@@ -453,7 +453,7 @@ def get_projects_from_envelope(left, bottom, right, top):
 def get_project_pas_from_envelope(left, bottom, right, top, ident_cely):
     """
     Funkce pro získaní pas projekt ze čtverce.
-    @janhnat zohlednit pristupnost
+    @janhnat zohlednit pristupnost - zohledneno v ProjectPasFromEnvelopeView
     """
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
@@ -477,7 +477,7 @@ def get_project_pas_from_envelope(left, bottom, right, top, ident_cely):
 def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
     """
     Funkce pro získaní pianů projektu ze čtverce.
-    @janhnat zohlednit pristupnost
+    @janhnat zohlednit pristupnost - zohledneno v ProjectPianFromEnvelopeView
     """
     from arch_z.models import Akce
     from dj.models import DokumentacniJednotka
@@ -488,28 +488,25 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
         "archeologicky_zaznam__ident_cely"
     )
 
-    queryset_akce = []
-    queryset = None
+    pians = []
     d = None
     for i in q1:
-        d = (
-            DokumentacniJednotka.objects.filter(
-                Q(ident_cely__istartswith=i.archeologicky_zaznam.ident_cely)
-                | Q(pian__geom__crosses=Polygon.from_bbox([right, top, left, bottom]))
-            )
-            .distinct()
-            .values("pian__id", "pian__ident_cely", "pian__geom")
-        )
-        # FIltering bbox is disabled-because of caching add .filter(Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom])))
-        logger.debug(d)
-        queryset_akce.append(d)
-        if len(queryset_akce) > 1:
-            queryset = queryset.union(d)
+        d = list(
+                (
+                DokumentacniJednotka.objects.filter(
+                    Q(ident_cely__istartswith=i.archeologicky_zaznam.ident_cely)
+                    | Q(pian__geom__crosses=Polygon.from_bbox([right, top, left, bottom]))
+                )
+                .distinct()
+                .values_list("pian", flat=True)
+            ))
+            # FIltering bbox is disabled-because of caching add .filter(Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom])))
+        if pians:
+            pians.append(d)
         else:
-            queryset = d
-
-    try:  # chyba vykonu spravne ma vracet queryset
-        return queryset_akce
+            pians = d
+    try:  
+        return Pian.objects.filter(pk__in=pians)
     except IndexError:
         logger.debug(
             "core.utils.get_project_pian_from_envelope.no_points",
@@ -540,20 +537,24 @@ def get_3d_from_envelope(left, bottom, right, top):
         return None
 
 
-def get_num_pass_from_envelope(left, bottom, right, top):
+def get_num_pass_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní počtu pas ze čtverce.
-    @janhnat zohlednit pristupnost
+    @janhnat zohlednit pristupnost - done
     """
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
     from pas.models import SamostatnyNalez
+    from core.views import PermissionFilterMixin
+    from core.models import Permissions as p
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
-    queryset = SamostatnyNalez.objects.filter(c1).filter(c2).count()
+    queryset = SamostatnyNalez.objects.filter(c1).filter(c2)
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
     try:
-        return queryset
+        return perm_object.check_filter_permission(queryset, p.actionChoices.pas_mapa_pas).count()
     except IndexError:
         logger.debug(
             "core.utils.get_num_pas_from_envelope.no_points",
@@ -562,21 +563,25 @@ def get_num_pass_from_envelope(left, bottom, right, top):
         return None
 
 
-def get_pas_from_envelope(left, bottom, right, top):
+def get_pas_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní pas ze čtverce.
-    @janhnat zohlednit pristupnost
+    @janhnat zohlednit pristupnost - done
     """
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
     from pas.models import SamostatnyNalez
+    from core.views import PermissionFilterMixin
+    from core.models import Permissions as p
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
     queryset = SamostatnyNalez.objects.filter(c2).filter(c1)
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
 
     try:
-        return queryset.only("id", "ident_cely", "geom")
+        return perm_object.check_filter_permission(queryset, p.actionChoices.pas_mapa_pas).only("id", "ident_cely", "geom")
     except IndexError:
         logger.debug(
             "core.utils.get__pas_from_envelope.no_points",
@@ -585,22 +590,26 @@ def get_pas_from_envelope(left, bottom, right, top):
         return None
 
 
-def get_num_pian_from_envelope(left, bottom, right, top):
+def get_num_pian_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní počtu pianu ze čtverce.
-    @janhnat zohlednit pristupnost
+    @janhnat zohlednit pristupnost - done
     """
     from dj.models import DokumentacniJednotka
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
+    from core.views import PermissionFilterMixin
+    from core.models import Permissions as p
 
     queryset = DokumentacniJednotka.objects.filter(
         Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom]))
         | Q(pian__geom__intersects=Polygon.from_bbox([right, top, left, bottom]))
-    ).count()
+    )
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
 
     try:
-        return queryset
+        return perm_object.check_filter_permission(queryset, p.actionChoices.pas_mapa_pian).count()
     except IndexError:
         logger.debug(
             "core.utils.get_num_pian_from_envelope.no_points",
@@ -609,15 +618,17 @@ def get_num_pian_from_envelope(left, bottom, right, top):
         return None
 
 
-def get_pian_from_envelope(left, bottom, right, top):
+def get_pian_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní pianů ze čtverce.
-    @janhnat zohlednit pristupnost
+    @janhnat zohlednit pristupnost - done
     """
     from dj.models import DokumentacniJednotka
     from django.contrib.gis.db.models.functions import Centroid
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
+    from core.views import PermissionFilterMixin
+    from core.models import Permissions as p
 
     queryset = (
         DokumentacniJednotka.objects.filter(
@@ -627,9 +638,11 @@ def get_pian_from_envelope(left, bottom, right, top):
         .annotate(pian__centroid=Centroid("pian__geom"))
         .distinct()
     )
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
 
     try:
-        return queryset[:10000].values(
+        return perm_object.check_filter_permission(queryset, p.actionChoices.pas_mapa_pian)[:10000].values(
             "pian__id",
             "pian__ident_cely",
             "pian__geom",

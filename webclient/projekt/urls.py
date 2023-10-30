@@ -15,8 +15,6 @@ from .views import (
     navrhnout_ke_zruseni,
     odpojit_dokument,
     post_ajax_get_project_one,
-    post_ajax_get_project_pas_limit,
-    post_ajax_get_project_pian_limit,
     post_ajax_get_projects_limit,
     prihlasit,
     pripojit_dokument,
@@ -28,6 +26,8 @@ from .views import (
     vratit_navrh_zruseni,
     zahajit_v_terenu,
     zrusit,
+    ProjectPasFromEnvelopeView,
+    ProjectPianFromEnvelopeView,
 )
 
 app_name = "projekt"
@@ -77,12 +77,12 @@ urlpatterns = [
     ),
     path(
         "akce-get-projekt-pas",
-        post_ajax_get_project_pas_limit,
+        ProjectPasFromEnvelopeView.as_view(),
         name="post_ajax_get_project_pas_limit",
     ),
     path(
         "akce-get-projekt-pian",
-        post_ajax_get_project_pian_limit,
+        ProjectPianFromEnvelopeView.as_view(),
         name="post_ajax_get_project_pian_limit",
     ),
     path(
