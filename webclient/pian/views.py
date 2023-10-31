@@ -18,6 +18,8 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.utils import (
+    file_validate_epsg,
+    file_validate_geometry,
     get_validation_messages,
     update_all_katastr_within_akce_or_lokalita,
 )
@@ -396,12 +398,21 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
             return _("pian.views.importovatPianView.check.notUniquelabel")
         if not self.check_geometry(row[2]):
             return _("pian.views.importovatPianView.check.wrongGeometry")
+        if not self.check_epsg(row[2]):
+            return _("pian.views.importovatPianView.check.wrongEpsg")
         else:
             return True
     
     def check_geometry(self, geometry):
         # @jiribartos kontrola geometrie
-        if not geometry:
+        if not file_validate_geometry(geometry)[0]:
+            return False
+        else:
+            return True
+        
+    def check_epsg(self, epsg):
+        # @jiribartos kontrola geometrie
+        if not file_validate_epsg(epsg)[0]:
             return False
         else:
             return True
