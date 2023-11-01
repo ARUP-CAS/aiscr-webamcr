@@ -39,6 +39,7 @@
           </div>
         </a>
       </div>
+      {% if user.can_see_ours_item %}
       <div class="col">
         <a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-nase-modely">
           <div class="card-body">
@@ -49,6 +50,7 @@
           </div>
         </a>
       </div>
+      {% endif %}
       <div class="col">
         <a href="{% url 'dokument:list' %}?stav=2&sort=ident_cely" class="card app-card-entity app-card-archivovat">
           <div class="card-body">
@@ -77,13 +79,15 @@
         {% trans "dokument.templates.indexDokument.cardMojeDokumenty.text" %}
       </div>
     </div>
-    <div class="app-collapse-nase-modely collapse">
-      <div class="p-3">
-        <h4>{% trans "dokument.templates.indexDokument.cardNaseDokumenty.text.title" %}</h4>
-        <hr />
-        {% trans "dokument.templates.indexDokument.cardNaseDokumenty.text" %}
+    {% if user.can_see_ours_item %}
+      <div class="app-collapse-nase-modely collapse">
+        <div class="p-3">
+          <h4>{% trans "dokument.templates.indexDokument.cardNaseDokumenty.text.title" %}</h4>
+          <hr />
+          {% trans "dokument.templates.indexDokument.cardNaseDokumenty.text" %}
+        </div>
       </div>
-    </div>
+    {% endif %}
     <div class="app-collapse-vybrat collapse">
       <div class="p-3">
         <h4>{% trans "dokument.templates.indexDokument.cardVybrat.text.title" %}</h4>
@@ -114,12 +118,14 @@
     $(".app-card-moje-modely").mouseover(function(){
       $(".app-collapse-moje-modely").show(100);
     });
-    $(".app-card-nase-modely").mouseleave(function(){
-      $(".app-collapse-nase-modely").hide(100);
-    });
-    $(".app-card-nase-modely").mouseover(function(){
-      $(".app-collapse-nase-modely").show(100);
-    });
+    {% if user.can_see_ours_item %}
+      $(".app-card-nase-modely").mouseleave(function(){
+        $(".app-collapse-nase-modely").hide(100);
+      });
+      $(".app-card-nase-modely").mouseover(function(){
+        $(".app-collapse-nase-modely").show(100);
+      });
+    {% endif %}
     $(".app-card-vybrat").mouseleave(function(){
       $(".app-collapse-vybrat").hide(100);
     });

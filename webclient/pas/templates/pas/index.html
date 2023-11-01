@@ -49,16 +49,18 @@
           </div>
         </a>
       </div>
-      <div class="col">
-        <a href="{% url 'pas:list' %}}?historie_typ_zmeny=SN01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-nalezy">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "pas.templates.index.cardNaseNalezy.label" %}
-          </div>
-        </a>
-      </div>
+      {% if user.can_see_ours_item %}
+        <div class="col">
+          <a href="{% url 'pas:list' %}}?historie_typ_zmeny=SN01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-nalezy">
+            <div class="card-body">
+              <img src="{% static 'logo-am-mark.png' %}" />
+            </div>
+            <div class="card-footer">
+              {% trans "pas.templates.index.cardNaseNalezy.label" %}
+            </div>
+          </a>
+        </div>
+      {% endif %}
       <div class="col">
         <a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" class="card app-card-entity app-card-potvrdit">
           <div class="card-body">
@@ -97,13 +99,15 @@
         {% trans "pas.templates.index.cardMojeNalezy.text" %}
       </div>
     </div>
-    <div class="app-collapse-nase-nalezy collapse">
-      <div class="p-3">
-        <h4>{% trans "pas.templates.index.cardNaseNalezy.title" %}</h4>
-        <hr />
-        {% trans "pas.templates.index.cardNaseNalezy.text" %}
+    {% if user.can_see_ours_item %}
+      <div class="app-collapse-nase-nalezy collapse">
+        <div class="p-3">
+          <h4>{% trans "pas.templates.index.cardNaseNalezy.title" %}</h4>
+          <hr />
+          {% trans "pas.templates.index.cardNaseNalezy.text" %}
+        </div>
       </div>
-    </div>
+    {% endif %}
     <div class="app-collapse-vybrat collapse">
       <div class="p-3">
         <h4>{% trans "pas.templates.index.cardVybrat.title" %}</h4>
@@ -148,12 +152,14 @@
     $(".app-card-moje-nalezy").mouseover(function(){
       $(".app-collapse-moje-nalezy").show(100);
     });
-    $(".app-card-nase-nalezy").mouseleave(function(){
-      $(".app-collapse-nase-nalezy").hide(100);
-    });
-    $(".app-card-nase-nalezy").mouseover(function(){
-      $(".app-collapse-nase-nalezy").show(100);
-    });
+    {% if user.can_see_ours_item %}
+      $(".app-card-nase-nalezy").mouseleave(function(){
+        $(".app-collapse-nase-nalezy").hide(100);
+      });
+      $(".app-card-nase-nalezy").mouseover(function(){
+        $(".app-collapse-nase-nalezy").show(100);
+      });
+    {% endif %}
     $(".app-card-vybrat").mouseleave(function(){
       $(".app-collapse-vybrat").hide(100);
     });

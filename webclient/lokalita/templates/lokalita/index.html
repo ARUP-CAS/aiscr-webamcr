@@ -39,16 +39,18 @@
           </div>
         </a>
       </div>
-      <div class="col">
-        <a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-lokality">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "lokalita.templates.index.cardNaseLokality.label" %}
-          </div>
-        </a>
-      </div>
+      {% if user.can_see_ours_item %}
+        <div class="col">
+          <a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-lokality">
+            <div class="card-body">
+              <img src="{% static 'logo-am-mark.png' %}" />
+            </div>
+            <div class="card-footer">
+              {% trans "lokalita.templates.index.cardNaseLokality.label" %}
+            </div>
+          </a>
+        </div>
+      {% endif %}
       <div class="col">
         <a href="{% url 'lokalita:list' %}?stav=2&sort=nazev" class="card app-card-entity app-card-archivovat">
           <div class="card-body">
@@ -77,13 +79,15 @@
         {% trans "lokalita.templates.index.cardMojeLokality.text" %}
       </div>
     </div>
-    <div class="app-collapse-nase-lokality collapse">
-      <div class="p-3">
-        <h4>{% trans "lokalita.templates.index.cardNaseLokality.title" %}</h4>
-        <hr />
-        {% trans "lokalita.templates.index.cardNaseLokality.text" %}
+    {% if user.can_see_ours_item %}
+      <div class="app-collapse-nase-lokality collapse">
+        <div class="p-3">
+          <h4>{% trans "lokalita.templates.index.cardNaseLokality.title" %}</h4>
+          <hr />
+          {% trans "lokalita.templates.index.cardNaseLokality.text" %}
+        </div>
       </div>
-    </div>
+    {% endif %}
     <div class="app-collapse-vybrat collapse">
       <div class="p-3">
         <h4>{% trans "lokalita.templates.index.cardVybrat.title" %}</h4>
@@ -114,12 +118,14 @@
     $(".app-card-moje-lokality").mouseover(function(){
       $(".app-collapse-moje-lokality").show(100);
     });
-    $(".app-card-nase-lokality").mouseleave(function(){
-      $(".app-collapse-nase-lokality").hide(100);
-    });
-    $(".app-card-nase-lokality").mouseover(function(){
-      $(".app-collapse-nase-lokality").show(100);
-    });
+    {% if user.can_see_ours_item %}
+      $(".app-card-nase-lokality").mouseleave(function(){
+        $(".app-collapse-nase-lokality").hide(100);
+      });
+      $(".app-card-nase-lokality").mouseover(function(){
+        $(".app-collapse-nase-lokality").show(100);
+      });
+    {% endif %}
     $(".app-card-vybrat").mouseleave(function(){
       $(".app-collapse-vybrat").hide(100);
     });

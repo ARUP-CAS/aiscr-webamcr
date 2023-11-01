@@ -7,7 +7,7 @@ from dal import autocomplete
 from crispy_forms.layout import Div, Layout, HTML
 from django.contrib.auth.models import Group
 from django.db import utils
-from django.db.models import Q
+from django.db.models import Q, OuterRef, Subquery, F
 from django.forms import Select, SelectMultiple
 from django.utils.translation import gettext as _
 from django_filters import (
@@ -227,17 +227,26 @@ class SamostatnyNalezFilter(HistorieFilter):
         widget=SelectMultipleSeparator(),
     )
 
-    historie_zapsal_uzivatel_organizace = CharFilter(
-        label=_("arch_z.filters.SamostatnyNalezFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+    historie_zapsal_uzivatel_organizace = ModelMultipleChoiceFilter(
+        queryset=Organizace.objects.all(),
+        field_name="samostatny_nalez__historie__historie__uzivatel",
+        label=_("lokalita.filters.SamostatnyNalezFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        widget=SelectMultipleSeparator(),
         method="filter_historie_zapsal_uzivatel_organizace",
         distinct=True,
     )
 
     def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
-        historie_query = Historie.objects.filter(vazba__sn_historie__isnull=False).filter(typ_zmeny=ZAPSANI_SN)\
-            .filter(uzivatel__organizace=int(value))
-        sn_ids = [x.vazba.sn_historie.pk for x in historie_query]
-        return queryset.filter(pk__in=sn_ids).distinct()
+        if value:
+            historie_subquery = Historie.objects.filter(vazba__sn_historie__isnull=False)\
+                .filter(typ_zmeny=ZAPSANI_SN)\
+                .filter(vazba__sn_historie=OuterRef("pk"))\
+                .filter(uzivatel__organizace__in=value)\
+                .annotate(sn_ids=F("vazba__sn_historie"))
+            return queryset.annotate(sn_ids=Subquery(historie_subquery.values("sn_ids")))\
+                .filter(pk__in=F("sn_ids")).distinct()
+        else:
+            return queryset
 
     class Meta:
         model = SamostatnyNalez
@@ -394,7 +403,8 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
-                Div("historie_uzivatel", css_class="col-sm-4"),
+                Div("historie_uzivatel", css_class="col-sm-3"),
+                Div("historie_zapsal_uzivatel_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),

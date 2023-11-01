@@ -39,16 +39,18 @@
           </div>
         </a>
       </div>
-      <div class="col">
-        <a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-modely">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "dokument.templates.indexModel3D.cardNaseModely.label" %}
-          </div>
-        </a>
-      </div>
+      {% if user.can_see_ours_item %}
+        <div class="col">
+          <a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-modely">
+            <div class="card-body">
+              <img src="{% static 'logo-am-mark.png' %}" />
+            </div>
+            <div class="card-footer">
+              {% trans "dokument.templates.indexModel3D.cardNaseModely.label" %}
+            </div>
+          </a>
+        </div>
+      {% endif %}
       <div class="col">
         <a href="{% url 'dokument:list-model-3D' %}?stav=3&sort=datum_nalezu&sort=ident_cely" class="card app-card-entity app-card-archivovat">
           <div class="card-body">
@@ -77,13 +79,22 @@
         {% trans "dokument.templates.indexModel3D.cardMojeModely.text" %}
       </div>
     </div>
-    <div class="app-collapse-vybrat collapse">
+    <div class="app-collapse-nase-modely collapse">
       <div class="p-3">
-        <h4>{% trans "dokument.templates.indexModel3D.cardVybrat.text.title" %}</h4>
+        <h4>{% trans "dokument.templates.indexModel3D.cardNaseModely.text.title" %}</h4>
         <hr />
-        {% trans "dokument.templates.indexModel3D.cardVybrat.text" %}
+        {% trans "dokument.templates.indexModel3D.cardNaseModely.text" %}
       </div>
     </div>
+    {% if user.can_see_ours_item %}
+      <div class="app-collapse-vybrat collapse">
+        <div class="p-3">
+          <h4>{% trans "dokument.templates.indexModel3D.cardVybrat.text.title" %}</h4>
+          <hr />
+          {% trans "dokument.templates.indexModel3D.cardVybrat.text" %}
+        </div>
+      </div>
+    {% endif %}
     <div class="app-collapse-archivovat collapse">
       <div class="p-3">
         <h4>{% trans "dokument.templates.indexModel3D.cardArchivovat.text.title" %}</h4>
@@ -107,6 +118,14 @@
     $(".app-card-moje-modely").mouseover(function(){
       $(".app-collapse-moje-modely").show(100);
     });
+    {% if user.can_see_ours_item %}
+      $(".app-card-nase-modely").mouseleave(function(){
+        $(".app-collapse-nase-modely").hide(100);
+      });
+      $(".app-card-nase-modely").mouseover(function(){
+        $(".app-collapse-nase-modely").show(100);
+      });
+    {% endif %}
     $(".app-card-vybrat").mouseleave(function(){
       $(".app-collapse-vybrat").hide(100);
     });
