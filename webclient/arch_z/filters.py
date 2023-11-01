@@ -642,13 +642,14 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metóda pro filtrování podle toho či akce má pozitivní DJ.
         """
-        if "True" in value and "False" in value:
+        if "True" not in value and "False" not in value:
             return queryset
-        elif "True" in value:
+        queryset = queryset.filter(archeologicky_zaznam__dokumentacni_jednotky_akce__isnull=False)
+        if "True" in value:
             return queryset.filter(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
+                archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=True
             ).distinct()
-        elif "False" in value:
+        if "False" in value:
             return queryset.exclude(
                 archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
             ).distinct()
