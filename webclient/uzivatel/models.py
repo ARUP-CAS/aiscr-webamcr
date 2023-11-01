@@ -242,6 +242,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     def anonymous_details(self):
         return f"{self.ident_cely} ({self.organizace})"
 
+    @property
+    def can_see_ours_item(self):
+        return self.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
+
     class Meta:
         db_table = "auth_user"
         verbose_name = "Uživatel"
