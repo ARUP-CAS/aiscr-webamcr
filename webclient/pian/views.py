@@ -1,5 +1,5 @@
 import logging
-
+import pandas as pd
 
 from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN, PIAN_POTVRZEN, ROLE_ADMIN_ID, ZAPSANI_AZ, ZAPSANI_PIAN, ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from core.exceptions import MaximalIdentNumberError, NeznamaGeometrieError
@@ -18,6 +18,8 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.utils import (
+    file_validate_epsg,
+    file_validate_geometry,
     get_validation_messages,
     update_all_katastr_within_akce_or_lokalita,
 )
@@ -30,10 +32,11 @@ from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
 from django.core.exceptions import PermissionDenied
 from django.db import connection
-from django.http import JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
+from django.views.generic import TemplateView
 from django.db.models import OuterRef, Subquery, Q
 from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA, PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
@@ -357,3 +360,59 @@ class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pia
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q).exclude(presnost__zkratka="4")
         return self.check_filter_permission(qs)
+    
+
+class ImportovatPianView(LoginRequiredMixin, TemplateView):
+    """
+    Třída pohledu pro získaní řádku tabulky s externím zdrojem.
+    """
+    http_method_names = [
+        "post",
+    ]
+    template_name = "pian/pian_import_table.html"
+
+    def post(self, request):
+        docfile = request.FILES["file"]
+        try:
+            self.sheet = pd.read_csv(docfile, sep=";")
+        except ValueError as e:
+            logger.debug(e)
+            return HttpResponseBadRequest()
+        if self.sheet.columns[0] != "label":
+            return HttpResponseBadRequest()
+        if self.sheet.columns[1] != "epsg":
+            return HttpResponseBadRequest()
+        if self.sheet.columns[2] != "geometry":
+            return HttpResponseBadRequest()
+        self.sheet["result"] = self.sheet.apply(self.check_save_row, axis=1)
+        logger.debug(self.sheet.info())
+        context = self.get_context_data()
+        context["table"] = self.sheet
+        context["archz_ident"] = request.POST.get("arch_ident")
+        context["dj_ident"] = request.POST.get("dj_ident")
+        context["pian_ident"] = request.POST.get("pian_ident")
+        return self.render_to_response(context)
+    
+    def check_save_row(self, row):
+        if self.sheet['label'].value_counts()[row[0]] > 1:
+            return _("pian.views.importovatPianView.check.notUniquelabel")
+        if not self.check_geometry(row[2]):
+            return _("pian.views.importovatPianView.check.wrongGeometry")
+        if not self.check_epsg(row[2]):
+            return _("pian.views.importovatPianView.check.wrongEpsg")
+        else:
+            return True
+    
+    def check_geometry(self, geometry):
+        # @jiribartos kontrola geometrie
+        if not file_validate_geometry(geometry)[0]:
+            return False
+        else:
+            return True
+        
+    def check_epsg(self, epsg):
+        # @jiribartos kontrola geometrie
+        if not file_validate_epsg(epsg)[0]:
+            return False
+        else:
+            return True
