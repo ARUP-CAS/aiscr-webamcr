@@ -83,6 +83,7 @@ class AkceTable(SearchTable):
         Class pro definování tabulky pro akci použitých pro zobrazení přehledu akcií a exportu.
     """
     ident_cely = tables.Column(
+        verbose_name=_("arch_z.tables.AkceTable.ident_cely.label"),
         linkify=True, accessor="archeologicky_zaznam__ident_cely"
     )
     katastr = tables.Column(
@@ -105,16 +106,25 @@ class AkceTable(SearchTable):
         default="",
         accessor="archeologicky_zaznam__katastry",
     )
-    stav = tables.columns.Column(default="", accessor="archeologicky_zaznam__stav")
+    stav = tables.columns.Column(
+        verbose_name=_("arch_z.tables.AkceTable.stav.label"),
+        default="",
+        accessor="archeologicky_zaznam__stav"
+    )
     organizace = tables.columns.Column(
-        default="", order_by="organizace__nazev_zkraceny"
+        verbose_name=_("arch_z.tables.AkceTable.organizace.label"),
+        default="",
+        order_by="organizace__nazev_zkraceny"
     )
     vedouci_organizace = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.vedouci_organizace.label"),
         default="",
         accessor="vedouci_organizace",
     )
-    hlavni_vedouci = tables.columns.Column(default="")
+    hlavni_vedouci = tables.columns.Column(
+        verbose_name=_("arch_z.tables.AkceTable.hlavni_vedouci.label"),
+        default=""
+    )
     vedouci = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.vedouci.label"),
         default="",

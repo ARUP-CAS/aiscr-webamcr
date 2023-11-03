@@ -71,15 +71,15 @@ class Model3DTable(SearchTable):
     """
     Class pro definování tabulky pro modelu 3D použitých pro zobrazení přehledu modelu 3D a exportu.
     """
-    ident_cely = tables.Column(linkify=True)
-    typ_dokumentu = tables.columns.Column(default="")
-    organizace__nazev_zkraceny = tables.columns.Column(default="")
-    popis = tables.columns.Column(default="")
-    rok_vzniku = tables.columns.Column(default="")
-    extra_data__format = tables.columns.Column(default="")
-    extra_data__odkaz = tables.columns.Column(default="")
-    extra_data__duveryhodnost = tables.columns.Column(default="")
-    autori = AutorColumn()
+    ident_cely = tables.Column(linkify=True, verbose_name=_("dokument.tables.modelTable.ident_cely.label"))
+    typ_dokumentu = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.typ_dokumentu.label"))
+    organizace__nazev_zkraceny = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.organizace.label"))
+    popis = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.popis.label"))
+    rok_vzniku = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.rok_vzniku.label"))
+    extra_data__format = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.extra_data__format.label"))
+    extra_data__odkaz = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.extra_data__odkaz.label"))
+    extra_data__duveryhodnost = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.extra_data__duveryhodnost.label"))
+    autori = AutorColumn(verbose_name=_("dokument.tables.modelTable.autori.label"))
     app = "knihovna_3d"
     first_columns = None
     nahled = tables.columns.Column(
@@ -89,7 +89,7 @@ class Model3DTable(SearchTable):
             "th": {"class": "white"},
         },
         orderable=False,
-        verbose_name=_("dokument.tables.dokumentTable.soubory.label"),
+        verbose_name=_("dokument.tables.modelTable.nahled.label"),
     )
 
     class Meta:
@@ -143,25 +143,25 @@ class DokumentTable(SearchTable):
     """
     Class pro definování tabulky pro dokumenty použitých pro zobrazení přehledu dokumentů a exportu.
     """
-    ident_cely = tables.Column(linkify=True)
-    typ_dokumentu = tables.columns.Column(default="")
+    ident_cely = tables.Column(linkify=True, verbose_name=_("dokument.tables.dokumentTable.ident_cely.label"))
+    typ_dokumentu = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.typ_dokumentu.label"))
     organizace__nazev_zkraceny = tables.columns.Column(
         default="", verbose_name=_("dokument.tables.dokumentTable.organizace.label")
     )
-    popis = tables.columns.Column(default="")
-    rok_vzniku = tables.columns.Column(default="")
-    autori = AutorColumn()
-    osoby = OsobyColumn()
-    popis = tables.columns.Column(default="")
-    pristupnost = tables.columns.Column(default="")
-    rada = tables.columns.Column(default="")
-    let = tables.columns.Column(default="")
-    material_originalu = tables.columns.Column(default="")
-    poznamka = tables.columns.Column(default="")
-    ulozeni_originalu = tables.columns.Column(default="")
-    oznamceni_originalu = tables.columns.Column(default="")
-    datum_zverejneni = tables.columns.Column(default="")
-    licence = tables.columns.Column(default="")
+    popis = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.popis.label"))
+    rok_vzniku = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.rok_vzniku.label"))
+    autori = AutorColumn(verbose_name=_("dokument.tables.dokumentTable.autori.label"))
+    osoby = OsobyColumn(verbose_name=_("dokument.tables.dokumentTable.osoby.label"))
+    popis = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.popis.label"))
+    pristupnost = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.pristupnost.label"))
+    rada = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.rada.label"))
+    let = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.let.label"))
+    material_originalu = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.material_originalu.label"))
+    poznamka = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.poznamka.label"))
+    ulozeni_originalu = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.ulozeni_originalu.label"))
+    oznamceni_originalu = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.oznamceni_originalu.label"))
+    datum_zverejneni = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.datum_zverejneni.label"))
+    licence = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.licence.label"))
     nahled = tables.columns.Column(
         default="",
         accessor="soubory",
@@ -169,7 +169,7 @@ class DokumentTable(SearchTable):
             "th": {"class": "white"},
         },
         orderable=False,
-        verbose_name=_("dokument.tables.dokumentTable.soubory.label"),
+        verbose_name=_("dokument.tables.dokumentTable.nahled.label"),
     )
     columns_to_hide = (
         "pristupnost",

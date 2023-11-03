@@ -323,6 +323,11 @@ class CustomAdminSettings(ExportModelOperationsMixin("custom_admin_settings"), m
     item_group = models.CharField(max_length=100)
     item_id = models.CharField(max_length=100)
     value = models.TextField()
+
+    class Meta:
+        verbose_name = _("core.model.CustomAdminSettings.modelTitle.label")
+        verbose_name_plural = _("core.model.CustomAdminSettings.modelTitles.label")
+
 class Permissions(models.Model):
     class ownershipChoices(models.TextChoices):
         my = "my", "core.models.permissions.ownershipChoices.my"
