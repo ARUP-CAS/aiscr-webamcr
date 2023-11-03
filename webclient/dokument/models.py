@@ -61,8 +61,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     """
     STATES = (
         (D_STAV_ZAPSANY, _("dokument.models.dokument.states.D1")),
-        (D_STAV_ODESLANY, _("dokument.models.dokument.states.D1")),
-        (D_STAV_ARCHIVOVANY, _("dokument.models.dokument.states.D1")),
+        (D_STAV_ODESLANY, _("dokument.models.dokument.states.D2")),
+        (D_STAV_ARCHIVOVANY, _("dokument.models.dokument.states.D3")),
     )
 
     let = models.ForeignKey(
