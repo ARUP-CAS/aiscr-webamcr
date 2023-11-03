@@ -211,14 +211,20 @@ class FedoraRepositoryConnector:
                                 ):
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok",
-                             extra={"text": response.text, "status_code": response.status_code})
+                             extra={"text": response.text, "status_code": response.status_code,
+                                    "request_type": request_type})
             else:
-                logger.error("core_repository_connector._send_request.response.error",
-                             extra={"text": response.text, "status_code": response.status_code})
+                extra = {"text": response.text, "status_code": response.status_code, "request_type": request_type}
+                if headers:
+                    extra["headers"] = headers
+                if data and len(str(data)) < 10 ** 3:
+                    extra["data"] = data
+                logger.error("core_repository_connector._send_request.response.error", extra=extra)
                 raise FedoraError(response.text, response.status_code)
         else:
             logger.debug("core_repository_connector._send_request.response",
-                         extra={"text": response.text, "status_code": response.status_code})
+                         extra={"text": response.text, "status_code": response.status_code,
+                                "request_type": request_type})
         return response
 
     def _create_container(self):

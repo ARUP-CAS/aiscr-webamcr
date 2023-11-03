@@ -2,7 +2,7 @@ import logging
 
 from .models import ExterniZdroj
 from core.constants import EXTERNI_ZDROJ_RELATION_TYPE
-from django.db.models.signals import pre_save, post_save, post_delete
+from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
 from historie.models import HistorieVazby
 
@@ -28,6 +28,6 @@ def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
         instance.save_metadata()
 
 
-@receiver(post_delete, sender=ExterniZdroj)
+@receiver(pre_delete, sender=ExterniZdroj)
 def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **kwargs):
     instance.record_deletion()
