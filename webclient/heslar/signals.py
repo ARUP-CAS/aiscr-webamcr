@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models.signals import post_save, post_delete, pre_save
+from django.db.models.signals import post_save, post_delete, pre_save, pre_delete
 from django.dispatch import receiver
 
 from core.ident_cely import get_heslar_ident
@@ -96,17 +96,17 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
         heslo.save_metadata()
 
 
-@receiver(post_delete, sender=Heslar)
+@receiver(pre_delete, sender=Heslar)
 def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=RuianKatastr)
+@receiver(pre_delete, sender=RuianKatastr)
 def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=RuianKraj)
+@receiver(pre_delete, sender=RuianKraj)
 def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs):
     instance.record_deletion()
 
