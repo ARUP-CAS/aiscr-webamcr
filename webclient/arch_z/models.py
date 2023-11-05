@@ -18,7 +18,7 @@ from core.constants import (
     ZAPSANI_AZ, OBLAST_CECHY, OBLAST_MORAVA,
 )
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 
 from ez.models import ExterniZdroj

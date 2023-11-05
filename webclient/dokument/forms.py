@@ -6,7 +6,7 @@ from dal import autocomplete
 from django import forms
 from django.db import utils
 from django.forms import HiddenInput
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.db.models import Value, IntegerField
 from crispy_forms.bootstrap import AppendedText

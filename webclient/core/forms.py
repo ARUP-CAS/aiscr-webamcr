@@ -4,9 +4,8 @@ from django.utils import formats
 
 from django import forms
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Layout
-from django.utils.translation import gettext as _
-from core.models import Soubor, OdstavkaSystemu
+from django.utils.translation import gettext_lazy as _
+from core.models import OdstavkaSystemu
 from heslar.models import Heslar
 from bs4 import BeautifulSoup
 from polib import pofile

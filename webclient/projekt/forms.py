@@ -7,9 +7,8 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
-from django.core.exceptions import ValidationError
 from django.forms import HiddenInput
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 
 from arch_z import validators

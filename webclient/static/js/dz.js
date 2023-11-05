@@ -10,10 +10,10 @@ const get_params = () => {
 };
 const get_description = () => {
     if (typ_uploadu == 'upload') {
-        return "Přiložte dokumentaci";
+        return [dz_trans["descriptionUpload"]];
     }
     if (typ_uploadu == 'nahradit') {
-        return "Přiložte aktualizovaný soubor";
+        return [dz_trans["descriptionNahradit"]];
     }
     return "";
 };
