@@ -2,14 +2,14 @@ import datetime
 import logging
 import os
 import re
-from typing import Iterable, Optional
+from typing import Optional
 from django_prometheus.models import ExportModelOperationsMixin
 
 from django.conf import settings
 from django.db import models
 from django.forms import ValidationError
 from django.contrib.auth.models import Group
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian

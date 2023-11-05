@@ -41,6 +41,11 @@
   </div>
 </div>
 <script src="{% static 'dropzone.min.js' %}"></script>
+<script>
+  const dz_trans = {
+    description: '{%trans "pian.templates.pian.importovat_pian_modal.dz.description" %}',
+  }
+</script>
 <script src="{% static 'dz_import_pian.js' %}"></script>
 <script>
   $('#importovat_pian').on('hidden.bs.modal', function (e) {

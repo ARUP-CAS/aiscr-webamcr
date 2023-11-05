@@ -52,7 +52,7 @@ window.onload = function () {
         return cookieValue;
     };
     var dropzoneOptions = {
-        dictDefaultMessage: "Nahrajte dok",
+        dictDefaultMessage: [dz_trans["description"]],
         acceptedFiles: ".csv, .CSV",
         dictInvalidFileType: "RejectedFileMessage",
         addRemoveLinks: true,

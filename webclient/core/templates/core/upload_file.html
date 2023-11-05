@@ -57,7 +57,11 @@
       "rejected_dokument" : "{% get_message 'UPLOADFILE_REJECTED_DOKUMENT' %}",
       "rejected_all" : "{% get_message 'UPLOADFILE_REJECTED_ALL' %}",
     };
-    var upload_error = "{% get_message 'UPLOADFILE_ERROR' %}"
+    var upload_error = "{% get_message 'UPLOADFILE_ERROR' %}";
+    const dz_trans = {
+      descriptionUpload: '{%trans "core.templates.core.upload_file.dz.descriptionUpload" %}',
+      descriptionNahradit: '{%trans "core.templates.core.upload_file.dz.descriptionNahradit" %}',
+    }
   </script>
     <script src="{% static 'dz.js' %}"></script>
 {% endblock %}

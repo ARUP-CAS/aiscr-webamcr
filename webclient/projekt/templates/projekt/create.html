@@ -87,6 +87,15 @@
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script src="{% static 'leaflet_subgroup.js' %}"></script>
+  <script>
+    const map_translations = {
+      cuzkKatastralniMapa: '{%trans "projekt.templates.projekt.detail_common.mapa.cuzkKatastralniMapa" %}',
+    };
+    const dz_trans = {
+      descriptionUpload: '{%trans "core.templates.core.upload_file.dz.descriptionUpload" %}',
+      descriptionNahradit: '{%trans "core.templates.core.upload_file.dz.descriptionNahradit" %}',
+    }
+  </script>
   <script src="{% static 'mapa_projekty.js' %}"></script>
   <script src="{% static 'dropzone.min.js' %}"></script>
   <script>var object_id = "{{ confirm.ident_cely }}";</script>
