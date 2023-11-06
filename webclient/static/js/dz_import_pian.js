@@ -54,7 +54,7 @@ window.onload = function () {
     var dropzoneOptions = {
         dictDefaultMessage: [dz_trans["description"]],
         acceptedFiles: ".csv, .CSV",
-        dictInvalidFileType: "RejectedFileMessage",
+        dictInvalidFileType: [dz_trans["rejectedFileMessage"]],
         addRemoveLinks: true,
         dictCancelUpload: [dz_trans["cancelUpload"]],
         dictCancelUploadConfirmation: [dz_trans["cancelUploadConfirm"]],
