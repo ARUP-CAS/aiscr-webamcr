@@ -71,13 +71,13 @@ class ExterniZdrojTable(SearchTable):
     """
     Class pro definování tabulky pro externí zdroj použitých pro zobrazení přehledu zdrojů a exportu.
     """
-    ident_cely = tables.Column(linkify=True)
-    autori = ExtZdrojAutoriColumn(default="", accessor="autori__all")
-    editori = ExtZdrojEditoriColumn(default="", accessor="editori__all")
-    casopis_denik_nazev = tables.columns.Column(default="")
-    casopis_rocnik = tables.columns.Column(default="")
-    sbornik_nazev = tables.columns.Column(default="")
-    sysno = tables.columns.Column(default="")
+    ident_cely = tables.Column(linkify=True, verbose_name=_("ez.tables.ezTable.ident_cely.label"))
+    autori = ExtZdrojAutoriColumn(default="", accessor="autori__all", verbose_name=_("ez.tables.ezTable.autori.label"))
+    editori = ExtZdrojEditoriColumn(default="", accessor="editori__all", verbose_name=_("ez.tables.ezTable.editori.label"))
+    casopis_denik_nazev = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.casopis_denik_nazev.label"))
+    casopis_rocnik = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.casopis_rocnik.label"))
+    sbornik_nazev = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.sbornik_nazev.label"))
+    sysno = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.sysno.label"))
     columns_to_hide = (
         "sysno",
         "datum_rd",

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.db import models
 from projekt.models import Projekt
 from django_prometheus.models import ExportModelOperationsMixin

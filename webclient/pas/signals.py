@@ -38,7 +38,7 @@ def dokument_delete_soubor_vazby(sender, instance: SamostatnyNalez, **kwargs):
     instance.soubory.delete()
 
 
-@receiver(post_delete, sender=SamostatnyNalez)
+@receiver(pre_delete, sender=SamostatnyNalez)
 def samostatny_nalez_okres_delete_repository_container(sender, instance: SamostatnyNalez, **kwargs):
     instance.record_deletion()
 

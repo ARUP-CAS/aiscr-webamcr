@@ -1,12 +1,10 @@
 import logging
 
-from abc import ABC
-
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.db.models import CheckConstraint, Q
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from core.mixins import ManyToManyRestrictedClassMixin

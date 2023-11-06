@@ -1,69 +1,57 @@
 from typing import Final
 from django.utils.translation import gettext_lazy as _
 
-FORM_NOT_VALID: Final = "Forma není validní."
+FORM_NOT_VALID: Final = _("common.message.FORM_NOT_VALID.text")  # Forma není validní.
 
-PRISTUP_ZAKAZAN: Final = "common.message.pristupZakazan.text"
+PRISTUP_ZAKAZAN: Final = _("common.message.pristupZakazan.text")
 
-ZAZNAM_NELZE_SMAZAT_FEDORA = "Záznam nelze smazat, protože nebylo dokončeno nahrávání do Fedory.."
-ZAZNAM_USPESNE_VYTVOREN: Final = "Záznam byl úspěšně vytvořen."
-ZAZNAM_SE_NEPOVEDLO_VYTVORIT: Final = "Záznam se nepovedlo vytvořit."
-ZAZNAM_USPESNE_EDITOVAN: Final = "Záznam byl úspěšně upraven."
-ZAZNAM_SE_NEPOVEDLO_EDITOVAT: Final = "Záznam se nepovedlo editovat."
-ZAZNAM_USPESNE_SMAZAN: Final = "Záznam byl úspěšně smazán."
-ZAZNAM_SE_NEPOVEDLO_SMAZAT: Final = "Záznam nebyl smazán."
-ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY: Final = "Záznam nebyl smazán kvůli navázaným záznamům."
-MAXIMUM_IDENT_DOSAZEN: Final = "Byl překročen limit při přidělování identifikátoru. Pro vyřešení problému kontaktujte administrátora AMČR."
-MAXIMUM_AKCII_DOSAZENO: Final = "Byl překročen limit akcií pro jeden projekt."
-MAXIMUM_DJ_DOSAZENO: Final = (
-    "Byl překročen limit dokumentačních jednotek pro jednu akci."
-)
-MAXIMUM_KOMPONENT_DOSAZENO: Final = (
-    "Byl překročen limit komponent pro dokumentační jednotky."
-)
+ZAZNAM_NELZE_SMAZAT_FEDORA = _("common.message.ZAZNAM_NELZE_SMAZAT_FEDORA.text")  # Záznam nelze smazat, protože nebylo dokončeno nahrávání do Fedory..
+ZAZNAM_USPESNE_VYTVOREN: Final = _("common.message.ZAZNAM_USPESNE_VYTVOREN.text")  # Záznam byl úspěšně vytvořen.
+ZAZNAM_SE_NEPOVEDLO_VYTVORIT: Final = _("common.message.ZAZNAM_SE_NEPOVEDLO_VYTVORIT.text")  # Záznam se nepovedlo vytvořit.
+ZAZNAM_USPESNE_EDITOVAN: Final = _("common.message.ZAZNAM_USPESNE_EDITOVAN.text")  # Záznam byl úspěšně upraven.
+ZAZNAM_SE_NEPOVEDLO_EDITOVAT: Final = _("common.message.ZAZNAM_SE_NEPOVEDLO_EDITOVAT.text")  # Záznam se nepovedlo editovat.
+ZAZNAM_USPESNE_SMAZAN: Final = _("common.message.ZAZNAM_USPESNE_SMAZAN.text")  # Záznam byl úspěšně smazán.
+ZAZNAM_SE_NEPOVEDLO_SMAZAT: Final = _("common.message.ZAZNAM_SE_NEPOVEDLO_SMAZAT.text")  # Záznam nebyl smazán.
+ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY: Final = _("common.message.ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY.text")  # Záznam nebyl smazán kvůli navázaným záznamům.
+MAXIMUM_IDENT_DOSAZEN: Final = _("common.message.MAXIMUM_IDENT_DOSAZEN.text")  # Byl překročen limit při přidělování identifikátoru. Pro vyřešení problému kontaktujte administrátora AMČR.
+MAXIMUM_AKCII_DOSAZENO: Final = _("common.message.MAXIMUM_AKCI_DOSAZENO.text")  # Byl překročen limit akcí pro jeden projekt.
+MAXIMUM_DJ_DOSAZENO: Final = _("common.message.MAXIMUM_DJ_DOSAZENO.text")  # Byl překročen limit dokumentačních jednotek pro jednu akci.
+MAXIMUM_KOMPONENT_DOSAZENO: Final = _("common.message.MAXIMUM_KOMPONENT_DOSAZENO.text")  # Byl překročen limit komponent pro dokumentační jednotky.
 
 # Projekt
-PROJEKT_USPESNE_PRIHLASEN: Final = "Projekt byl úspěšně přihlášen."
-PROJEKT_USPESNE_VRACEN: Final = "Projekt byl úspěšně vrácen do předchozího stavu."
-PROJEKT_USPESNE_SCHVALEN: Final = "Projekt byl úspěšně schválen."
-PROJEKT_USPESNE_ZAHAJEN_V_TERENU: Final = "Projekt byl úspěšně zahájen v terénu."
-PROJEKT_USPESNE_UKONCEN_V_TERENU: Final = "Projekt byl úspěšně ukončen v terénu."
-PROJEKT_USPESNE_UZAVREN: Final = "Projekt byl úspěšně uzavřen."
-PROJEKT_USPESNE_ZRUSEN: Final = "Projekt byl úspěšně zrušen."
-PROJEKT_USPESNE_ARCHIVOVAN: Final = "Projekt byl úspěšně archivován."
-PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI: Final = "Projekt byl úspěšně navržen ke zrušení."
-PROJEKT_NELZE_UZAVRIT: Final = (
-    "Projekt nelze uzavřít. Zkontrolujte zda má všechny náležitosti."
-)
-PROJEKT_NELZE_ARCHIVOVAT: Final = (
-    "Projekt nelze archivovat. Zkontrolujte zda má všechny náležitosti."
-)
-PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI: Final = (
-    "Projekt nelze navrhnout ke zrušení. Nesmí mít žádné akce."
-)
-PROJEKT_NELZE_SMAZAT: Final = "Projekt nelze smazat."
+PROJEKT_USPESNE_PRIHLASEN: Final = _("common.message.PROJEKT_USPESNE_PRIHLASEN.text")  # Projekt byl úspěšně přihlášen.
+PROJEKT_USPESNE_VRACEN: Final = _("common.message.PROJEKT_USPESNE_VRACEN.text")  # Projekt byl úspěšně vrácen do předchozího stavu.
+PROJEKT_USPESNE_SCHVALEN: Final = _("common.message.PROJEKT_USPESNE_SCHVALEN.text")  # Projekt byl úspěšně schválen.
+PROJEKT_USPESNE_ZAHAJEN_V_TERENU: Final = _("common.message.PROJEKT_USPESNE_ZAHAJEN_V_TERENU.text")  # Projekt byl úspěšně zahájen v terénu.
+PROJEKT_USPESNE_UKONCEN_V_TERENU: Final = _("common.message.PROJEKT_USPESNE_UKONCEN_V_TERENU.text")  # Projekt byl úspěšně ukončen v terénu.
+PROJEKT_USPESNE_UZAVREN: Final = _("common.message.PROJEKT_USPESNE_UZAVREN.text")  # Projekt byl úspěšně uzavřen.
+PROJEKT_USPESNE_ZRUSEN: Final = _("common.message.PROJEKT_USPESNE_ZRUSEN.text")  # Projekt byl úspěšně zrušen.
+PROJEKT_USPESNE_ARCHIVOVAN: Final = _("common.message.PROJEKT_USPESNE_ARCHIVOVAN.text")  # Projekt byl úspěšně archivován.
+PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI: Final = _("common.message.PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI.text")  # Projekt byl úspěšně navržen ke zrušení.
+PROJEKT_NELZE_UZAVRIT: Final = _("common.message.PROJEKT_NELZE_UZAVRIT.text")  # Projekt nelze uzavřít. Zkontrolujte zda má všechny náležitosti.
+PROJEKT_NELZE_ARCHIVOVAT: Final = _("common.message.PROJEKT_NELZE_ARCHIVOVAT.text")  # Projekt nelze archivovat. Zkontrolujte zda má všechny náležitosti.
+PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI: Final = _("common.message.PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI.text")  # Projekt nelze navrhnout ke zrušení. Nesmí mít žádné akce.
+PROJEKT_NELZE_SMAZAT: Final = _("common.message.PROJEKT_NELZE_SMAZAT.text")  # Projekt nelze smazat.
 PROJEKT_NEKDO_ZMENIL_STAV: Final = _("core.message_constants.projektZmenaStavuNekymJinym.text")
 
-AKCE_USPESNE_ZAPSANA: Final = "Akce úspěšně zapsána."
-AKCE_USPESNE_ODESLANA: Final = "Akce úspěšně odeslána."
-AKCE_USPESNE_ARCHIVOVANA: Final = "Akce úspěšně archivovaná."
-AKCE_USPESNE_VRACENA: Final = "Akce úspěšně vrácena."
-AKCE_NELZE_ODESLAT: Final = "Akci nelze odeslat."
-AKCE_NELZE_ARCHIVOVAT: Final = "Akci nelze archivovat."
+AKCE_USPESNE_ZAPSANA: Final = _("common.message.AKCE_USPESNE_ZAPSANA.text")  # Akce úspěšně zapsána.
+AKCE_USPESNE_ODESLANA: Final = _("common.message.AKCE_USPESNE_ODESLANA.text")  # Akce úspěšně odeslána.
+AKCE_USPESNE_ARCHIVOVANA: Final = _("common.message.AKCE_USPESNE_ARCHIVOVANA.text")  # Akce úspěšně archivovaná.
+AKCE_USPESNE_VRACENA: Final = _("common.message.AKCE_USPESNE_VRACENA.text")  # Akce úspěšně vrácena.
+AKCE_NELZE_ODESLAT: Final = _("common.message.AKCE_NELZE_ODESLAT.text")  # Akci nelze odeslat.
+AKCE_NELZE_ARCHIVOVAT: Final = _("common.message.AKCE_NELZE_ARCHIVOVAT.text")  # Akci nelze archivovat.
 AKCE_NEKDO_ZMENIL_STAV: Final = _("core.message_constants.akceZmenaStavuNekymJinym.text")
 
-DOKUMENT_USPESNE_ODESLAN: Final = "Dokument úspěšně odeslán."
-DOKUMENT_USPESNE_ARCHIVOVAN: Final = "Dokument úspěšně archivován."
-DOKUMENT_USPESNE_VRACEN: Final = "Dokument úspěšně vrácen."
-DOKUMENT_NELZE_ODESLAT: Final = "Dokument nelze odeslat."
-DOKUMENT_NELZE_ARCHIVOVAT: Final = "Dokument nelze archivovat."
-DOKUMENT_NELZE_ARCHIVOVAT_CHYBY_SOUBOR: Final = _(
-    "core.message_constants.dokumentNelzeArchivovatChybaSouboru.text"
-)
-DOKUMENT_USPESNE_PRIPOJEN: Final = "Dokument úspěšně připojen."
-DOKUMENT_JIZ_BYL_PRIPOJEN: Final = "Dokument již byl připojen!"
-DOKUMENT_USPESNE_ODPOJEN: Final = "Dokument úspěšně odpojen."
-VYBERTE_PROSIM_POLOHU: Final = "Vyberte prosím lokalizaci na mapě."
+DOKUMENT_USPESNE_ODESLAN: Final = _("common.message.DOKUMENT_USPESNE_ODESLAN.text")  # Dokument úspěšně odeslán.
+DOKUMENT_USPESNE_ARCHIVOVAN: Final = _("common.message.DOKUMENT_USPESNE_ARCHIVOVAN.text")  # Dokument úspěšně archivován.
+DOKUMENT_USPESNE_VRACEN: Final = _("common.message.DOKUMENT_USPESNE_VRACEN.text")  # Dokument úspěšně vrácen.
+DOKUMENT_NELZE_ODESLAT: Final = _("common.message.DOKUMENT_NELZE_ODESLAT.text")  # Dokument nelze odeslat.
+DOKUMENT_NELZE_ARCHIVOVAT: Final = _("common.message.DOKUMENT_NELZE_ARCHIVOVAT.text")  # Dokument nelze archivovat.
+DOKUMENT_NELZE_ARCHIVOVAT_CHYBY_SOUBOR: Final = _("core.message_constants.dokumentNelzeArchivovatChybaSouboru.text")
+DOKUMENT_USPESNE_PRIPOJEN: Final = _("common.message.DOKUMENT_USPESNE_PRIPOJEN.text")  # Dokument úspěšně připojen.
+DOKUMENT_JIZ_BYL_PRIPOJEN: Final = _("common.message.DOKUMENT_JIZ_BYL_PRIPOJEN.text")  # Dokument již byl připojen!
+DOKUMENT_USPESNE_ODPOJEN: Final = _("common.message.DOKUMENT_USPESNE_ODPOJEN.text")  # Dokument úspěšně odpojen.
+VYBERTE_PROSIM_POLOHU: Final = _("common.message.VYBERTE_PROSIM_POLOHU.text")  # Vyberte prosím lokalizaci na mapě.
 DOKUMENT_NEKDO_ZMENIL_STAV: Final = _("core.message_constants.dokumentZmenaStavuNekymJinym.text")
 DOKUMENT_ODPOJ_ZADNE_RELACE: Final = _("core.message_constants.dokumentOdpojitDokumentBezRelace.text")
 DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM: Final = _(
@@ -79,30 +67,30 @@ DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA: Final = _(
     "core.message_constants.dokumentNeidentAkceUspesneSmazana.text"
 )
 # Osoba
-OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."
-OSOBA_JIZ_EXISTUJE: Final = "Jméno již existuje."
+OSOBA_USPESNE_PRIDANA: Final = _("common.message.OSOBA_USPESNE_PRIDANA.text")  # Osoba úspěšně přidána.
+OSOBA_JIZ_EXISTUJE: Final = _("common.message.OSOBA_JIZ_EXISTUJE.text")  # Jméno již existuje.
 
-# Pian
-PIAN_USPESNE_ODPOJEN: Final = "Pian uspesne odpojen."
-PIAN_USPESNE_POTVRZEN: Final = "Pian uspesne potvrzen."
-PIAN_USPESNE_SMAZAN: Final = "Pian byl smazán."
-PIAN_NEVALIDNI_GEOMETRIE: Final = "Pian má nevalidní geometrii."
-PIAN_VALIDACE_VYPNUTA: Final = "Geometrii Pianu se nepodařilo ověřit."
+# PIAN
+PIAN_USPESNE_ODPOJEN: Final = _("common.message.PIAN_USPESNE_ODPOJEN.text")  # Pian uspesne odpojen.
+PIAN_USPESNE_POTVRZEN: Final = _("common.message.PIAN_USPESNE_POTVRZEN.text")  # Pian uspesne potvrzen.
+PIAN_USPESNE_SMAZAN: Final = _("common.message.PIAN_USPESNE_SMAZAN.text")  # Pian byl smazán.
+PIAN_NEVALIDNI_GEOMETRIE: Final = _("common.message.PIAN_NEVALIDNI_GEOMETRIE.text")  # Pian má nevalidní geometrii.
+PIAN_VALIDACE_VYPNUTA: Final = _("common.message.PIAN_VALIDACE_VYPNUTA.text")  # Geometrii Pianu se nepodařilo ověřit.
 
 # SN
-SAMOSTATNY_NALEZ_VRACEN: Final = "Samostatný nález vrácen do předchozího stavu."
-SAMOSTATNY_NALEZ_NELZE_ODESLAT: Final = "Samostatný nález nelze odeslat."
-SAMOSTATNY_NALEZ_ODESLAN: Final = "Samostatný nález úspěšně odeslán."
-SAMOSTATNY_NALEZ_POTVRZEN: Final = "Samostatný nález úspěšně potvrzen."
-SAMOSTATNY_NALEZ_ARCHIVOVAN: Final = "Samostatný nález úspěšně archivován."
+SAMOSTATNY_NALEZ_VRACEN: Final = _("common.message.SAMOSTATNY_NALEZ_VRACEN.text")  # Samostatný nález vrácen do předchozího stavu.
+SAMOSTATNY_NALEZ_NELZE_ODESLAT: Final = _("common.message.SAMOSTATNY_NALEZ_NELZE_ODESLAT.text")  # Samostatný nález nelze odeslat.
+SAMOSTATNY_NALEZ_ODESLAN: Final = _("common.message.SAMOSTATNY_NALEZ_ODESLAN.text")  # Samostatný nález úspěšně odeslán.
+SAMOSTATNY_NALEZ_POTVRZEN: Final = _("common.message.SAMOSTATNY_NALEZ_POTVRZEN.text")  # Samostatný nález úspěšně potvrzen.
+SAMOSTATNY_NALEZ_ARCHIVOVAN: Final = _("common.message.SAMOSTATNY_NALEZ_ARCHIVOVAN.text")  # Samostatný nález úspěšně archivován.
 SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV: Final = _("core.message_constants.pasZmenaStavuNekymJinym.text")
 
 # Spoluprace
-ZADOST_O_SPOLUPRACI_VYTVORENA: Final = "Žádost o spolupráci byla vytvořena."
-SPOLUPRACE_BYLA_AKTIVOVANA: Final = "Spolupráce byla aktivována."
-SPOLUPRACE_BYLA_DEAKTIVOVANA: Final = "Spolupráce byla deaktivována."
-SPOLUPRACI_NELZE_AKTIVOVAT: Final = "Spolupráci nejde aktivovat."
-SPOLUPRACI_NELZE_DEAKTIVOVAT: Final = "Spolupráci nejde deaktivovat."
+ZADOST_O_SPOLUPRACI_VYTVORENA: Final = _("common.message.ZADOST_O_SPOLUPRACI_VYTVORENA.text")  # Žádost o spolupráci byla vytvořena.
+SPOLUPRACE_BYLA_AKTIVOVANA: Final = _("common.message.SPOLUPRACE_BYLA_AKTIVOVANA.text")  # Spolupráce byla aktivována.
+SPOLUPRACE_BYLA_DEAKTIVOVANA: Final = _("common.message.SPOLUPRACE_BYLA_DEAKTIVOVANA.text")  # Spolupráce byla deaktivována.
+SPOLUPRACI_NELZE_AKTIVOVAT: Final = _("common.message.SPOLUPRACI_NELZE_AKTIVOVAT.text")  # Spolupráci nejde aktivovat.
+SPOLUPRACI_NELZE_DEAKTIVOVAT: Final = _("common.message.SPOLUPRACI_NELZE_DEAKTIVOVAT.text")  # Spolupráci nejde deaktivovat.
 
 # Auto-logout
 AUTOLOGOUT_AFTER_LOGOUT: Final = _("core.message_constants.autologoutAfterlogout.text")
@@ -119,11 +107,11 @@ UPLOADFILE_REJECTED_ALL: Final = _("core.message_constants.uploadFile.rejectedAl
 UPLOADFILE_ERROR: Final = _("core.message_constants.uploadFile.error.text")
 
 # Validation
-VALIDATION_NOT_VALID: Final = "Geometrie není validní."
-VALIDATION_EMPTY: Final = "Geometrie je prázdná."
-VALIDATION_NOT_SIMPLE: Final = "Geometrie není typu simple geometry."
-VALIDATION_NOT_MULTIPART: Final = "Geometrie je multigeometrií."
-VALIDATION_LINE_LENGTH: Final = "Vzdálenost bodů je nižší než povolená mez."
+VALIDATION_NOT_VALID: Final = _("common.message.VALIDATION_NOT_VALID.text")  # Geometrie není validní.
+VALIDATION_EMPTY: Final = _("common.message.VALIDATION_EMPTY.text")  # Geometrie je prázdná.
+VALIDATION_NOT_SIMPLE: Final = _("common.message.VALIDATION_NOT_SIMPLE.text")  # Geometrie není typu simple geometry.
+VALIDATION_NOT_MULTIPART: Final = _("common.message.VALIDATION_NOT_MULTIPART.text")  # Geometrie je multigeometrií.
+VALIDATION_LINE_LENGTH: Final = _("common.message.VALIDATION_LINE_LENGTH.text")  # Vzdálenost bodů je nižší než povolená mez.
 
 # Lokalita
 LOKALITA_USPESNE_ZAPSANA: Final = _("core.message_constants.lokalitaUspesneZapsana.text")

@@ -6,7 +6,7 @@ from dal import autocomplete
 from django import forms
 from django.db import utils
 from django.forms import HiddenInput
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.db.models import Value, IntegerField
 from crispy_forms.bootstrap import AppendedText
@@ -53,7 +53,7 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
 
 class CoordinatesDokumentForm(forms.Form):
     """
-    Hlavní formulář pro editaci souradnic u modelu 3D.
+    Hlavní formulář pro editaci souřadnic v PAS.
     """
     detector_system_coordinates = forms.ChoiceField(
         label=_("pas.forms.coordinates.detector.label"),

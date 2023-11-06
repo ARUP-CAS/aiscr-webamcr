@@ -110,19 +110,19 @@ map.addLayer(poi_dj);
 map.addLayer(poi_all)
 
 var baseLayers = {
-    "ČÚZK - Základní mapy ČR": cuzkZM,
-    "ČÚZK - Ortofotomapa": cuzkOrt,
-    "ČÚZK - Stínovaný reliéf 5G": cuzkEL,
-    "OpenStreetMap šedá": osmGrey,
+    [map_translations['cuzkzakladniMapyCr']]: cuzkZM,
+    [map_translations['cuzkOrtofotomapa']]: cuzkOrt,
+    [map_translations['cuzkStinovanyeelief5G']]: cuzkEL,
+    [map_translations['openStreetMapSeda']]: osmGrey,
 };
 
 var overlays = {
-    "ČÚZK - Katastrální mapa": cuzkWMS,
-    "ČÚZK - Katastrální území": cuzkWMS2,
-    "Lokalizace projektu":poi_model,
-    "PIAN záznamu ": drawnItems,
-    "Samostatné nálezy": poi_sn,
-    "PIAN": poi_all,
+    [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
+    [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
+    [map_translations['lokalizaceProjektu']]: poi_model,
+    [map_translations['pianZazamu']]: drawnItems,
+    [map_translations['samostatneNalezy']]: poi_sn,
+    [map_translations['pian']]: poi_all,
 };
 
 var control = L.control.layers(baseLayers, overlays).addTo(map);
@@ -137,9 +137,9 @@ map.addControl(new L.Control.Fullscreen({
 map.addControl(new L.control.zoom(
     {
         zoomInText: '+',
-        zoomInTitle: 'Přiblížit',
+        zoomInTitle: [map_translations['zoomInTitle']],
         zoomOutText: '-',
-        zoomOutTitle: 'Oddálit'
+        zoomOutTitle: [map_translations['zoomOutTitle']]
     }));
 
 var searchControl = new L.Control.Search({

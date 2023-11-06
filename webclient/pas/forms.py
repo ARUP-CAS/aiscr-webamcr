@@ -10,7 +10,7 @@ from django import forms
 from django.contrib.auth.models import Group
 from django.contrib.gis.forms import ValidationError
 from django.forms import ModelChoiceField
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 from heslar.hesla import (
     HESLAR_OBDOBI,
@@ -25,7 +25,6 @@ from projekt.models import Projekt
 from uzivatel.models import User
 
 import logging
-import logstash
 
 logger = logging.getLogger(__name__)
 

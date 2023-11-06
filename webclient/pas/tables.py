@@ -20,17 +20,18 @@ class SamostatnyNalezTable(SearchTable):
     """
     Class pro definování tabulky pro samostatný nález použitých pro zobrazení přehledu nálezu a exportu.
     """
-    ident_cely = tables.Column(linkify=True)
+    ident_cely = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.ident_cely.label"), linkify=True)
     katastr = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.katastr.label"), default="")
-    datum_nalezu = tables.columns.DateTimeColumn(format="Y-m-d", default="")
-    lokalizace = tables.columns.Column(default="")
-    obdobi = tables.columns.Column(default="")
-    druh_nalezu = tables.columns.Column(default="")
-    specifikace = tables.columns.Column(default="")
-    nalezce = tables.columns.Column(default="")
-    evidencni_cislo = tables.columns.Column(default="")
-    predano = tables.columns.Column(default="")
+    datum_nalezu = tables.columns.DateTimeColumn(verbose_name=_("pas.tables.samostatnyNalezTable.datum_nalezu.label"), format="Y-m-d", default="")
+    lokalizace = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.lokalizace.label"), default="")
+    obdobi = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.obdobi.label"), default="")
+    druh_nalezu = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.druh_nalezu.label"), default="")
+    specifikace = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.specifikace.label"), default="")
+    nalezce = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.nalezce.label"), default="")
+    evidencni_cislo = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.evidencni_cislo.label"), default="")
+    predano = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.predano.label"), default="")
     predano_organizace = tables.columns.Column(
+        verbose_name=_("pas.tables.samostatnyNalezTable.predano_organizace.label"), 
         default="", order_by="predano_organizace__nazev_zkraceny"
     )
     app = "samostatny_nalez"
@@ -41,7 +42,7 @@ class SamostatnyNalezTable(SearchTable):
             "th": {"class": "white"},
         },
         orderable=False,
-        verbose_name=_("dokument.tables.dokumentTable.soubory.label"),
+        verbose_name=_("pas.tables.samostatnyNalezTable.nahled.label"), 
     )
     columns_to_hide = (
         "predano",
@@ -142,35 +143,36 @@ class UzivatelSpolupraceTable(SearchTable):
     )
     vedouci = tables.Column(
         accessor="vedouci__name_and_id",
-        verbose_name="Vedoucí",
+        verbose_name=_("pas.tables.spolupraceTable.vedouci.label"),
         order_by=("vedouci__last_name", "vedouci__first_name", "vedouci__ident_cely"),
         default="",
     )
     organizace_vedouci = tables.Column(
         accessor=("vedouci__organizace"),
-        verbose_name="Organizace (Vedoucí)",
+        verbose_name=_("pas.tables.spolupraceTable.organizace_vedouci.label"),
         default="",
         order_by="vedouci__organizace__nazev_zkraceny",
     )
     spolupracovnik = tables.Column(
         accessor="spolupracovnik__name_and_id",
-        verbose_name="Spolupracovník",
+        verbose_name=_("pas.tables.spolupraceTable.spolupracovnik.label"),
         order_by=("spolupracovnik__last_name", "spolupracovnik__first_name", "spolupracovnik__ident_cely"),
         default="",
     )
     organizace_spolupracovnik = tables.Column(
         accessor=("spolupracovnik__organizace"),
-        verbose_name="Organizace (Spolupracovník)",
+        verbose_name=_("pas.tables.spolupraceTable.organizace_spolupracovnik.label"),
         default="",
         order_by="spolupracovnik__organizace__nazev_zkraceny",
     )
 
     historie = tables.LinkColumn(
         "historie:spoluprace",
-        text="Historie",
+        text=_("pas.tables.spolupraceTable.historie.cell"),
         args=[A("pk")],
         attrs={"th": {"style": "color:white"}},
         orderable=False,
+        verbose_name=_("pas.tables.spolupraceTable.historie.label"),
     )
     aktivace = AktivaceDeaktivaceColumn(
         attrs={
@@ -178,6 +180,7 @@ class UzivatelSpolupraceTable(SearchTable):
         },
         template_name="pas/aktivace_deaktivace_cell.html",
         orderable=False,
+        verbose_name=_("pas.tables.spolupraceTable.aktivace.label"),
     )
     smazani = smazatColumn(
         attrs={
@@ -186,6 +189,7 @@ class UzivatelSpolupraceTable(SearchTable):
         template_name="pas/smazat_cell.html",
         exclude_from_export=True,
         orderable=False,
+        verbose_name=_("pas.tables.spolupraceTable.smazani.label"),
     )
     app = "spoluprace"
 

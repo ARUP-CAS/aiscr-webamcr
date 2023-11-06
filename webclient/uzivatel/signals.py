@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed
+from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed, pre_delete
 from django.dispatch import receiver
 
 from historie.models import Historie
@@ -107,11 +107,11 @@ def delete_profile(sender, instance, *args, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=Osoba)
+@receiver(pre_delete, sender=Osoba)
 def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=Organizace)
+@receiver(pre_delete, sender=Organizace)
 def osoba_delete_repository_container(sender, instance: Organizace, **kwargs):
     instance.record_deletion()

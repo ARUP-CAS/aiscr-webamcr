@@ -259,6 +259,11 @@
             <script src="{% static 'spin/spin.min.js' %}"></script>
             <script src="{% static 'leaflet.spin.min.js' %}"></script>
             <script src="{% static 'leaflet_subgroup.js' %}"></script>
+            <script>
+              const map_translations = {
+                cuzkKatastralniMapa: '{%trans "projekt.templates.projekt.detail_common.mapa.cuzkKatastralniMapa" %}',
+              };
+            </script>
             <script src="{% static 'mapa_projekty.js' %}"></script>
             <script>
                 global_map_can_edit=false;

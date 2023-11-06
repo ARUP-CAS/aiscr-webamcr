@@ -1,7 +1,7 @@
 import logging
 from django.db import models
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_EXTERNI_ZDROJ_TYP
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
@@ -18,7 +18,6 @@ from core.constants import (
 )
 from core.exceptions import MaximalIdentNumberError
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models.functions import Cast, Substr
 from django_prometheus.models import ExportModelOperationsMixin
 
 from xml_generator.models import ModelWithMetadata
