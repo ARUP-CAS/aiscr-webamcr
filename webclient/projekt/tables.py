@@ -24,6 +24,7 @@ class ProjektTable(SearchTable):
     termin_odevzdani_nz = tables.columns.Column(verbose_name=_("projekt.tables.ProjektTable.termin_odevzdani_nz.label"),default="")
     lokalizace = tables.columns.Column(verbose_name=_("projekt.tables.ProjektTable.lokalizace.label"),default="")
     parcelni_cislo = tables.columns.Column(verbose_name=_("projekt.tables.ProjektTable.parcelni_cislo.label"),default="")
+    oznaceni_stavby = tables.columns.Column(verbose_name=_("projekt.tables.ProjektTable.oznaceni_stavby.label"),default="")
     columns_to_hide = (
         "uzivatelske_oznaceni",
         "katastry",
