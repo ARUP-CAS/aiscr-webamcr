@@ -233,7 +233,7 @@ class PermissionAdmin(admin.ModelAdmin):
         media = self.media
         payload = {
             **self.admin_site.each_context(request),
-            "title": _("core.admin.permissionAdmin.title.error"),
+            "title": _("core.admin.permissionAdmin.title"),
             "form": form,
             "media": media,
         }
