@@ -1,7 +1,7 @@
 import crispy_forms
 from dal import autocomplete
 from crispy_forms.layout import Div, Layout, HTML
-from django.db.models import Q, OuterRef, Subquery, F
+from django.db.models import Q, OuterRef, Subquery, F, Count
 from django.forms import SelectMultiple, Select
 from django.utils.translation import gettext as _
 from django_filters import (
@@ -15,6 +15,7 @@ from django_filters import (
 from django_filters.widgets import DateRangeWidget
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_AZ
+from dj.models import DokumentacniJednotka
 from heslar.hesla import (
     HESLAR_ADB_PODNET,
     HESLAR_ADB_TYP,
@@ -646,13 +647,13 @@ class AkceFilter(ArchZaznamFilter):
             return queryset
         queryset = queryset.filter(archeologicky_zaznam__dokumentacni_jednotky_akce__isnull=False)
         if "True" in value:
-            return queryset.filter(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=True
-            ).distinct()
+            doumentacni_jednotka_subquery = DokumentacniJednotka.objects\
+                .filter(negativni_jednotka=False).values_list("archeologicky_zaznam__pk", flat=True)
+            return queryset.filter(pk__in=doumentacni_jednotka_subquery).distinct()
         if "False" in value:
-            return queryset.exclude(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
-            ).distinct()
+            doumentacni_jednotka_subquery = DokumentacniJednotka.objects \
+                .filter(negativni_jednotka=True).values_list("archeologicky_zaznam__pk", flat=False)
+            return queryset.filter(pk__in=doumentacni_jednotka_subquery).distinct()
 
     def filter_adb_popisne_udaje(self, queryset, name, value):
         """
