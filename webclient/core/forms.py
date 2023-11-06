@@ -211,6 +211,6 @@ class PermissionImportForm(forms.Form):
 class PermissionSkipImportForm(forms.Form):
     file = forms.FileField(
         required=True,
-        label="core.forms.permissionSkipImport.file.label",
+        label=_("core.forms.permissionSkipImport.file.label"),
         widget=forms.FileInput(attrs={"accept": ".csv"}),
     )
