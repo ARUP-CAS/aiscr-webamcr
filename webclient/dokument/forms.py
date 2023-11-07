@@ -85,7 +85,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení Extra dat u dokumentu a modelu 3D.
     """
-    rada = forms.CharField(label="Řada", required=False, help_text=_("dokument.forms.editDokumentExtraDataForm.rada.tooltip"),)
+    rada = forms.CharField(label=_("dokument.forms.editDokumentExtraDataForm.rada.label"), required=False, help_text=_("dokument.forms.editDokumentExtraDataForm.rada.tooltip"),)
 
     class Meta:
         model = DokumentExtraData
@@ -201,13 +201,13 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         except utils.ProgrammingError:
             self.fields["dokument_osoba"] = forms.MultipleChoiceField(
                 choices=tuple(("", "")),
-                label="Dokumentované osoby",
+                label=_("dokument.forms.editDokumentExtraDataForm.osoby.label"),
                 required=False,
                 widget=autocomplete.Select2Multiple(url="heslar:osoba-autocomplete-choices"),
             )
             self.fields["let"] = forms.ChoiceField(
                 choices=tuple(("", "")),
-                label="Let",
+                label=_("dokument.forms.editDokumentExtraDataForm.let.label"),
                 required=False,
                 widget=forms.Select(
                     attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
