@@ -334,7 +334,12 @@ class CreateZadostForm(forms.Form):
         validators=[validate_uzivatel_email],
         help_text=_("pas.forms.createZadostForm.emailUzivatele.tooltip"),
     )
-    text = forms.CharField(widget=forms.Textarea, required=False, help_text=_("pas.forms.createZadostForm.text.tooltip"),)
+    text = forms.CharField(
+        widget=forms.Textarea,
+        required=False,
+        help_text=_("pas.forms.createZadostForm.text.tooltip"),
+        label=_("pas.forms.createZadostForm.text.label")
+    )
 
     def __init__(self, *args, **kwargs):
         super(CreateZadostForm, self).__init__(*args, **kwargs)
