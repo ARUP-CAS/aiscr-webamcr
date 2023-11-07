@@ -493,7 +493,9 @@ class CreateModelDokumentForm(forms.ModelForm):
     """
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
-            ),)
+            ),
+            help_text= _("dokument.forms.createModelDokumentForm.autori.tooltip"),
+            label = _("dokument.forms.createModelDokumentForm.autori.label"),)
     class Meta:
         model = Dokument
         fields = (
