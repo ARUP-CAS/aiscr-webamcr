@@ -277,9 +277,11 @@ class CreateAkceForm(forms.ModelForm):
     """
     datum_zahajeni = StartDateInput(
         help_text=_("arch_z.forms.CreateAkceForm.datum_zahajeni.tooltip"),
+        label=_("arch_z.forms.CreateAkceForm.datum_zahajeni.label"),
     )
     datum_ukonceni = EndDateInput(
         help_text=_("arch_z.forms.CreateAkceForm.datum_ukonceni.tooltip"),
+        label=_("arch_z.forms.CreateAkceForm.datum_ukonceni.label"),
         required=False,
     )
 
