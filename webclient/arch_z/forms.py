@@ -325,6 +325,7 @@ class CreateAkceForm(forms.ModelForm):
 
         labels = {
             "hlavni_vedouci": _("arch_z.forms.CreateAkceForm.hlavni_vedouci.label"),
+            "organizace": _("arch_z.forms.CreateAkceForm.organizace.label"),
             "datum_zahajeni": _("arch_z.forms.CreateAkceForm.datum_zahajeni.label"),
             "datum_ukonceni": _("arch_z.forms.CreateAkceForm.datum_ukonceni.label"),
             "lokalizace_okolnosti": _("arch_z.forms.CreateAkceForm.lokalizace_okolnosti.label"),
@@ -334,6 +335,8 @@ class CreateAkceForm(forms.ModelForm):
             "specifikace_data": _("arch_z.forms.CreateAkceForm.specifikace_data.label"),
             "ulozeni_dokumentace": _("arch_z.forms.CreateAkceForm.ulozeni_dokumentace.label"),
             "odlozena_nz": _("arch_z.forms.CreateAkceForm.odlozena_nz.label"),
+            "hlavni_typ": _("arch_z.forms.CreateAkceForm.hlavni_typ.label"),
+            "vedlejsi_typ": _("arch_z.forms.CreateAkceForm.vedlejsi_typ.label"),
         }
 
         widgets = {
