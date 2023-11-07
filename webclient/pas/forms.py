@@ -187,6 +187,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "poznamka": forms.TextInput(),
         }
         labels = {
+            "projekt": _("pas.forms.createSamostatnyNalezForm.projekt.label"),
             "nalezce": _("pas.forms.createSamostatnyNalezForm.nalezce.label"),
             "datum_nalezu": _("pas.forms.createSamostatnyNalezForm.datumNalezu.label"),
             "lokalizace": _("pas.forms.createSamostatnyNalezForm.lokalizace.label"),
