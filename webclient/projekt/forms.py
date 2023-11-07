@@ -558,6 +558,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
     datum_zahajeni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("projekt.forms.zahajitVTerenu.datumZahajeni.tooltip"),
+        label=_("projekt.forms.zahajitVTerenu.datumZahajeni.label")
     )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
@@ -592,6 +593,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
     datum_ukonceni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("projekt.forms.ukoncitVTerenu.datumUkonceni.tooltip"),
+        label=_("projekt.forms.zahajitVTerenu.datumUkonceni.label")
     )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
