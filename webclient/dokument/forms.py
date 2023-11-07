@@ -362,6 +362,8 @@ class EditDokumentForm(forms.ModelForm):
             "pristupnost": _("dokument.forms.editDokumentForm.pristupnost.label"),
             "datum_zverejneni": _("dokument.forms.editDokumentForm.datumZverejneni.label"),
             "licence": _("dokument.forms.editDokumentForm.licence.label"),
+            "jazyky": _("dokument.forms.editDokumentForm.jazyky.label"),
+            "posudky": _("dokument.forms.editDokumentForm.posudky.label"),
         }
         help_texts = {
             "organizace": _("dokument.forms.editDokumentForm.organizace.tooltip"),
