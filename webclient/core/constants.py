@@ -29,8 +29,8 @@ SN_POTVRZENY: Final = 3  # SN3
 SN_ARCHIVOVANY: Final = 4  # SN4
 # Uzivatel
 # Pian
-PIAN_NEPOTVRZEN: Final = 1  # PN
-PIAN_POTVRZEN: Final = 2  # PP
+PIAN_NEPOTVRZEN: Final = 1  # PI1
+PIAN_POTVRZEN: Final = 2  # PI2
 # Uzivatel_spoluprace
 SPOLUPRACE_NEAKTIVNI: Final = 1  # US1
 SPOLUPRACE_AKTIVNI: Final = 2  # US2
