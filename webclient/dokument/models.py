@@ -3,17 +3,15 @@ import datetime
 import logging
 import math
 import os
-import re
 from string import ascii_uppercase as letters
 
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import CheckConstraint, Q, IntegerField
-from django.db.models.functions import Cast, Substr
+from django.db.models import CheckConstraint, Q
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from projekt.models import Projekt
@@ -50,7 +48,6 @@ from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
 from uzivatel.models import Organizace, Osoba
-from core.utils import calculate_crc_32
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +57,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     Class pro db model dokument.
     """
     STATES = (
-        (D_STAV_ZAPSANY, "D1 - Zapsán"),
-        (D_STAV_ODESLANY, "D2 - Odeslán"),
-        (D_STAV_ARCHIVOVANY, "D3 - Archivován"),
+        (D_STAV_ZAPSANY, _("dokument.models.dokument.states.D1")),
+        (D_STAV_ODESLANY, _("dokument.models.dokument.states.D2")),
+        (D_STAV_ARCHIVOVANY, _("dokument.models.dokument.states.D3")),
     )
 
     let = models.ForeignKey(

@@ -30,7 +30,7 @@ var global_clusters = false;
 var global_heat = false;
 
 var overlays = {
-    "ČÚZK - Katastrální mapa": cuzkWMS,
+    [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
     "ČÚZK - Katastrální území": cuzkWMS2,
     "Lokalizace projektu":poi_sugest,
     "Projekty - zapsané":poi_p1,

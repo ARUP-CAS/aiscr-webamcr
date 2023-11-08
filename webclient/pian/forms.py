@@ -1,7 +1,7 @@
 from crispy_forms.helper import FormHelper
 from django import forms
 from django.contrib.gis.forms import HiddenInput
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from pian.models import Pian
 
 

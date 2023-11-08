@@ -14,13 +14,12 @@ from core.constants import (
     SPOLUPRACE_NEAKTIVNI,
     VRACENI_SN,
     ZAPSANI_SN,
-    SPOLUPRACE_ZADOST,
 )
 from core.models import SouborVazby, ModelWithMetadata
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
     HESLAR_OBDOBI,

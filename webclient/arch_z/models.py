@@ -18,7 +18,7 @@ from core.constants import (
     ZAPSANI_AZ, OBLAST_CECHY, OBLAST_MORAVA,
 )
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 
 from ez.models import ExterniZdroj
@@ -53,9 +53,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     CHOICES = ((TYP_ZAZNAMU_LOKALITA, "Lokalita"), (TYP_ZAZNAMU_AKCE, "Akce"))
     STATES = (
-        (AZ_STAV_ZAPSANY, "A1 - Zapsána"),
-        (AZ_STAV_ODESLANY, "A2 - Odeslána"),
-        (AZ_STAV_ARCHIVOVANY, "A3 - Archivována"),
+        (AZ_STAV_ZAPSANY, _("arch_z.models.ArcheologickyZaznam.states.AZ1")),
+        (AZ_STAV_ODESLANY, _("arch_z.models.ArcheologickyZaznam.states.AZ2")),
+        (AZ_STAV_ARCHIVOVANY, _("arch_z.models.ArcheologickyZaznam.states.AZ3")),
     )
 
     typ_zaznamu = models.CharField(max_length=1, choices=CHOICES)

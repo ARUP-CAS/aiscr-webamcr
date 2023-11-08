@@ -23,7 +23,59 @@ from pian.models import Pian
 
 logger = logging.getLogger(__name__)
 
+def file_validate_epsg(epsg):
+    if epsg=='4326' or epsg==4326:
+        return True
+    else:
+        return False
 
+def file_validate_geometry(lower_geom):
+    geom=lower_geom.upper().strip()
+    geom=geom.replace("POINT (", "POINT(") 
+    geom=geom.replace("LINESTRING (", "LINESTRING(") 
+    geom=geom.replace("POLYGON (", "POLYGON(") 
+
+    if "MULTI" in geom:
+        return [False,'Multigeometries are not supported']
+    else:
+        if "POINT(" in geom:
+            try:
+                p=geom.split("POINT(")[1].split(")")[0].split(" ")
+                if (len(p)==2 or len(p)==3) and float(p[0]) and float(p[1]):
+                    return [True, "Point geometry is valid"]
+                else:
+                    return [False,"Point is not valid"]
+            except:
+                return [False,"Point is not valid"]
+        elif "LINESTRING(" in geom:
+            larray=geom.split("LINESTRING(")[1].split(")")[0].split(",")
+            if len(larray[0])>0:
+                for l in larray:
+                    p=l.strip().split(" ")
+                    try:
+                        if len(p)==2 and float(p[0]) and float(p[1]):
+                            continue
+                    except:
+                        return [False,"Linestring is not valid"]
+                return [True,"Linestring is valid"]
+            else:
+                return [False,"Linestring is not valid"]
+        elif "POLYGON(" in geom:
+            if " (" in geom or ",(" in geom:
+                return [False,"Polygon with innerbound is not supported"]
+            else:
+                larray=geom.split("POLYGON((")[1].split("))")[0].split(",")
+                for l in larray:
+                    p=l.strip().split(" ")
+                    try:
+                        if len(p)==2 and float(p[0]) and float(p[1]):
+                            continue
+                    except:
+                        return [False,"Polygon is not valid"]
+                return [True,"Polygon is valid"]
+        else:
+            return [False,"Polygon is not valid"]
+            
 def get_mime_type(file_name):
     """
     Funkce pro získaní mime typu pro soubor.

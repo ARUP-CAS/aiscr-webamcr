@@ -1,19 +1,15 @@
 import datetime
 import io
 import logging
-import os
 import zlib
 
 from django.contrib.gis.db import models as pgmodels
-from django.contrib.gis.db.models.functions import AsGML, AsWKT
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.files.base import ContentFile
 from django.db import models
-from django.db.models.functions import Cast, Substr
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from core.constants import (

@@ -46,6 +46,9 @@
           <a id="pian-upravit-{{j.pian_ident_cely}}"  class="dropdown-item" href="{% url 'arch_z:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.upravitPian.label' %}
           </a>
+            <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian">
+              {% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.importovatPian.label" %}
+            </button>
           {% endif %}
           {% if j.show_remove_pian %}
           <button id="pian-odpojit-{{j.pian_ident_cely}}" class="dropdown-item pian-odpojit-btn" type="button"
@@ -96,7 +99,7 @@
   </div>
   <div class="card-body">
     {% if not j.adb_form %}
-    <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}"
+    <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" id="djEditForm"
           onsubmit="editDjSubmitButton.disabled = true; return true;">
       {% crispy j.form %}
       {% if show.editovat %}
@@ -138,3 +141,11 @@
 
 </div>
 {% include "arch_z/dj/partials/dj_show_on_map.html" %}
+{% include "pian/importovat_pian_modal.html" %}
+<script>
+  jQuery(function ($) {        
+    $('#djEditForm').bind('submit', function () {
+      $(this).find('#pian_select').find(':input').prop('disabled', false);
+    });
+  });
+</script>

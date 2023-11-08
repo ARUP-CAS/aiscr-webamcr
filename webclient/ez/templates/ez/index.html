@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}{%trans ez.templates.index.Title%}{% endblock %}
+{% block title %}{%trans "ez.templates.index.Title" %}{% endblock %}
 
 {% block content %}
   <div class="app-entity-ext_zdroj">
@@ -39,16 +39,18 @@
           </div>
         </a>
       </div>
-      <div class="col">
-        <a href="{% url 'ez:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-nase-ez">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "ez.templates.index.naseEZ.label" %}
-          </div>
-        </a>
-      </div>
+      {% if user.can_see_ours_item %}
+        <div class="col">
+          <a href="{% url 'ez:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-nase-ez">
+            <div class="card-body">
+              <img src="{% static 'logo-am-mark.png' %}" />
+            </div>
+            <div class="card-footer">
+              {% trans "ez.templates.index.naseEZ.label" %}
+            </div>
+          </a>
+        </div>
+      {% endif %}
       <div class="col">
         <a href="{% url 'ez:list' %}?stav=2" class="card app-card-entity app-card-potvrdit">
           <div class="card-body">
@@ -77,13 +79,15 @@
         {% trans "ez.template.index.mojeEZ.text" %}
       </div>
     </div>
-    <div class="app-collapse-nase-ez collapse">
-      <div class="p-3">
-        <h4>{% trans "ez.template.index.naseEZ.text.title" %}</h4>
-        <hr />
-        {% trans "ez.template.index.naseEZ.text" %}
+    {% if user.can_see_ours_item %}
+      <div class="app-collapse-nase-ez collapse">
+        <div class="p-3">
+          <h4>{% trans "ez.template.index.naseEZ.text.title" %}</h4>
+          <hr />
+          {% trans "ez.template.index.naseEZ.text" %}
+        </div>
       </div>
-    </div>
+    {% endif %}
     <div class="app-collapse-vybrat collapse">
       <div class="p-3">
         <h4>{% trans "ez.template.index.vybratEZ.text.title" %}</h4>
@@ -114,12 +118,14 @@
     $(".app-card-moje-ez").mouseover(function(){
       $(".app-collapse-moje-ez").show(100);
     });
-    $(".app-card-nase-ez").mouseleave(function(){
-      $(".app-collapse-nase-ez").hide(100);
-    });
-    $(".app-card-nase-ez").mouseover(function(){
-      $(".app-collapse-nase-ez").show(100);
-    });
+    {% if user.can_see_ours_item %}
+      $(".app-card-nase-ez").mouseleave(function(){
+        $(".app-collapse-nase-ez").hide(100);
+      });
+      $(".app-card-nase-ez").mouseover(function(){
+        $(".app-collapse-nase-ez").show(100);
+      });
+    {% endif %}
     $(".app-card-vybrat").mouseleave(function(){
       $(".app-collapse-vybrat").hide(100);
     });

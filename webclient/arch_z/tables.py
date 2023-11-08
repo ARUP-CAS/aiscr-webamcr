@@ -1,5 +1,8 @@
 import django_tables2 as tables
+from django.contrib.postgres.aggregates import StringAgg
 from django.db import models
+from django.db.models import F, Subquery, CharField, OuterRef
+from django.db.models.functions import Concat
 from django.utils.encoding import force_str
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
@@ -15,6 +18,7 @@ class AkceVedouciColumn(tables.Column):
     """
     Třída pro sloupec další katastry lokality.
     """
+
     def render(self, value):
         if value:
             items = []
@@ -46,6 +50,7 @@ class AkceVedouciOrganizaceColumn(tables.Column):
     """
     Třída pro sloupec další katastry lokality.
     """
+
     def render(self, value):
         if value:
             items = []
@@ -78,6 +83,7 @@ class AkceTable(SearchTable):
         Class pro definování tabulky pro akci použitých pro zobrazení přehledu akcií a exportu.
     """
     ident_cely = tables.Column(
+        verbose_name=_("arch_z.tables.AkceTable.ident_cely.label"),
         linkify=True, accessor="archeologicky_zaznam__ident_cely"
     )
     katastr = tables.Column(
@@ -100,16 +106,25 @@ class AkceTable(SearchTable):
         default="",
         accessor="archeologicky_zaznam__katastry",
     )
-    stav = tables.columns.Column(default="", accessor="archeologicky_zaznam__stav")
+    stav = tables.columns.Column(
+        verbose_name=_("arch_z.tables.AkceTable.stav.label"),
+        default="",
+        accessor="archeologicky_zaznam__stav"
+    )
     organizace = tables.columns.Column(
-        default="", order_by="organizace__nazev_zkraceny"
+        verbose_name=_("arch_z.tables.AkceTable.organizace.label"),
+        default="",
+        order_by="organizace__nazev_zkraceny"
     )
     vedouci_organizace = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.vedouci_organizace.label"),
         default="",
         accessor="vedouci_organizace",
     )
-    hlavni_vedouci = tables.columns.Column(default="")
+    hlavni_vedouci = tables.columns.Column(
+        verbose_name=_("arch_z.tables.AkceTable.hlavni_vedouci.label"),
+        default=""
+    )
     vedouci = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.vedouci.label"),
         default="",
@@ -135,11 +150,13 @@ class AkceTable(SearchTable):
         default="",
         accessor="akcevedouci_set__all",
     )
-    hlavni_katastr = tables.Column(
-        verbose_name=_("arch_z.tables.AkceTable.hlavni_katastr.label"),
-        default="",
-        accessor="archeologicky_zaznam__hlavni_katastr",
-    )
+
+    def order_vedouci_organizace(self, queryset, is_descending):
+        queryset = queryset \
+            .annotate(vedouci_organizace__nazev_zkraceny=
+                      StringAgg("akcevedouci__organizace__nazev_zkraceny", delimiter=", ", )) \
+            .order_by(f"{'-' * (-1 * is_descending)}vedouci_organizace__nazev_zkraceny")
+        return (queryset, True)
 
     app = "akce"
     columns_to_hide = \

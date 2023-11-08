@@ -1,7 +1,7 @@
 import crispy_forms
 from dal import autocomplete
 from crispy_forms.layout import Div, Layout, HTML
-from django.db.models import Q
+from django.db.models import Q, OuterRef, Subquery, F, Count
 from django.forms import SelectMultiple, Select
 from django.utils.translation import gettext as _
 from django_filters import (
@@ -15,6 +15,7 @@ from django_filters import (
 from django_filters.widgets import DateRangeWidget
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_AZ
+from dj.models import DokumentacniJednotka
 from heslar.hesla import (
     HESLAR_ADB_PODNET,
     HESLAR_ADB_TYP,
@@ -252,11 +253,21 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         widget=SelectMultipleSeparator(),
     )
 
-    historie_zapsal_uzivatel_organizace = CharFilter(
+    # historie_zapsal_uzivatel_organizace = CharFilter(
+    #     label=_("arch_z.filters.AkceFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+    #     method="filter_historie_zapsal_uzivatel_organizace",
+    #     distinct=True,
+    # )
+
+    historie_zapsal_uzivatel_organizace = ModelMultipleChoiceFilter(
+        queryset=Organizace.objects.all(),
+        field_name="archeologicky_zaznam__historie__historie__uzivatel",
         label=_("arch_z.filters.AkceFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        widget=SelectMultipleSeparator(),
         method="filter_historie_zapsal_uzivatel_organizace",
         distinct=True,
     )
+
 
 
     def filtr_katastr(self, queryset, name, value):
@@ -377,10 +388,16 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         ).distinct()
 
     def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
-        historie_query = Historie.objects.filter(vazba__archeologickyzaznam__isnull=False).filter(typ_zmeny=ZAPSANI_AZ)\
-            .filter(uzivatel__organizace=int(value))
-        arch_z_ids = [x.vazba.archeologickyzaznam for x in historie_query]
-        return queryset.filter(archeologicky_zaznam__in=arch_z_ids).distinct()
+        if value:
+            historie_subquery = Historie.objects.filter(vazba__archeologickyzaznam__isnull=False)\
+                .filter(typ_zmeny=ZAPSANI_AZ)\
+                .filter(vazba__archeologickyzaznam=OuterRef("pk"))\
+                .filter(uzivatel__organizace__in=value)\
+                .annotate(arch_z_ids=F("vazba__archeologickyzaznam"))
+            return queryset.annotate(arch_z_ids=Subquery(historie_subquery.values("arch_z_ids")))\
+                .filter(pk__in=F("arch_z_ids")).distinct()
+        else:
+            return queryset
 
     def __init__(self, *args, **kwargs):
         super(ArchZaznamFilter, self).__init__(*args, **kwargs)
@@ -626,16 +643,17 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metóda pro filtrování podle toho či akce má pozitivní DJ.
         """
-        if "True" in value and "False" in value:
+        if "True" not in value and "False" not in value:
             return queryset
-        elif "True" in value:
-            return queryset.filter(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
-            ).distinct()
-        elif "False" in value:
-            return queryset.exclude(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
-            ).distinct()
+        queryset = queryset.filter(archeologicky_zaznam__dokumentacni_jednotky_akce__isnull=False)
+        if "True" in value:
+            doumentacni_jednotka_subquery = DokumentacniJednotka.objects\
+                .filter(negativni_jednotka=False).values_list("archeologicky_zaznam__pk", flat=True)
+            return queryset.filter(pk__in=doumentacni_jednotka_subquery).distinct()
+        if "False" in value:
+            doumentacni_jednotka_subquery = DokumentacniJednotka.objects \
+                .filter(negativni_jednotka=True).values_list("archeologicky_zaznam__pk", flat=False)
+            return queryset.filter(pk__in=doumentacni_jednotka_subquery).distinct()
 
     def filter_adb_popisne_udaje(self, queryset, name, value):
         """
@@ -762,7 +780,8 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
-                Div("historie_uzivatel", css_class="col-sm-4"),
+                Div("historie_uzivatel", css_class="col-sm-3"),
+                Div("historie_zapsal_uzivatel_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),

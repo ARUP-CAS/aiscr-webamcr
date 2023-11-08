@@ -81,6 +81,6 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
         check_hlidaci_pes.delay(instance.pk)
 
 
-@receiver(post_delete, sender=Projekt)
+@receiver(pre_delete, sender=Projekt)
 def projekt_post_delete(sender, instance: Projekt, **kwargs):
     instance.record_deletion()

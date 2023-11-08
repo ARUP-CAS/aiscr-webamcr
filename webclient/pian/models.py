@@ -11,7 +11,7 @@ from core.constants import (
 from django.contrib.gis.db import models as pgmodels
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
 from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR
 from heslar.models import Heslar

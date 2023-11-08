@@ -1,7 +1,7 @@
 
 
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from core.forms import TwoLevelSelectField
 from heslar.hesla import HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_KAT

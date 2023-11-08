@@ -2,9 +2,9 @@ import logging
 
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Layout, HTML, Field
+from crispy_forms.layout import Div, Layout
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_AKTIVITA
 from heslar.models import Heslar
 from komponenta.models import Komponenta

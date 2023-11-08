@@ -93,7 +93,7 @@ def delete_arch_z_connected_documents(sender, instance: ArcheologickyZaznam, **k
     logger.debug("arch_z.signals.delete_arch_z_repository_container.end", extra={"arch_z": instance.ident_cely})
 
 
-@receiver(post_delete, sender=ArcheologickyZaznam)
+@receiver(pre_delete, sender=ArcheologickyZaznam)
 def delete_arch_z_repository_container(sender, instance: ArcheologickyZaznam, **kwargs):
     """
         Funkce pro aktualizaci metadat archeologického záznamu.

@@ -1,8 +1,7 @@
 from core.forms import HeslarChoiceFieldField, TwoLevelSelectField
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Fieldset, Layout, Div, HTML
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from nalez.models import NalezObjekt, NalezPredmet
 
 

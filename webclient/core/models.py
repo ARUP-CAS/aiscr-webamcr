@@ -2,14 +2,14 @@ import datetime
 import logging
 import os
 import re
-from typing import Iterable, Optional
+from typing import Optional
 from django_prometheus.models import ExportModelOperationsMixin
 
 from django.conf import settings
 from django.db import models
 from django.forms import ValidationError
 from django.contrib.auth.models import Group
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian
@@ -156,7 +156,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             logger.warning("core.models.soubor.vytvoreno.error", extra={"pk": self.pk})
             return None
 
-    def get_repository_content(self) -> Optional[RepositoryBinaryFile]:
+    def get_repository_content(self, ident_cely_old=None) -> Optional[RepositoryBinaryFile]:
         from .repository_connector import FedoraRepositoryConnector
 
         record = self.vazba.navazany_objekt
@@ -164,7 +164,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             logger.debug("core.models.Soubor.get_repository_content", extra={"record_ident_cely": record.ident_cely,
                                                                              "repository_uuid": self.repository_uuid})
             conector = FedoraRepositoryConnector(record)
-            rep_bin_file = conector.get_binary_file(self.repository_uuid)
+            rep_bin_file = conector.get_binary_file(self.repository_uuid, ident_cely_old)
             return rep_bin_file
         logger.debug("core.models.Soubor.get_repository_content.not_found",
                      extra={"record_ident_cely": record, "repository_uuid": self.repository_uuid, "soubor_pk": self.pk})
@@ -323,6 +323,11 @@ class CustomAdminSettings(ExportModelOperationsMixin("custom_admin_settings"), m
     item_group = models.CharField(max_length=100)
     item_id = models.CharField(max_length=100)
     value = models.TextField()
+
+    class Meta:
+        verbose_name = _("core.model.CustomAdminSettings.modelTitle.label")
+        verbose_name_plural = _("core.model.CustomAdminSettings.modelTitles.label")
+
 class Permissions(models.Model):
     class ownershipChoices(models.TextChoices):
         my = "my", "core.models.permissions.ownershipChoices.my"

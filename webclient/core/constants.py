@@ -29,8 +29,8 @@ SN_POTVRZENY: Final = 3  # SN3
 SN_ARCHIVOVANY: Final = 4  # SN4
 # Uzivatel
 # Pian
-PIAN_NEPOTVRZEN: Final = 1  # PN
-PIAN_POTVRZEN: Final = 2  # PP
+PIAN_NEPOTVRZEN: Final = 1  # PI1
+PIAN_POTVRZEN: Final = 2  # PI2
 # Uzivatel_spoluprace
 SPOLUPRACE_NEAKTIVNI: Final = 1  # US1
 SPOLUPRACE_AKTIVNI: Final = 2  # US2
@@ -125,18 +125,6 @@ ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE: Final = "archeologicky_zaznam"
 DOKUMENTACNI_JEDNOTKA_RELATION_TYPE: Final = "dokumentacni_jednotka"
 DOKUMENT_CAST_RELATION_TYPE: Final = "dokument_cest"
 SOUBOR_RELATION_TYPE: Final = "soubor"
-
-# Typy souboru
-IMPORTED_FILE: Final = "IMPORT"
-GENERATED_NOTIFICATION: Final = "AGPO"  # automaticky generována projektová oznameni
-PHOTO_DOCUMENTATION: Final = "FDN"  # fotodokumentace - samostatne nalezy
-OTHER_DOCUMENT_FILES: Final = (
-    "OSD"  # ostatní soubory dokumentace pri zápisu nového dokumentu
-)
-OTHER_PROJECT_FILES: Final = "OSPD"  # ostatní soubory projektové dokumentace z webu
-ZA_ZL_FILES: Final = (
-    "AGDZZ"  # automaticky generované dokumenty z rad ZA a ZL pri archivaci projektu
-)
 
 KLADYZM10 = 1
 KLADYZM25 = 2

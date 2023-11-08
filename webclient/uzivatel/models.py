@@ -32,7 +32,7 @@ from django.db import models
 from django.db.models import DEFERRED, CheckConstraint, Q
 from django.db.models.functions import Collate
 from django.utils import timezone
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from heslar.hesla import HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
@@ -40,8 +40,6 @@ from heslar.models import Heslar
 from services.notfication_settings import notification_settings
 from uzivatel.managers import CustomUserManager
 from simple_history.models import HistoricalRecords
-from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.contenttypes.models import ContentType
 
 import logging
 
@@ -241,6 +239,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     @property
     def anonymous_details(self):
         return f"{self.ident_cely} ({self.organizace})"
+
+    @property
+    def can_see_ours_item(self):
+        return self.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
 
     class Meta:
         db_table = "auth_user"
