@@ -71,17 +71,17 @@ urlpatterns = [
         name="post_ajax_get_project_one",
     ),
     path(
-        "akce-get-projekty",
+        "mapa-projekty",
         post_ajax_get_projects_limit,
         name="post_ajax_get_projects_limit",
     ),
     path(
-        "akce-get-projekt-pas",
+        "mapa-pas",
         ProjectPasFromEnvelopeView.as_view(),
         name="post_ajax_get_project_pas_limit",
     ),
     path(
-        "akce-get-projekt-pian",
+        "mapa-pas",
         ProjectPianFromEnvelopeView.as_view(),
         name="post_ajax_get_project_pian_limit",
     ),

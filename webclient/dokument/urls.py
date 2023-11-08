@@ -42,7 +42,7 @@ urlpatterns = [
     ),
     path("radek-tabulky-odkaz",views.get_dokument_table_row, name="get_dokument_table_row"),
     path(
-        "akce-get-3d",
+        "mapa-3d",
         post_ajax_get_3d_limit,
         name="post_ajax_get_3d_limit",
     )

@@ -593,6 +593,7 @@ def get_num_pass_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní počtu pas ze čtverce.
     @janhnat zohlednit pristupnost - done
+    musi zohlednit pristupnost [mapa_pas]
     """
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
@@ -619,6 +620,7 @@ def get_pas_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní pas ze čtverce.
     @janhnat zohlednit pristupnost - done
+    musi zohlednit pristupnost [mapa_pas]
     """
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
@@ -646,6 +648,7 @@ def get_num_pian_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní počtu pianu ze čtverce.
     @janhnat zohlednit pristupnost - done
+    musi zohlednit pristupnost [mapa_pian]
     """
     from dj.models import DokumentacniJednotka
     from django.contrib.gis.geos import Polygon
@@ -674,6 +677,7 @@ def get_pian_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní pianů ze čtverce.
     @janhnat zohlednit pristupnost - done
+    musi zohlednit pristupnost [mapa_pian]
     """
     from dj.models import DokumentacniJednotka
     from django.contrib.gis.db.models.functions import Centroid

@@ -122,7 +122,7 @@ switchMap = function (overview = false) {
             console.log("Change: " + northWest + "  " + southEast + " " + zoom);
             boundsLock = bounds;
             let xhr_3d_all = new XMLHttpRequest();
-            xhr_3d_all.open('POST', '/dokument/akce-get-3d');
+            xhr_3d_all.open('POST', '/dokument/mapa-3d');
             xhr_3d_all.setRequestHeader('Content-type', 'application/json');
             if (typeof global_csrftoken !== 'undefined') {
                 xhr_3d_all.setRequestHeader('X-CSRFToken', global_csrftoken);

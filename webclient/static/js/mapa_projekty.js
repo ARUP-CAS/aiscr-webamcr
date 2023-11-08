@@ -213,9 +213,9 @@ switchMap = function (overview = false) {
             let xhr_proj = new XMLHttpRequest();
             let xhr_pas = new XMLHttpRequest();
             let xhr_pian = new XMLHttpRequest();
-            xhr_proj.open('POST', '/projekt/akce-get-projekty');
-            xhr_pas.open('POST', '/projekt/akce-get-projekt-pas');
-            xhr_pian.open('POST', '/projekt/akce-get-projekt-pian');
+            xhr_proj.open('POST', '/projekt/mapa-projekty');
+            xhr_pas.open('POST', '/projekt/mapa-pas');
+            xhr_pian.open('POST', '/projekt/mapa-pas');
             xhr_proj.setRequestHeader('Content-type', 'application/json');
             if (typeof global_csrftoken !== 'undefined') {
                 xhr_proj.setRequestHeader('X-CSRFToken', global_csrftoken);
