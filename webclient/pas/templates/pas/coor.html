@@ -194,6 +194,30 @@ crossorigin=""/>
 <script src="{% static 'leaflet_subgroup.js' %}"></script>
 <script src="{% static 'spin/spin.min.js' %}"></script>
 <script src="{% static 'leaflet.spin.min.js' %}"></script>
+<script>
+    const map_translations = {
+      CurrentLocationError: '{%trans "mapa.CurrentLocationError" %}',
+      cuzkKatastralniMapa: '{%trans "mapa.cuzkKatastralniMapa" %}',
+      cuzkKatastralniUzemi: '{%trans "mapa.cuzkKatastralniUzemi" %}',
+      cuzkOrtofotomapa: '{%trans "mapa.cuzkOrtofotomapa" %}',
+      cuzkStinovanyeelief5G: '{%trans "mapa.cuzkStinovanyeelief5G" %}',
+      cuzkzakladniMapyCr: '{%trans "mapa.cuzkzakladniMapyCr" %}',
+      FindLocation: '{%trans "mapa.FindLocation" %}',
+      FullscreenTitle: '{%trans "mapa.FullscreenTitle" %}',
+      FullscreenTitleClose: '{%trans "mapa.FullscreenTitleClose" %}',
+      MeasureTitle: '{%trans "mapa.MeasureTitle" %}',
+      openStreetMap: '{%trans "mapa.openStreetMap" %}',
+      pian: '{%trans "mapa.pian" %}',
+      samostatneNalezy: '{%trans "mapa.samostatneNalezy" %}',
+      SearchText: '{%trans "mapa.SearchText" %}',
+      SearchTextCancel: '{%trans "mapa.SearchTextCancel" %}',
+      SearchTextError: '{%trans "mapa.SearchTextError" %}',
+      SetLocation: '{%trans "mapa.SetLocation" %}',
+      TransformationError: '{%trans "mapa.TransformationError" %}',
+      zoomInTitle: '{%trans "mapa.zoomInTitle" %}',
+      zoomOutTitle: '{%trans "mapa.zoomOutTitle" %}'
+    };
+</script>
 <script src="{% static 'mapa_pas.js' %}"></script>
     <script>
         $(document).ready(function () {
