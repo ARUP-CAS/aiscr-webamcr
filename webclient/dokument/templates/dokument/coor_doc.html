@@ -80,7 +80,7 @@
         addReadOnlyUniquePointToPoiLayer(corX, corY);
         {% endif %}
         {% else  %}
-        if(!window.location.href.includes("model/zapsat")){
+        if(window.location.href.includes("/detail/")){
           global_map_can_edit = false
         }
         {% endif %}
