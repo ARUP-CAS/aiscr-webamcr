@@ -48,11 +48,7 @@ from core.utils import (
     get_pian_from_envelope,
     get_pas_from_envelope,
     get_num_pian_from_envelope,
-    get_heatmap_pas,
-    get_heatmap_pas_density,
     get_dj_pians_from_envelope,
-    get_heatmap_pian_density,
-    get_heatmap_pian,
 )
 from core.views import SearchListView, check_stav_changed
 from django.contrib import messages

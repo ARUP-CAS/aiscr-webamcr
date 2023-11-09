@@ -85,8 +85,10 @@ from core.utils import (
     get_num_pian_from_envelope,
     get_pas_from_envelope,
     get_pian_from_envelope,
+    get_heatmap_pas,
+    get_heatmap_pas_density,
+    get_heatmap_pian,
 )
-
 
 logger = logging.getLogger(__name__)
 
