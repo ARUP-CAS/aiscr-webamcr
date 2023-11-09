@@ -47,7 +47,6 @@ from core.utils import (
     get_cadastre_from_point_with_geometry,
     get_pian_from_envelope,
     get_pas_from_envelope,
-    get_num_pass_from_envelope,
     get_num_pian_from_envelope,
     get_heatmap_pas,
     get_heatmap_pas_density,

@@ -80,6 +80,13 @@ from core.models import Permissions
 from historie.models import Historie
 from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
 
+from core.utils import (
+    get_num_pass_from_envelope,
+    get_num_pian_from_envelope,
+    get_pas_from_envelope,
+    get_pian_from_envelope,
+)
+
 
 logger = logging.getLogger(__name__)
 

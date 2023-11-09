@@ -52,7 +52,7 @@ urlpatterns = [
         name="stahnout_metadata",
     ),
     path(
-        "mapa-pian-pas",
+        "core/mapa-pian-pas",
         post_ajax_get_pas_and_pian_limit,
         name="post_ajax_get_pas_pian_limit",
     ),
