@@ -419,6 +419,8 @@ switchMap = function (overview = false) {
                     'northWest': northWest,
                     'southEast': southEast,
                     'zoom': zoom,
+                    'pian':map.hasLayer(poi_pian),
+                    'pas':map.hasLayer(poi_sn),
                 }));
 
             xhr.onload = function () {
