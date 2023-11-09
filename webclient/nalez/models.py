@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import (
     HESLAR_OBJEKT_DRUH,
     HESLAR_OBJEKT_SPECIFIKACE,
@@ -48,6 +48,9 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
 
     def __str__(self):
         return self.druh.heslo
+    
+    def get_permission_object(self):
+        return self.komponenta.get_permission_object()
 
 
 class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
@@ -87,3 +90,6 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
 
     def __str__(self):
         return self.druh.heslo
+    
+    def get_permission_object(self):
+        return self.komponenta.get_permission_object()

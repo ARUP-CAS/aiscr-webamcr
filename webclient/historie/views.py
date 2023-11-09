@@ -62,6 +62,7 @@ class ProjektHistorieListView(HistorieListView):
     """
     Třida pohledu pro zobrazení historie projektu.
     """
+
     def get_queryset(self):
         projekt_ident = self.kwargs["ident_cely"]
         queryset = self.model.objects.filter(
@@ -82,11 +83,14 @@ class AkceHistorieListView(HistorieListView):
     """
     Třida pohledu pro zobrazení historie akcií.
     """
+
     def get_queryset(self):
         akce_ident = self.kwargs["ident_cely"]
-        return self.model.objects.filter(
+        queryset = self.model.objects.filter(
             vazba__archeologickyzaznam__ident_cely=akce_ident
         ).order_by("-datum_zmeny")
+        queryset = self._annotate_queryset(queryset)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(AkceHistorieListView, self).get_context_data(**kwargs)
@@ -100,11 +104,14 @@ class DokumentHistorieListView(HistorieListView):
     """
     Třida pohledu pro zobrazení historie dokumentů.
     """
+
     def get_queryset(self):
         dokument_ident = self.kwargs["ident_cely"]
-        return self.model.objects.filter(
+        queryset = self.model.objects.filter(
             vazba__dokument_historie__ident_cely=dokument_ident
         ).order_by("-datum_zmeny")
+        queryset = self._annotate_queryset(queryset)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(DokumentHistorieListView, self).get_context_data(**kwargs)
@@ -121,11 +128,14 @@ class SamostatnyNalezHistorieListView(HistorieListView):
     """
     Třida pohledu pro zobrazení historie samostatných nálezů.
     """
+
     def get_queryset(self):
         sn_ident = self.kwargs["ident_cely"]
-        return self.model.objects.filter(
+        queryset = self.model.objects.filter(
             vazba__sn_historie__ident_cely=sn_ident
         ).order_by("-datum_zmeny")
+        queryset = self._annotate_queryset(queryset)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(SamostatnyNalezHistorieListView, self).get_context_data(
@@ -141,11 +151,14 @@ class SpolupraceHistorieListView(HistorieListView):
     """
     Třida pohledu pro zobrazení historie spolupráce.
     """
+
     def get_queryset(self):
         spoluprace_ident = self.kwargs["pk"]
-        return self.model.objects.filter(
+        queryset = self.model.objects.filter(
             vazba__spoluprace_historie__pk=spoluprace_ident
         ).order_by("-datum_zmeny")
+        queryset = self._annotate_queryset(queryset)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(SpolupraceHistorieListView, self).get_context_data(**kwargs)
@@ -158,6 +171,7 @@ class SouborHistorieListView(HistorieListView):
     """
     Třida pohledu pro zobrazení historie souborů.
     """
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         soubor_id = self.kwargs["soubor_id"]
@@ -172,20 +186,25 @@ class SouborHistorieListView(HistorieListView):
 
     def get_queryset(self):
         soubor_id = self.kwargs["soubor_id"]
-        return self.model.objects.filter(vazba__soubor_historie=soubor_id).order_by(
+        queryset = self.model.objects.filter(vazba__soubor_historie=soubor_id).order_by(
             "-datum_zmeny"
         )
+        queryset = self._annotate_queryset(queryset)
+        return queryset
 
 
 class LokalitaHistorieListView(HistorieListView):
     """
     Třida pohledu pro zobrazení historie lokalit.
     """
+
     def get_queryset(self):
         lokalita_ident = self.kwargs["ident_cely"]
-        return self.model.objects.filter(
+        queryset = self.model.objects.filter(
             vazba__archeologickyzaznam__ident_cely=lokalita_ident
         ).order_by("-datum_zmeny")
+        queryset = self._annotate_queryset(queryset)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(LokalitaHistorieListView, self).get_context_data(**kwargs)
@@ -199,11 +218,14 @@ class UzivatelHistorieListView(HistorieListView):
     """
     Třida pohledu pro zobrazení historie uživatele.
     """
+
     def get_queryset(self):
         user_ident = self.kwargs["ident_cely"]
-        return self.model.objects.filter(
+        queryset = self.model.objects.filter(
             vazba__uzivatelhistorievazba__ident_cely=user_ident
         ).order_by("-datum_zmeny")
+        queryset = self._annotate_queryset(queryset)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(UzivatelHistorieListView, self).get_context_data(**kwargs)
@@ -217,11 +239,14 @@ class ExterniZdrojHistorieListView(HistorieListView):
     """
     Třida pohledu pro zobrazení historie externích zdrojů.
     """
+
     def get_queryset(self):
         ez_ident = self.kwargs["ident_cely"]
-        return self.model.objects.filter(
+        queryset = self.model.objects.filter(
             vazba__externizdroj__ident_cely=ez_ident
         ).order_by("-datum_zmeny")
+        queryset = self._annotate_queryset(queryset)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(ExterniZdrojHistorieListView, self).get_context_data(**kwargs)

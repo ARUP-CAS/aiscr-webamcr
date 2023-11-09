@@ -38,8 +38,10 @@
                     map.setView([rs.lat, rs.lng], rs.zoom)
                   }
                   if (rs.zoom == 17) {
-                      drawnItems.clearLayers();
-                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,'{{ dj_ident_cely }}',rs.geom,rs.presnost==4)
+                      if(!global_blocked_by_query_geom){
+                        drawnItems.clearLayers();
+                        addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,'{{ dj_ident_cely }}',rs.geom,rs.presnost==4)
+                      }
                   }
               };
               xhr.send(JSON.stringify(

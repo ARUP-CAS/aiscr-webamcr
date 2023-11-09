@@ -8,7 +8,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
 from psycopg2._range import DateRange
@@ -59,12 +59,14 @@ class OznamovatelForm(forms.ModelForm):
     telefon = forms.CharField(
         validators=[validate_phone_number],
         help_text=_("oznameni.forms.oznamovatelForm.telefon.tooltip"),
+        label=_("oznameni.forms.oznamovatelForm.telefon.label"),
         widget=forms.TextInput(
             attrs={"pattern": "^[+](420)\d{9}", "title": "+420XXXXXXXXX"}
         ),
     )
     email = forms.EmailField(
         help_text=_("oznameni.forms.oznamovatelForm.email.tooltip"),
+        label=_("oznameni.forms.oznamovatelForm.email.label"),
     )
 
     class Meta:

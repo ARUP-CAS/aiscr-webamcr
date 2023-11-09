@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.views import View
 
 
-from core.views import SearchListView, check_stav_changed
+from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext as _
 from django.views.generic import DetailView, TemplateView
@@ -40,7 +40,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
-from core.exceptions import MaximalIdentNumberError
+from core.models import Permissions as p, check_permissions
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 from core.utils import get_message
 from core.ident_cely import get_temp_ez_ident
@@ -117,6 +117,9 @@ class ExterniZdrojListView(SearchListView):
             "editori",
             "autori"
         )
+        return self.check_filter_permission(qs)
+    
+    def add_accessibility_lookup(self,permission, qs):
         return qs
 
 
@@ -154,7 +157,7 @@ class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
         context["page_title"] = _("ez.templates.ExterniZdrojDetailView.pageTitle")
         context["toolbar_name"] = _("ez.templates.ExterniZdrojDetailView.toolbar.title")
         context["history_dates"] = get_history_dates(zaznam.historie, self.request.user)
-        context["show"] = get_detail_template_shows(zaznam)
+        context["show"] = get_detail_template_shows(zaznam, self.request.user)
         context["ez_akce"] = ez_akce
         context["ez_lokality"] = ez_lokality
         return context
@@ -543,10 +546,12 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 
-class ExterniZdrojAutocomplete(autocomplete.Select2QuerySetView):
+class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,PermissionFilterMixin):
     """
     Třída pohledu pro autocomplete externích zdrojů.
     """
+    typ_zmeny_lookup = ZAPSANI_EXT_ZD
+
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return ExterniZdroj.objects.none()
@@ -554,6 +559,9 @@ class ExterniZdrojAutocomplete(autocomplete.Select2QuerySetView):
         qs = ExterniZdroj.objects.filter()
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
+        return self.check_filter_permission(qs)
+    
+    def add_accessibility_lookup(self,permission, qs):
         return qs
 
 
@@ -633,27 +641,25 @@ def get_history_dates(historie_vazby, request_user):
     return historie
 
 
-def get_detail_template_shows(zaznam):
+def get_detail_template_shows(zaznam, user):
     """
     Funkce pro získaní kontextu pro zobrazování možností na stránkách.
     """
-    show_vratit = zaznam.stav > EZ_STAV_ZAPSANY
-    show_odeslat = zaznam.stav == EZ_STAV_ZAPSANY
-    show_potvrdit = zaznam.stav == EZ_STAV_ODESLANY
-    show_edit = zaznam.stav not in [EZ_STAV_POTVRZENY]
     show_arch_links = zaznam.stav == EZ_STAV_POTVRZENY
     show_ez_odkazy = True
     show_paginace = True
-    show_odpojit = True
     show = {
-        "vratit_link": show_vratit,
-        "odeslat_link": show_odeslat,
-        "potvrdit_link": show_potvrdit,
-        "editovat": show_edit,
-        "odpojit": show_odpojit,
+        "vratit_link": check_permissions(p.actionChoices.ez_vratit, user, zaznam.ident_cely),
+        "odeslat_link": check_permissions(p.actionChoices.ez_odeslat, user, zaznam.ident_cely),
+        "potvrdit_link": check_permissions(p.actionChoices.ez_potvrdit, user, zaznam.ident_cely),
+        "editovat": check_permissions(p.actionChoices.ez_edit, user, zaznam.ident_cely),
+        "odpojit": check_permissions(p.actionChoices.eo_odpojit_akce, user, zaznam.ident_cely),
         "arch_links": show_arch_links,
         "ez_odkazy": show_ez_odkazy,
         "paginace": show_paginace,
+        "pripojit_eo": check_permissions(p.actionChoices.eo_pripojit_akce, user, zaznam.ident_cely),
+        "paginace_edit": check_permissions(p.actionChoices.eo_edit_ez, user, zaznam.ident_cely),
+        "smazat": check_permissions(p.actionChoices.ez_smazat, user, zaznam.ident_cely),
     }
     return show
 

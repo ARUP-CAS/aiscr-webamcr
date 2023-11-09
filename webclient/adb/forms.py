@@ -7,8 +7,9 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from cron.convertToSJTSK import convertToJTSK
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
+from dal import autocomplete
 
 
 logger = logging.getLogger(__name__)
@@ -58,12 +59,8 @@ class CreateADBForm(forms.ModelForm):
             "parcelni_cislo": forms.TextInput(),
             "stratigraficke_jednotky": forms.TextInput(),
             "poznamka": forms.TextInput(),
-            "autor_popisu": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
-            ),
-            "autor_revize": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
-            ),
+            "autor_popisu": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
+            "autor_revize": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
         }
 
         help_texts = {
@@ -129,7 +126,7 @@ class CreateADBForm(forms.ModelForm):
                             "autor_popisu",
                             mark_safe('<button id="create-autor-popisu" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                         ),
-                        css_class="col-sm-2 input-osoba",
+                        css_class="col-sm-2 input-osoba select2-input",
                     ),
                     # Div("autor_popisu", css_class="col-sm-2"),
                     Div("rok_popisu", css_class="col-sm-2"),
@@ -138,7 +135,7 @@ class CreateADBForm(forms.ModelForm):
                             "autor_revize",
                             mark_safe('<button id="create-autor-revize" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                         ),
-                        css_class="col-sm-2 input-osoba",
+                        css_class="col-sm-2 input-osoba select2-input",
                     ),
                     # Div("autor_revize", css_class="col-sm-2"),
                     Div("rok_revize", css_class="col-sm-2"),

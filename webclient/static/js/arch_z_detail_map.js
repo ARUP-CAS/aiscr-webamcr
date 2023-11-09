@@ -68,21 +68,12 @@ var osmGrey = L.tileLayer.grayscale('http://tile.openstreetmap.org/{z}/{x}/{y}.p
     cuzkEL = L.tileLayer.wms('http://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer?', { layers: 'dmr5g:GrayscaleHillshade', maxZoom: 25, maxNativeZoom: 20, minZoom: 6 }),
     cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 25, maxNativeZoom: 19, minZoom: 6 });
 
-var poi_sugest = L.layerGroup();
-var gm_correct = L.layerGroup();
-var poi_dj = L.layerGroup();
-var poi_other_dp = L.markerClusterGroup({ disableClusteringAtZoom: 22 });
-var poi_other = L.layerGroup();
-var heatPoints = [];
-var heatmapOptions = settings_heatmap_options;
-var heatLayer = L.heatLayer(heatPoints, heatmapOptions);
-
 var global_clusters = false;
 var global_heat = false;
 
 var map = L.map('djMap', {
     attributionControl: false,
-    layers: [cuzkZM, poi_other],
+    layers: [cuzkZM],
     zoomControl: false,
     contextmenu: true,
     contextmenuWidth: 140,
@@ -90,22 +81,48 @@ var map = L.map('djMap', {
 
 }).setView([49.84, 15.17], 8);
 
+var parentGroup = L.markerClusterGroup({ disableClusteringAtZoom: 20 }).addTo(map);
+var poi_all =  L.featureGroup.subGroup(parentGroup)
+var poi_sn =  L.featureGroup.subGroup(parentGroup)
+
+var poi_sugest = L.layerGroup();
+var gm_correct = L.layerGroup();
+
+var poi_dj = L.featureGroup.subGroup(poi_all)
+var poi_pian_dp = L.featureGroup.subGroup(poi_all)
+var poi_pian =  L.featureGroup.subGroup(poi_all)
+
+//console.log(global_map_projekt_ident)
+
+var poi_model = L.layerGroup();
+var heatPoints = [];
+var heatmapOptions = settings_heatmap_options;
+var heatLayer = L.heatLayer(heatPoints, heatmapOptions);
+
+var drawnItems = new L.FeatureGroup();
+var drawnItemsBuffer = new L.FeatureGroup();
+map.addLayer(drawnItems);
+
 map.addLayer(poi_sugest);
-map.addLayer(poi_other);
-map.addLayer(poi_other_dp);
+map.addLayer(poi_pian);
+map.addLayer(poi_pian_dp);
 map.addLayer(poi_dj);
+map.addLayer(poi_all)
 
 var baseLayers = {
-    "ČÚZK - Základní mapy ČR": cuzkZM,
-    "ČÚZK - Ortofotomapa": cuzkOrt,
-    "ČÚZK - Stínovaný reliéf 5G": cuzkEL,
-    "OpenStreetMap šedá": osmGrey,
+    [map_translations['cuzkzakladniMapyCr']]: cuzkZM,
+    [map_translations['cuzkOrtofotomapa']]: cuzkOrt,
+    [map_translations['cuzkStinovanyeelief5G']]: cuzkEL,
+    [map_translations['openStreetMapSeda']]: osmGrey,
 };
 
 var overlays = {
-    "ČÚZK - Katastrální mapa": cuzkWMS,
-    "ČÚZK - Katastrální území": cuzkWMS2,
-    "AMČR Piany": poi_other
+    [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
+    [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
+    [map_translations['lokalizaceProjektu']]: poi_model,
+    [map_translations['pianZazamu']]: drawnItems,
+    [map_translations['samostatneNalezy']]: poi_sn,
+    [map_translations['pian']]: poi_all,
 };
 
 var control = L.control.layers(baseLayers, overlays).addTo(map);
@@ -113,16 +130,16 @@ L.control.scale(metric = "true").addTo(map);
 
 map.addControl(new L.Control.Fullscreen({
     title: {
-        'false': 'Celá obrazovka',
-        'true': 'Opustit celou obrazovku'
+        'false': [map_translations['FullscreenTitle']],
+        'true': [map_translations['FullscreenTitleClose']]
     }
 }));
 map.addControl(new L.control.zoom(
     {
         zoomInText: '+',
-        zoomInTitle: 'Přiblížit',
+        zoomInTitle: [map_translations['zoomInTitle']],
         zoomOutText: '-',
-        zoomOutTitle: 'Oddálit'
+        zoomOutTitle: [map_translations['zoomOutTitle']]
     }));
 
 var searchControl = new L.Control.Search({
@@ -131,12 +148,12 @@ var searchControl = new L.Control.Search({
     initial: false,
     zoom: 12,
     marker: false,
-    textPlaceholder: 'Vyhledej',
-    textCancel: 'Zruš',
+    textPlaceholder: [map_translations['SearchText']],
+    textCancel: [map_translations['SearchTextCancel']],
     propertyName: 'text',
     propertyMagicKey: 'magicKey',
     propertyMagicKeyUrl: 'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/{*}/findAddressCandidates?outSR={"wkid":4258}&f=json',
-    textErr: 'Nenalezeno',
+    textErr: [map_translations['SearchTextError']],
     minLength: 3
 }).addTo(map);
 
@@ -144,14 +161,11 @@ var buttons = [
     L.easyButton('bi bi-skip-backward-fill', function () {
         map.setView(poi_sugest.getLayers()[0]._latlng, 18);
         edit_buttons.disable();
-    }, 'Výchozí stav')]
+    }, [map_translations['DefaultTitle']])]
 
 var edit_buttons = L.easyBar(buttons)
 map.addControl(edit_buttons)
 
-var drawnItems = new L.FeatureGroup();
-var drawnItemsBuffer = new L.FeatureGroup();
-map.addLayer(drawnItems);
 
 L.EditToolbar.Delete.include({
     removeAllLayers: false
@@ -197,66 +211,66 @@ L.drawLocal = {
     draw: {
         toolbar: {
             actions: {
-                title: 'Storno',
-                text: 'Storno'
+                title: [map_translations['EditCancelTitle']],
+                text: [map_translations['EditCancelText']]
             },
             finish: {
-                title: 'Dokončit',
-                text: 'Dokončit'
+                title: [map_translations['EditFinishTitle']],
+                text: [map_translations['EditFinishText']]
             },
             undo: {
-                title: 'Krok zpět',
-                text: 'Krok zpět'
+                title: [map_translations['EditBackTitle']],
+                text: [map_translations['EditBackText']]
             },
             buttons: {
-                polyline: 'Přidat linii',
-                polygon: 'Přidat polygon',
-                rectangle: 'Přidat obdélník',
-                circle: 'Přidat kruh',
-                marker: 'Přidat bod',
-                circlemarker: 'Přidat kruhový bod'
+                polyline: [map_translations['EditAddPolyline']],
+                polygon: [map_translations['EditAddPolygon']],
+                rectangle: [map_translations['EditAddRectangle']],
+                circle: [map_translations['EditAddCircle']],
+                marker: [map_translations['EditAddMarker']],
+                circlemarker: [map_translations['EditAddCirclemarker']]
             }
         },
         handlers: {
             circle: {
                 tooltip: {
-                    start: 'Pro nakreslení kruhu klikni a táhni.'
+                    start: [map_translations['EditCircleTooltip']] // 'Pro nakreslení kruhu klikni a táhni.'
                 },
-                radius: 'Poloměr'
+                radius: [map_translations['EditRadius']] // 'Poloměr'
             },
             circlemarker: {
                 tooltip: {
-                    start: 'Klikni na mapu a umísti kruhovou značku.'
+                    start: [map_translations['EditCirclemarkerTooltip']] // 'Klikni na mapu a umísti kruhovou značku.'
                 }
             },
             marker: {
                 tooltip: {
-                    start: 'Klikni na mapu a umísti značku.'
+                    start: [map_translations['EditMarkerTooltip']] // 'Klikni na mapu a umísti značku.'
                 }
             },
             polygon: {
                 tooltip: {
-                    start: 'Pro nakreslení tvaru klikni.',
-                    cont: 'Pro pokračování v kresbě klikni.',
-                    end: 'Klikni na první bod k uzavření tvaru.'
+                    start: [map_translations['EditPolygonStart']], // 'Pro nakreslení tvaru klikni.'
+                    cont: [map_translations['EditPolygonTooltipCont']], // 'Pro pokračování v kresbě klikni.'
+                    end: [map_translations['EditPolygonTooltipEnd']] // 'Klikni na první bod k uzavření tvaru.'
                 }
             },
             polyline: {
-                error: '<strong>Chyba:</strong> hrany tvaru se nesmějí překrývat!',
+                error: [map_translations['EditPolylineError']], // '<strong>Chyba:</strong> hrany tvaru se nesmějí překrývat!'
                 tooltip: {
-                    start: 'Klikni pro začátek linie.',
-                    cont: 'Klikni pro pokračování linie.',
-                    end: 'Klikni poslední bod k ukončení linie.'
+                    start: [map_translations['EditPolylineStart']], // 'Klikni pro začátek linie.'
+                    cont: [map_translations['EditPolylineCont']], // 'Klikni pro pokračování linie.'
+                    end: [map_translations['EditPolylineEnd']] // 'Klikni poslední bod k ukončení linie.'
                 }
             },
             rectangle: {
                 tooltip: {
-                    start: 'Pro nakreslení obdělníku klikni a táhni.'
+                    start: [map_translations['EditRectangleStart']] // 'Pro nakreslení obdělníku klikni a táhni.'
                 }
             },
             simpleshape: {
                 tooltip: {
-                    end: 'Uvolni kliknutí myši pro dokončení kresby.'
+                    end: [map_translations['EditSimpleshapeTooltip']] // 'Uvolni kliknutí myši pro dokončení kresby.'
                 }
             }
         }
@@ -265,35 +279,35 @@ L.drawLocal = {
         toolbar: {
             actions: {
                 save: {
-                    title: 'Dokončit',
-                    text: 'Dokončit'
+                    title: [map_translations['ActionsSaveTitle']],
+                    text: [map_translations['ActionsSaveText']]
                 },
                 cancel: {
-                    title: 'Storno',
-                    text: 'Storno'
+                    title: [map_translations['ActionsCancelTitle']],
+                    text: [map_translations['ActionsCancelText']]
                 },
                 clearAll: {
-                    title: 'Smazat',
-                    text: 'Smazat'
+                    title: [map_translations['ActionsClearTitle']],
+                    text: [map_translations['ActionsClearText']]
                 }
             },
             buttons: {
-                edit: 'Uprav vymezení',
-                editDisabled: 'Neexistuje vrstva k editaci',
-                remove: 'Smazat',
-                removeDisabled: 'Neexistuje vrstva ke smazání'
+                edit: [map_translations['EditTitle']],
+                editDisabled: [map_translations['EditDisabled']], // 'Neexistuje vrstva k editaci'
+                remove: [map_translations['RemoveTitle']],
+                removeDisabled: [map_translations['RemoveDisabled']] // 'Neexistuje vrstva ke smazání'
             }
         },
         handlers: {
             edit: {
                 tooltip: {
-                    text: 'Vyber prvek nebo značku pro editaci.',
-                    subtext: 'Klikni k návratu změn.'
+                    text: [map_translations['EditTooltipText']], // 'Vyber prvek nebo značku pro editaci.'
+                    subtext: [map_translations['EditTooltipSubtext']] // 'Klikni k návratu změn.'
                 }
             },
             remove: {
                 tooltip: {
-                    text: 'Klikni na prvek k odstranění.'
+                    text: [map_translations['RemoveTooltipText']] // 'Klikni na prvek k odstranění.'
                 }
             }
         }
@@ -309,7 +323,7 @@ var drawControl = new L.Control.Draw({
             allowIntersection: false, // Restricts shapes to simple polygons
             drawError: {
                 color: '#e1e100', // Color the shape will turn when intersects
-                message: '<strong>Oh snap!<strong> you can\'t draw that!' // Message that will show when intersect
+                message: [map_translations['DrawError']] // '<strong>Oh snap!<strong> you can\'t draw that!' Message that will show when intersect
             },
             shapeOptions: {
                 color: '#ba0d27'
@@ -337,7 +351,7 @@ map.addControl(drawControl);
 
 let global_measuring_toolbox = new L.control.measure(
     {
-        title: "Měřit vzdálenost",
+        title: [map_translations['MeasureTitle']],
         icon: '<img src="' + static_url + '/img/ruler-bold-32.png" style="width:20px"/>'
     });
 map.addControl(global_measuring_toolbox);
@@ -380,7 +394,7 @@ map.on('contextmenu', (e) => {
 
     var features = [];
     map.contextmenu.removeAllItems();
-    map.contextmenu.addItem({ text: 'Přenes do popředí:', disabled: true })
+    map.contextmenu.addItem({ text: [map_translations['MoveFront']], disabled: true }) // 'Přenes do popředí:'
     map.eachLayer(function (layer) {
         if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
             if (layer.getBounds().contains(e.latlng)) {
@@ -418,6 +432,7 @@ map.on('draw:edited', function (e) {
     addLogText("arch_z_detail_map.draw:edited")
     addLogText("edited")
     geomToText();
+    save_edited_geometry_session();
 });
 map.on('draw:deleted', function (e) {
     addLogText("arch_z_detail_map.draw:drawstart")
@@ -425,6 +440,7 @@ map.on('draw:deleted', function (e) {
     addWGS84Geometry()
     addSJTSKGeometry()
     disableSavePianButton();
+    save_edited_geometry_session();
 })
 
 map.on('draw:drawstart', function (e) {
@@ -446,7 +462,7 @@ map.on('draw:created', function (e) {
             let corX = e.layer._latlng.lat;
             let corY = e.layer._latlng.lng;
             if (global_map_can_edit) {
-                L.marker([corX, corY], { icon: pinIconRedPoint }).bindPopup('Navržený pian').addTo(drawnItems);
+                L.marker([corX, corY], { icon: pinIconRedPoint }).bindPopup([map_translations['TempPIAN']]).addTo(drawnItems); //'Navržený pian'
 
             }
         } else {
@@ -456,6 +472,7 @@ map.on('draw:created', function (e) {
         }
         addLogText("created")
         geomToText();
+        save_edited_geometry_session();
         disableSavePianButton();
 
     }
@@ -561,6 +578,20 @@ map.on('click', function (e) {
     clickOnMap(e);
 });
 
+map.on('overlayadd', function(eventlayer){
+    console.log("pridat mapu")
+    if(eventlayer.layer===poi_sn || eventlayer.layer===poi_all){
+        switchMap(false)
+    }
+});
+
+map.on('overlayremove', function(eventlayer){
+    console.log("ubrat mapu")
+    if(eventlayer.layer===poi_sn || eventlayer.layer===poi_all){
+        switchMap(false)
+    }
+});
+
 var mouseOverGeometry =(geom, allowClick=true)=>{
     function getContent(e){
         let content="";
@@ -632,8 +663,8 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
     })
 }
 
-var addPointToPoiLayerWithForce = (geom, layer, text, st_text, presnost4=false) => {
-    addLogText("arch_z_detail_map.addPointToPoiLayerWithForce")
+var addGoldPointOnLoad = (geom, layer, text, st_text, presnost4=false) => {
+    addLogText("arch_z_detail_map.addGoldPointOnLoad")
     let coor = []
     if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
         //ToDo" 21.06.2022 pinIconYellow
@@ -655,8 +686,32 @@ var addPointToPoiLayerWithForce = (geom, layer, text, st_text, presnost4=false) 
     }
 
 }
-var addPointToPoiLayerWithForceG = (st_text, layer, text, overview = false, presnost4=false) => {
-    addLogText("arch_z_detail_map.addPointToPoiLayerWithForceG")
+
+var addPointQuery = (geom, layer, text, st_text, presnost4=false) => {
+    addLogText("arch_z_detail_map.addPointQuery")
+    let coor = []
+    if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
+        if (st_text.includes("POLYGON")) {
+            st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
+                coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1].trim(), i.split(" ")[0].trim()]));
+            })
+            mouseOverGeometry(L.polygon(coor, { color: 'gold' }).bindTooltip(text, { sticky: true },!presnost4).addTo(layer));
+        } else if (st_text.includes("LINESTRING")) {
+            st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
+                coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1].trim(), i.split(" ")[0].trim()]))
+            })
+            mouseOverGeometry(L.polyline(coor, { color: 'gold' }).bindTooltip(text, { sticky: true },!presnost4).addTo(layer));
+        }
+    } else {
+        i=st_text.split("(")[1].split(")")[0]
+        coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1].trim(), i.split(" ")[0].trim()]));
+        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(coor[0]), { icon: !presnost4 ? pinIconYellowPoint: pinIconYellowHW, zIndexOffset: 2000,changeIcon: presnost4 },!presnost4).addTo(layer));
+    }
+    map.setView(coor[0],17)
+
+}
+var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost4=false) => {
+    addLogText("arch_z_detail_map.addPointToPoiLayer")
     let coor = []
     let myIco = { icon: pinIconPurplePoint };
     let myIco2 = { icon: pinIconPurpleHW };
@@ -694,14 +749,14 @@ var addPointToPoiLayerWithForceG = (st_text, layer, text, overview = false, pres
     } else if (st_text.includes("POINT")) {
         let i = st_text.split("(")[1].split(")")[0];
         coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
-        if (layer === poi_other) {
+        if (layer === poi_pian) {
             mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]), myIco).bindTooltip(text).addTo(layer),!presnost4);
         }
 
     }
-    if (overview && coor.length > 0 && layer !== poi_other) { //ToDo: vypnout def. body && layer!==poi_other)
-        if (layer === poi_other) {
-            layer = poi_other_dp;
+    if (overview && coor.length > 0 && layer !== poi_pian) { //ToDo: vypnout def. body && layer!==poi_pian)
+        if (layer === poi_pian) {
+            layer = poi_pian_dp;
         }
         x0 = 0.0;
         x1 = 0.0
@@ -883,19 +938,17 @@ map.on('overlayadd overlayremove', function (e) {
         }
     }
 });
-
 switchMap = function (overview = false) {
-    addLogText("arch_z_detail_map.switchMap")
     var bounds = map.getBounds();
     let zoom = map.getZoom();
     var northWest = bounds.getNorthWest(),
         southEast = bounds.getSouthEast();
-    if (global_map_can_load_pians) {
+    if (global_map_can_load_pians && (map.hasLayer(poi_all) || map.hasLayer(poi_sn))) {
         if (overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest) {
-            addLogText("Change: " + northWest + "  " + southEast + " " + zoom);
+            console.log("Change: " + northWest + "  " + southEast + " " + zoom);
             boundsLock = bounds;
             let xhr = new XMLHttpRequest();
-            xhr.open('POST', '/arch-z/mapa-pian');
+            xhr.open('POST', '/pas/akce-get-pas-pian');
             xhr.setRequestHeader('Content-type', 'application/json');
             if (typeof global_csrftoken !== 'undefined') {
                 xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -907,61 +960,66 @@ switchMap = function (overview = false) {
                     'northWest': northWest,
                     'southEast': southEast,
                     'zoom': zoom,
-                    'dj_ident_cely': global_map_projekt_ident,
+                    'pian':map.hasLayer(poi_all),
+                    'pas':map.hasLayer(poi_sn),
                 }));
+
             xhr.onload = function () {
-                poi_other.clearLayers();
-                poi_other_dp.clearLayers();
-                if (!global_map_can_edit) {
-                    poi_dj.clearLayers();
-                }
-                heatPoints = []
-                map.removeLayer(heatLayer);
-                //gm_correct.clearLayers();
-                let resAl = JSON.parse(this.responseText).algorithm
-                if (resAl == "detail") {
-                    var detail_clusters = JSON.parse(this.responseText).clusters;
-                    let resPoints = JSON.parse(this.responseText).points
-                    //let dj_head=form_id.replace("detail_dj_form_", "")
-                    var pocet = 0;
-                    resPoints.forEach((i) => {
-                        pocet += 1;
-                        //console.log(i.geom+" "+poi_dj+" "+i.ident_cely+" "+i.presnost)
-                        if (i.dj != null) {
-                            if (!global_map_can_edit) {
-                                addPointToPoiLayerWithForceG(i.geom, poi_dj, i.ident_cely, true,i.presnost==4)
-                            }
-                        }
-                        else{
-                            if (!detail_clusters) {
-                                addPointToPoiLayerWithForceG(i.geom, poi_other, i.ident_cely, true,i.presnost==4)
-                            } else {
-                                addPointToPoiLayerWithForceG(i.geom, poi_other_dp, i.ident_cely, true,i.presnost==4)
-                            }
-                        }
-                    })
-                    if (pocet > 50 && !detail_clusters) {
-                        map.removeLayer(poi_other_dp);
-                    } else if (!map.hasLayer(poi_other_dp)) {
-                        map.addLayer(poi_other_dp);
+                try{
+                    poi_sn.clearLayers();
+                    poi_pian.clearLayers();
+                    poi_pian_dp.clearLayers();
+                    if (!global_map_can_edit) {
+                        poi_dj.clearLayers();
                     }
-                } else {
-                    let resHeat = JSON.parse(this.responseText).heat
-                    resHeat.forEach((i) => {
-                        geom = i.geom.split("(")[1].split(")")[0].split(" ");
-                        for (let j = 0; j < i.pocet; j++) {
-                            heatPoints.push([geom[1], geom[0]])//chyba je to geome
-                        }
-                    })
-                    heatLayer = L.heatLayer(heatPoints, heatmapOptions);
-                    map.addLayer(heatLayer);
-                    poi_other.clearLayers();
-                    poi_other_dp.clearLayers();
-                    poi_dj.clearLayers();
-                }
-                map.spin(false);
-                addLogText("layer.loaded")
-            }
+                    heatPoints = []
+                    map.removeLayer(heatLayer);
+                    if (JSON.parse(this.responseText).algorithm == "detail") {
+                        let resPoints = JSON.parse(this.responseText).points
+                        var count = JSON.parse(this.responseText).count;
+                        resPoints.forEach((i) => {
+
+                            if(i.type=="pas"){
+                                let ge = i.geom.split("(")[1].split(")")[0];
+                                L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurple3D }).bindPopup(i.ident_cely).addTo(poi_sn)
+                            } else if(i.type=="pian"){
+
+                                if (i.dj == global_map_projekt_ident) {
+                                    if (!global_map_can_edit) {
+                                        addPointToPoiLayer(i.geom, poi_dj, i.ident_cely, true,i.presnost==4)
+                                    }
+                                }
+                                else{
+                                    if (count<500) {
+                                        addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost==4)
+                                    } else {
+                                        addPointToPoiLayer(i.geom, poi_pian_dp, i.ident_cely, true,i.presnost==4)
+                                    }
+                                }
+                            }
+                        })
+                        /*if (count > 50 && count<500) {
+                            map.removeLayer(poi_pian_dp);
+                        } else if (!map.hasLayer(poi_pian_dp)) {
+                           // map.addLayer(poi_pian_dp);
+                        }*/
+                    } else {
+                        let resHeat = JSON.parse(this.responseText).heat
+                        resHeat.forEach((i) => {
+                            geom = i.geom.split("(")[1].split(")")[0].split(" ");
+                            for (let j = 0; j < i.pocet; j++) {
+                                heatPoints.push([geom[1], geom[0]])//chyba je to geome
+                            }
+                        })
+                        heatLayer = L.heatLayer(heatPoints, heatmapOptions);
+                        map.addLayer(heatLayer);
+                        poi_pian.clearLayers();
+                        poi_pian_dp.clearLayers();
+                        poi_dj.clearLayers();
+                    }
+                    map.spin(false);
+                } catch(e){map.spin(false);console.log(e)}
+            };
         }
     }
 }
@@ -1028,3 +1086,80 @@ function searchByAjax(text, callResponse) {
     ];
     Promise.all(ajaxCall).then(() => {/*console.log("Vyhledani ukonceno");*/callResponse([...items2, ...items1]); })
 }
+
+function save_edited_geometry_session(){
+    const currentUrl = window.location.href;
+     sessionStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:document.getElementById(global_map_element).value}))
+}
+
+window.addEventListener("load", function(){
+    const currentUrl = window.location.href;
+    const urlParams = new URLSearchParams(window.location.search);
+    let myParamG = urlParams.get('geometry');
+    let myParamL = urlParams.get('label');
+    if(myParamG !==null){
+        //console.log("query")
+        global_blocked_by_query_geom=true;
+        drawnItems.clearLayers();
+        drawnItemsBuffer.clearLayers();
+        addPointQuery(null,  drawnItems,myParamL,myParamG,false)
+        //myParam="POINT (13.2164736 49.9596986)"
+        //http://localhost:8000/arch-z/akce/detail/C-202211987A/dj/C-202211987A-D02?geometry=
+        //myParam="POLYGON ((13.2164736 49.9596986,13.2154006 49.9589111,13.2178685 49.9583378,13.2183513 49.9593602,13.2164736 49.9596986))"
+        //myParam="POLYGON ((13.2164736 49.9596986,13.2154006 49.9589111,13.2178685 49.9583378,13.2165204 49.9590543,13.2164736 49.9596986))"
+    } else{
+        let geom_session=sessionStorage.getItem("Geom-session")
+        if(geom_session != null){
+            geom_session=JSON.parse(geom_session)
+            if(geom_session.url==currentUrl && geom_session.geometry !=null){
+                global_blocked_by_query_geom=true;
+                drawnItems.clearLayers();
+                drawnItemsBuffer.clearLayers();
+                //POLYGON ((13.2496364 50.0099953, 13.2502051 50.0099539, 13.2500978 50.0094364, 13.2496364 50.0099953))
+                //POLYGON ((13.2491214 50.0100783, 13.2482845 50.0096987, 13.249218 50.0096021, 13.2491214 50.0100783))
+                //POLYGON((13.2496364 50.0099953, 13.2502051 50.0099539, 13.2500978 50.0094364, 13.2496364 50.0099953))
+                //myParam="POLYGON((13.2496364 50.0099953,13.2502051 50.0099539,13.2500978 50.0094364,13.2496364 50.0099953))"
+                addPointQuery(null,  drawnItems,"Refresh geom",geom_session.geometry,false)
+
+            }else{
+                sessionStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:null}));
+            }
+        }
+    }
+
+
+});
+
+window.addEventListener("load", (event) => {
+    if(!global_map_projekt_ident || global_map_projekt_ident==="" || global_map_projekt_ident.charAt(0)!="C"){
+        control.removeLayer(poi_model);
+    } else{
+        let xhr_proj = new XMLHttpRequest();
+        xhr_proj.open('POST', '/projekt/akce-get-projekt');
+        if (typeof global_csrftoken !== 'undefined') {
+            xhr_proj.setRequestHeader('X-CSRFToken', global_csrftoken);
+
+        }
+        map.spin(false);
+        map.spin(true);
+        xhr_proj.send(JSON.stringify(
+            {
+                'projekt_ident_cely': global_map_projekt_ident,
+            }));
+        xhr_proj.onload = function () {
+            poi_model.clearLayers();
+            let resPoints = JSON.parse(this.responseText).points
+            resPoints.forEach((i) => {
+                try{
+                    let ge = i.geom.split("(")[1].split(")")[0];
+                    L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconGreenPin }).bindPopup(i.ident_cely).addTo(poi_model)
+                } catch(e){
+                    control.removeLayer(poi_model);
+                    console.log("Projekt nema geometrii")
+                }
+            })
+            map.spin(false);
+        }
+    }
+
+});

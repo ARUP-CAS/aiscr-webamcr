@@ -3,7 +3,6 @@ import logging
 import simplejson as json
 from django.utils.translation import gettext as _
 from core.constants import (
-    PRIDANI_OZNAMOVATELE_PROJ,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_VYTVORENY,
     OBLAST_CECHY,
@@ -261,11 +260,6 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
             ozn = form.save(commit=False)
             ozn.projekt = projekt
             ozn.save()
-            Historie(
-                typ_zmeny=PRIDANI_OZNAMOVATELE_PROJ,
-                uzivatel=request.user,
-                vazba=projekt.historie,
-            ).save()
 
             logger.debug("Pridan oznamovatel do projektu: " + str(projekt.ident_cely))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)

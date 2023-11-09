@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from arch_z.models import ArcheologickyZaznam
 from heslar.models import Heslar
 from django.urls import reverse

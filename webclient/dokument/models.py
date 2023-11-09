@@ -3,17 +3,15 @@ import datetime
 import logging
 import math
 import os
-import re
 from string import ascii_uppercase as letters
 
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import CheckConstraint, Q, IntegerField
-from django.db.models.functions import Cast, Substr
+from django.db.models import CheckConstraint, Q
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from projekt.models import Projekt
@@ -50,7 +48,6 @@ from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
 from uzivatel.models import Organizace, Osoba
-from core.utils import calculate_crc_32
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +57,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     Class pro db model dokument.
     """
     STATES = (
-        (D_STAV_ZAPSANY, "D1 - Zapsán"),
-        (D_STAV_ODESLANY, "D2 - Odeslán"),
-        (D_STAV_ARCHIVOVANY, "D3 - Archivován"),
+        (D_STAV_ZAPSANY, _("dokument.models.dokument.states.D1")),
+        (D_STAV_ODESLANY, _("dokument.models.dokument.states.D2")),
+        (D_STAV_ARCHIVOVANY, _("dokument.models.dokument.states.D3")),
     )
 
     let = models.ForeignKey(
@@ -346,26 +343,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         self.save()
         self.save_metadata(use_celery=False)
 
-        from core.repository_connector import FedoraRepositoryConnector
-        from core.utils import get_mime_type
-        from core.views import get_projekt_soubor_name
-        connector = FedoraRepositoryConnector(self)
-        connector.record_ident_change(old_ident_cely)
-        for soubor in self.soubory.soubory.all():
-            soubor: Soubor
-            repository_binary_file = soubor.get_repository_content()
-            if repository_binary_file is not None:
-                rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
-                                                          get_mime_type(soubor.nazev),
-                                                          repository_binary_file.content)
-                connector.validate_file_sha_512(soubor)
+        self.record_ident_change(old_ident_cely)
+
         for dc in self.casti.all():
-            if "3D" in perm_ident_cely:
-                for komponenta in dc.komponenty.komponenty.all():
-                    komponenta.ident_cely = perm_ident_cely + komponenta.ident_cely[-5:]
-                    komponenta.save()
-                    logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_components",
-                                   extra={"ident_cely": komponenta.ident_cely})
+            for komponenta in dc.komponenty.komponenty.all():
+                komponenta.ident_cely = perm_ident_cely + komponenta.ident_cely[-5:]
+                komponenta.save()
+                logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_components",
+                               extra={"ident_cely": komponenta.ident_cely})
             dc.ident_cely = perm_ident_cely + dc.ident_cely[-5:]
             dc.save()
             logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_dokumentacni_casti",
@@ -390,8 +375,18 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         return self
     
     def get_create_user(self):
-        return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel
-
+        try:
+            return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel
+        except Exception as e:
+            logger.debug(e)
+            return None
+        
+    def get_create_org(self):
+        try:
+            return self.get_create_user().organizace
+        except Exception as e:
+            logger.debug(e)
+            return None
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     """

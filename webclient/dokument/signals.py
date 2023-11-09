@@ -54,12 +54,12 @@ def let_save_metadata(sender, instance: Let, **kwargs):
         instance.save_metadata()
 
 
-@receiver(post_delete, sender=Dokument)
+@receiver(pre_delete, sender=Dokument)
 def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=Let)
+@receiver(pre_delete, sender=Let)
 def let_delete_repository_container(sender, instance: Let, **kwargs):
     instance.record_deletion()
 

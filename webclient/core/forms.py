@@ -4,9 +4,8 @@ from django.utils import formats
 
 from django import forms
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Layout
-from django.utils.translation import gettext as _
-from core.models import Soubor, OdstavkaSystemu
+from django.utils.translation import gettext_lazy as _
+from core.models import OdstavkaSystemu
 from heslar.models import Heslar
 from bs4 import BeautifulSoup
 from polib import pofile
@@ -90,9 +89,14 @@ class CheckStavNotChangedForm(forms.Form):
         cleaned_data = super().clean()
         old_stav = self.cleaned_data.get("old_stav")
         if str(self.db_stav) != str(old_stav):
-            logger.debug("core.forms.CheckStavNotChangedForm.clean.ValidationError",
-                         extra={"message": "Stav zaznamu se zmenil mezi posunutim stavu.", "db_stav": self.db_stav,
-                                "old_stav": old_stav})
+            logger.debug(
+                "core.forms.CheckStavNotChangedForm.clean.ValidationError",
+                extra={
+                    "message": "Stav zaznamu se zmenil mezi posunutim stavu.",
+                    "db_stav": self.db_stav,
+                    "old_stav": old_stav,
+                },
+            )
             raise forms.ValidationError("State_changed")
         return cleaned_data
 
@@ -195,6 +199,18 @@ class OdstavkaSystemuForm(forms.ModelForm):
 class PermissionImportForm(forms.Form):
     file = forms.FileField(
         required=True,
-        label="core.forms.permissionImport.file.label",
-        widget=forms.FileInput(attrs={'accept':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel'})
+        label=_("core.forms.permissionImport.file.label"),
+        widget=forms.FileInput(
+            attrs={
+                "accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+            }
+        ),
+    )
+
+
+class PermissionSkipImportForm(forms.Form):
+    file = forms.FileField(
+        required=True,
+        label=_("core.forms.permissionSkipImport.file.label"),
+        widget=forms.FileInput(attrs={"accept": ".csv"}),
     )

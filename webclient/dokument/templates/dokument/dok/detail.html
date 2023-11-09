@@ -23,7 +23,7 @@
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
+            <a class="btn app-entity-dokument" href="{% url 'core:upload_file' 'dokument' dokument.ident_cely %}"
                rel="tooltip"
                data-placement="top" title="{% trans 'dokument.templates.dok.detail.soubory.NahratSoubory.tooltip' %}">
               <span class="material-icons">publish</span>
@@ -89,7 +89,7 @@
             <div class="app-fx app-left">
               {% trans "dokument.templates.dok.detail.castiDokumentu.cardHeader" %}
             </div>
-            {% if show.editovat %}
+            {% if show.zapsat_cast %}
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
                 <button id="button-add-cast" class="btn" href="{% url 'dokument:vytvorit-cast' dokument.ident_cely %}"
@@ -173,7 +173,7 @@
         {% if form_tvary %}  
         <form class="mb-3" method="POST" action="{% url 'dokument:edit-tvar' dokument.ident_cely %}" onsubmit="editTvarSubmitButton.disabled = true; return true;">
             {% crispy form_tvary tvary_helper %}
-            {% if show.editovat %}
+            {% if show.tvary_edit %}
           <button type="submit" id="editTvarSubmitButton"
                   class="btn btn-primary">{% trans "dokument.templates.dok.detail.tvary.submitButtonText" %}
           </button>

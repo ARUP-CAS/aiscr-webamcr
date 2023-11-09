@@ -11,10 +11,20 @@
     </a>
   </li>
   {% endif %}
+  {% if import_list %}
   <li>
     {% url cl.opts|admin_urlname:'import_permissions' as import_url %}
     <a href="{% url 'admin:import_permissions' %}" class="addlink">
       {% trans "core.admin.templates.permissionsChangeList.import.label" %}
     </a>
   </li>
+  {% endif %}
+  {% if import_skip_list %}
+  <li>
+    {% url cl.opts|admin_urlname:'import_permissions_skip' as import_url %}
+    <a href="{% url 'admin:import_permissions_skip' %}" class="addlink">
+      {% trans "core.admin.templates.permissionsSkipChangeList.import.label" %}
+    </a>
+  </li>
+  {% endif %}
 {% endblock %}

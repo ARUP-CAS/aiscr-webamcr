@@ -11,7 +11,7 @@ from core.constants import (
 from django.contrib.gis.db import models as pgmodels
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
 from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR
 from heslar.models import Heslar
@@ -134,12 +134,12 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         Metóda pro nastavení permanentního ident celý pro pian.
         Metóda vráti ident podle sekvence pianu.
         """
-        MAXIMUM: int = 999999
         katastr = True if self.presnost.zkratka == "4" else False
+        maximum: int = 999999 if katastr else 899999
         sequence = PianSekvence.objects.filter(kladyzm50=self.zm50).filter(
             katastr=katastr
         )[0]
-        if sequence.sekvence < MAXIMUM:
+        if sequence.sekvence < maximum:
             perm_ident_cely = (
                 "P-"
                 + str(self.zm50.cislo).replace("-", "").zfill(4)
@@ -147,7 +147,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
                 + f"{sequence.sekvence:06}"
             )
         else:
-            raise MaximalIdentNumberError(MAXIMUM)
+            raise MaximalIdentNumberError(maximum)
         # Loop through all of the idents that have been imported
         while True:
             if Pian.objects.filter(ident_cely=perm_ident_cely).exists():

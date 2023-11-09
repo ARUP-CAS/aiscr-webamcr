@@ -1,9 +1,11 @@
 import json
+import html
 import logging
 import mimetypes
 import os
 import re
 from io import StringIO, BytesIO
+from PIL import Image
 
 import unicodedata
 from django.core.files.uploadedfile import TemporaryUploadedFile
@@ -11,6 +13,8 @@ from django_tables2 import SingleTableMixin
 from django_filters.views import FilterView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
+from django.views.generic import TemplateView
+
 
 
 from django.conf import settings
@@ -33,8 +37,12 @@ from core.constants import (
     DOKUMENT_RELATION_TYPE,
     PROJEKT_RELATION_TYPE,
     PROJEKT_STAV_ARCHIVOVANY,
+    ROLE_ADMIN_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     SN_ARCHIVOVANY,
+    ROLE_BADATEL_ID, 
+    ROLE_ARCHEOLOG_ID, 
+    ROLE_ARCHIVAR_ID
 )
 from core.forms import CheckStavNotChangedForm
 from core.message_constants import (
@@ -61,14 +69,17 @@ from projekt.models import Projekt
 from uzivatel.models import User
 from django_tables2.export import ExportMixin
 from datetime import datetime
+from heslar.hesla import HESLAR_PRISTUPNOST
+
+from heslar.models import Heslar
+from .models import Permissions, PermissionsSkip
+from historie.models import Historie
 
 from core.ident_cely import get_record_from_ident
-from dj.models import DokumentacniJednotka
-from komponenta.models import Komponenta
 from core.models import Permissions
 from historie.models import Historie
 from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
-from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
+
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +93,7 @@ def index(request):
 
 @login_required
 @require_http_methods(["POST", "GET"])
-def delete_file(request, pk):
+def delete_file(request, typ_vazby, ident_cely, pk):
     """
     Funkce pohledu pro smazání souboru. Funkce maže jak záznam v DB tak i soubor na disku.
     """
@@ -132,37 +143,66 @@ def delete_file(request, pk):
         return render(request, "core/transakce_modal.html", context)
 
 
-@login_required
-@require_http_methods(["GET"])
-def download_file(request, pk):
-    """
-    Funkce pohledu pro stažení souboru.
-    """
-    soubor: Soubor = get_object_or_404(Soubor, id=pk)
-    rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content()
-    if soubor.repository_uuid is not None:
-        # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
-        response = FileResponse(rep_bin_file.content, filename=soubor.nazev)
-        response["Content-Length"] = rep_bin_file.size
-        response["Content-Disposition"] = (
-                "attachment; filename=" + soubor.nazev
-        )
-        return response
+class DownloadFile(LoginRequiredMixin, View):
+    @staticmethod
+    def _preprocess_image(file_content: BytesIO) -> BytesIO:
+        return file_content
 
-    path = os.path.join(settings.MEDIA_ROOT, soubor.path)
-    if os.path.exists(path):
-        content_type = mimetypes.guess_type(soubor.nazev)[
-            0
-        ]  # Use mimetypes to get file type
-        response = HttpResponse(soubor.path, content_type=content_type)
-        response["Content-Length"] = str(len(soubor.path))
-        response["Content-Disposition"] = (
-            "attachment; filename=" + soubor.nazev
-        )
-        return response
-    else:
-        logger.debug("core.views.download_file.not_exists", extra={"soubor_name": soubor.nazev, "path": path})
-    return HttpResponse("")
+    def get(self, request, pk, *args, **kwargs):
+        soubor: Soubor = get_object_or_404(Soubor, id=pk)
+        rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content()
+        if soubor.repository_uuid is not None:
+            # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
+            content = self._preprocess_image(rep_bin_file.content)
+            response = FileResponse(content, filename=soubor.nazev)
+            content.seek(0)
+            response["Content-Length"] = content.getbuffer().nbytes
+            content.seek(0)
+            response["Content-Disposition"] = (
+                    f"attachment; filename={soubor.nazev}"
+            )
+            return response
+
+        path = os.path.join(settings.MEDIA_ROOT, soubor.path)
+        if os.path.exists(path):
+            content_type = mimetypes.guess_type(soubor.nazev)[
+                0
+            ]  # Use mimetypes to get file type
+            response = HttpResponse(soubor.path, content_type=content_type)
+            response["Content-Length"] = str(len(soubor.path))
+            response["Content-Disposition"] = (
+                    "attachment; filename=" + soubor.nazev
+            )
+            return response
+        else:
+            logger.debug("core.views.download_file.not_exists", extra={"soubor_name": soubor.nazev, "path": path})
+        return HttpResponse("")
+
+
+class DownloadThumbnail(DownloadFile):
+    @staticmethod
+    def _preprocess_image(file_content: BytesIO) -> BytesIO:
+        logger.debug("core.views.DownloadFile._resize_image.start")
+        try:
+            image = Image.open(file_content)
+            max_size = 100
+            width, height = image.size
+            if width > height:
+                new_width = max_size
+                new_height = int((max_size / width) * height)
+            else:
+                new_height = max_size
+                new_width = int((max_size / height) * width)
+            image.thumbnail((new_width, new_height))
+            output_buffer = BytesIO()
+            image.save(output_buffer, format="JPEG")
+            output_buffer.seek(0)
+            logger.debug("core.views.DownloadFile._resize_image.end")
+            return output_buffer
+        except Exception as err:
+            logger.debug("core.views.DownloadFile._resize_image.error", extra={"err": err})
+            return file_content
+
 
 
 @login_required
@@ -199,7 +239,7 @@ def upload_file_dokument(request, ident_cely):
 
 @login_required
 @require_http_methods(["GET"])
-def update_file(request, typ_vazby, file_id):
+def update_file(request, typ_vazby, ident_cely, file_id):
     """
     Funkce pohledu pro zobrazení stránky pro upload souboru.
     """
@@ -208,7 +248,7 @@ def update_file(request, typ_vazby, file_id):
     return render(
         request,
         "core/upload_file.html",
-        {"ident_cely": ident_cely, "back_url": back_url, "file_id": file_id},
+        {"ident_cely": ident_cely, "back_url": back_url, "file_id": file_id, "typ_vazby":typ_vazby},
     )
 
 
@@ -226,6 +266,32 @@ def upload_file_samostatny_nalez(request, ident_cely):
         "core/upload_file.html",
         {"ident_cely": ident_cely, "back_url": sn.get_absolute_url()},
     )
+
+class uploadFileView(LoginRequiredMixin, TemplateView):
+    """
+    Třída pohledu pro zobrazení stránky s uploadem souboru.
+    """
+    template_name = "core/upload_file.html"
+    http_method_names = ["get"]
+
+    def get_zaznam(self):
+        self.typ_vazby = self.kwargs.get("typ_vazby")
+        self.ident = self.kwargs.get("ident_cely")
+        if self.typ_vazby == "pas":
+            return get_object_or_404(SamostatnyNalez, ident_cely=self.ident)
+        elif self.typ_vazby == "dokument":
+            return get_object_or_404(Dokument, ident_cely=self.ident)
+        else:
+            return get_object_or_404(Projekt, ident_cely=self.ident)
+
+    def get_context_data(self, **kwargs):
+        zaznam = self.get_zaznam()
+        context = {
+            "ident_cely": self.ident,
+            "back_url": zaznam.get_absolute_url(),
+            "typ_vazby": self.typ_vazby,
+        }
+        return context
 
 
 @require_http_methods(["POST"])
@@ -588,69 +654,46 @@ class ExportMixinDate(ExportMixin):
         now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         return "{}{}.{}".format(self.export_name, now, export_format)
 
-
-class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView):
-    """
-    Třída pohledu pro tabulky záznamů, která je použita jako základ pro jednotlivé pohledy.
-    """
-    template_name = "search_list.html"
-    paginate_by = 100
-    allow_empty = True
-    export_formats = ["csv", "json", "xlsx"]
-    page_title = _("core.views.AkceListView.page_title.text")
-    app = "core"
-    toolbar = "toolbar_akce.html"
-    search_sum = _("core.views.AkceListView.search_sum.text")
-    pick_text = _("core.views.AkceListView.pick_text.text")
-    hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
-    hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
-    hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
-    hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
-    default_header = _("core.views.AkceListView.default_header.text")
-    toolbar_name = _("core.views.AkceListView.toolbar_name.text")
+class PermissionFilterMixin():
     permission_model_lookup = ""
     typ_zmeny_lookup = ""
-
-    def get_paginate_by(self, queryset):
-        return self.request.GET.get("per_page", self.paginate_by)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["export_formats"] = self.export_formats
-        context["page_title"] = self.page_title
-        context["app"] = self.app
-        context["toolbar"] = self.toolbar
-        context["search_sum"] = self.search_sum
-        context["pick_text"] = self.pick_text
-        context["hasOnlyVybrat_header"] = self.hasOnlyVybrat_header
-        context["hasOnlyVlastnik_header"] = self.hasOnlyVlastnik_header
-        context["hasOnlyArchive_header"] = self.hasOnlyArchive_header
-        context["hasOnlyPotvrdit_header"] = self.hasOnlyPotvrdit_header
-        context["default_header"] = self.default_header
-        context["toolbar_name"] = self.toolbar_name
-        return context
     
-    def get_queryset(self):
-        qs = super().get_queryset()
-        permissions = Permissions.objects.filter(
+    def check_filter_permission(self, qs, action=None):
+        if action:
+            permissions = Permissions.objects.filter(
                 main_role=self.request.user.hlavni_role,
                 address_in_app=self.request.resolver_match.route,
+                action=action
             )
+        else:    
+            permissions = Permissions.objects.filter(
+                    main_role=self.request.user.hlavni_role,
+                    address_in_app=self.request.resolver_match.route,
+                )
         if permissions.count()>0:
-            new_qs = qs.none()
-            for perm in permissions:
-                new_qs = (new_qs | self.filter_by_permission(qs, perm))
-            qs = new_qs
-        
-        return qs.distinct()
+            for idx, perm in enumerate(permissions):
+                if idx == 0:
+                    new_qs = self.filter_by_permission(qs, perm)
+                else:
+                    new_qs = self.filter_by_permission(qs, perm).exclude(pk__in=new_qs.values("pk")) | new_qs
+
+            perm_skips = list(PermissionsSkip.objects.filter(user=self.request.user).values_list("ident_list",flat=True))
+            if len(perm_skips) > 0:
+                ident_key = self.permission_model_lookup + "ident_cely__in"
+                filterdoc = {ident_key:perm_skips[0].split(",")}
+                qs = new_qs | qs.filter(**filterdoc)
+            else:
+                qs = new_qs
+        return qs
     
     def filter_by_permission(self, qs, permission):
         filterdoc = {}
-        logger.debug(permission.status)
+        if not permission.base:
+            return qs.none()
         if permission.status:
             filterdoc.update(self.add_status_lookup(permission))
         if permission.ownership:
-            filterdoc.update(self.add_ownership_lookup(permission.ownership))
+            filterdoc.update(self.add_ownership_lookup(permission.ownership,qs))
         qs = qs.filter(**filterdoc)
         if permission.accessibility:
             qs = self.add_accessibility_lookup(permission,qs)
@@ -690,17 +733,16 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             )
         return filterdoc
     
-    def add_ownership_lookup(self, ownership):
-        filtered = Historie.objects.filter(typ_zmeny=self.typ_zmeny_lookup)
-        if ownership == Permissions.ownershipChoices.my:
-            usr_org_key = "uzivatel"
-            usr_org_value = self.request.user
-        elif ownership == Permissions.ownershipChoices.our:
-            usr_org_key = "uzivatel__organizace"    
-            usr_org_value = self.request.user.organizace
-        filter_historie = {usr_org_key:usr_org_value}
-        filtered = filtered.filter(**filter_historie)
-        historie_key = self.permission_model_lookup + "historie__historie__in"
+    def add_ownership_lookup(self, ownership, qs=None):
+        filter_historie = {"typ_zmeny":self.typ_zmeny_lookup,"uzivatel":self.request.user}
+        filtered_my = Historie.objects.filter(**filter_historie)
+        if ownership == Permissions.ownershipChoices.our:
+            filter_historie = {"typ_zmeny":self.typ_zmeny_lookup, "uzivatel__organizace":self.request.user.organizace}
+            filtered_our = Historie.objects.exclude(pk__in=filtered_my.values("pk")).filter(**filter_historie)
+            filtered = Historie.objects.filter(Q(pk__in=filtered_our.values("pk"))|Q(pk__in=filtered_my.values("pk")))
+        else:
+            filtered = filtered_my
+        historie_key = self.permission_model_lookup + "historie__historie__pk__in"
         filterdoc = {historie_key:filtered}
         return filterdoc
     
@@ -709,18 +751,54 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             ROLE_BADATEL_ID: PRISTUPNOST_BADATEL_ID,
             ROLE_ARCHEOLOG_ID: PRISTUPNOST_ARCHEOLOG_ID,
             ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
+            ROLE_ADMIN_ID:PRISTUPNOST_ARCHIVAR_ID ,
         }
-        new_qs = qs.filter(**self.add_ownership_lookup(permission.accessibility))
+        qs_ownership = qs.filter(**self.add_ownership_lookup(permission.accessibility))
         accessibility_key = self.permission_model_lookup+"pristupnost__in"
-        i = self.request.user.hlavni_role.id
-        accessibilities = [PRISTUPNOST_ANONYM_ID]
-        while i > 0:
-            if self.request.user.hlavni_role.id != 4:
-                accessibilities.append(group_to_accessibility.get(i))
-            i -= 1
+        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, razeni__lte=Heslar.objects.filter(id=group_to_accessibility.get(self.request.user.hlavni_role.id)).values_list("razeni",flat=True))
         filter = {accessibility_key:accessibilities}
-        logger.debug(qs.filter(**filter))
-        return (new_qs | qs.filter(**filter)).distinct()
+        qs_access = qs.exclude(pk__in=qs_ownership.values("pk")).filter(**filter)
+        return qs.filter(Q(pk__in=qs_ownership.values("pk"))|Q(pk__in=qs_access.values("pk")))
+
+class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView, PermissionFilterMixin):
+    """
+    Třída pohledu pro tabulky záznamů, která je použita jako základ pro jednotlivé pohledy.
+    """
+    template_name = "search_list.html"
+    paginate_by = 100
+    allow_empty = True
+    export_formats = ["csv", "json", "xlsx"]
+    page_title = _("core.views.AkceListView.page_title.text")
+    app = "core"
+    toolbar = "toolbar_akce.html"
+    search_sum = _("core.views.AkceListView.search_sum.text")
+    pick_text = _("core.views.AkceListView.pick_text.text")
+    hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
+    hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
+    hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
+    hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
+    default_header = _("core.views.AkceListView.default_header.text")
+    toolbar_name = _("core.views.AkceListView.toolbar_name.text")
+
+    def get_paginate_by(self, queryset):
+        return self.request.GET.get("per_page", self.paginate_by)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["export_formats"] = self.export_formats
+        context["page_title"] = self.page_title
+        context["app"] = self.app
+        context["toolbar"] = self.toolbar
+        context["search_sum"] = self.search_sum
+        context["pick_text"] = self.pick_text
+        context["hasOnlyVybrat_header"] = self.hasOnlyVybrat_header
+        context["hasOnlyVlastnik_header"] = self.hasOnlyVlastnik_header
+        context["hasOnlyArchive_header"] = self.hasOnlyArchive_header
+        context["hasOnlyPotvrdit_header"] = self.hasOnlyPotvrdit_header
+        context["default_header"] = self.default_header
+        context["toolbar_name"] = self.toolbar_name
+        return context
+    
 
 class SearchListChangeColumnsView(LoginRequiredMixin, View):
     """
@@ -730,7 +808,7 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
         if "vychozi_skryte_sloupce" not in request.session:
             request.session["vychozi_skryte_sloupce"] = {}
         app = json.loads(request.body.decode("utf8"))["app"]
-        sloupec = json.loads(request.body.decode("utf8"))["sloupec"]
+        sloupec = html.escape(json.loads(request.body.decode("utf8"))["sloupec"])
         zmena = json.loads(request.body.decode("utf8"))["zmena"]
         if app not in request.session["vychozi_skryte_sloupce"]:
             request.session["vychozi_skryte_sloupce"][app] = []
@@ -747,7 +825,7 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
         else:
             skryte_sloupce.append(sloupec)
             request.session.modified = True
-        return HttpResponse("Pridano do skrytych %s" % sloupec)
+        return HttpResponse(f"{_('core.views.SearchListChangeColumnsView.response')} {sloupec}")
 
 
 class StahnoutMetadataView(LoginRequiredMixin, View):
@@ -780,6 +858,18 @@ class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
     def get(self, request, model_name, ident_cely):
         if model_name == "pian":
             record: Pian = Pian.objects.get(ident_cely=ident_cely)
+        elif model_name == "projekt":
+            record: Projekt = Projekt.objects.get(ident_cely=ident_cely)
+        elif model_name == "archeologicky_zaznam":
+            record: ArcheologickyZaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
+        elif model_name == "adb":
+            record: Adb = Adb.objects.get(ident_cely=ident_cely)
+        elif model_name == "dokument":
+            record: Dokument = Dokument.objects.get(ident_cely=ident_cely)
+        elif model_name == "samostatny_nalez":
+            record: SamostatnyNalez = SamostatnyNalez.objects.get(ident_cely=ident_cely)
+        elif model_name == "externi_zdroj":
+            record: ExterniZdroj = ExterniZdroj.objects.get(ident_cely=ident_cely)
         else:
             raise Http404
         metadata = record.metadata

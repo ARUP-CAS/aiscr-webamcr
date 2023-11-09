@@ -8,7 +8,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.utils import formats
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
 from heslar.hesla_dynamicka import SPECIFIKACE_DATA_PRESNE
@@ -19,7 +19,6 @@ from projekt.models import Projekt
 from . import validators
 
 import logging
-import logstash
 
 logger = logging.getLogger(__name__)
 
@@ -73,13 +72,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
                 }
             else:
                 widgets = {
-                    "vedouci": forms.Select(
-                        attrs={
-                            "class": "selectpicker",
-                            "data-multiple-separator": "; ",
-                            "data-live-search": "true",
-                        }
-                    ),
+                    "vedouci": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
                     "organizace": forms.Select(
                         attrs={
                             "class": "selectpicker",
@@ -284,9 +277,11 @@ class CreateAkceForm(forms.ModelForm):
     """
     datum_zahajeni = StartDateInput(
         help_text=_("arch_z.forms.CreateAkceForm.datum_zahajeni.tooltip"),
+        label=_("arch_z.forms.CreateAkceForm.datum_zahajeni.label"),
     )
     datum_ukonceni = EndDateInput(
         help_text=_("arch_z.forms.CreateAkceForm.datum_ukonceni.tooltip"),
+        label=_("arch_z.forms.CreateAkceForm.datum_ukonceni.label"),
         required=False,
     )
 
@@ -332,6 +327,7 @@ class CreateAkceForm(forms.ModelForm):
 
         labels = {
             "hlavni_vedouci": _("arch_z.forms.CreateAkceForm.hlavni_vedouci.label"),
+            "organizace": _("arch_z.forms.CreateAkceForm.organizace.label"),
             "datum_zahajeni": _("arch_z.forms.CreateAkceForm.datum_zahajeni.label"),
             "datum_ukonceni": _("arch_z.forms.CreateAkceForm.datum_ukonceni.label"),
             "lokalizace_okolnosti": _("arch_z.forms.CreateAkceForm.lokalizace_okolnosti.label"),
@@ -341,16 +337,12 @@ class CreateAkceForm(forms.ModelForm):
             "specifikace_data": _("arch_z.forms.CreateAkceForm.specifikace_data.label"),
             "ulozeni_dokumentace": _("arch_z.forms.CreateAkceForm.ulozeni_dokumentace.label"),
             "odlozena_nz": _("arch_z.forms.CreateAkceForm.odlozena_nz.label"),
+            "hlavni_typ": _("arch_z.forms.CreateAkceForm.hlavni_typ.label"),
+            "vedlejsi_typ": _("arch_z.forms.CreateAkceForm.vedlejsi_typ.label"),
         }
 
         widgets = {
-            "hlavni_vedouci": forms.Select(
-                attrs={
-                    "class": "selectpicker",
-                    "data-multiple-separator": "; ",
-                    "data-live-search": "true",
-                }
-            ),
+            "hlavni_vedouci": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
             "organizace": forms.Select(
                 attrs={
                     "class": "selectpicker",
@@ -459,7 +451,7 @@ class CreateAkceForm(forms.ModelForm):
                             HTML(
                                 '<a href="{% url "heslar:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'
                             ),
-                            css_class="col-sm-2",
+                            css_class="col-sm-2 input-osoba select2-input",
                             style="display: flex; align-items: center;",
                         ),
                         css_class="row",

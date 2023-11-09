@@ -6,7 +6,7 @@ from dal import autocomplete
 from django import forms
 from django.db import utils
 from django.forms import HiddenInput
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.db.models import Value, IntegerField
 from crispy_forms.bootstrap import AppendedText
@@ -53,7 +53,7 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
 
 class CoordinatesDokumentForm(forms.Form):
     """
-    Hlavní formulář pro editaci souradnic u modelu 3D.
+    Hlavní formulář pro editaci souřadnic v PAS.
     """
     detector_system_coordinates = forms.ChoiceField(
         label=_("pas.forms.coordinates.detector.label"),
@@ -85,7 +85,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení Extra dat u dokumentu a modelu 3D.
     """
-    rada = forms.CharField(label="Řada", required=False, help_text=_("dokument.forms.editDokumentExtraDataForm.rada.tooltip"),)
+    rada = forms.CharField(label=_("dokument.forms.editDokumentExtraDataForm.rada.label"), required=False, help_text=_("dokument.forms.editDokumentExtraDataForm.rada.tooltip"),)
 
     class Meta:
         model = DokumentExtraData
@@ -201,13 +201,13 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         except utils.ProgrammingError:
             self.fields["dokument_osoba"] = forms.MultipleChoiceField(
                 choices=tuple(("", "")),
-                label="Dokumentované osoby",
+                label=_("dokument.forms.editDokumentExtraDataForm.osoby.label"),
                 required=False,
                 widget=autocomplete.Select2Multiple(url="heslar:osoba-autocomplete-choices"),
             )
             self.fields["let"] = forms.ChoiceField(
                 choices=tuple(("", "")),
-                label="Let",
+                label=_("dokument.forms.editDokumentExtraDataForm.let.label"),
                 required=False,
                 widget=forms.Select(
                     attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
@@ -362,6 +362,8 @@ class EditDokumentForm(forms.ModelForm):
             "pristupnost": _("dokument.forms.editDokumentForm.pristupnost.label"),
             "datum_zverejneni": _("dokument.forms.editDokumentForm.datumZverejneni.label"),
             "licence": _("dokument.forms.editDokumentForm.licence.label"),
+            "jazyky": _("dokument.forms.editDokumentForm.jazyky.label"),
+            "posudky": _("dokument.forms.editDokumentForm.posudky.label"),
         }
         help_texts = {
             "organizace": _("dokument.forms.editDokumentForm.organizace.tooltip"),
@@ -491,7 +493,9 @@ class CreateModelDokumentForm(forms.ModelForm):
     """
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
-            ),)
+            ),
+            help_text= _("dokument.forms.createModelDokumentForm.autori.tooltip"),
+            label = _("dokument.forms.createModelDokumentForm.autori.label"),)
     class Meta:
         model = Dokument
         fields = (

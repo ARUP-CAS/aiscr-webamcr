@@ -23,7 +23,7 @@ urlpatterns = [
     path("pas/<str:ident_cely>", SamostatnyNalezHistorieListView.as_view(), name="pas"),
     path("soubor/<int:soubor_id>", SouborHistorieListView.as_view(), name="soubor"),
     path(
-        "spoluprace/<str:pk>",
+        "spoluprace/<int:pk>",
         SpolupraceHistorieListView.as_view(),
         name="spoluprace",
     ),

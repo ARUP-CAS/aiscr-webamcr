@@ -34,9 +34,8 @@ class ModelWithMetadata(models.Model):
         app = Celery("webclient")
         app.config_from_object("django.conf:settings", namespace="CELERY")
         app.autodiscover_tasks()
-        i = app.control.inspect()
+        i = app.control.inspect(["worker1@amcr"])
         queues = (i.scheduled(),)
-
         for queue in queues:
             for queue_name, queue_tasks in queue.items():
                 for task in queue_tasks:

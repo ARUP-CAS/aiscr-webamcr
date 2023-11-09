@@ -15,7 +15,7 @@
           enctype="multipart/form-data">
       {% csrf_token %}
       {% if file_id %}
-        <input type="hidden" name="">
+        <input type="hidden" name="fileID" value={{file_id}}>
       {% endif %}
       <div class="fallback">
         <input name="file" type="file" multiple/>
@@ -34,13 +34,22 @@
 {% block script %}
   <script src="{% static 'dropzone.min.js' %}"></script>
     {% if file_id %}
-        <script>var maxFiles = 1;</script>
-        <script>var file_id = {{ file_id }};</script>
-        <script>var addRemoveLinks = false;</script>
+        <script>
+          var maxFiles = 1;
+          var file_id = {{ file_id }};
+          var object_id = "{{ ident_cely }}";
+          var typ_vazby = "{{ typ_vazby }}";
+          var typ_uploadu = "nahradit";
+          var addRemoveLinks = false;
+      </script>
     {% else %}
-        <script>var maxFiles = 999;</script>
-        <script>var object_id = "{{ ident_cely }}";</script>
-        <script>var addRemoveLinks = true;</script>
+        <script>
+          var maxFiles = 999;
+          var object_id = "{{ ident_cely }}";
+          var typ_vazby = "{{ typ_vazby }}";
+          var typ_uploadu = "upload";
+          var addRemoveLinks = true;
+        </script>
     {% endif %}
     <script>
     var reject_dict = {
@@ -48,7 +57,14 @@
       "rejected_dokument" : "{% get_message 'UPLOADFILE_REJECTED_DOKUMENT' %}",
       "rejected_all" : "{% get_message 'UPLOADFILE_REJECTED_ALL' %}",
     };
-    var upload_error = "{% get_message 'UPLOADFILE_ERROR' %}"
+    var upload_error = "{% get_message 'UPLOADFILE_ERROR' %}";
+    const dz_trans = {
+      descriptionUpload: '{%trans "core.templates.core.upload_file.dz.descriptionUpload" %}',
+      descriptionNahradit: '{%trans "core.templates.core.upload_file.dz.descriptionNahradit" %}',
+      cancelUpload: '{%trans "core.templates.core.upload_file.dz.cancelUpload" %}',
+      cancelUploadConfirm: '{%trans "core.templates.core.upload_file.dz.cancelUploadConfirm" %}',
+      removeFile: '{%trans "core.templates.core.upload_file.dz.removeFile" %}'
+    }
   </script>
     <script src="{% static 'dz.js' %}"></script>
 {% endblock %}

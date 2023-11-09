@@ -5,7 +5,7 @@
       <div class="app-fx app-left">
         {% trans "ez.templates.azEzOdakzytable.table.cardHeader" %}
       </div>
-      {% if show.editovat %}
+      {% if show.pripojit_eo %}
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
           <button class="btn" id="eo-pripojit-do-az" type="button" type="button" rel="tooltip" data-placement="top" title="{% trans "ez.templates.azEzOdakzytable.pridat.label" %}" name="button" href="{% url 'ez:pripojit_eo_do_az' zaznam.ident_cely %}">

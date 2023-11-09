@@ -58,6 +58,7 @@
   <script src="{% static 'leaflet.markercluster-src.js' %}"></script>
   <link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
   <link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
+  <script src="{% static 'leaflet_subgroup.js' %}"></script>
 
 
   <script>
@@ -204,6 +205,72 @@
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
+  <script>
+    const map_translations = {
+      ActionsCancelText: '{%trans "mapa.ActionsCancelText" %}',
+      ActionsCancelTitle: '{%trans "mapa.ActionsCancelTitle" %}',
+      ActionsClearText: '{%trans "mapa.ActionsClearText" %}',
+      ActionsClearTitle: '{%trans "mapa.ActionsClearTitle" %}',
+      ActionsSaveText: '{%trans "mapa.ActionsSaveText" %}',
+      ActionsSaveTitle: '{%trans "mapa.ActionsSaveTitle" %}',
+      CurrentLocationError: '{%trans "mapa.CurrentLocationError" %}',
+      cuzkKatastralniMapa: '{%trans "mapa.cuzkKatastralniMapa" %}',
+      cuzkKatastralniUzemi: '{%trans "mapa.cuzkKatastralniUzemi" %}',
+      cuzkOrtofotomapa: '{%trans "mapa.cuzkOrtofotomapa" %}',
+      cuzkStinovanyeelief5G: '{%trans "mapa.cuzkStinovanyeelief5G" %}',
+      cuzkzakladniMapyCr: '{%trans "mapa.cuzkzakladniMapyCr" %}',
+      DefaultTitle: '{%trans "mapa.DefaultTitle" %}',
+      DrawError: '{%trans "mapa.DrawError" %}',
+      EditAddCircle: '{%trans "mapa.EditAddCircle" %}',
+      EditAddCirclemarker: '{%trans "mapa.EditAddCirclemarker" %}',
+      EditAddMarker: '{%trans "mapa.EditAddMarker" %}',
+      EditAddPolygon: '{%trans "mapa.EditAddPolygon" %}',
+      EditAddPolyline: '{%trans "mapa.EditAddPolyline" %}',
+      EditAddRectangle: '{%trans "mapa.EditAddRectangle" %}',
+      EditBackText: '{%trans "mapa.EditBackText" %}',
+      EditBackTitle: '{%trans "mapa.EditBackTitle" %}',
+      EditCancelText: '{%trans "mapa.EditCancelText" %}',
+      EditCancelTitle: '{%trans "mapa.EditCancelTitle" %}',
+      EditCirclemarkerTooltip: '{%trans "mapa.EditCirclemarkerTooltip" %}',
+      EditCircleTooltip: '{%trans "mapa.EditCircleTooltip" %}',
+      EditDisabled: '{%trans "mapa.EditDisabled" %}',
+      EditFinishText: '{%trans "mapa.EditFinishText" %}',
+      EditFinishTitle: '{%trans "mapa.EditFinishTitle" %}',
+      EditMarkerTooltip: '{%trans "mapa.EditMarkerTooltip" %}',
+      EditPolygonStart: '{%trans "mapa.EditPolygonStart" %}',
+      EditPolygonTooltipCont: '{%trans "mapa.EditPolygonTooltipCont" %}',
+      EditPolygonTooltipEnd: '{%trans "mapa.EditPolygonTooltipEnd" %}',
+      EditPolylineCont: '{%trans "mapa.EditPolylineCont" %}',
+      EditPolylineEnd: '{%trans "mapa.EditPolylineEnd" %}',
+      EditPolylineError: '{%trans "mapa.EditPolylineError" %}',
+      EditPolylineStart: '{%trans "mapa.EditPolylineStart" %}',
+      EditRadius: '{%trans "mapa.EditRadius" %}',
+      EditRectangleStart: '{%trans "mapa.EditRectangleStart" %}',
+      EditSimpleshapeTooltip: '{%trans "mapa.EditSimpleshapeTooltip" %}',
+      EditTitle: '{%trans "mapa.EditTitle" %}',
+      EditTooltipSubtext: '{%trans "mapa.EditTooltipSubtext" %}',
+      EditTooltipText: '{%trans "mapa.EditTooltipText" %}',
+      FullscreenTitle: '{%trans "mapa.FullscreenTitle" %}',
+      FullscreenTitleClose: '{%trans "mapa.FullscreenTitleClose" %}',
+      lokalizaceProjektu: '{%trans "mapa.lokalizaceProjektu" %}',
+      MeasureTitle: '{%trans "mapa.MeasureTitle" %}',
+      MoveFront: '{%trans "mapa.MoveFront" %}',
+      openStreetMap: '{%trans "mapa.openStreetMap" %}',
+      openStreetMapSeda: '{%trans "mapa.openStreetMapSeda" %}',
+      pian: '{%trans "mapa.pian" %}',
+      pianZazamu: '{%trans "mapa.pianZazamu" %}',
+      RemoveDisabled: '{%trans "mapa.RemoveDisabled" %}',
+      RemoveTitle: '{%trans "mapa.RemoveTitle" %}',
+      RemoveTooltipText: '{%trans "mapa.RemoveTooltipText" %}',
+      samostatneNalezy: '{%trans "mapa.samostatneNalezy" %}',
+      SearchText: '{%trans "mapa.SearchText" %}',
+      SearchTextCancel: '{%trans "mapa.SearchTextCancel" %}',
+      SearchTextError: '{%trans "mapa.SearchTextError" %}',
+      TempPIAN: '{%trans "mapa.TempPIAN" %}',
+      zoomInTitle: '{%trans "mapa.zoomInTitle" %}',
+      zoomOutTitle: '{%trans "mapa.zoomOutTitle" %}'
+    };
+  </script>
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
   <script src="{% static 'leaflet.measure.js' %}"></script>
   <script>
@@ -269,7 +336,7 @@
                   }
                   if (rs.zoom == 17) {
                       drawnItems.clearLayers();
-                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom,rs.presnost==4)
+                      addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom,rs.presnost==4)
                   }
               };
               xhr.send(JSON.stringify(
@@ -442,22 +509,47 @@
           new Modal(options, elements.item(i).id);
         }
       }
+      var successFunctionAutorPopisu = function(settings, response) {
+        var newOption = new Option(response.text, response.value, true, true);
+        console.log("test")
+        $('#id_autor_popisu').append(newOption).trigger('change');
+        $('#id_autor_popisu').trigger({
+          type: 'select2:select',
+          params: {
+              data: [response.text, response.value, true, true]
+          }
+        });
+        $(settings.modalIDD).modal("hide");
+      };
       var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'heslar:create_osoba' %}",
       formID: "create-osoba-form",
       modalFormID: "#create-osoba-form",
       modalIDD : "#modal-form",
+      successFunc:successFunctionAutorPopisu,
     })
     try {
      create_autor_popisu_modal = new Modal(options, "create-autor-popisu");
     } catch (e) {
       console.log(e);
     }
+    var successFunctionAutorRevize = function(settings, response) {
+      var newOption = new Option(response.text, response.value, true, true);
+      $('#id_autor_revize').append(newOption).trigger('change');
+      $('#id_autor_revize').trigger({
+        type: 'select2:select',
+        params: {
+            data: [response.text, response.value, true, true]
+        }
+      });
+      $(settings.modalIDD).modal("hide");
+    };
     var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'heslar:create_osoba' %}",
       formID: "create-osoba-form",
       modalFormID: "#create-osoba-form",
       modalIDD : "#modal-form",
+      successFunc:successFunctionAutorRevize,
     })
     try {
      create_autor_revize_modal = new Modal(options, "create-autor-revize");

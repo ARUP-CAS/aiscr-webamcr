@@ -19,7 +19,7 @@ from core.models import SouborVazby, ModelWithMetadata
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
     HESLAR_OBDOBI,
@@ -279,6 +279,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     
     def get_create_user(self):
         return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_SN)[0].uzivatel
+    
+    def get_create_org(self):
+        return self.projekt.organizace
 
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):
@@ -366,3 +369,9 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     def __str__(self):
         return self.spolupracovnik.last_name + " + " + self.vedouci.last_name
+    
+    def get_create_user(self):
+        return self.spolupracovnik
+    
+    def get_create_org(self):
+        return self.vedouci.organizace

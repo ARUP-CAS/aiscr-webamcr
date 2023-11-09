@@ -1,5 +1,6 @@
 import logging
 import os
+import simplejson as json
 
 from django.db.models.signals import post_save
 from django.views import View
@@ -49,7 +50,8 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
-from core.views import SearchListView, check_stav_changed
+from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
+from core.models import Permissions as p, check_permissions
 from dal import autocomplete
 from django.db.models.functions import Length
 from django.contrib import messages
@@ -130,6 +132,10 @@ from django.db.models import Prefetch, Subquery, OuterRef
 
 from uzivatel.models import Osoba
 
+from core.utils import (
+    get_3d_from_envelope,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -167,7 +173,7 @@ def detail_model_3D(request, ident_cely):
         logger.warning("dokument.views.detail_model_3D.komponenty_count_error",
                        extra={"casti_count": komponenty.count()})
         raise UnexpectedDataRelations()
-    show = get_detail_template_shows(dokument)
+    show = get_detail_template_shows(dokument, request.user)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
@@ -283,7 +289,7 @@ class Model3DListView(SearchListView):
                 to_attr="ordered_autors",
             )
         )
-        return qs
+        return self.check_filter_permission(qs)
 
 
 class DokumentIndexView(LoginRequiredMixin, TemplateView):
@@ -350,7 +356,7 @@ class DokumentListView(SearchListView):
                 to_attr="ordered_autors",
             )
         )
-        return qs
+        return self.check_filter_permission(qs)
 
 
 class RelatedContext(LoginRequiredMixin, TemplateView):
@@ -372,11 +378,18 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
             context["neident_akce_form"] = NeidentAkceForm(
                 instance=neident_akce[0], readonly=True
             )
+        context["show_edit_cast"] = check_permissions(p.actionChoices.dok_cast_edit, self.request.user, cast.dokument.ident_cely)
+        context["show_smazat_cast"] = check_permissions(p.actionChoices.dok_cast_smazat, self.request.user, cast.dokument.ident_cely)
+        context["show_zapsat_komponentu"] = check_permissions(p.actionChoices.dok_komponenta_zapsat, self.request.user, cast.dokument.ident_cely)
+        context["show_neident_akce_edit"] = check_permissions(p.actionChoices.neident_akce_edit, self.request.user, cast.dokument.ident_cely)
+        context["show_neident_akce_smazat"] = check_permissions(p.actionChoices.neident_akce_smazat, self.request.user, cast.dokument.ident_cely)
         context["show_odpojit"] = False
-        context["show_pripojit"] = True
+        context["show_pripojit_proj"] = check_permissions(p.actionChoices.dok_pripojit_proj, self.request.user, cast.dokument.ident_cely)
+        context["show_pripojit_archz"] = check_permissions(p.actionChoices.dok_pripojit_archz, self.request.user, cast.dokument.ident_cely)
         if cast.projekt or cast.archeologicky_zaznam:
-            context["show_odpojit"] = True
-            context["show_pripojit"] = False
+            context["show_odpojit"] = check_permissions(p.actionChoices.dok_cast_odpojit, self.request.user, cast.dokument.ident_cely)
+            context["show_pripojit_proj"] = False
+            context["show_pripojit_archz"] = False
 
     def get_context_data(self, **kwargs):
         """
@@ -407,7 +420,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
             instance=extra_data,
             readonly=True,
         )
-        show = get_detail_template_shows(dokument)
+        show = get_detail_template_shows(dokument, self.request.user)
         if dokument.rada.zkratka in ["LD", "LN", "DL"]:
             TvarFormset = inlineformset_factory(
                 Dokument,
@@ -1492,23 +1505,27 @@ def smazat(request, ident_cely):
         return render(request, "core/transakce_modal.html", context)
 
 
-class DokumentAutocomplete(autocomplete.Select2QuerySetView):
+class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,PermissionFilterMixin):
     """
     Třída pohledu pro autocomplete dokumentů.
     """
+    typ_zmeny_lookup = ZAPSANI_DOK
+
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
         qs = Dokument.objects.all()
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
-        return qs
+        return self.check_filter_permission(qs)
 
 
-class DokumentAutocompleteBezZapsanych(DokumentAutocomplete):
+class DokumentAutocompleteBezZapsanych(DokumentAutocomplete, PermissionFilterMixin):
     """
     Třída pohledu pro autocomplete dokumentů bez zapsaných.
     """
+    typ_zmeny_lookup = ZAPSANI_DOK
+    
     def get_queryset(self):
         qs = super(DokumentAutocompleteBezZapsanych, self).get_queryset()
         qs = (
@@ -1516,7 +1533,7 @@ class DokumentAutocompleteBezZapsanych(DokumentAutocomplete):
             .annotate(ident_len=Length("ident_cely"))
             .filter(ident_len__gt=0)
         )
-        return qs
+        return self.check_filter_permission(qs)
 
 
 def get_hierarchie_dokument_typ():
@@ -1549,25 +1566,28 @@ def get_history_dates(historie_vazby, request_user):
     return historie
 
 
-def get_detail_template_shows(dokument):
+def get_detail_template_shows(dokument,user):
     """
     Funkce pro získaní kontextu pro zobrazování možností na stránkách.
     """
-    show_vratit = dokument.stav > D_STAV_ZAPSANY
-    show_odeslat = dokument.stav == D_STAV_ZAPSANY
-    show_archivovat = dokument.stav == D_STAV_ODESLANY
-    show_edit = dokument.stav not in [
-        D_STAV_ARCHIVOVANY,
-    ]
+    show_edit = (
+        check_permissions(p.actionChoices.model_edit, user, dokument.ident_cely)
+        if "3D" in dokument.ident_cely
+        else check_permissions(p.actionChoices.dok_edit, user, dokument.ident_cely)
+    )
     show_arch_links = dokument.stav == D_STAV_ARCHIVOVANY
     show_tvary = True if dokument.rada.zkratka in ["LD", "LN", "DL"] else False
     show = {
-        "vratit_link": show_vratit,
-        "odeslat_link": show_odeslat,
-        "archivovat_link": show_archivovat,
+        "vratit_link": check_permissions(p.actionChoices.dok_vratit, user, dokument.ident_cely),
+        "odeslat_link": check_permissions(p.actionChoices.dok_odeslat, user, dokument.ident_cely),
+        "archivovat_link": check_permissions(p.actionChoices.dok_archivovat, user, dokument.ident_cely),
         "editovat": show_edit,
         "arch_links": show_arch_links,
         "tvary": show_tvary,
+        "tvary_edit": show_tvary and check_permissions(p.actionChoices.dok_tvary_edit, user, dokument.ident_cely),
+        "tvary_smazat": show_tvary and check_permissions(p.actionChoices.dok_tvary_smazat, user, dokument.ident_cely),
+        "zapsat_cast": check_permissions(p.actionChoices.dok_cast_zapsat, user, dokument.ident_cely),
+        "nalez_smazat": check_permissions(p.actionChoices.nalez_smazat_dokument, user, dokument.ident_cely),
     }
     return show
 
@@ -1990,3 +2010,31 @@ def get_areal_choices():
     Funkce která vrací dvou stupňový heslař pro areál.
     """
     return heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_3d_limit(request):
+    """
+    Funkce pohledu pro získaní 3D.
+    """
+    body = json.loads(request.body.decode("utf-8"))
+    pians = get_3d_from_envelope(
+        body["southEast"]["lng"],
+        body["northWest"]["lat"],
+        body["northWest"]["lng"],
+        body["southEast"]["lat"],
+    )
+    back = []
+    for pian in pians:
+        logger.debug(pian)
+        back.append(
+            {
+                "id": pian["dokument__id"],
+                "ident_cely": pian["dokument__ident_cely"],
+                "geom": pian["geom"].wkt.replace(", ", ",")
+            }
+        )
+    if len(pians) > 0:
+        return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+    else:
+        return JsonResponse({"points": [], "algorithm": "detail"}, status=200)

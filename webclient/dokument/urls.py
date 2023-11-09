@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from .views import DokumentAutocomplete, Model3DListView, DokumentListView
+from .views import DokumentAutocomplete, Model3DListView, DokumentListView, post_ajax_get_3d_limit
 
 app_name = "dokument"
 
@@ -13,7 +13,7 @@ urlpatterns = [
     path("detail/<str:ident_cely>/komponenta/<str:komp_ident_cely>",views.KomponentaDokumentDetailView.as_view(),name="detail-komponenta"),
     path("detail/<str:ident_cely>/cast/<str:cast_ident_cely>/komponenta/zapsat", views.KomponentaDokumentCreateView.as_view(), name="create-komponenta"),
     path("tvar/edit/<str:ident_cely>", views.TvarEditView.as_view(), name="edit-tvar"),
-    path("tvar/smazat/<str:pk>",views.TvarSmazatView.as_view(), name="smazat-tvar"),
+    path("tvar/smazat/<str:ident_cely>/<int:pk>",views.TvarSmazatView.as_view(), name="smazat-tvar"),
     path("cast/zapsat/<str:ident_cely>", views.VytvoritCastView.as_view(), name="vytvorit-cast"),
     path("cast/pripojit-arch-z/<str:ident_cely>",views.DokumentCastPripojitAkciView.as_view(), name="pripojit-az-cast"),
     path("cast/pripojit-projekt/<str:ident_cely>",views.DokumentCastPripojitProjektView.as_view(),name="pripojit-projekt-cast"),
@@ -40,5 +40,10 @@ urlpatterns = [
     path(
         "model/detail/<str:ident_cely>", views.detail_model_3D, name="detail-model-3D"
     ),
-    path("radek-tabulky-odkaz",views.get_dokument_table_row, name="get_dokument_table_row")
+    path("radek-tabulky-odkaz",views.get_dokument_table_row, name="get_dokument_table_row"),
+    path(
+        "akce-get-3d",
+        post_ajax_get_3d_limit,
+        name="post_ajax_get_3d_limit",
+    )
 ]

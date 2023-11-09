@@ -68,32 +68,32 @@ var map = L.map('projectMap',{attributionControl:false,zoomControl:false,  layer
 
 
 var baseLayers = {
-    "ČÚZK - Základní mapy ČR": cuzkZM,
-    "ČÚZK - Ortofotomapa": cuzkOrt,
-    "ČÚZK - Stínovaný reliéf 5G": cuzkEL,
-    "OpenStreetMap šedá": osmGrey,
+    [map_translations['cuzkzakladniMapyCr']]: cuzkZM,
+    [map_translations['cuzkOrtofotomapa']]: cuzkOrt,
+    [map_translations['cuzkStinovanyeelief5G']]: cuzkEL,
+    [map_translations['openStreetMapSeda']]: osmGrey,
 };
 
 var overlays = {
-    "ČÚZK - Katastrální mapa": cuzkWMS,
-    "ČÚZK - Katastrální území": cuzkWMS2,
-    "AMČR - Zájmové body": poi
+    [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
+    [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
+    [map_translations['lokalizace']]: poi
 };
 
 global_map_layers = L.control.layers(baseLayers,overlays).addTo(map);
 L.control.scale(metric = "true").addTo(map);
 map.addControl(new L.Control.Fullscreen({
     title: {
-        'false': 'Celá obrazovka',
-        'true': 'Opustit celou obrazovku'
+        'false': [map_translations['FullscreenTitle']],
+        'true': [map_translations['FullscreenTitleClose']]
     }
 }));
 map.addControl(new L.control.zoom(
     {
-        zoomInText:'+',
-        zoomInTitle:'Přiblížit',
-        zoomOutText:'-',
-        zoomOutTitle:'Oddálit'
+        zoomInText: '+',
+        zoomInTitle: [map_translations['zoomInTitle']],
+        zoomOutText: '-',
+        zoomOutTitle: [map_translations['zoomOutTitle']]
     }))
 
 var searchControl=new L.Control.Search({
@@ -102,18 +102,18 @@ var searchControl=new L.Control.Search({
     initial: false,
     zoom: 12,
     marker: false,
-    textPlaceholder:'Vyhledej',
-    textCancel: 'Zruš',
+    textPlaceholder: [map_translations['SearchText']],
+    textCancel: [map_translations['SearchTextCancel']],
     propertyName: 'text',
     propertyMagicKey:'magicKey',
     propertyMagicKeyUrl:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/{*}/findAddressCandidates?outSR={"wkid":4258}&f=json',
-    textErr: 'Nenalezeno',
+    textErr: [map_translations['SearchTextError']],
     minLength:3
 }).addTo(map);
 
 let global_measuring_toolbox=new L.control.measure(
     {
-        title:"Měřit vzdálenost",
+        title: [map_translations['MeasureTitle']],
         icon:'<img src="'+static_url+'/img/ruler-bold-32.png" style="width:20px"/>'
     });
 map.addControl(global_measuring_toolbox);
@@ -136,7 +136,7 @@ function getLocation() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(showPosition);
     } else {
-        x.innerHTML = "Geolocation is not supported by this browser.";
+        x.innerHTML = [map_translations['CurrentLocationError']]; // "Geolocation is not supported by this browser."
     }
 }
 

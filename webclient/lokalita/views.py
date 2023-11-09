@@ -92,7 +92,7 @@ class LokalitaListView(SearchListView):
             "archeologicky_zaznam",
             "archeologicky_zaznam__pristupnost",
         ).prefetch_related("archeologicky_zaznam__katastry","archeologicky_zaznam__katastry__okres")
-        return qs
+        return self.check_filter_permission(qs)
 
 
 class LokalitaDetailView(LoginRequiredMixin, DetailView):

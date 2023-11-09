@@ -18,7 +18,7 @@ from core.constants import (
     ZAPSANI_AZ, OBLAST_CECHY, OBLAST_MORAVA,
 )
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 
 from ez.models import ExterniZdroj
@@ -53,9 +53,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     CHOICES = ((TYP_ZAZNAMU_LOKALITA, "Lokalita"), (TYP_ZAZNAMU_AKCE, "Akce"))
     STATES = (
-        (AZ_STAV_ZAPSANY, "A1 - Zapsána"),
-        (AZ_STAV_ODESLANY, "A2 - Odeslána"),
-        (AZ_STAV_ARCHIVOVANY, "A3 - Archivována"),
+        (AZ_STAV_ZAPSANY, _("arch_z.models.ArcheologickyZaznam.states.AZ1")),
+        (AZ_STAV_ODESLANY, _("arch_z.models.ArcheologickyZaznam.states.AZ2")),
+        (AZ_STAV_ARCHIVOVANY, _("arch_z.models.ArcheologickyZaznam.states.AZ3")),
     )
 
     typ_zaznamu = models.CharField(max_length=1, choices=CHOICES)
@@ -277,6 +277,14 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                         + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text2"
                     )
                 )
+            elif dj.pian is None:
+                result.append(
+                    _(
+                        "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.no_pian.text1")
+                    + str(dj.ident_cely)
+                    + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.no_pian.text2"
+                        )
+                )
         return result
 
     def set_lokalita_permanent_ident_cely(self):
@@ -375,6 +383,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     
     def get_create_user(self):
         return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_AZ)[0].uzivatel
+    
+    def get_create_org(self):
+        return self.get_create_user().organizace
 
     def __init__(self, *args, **kwargs):
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)

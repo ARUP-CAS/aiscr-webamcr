@@ -42,12 +42,25 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
-from core.utils import get_cadastre_from_point, get_cadastre_from_point_with_geometry
+from core.utils import (
+    get_cadastre_from_point,
+    get_cadastre_from_point_with_geometry,
+    get_pian_from_envelope,
+    get_pas_from_envelope,
+    get_num_pass_from_envelope,
+    get_num_pian_from_envelope,
+    get_heatmap_pas,
+    get_heatmap_pas_density,
+    get_dj_pians_from_envelope,
+    get_heatmap_pian_density,
+    get_heatmap_pian,
+)
 from core.views import SearchListView, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -63,6 +76,7 @@ from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from services.mailer import Mailer
 from uzivatel.models import Organizace, User
+from core.models import Permissions as p, check_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +91,7 @@ def get_detail_context(sn, request):
     )
     context["ulozeni_form"] = PotvrditNalezForm(instance=sn, readonly=True)
     context["history_dates"] = get_history_dates(sn.historie, request.user)
-    context["show"] = get_detail_template_shows(sn)
+    context["show"] = get_detail_template_shows(sn, request.user)
     logger.debug("pas.views.get_detail_context", extra=context)
     if sn.soubory:
         context["soubory"] = sn.soubory.soubory.all()
@@ -634,7 +648,21 @@ class SamostatnyNalezListView(SearchListView):
             "katastr",
             "katastr__okres",
         )
-        return qs
+        return self.check_filter_permission(qs)
+    
+    def add_ownership_lookup(self, ownership, qs):
+        usr_org_key = "uzivatel"
+        usr_org_value = self.request.user
+        filter_historie = {"typ_zmeny":self.typ_zmeny_lookup,usr_org_key:usr_org_value}
+        filtered_my = Historie.objects.filter(**filter_historie)
+        filtered = filtered_my
+        historie_key = self.permission_model_lookup + "historie__historie__pk__in"
+        qs_my = qs.filter(**{historie_key:filtered})
+        qs_values = qs_my.values_list("pk")
+        if ownership == p.ownershipChoices.our:
+            qs_our = qs.exclude(pk__in=qs_my.values("pk")).filter(**{"projekt__organizace":self.request.user.organizace})
+            qs_values = qs_values.union(qs_our.values_list("pk"))
+        return {"pk__in":qs_values}
 
 
 @login_required
@@ -805,12 +833,25 @@ class UzivatelSpolupraceListView(SearchListView):
             "historie",
             "spolupracovnik__organizace",
         )
-        return qs.order_by("id")
-
-    def get_table_kwargs(self):
-        if self.request.user.hlavni_role.id not in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
-            return {"exclude": ("smazani",)}
-        return {}
+        return self.check_filter_permission(qs).order_by("id")
+    
+    def add_ownership_lookup(self, ownership, qs=None):
+        filtered_my = UzivatelSpoluprace.objects.filter(spolupracovnik=self.request.user)
+        if ownership == p.ownershipChoices.our:
+            filtered_our = UzivatelSpoluprace.objects.exclude(pk__in=filtered_my.values("pk")).filter(vedouci__organizace=self.request.user.organizace)
+            filtered = UzivatelSpoluprace.objects.filter(Q(pk__in=filtered_our.values("pk"))|Q(pk__in=filtered_my.values("pk")))
+        else:
+            filtered = filtered_my
+        filterdoc = {"pk__in":filtered}
+        return filterdoc
+    
+    def add_accessibility_lookup(self,permission, qs):
+        return qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["show_zadost"] = check_permissions(p.actionChoices.spoluprace_zadost, self.request.user)
+        return context
 
 
 @login_required
@@ -948,25 +989,20 @@ def get_history_dates(historie_vazby, request_user):
     return historie
 
 
-def get_detail_template_shows(sn):
+def get_detail_template_shows(sn, user):
     """
     Funkce pro získaní kontextu pro zobrazování možností na stránkách.
     """
-    show_vratit = sn.stav > SN_ZAPSANY
-    show_odeslat = sn.stav == SN_ZAPSANY
-    show_potvrdit = sn.stav == SN_ODESLANY
-    show_archivovat = sn.stav == SN_POTVRZENY
-    show_edit = sn.stav not in [
-        SN_ARCHIVOVANY,
-    ]
     show_arch_links = sn.stav == SN_ARCHIVOVANY
     show = {
-        "vratit_link": show_vratit,
-        "odeslat_link": show_odeslat,
-        "potvrdit_link": show_potvrdit,
-        "archivovat_link": show_archivovat,
-        "editovat": show_edit,
+        "vratit_link": check_permissions(p.actionChoices.pas_vratit, user, sn.ident_cely),
+        "odeslat_link": check_permissions(p.actionChoices.pas_odeslat, user, sn.ident_cely),
+        "potvrdit_link": check_permissions(p.actionChoices.pas_potvrdit, user, sn.ident_cely),
+        "archivovat_link": check_permissions(p.actionChoices.pas_archivovat, user, sn.ident_cely),
+        "editovat": check_permissions(p.actionChoices.pas_edit, user, sn.ident_cely),
         "arch_links": show_arch_links,
+        "smazat": check_permissions(p.actionChoices.pas_smazat, user, sn.ident_cely),
+        "ulozeni_edit": check_permissions(p.actionChoices.pas_ulozeni_edit, user, sn.ident_cely),
     }
     return show
 
@@ -1049,3 +1085,96 @@ def get_required_fields(zaznam=None, next=0):
             "detector_coordinates_y",
         ]
     return required_fields
+
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_pas_and_pian_limit(request):
+    """
+    Funkce pohledu pro získaní heatmapy.
+    """
+    body = json.loads(request.body.decode("utf-8"))
+    params= [
+            body["southEast"]["lng"],
+            body["northWest"]["lat"],
+            body["northWest"]["lng"],
+            body["southEast"]["lat"],
+            body["zoom"]
+            ]
+    num1 =  get_num_pass_from_envelope(*params[0:4],request)
+    num2 =  get_num_pian_from_envelope(*params[0:4],request)
+    req_pian=body["pian"]
+    req_pas=body["pas"]
+    logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"num": num1+num2})
+    num=0
+    if req_pas:
+        num=num+num1
+
+    if req_pian:
+        num=num+num2
+
+    if num< 5000:
+        back = []
+        remove_duplicity = []
+
+        if req_pas:
+            pases = get_pas_from_envelope(*params[0:4],request)
+            for pas in pases:
+                if pas.id not in remove_duplicity:
+                    remove_duplicity.append(pas.id)
+                    back.append(
+                        {
+                            "id": pas.id,
+                            "ident_cely": pas.ident_cely,
+                            "geom": pas.geom.wkt.replace(", ", ","),
+                            "type": "pas"
+                        }
+                    )
+
+        if req_pian:    
+            pians = get_pian_from_envelope(*params[0:4],request)    
+            for pian in pians:
+                if pian["pian__id"] not in remove_duplicity:
+                    remove_duplicity.append(pian["pian__id"])
+                    back.append(
+                        
+                        {
+                            "id": pian["pian__id"],
+                            "ident_cely": pian["pian__ident_cely"],
+                            "geom": pian["pian__geom"].wkt.replace(", ", ",")
+                            if num<500
+                            else pian["pian__centroid"].wkt.replace(", ", ","),
+                            "dj": pian["ident_cely"],
+                            "presnost": pian["pian__presnost__zkratka"],
+                            "type": "pian"
+                        
+                        }
+                    )
+        if num > 0:
+            return JsonResponse({"points": back, "algorithm": "detail","count":num}, status=200)
+        else:
+            return JsonResponse({"points": [], "algorithm": "detail","count":0}, status=200)
+    else:
+        density = get_heatmap_pas_density(*params)
+        logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.density", extra={"density": density})
+
+        heats = []
+        if req_pas:
+            heats=heats+get_heatmap_pas(*params)
+        if req_pian:
+            heats=heats+get_heatmap_pian(*params)
+        back = []
+        cid = 0
+        for heat in heats:
+            cid += 1
+            back.append(
+                {
+                    "id": str(cid),
+                    "pocet": heat["count"],
+                    "density": 0,
+                    "geom": heat["geometry"].replace(", ", ","),
+                }
+            )
+        if len(heats) > 0:
+            return JsonResponse({"heat": back, "algorithm": "heat","count":len(heats)}, status=200)
+        else:
+            return JsonResponse({"heat": [], "algorithm": "heat","count":len(heats)}, status=200)

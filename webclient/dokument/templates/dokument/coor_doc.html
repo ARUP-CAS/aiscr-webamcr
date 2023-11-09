@@ -11,6 +11,9 @@
   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
   crossorigin="">
   </script>
+<script src="{% static 'leaflet.markercluster-src.js' %}"></script>
+<link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
+<link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
 <!--Leaflet FullScreen-->
 <script src="https://unpkg.com/lerc@1.0.1/LercDecode.js"></script>
 <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
@@ -48,11 +51,38 @@
 {% endblock %}
 
 {% block script %}
+<script>
+  var global_csrftoken = '{{ csrf_token }}';
+</script>
 <script >
   var static_url = "{% get_static_prefix %}";
 </script>
 <script src="{% static 'mapa_pins.js' %}"></script>
 <script src="{% static 'coor_precision.js' %}"></script>
+<script src="{% static 'spin/spin.min.js' %}"></script>
+<script src="{% static 'leaflet.spin.min.js' %}"></script>
+<script>
+  const map_translations = {
+    3DLibrary: '{%trans "mapa.3DLibrary" %}',
+    3DLocation: '{%trans "mapa.3DLocation" %}',
+    CurrentLocation: '{%trans "mapa.CurrentLocation" %}',
+    CurrentLocationError: '{%trans "mapa.CurrentLocationError" %}',
+    cuzkKatastralniMapa: '{%trans "mapa.cuzkKatastralniMapa" %}',
+    cuzkKatastralniUzemi: '{%trans "mapa.cuzkKatastralniUzemi" %}',
+    cuzkOrtofotomapa: '{%trans "mapa.cuzkOrtofotomapa" %}',
+    cuzkStinovanyeelief5G: '{%trans "mapa.cuzkStinovanyeelief5G" %}',
+    cuzkzakladniMapyCr: '{%trans "mapa.cuzkzakladniMapyCr" %}',
+    FullscreenTitle: '{%trans "mapa.FullscreenTitle" %}',
+    FullscreenTitleClose: '{%trans "mapa.FullscreenTitleClose" %}',
+    MeasureTitle: '{%trans "mapa.MeasureTitle" %}',
+    openStreetMap: '{%trans "mapa.openStreetMap" %}',
+    SearchText: '{%trans "mapa.SearchText" %}',
+    SearchTextCancel: '{%trans "mapa.SearchTextCancel" %}',
+    SearchTextError: '{%trans "mapa.SearchTextError" %}',
+    zoomInTitle: '{%trans "mapa.zoomInTitle" %}',
+    zoomOutTitle: '{%trans "mapa.zoomOutTitle" %}'          
+  };
+</script>
 <script src="{% static 'mapa_basic_grey.js' %}"></script>
 <script src="{% static 'mapa_doc.js' %}"></script>
 <script>

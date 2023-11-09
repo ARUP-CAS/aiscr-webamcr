@@ -2,7 +2,7 @@ import logging
 
 import crispy_forms
 from crispy_forms.layout import Div, Layout, HTML
-from django.db.models import Q
+from django.db.models import Q, OuterRef, Subquery, F
 from django.utils.translation import gettext as _
 from django_filters import (
     ModelMultipleChoiceFilter, CharFilter,
@@ -19,6 +19,7 @@ from heslar.models import Heslar
 from arch_z.filters import ArchZaznamFilter
 from core.forms import SelectMultipleSeparator
 from historie.models import Historie
+from uzivatel.models import Organizace
 from .models import Lokalita
 
 logger = logging.getLogger(__name__)
@@ -58,8 +59,12 @@ class LokalitaFilter(ArchZaznamFilter):
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
-    historie_zapsal_uzivatel_organizace = CharFilter(
-        label=_("arch_z.filters.AkceFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+
+    historie_zapsal_uzivatel_organizace = ModelMultipleChoiceFilter(
+        queryset=Organizace.objects.all(),
+        field_name="lokalita__archeologicky_zaznam__historie__historie__uzivatel",
+        label=_("lokalita.filters.LokalitaFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        widget=SelectMultipleSeparator(),
         method="filter_historie_zapsal_uzivatel_organizace",
         distinct=True,
     )
@@ -76,10 +81,17 @@ class LokalitaFilter(ArchZaznamFilter):
         ).distinct()
 
     def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
-        historie_query = Historie.objects.filter(vazba__archeologickyzaznam__isnull=False).filter(typ_zmeny=ZAPSANI_AZ)\
-            .filter(uzivatel__organizace=int(value))
-        arch_z_ids = [x.vazba.archeologickyzaznam for x in historie_query]
-        return queryset.filter(archeologicky_zaznam__in=arch_z_ids).distinct()
+        if value:
+            historie_subquery = Historie.objects.filter(vazba__archeologickyzaznam__isnull=False)\
+                .filter(typ_zmeny=ZAPSANI_AZ)\
+                .filter(vazba__archeologickyzaznam__lokalita=OuterRef("pk"))\
+                .filter(uzivatel__organizace__in=value)\
+                .annotate(lokalita_ids=F("vazba__archeologickyzaznam__lokalita"))
+            return queryset.annotate(lokalita_ids=Subquery(historie_subquery.values("lokalita_ids")))\
+                .filter(pk__in=F("lokalita_ids")).distinct()
+        else:
+            return queryset
+
 
     class Meta:
         model = Lokalita
@@ -143,7 +155,8 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
-                Div("historie_uzivatel", css_class="col-sm-4"),
+                Div("historie_uzivatel", css_class="col-sm-3"),
+                Div("historie_zapsal_uzivatel_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),

@@ -155,6 +155,7 @@ MIDDLEWARE = [
     "django.middleware.locale.LocaleMiddleware",
     'django_prometheus.middleware.PrometheusAfterMiddleware',
     'core.middleware.PermissionMiddleware',
+    'core.middleware.ErrorMiddleware',
 ]
 
 CRON_CLASSES = [

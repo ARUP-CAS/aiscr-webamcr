@@ -1,7 +1,7 @@
 import logging
+import pandas as pd
 
-
-from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN, PIAN_POTVRZEN
+from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN, PIAN_POTVRZEN, ROLE_ADMIN_ID, ZAPSANI_AZ, ZAPSANI_PIAN, ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from core.exceptions import MaximalIdentNumberError, NeznamaGeometrieError
 from core.ident_cely import get_temporary_pian_ident
 from core.message_constants import (
@@ -18,6 +18,8 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.utils import (
+    file_validate_epsg,
+    file_validate_geometry,
     get_validation_messages,
     update_all_katastr_within_akce_or_lokalita,
 )
@@ -30,14 +32,21 @@ from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
 from django.core.exceptions import PermissionDenied
 from django.db import connection
-from django.http import JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
+from django.views.generic import TemplateView
+from django.db.models import OuterRef, Subquery, Q
+from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA, PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from pian.forms import PianCreateForm
 from pian.models import Kladyzm, Pian
+from core.views import PermissionFilterMixin
+from core.models import Permissions
+from historie.models import Historie
+from arch_z.models import ArcheologickyZaznam
+from heslar.hesla import HESLAR_PRISTUPNOST
 
 logger = logging.getLogger(__name__)
 
@@ -301,8 +310,48 @@ def create(request, dj_ident_cely):
     )
     return response
 
+class PianPermissionFilterMixin(PermissionFilterMixin):
+    def add_ownership_lookup(self, ownership):
+        filtered_pian_history = Historie.objects.filter(typ_zmeny=ZAPSANI_PIAN,uzivatel=self.request.user)
+        filtered_pian_pian = set(Pian.objects.filter(historie__historie__in=filtered_pian_history).values_list("pk", flat=True))
+        filtered_az_history = Historie.objects.filter(typ_zmeny=ZAPSANI_AZ,uzivatel=self.request.user)
+        filtered_pian_az = set(Pian.objects.filter(dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__in=filtered_az_history).values_list("pk", flat=True))
+        filtered_pian_my = filtered_pian_pian.union(filtered_pian_az)
+        if ownership == Permissions.ownershipChoices.our:
+            filtered_pian_history_our = Historie.objects.filter(typ_zmeny=ZAPSANI_PIAN,uzivatel__organizace=self.request.user.organizace)
+            filtered_pian_pian_our = set(Pian.objects.filter(historie__historie__in=filtered_pian_history_our).values_list("pk", flat=True))
+            filtered_az_history_our = Historie.objects.filter(typ_zmeny=ZAPSANI_AZ,uzivatel__organizace=self.request.user.organizace)
+            filtered_pian_az_our = set(Pian.objects.filter(dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__in=filtered_az_history_our).values_list("pk", flat=True))
+            filtered_pian_projekt_our = set(Pian.objects.filter(dokumentacni_jednotky_pianu__archeologicky_zaznam__akce__projekt__organizace=self.request.user.organizace).values_list("pk", flat=True))
+            filtered_pian_my_our = filtered_pian_pian_our.union(filtered_pian_az_our).union(filtered_pian_projekt_our)
+        else:
+            filtered_pian_my_our = set()
+        filtered_pians = filtered_pian_my.union(filtered_pian_my_our)
+        return {"pk__in":filtered_pians}
 
-class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    
+    def add_accessibility_lookup(self,permission, qs):
+        group_to_accessibility={
+            ROLE_BADATEL_ID: PRISTUPNOST_BADATEL_ID,
+            ROLE_ARCHEOLOG_ID: PRISTUPNOST_ARCHEOLOG_ID,
+            ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
+            ROLE_ADMIN_ID:PRISTUPNOST_ARCHIVAR_ID ,
+        }
+        ownership_qs = qs.filter(**self.add_ownership_lookup(permission.accessibility))
+        accessibility_key = self.permission_model_lookup+"pristupnost_filter__in"
+        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, razeni__lte=Heslar.objects.filter(id=group_to_accessibility.get(self.request.user.hlavni_role.id)).values_list("razeni",flat=True))
+        filter = {accessibility_key:accessibilities}
+        pristupnost = (
+            ArcheologickyZaznam.objects.filter(dokumentacni_jednotky_akce__pian=OuterRef("pk"),pristupnost__isnull=False)
+            .order_by("pristupnost__razeni")
+            .values("pristupnost")
+        )
+        qs = qs.annotate(pristupnost_filter=Subquery(pristupnost[:1]))
+        qs_access = qs.exclude(pk__in=ownership_qs.values("pk")).filter(Q(**filter)|Q(pristupnost_filter__isnull=True))
+        return (ownership_qs | qs_access)
+
+
+class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, PianPermissionFilterMixin):
     """
     Třída pohledu pro autocomplete pianu.
     """
@@ -310,4 +359,60 @@ class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
         qs = Pian.objects.all().order_by("ident_cely")
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q).exclude(presnost__zkratka="4")
-        return qs
+        return self.check_filter_permission(qs)
+    
+
+class ImportovatPianView(LoginRequiredMixin, TemplateView):
+    """
+    Třída pohledu pro získaní řádku tabulky s externím zdrojem.
+    """
+    http_method_names = [
+        "post",
+    ]
+    template_name = "pian/pian_import_table.html"
+
+    def post(self, request):
+        docfile = request.FILES["file"]
+        try:
+            self.sheet = pd.read_csv(docfile, sep=";")
+        except ValueError as e:
+            logger.debug(e)
+            return HttpResponseBadRequest()
+        if self.sheet.columns[0] != "label":
+            return HttpResponseBadRequest()
+        if self.sheet.columns[1] != "epsg":
+            return HttpResponseBadRequest()
+        if self.sheet.columns[2] != "geometry":
+            return HttpResponseBadRequest()
+        self.sheet["result"] = self.sheet.apply(self.check_save_row, axis=1)
+        logger.debug(self.sheet.info())
+        context = self.get_context_data()
+        context["table"] = self.sheet
+        context["archz_ident"] = request.POST.get("arch_ident")
+        context["dj_ident"] = request.POST.get("dj_ident")
+        context["pian_ident"] = request.POST.get("pian_ident")
+        return self.render_to_response(context)
+    
+    def check_save_row(self, row):
+        if self.sheet['label'].value_counts()[row[0]] > 1:
+            return _("pian.views.importovatPianView.check.notUniquelabel")
+        if not self.check_geometry(row[2]):
+            return _("pian.views.importovatPianView.check.wrongGeometry")
+        if not self.check_epsg(row[2]):
+            return _("pian.views.importovatPianView.check.wrongEpsg")
+        else:
+            return True
+    
+    def check_geometry(self, geometry):
+        # @jiribartos kontrola geometrie
+        if not file_validate_geometry(geometry)[0]:
+            return False
+        else:
+            return True
+        
+    def check_epsg(self, epsg):
+        # @jiribartos kontrola geometrie
+        if not file_validate_epsg(epsg)[0]:
+            return False
+        else:
+            return True

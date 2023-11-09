@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed
+from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed, pre_delete
 from django.dispatch import receiver
 
 from historie.models import Historie
@@ -45,7 +45,7 @@ def create_ident_cely(sender, instance, **kwargs):
                 instance.ident_cely = "U-" + "{0}".format(str(number)).zfill(6)
             else:
                 instance.ident_cely = "U-000001"
-    if len(kwargs["update_fields"]) == 1 and "last_login" in kwargs["update_fields"]:
+    if kwargs["update_fields"] and len(kwargs["update_fields"]) == 1 and "last_login" in kwargs["update_fields"]:
         instance.suppress_signal = True
 
 
@@ -107,11 +107,11 @@ def delete_profile(sender, instance, *args, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=Osoba)
+@receiver(pre_delete, sender=Osoba)
 def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=Organizace)
+@receiver(pre_delete, sender=Organizace)
 def osoba_delete_repository_container(sender, instance: Organizace, **kwargs):
     instance.record_deletion()

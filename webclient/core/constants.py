@@ -29,8 +29,8 @@ SN_POTVRZENY: Final = 3  # SN3
 SN_ARCHIVOVANY: Final = 4  # SN4
 # Uzivatel
 # Pian
-PIAN_NEPOTVRZEN: Final = 1  # PN
-PIAN_POTVRZEN: Final = 2  # PP
+PIAN_NEPOTVRZEN: Final = 1  # PI1
+PIAN_POTVRZEN: Final = 2  # PI2
 # Uzivatel_spoluprace
 SPOLUPRACE_NEAKTIVNI: Final = 1  # US1
 SPOLUPRACE_AKTIVNI: Final = 2  # US2
@@ -52,7 +52,6 @@ ARCHIVACE_PROJ: Final = "P56"  # 6
 NAVRZENI_KE_ZRUSENI_PROJ: Final = "P*7"  # 7
 RUSENI_PROJ: Final = "P78"  # 8
 VRACENI_PROJ: Final = "P-1"  # New
-PRIDANI_OZNAMOVATELE_PROJ: Final = "PO1"  # New
 VRACENI_NAVRHU_ZRUSENI: Final = "P71"  # New
 VRACENI_ZRUSENI: Final = "P81"  # New
 # Akce + Lokalita (archeologicke zaznamy)
@@ -127,18 +126,6 @@ DOKUMENTACNI_JEDNOTKA_RELATION_TYPE: Final = "dokumentacni_jednotka"
 DOKUMENT_CAST_RELATION_TYPE: Final = "dokument_cest"
 SOUBOR_RELATION_TYPE: Final = "soubor"
 
-# Typy souboru
-IMPORTED_FILE: Final = "IMPORT"
-GENERATED_NOTIFICATION: Final = "AGPO"  # automaticky generována projektová oznameni
-PHOTO_DOCUMENTATION: Final = "FDN"  # fotodokumentace - samostatne nalezy
-OTHER_DOCUMENT_FILES: Final = (
-    "OSD"  # ostatní soubory dokumentace pri zápisu nového dokumentu
-)
-OTHER_PROJECT_FILES: Final = "OSPD"  # ostatní soubory projektové dokumentace z webu
-ZA_ZL_FILES: Final = (
-    "AGDZZ"  # automaticky generované dokumenty z rad ZA a ZL pri archivaci projektu
-)
-
 KLADYZM10 = 1
 KLADYZM25 = 2
 KLADYZM50 = 3
@@ -183,3 +170,4 @@ PERMISSIONS_SHEET_VLASTNICTVI_NAME = "Vlastnictví"
 PERMISSIONS_SHEET_PRISTUPNOST_NAME = "Přístupnost"
 PERMISSIONS_SHEET_APP_NAME = "app"
 PERMISSIONS_SHEET_URL_NAME = "URL"
+PERMISSIONS_SHEET_ACTION_NAME = "action"

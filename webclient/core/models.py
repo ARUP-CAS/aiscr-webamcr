@@ -2,20 +2,22 @@ import datetime
 import logging
 import os
 import re
-from typing import Iterable, Optional
+from typing import Optional
 from django_prometheus.models import ExportModelOperationsMixin
-
 
 from django.conf import settings
 from django.db import models
 from django.forms import ValidationError
 from django.contrib.auth.models import Group
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian
 from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
 from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
+from nalez.models import NalezObjekt, NalezPredmet
+from notifikace_projekty.models import Pes
+from uzivatel.models import User
 
 from xml_generator.models import ModelWithMetadata
 from .constants import (
@@ -26,6 +28,10 @@ from .constants import (
     SOUBOR_RELATION_TYPE,
 )
 from .repository_connector import RepositoryBinaryFile
+
+from PIL import Image
+from pypdf import PdfReader
+
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +156,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             logger.warning("core.models.soubor.vytvoreno.error", extra={"pk": self.pk})
             return None
 
-    def get_repository_content(self) -> Optional[RepositoryBinaryFile]:
+    def get_repository_content(self, ident_cely_old=None) -> Optional[RepositoryBinaryFile]:
         from .repository_connector import FedoraRepositoryConnector
 
         record = self.vazba.navazany_objekt
@@ -158,7 +164,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             logger.debug("core.models.Soubor.get_repository_content", extra={"record_ident_cely": record.ident_cely,
                                                                              "repository_uuid": self.repository_uuid})
             conector = FedoraRepositoryConnector(record)
-            rep_bin_file = conector.get_binary_file(self.repository_uuid)
+            rep_bin_file = conector.get_binary_file(self.repository_uuid, ident_cely_old)
             return rep_bin_file
         logger.debug("core.models.Soubor.get_repository_content.not_found",
                      extra={"record_ident_cely": record, "repository_uuid": self.repository_uuid, "soubor_pk": self.pk})
@@ -198,29 +204,25 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         Metóda pro uložení souboru do DB. Navíc se počítá počet stran pro pdf, případne počet frames pro obrázek.
         """
         # TODO: Rewrite this
-        # super().save(*args, **kwargs)
-        # try:
-        #     self.path
-        # except self.DoesNotExist:
-        #     super().save(*args, **kwargs)
-        # if self.path and self.path.path.lower().endswith("pdf"):
-        #     try:
-        #         reader = PdfReader(self.path)
-        #     except:
-        #         logger.debug("core.models.Soubor.save_error_reading_pdf")
-        #         self.rozsah = 1
-        #     else:
-        #         self.rozsah = len(reader.pages)
-        # elif self.path and self.path.path.lower().endswith("tif"):
-        #     try:
-        #         img = Image.open(self.path)
-        #     except:
-        #         logger.debug("core.models.Soubor.save_error_reading_tif")
-        #         self.rozsah = 1
-        #     else:
-        #         self.rozsah = img.n_frames
-        # else:
-        #     self.rozsah = 1
+        super().save(*args, **kwargs)
+        repository_binary_file = self.get_repository_content()
+        if repository_binary_file and self.nazev.lower().endswith("pdf"):
+            try:
+                reader = PdfReader(repository_binary_file.content)
+                self.rozsah = len(reader.pages)
+            except:
+                logger.debug("core.models.Soubor.save_error_reading_pdf")
+                self.rozsah = 1
+        elif repository_binary_file and self.nazev.lower().endswith("tif"):
+            try:
+                img = Image.open(repository_binary_file.content)
+            except:
+                logger.debug("core.models.Soubor.save_error_reading_tif")
+                self.rozsah = 1
+            else:
+                self.rozsah = img.n_frames
+        else:
+            self.rozsah = 1
         super().save(*args, **kwargs)
 
 
@@ -279,7 +281,7 @@ class GeomMigrationJobError(ExportModelOperationsMixin("geom_migration_job_error
         abstract = True
 
 
-class GeomMigrationJobSJTSKError(ExportModelOperationsMixin("geom_migration_job_sjtsk_error"), GeomMigrationJobError):
+class GeomMigrationJobSJTSKError(ExportModelOperationsMixin("geom_migration_job_sjtsk_error"), GeomMigrationJobError): # type: ignore pylance to ignore error
     """
     Model pro tabulku s chybami jobu geaom SJTSK migracií.
     """
@@ -289,7 +291,7 @@ class GeomMigrationJobSJTSKError(ExportModelOperationsMixin("geom_migration_job_
         abstract = False
 
 
-class GeomMigrationJobWGS84Error(ExportModelOperationsMixin("geom_migration_job_wgs84_error"), GeomMigrationJobError):
+class GeomMigrationJobWGS84Error(ExportModelOperationsMixin("geom_migration_job_wgs84_error"), GeomMigrationJobError): # type: ignore pylance to ignore error
     """
     Model pro tabulku s chybami jobu geaom WGS84 migracií.
     """
@@ -321,10 +323,122 @@ class CustomAdminSettings(ExportModelOperationsMixin("custom_admin_settings"), m
     item_group = models.CharField(max_length=100)
     item_id = models.CharField(max_length=100)
     value = models.TextField()
+
+    class Meta:
+        verbose_name = _("core.model.CustomAdminSettings.modelTitle.label")
+        verbose_name_plural = _("core.model.CustomAdminSettings.modelTitles.label")
+
 class Permissions(models.Model):
     class ownershipChoices(models.TextChoices):
         my = "my", "core.models.permissions.ownershipChoices.my"
         our = "our", "core.models.permissions.ownershipChoices.our"
+
+    class actionChoices(models.TextChoices):
+        adb_smazat = "adb_smazat", "core.models.permissions.actionChoices.adb_smazat"
+        vb_smazat = "vb_smazat", "core.models.permissions.actionChoices.vb_smazat"
+        adb_zapsat = "adb_zapsat", "core.models.permissions.actionChoices.adb_zapsat"
+        archz_adb_zapsat = "archz_adb_zapsat", "core.models.permissions.actionChoices.archz_adb_zapsat"
+        archz_komponenta_zapsat = "archz_komponenta_zapsat", "core.models.permissions.actionChoices.archz_komponenta_zapsat"
+        archz_pian_zapsat = "archz_pian_zapsat", "core.models.permissions.actionChoices.archz_pian_zapsat"
+        archz_vratit = "archz_vratit", "core.models.permissions.actionChoices.archz_vratit"
+        archz_odeslat = "archz_odeslat", "core.models.permissions.actionChoices.archz_odeslat"
+        archz_archivovat = "archz_archivovat", "core.models.permissions.actionChoices.archz_archivovat"
+        archz_pian_edit = "archz_pian_edit", "core.models.permissions.actionChoices.archz_pian_edit"
+        archz_vedouci_smazat = "archz_vedouci_smazat", "core.models.permissions.actionChoices.archz_vedouci_smazat"
+        archz_edit = "archz_edit", "core.models.permissions.actionChoices.archz_edit"
+        archz_smazat = "archz_smazat", "core.models.permissions.actionChoices.archz_smazat"
+        archz_zmenit_proj = "archz_zmenit_proj", "core.models.permissions.actionChoices.archz_zmenit_proj"
+        archz_zmenit_sam = "archz_zmenit_sam", "core.models.permissions.actionChoices.archz_zmenit_sam"
+        archz_odpojit_dokument = "archz_odpojit_dokument", "core.models.permissions.actionChoices.archz_odpojit_dokument"
+        archz_pripojit_dok = "archz_pripojit_dok", "core.models.permissions.actionChoices.archz_pripojit_dok"
+        archz_pripojit_proj = "archz_pripojit_proj", "core.models.permissions.actionChoices.archz_pripojit_proj"
+        archz_pripojit_dok_proj = "archz_pripojit_dok_proj", "core.models.permissions.actionChoices.archz_pripojit_dok_proj"
+        archz_dj_zapsat = "archz_dj_zapsat", "core.models.permissions.actionChoices.archz_dj_zapsat"
+        dj_smazat = "dj_smazat", "core.models.permissions.actionChoices.dj_smazat"
+        dj_zmenit_katastr = "dj_zmenit_katastr", "core.models.permissions.actionChoices.dj_zmenit_katastr"
+        dok_pripojit_archz = "dok_pripojit_archz", "core.models.permissions.actionChoices.dok_pripojit_archz"
+        dok_pripojit_proj = "dok_pripojit_proj", "core.models.permissions.actionChoices.dok_pripojit_proj"
+        dok_cast_odpojit = "dok_cast_odpojit", "core.models.permissions.actionChoices.dok_cast_odpojit"
+        dok_cast_edit = "dok_cast_edit", "core.models.permissions.actionChoices.dok_cast_edit"
+        dok_cast_smazat = "dok_cast_smazat", "core.models.permissions.actionChoices.dok_cast_smazat"
+        dok_cast_zapsat = "dok_cast_zapsat", "core.models.permissions.actionChoices.dok_cast_zapsat"
+        dok_komponenta_zapsat = "dok_komponenta_zapsat", "core.models.permissions.actionChoices.dok_komponenta_zapsat"
+        dok_edit = "dok_edit", "core.models.permissions.actionChoices.dok_edit"
+        dok_smazat = "dok_smazat", "core.models.permissions.actionChoices.dok_smazat"
+        dok_archivovat = "dok_archivovat", "core.models.permissions.actionChoices.dok_archivovat"
+        dok_odeslat = "dok_odeslat", "core.models.permissions.actionChoices.dok_odeslat"
+        dok_vratit = "dok_vratit", "core.models.permissions.actionChoices.dok_vratit"
+        dok_tvary_edit = "dok_tvary_edit", "core.models.permissions.actionChoices.dok_tvary_edit"
+        dok_tvary_smazat = "dok_tvary_smazat", "core.models.permissions.actionChoices.dok_tvary_smazat"
+        dok_zapsat_do_archz = "dok_zapsat_do_archz", "core.models.permissions.actionChoices.dok_zapsat_do_archz"
+        dok_zapsat_do_projekt = "dok_zapsat_do_projekt", "core.models.permissions.actionChoices.dok_zapsat_do_projekt"
+        model_edit = "model_edit", "core.models.permissions.actionChoices.model_edit"
+        neident_akce_edit = "neident_akce_edit", "core.models.permissions.actionChoices.neident_akce_edit"
+        neident_akce_smazat = "neident_akce_smazat", "core.models.permissions.actionChoices.neident_akce_smazat"
+
+        ez_edit = "ez_edit", "core.models.permissions.actionChoices.ez_edit"
+        ez_odeslat = "ez_odeslat", "core.models.permissions.actionChoices.ez_odeslat"
+        ez_potvrdit = "ez_potvrdit", "core.models.permissions.actionChoices.ez_potvrdit"
+        ez_vratit = "ez_vratit", "core.models.permissions.actionChoices.ez_vratit"
+        ez_smazat = "ez_smazat", "core.models.permissions.actionChoices.ez_smazat"
+        eo_edit_ez = "eo_edit_ez", "core.models.permissions.actionChoices.eo_edit_ez"
+        eo_edit_akce = "eo_edit_akce", "core.models.permissions.actionChoices.eo_edit_akce"
+        eo_odpojit_ez = "eo_odpojit_ez", "core.models.permissions.actionChoices.eo_odpojit_ez"
+        eo_odpojit_akce = "eo_odpojit_akce", "core.models.permissions.actionChoices.eo_odpojit_akce"
+        eo_pripojit_akce = "eo_pripojit_akce", "core.models.permissions.actionChoices.eo_pripojit_akce"
+        eo_pripojit_ez = "eo_pripojit_ez", "core.models.permissions.actionChoices.eo_pripojit_ez"
+        lokalita_komponenta_zapsat = "lokalita_komponenta_zapsat", "core.models.permissions.actionChoices.lokalita_komponenta_zapsat"
+        lokalita_pian_edit = "lokalita_pian_edit", "core.models.permissions.actionChoices.lokalita_pian_edit"
+        lokalita_pian_zapsat = "lokalita_pian_zapsat", "core.models.permissions.actionChoices.lokalita_pian_zapsat"
+        lokalita_dj_zapsat = "lokalita_dj_zapsat", "core.models.permissions.actionChoices.lokalita_dj_zapsat"
+        lokalita_edit = "lokalita_edit", "core.models.permissions.actionChoices.lokalita_edit"
+        komponenta_archz_detail = "komponenta_archz_detail", "core.models.permissions.actionChoices.komponenta_archz_detail"
+        komponenta_archz_smazat = "komponenta_archz_smazat", "core.models.permissions.actionChoices.komponenta_archz_smazat"
+        nalez_smazat_dokument = "nalez_smazat_dokument", "core.models.permissions.actionChoices.nalez_smazat_dokument"
+        nalez_smazat_akce = "nalez_smazat_akce", "core.models.permissions.actionChoices.nalez_smazat_akce"
+        pas_edit = "pas_edit" , "core.models.permissions.actionChoices.pas_edit"
+        pas_archivovat = "pas_archivovat" , "core.models.permissions.actionChoices.pas_archivovat"
+        pas_odeslat = "pas_odeslat" , "core.models.permissions.actionChoices.pas_odeslat"
+        pas_potvrdit = "pas_potvrdit" , "core.models.permissions.actionChoices.pas_potvrdit"
+        pas_vratit = "pas_vratit" , "core.models.permissions.actionChoices.pas_vratit"
+        pas_smazat = "pas_smazat" , "core.models.permissions.actionChoices.pas_smazat"
+        pas_ulozeni_edit = "pas_ulozeni_edit", "core.models.permissions.actionChoices.pas_ulozeni_edit"
+        pas_zapsat_do_projektu = "pas_zapsat_do_projektu", "core.models.permissions.actionChoices.pas_zapsat_do_projektu"
+        pas_mapa_pas = "pas_mapa_pas", "core.models.permissions.actionChoices.pas_mapa_pas"
+        pas_mapa_pian = "pas_mapa_pian", "core.models.permissions.actionChoices.pas_mapa_pian"
+        pian_potvrdit = "pian_potvrdit", "core.models.permissions.actionChoices.pian_potvrdit"
+        pian_odpojit = "pian_odpojit", "core.models.permissions.actionChoices.pian_odpojit"
+        pian_zapsat = "pian_zapsat", "core.models.permissions.actionChoices.pian_zapsat"
+        projekt_archivovat = "projekt_archivovat", "core.models.permissions.actionChoices.projekt_archivovat"
+        projekt_dok_odpojit = "projekt_dok_odpojit", "core.models.permissions.actionChoices.projekt_dok_odpojit"
+        projekt_dok_pripojit = "projekt_dok_pripojit", "core.models.permissions.actionChoices.projekt_dok_pripojit"
+        projekt_edit = "projekt_edit", "core.models.permissions.actionChoices.projekt_edit"
+        projekt_generovat_exp_list = "projekt_generovat_exp_list", "core.models.permissions.actionChoices.projekt_generovat_exp_list"
+        projekt_generovat_oznameni = "projekt_generovat_oznameni", "core.models.permissions.actionChoices.projekt_generovat_oznameni"
+        projekt_oznamovatel_zapsat = "projekt_oznamovatel_zapsat", "core.models.permissions.actionChoices.projekt_oznamovatel_zapsat"
+        projekt_smazat = "projekt_smazat", "core.models.permissions.actionChoices.projekt_smazat"
+        projekt_navrh_ke_zruseni = "projekt_navrh_ke_zruseni", "core.models.permissions.actionChoices.projekt_navrh_ke_zruseni"
+        projekt_prihlasit = "projekt_prihlasit", "core.models.permissions.actionChoices.projekt_prihlasit"
+        projekt_schvalit = "projekt_schvalit", "core.models.permissions.actionChoices.projekt_schvalit"
+        projekt_ukoncit_v_terenu = "projekt_ukoncit_v_terenu", "core.models.permissions.actionChoices.projekt_ukoncit_v_terenu"
+        projekt_uzavrit = "projekt_uzavrit", "core.models.permissions.actionChoices.projekt_uzavrit"
+        projekt_vratit_navrh_zruseni = "projekt_vratit_navrh_zruseni", "core.models.permissions.actionChoices.projekt_vratit_navrh_zruseni"
+        projekt_vratit = "projekt_vratit", "core.models.permissions.actionChoices.projekt_vratit"
+        projekt_zahajit_v_terenu = "projekt_zahajit_v_terenu", "core.models.permissions.actionChoices.projekt_zahajit_v_terenu"
+        projekt_zrusit = "projekt_zrusit", "core.models.permissions.actionChoices.projekt_zrusit"
+        soubor_nahrat_dokument = "soubor_nahrat_dokument", "core.models.permissions.actionChoices.soubor_nahrat_dokument"
+        soubor_nahrat_pas = "soubor_nahrat_pas", "core.models.permissions.actionChoices.soubor_nahrat_pas"
+        soubor_nahrat_projekt = "soubor_nahrat_projekt", "core.models.permissions.actionChoices.soubor_nahrat_projekt"
+        soubor_smazat_projekt = "soubor_smazat_projekt", "core.models.permissions.actionChoices.soubor_smazat_projekt"
+        soubor_smazat_dokument = "soubor_smazat_dokument", "core.models.permissions.actionChoices.soubor_smazat_dokument"
+        soubor_smazat_pas = "soubor_smazat_pas", "core.models.permissions.actionChoices.soubor_smazat_pas"
+        soubor_stahnout_projekt = "soubor_stahnout_projekt", "core.models.permissions.actionChoices.soubor_stahnout_projekt"
+        soubor_stahnout_dokument = "soubor_stahnout_dokument", "core.models.permissions.actionChoices.soubor_stahnout_dokument"
+        soubor_stahnout_pas = "soubor_stahnout_pas", "core.models.permissions.actionChoices.soubor_stahnout_pas"
+        spoluprace_zadost = "spoluprace_zadost", "core.models.permissions.actionChoices.spoluprace_zadost"
+        spoluprace_aktivovat = "spoluprace_aktivovat", "core.models.permissions.actionChoices.spoluprace_aktivovat"
+        spoluprace_deaktivovat = "spoluprace_deaktivovat", "core.models.permissions.actionChoices.spoluprace_deaktivovat"
+        spoluprace_smazat = "spoluprace_smazat", "core.models.permissions.actionChoices.spoluprace_smazat"
 
     pristupnost_to_groups = {
         PRISTUPNOST_ANONYM_ID: 0,
@@ -347,45 +461,54 @@ class Permissions(models.Model):
         default=True, verbose_name=_("core.models.permissions.base")
     )
     status = models.CharField(
-        max_length=10, verbose_name=_("core.models.permissions.status"), null=True
+        max_length=10, verbose_name=_("core.models.permissions.status"), null=True, blank=True,
     )
     ownership = models.CharField(
         max_length=10,
         verbose_name=_("core.models.permissions.ownership"),
         null=True,
+        blank=True,
         choices=ownershipChoices.choices,
     )
     accessibility = models.CharField(
         max_length=10,
         verbose_name=_("core.models.permissions.accessibility"),
         null=True,
+        blank=True,
         choices=ownershipChoices.choices,
+    )
+    action = models.CharField(
+        max_length=50,
+        verbose_name=_("core.models.permissions.action"),
+        null=True,
+        blank=True,
+        choices=actionChoices.choices,
     )
 
     class Meta:
         verbose_name = _("core.model.permissions.modelTitle.label")
         verbose_name_plural = _("core.model.permissions.modelTitles.label")
 
-    def check_concrete_permission(self, request_kwargs, user):
+    def check_concrete_permission(self, user, ident=None, typ=None):
+        self.typ= typ
         self.object = None
         self.logged_in_user = user
         self.permission_object = None
-        if len(request_kwargs) > 0:
-            self.ident = list(request_kwargs.values())[0]
+        self.ident = ident
         if not self.check_base():
+            logger.debug("base false")
             return False
-        try: 
-            self.ident
-        except AttributeError as e:
-            logger.debug(e)
-        else:
-            if not self.check_status():
+        if self.ident is not None:
+            perm_check = self.check_status()
+            if perm_check and not self.check_ownership(self.ownership):
+                logger.debug("ownership false")
+                perm_check = False
+            if perm_check and not self.check_accessibility():
+                logger.debug("accessibility false")
+                perm_check = False
+            if not perm_check and not self.check_permission_skip():
+                logger.debug("skip false")
                 return False
-            if not self.check_ownership(self.ownership):
-                return False
-            if not self.check_accessibility():
-                return False
-
         return True
 
     def check_base(self):
@@ -395,12 +518,11 @@ class Permissions(models.Model):
             return False
 
     def check_status(self):
-        from core.ident_cely import get_record_from_ident
-
         if self.status:
             if not self.permission_object:
-                self.object = get_record_from_ident(self.ident)
-                self.permission_object = self.object.get_permission_object()
+                self.get_permission_object()
+                if self.permission_object == "error":
+                    return True
             subed_status = re.sub("[a-zA-Z]", "", self.status)
             if ">" in self.status:
                 if not int(self.permission_object.stav) > int(subed_status[1]):
@@ -420,21 +542,20 @@ class Permissions(models.Model):
         return True
 
     def check_ownership(self, ownership):
-        from core.ident_cely import get_record_from_ident
-
         if ownership:
             if not self.permission_object:
-                self.object = get_record_from_ident(self.ident)
-                self.permission_object = self.object.get_permission_object()
-            if ownership == self.ownershipChoices.my:
-                if not self.permission_object.get_create_user() == self.logged_in_user:
-                    return False
-            elif ownership == self.ownershipChoices.our:
+                self.get_permission_object()
+                if self.permission_object == "error":
+                    return True
+            if self.permission_object.get_create_user() and self.permission_object.get_create_user() == self.logged_in_user:
+                return True
+            if ownership == self.ownershipChoices.our:
                 if (
-                    not self.permission_object.get_create_user().organizace
+                    self.permission_object.get_create_org() 
                     == self.logged_in_user.organizace
                 ):
-                    return False
+                    return True
+            return False
         return True
 
     def check_accessibility(self):
@@ -449,3 +570,64 @@ class Permissions(models.Model):
                     return False
         return True
     
+    def check_permission_skip(self):
+        if not self.permission_object:
+            self.get_permission_object()
+            if self.permission_object == "error":
+                return True
+        perm_skips = list(PermissionsSkip.objects.filter(user=self.logged_in_user).values_list("ident_list",flat=True))
+        if len(perm_skips) > 0 and self.permission_object.ident_cely in perm_skips[0].split(","):
+            return True
+        return False
+
+    def get_permission_object(self):
+        from core.ident_cely import get_record_from_ident
+        from pas.models import UzivatelSpoluprace
+
+        if "spoluprace/" in self.address_in_app:
+            self.permission_object = UzivatelSpoluprace.objects.get(id=self.ident)
+        elif "nalez/smazat" in self.address_in_app:
+            if self.typ == "objekt":
+                self.permission_object = NalezObjekt.objects.get(id=self.ident).get_permission_object()
+            elif self.typ == "predmet":
+                self.permission_object = NalezPredmet.objects.get(id=self.ident).get_permission_object()
+            else:
+                self.object = get_record_from_ident(self.ident)
+                self.permission_object = self.object.get_permission_object()
+        elif "notifikace-projekty/smazat" in self.address_in_app:
+            self.permission_object = Pes.objects.get(id=self.ident)
+        else:
+            try:
+                self.object = get_record_from_ident(self.ident)
+                self.permission_object = self.object.get_permission_object()
+            except Exception as e:
+                logger.error(e)
+                self.permission_object = "error"
+    
+
+def check_permissions(action, user, ident=None):
+    permission_set = Permissions.objects.filter(
+        main_role=user.hlavni_role,
+        action=action,
+    )
+    logger.debug("checking action permission")
+    logger.debug(permission_set)
+    if permission_set.count() > 0:
+        tested = []
+        for concrete_permission in permission_set:
+            tested.append(
+                concrete_permission.check_concrete_permission(
+                    user, ident
+                )
+            )
+        if not any(tested):
+            return False
+    return True
+
+class PermissionsSkip(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ident_list = models.TextField()
+
+    class Meta:
+        verbose_name = _("core.model.permissionsSkip.modelTitle.label")
+        verbose_name_plural = _("core.model.permissionsSkip.modelTitles.label")

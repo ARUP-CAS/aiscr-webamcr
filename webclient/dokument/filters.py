@@ -20,7 +20,7 @@ from django_filters import (
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_DOK
 from dokument.models import Dokument, DokumentCast, Tvar
 from historie.models import Historie
-from django.db.models import Q
+from django.db.models import Q, OuterRef, Subquery, F
 from heslar.hesla import (
     HESLAR_AREAL_KAT,
     HESLAR_DOHLEDNOST,
@@ -52,7 +52,7 @@ from heslar.hesla import (
     HESLAR_PREDMET_SPECIFIKACE,
 )
 from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
-from heslar.models import Heslar
+from heslar.models import Heslar, RuianKatastr
 from uzivatel.models import Organizace, User, Osoba
 from django.utils.translation import gettext as _
 
@@ -229,7 +229,7 @@ class Model3DFilter(HistorieFilter):
         field_name="extra_data__duveryhodnost",
         label=_("dokument.filters.model3DFilter.duverihodnost.label"),
         lookup_expr="gte",
-        widget=NumberInput(attrs={"min": "1", "max": "100"}),
+        widget=NumberInput(attrs={"min": "0", "max": "100"}),
         distinct=True,
     )
     popisne_udaje = CharFilter(
@@ -351,8 +351,11 @@ class Model3DFilter(HistorieFilter):
         distinct=True,
     )
 
-    historie_zapsal_uzivatel_organizace = CharFilter(
-        label=_("arch_z.filters.model3DFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+    historie_zapsal_uzivatel_organizace = ModelMultipleChoiceFilter(
+        queryset=Organizace.objects.all(),
+        field_name="dokument__historie__historie__uzivatel",
+        label=_("dokument.filters.Model3DFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        widget=SelectMultipleSeparator(),
         method="filter_historie_zapsal_uzivatel_organizace",
         distinct=True,
     )
@@ -383,10 +386,16 @@ class Model3DFilter(HistorieFilter):
         return queryset.filter(casti__komponenty__komponenty__areal__in=value)
 
     def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
-        historie_query = Historie.objects.filter(vazba__dokument_historie__isnull=False).filter(typ_zmeny=ZAPSANI_DOK)\
-            .filter(uzivatel__organizace=int(value))
-        d_ids = [x.vazba.dokument_historie.pk for x in historie_query]
-        return queryset.filter(pk__in=d_ids).distinct()
+        if value:
+            historie_subquery = Historie.objects.filter(vazba__dokument_historie__isnull=False)\
+                .filter(typ_zmeny=ZAPSANI_DOK)\
+                .filter(vazba__dokument_historie=OuterRef("pk"))\
+                .filter(uzivatel__organizace__in=value)\
+                .annotate(dok_ids=F("vazba__dokument_historie"))
+            return queryset.annotate(dok_ids=Subquery(historie_subquery.values("dok_ids")))\
+                .filter(pk__in=F("dok_ids")).distinct()
+        else:
+            return queryset
 
     class Meta:
         model = Dokument
@@ -447,7 +456,8 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
-                Div("historie_uzivatel", css_class="col-sm-4"),
+                Div("historie_uzivatel", css_class="col-sm-3"),
+                Div("historie_zapsal_uzivatel_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),
@@ -612,9 +622,11 @@ class DokumentFilter(Model3DFilter):
         distinct=True,
     )
 
-    neident_katastr = CharFilter(
+    neident_katastr =ModelMultipleChoiceFilter(
+        queryset=RuianKatastr.objects.all(),
         label=_("dokument.filters.dokumentFilter.neidentAkceKatastr.label"),
-        field_name="casti__neident_akce__katastr__nazev",
+        field_name="casti__neident_akce__katastr",
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
         distinct=True,
     )
 
@@ -835,8 +847,11 @@ class DokumentFilter(Model3DFilter):
         distinct=True,
     )
 
-    historie_zapsal_uzivatel_organizace = CharFilter(
-        label=_("arch_z.filters.dokumentFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+    historie_zapsal_uzivatel_organizace = ModelMultipleChoiceFilter(
+        queryset=Organizace.objects.all(),
+        field_name="dokument__historie__historie__uzivatel",
+        label=_("dokument.filters.DokumentFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        widget=SelectMultipleSeparator(),
         method="filter_historie_zapsal_uzivatel_organizace",
         distinct=True,
     )
@@ -1026,10 +1041,16 @@ class DokumentFilter(Model3DFilter):
             return queryset.distinct()
 
     def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
-        historie_query = Historie.objects.filter(vazba__dokument_historie__isnull=False).filter(typ_zmeny=ZAPSANI_DOK)\
-            .filter(uzivatel__organizace=int(value))
-        d_ids = [x.vazba.dokument_historie.pk for x in historie_query]
-        return queryset.filter(pk__in=d_ids).distinct()
+        if value:
+            historie_subquery = Historie.objects.filter(vazba__dokument_historie__isnull=False)\
+                .filter(typ_zmeny=ZAPSANI_DOK)\
+                .filter(vazba__dokument_historie=OuterRef("pk"))\
+                .filter(uzivatel__organizace__in=value)\
+                .annotate(dok_ids=F("vazba__dokument_historie"))
+            return queryset.annotate(dok_ids=Subquery(historie_subquery.values("dok_ids")))\
+                .filter(pk__in=F("dok_ids")).distinct()
+        else:
+            return queryset
 
     def __init__(self, *args, **kwargs):
         super(DokumentFilter, self).__init__(*args, **kwargs)
@@ -1104,7 +1125,8 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
-                Div("historie_uzivatel", css_class="col-sm-4"),
+                Div("historie_uzivatel", css_class="col-sm-3"),
+                Div("historie_zapsal_uzivatel_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),

@@ -5,6 +5,29 @@ var lock = false;
 var GLOBAL_DEBUG_TEXT=false;
 
 var lock_sjtsk_low_precision=false;
+var global_map_can_load_projects=true //zkontroluj
+var boundsLock=false //zkontroluj
+
+var poi_sugest= L.layerGroup();
+var mcg = L.markerClusterGroup({ disableClusteringAtZoom: 20 }).addTo(map);
+var poi_sn = L.featureGroup.subGroup(mcg)
+var poi_pian = L.featureGroup.subGroup(mcg)
+var heatPoints = [];
+var heatmapOptions = settings_heatmap_options;
+var heatLayer = L.heatLayer(heatPoints, heatmapOptions);
+
+map.addLayer(poi_sugest);
+
+var overlays = {
+    [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
+    [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
+    [map_translations['FindLocation']]:poi_sugest,
+    [map_translations['samostatneNalezy']]: poi_sn,
+    [map_translations['pian']]:poi_pian,
+};
+
+global_map_layers.remove(map);//remove previous overlay
+L.control.layers(baseLayers, overlays).addTo(map);
 
 var mem={
     "detector_coordinates_x":0.0,
@@ -17,7 +40,7 @@ map.on('click', function (e) {
             if (!lock) {
                 if (map.getZoom() > 15) {
                     lock_sjtsk_low_precision=false;
-                    var [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
+                    var [corY, corX] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
                     jtsk_coor = amcr_static_coordinate_precision_jtsk(convertToJTSK(corX, corY));
                     point_global_WGS84 = [corX, corY];
                     point_global_JTSK = jtsk_coor
@@ -128,7 +151,7 @@ var transformSinglePoint = async(y_plus,x_plus,push,addComa) => {
                     //document.getElementById('detector_coordinates_y').value = x_plus+ (addComa==true ? ',':'');
                     lock_sjtsk_low_precision=true;
                     switch_coordinate_system();
-                    alert("Přesná transformace ze systemu S-JTSK není v současnosti dostupná, proto bude použita méně přesná transformace!")
+                    alert([map_translations['TransformationError']]) // "Přesná transformace ze systemu S-JTSK není v současnosti dostupná, proto bude použita méně přesná transformace!"
 
                 }
             }
@@ -165,7 +188,7 @@ var is_in_czech_republic = (corX, corY) => {
             disableSaveButton(true)
             //alert("Zadané souřadnice nejsou v ČR 1")
             point_global_WGS84 = [0, 0];
-            poi.clearLayers();
+            poi_sugest.clearLayers();
             return false
         }
     } else {
@@ -177,7 +200,7 @@ var is_in_czech_republic = (corX, corY) => {
             disableSaveButton(true)
             //alert("Zadané souřadnice nejsou v ČR")
             point_global_WGS84 = [0, 0];
-            poi.clearLayers();
+            poi_sugest.clearLayers();
             return false;
         }
     }
@@ -246,11 +269,11 @@ var switch_coor_system = (new_system) => {
 
 var addUniquePointToPoiLayer = (lat, long, text, zoom = true, redPin = false) => {
     var [corX, corY] = amcr_static_coordinate_precision_wgs84([lat, long]);
-    poi.clearLayers()
+    poi_sugest.clearLayers()
     if(redPin){
-        L.marker([corX, corY],{icon:pinIconRedPin}).bindPopup("Vámi vyznačená poloha").addTo(poi);
+        L.marker([corX, corY],{icon:pinIconRedPin, zIndexOffset: 2000}).bindPopup([map_translations['SetLocation']]).addTo(poi_sugest); //"Vámi vyznačená poloha"
     } else {
-        L.marker([corX, corY],{icon:pinIconYellowPin}).bindPopup("Vámi vyznačená poloha").addTo(poi);
+        L.marker([corX, corY],{icon:pinIconYellowPin, zIndexOffset: 2000}).bindPopup([map_translations['SetLocation']]).addTo(poi_sugest); // "Vámi vyznačená poloha"
     }
     if (corX && corY && zoom) {
         map.setView([corX, corY], 15);
@@ -282,7 +305,7 @@ function showPosition(position) {
     document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
     replace_coor();
 
-    L.marker(latlng,{icon:pinIconGreenPin}).addTo(poi)
+    L.marker(latlng,{icon:pinIconGreenPin}).addTo(poi_sugest)
         .bindPopup("Vaše současná poloha")
         .openPopup();
 };
@@ -323,3 +346,116 @@ $(document).ready(function () {
     }
 
 })
+var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost4=false) => {
+    //addLogText("arch_z_detail_map.addPointToPoiLayer")
+    let coor = []
+    let myIco = { icon: pinIconPurplePoint };
+    let myIco2 = { icon: pinIconPurpleHW };
+    let myColor = { color: "rgb(151, 0, 156)" };
+    if(presnost4){
+        myIco = { icon: pinIconPurpleHW};
+    }
+
+
+    if (st_text.includes("POLYGON") && !presnost4) {
+        st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
+            coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0].replace("(", "")]))
+        })
+        L.polygon(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer);
+    } else if (st_text.includes("LINESTRING")) {
+        st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
+            coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
+        })
+        L.polyline(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer);
+    } else if (st_text.includes("POINT")) {
+        let i = st_text.split("(")[1].split(")")[0];
+        coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
+
+    }
+    if (overview && coor.length > 0) {
+        x0 = 0.0;
+        x1 = 0.0
+        c0 = 0
+        //console.log(coor)
+        for (const i of coor) {
+            if(!(st_text.includes("POLYGON") && c0==coor.length-1)){
+                x0 = x0 + parseFloat(i[0])
+                x1 = x1 + parseFloat(i[1])
+                c0 = c0 + 1
+            }
+        }
+        if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
+            L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco2).bindTooltip(text).addTo(layer);
+        } else {
+            L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco).bindTooltip(text).addTo(layer);
+        }
+
+    }
+}
+
+map.on('moveend', function () {
+    switchMap(false);
+});
+
+switchMap = function (overview = false) {
+    var bounds = map.getBounds();
+    let zoom = map.getZoom();
+    var northWest = bounds.getNorthWest(),
+        southEast = bounds.getSouthEast();
+    if (global_map_can_load_projects) {
+        if (overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest) {
+            console.log("Change: " + northWest + "  " + southEast + " " + zoom);
+            boundsLock = bounds;
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', '/pas/akce-get-pas-pian');
+            xhr.setRequestHeader('Content-type', 'application/json');
+            if (typeof global_csrftoken !== 'undefined') {
+                xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+            }
+            map.spin(false);
+            map.spin(true);
+            xhr.send(JSON.stringify(
+                {
+                    'northWest': northWest,
+                    'southEast': southEast,
+                    'zoom': zoom,
+                }));
+
+            xhr.onload = function () {
+                try{
+                    poi_sn.clearLayers();
+                    poi_pian.clearLayers();
+                    map.removeLayer(heatLayer);
+                    let resAl = JSON.parse(this.responseText).algorithm
+                    if (resAl == "detail") {
+                        let resPoints = JSON.parse(this.responseText).points
+                        resPoints.forEach((i) => {
+
+                            if(i.type=="pas"){
+                                let ge = i.geom.split("(")[1].split(")")[0];
+                                L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurple3D }).bindPopup(i.ident_cely).addTo(poi_sn)
+                            } else if(i.type=="pian"){
+                                addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost==4)
+                            }
+                        })
+                    } else {
+                        let resHeat = JSON.parse(this.responseText).heat
+                        resHeat.forEach((i) => {
+                            geom = i.geom.split("(")[1].split(")")[0].split(" ");
+                            for (let j = 0; j < i.pocet; j++) {
+                                heatPoints.push([geom[1], geom[0]])//chyba je to geome
+                            }
+                        })
+                        heatLayer = L.heatLayer(heatPoints, heatmapOptions);
+                        map.addLayer(heatLayer);
+                        //poi_other.clearLayers();
+                        //poi_other_dp.clearLayers();
+                        //poi_dj.clearLayers();
+
+                    }
+                    map.spin(false);
+                } catch(e){map.spin(false);console.log(e)}
+            };
+        }
+    }
+}

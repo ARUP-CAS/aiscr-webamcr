@@ -211,14 +211,20 @@ class FedoraRepositoryConnector:
                                 ):
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok",
-                             extra={"text": response.text, "status_code": response.status_code})
+                             extra={"text": response.text, "status_code": response.status_code,
+                                    "request_type": request_type})
             else:
-                logger.error("core_repository_connector._send_request.response.error",
-                             extra={"text": response.text, "status_code": response.status_code})
+                extra = {"text": response.text, "status_code": response.status_code, "request_type": request_type}
+                if headers:
+                    extra["headers"] = headers
+                if data and len(str(data)) < 10 ** 3:
+                    extra["data"] = data
+                logger.error("core_repository_connector._send_request.response.error", extra=extra)
                 raise FedoraError(response.text, response.status_code)
         else:
             logger.debug("core_repository_connector._send_request.response",
-                         extra={"text": response.text, "status_code": response.status_code})
+                         extra={"text": response.text, "status_code": response.status_code,
+                                "request_type": request_type})
         return response
 
     def _create_container(self):
@@ -383,13 +389,28 @@ class FedoraRepositoryConnector:
                      extra={"url": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file
 
-    def migrate_binary_file(self, soubor, include_content=True) -> Optional[RepositoryBinaryFile]:
+    def migrate_binary_file(self, soubor, include_content=True, check_if_exists=True,
+                            ident_cely_old=None) -> Optional[RepositoryBinaryFile]:
         from core.models import Soubor
         soubor: Soubor
         logger.debug("core_repository_connector.migrate_binary_file.start", extra={"soubor": soubor.pk})
-        if soubor.repository_uuid is not None:
+        if soubor.repository_uuid is not None and check_if_exists:
             return None
         self._check_binary_file_container()
+        if include_content:
+            if soubor.repository_uuid is None:
+                with open(soubor.path, mode="rb") as file:
+                    data = file.read()
+                data = io.BytesIO(data)
+                file_sha_512 = hashlib.sha512(data).hexdigest()
+            else:
+                old_rep_bin_file = soubor.get_repository_content(ident_cely_old)
+                data = old_rep_bin_file.content
+                file_sha_512 = old_rep_bin_file.sha_512
+                data.seek(0)
+        else:
+            data = None
+            file_sha_512 = None
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
         result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE)
         uuid = result.text.split("/")[-1]
@@ -397,14 +418,8 @@ class FedoraRepositoryConnector:
         soubor.suppress_signal = True
         soubor.save()
         if include_content:
-            with open(soubor.path, mode="rb") as file:
-                data = file.read()
-            data = io.BytesIO(data)
-            soubor.nazev = soubor.nazev
-            soubor.save()
-            content_type = get_mime_type(soubor.name)
+            content_type = get_mime_type(soubor.nazev)
             rep_bin_file = RepositoryBinaryFile(uuid, data, soubor.nazev)
-            file_sha_512 = hashlib.sha512(data).hexdigest()
             headers = {
                 "Content-Type": content_type,
                 "Content-Disposition": f'attachment; filename="{soubor.nazev}"'.encode("utf-8"),
@@ -414,18 +429,22 @@ class FedoraRepositoryConnector:
             url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
             self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
             logger.debug("core_repository_connector.migrate_binary_file.end",
-                         extra={"url": uuid, "ident_cely": self.record.ident_cely})
+                         extra={"uuid": uuid, "ident_cely": self.record.ident_cely})
             return rep_bin_file
 
-    def get_binary_file(self, uuid) -> RepositoryBinaryFile:
-        logger.debug("core_repository_connector.get_binary_file.start", extra={"url": uuid})
+    def get_binary_file(self, uuid, ident_cely_old=None) -> RepositoryBinaryFile:
+        logger.debug("core_repository_connector.get_binary_file.start", extra={"url": uuid,
+                                                                               "ident_cely_old": ident_cely_old})
         url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT, uuid=uuid)
+        if ident_cely_old is not None:
+            url = url.replace(self.record.ident_cely, ident_cely_old)
         response = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTENT)
         file = io.BytesIO()
         file.write(response.content)
         file.seek(0)
         rep_bin_file = RepositoryBinaryFile(uuid, file)
-        logger.debug("core_repository_connector.get_binary_file.end", extra={"url": uuid})
+        logger.debug("core_repository_connector.get_binary_file.end",
+                     extra={"url": uuid, "sha_512": rep_bin_file.sha_512, "ident_cely_old": ident_cely_old})
         return rep_bin_file
 
     def update_binary_file(self, file_name, content_type, file: io.BytesIO, uuid: str) -> RepositoryBinaryFile:
@@ -551,6 +570,16 @@ class FedoraRepositoryConnector:
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, headers=headers, data=data)
         logger.debug("core_repository_connector.record_ident_change.end", extra={"ident_cely": self.record.ident_cely,
                                                                                  "ident_cely_old": ident_cely_old})
+        from dokument.models import Dokument
+        if isinstance(self.record, Dokument):
+            for item in self.record.soubory.soubory.all():
+                from core.models import Soubor
+                item: Soubor
+                item.nazev = item.nazev.replace(ident_cely_old.replace("-", ""),
+                                                self.record.ident_cely.replace("-", ""))
+                item.save()
+                self.migrate_binary_file(item, include_content=True, check_if_exists=False,
+                                         ident_cely_old=ident_cely_old)
 
     def validate_file_sha_512(self, soubor):
         logger.error("core_repository_connector.validate_file_sha_512.start",
