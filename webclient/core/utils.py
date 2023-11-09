@@ -142,46 +142,6 @@ def get_cadastre_from_point_with_geometry(point):
         )
         return None
 
-
-def get_centre_point(bod, geom):
-    """
-    Funkce pro získani stredového bodu z bodu a geomu.
-    """
-    try:
-        [x0, x1, xlength] = [0.0, 0.0, 1]
-        bod.zoom = 17
-        if isinstance(geom[0], float):
-            [x0, x1, xlength] = [geom[0], geom[1], 1]
-        elif isinstance(geom[0][0], float):
-            for i in range(0, len(geom)):
-                [x0, x1, xlength] = [
-                    x0 + geom[i][0],
-                    x1 + geom[i][1],
-                    len(geom),
-                ]
-        elif isinstance(geom[0][0][0], tuple):
-            for i in range(0, len(geom) - 1):
-                [x0, x1, xlength] = [
-                    x0 + geom[0][0][i][0],
-                    x1 + geom[0][0][i][1],
-                    len(geom) - 1,
-                ]
-        else:
-            for i in range(0, len(geom[0]) - 1):
-                [x0, x1, xlength] = [
-                    x0 + geom[0][i][0],
-                    x1 + geom[0][i][1],
-                    len(geom[0]) - 1,
-                ]
-        bod.lat = x1 / xlength
-        bod.lng = x0 / xlength
-        return [bod, geom]
-    except Exception as e:
-        logger.error(
-            "core.utils.get_cadastre_from_point_with_geometry.error", extra={"e": e}
-        )
-
-
 def get_all_pians_with_akce(ident_cely):
     """
     Funkce pro získaní všech pianů s akci.
@@ -314,22 +274,27 @@ def get_centre_from_akce(katastr, pian):
     """
     Funkce pro bodu, geomu a presnosti z akce.
     """
+    from django.contrib.gis.db.models.functions import Centroid
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
         " from public.ruian_katastr where "
         " upper(nazev_stary)=upper(%s) and aktualni='t' limit 1"
     )
     try:
-        bod = RuianKatastr.objects.raw(query, [katastr])[0]
+        bod_ku = RuianKatastr.objects.raw(query, [katastr])[0]
+        bod=[bod_ku.lat,bod_ku.lng]
         geom = ""
         presnost = 4
-        bod.zoom = 14
+        zoom = 14
         if len(pian) > 1:
-            dj = DokumentacniJednotka.objects.get(ident_cely=pian)
+            dj = DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom")).get(ident_cely=pian)
             if dj.pian and dj.pian.geom:
-                [bod, geom] = get_centre_point(bod, dj.pian.geom)
+                bod = dj.pian__centroid
+                bod =[bod[1],bod[0]]
+                zoom = 17
+                geom = dj.pian.geom
                 presnost = dj.pian.presnost.zkratka
-        return [bod, geom, presnost]
+        return [bod, geom, presnost,zoom]
     except IndexError:
         logger.error(
             "core.utils.get_centre_from_akce.error",
