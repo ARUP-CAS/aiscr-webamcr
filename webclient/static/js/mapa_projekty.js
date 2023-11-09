@@ -159,7 +159,7 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost4=fals
     //addLogText("arch_z_detail_map.addPointToPoiLayer")
     let coor = []
     let myIco = { icon: pinIconGreenPoint };
-    let myIco2 = { icon: pinIconGreenleHW };
+    let myIco2 = { icon: pinIconGreenHW };
     let myColor = { color: "rgb(151, 0, 156)" };
     if(presnost4){
         myIco = { icon: pinIconGreenHW};
@@ -215,7 +215,7 @@ switchMap = function (overview = false) {
             let xhr_pian = new XMLHttpRequest();
             xhr_proj.open('POST', '/projekt/mapa-projekty');
             xhr_pas.open('POST', '/projekt/mapa-pas');
-            xhr_pian.open('POST', '/projekt/mapa-pas');
+            xhr_pian.open('POST', '/projekt/mapa-pian');
             xhr_proj.setRequestHeader('Content-type', 'application/json');
             if (typeof global_csrftoken !== 'undefined') {
                 xhr_proj.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -300,7 +300,7 @@ switchMap = function (overview = false) {
                     let resPoints = JSON.parse(this.responseText).points
                     resPoints.forEach((i) => {
                         let ge = i.geom.split("(")[1].split(")")[0];
-                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconGreenPin }).bindPopup(i.ident_cely).addTo(poi_sn)
+                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[0], ge.split(" ")[1]]), { icon: pinIconGreenPin }).bindPopup(i.ident_cely).addTo(poi_sn)
                     })
 
                     map.spin(false);

@@ -81,7 +81,7 @@ urlpatterns = [
         name="post_ajax_get_project_pas_limit",
     ),
     path(
-        "mapa-pas",
+        "mapa-pian",
         ProjectPianFromEnvelopeView.as_view(),
         name="post_ajax_get_project_pian_limit",
     ),
