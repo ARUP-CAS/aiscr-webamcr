@@ -155,6 +155,20 @@ map.on('click', function (e) {
             }
 });
 
+map.on('overlayadd', function(eventlayer){
+    console.log("pridat mapu")
+    if(eventlayer.layer===poi_p1 || eventlayer.layer===poi_p2 || eventlayer.layer===poi_p3 || eventlayer.layer===poi_p46 || eventlayer.layer===poi_p78){
+        switchMap(false)
+    }
+});
+
+map.on('overlayremove', function(eventlayer){
+    console.log("ubrat mapu")
+    if(eventlayer.layer===poi_p1 || eventlayer.layer===poi_p2 || eventlayer.layer===poi_p3 || eventlayer.layer===poi_p46 || eventlayer.layer===poi_p78){
+        switchMap(false)
+    }
+});
+
 var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost4=false) => {
     //addLogText("arch_z_detail_map.addPointToPoiLayer")
     let coor = []
@@ -229,6 +243,11 @@ switchMap = function (overview = false) {
                     'northWest': northWest,
                     'southEast': southEast,
                     'zoom': zoom,
+                    'p1':map.hasLayer(poi_p1),
+                    'p2':map.hasLayer(poi_p2),
+                    'p3':map.hasLayer(poi_p3),
+                    'p46':map.hasLayer(poi_p46),
+                    'p78':map.hasLayer(poi_p78),
                 }));
             xhr_pas.send(JSON.stringify(
                     {

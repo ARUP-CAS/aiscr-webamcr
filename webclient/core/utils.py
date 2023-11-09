@@ -458,7 +458,7 @@ def get_project_geom(ident_cely):
         return None
 
 
-def get_num_projects_from_envelope(left, bottom, right, top):
+def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78):
     """
     Funkce pro získaní počtu projektů ze čtverce.
     Bez pristupnosti
@@ -469,7 +469,18 @@ def get_num_projects_from_envelope(left, bottom, right, top):
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
-    queryset = Projekt.objects.filter(c1).filter(c2).count()
+    stavy=[]
+    if p1: stavy.append(1)
+    if p2: stavy.append(2)
+    if p3: stavy.append(3)
+    if p46: 
+        stavy.append(4)
+        stavy.append(5)
+        stavy.append(6)
+    if p78: 
+        stavy.append(7)
+        stavy.append(8)
+    queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy)).count()
     try:
         return queryset
     except IndexError:
@@ -480,7 +491,7 @@ def get_num_projects_from_envelope(left, bottom, right, top):
         return None
 
 
-def get_projects_from_envelope(left, bottom, right, top):
+def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78):
     """
     Funkce pro získaní projektů ze čtverce.
     Bez pristupnosti
@@ -491,7 +502,18 @@ def get_projects_from_envelope(left, bottom, right, top):
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
-    queryset = Projekt.objects.filter(c1).filter(c2)
+    stavy=[]
+    if p1: stavy.append(1)
+    if p2: stavy.append(2)
+    if p3: stavy.append(3)
+    if p46: 
+        stavy.append(4)
+        stavy.append(5)
+        stavy.append(6)
+    if p78: 
+        stavy.append(7)
+        stavy.append(8)
+    queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy))
     try:
         return queryset.only("id", "ident_cely", "geom", "stav")
     except IndexError:
