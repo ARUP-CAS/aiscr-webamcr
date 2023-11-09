@@ -150,6 +150,46 @@ class AkceTable(SearchTable):
         default="",
         accessor="akcevedouci_set__all",
     )
+    datum_zahajeni = AkceVedouciColumn(
+        verbose_name=_("arch_z.tables.AkceTable.datum_zahajeni.label"),
+        default="",
+    )
+    datum_ukonceni = AkceVedouciColumn(
+        verbose_name=_("arch_z.tables.AkceTable.datum_ukonceni.label"),
+        default="",
+    )
+    hlavni_typ = AkceVedouciColumn(
+        verbose_name=_("arch_z.tables.AkceTable.hlavni_typ.label"),
+        default="",
+    )
+    vedlejsi_typ = AkceVedouciColumn(
+        verbose_name=_("arch_z.tables.AkceTable.vedlejsi_typ.label"),
+        default="",
+    )
+    lokalizace_okolnosti = AkceVedouciColumn(
+        verbose_name=_("arch_z.tables.AkceTable.lokalizace_okolnosti.label"),
+        default="",
+    )
+    specifikace_data = AkceVedouciColumn(
+        verbose_name=_("arch_z.tables.AkceTable.specifikace_data.label"),
+        default="",
+    )
+    ulozeni_nalezu = AkceVedouciColumn(
+        verbose_name=_("arch_z.tables.AkceTable.ulozeni_nalezu.label"),
+        default="",
+    )
+    ulozeni_dokumentace = AkceVedouciColumn(
+        verbose_name=_("arch_z.tables.AkceTable.ulozeni_dokumentace.label"),
+        default="",
+    )
+    je_nz = AkceVedouciColumn(
+        verbose_name=_("arch_z.tables.AkceTable.je_nz.label"),
+        default="",
+    )
+    odlozena_nz = AkceVedouciColumn(
+        verbose_name=_("arch_z.tables.AkceTable.odlozena_nz.label"),
+        default="",
+    )
 
     def order_vedouci_organizace(self, queryset, is_descending):
         queryset = queryset \

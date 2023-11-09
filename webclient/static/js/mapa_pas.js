@@ -19,11 +19,11 @@ var heatLayer = L.heatLayer(heatPoints, heatmapOptions);
 map.addLayer(poi_sugest);
 
 var overlays = {
-    "ČÚZK - Katastrální mapa": cuzkWMS,
-    "ČÚZK - Katastrální území": cuzkWMS2,
-    "Lokalizace nálezu ":poi_sugest,
-    "Samostatné nálezy": poi_sn,
-    "PIAN":poi_pian,
+    [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
+    [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
+    [map_translations['FindLocation']]:poi_sugest,
+    [map_translations['samostatneNalezy']]: poi_sn,
+    [map_translations['pian']]:poi_pian,
 };
 
 global_map_layers.remove(map);//remove previous overlay
@@ -151,7 +151,7 @@ var transformSinglePoint = async(y_plus,x_plus,push,addComa) => {
                     //document.getElementById('detector_coordinates_y').value = x_plus+ (addComa==true ? ',':'');
                     lock_sjtsk_low_precision=true;
                     switch_coordinate_system();
-                    alert("Přesná transformace ze systemu S-JTSK není v současnosti dostupná, proto bude použita méně přesná transformace!")
+                    alert([map_translations['TransformationError']]) // "Přesná transformace ze systemu S-JTSK není v současnosti dostupná, proto bude použita méně přesná transformace!"
 
                 }
             }
@@ -271,9 +271,9 @@ var addUniquePointToPoiLayer = (lat, long, text, zoom = true, redPin = false) =>
     var [corX, corY] = amcr_static_coordinate_precision_wgs84([lat, long]);
     poi_sugest.clearLayers()
     if(redPin){
-        L.marker([corX, corY],{icon:pinIconRedPin, zIndexOffset: 2000}).bindPopup("Vámi vyznačená poloha").addTo(poi_sugest);
+        L.marker([corX, corY],{icon:pinIconRedPin, zIndexOffset: 2000}).bindPopup([map_translations['SetLocation']]).addTo(poi_sugest); //"Vámi vyznačená poloha"
     } else {
-        L.marker([corX, corY],{icon:pinIconYellowPin, zIndexOffset: 2000}).bindPopup("Vámi vyznačená poloha").addTo(poi_sugest);
+        L.marker([corX, corY],{icon:pinIconYellowPin, zIndexOffset: 2000}).bindPopup([map_translations['SetLocation']]).addTo(poi_sugest); // "Vámi vyznačená poloha"
     }
     if (corX && corY && zoom) {
         map.setView([corX, corY], 15);

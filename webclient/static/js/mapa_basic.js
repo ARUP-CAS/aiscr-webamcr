@@ -1,4 +1,4 @@
-var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
+var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom: 25, maxNativeZoom: 19, minZoom: 6 }),
     cuzkWMS = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom:25, maxNativeZoom: 20, minZoom: 17, opacity: 0.5 }),
     cuzkWMS2 = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom:25, maxNativeZoom: 20, minZoom: 12, opacity: 0.5 }),
     cuzkOrt = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/ortofoto_wm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'ortofoto_wm', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
@@ -10,31 +10,31 @@ var poi = L.layerGroup();
 var map = L.map('projectMap',{attributionControl:false,zoomControl:false,  layers: [cuzkZM]}).setView([49.84, 15.17], 7);
 
 var baseLayers = {
-    "ČÚZK - Základní mapy ČR": cuzkZM,
-    "ČÚZK - Ortofotomapa": cuzkOrt,
-    "ČÚZK - Stínovaný reliéf 5G": cuzkEL,
-    "OpenStreetMap": osmColor,
+    [map_translations['cuzkzakladniMapyCr']]: cuzkZM,
+    [map_translations['cuzkOrtofotomapa']]: cuzkOrt,
+    [map_translations['cuzkStinovanyeelief5G']]: cuzkEL,
+    [map_translations['openStreetMap']]: osmColor,
 };
 
 var overlays = {
-    "ČÚZK - Katastrální mapa": cuzkWMS,
-    "ČÚZK - Katastrální území": cuzkWMS2,
+    [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
+    [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
 };
 
 global_map_layers = L.control.layers(baseLayers,overlays).addTo(map);
 L.control.scale(metric = "true").addTo(map);
 map.addControl(new L.Control.Fullscreen({
     title: {
-        'false': 'Celá obrazovka',
-        'true': 'Opustit celou obrazovku'
+        'false': [map_translations['FullscreenTitle']],
+        'true': [map_translations['FullscreenTitleClose']]
     }
 }));
 map.addControl(new L.control.zoom(
     {
-        zoomInText:'+',
-        zoomInTitle:'Přiblížit',
-        zoomOutText:'-',
-        zoomOutTitle:'Oddálit'
+        zoomInText: '+',
+        zoomInTitle: [map_translations['zoomInTitle']],
+        zoomOutText: '-',
+        zoomOutTitle: [map_translations['zoomOutTitle']]
     }))
 
 var searchControl=new L.Control.Search({
@@ -43,18 +43,18 @@ var searchControl=new L.Control.Search({
     initial: false,
     zoom: 12,
     marker: false,
-    textPlaceholder:'Vyhledej',
-    textCancel: 'Zruš',
+    textPlaceholder: [map_translations['SearchText']],
+    textCancel: [map_translations['SearchTextCancel']],
     propertyName: 'text',
     propertyMagicKey:'magicKey',
     propertyMagicKeyUrl:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/{*}/findAddressCandidates?outSR={"wkid":4258}&f=json',
-    textErr: 'Nenalezeno',
+    textErr: [map_translations['SearchTextError']],
     minLength:3
 }).addTo(map);
 
 let global_measuring_toolbox=new L.control.measure(
     {
-        title:"Měřit vzdálenost",
+        title: [map_translations['MeasureTitle']],
         icon:'<img src="'+static_url+'/img/ruler-bold-32.png" style="width:20px"/>'
     });
 map.addControl(global_measuring_toolbox);

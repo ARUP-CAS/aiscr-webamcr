@@ -11,10 +11,10 @@ var poi_all = L.markerClusterGroup({ disableClusteringAtZoom: 20 })
 map.addLayer(poi_model);
 
 var overlays = {
-    "ČÚZK - Katastrální mapa": cuzkWMS,
-    "ČÚZK - Katastrální území": cuzkWMS2,
-    "Lokalizace modelu":poi_model,
-    "Knihovna 3D":poi_all,
+    [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
+    [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
+    [map_translations['3DLocation']]:poi_model,
+    [map_translations['3DLibrary']]:poi_all,
 };
 global_map_layers.remove(map);//remove previous overlay
 L.control.layers(baseLayers, overlays).addTo(map);
@@ -91,7 +91,7 @@ function showPosition(position) {
     document.getElementById('id_vyska').value = point_global_WGS84[1]
 
     L.marker(latlng).addTo(poi_model)
-        .bindPopup("Vaše současná poloha")
+        .bindPopup([map_translations['CurrentLocation']]) // "Vaše současná poloha"
         .openPopup();
 }
 

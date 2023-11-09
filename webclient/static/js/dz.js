@@ -10,10 +10,10 @@ const get_params = () => {
 };
 const get_description = () => {
     if (typ_uploadu == 'upload') {
-        return [dz_trans["descriptionUpload"]];
+        return [dz_trans["descriptionUpload"]]; // Přiložte dokumentaci
     }
     if (typ_uploadu == 'nahradit') {
-        return [dz_trans["descriptionNahradit"]];
+        return [dz_trans["descriptionNahradit"]]; // Přiložte aktualizovaný soubor
     }
     return "";
 };
@@ -127,9 +127,9 @@ window.onload = function () {
         acceptedFiles: acceptFile,
         dictInvalidFileType: RejectedFileMessage,
         addRemoveLinks: true,
-        dictCancelUpload: "Zrušit nahrávání",
-        dictCancelUploadConfirmation: "Naozaj chcete zrušit nahrávání?",
-        dictRemoveFile: "Odstranit soubor",
+        dictCancelUpload: [dz_trans["cancelUpload"]],
+        dictCancelUploadConfirmation: [dz_trans["cancelUploadConfirm"]],
+        dictRemoveFile: [dz_trans["removeFile"]],
         maxFilesize: 100, // MB
         maxFiles: maxFiles,
         addRemoveLinks: addRemoveLinks,

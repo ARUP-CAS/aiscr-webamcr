@@ -179,7 +179,7 @@ def detail(request, ident_cely):
             messages.add_message(
                 request,
                 messages.ERROR,
-                ZAZNAM_SE_NEPOVEDLO_EDITOVAT + "detail.vyskovy_bod.povinna_pole",
+                ZAZNAM_SE_NEPOVEDLO_EDITOVAT + _("detail.vyskovy_bod.povinna_pole"),
             )
 
     response = dj.archeologicky_zaznam.get_redirect(dj.ident_cely)

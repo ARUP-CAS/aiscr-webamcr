@@ -130,8 +130,8 @@ L.control.scale(metric = "true").addTo(map);
 
 map.addControl(new L.Control.Fullscreen({
     title: {
-        'false': 'Celá obrazovka',
-        'true': 'Opustit celou obrazovku'
+        'false': [map_translations['FullscreenTitle']],
+        'true': [map_translations['FullscreenTitleClose']]
     }
 }));
 map.addControl(new L.control.zoom(
@@ -148,12 +148,12 @@ var searchControl = new L.Control.Search({
     initial: false,
     zoom: 12,
     marker: false,
-    textPlaceholder: 'Vyhledej',
-    textCancel: 'Zruš',
+    textPlaceholder: [map_translations['SearchText']],
+    textCancel: [map_translations['SearchTextCancel']],
     propertyName: 'text',
     propertyMagicKey: 'magicKey',
     propertyMagicKeyUrl: 'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/{*}/findAddressCandidates?outSR={"wkid":4258}&f=json',
-    textErr: 'Nenalezeno',
+    textErr: [map_translations['SearchTextError']],
     minLength: 3
 }).addTo(map);
 
@@ -161,7 +161,7 @@ var buttons = [
     L.easyButton('bi bi-skip-backward-fill', function () {
         map.setView(poi_sugest.getLayers()[0]._latlng, 18);
         edit_buttons.disable();
-    }, 'Výchozí stav')]
+    }, [map_translations['DefaultTitle']])]
 
 var edit_buttons = L.easyBar(buttons)
 map.addControl(edit_buttons)
@@ -211,66 +211,66 @@ L.drawLocal = {
     draw: {
         toolbar: {
             actions: {
-                title: 'Storno',
-                text: 'Storno'
+                title: [map_translations['EditCancelTitle']],
+                text: [map_translations['EditCancelText']]
             },
             finish: {
-                title: 'Dokončit',
-                text: 'Dokončit'
+                title: [map_translations['EditFinishTitle']],
+                text: [map_translations['EditFinishText']]
             },
             undo: {
-                title: 'Krok zpět',
-                text: 'Krok zpět'
+                title: [map_translations['EditBackTitle']],
+                text: [map_translations['EditBackText']]
             },
             buttons: {
-                polyline: 'Přidat linii',
-                polygon: 'Přidat polygon',
-                rectangle: 'Přidat obdélník',
-                circle: 'Přidat kruh',
-                marker: 'Přidat bod',
-                circlemarker: 'Přidat kruhový bod'
+                polyline: [map_translations['EditAddPolyline']],
+                polygon: [map_translations['EditAddPolygon']],
+                rectangle: [map_translations['EditAddRectangle']],
+                circle: [map_translations['EditAddCircle']],
+                marker: [map_translations['EditAddMarker']],
+                circlemarker: [map_translations['EditAddCirclemarker']]
             }
         },
         handlers: {
             circle: {
                 tooltip: {
-                    start: 'Pro nakreslení kruhu klikni a táhni.'
+                    start: [map_translations['EditCircleTooltip']] // 'Pro nakreslení kruhu klikni a táhni.'
                 },
-                radius: 'Poloměr'
+                radius: [map_translations['EditRadius']] // 'Poloměr'
             },
             circlemarker: {
                 tooltip: {
-                    start: 'Klikni na mapu a umísti kruhovou značku.'
+                    start: [map_translations['EditCirclemarkerTooltip']] // 'Klikni na mapu a umísti kruhovou značku.'
                 }
             },
             marker: {
                 tooltip: {
-                    start: 'Klikni na mapu a umísti značku.'
+                    start: [map_translations['EditMarkerTooltip']] // 'Klikni na mapu a umísti značku.'
                 }
             },
             polygon: {
                 tooltip: {
-                    start: 'Pro nakreslení tvaru klikni.',
-                    cont: 'Pro pokračování v kresbě klikni.',
-                    end: 'Klikni na první bod k uzavření tvaru.'
+                    start: [map_translations['EditPolygonStart']], // 'Pro nakreslení tvaru klikni.'
+                    cont: [map_translations['EditPolygonTooltipCont']], // 'Pro pokračování v kresbě klikni.'
+                    end: [map_translations['EditPolygonTooltipEnd']] // 'Klikni na první bod k uzavření tvaru.'
                 }
             },
             polyline: {
-                error: '<strong>Chyba:</strong> hrany tvaru se nesmějí překrývat!',
+                error: [map_translations['EditPolylineError']], // '<strong>Chyba:</strong> hrany tvaru se nesmějí překrývat!'
                 tooltip: {
-                    start: 'Klikni pro začátek linie.',
-                    cont: 'Klikni pro pokračování linie.',
-                    end: 'Klikni poslední bod k ukončení linie.'
+                    start: [map_translations['EditPolylineStart']], // 'Klikni pro začátek linie.'
+                    cont: [map_translations['EditPolylineCont']], // 'Klikni pro pokračování linie.'
+                    end: [map_translations['EditPolylineEnd']] // 'Klikni poslední bod k ukončení linie.'
                 }
             },
             rectangle: {
                 tooltip: {
-                    start: 'Pro nakreslení obdělníku klikni a táhni.'
+                    start: [map_translations['EditRectangleStart']] // 'Pro nakreslení obdělníku klikni a táhni.'
                 }
             },
             simpleshape: {
                 tooltip: {
-                    end: 'Uvolni kliknutí myši pro dokončení kresby.'
+                    end: [map_translations['EditSimpleshapeTooltip']] // 'Uvolni kliknutí myši pro dokončení kresby.'
                 }
             }
         }
@@ -279,35 +279,35 @@ L.drawLocal = {
         toolbar: {
             actions: {
                 save: {
-                    title: 'Dokončit',
-                    text: 'Dokončit'
+                    title: [map_translations['ActionsSaveTitle']],
+                    text: [map_translations['ActionsSaveText']]
                 },
                 cancel: {
-                    title: 'Storno',
-                    text: 'Storno'
+                    title: [map_translations['ActionsCancelTitle']],
+                    text: [map_translations['ActionsCancelText']]
                 },
                 clearAll: {
-                    title: 'Smazat',
-                    text: 'Smazat'
+                    title: [map_translations['ActionsClearTitle']],
+                    text: [map_translations['ActionsClearText']]
                 }
             },
             buttons: {
-                edit: 'Uprav vymezení',
-                editDisabled: 'Neexistuje vrstva k editaci',
-                remove: 'Smazat',
-                removeDisabled: 'Neexistuje vrstva ke smazání'
+                edit: [map_translations['EditTitle']],
+                editDisabled: [map_translations['EditDisabled']], // 'Neexistuje vrstva k editaci'
+                remove: [map_translations['RemoveTitle']],
+                removeDisabled: [map_translations['RemoveDisabled']] // 'Neexistuje vrstva ke smazání'
             }
         },
         handlers: {
             edit: {
                 tooltip: {
-                    text: 'Vyber prvek nebo značku pro editaci.',
-                    subtext: 'Klikni k návratu změn.'
+                    text: [map_translations['EditTooltipText']], // 'Vyber prvek nebo značku pro editaci.'
+                    subtext: [map_translations['EditTooltipSubtext']] // 'Klikni k návratu změn.'
                 }
             },
             remove: {
                 tooltip: {
-                    text: 'Klikni na prvek k odstranění.'
+                    text: [map_translations['RemoveTooltipText']] // 'Klikni na prvek k odstranění.'
                 }
             }
         }
@@ -323,7 +323,7 @@ var drawControl = new L.Control.Draw({
             allowIntersection: false, // Restricts shapes to simple polygons
             drawError: {
                 color: '#e1e100', // Color the shape will turn when intersects
-                message: '<strong>Oh snap!<strong> you can\'t draw that!' // Message that will show when intersect
+                message: [map_translations['DrawError']] // '<strong>Oh snap!<strong> you can\'t draw that!' Message that will show when intersect
             },
             shapeOptions: {
                 color: '#ba0d27'
@@ -351,7 +351,7 @@ map.addControl(drawControl);
 
 let global_measuring_toolbox = new L.control.measure(
     {
-        title: "Měřit vzdálenost",
+        title: [map_translations['MeasureTitle']],
         icon: '<img src="' + static_url + '/img/ruler-bold-32.png" style="width:20px"/>'
     });
 map.addControl(global_measuring_toolbox);
@@ -394,7 +394,7 @@ map.on('contextmenu', (e) => {
 
     var features = [];
     map.contextmenu.removeAllItems();
-    map.contextmenu.addItem({ text: 'Přenes do popředí:', disabled: true })
+    map.contextmenu.addItem({ text: [map_translations['MoveFront']], disabled: true }) // 'Přenes do popředí:'
     map.eachLayer(function (layer) {
         if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
             if (layer.getBounds().contains(e.latlng)) {
@@ -462,7 +462,7 @@ map.on('draw:created', function (e) {
             let corX = e.layer._latlng.lat;
             let corY = e.layer._latlng.lng;
             if (global_map_can_edit) {
-                L.marker([corX, corY], { icon: pinIconRedPoint }).bindPopup('Navržený pian').addTo(drawnItems);
+                L.marker([corX, corY], { icon: pinIconRedPoint }).bindPopup([map_translations['TempPIAN']]).addTo(drawnItems); //'Navržený pian'
 
             }
         } else {

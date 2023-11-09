@@ -59,12 +59,14 @@ class OznamovatelForm(forms.ModelForm):
     telefon = forms.CharField(
         validators=[validate_phone_number],
         help_text=_("oznameni.forms.oznamovatelForm.telefon.tooltip"),
+        label=_("oznameni.forms.oznamovatelForm.telefon.label"),
         widget=forms.TextInput(
             attrs={"pattern": "^[+](420)\d{9}", "title": "+420XXXXXXXXX"}
         ),
     )
     email = forms.EmailField(
         help_text=_("oznameni.forms.oznamovatelForm.email.tooltip"),
+        label=_("oznameni.forms.oznamovatelForm.email.label"),
     )
 
     class Meta:
