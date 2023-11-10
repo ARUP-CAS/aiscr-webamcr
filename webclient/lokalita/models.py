@@ -180,4 +180,5 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
                 logger.debug("lokalita.models.Lokalita.check_pred_odeslanim.nema_pian",
                              extra={"dokument_warning": dokument_warning,
                                     "dokument_cast_dokument_ident_cely": dokument_cast.dokument.ident_cely})
+        result = [str(x) for x in result]
         return result
