@@ -225,12 +225,12 @@ def detail(request, ident_cely):
         )
         gx_wgs = geom.split(" ")[1]
         gy_wgs = geom.split(" ")[0]
-        gx_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
-        gy_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
+        gx_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
+        gy_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
         gx = gx_wgs if system == "WGS-84" else gx_sjtsk
         gy = gy_wgs if system == "WGS-84" else gy_sjtsk
-        if float(gy_sjtsk) > float(gx_sjtsk):
-            gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
+        #if float(gy_sjtsk) > float(gx_sjtsk):
+        #    gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
         context["formCoor"] = CoordinatesDokumentForm(
             initial={
                 "detector_coordinates_x": gx,
@@ -333,12 +333,12 @@ def edit(request, ident_cely):
             )
             gx_wgs = geom.split(" ")[1]
             gy_wgs = geom.split(" ")[0]
-            gx_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
-            gy_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
+            gx_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
+            gy_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
             gx = gx_wgs if system == "WGS-84" else gx_sjtsk
             gy = gy_wgs if system == "WGS-84" else gy_sjtsk
-            if float(gy_sjtsk) > float(gx_sjtsk):
-                gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
+            #if float(gy_sjtsk) > float(gx_sjtsk):
+            #    gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
             form_coor = CoordinatesDokumentForm(
                 initial={
                     "detector_coordinates_x": gx,

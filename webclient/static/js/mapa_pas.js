@@ -40,10 +40,10 @@ map.on('click', function (e) {
             if (!lock) {
                 if (map.getZoom() > 15) {
                     lock_sjtsk_low_precision=false;
-                    var [corY, corX] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
+                    var [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
                     jtsk_coor = amcr_static_coordinate_precision_jtsk(convertToJTSK(corX, corY));
                     point_global_WGS84 = [corX, corY];
-                    point_global_JTSK = jtsk_coor
+                    point_global_JTSK = [jtsk_coor[1],jtsk_coor[0]]
                     if (document.getElementById('detector_system_coordinates').value == 1) {
                         document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]
                         document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
