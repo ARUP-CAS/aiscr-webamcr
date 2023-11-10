@@ -46,7 +46,7 @@ const show_upload_successful_message = (file, result = UploadResultsEnum.success
         } else if (result === UploadResultsEnum.duplicate) {
             alert_element.textContent = message;
         } else if (result === UploadResultsEnum.reject) {
-            alert_element.textContent = [dz_trans["alerts.upload_reject.part_1"]] + file.name + [dz_trans[" alerts.upload_reject.part_2"]] + message;
+            alert_element.textContent = [dz_trans["alerts.upload_reject.part_1"]] + file.name + [dz_trans["alerts.upload_reject.part_2"]] + message;
         } else if (result === UploadResultsEnum.error) {
             alert_element.textContent = [dz_trans["alerts.upload_error.part_1"]] + file.name + [dz_trans["alerts.upload_error.part_2"]] + message;
         }
