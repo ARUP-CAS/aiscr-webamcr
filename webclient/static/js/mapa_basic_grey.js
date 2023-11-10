@@ -80,7 +80,7 @@ var overlays = {
     [map_translations['lokalizace']]: poi
 };
 
-global_map_layers = L.control.layers(baseLayers,overlays).addTo(map);
+var global_map_layers = L.control.layers(baseLayers,overlays).addTo(map);
 L.control.scale(metric = "true").addTo(map);
 map.addControl(new L.Control.Fullscreen({
     title: {

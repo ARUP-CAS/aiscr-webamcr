@@ -42,7 +42,9 @@ var overlays = {
     [map_translations['projektyPIAN']]:poi_pian,
 };
 
-global_map_layers.remove(map);//remove previous overlay
+if (global_map_layers) {
+    global_map_layers.remove(map);//remove previous overlay
+}
 L.control.layers(baseLayers, overlays).addTo(map);
 
 L.easyButton('bi bi-skip-backward-fill', function () {

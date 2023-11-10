@@ -69,16 +69,8 @@
 
 
 {% block script %}
-  <script >
-    var static_url = "{% get_static_prefix %}";
-  </script>
-  <script src="{% static 'mapa_pins.js' %}"></script>
-  <script src="{% static 'coor_precision.js' %}"></script>
-  <script src="{% static 'mapa_basic_grey.js' %}"></script>
-  <script src="{% static 'spin/spin.min.js' %}"></script>
-  <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script>
-    const map_translations = {
+    var map_translations = {
       	CurrentLocationError: '{%trans "mapa.CurrentLocationError" %}',
 	cuzkKatastralniMapa: '{%trans "mapa.cuzkKatastralniMapa" %}',
 	cuzkKatastralniUzemi: '{%trans "mapa.cuzkKatastralniUzemi" %}',
@@ -108,6 +100,13 @@
 	zoomOutTitle: '{%trans "mapa.zoomOutTitle" %}'
     };
   </script>
+  <script >
+    var static_url = "{% get_static_prefix %}";
+  </script>
+  <script src="{% static 'mapa_pins.js' %}"></script>
+  <script src="{% static 'coor_precision.js' %}"></script>
+  <script src="{% static 'spin/spin.min.js' %}"></script>
+  <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script src="{% static 'mapa_projekty.js' %}"></script>
   <script>
       global_map_can_edit = true;
