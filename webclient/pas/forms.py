@@ -238,6 +238,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             help_text=_("pas.forms.createSamostatnyNalezForm.projekt.tooltip"),
+            label=_("pas.forms.createSamostatnyNalezForm.projekt.label"),
             initial=Projekt.objects.filter(ident_cely=project_ident)[0]
             if project_ident
             else None,
