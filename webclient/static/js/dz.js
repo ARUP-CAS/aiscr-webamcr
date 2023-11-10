@@ -42,13 +42,13 @@ const show_upload_successful_message = (file, result = UploadResultsEnum.success
         }
         alert_element.setAttribute("role", "alert");
         if (result === UploadResultsEnum.success) {
-            alert_element.textContent = [dz_trans["alerts.upload_succesfull.part_1"]] + file.name + [dz_trans["alerts.upload_succesfull.part_2"]];
+            alert_element.textContent = [dz_trans["alertsUpload_succesfullPart_1"]] + file.name + [dz_trans["alertsUpload_succesfullPart_2"]];
         } else if (result === UploadResultsEnum.duplicate) {
             alert_element.textContent = message;
         } else if (result === UploadResultsEnum.reject) {
-            alert_element.textContent = [dz_trans["alerts.upload_reject.part_1"]] + file.name + [dz_trans["alerts.upload_reject.part_2"]] + message;
+            alert_element.textContent = [dz_trans["alertsUpload_rejectPart_1"]] + file.name + [dz_trans["alertsUpload_rejectPart_2"]] + message;
         } else if (result === UploadResultsEnum.error) {
-            alert_element.textContent = [dz_trans["alerts.upload_error.part_1"]] + file.name + [dz_trans["alerts.upload_error.part_2"]] + message;
+            alert_element.textContent = [dz_trans["alertsUpload_errorPart_1"]] + file.name + [dz_trans["alertsUpload_errorPart_2"]] + message;
         }
         const button_element = document.createElement("button");
         button_element.setAttribute('type', 'button');
