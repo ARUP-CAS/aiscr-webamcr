@@ -114,6 +114,8 @@ def detail(request, ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     response = redirect(dj.get_absolute_url())
+    if validation_results != "valid" and validation_results != PIAN_VALIDACE_VYPNUTA:
+        response = redirect(dj.get_absolute_url()+"/pian/edit/"+str(ident_cely))
     response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",
