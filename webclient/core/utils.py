@@ -700,6 +700,21 @@ def get_pian_from_envelope(left, bottom, right, top, request):
         )
         return None
 
+def get_dj_akce_for_pian(pian_ident_cely):
+    """
+    Funkce pro pro ziskani dj/akce pro pian_ident_cely
+    """
+    from django.db.models import Q
+    queryset = DokumentacniJednotka.objects.filter(Q(pian__geom__isnull=False)).filter(Q(pian__ident_cely=pian_ident_cely))
+    try:
+        return queryset.values("ident_cely", "archeologicky_zaznam__ident_cely")
+    except IndexError:
+        logger.debug(
+            "core.utils.get_dj_akce_for_pian.no_records",
+            extra={"pian_ident_cely": pian_ident_cely},
+        )
+        return None
+
 
 def dictfetchall(cursor):
     "Return all rows from a cursor as a dict"

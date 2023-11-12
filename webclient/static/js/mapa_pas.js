@@ -89,6 +89,29 @@ map.on('popupopen', function (e) {
 
 });
 
+function onMarkerClick(ident_cely,e) {
+    var popup = e.target.getPopup();
+    popup.setContent("");
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/pian/mapa-connections/'+ident_cely);
+    xhr.setRequestHeader('Content-type', 'application/json');
+    if (typeof global_csrftoken !== 'undefined') {
+        xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+    }
+    xhr.send();
+    xhr.onload = function () {
+        rs = JSON.parse(this.responseText).points
+        text=""
+        rs.forEach((i) => {
+            console.log(i)
+            let link='<a href="/arch-z/akce/detail/'+i.akce+'/dj/'+i.dj+'" target="_blank">'+i.dj+'</a></br>'
+            text=text+link
+        })
+        popup.setContent(text);
+        
+    }
+ }
+
 var debugText=(text)=>{
     if(GLOBAL_DEBUG_TEXT){
         console.log(text);
@@ -386,12 +409,14 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost) => {
         })
         L.polygon(coor, myColor)
         .bindTooltip(text+' ('+presnost+')', { sticky: true })
+        .bindPopup("").on("click",onMarkerClick.bind(null,text))
         .addTo(layer);
     } else if (st_text.includes("LINESTRING")) {
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
         })
         .bindTooltip(text+' ('+presnost+')', { sticky: true })
+        .bindPopup("").on("click",onMarkerClick.bind(null,text))
         .addTo(layer);
     } else if (st_text.includes("POINT")) {
         let i = st_text.split("(")[1].split(")")[0];
@@ -413,10 +438,12 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost) => {
         if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
             L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco2)
             .bindTooltip(text+' ('+presnost+')', { sticky: true })
+            .bindPopup("").on("click",onMarkerClick.bind(null,text))
             .addTo(layer);
         } else {
             L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco)
             .bindTooltip(text+' ('+presnost+')', { sticky: true })
+            .bindPopup("").on("click",onMarkerClick.bind(null,text))
             .addTo(layer);
         }
 
@@ -489,7 +516,7 @@ switchMap = function (overview = false) {
 
                     }
                     map.spin(false);
-                } catch(e){map.spin(false);console.log(e)}
+                } catch(e){map.spin(false);/*console.log(e)*/}
             };
         }
     }
