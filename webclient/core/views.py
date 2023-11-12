@@ -679,8 +679,15 @@ class PermissionFilterMixin():
 
             perm_skips = list(PermissionsSkip.objects.filter(user=self.request.user).values_list("ident_list",flat=True))
             if len(perm_skips) > 0:
-                ident_key = self.permission_model_lookup + "ident_cely__in"
-                filterdoc = {ident_key:perm_skips[0].split(",")}
+                if "spoluprace/vyber" in perm.address_in_app:
+                    ident_key = self.permission_model_lookup + "id__in"
+                    perm_skips_list = [id for id in perm_skips[0].split(",") if id.isdigit()]
+                else:
+                    ident_key = self.permission_model_lookup + "ident_cely__in"
+                    perm_skips_list = perm_skips[0].split(",")
+                filterdoc = {ident_key:perm_skips_list}
+                if perm.status:
+                    filterdoc.update(self.add_status_lookup(perm))
                 qs = new_qs | qs.filter(**filterdoc)
             else:
                 qs = new_qs
@@ -735,11 +742,11 @@ class PermissionFilterMixin():
     
     def add_ownership_lookup(self, ownership, qs=None):
         filter_historie = {"typ_zmeny":self.typ_zmeny_lookup,"uzivatel":self.request.user}
-        filtered_my = Historie.objects.filter(**filter_historie)
+        filtered_my = set(Historie.objects.filter(**filter_historie).values_list("pk", flat=True))
         if ownership == Permissions.ownershipChoices.our:
             filter_historie = {"typ_zmeny":self.typ_zmeny_lookup, "uzivatel__organizace":self.request.user.organizace}
-            filtered_our = Historie.objects.exclude(pk__in=filtered_my.values("pk")).filter(**filter_historie)
-            filtered = Historie.objects.filter(Q(pk__in=filtered_our.values("pk"))|Q(pk__in=filtered_my.values("pk")))
+            filtered_our = set(Historie.objects.filter(**filter_historie).values_list("pk", flat=True))
+            filtered = filtered_my.union(filtered_our)
         else:
             filtered = filtered_my
         historie_key = self.permission_model_lookup + "historie__historie__pk__in"
@@ -753,12 +760,13 @@ class PermissionFilterMixin():
             ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
             ROLE_ADMIN_ID:PRISTUPNOST_ARCHIVAR_ID ,
         }
-        qs_ownership = qs.filter(**self.add_ownership_lookup(permission.accessibility))
+        qs_ownership = set(qs.filter(**self.add_ownership_lookup(permission.accessibility)).values_list("pk", flat=True))
         accessibility_key = self.permission_model_lookup+"pristupnost__in"
         accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, razeni__lte=Heslar.objects.filter(id=group_to_accessibility.get(self.request.user.hlavni_role.id)).values_list("razeni",flat=True))
         filter = {accessibility_key:accessibilities}
-        qs_access = qs.exclude(pk__in=qs_ownership.values("pk")).filter(**filter)
-        return qs.filter(Q(pk__in=qs_ownership.values("pk"))|Q(pk__in=qs_access.values("pk")))
+        qs_access = set(qs.filter(**filter).values_list("pk", flat=True))
+        qs_set = qs_access.union(qs_ownership)
+        return qs.filter(pk__in=qs_set)
 
 class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView, PermissionFilterMixin):
     """
@@ -827,31 +835,6 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
             request.session.modified = True
         return HttpResponse(f"{_('core.views.SearchListChangeColumnsView.response')} {sloupec}")
 
-
-class StahnoutMetadataView(LoginRequiredMixin, View):
-    def get(self, request, model_name, pk):
-        if model_name == "projekt":
-            record: Projekt = Projekt.objects.get(pk=pk)
-        elif model_name == "archeologicky_zaznam":
-            record: ArcheologickyZaznam = ArcheologickyZaznam.objects.get(pk=pk)
-        elif model_name == "adb":
-            record: Adb = Adb.objects.get(pk=pk)
-        elif model_name == "dokument":
-            record: Dokument = Dokument.objects.get(pk=pk)
-        elif model_name == "samostatny_nalez":
-            record: SamostatnyNalez = SamostatnyNalez.objects.get(pk=pk)
-        elif model_name == "externi_zdroj":
-            record: ExterniZdroj = ExterniZdroj.objects.get(pk=pk)
-        else:
-            raise Http404
-        metadata = record.metadata
-
-        def context_processor(content):
-            yield content
-
-        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
-        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
-        return response
 
 
 class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):

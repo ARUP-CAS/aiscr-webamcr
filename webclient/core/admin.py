@@ -25,7 +25,7 @@ from django.core.cache import cache
 from uzivatel.models import User
 
 from .models import OdstavkaSystemu, Permissions, CustomAdminSettings, PermissionsSkip
-from .exceptions import WrongSheetError
+from .exceptions import WrongCSVError, WrongSheetError
 from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
 from .constants import (
     ROLE_NASTAVENI_ODSTAVKY,
@@ -169,7 +169,7 @@ class PermissionAdmin(admin.ModelAdmin):
 
     change_list_template = "core/permissions_changelist.html"
     list_display = [
-        "address_in_app", "main_role", "action"
+        "address_in_app", "main_role", "action", "base", "status", "ownership", "accessibility"
     ]
     list_filter = ["main_role"]
     search_fields = ["address_in_app", "action"]
@@ -288,6 +288,8 @@ class PermissionAdmin(admin.ModelAdmin):
         Metóda pro kontrolu řádku excelu.
         """
         number_to_role = ["B", "C", "D", "E"]
+        if row[1]=="/":
+            row[1] = ""
         with io.StringIO() as out:
             call_command("show_urls", "--format", "json", stdout=out)
             url_list = pd.read_json(out.getvalue())
@@ -334,13 +336,18 @@ class PermissionAdmin(admin.ModelAdmin):
         if "|" in row[8 + i]:
             n = 0
             results = list()
-            while n < len(row[8 + i].split("|")):
-                new_row = row
+            for n, value in enumerate(row[8 + i].split("|")):
+                new_row = row.copy()
                 new_row[8 + i] = row[8 + i].split("|")[n].strip()
-                new_row[12 + i] = row[12 + i].split("|")[n].strip()
-                new_row[16 + i] = row[16 + i].split("|")[n].strip()
+                if len(row[12 + i].split("|")) > 1:
+                    new_row[12 + i] = row[12 + i].split("|")[n].strip()
+                else:
+                    new_row[12 + i] = row[12 + i]
+                if len(row[16 + i].split("|")) > 1:
+                    new_row[16 + i] = row[16 + i].split("|")[n].strip()
+                else:
+                    new_row[16 + i] = row[16 + i]
                 results.append(self.save_permission(new_row, i))
-                n += 1
             if all(a == True for a in results):
                 return True
             else:
@@ -351,6 +358,7 @@ class PermissionAdmin(admin.ModelAdmin):
             elif self.check_status_regex(row[8 + i]):
                 status = row[8 + i]
             else:
+                logger.debug("status NOK")
                 return False
         if row[12 + i] == "*":
             ownership = None
@@ -359,6 +367,7 @@ class PermissionAdmin(admin.ModelAdmin):
         elif row[12 + i].endswith(".ours"):
             ownership = Permissions.ownershipChoices.our
         else:
+            logger.debug("ownership NOK")
             return False
         if row[16 + i] == "*":
             accessibility = None
@@ -367,6 +376,7 @@ class PermissionAdmin(admin.ModelAdmin):
         elif row[16 + i].endswith("(ours)"):
             accessibility = Permissions.ownershipChoices.our
         else:
+            logger.debug("accessibility NOK")
             return False
         if not (
             base == True
@@ -459,6 +469,17 @@ class PermissionSkipAdmin(admin.ModelAdmin):
             ),
         ]
         return my_urls + urls
+    
+    def validate_sheet(self, sheet):
+        """
+        Metóda pro validaci importovaného excelu a jeho úpravu.
+        """
+        if (
+            not sheet.columns[0] == "IDENT_CELY"
+            or not sheet.columns[1] == "IDENT_LIST"
+        ):
+            raise WrongCSVError
+        return True
 
     def import_skip_file(self, request):
         """
@@ -476,6 +497,16 @@ class PermissionSkipAdmin(admin.ModelAdmin):
                 self.message_user(
                     request,
                     _("core.admin.permissionSkipAdmin.wrongDoc.error"),
+                    messages.ERROR,
+                )
+                return redirect(reverse("admin:core_permissionsskip_changelist"))
+            try:
+                self.validate_sheet(sheet)
+            except WrongSheetError as e:
+                logger.debug(e)
+                self.message_user(
+                    request,
+                    _("core.admin.permissionSkipAdmin.wrongCsvConfiguration.error"),
                     messages.ERROR,
                 )
                 return redirect(reverse("admin:core_permissionsskip_changelist"))

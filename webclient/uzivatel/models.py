@@ -167,6 +167,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     @property
     def is_archiver_or_more(self):
         return self.hlavni_role.pk in (ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
+    
+    @property
+    def is_archeolog_or_more(self):
+        return self.hlavni_role.pk in (ROLE_ARCHEOLOG_ID,ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
 
     def save(self, *args, **kwargs):
         """

@@ -257,8 +257,16 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context["app"] = "akce"
         context["showbackdetail"] = False
         if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-            if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA and self.request.user.hlavni_role.pk != ROLE_BADATEL_ID:
-                context["showbackdetail"] = True
+            if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
+                context["showbackdetail"] = True if self.request.user.hlavni_role.pk != ROLE_BADATEL_ID else False
+                context["app"] = "pr"
+                context[
+                    "arch_pr_link"
+                ] = '{% url "projekt:projekt_archivovat" zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true'
+            else:
+                context["showbackdetail"] = False
+                context["app"] = "akce"
+                context["arch_pr_link"] = None
         self.get_vedouci(context)
         context["next_url"] = zaznam.get_absolute_url()
         return context
@@ -1200,6 +1208,7 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
     zmenit_sam_akci = False
     if archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
         show_edit = check_permissions(p.actionChoices.archz_edit, user, archeologicky_zaznam.ident_cely)
+        logger.debug(show_edit)
         if archeologicky_zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
             zmenit_proj_akci = check_permissions(p.actionChoices.archz_zmenit_proj, user, archeologicky_zaznam.ident_cely)
             show_pripojit_dokumenty = check_permissions(p.actionChoices.archz_pripojit_dok_proj, user, archeologicky_zaznam.ident_cely)
@@ -1240,6 +1249,7 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
         "paginace_edit": check_permissions(p.actionChoices.eo_edit_akce, user, archeologicky_zaznam.ident_cely),
         "nalez_smazat": check_permissions(p.actionChoices.nalez_smazat_akce, user, archeologicky_zaznam.ident_cely),
         "zapsat_dokumenty": check_permissions(p.actionChoices.dok_zapsat_do_archz, user, archeologicky_zaznam.ident_cely),
+        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, archeologicky_zaznam.ident_cely),
     }
     return show
 
@@ -1437,6 +1447,8 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
             and check_permissions(p.actionChoices.pian_potvrdit,request.user,zaznam.ident_cely)
             else False
         )
+        logger.debug("test")
+        logger.debug(check_permissions(p.actionChoices.vb_smazat,request.user,zaznam.ident_cely))
         dj_form_detail = {
             "ident_cely": jednotka.ident_cely,
             "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
@@ -1450,11 +1462,11 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
             "show_add_adb": show_adb_add,
             "show_add_komponenta": show_add_komponenta,
             "show_add_pian": show_add_pian,
-            "show_remove_pian": show_add_pian,
+            "show_remove_pian": (not show_add_pian and check_permissions(p.actionChoices.pian_odpojit, request.user, jednotka.ident_cely)),
             "show_uprav_pian": show_uprav_pian,
             "show_approve_pian": show_approve_pian,
             "show_pripojit_pian": True if jednotka.pian is None else False,
-            "show_vb_smazat": True if check_permissions(p.actionChoices.vb_smazat,request.user,zaznam.ident_cely) else False
+            "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat,request.user,zaznam.ident_cely)
         }
         if has_adb:
             logger.debug("arch_z.views.get_arch_z_context.adb", extra={"jednotka_ident_cely": jednotka.ident_cely})
@@ -1604,6 +1616,7 @@ class AkceListView(SearchListView):
                 "organizace",
                 "hlavni_vedouci",  
                 "archeologicky_zaznam__pristupnost",
+                "archeologicky_zaznam",
             ).prefetch_related("archeologicky_zaznam__katastry","archeologicky_zaznam__katastry__okres")
         )
         return self.check_filter_permission(qs)
@@ -1849,6 +1862,8 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
             prefix=jednotka.ident_cely,
             not_readonly=show["editovat"],
         )
+    logger.debug("test")
+    logger.debug(check_permissions(p.actionChoices.vb_smazat,user,jednotka.ident_cely))
     dj_form_detail = {
         "ident_cely": jednotka.ident_cely,
         "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
@@ -1864,7 +1879,8 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_approve_pian": show_approve_pian,
         "show_pripojit_pian": True if jednotka.pian is None else False,
         "show_change_katastr": True if jednotka.typ.id == TYP_DJ_KATASTR and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely) else False,
-        "show_dj_smazat": check_permissions(p.actionChoices.dj_smazat, user, jednotka.ident_cely)
+        "show_dj_smazat": check_permissions(p.actionChoices.dj_smazat, user, jednotka.ident_cely),
+        "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat,user,jednotka.ident_cely)
     }
     if has_adb and app != "lokalita":
         logger.debug("arch_z.views.get_dj_form_detail", extra={"jednotka_ident_cely": jednotka.ident_cely})

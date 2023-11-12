@@ -354,6 +354,7 @@ class Permissions(models.Model):
         archz_pripojit_proj = "archz_pripojit_proj", "core.models.permissions.actionChoices.archz_pripojit_proj"
         archz_pripojit_dok_proj = "archz_pripojit_dok_proj", "core.models.permissions.actionChoices.archz_pripojit_dok_proj"
         archz_dj_zapsat = "archz_dj_zapsat", "core.models.permissions.actionChoices.archz_dj_zapsat"
+        archz_pripojit_do_proj = "archz_pripojit_do_proj", "core.models.permissions.actionChoices.archz_pripojit_do_proj"
         dj_smazat = "dj_smazat", "core.models.permissions.actionChoices.dj_smazat"
         dj_zmenit_katastr = "dj_zmenit_katastr", "core.models.permissions.actionChoices.dj_zmenit_katastr"
         dok_pripojit_archz = "dok_pripojit_archz", "core.models.permissions.actionChoices.dok_pripojit_archz"
@@ -375,7 +376,7 @@ class Permissions(models.Model):
         model_edit = "model_edit", "core.models.permissions.actionChoices.model_edit"
         neident_akce_edit = "neident_akce_edit", "core.models.permissions.actionChoices.neident_akce_edit"
         neident_akce_smazat = "neident_akce_smazat", "core.models.permissions.actionChoices.neident_akce_smazat"
-
+        stahnout_metadata = "stahnout_metadata", "core.models.permissions.actionChoices.stahnout_metadata"
         ez_edit = "ez_edit", "core.models.permissions.actionChoices.ez_edit"
         ez_odeslat = "ez_odeslat", "core.models.permissions.actionChoices.ez_odeslat"
         ez_potvrdit = "ez_potvrdit", "core.models.permissions.actionChoices.ez_potvrdit"
@@ -426,15 +427,22 @@ class Permissions(models.Model):
         projekt_vratit = "projekt_vratit", "core.models.permissions.actionChoices.projekt_vratit"
         projekt_zahajit_v_terenu = "projekt_zahajit_v_terenu", "core.models.permissions.actionChoices.projekt_zahajit_v_terenu"
         projekt_zrusit = "projekt_zrusit", "core.models.permissions.actionChoices.projekt_zrusit"
+        projekt_autocomplete_archz = "projekt_autocomplete_archz", "core.models.permissions.actionChoices.projekt_autocomplete_archz"
+        projekt_autocomplete_dokument = "projekt_autocomplete_dokument", "core.models.permissions.actionChoices.projekt_autocomplete_dokument"
         soubor_nahrat_dokument = "soubor_nahrat_dokument", "core.models.permissions.actionChoices.soubor_nahrat_dokument"
+        soubor_nahrat_model3d = "soubor_nahrat_model3d", "core.models.permissions.actionChoices.soubor_nahrat_model3d"
         soubor_nahrat_pas = "soubor_nahrat_pas", "core.models.permissions.actionChoices.soubor_nahrat_pas"
         soubor_nahrat_projekt = "soubor_nahrat_projekt", "core.models.permissions.actionChoices.soubor_nahrat_projekt"
         soubor_smazat_projekt = "soubor_smazat_projekt", "core.models.permissions.actionChoices.soubor_smazat_projekt"
         soubor_smazat_dokument = "soubor_smazat_dokument", "core.models.permissions.actionChoices.soubor_smazat_dokument"
+        soubor_smazat_model3d = "soubor_smazat_model3d", "core.models.permissions.actionChoices.soubor_smazat_model3d"
         soubor_smazat_pas = "soubor_smazat_pas", "core.models.permissions.actionChoices.soubor_smazat_pas"
         soubor_stahnout_projekt = "soubor_stahnout_projekt", "core.models.permissions.actionChoices.soubor_stahnout_projekt"
         soubor_stahnout_dokument = "soubor_stahnout_dokument", "core.models.permissions.actionChoices.soubor_stahnout_dokument"
+        soubor_stahnout_model3d = "soubor_stahnout_model3d", "core.models.permissions.actionChoices.soubor_stahnout_model3d"
         soubor_stahnout_pas = "soubor_stahnout_pas", "core.models.permissions.actionChoices.soubor_stahnout_pas"
+        soubor_nahradit_dokument = "soubor_nahradit_dokument", "core.models.permissions.actionChoices.soubor_nahradit_dokument"
+        soubor_nahradit_pas = "soubor_nahradit_pas", "core.models.permissions.actionChoices.soubor_nahradit_pas"
         spoluprace_zadost = "spoluprace_zadost", "core.models.permissions.actionChoices.spoluprace_zadost"
         spoluprace_aktivovat = "spoluprace_aktivovat", "core.models.permissions.actionChoices.spoluprace_aktivovat"
         spoluprace_deaktivovat = "spoluprace_deaktivovat", "core.models.permissions.actionChoices.spoluprace_deaktivovat"
@@ -499,14 +507,14 @@ class Permissions(models.Model):
             logger.debug("base false")
             return False
         if self.ident is not None:
-            perm_check = self.check_status()
+            perm_check = status_check = self.check_status()
             if perm_check and not self.check_ownership(self.ownership):
                 logger.debug("ownership false")
                 perm_check = False
             if perm_check and not self.check_accessibility():
                 logger.debug("accessibility false")
                 perm_check = False
-            if not perm_check and not self.check_permission_skip():
+            if not perm_check and status_check and not self.check_permission_skip():
                 logger.debug("skip false")
                 return False
         return True

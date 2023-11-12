@@ -324,7 +324,7 @@ class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelated
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["j"] = get_dj_form_detail(
-            "lokalita", self.get_dokumentacni_jednotka(), show=self.get_shows()
+            "lokalita", self.get_dokumentacni_jednotka(), show=self.get_shows(), user=self.request.user
         )
         return context
 

@@ -39,12 +39,14 @@
           {% if show.smazat %}
           <button id="{{type}}-smazat" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarAkce.smazatAkci.label" %}</button>
           {% endif %}
+          {% if show.stahnout_metadata %}
           <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'archeologicky_zaznam' zaznam.ident_cely %}">{% trans "templates.toolbarAkce.metadataDownload.label" %}</a>
+          {% endif %}
           <a class="dropdown-item" href="{% url 'historie:'|add:type zaznam.ident_cely %}">{% trans "templates.toolbarAkce.historie.label" %}</a>
-          {% if show.zmenit_proj_akci %}
+          {% if show.zmenit_sam_akci %}
           <button id="arch_z-proj-akce-change" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarAkce.zmenitNaSamostatnou.label" %}</button>
           {% endif %}
-          {% if show.zmenit_sam_akci %}
+          {% if show.zmenit_proj_akci %}
           <button id="arch_z-sam-akce-change" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarAkce.zmenitNaProjektovou.label" %}</button>
           {% endif %}
           {% if show.arch_links%}

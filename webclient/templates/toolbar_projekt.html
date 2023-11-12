@@ -80,7 +80,9 @@
           {% if show.smazat_link %}
           <button id="projekt-smazat" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.smazatProjekt.label" %}</button>
           {% endif %}
+          {% if show.stahnout_metadata%}
           <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'projekt' projekt.ident_cely %}">{% trans "templates.toolbarProjekt.metadataDownload.label" %}</a>
+          {% endif %}
           {% if projekt.expert_list_can_be_created and show.generovat_exp_list %}
             <a class="dropdown-item" data-toggle="modal" data-target="#expertni_list">{% trans "templates.toolbarProjekt.expertniList.label" %}</a>
           {% endif %}
