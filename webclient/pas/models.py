@@ -248,6 +248,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.katastr.text"))
         if not self.soubory.soubory.exists():
             resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.soubory.text"))
+        resp = [str(x) for x in resp]
         return resp
 
     @property

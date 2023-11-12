@@ -131,6 +131,14 @@
   <script >
     var static_url = "{% get_static_prefix %}";
   </script>
+  <script>
+    var map_translations = {
+      cuzkzakladniMapyCr: '{%trans "mapa.cuzkzakladniMapyCr" %}',
+      cuzkOrtofotomapa: '{%trans "mapa.cuzkOrtofotomapa" %}',
+      cuzkStinovanyeelief5G: '{%trans "mapa.cuzkStinovanyeelief5G" %}',
+      openStreetMapSeda:  '{%trans "mapa.openStreetMapSeda" %}',
+    };
+  </script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'mapa_basic_grey.js' %}"></script>
   <script src="{% static 'mapa_pins.js' %}"></script>

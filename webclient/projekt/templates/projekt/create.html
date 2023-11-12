@@ -37,7 +37,6 @@
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'dropzone.min.css' %}"/>
   <!-- static leaflet additional import-->
 <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}"/>
 <script src="{% static 'leaflet.measure.js' %}"></script>
@@ -63,12 +62,6 @@
           <div id="id_oznamvatel_form">
             {% crispy form_oznamovatel %}
           </div>
-{#          <form action="{% url 'core:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone" enctype="multipart/form-data">#}
-{#            {% csrf_token %}#}
-{#            <div class="fallback">#}
-{#              <input name="file" type="file" multiple/>#}
-{#            </div>#}
-{#          </form>#}
         </div>
       </div>
       <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{{ button }}</button>
@@ -81,6 +74,37 @@
   <script >
     var static_url = "{% get_static_prefix %}";
   </script>
+  <script>
+    var map_translations = {
+      CurrentLocationError: '{%trans "mapa.CurrentLocationError" %}',
+      cuzkKatastralniMapa: '{%trans "mapa.cuzkKatastralniMapa" %}',
+      cuzkKatastralniUzemi: '{%trans "mapa.cuzkKatastralniUzemi" %}',
+      cuzkOrtofotomapa: '{%trans "mapa.cuzkOrtofotomapa" %}',
+      cuzkStinovanyeelief5G: '{%trans "mapa.cuzkStinovanyeelief5G" %}',
+      cuzkzakladniMapyCr: '{%trans "mapa.cuzkzakladniMapyCr" %}',
+      DefaultTitle: '{%trans "mapa.DefaultTitle" %}',
+      EditTurnOff: '{%trans "mapa.EditTurnOff" %}',
+      EditTurnOn: '{%trans "mapa.EditTurnOn" %}',
+      FullscreenTitle: '{%trans "mapa.FullscreenTitle" %}',
+      FullscreenTitleClose: '{%trans "mapa.FullscreenTitleClose" %}',
+      lokalizaceProjektu: '{%trans "mapa.lokalizaceProjektu" %}',
+      MeasureTitle: '{%trans "mapa.MeasureTitle" %}',
+      openStreetMap: '{%trans "mapa.openStreetMap" %}',
+      projektyP1: '{%trans "mapa.projektyP1" %}',
+      projektyP2: '{%trans "mapa.projektyP2" %}',
+      projektyP3: '{%trans "mapa.projektyP3" %}',
+      projektyP46: '{%trans "mapa.projektyP46" %}',
+      projektyP78: '{%trans "mapa.projektyP78" %}',
+      projektyPAS: '{%trans "mapa.projektyPAS" %}',
+      projektyPIAN: '{%trans "mapa.projektyPIAN" %}',
+      SearchText: '{%trans "mapa.SearchText" %}',
+      SearchTextCancel: '{%trans "mapa.SearchTextCancel" %}',
+      SearchTextError: '{%trans "mapa.SearchTextError" %}',
+      SelectedLocation: '{%trans "mapa.SelectedLocation" %}',
+      zoomInTitle: '{%trans "mapa.zoomInTitle" %}',
+      zoomOutTitle: '{%trans "mapa.zoomOutTitle" %}'
+    };
+  </script>
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'mapa_basic_grey.js' %}"></script>
@@ -88,18 +112,13 @@
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script src="{% static 'leaflet_subgroup.js' %}"></script>
   <script>
-    const map_translations = {
-      cuzkKatastralniMapa: '{%trans "projekt.templates.projekt.detail_common.mapa.cuzkKatastralniMapa" %}',
-    };
     const dz_trans = {
       descriptionUpload: '{%trans "core.templates.core.upload_file.dz.descriptionUpload" %}',
       descriptionNahradit: '{%trans "core.templates.core.upload_file.dz.descriptionNahradit" %}',
     }
   </script>
   <script src="{% static 'mapa_projekty.js' %}"></script>
-  <script src="{% static 'dropzone.min.js' %}"></script>
   <script>var object_id = "{{ confirm.ident_cely }}";</script>
-  <script src="{% static 'dz.js' %}"></script>
   <script>
       global_map_can_edit = true;
      /* if (document.getElementById("id_latitude").value > 1) {

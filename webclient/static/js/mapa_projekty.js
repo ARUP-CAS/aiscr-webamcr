@@ -31,18 +31,20 @@ var global_heat = false;
 
 var overlays = {
     [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
-    "ČÚZK - Katastrální území": cuzkWMS2,
-    "Lokalizace projektu":poi_sugest,
-    "Projekty - zapsané":poi_p1,
-    "Projekty - přihlášené":poi_p2,
-    "Projekty - běžící":poi_p3,
-    "Projekty - realizované":poi_p46,
-    "Projekty - zrušené":poi_p78,
-    "Samostatné nálezy projektu":poi_sn,
-    "PIAN projektu":poi_pian,
+    [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
+    [map_translations['lokalizaceProjektu']]:poi_sugest,
+    [map_translations['projektyP1']]:poi_p1,
+    [map_translations['projektyP2']]:poi_p2,
+    [map_translations['projektyP3']]:poi_p3,
+    [map_translations['projektyP46']]:poi_p46,
+    [map_translations['projektyP78']]:poi_p78,
+    [map_translations['projektyPAS']]:poi_sn,
+    [map_translations['projektyPIAN']]:poi_pian,
 };
 
-global_map_layers.remove(map);//remove previous overlay
+if (global_map_layers) {
+    global_map_layers.remove(map);//remove previous overlay
+}
 L.control.layers(baseLayers, overlays).addTo(map);
 
 L.easyButton('bi bi-skip-backward-fill', function () {
@@ -63,14 +65,14 @@ L.easyButton('bi bi-skip-backward-fill', function () {
 
         }
     }
-}, 'Výchozí stav ').addTo(map)
+}, [map_translations['DefaultTitle']]).addTo(map)
 
 
 var button_map_lock = L.easyButton({
     states: [{
         stateName: 'add-lock',
         icon: 'bi bi-lock',
-        title: 'Vypnout‌ ‌editaci‌‌',
+        title: [map_translations['EditTurnOff']],
         onClick: function (control) {
             global_map_can_edit = !global_map_can_edit;
             control.state('remove-lock');
@@ -78,7 +80,7 @@ var button_map_lock = L.easyButton({
     }, {
         icon: 'bi bi-geo-alt',
         stateName: 'remove-lock',
-        title: 'Zapnout‌ ‌editaci‌',
+        title: [map_translations['EditTurnOn']],
         onClick: function (control) {
             global_map_can_edit = !global_map_can_edit;
             control.state('add-lock');
@@ -144,7 +146,7 @@ map.on('click', function (e) {
                 } catch (e) {
                     console.log("Error: Element id_latitude/latitude doesn exists")
                 }
-                addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru');
+                addPointToPoiLayer(corX, corY, [map_translations['SelectedLocation']]); // 'Vámi vybraná poloha záměru'
 
             } else {
                 var zoom = 2;

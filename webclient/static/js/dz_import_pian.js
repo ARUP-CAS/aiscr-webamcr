@@ -54,11 +54,11 @@ window.onload = function () {
     var dropzoneOptions = {
         dictDefaultMessage: [dz_trans["description"]],
         acceptedFiles: ".csv, .CSV",
-        dictInvalidFileType: "RejectedFileMessage",
+        dictInvalidFileType: [dz_trans["rejectedFileMessage"]],
         addRemoveLinks: true,
-        dictCancelUpload: "Zrušit nahrávání",
-        dictCancelUploadConfirmation: "Naozaj chcete zrušit nahrávání?",
-        dictRemoveFile: "Odstranit soubor",
+        dictCancelUpload: [dz_trans["cancelUpload"]],
+        dictCancelUploadConfirmation: [dz_trans["cancelUploadConfirm"]],
+        dictRemoveFile: [dz_trans["removeFile"]],
         maxFilesize: 10, // MB
         maxFiles: 1,
         addRemoveLinks: false,

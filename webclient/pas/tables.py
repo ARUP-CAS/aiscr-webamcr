@@ -34,6 +34,13 @@ class SamostatnyNalezTable(SearchTable):
         verbose_name=_("pas.tables.samostatnyNalezTable.predano_organizace.label"), 
         default="", order_by="predano_organizace__nazev_zkraceny"
     )
+    stav = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.stav.label"), default="")
+    pristupnost = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.pristupnost.label"), default="")
+    presna_datace = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.presna_datace.label"), default="")
+    pocet = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.pocet.label"), default="")
+    poznamka = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.poznamka.label"), default="")
+    okolnosti = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.okolnosti.label"), default="")
+    hloubka = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.hloubka.label"), default="")
     app = "samostatny_nalez"
     nahled = tables.columns.Column(
         default="",
