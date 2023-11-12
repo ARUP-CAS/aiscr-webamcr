@@ -39,6 +39,29 @@ map.on('click', function (e) {
     }
 });
 
+map.on('popupclose', function (e) {
+
+    // make the tooltip for this feature visible again
+    // but check first, not all features will have tooltips!
+    var tooltip = e.popup._source.getTooltip();
+    if (tooltip) tooltip.setOpacity(0.9);
+
+});
+
+map.on('popupopen', function (e) {
+
+    var tooltip = e.popup._source.getTooltip();
+    // not all features will have tooltips!
+    if (tooltip) 
+    {
+        // close the open tooltip, if you have configured animations on the tooltip this looks snazzy
+        e.target.closeTooltip();
+        // use opacity to make the tooltip for this feature invisible while the popup is active.
+        e.popup._source.getTooltip().setOpacity(0);
+    }
+
+});
+
 var is_in_czech_republic = (corX, corY) => {
     console.log("Test coordinates for bounding box");
 
@@ -60,9 +83,13 @@ var addUniquePointToPoiLayer = (lat, long, text, zoom = true,redIcon= false) => 
     var [corX, corY] = amcr_static_coordinate_precision_wgs84([lat, long]);
     poi_model.clearLayers()
     if(redIcon){
-        L.marker([corX, corY],{icon:pinIconRed3D, zIndexOffset: 2000}).bindPopup("Vámi vyznačená poloha").addTo(poi_model);
+        L.marker([corX, corY],{icon:pinIconRed3D, zIndexOffset: 2000})
+        .bindPopup("Vámi vyznačená poloha")
+        .addTo(poi_model);
     }else{
-        L.marker([corX, corY],{icon:pinIconYellow3D, zIndexOffset: 2000}).bindPopup("Vámi vyznačená poloha").addTo(poi_model);
+        L.marker([corX, corY],{icon:pinIconYellow3D, zIndexOffset: 2000})
+        .bindPopup("Vámi vyznačená poloha")
+        .addTo(poi_model);
     }
 
     if (corX && corY && zoom) {
@@ -122,7 +149,7 @@ switchMap = function (overview = false) {
             console.log("Change: " + northWest + "  " + southEast + " " + zoom);
             boundsLock = bounds;
             let xhr_3d_all = new XMLHttpRequest();
-            xhr_3d_all.open('POST', '/dokument/akce-get-3d');
+            xhr_3d_all.open('POST', '/dokument/model/mapa-3d');
             xhr_3d_all.setRequestHeader('Content-type', 'application/json');
             if (typeof global_csrftoken !== 'undefined') {
                 xhr_3d_all.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -142,7 +169,10 @@ switchMap = function (overview = false) {
                     let resPoints = JSON.parse(this.responseText).points
                     resPoints.forEach((i) => {
                         let ge = i.geom.split("(")[1].split(")")[0];
-                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurple3D }).bindPopup(i.ident_cely).addTo(poi_all)
+                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurple3D })
+                        .bindTooltip(i.ident_cely, { sticky: true })
+                        .bindPopup('<a href="/dokument/model/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
+                        .addTo(poi_all)
                     })
                     map.spin(false);
                 } catch(e){map.spin(false);}

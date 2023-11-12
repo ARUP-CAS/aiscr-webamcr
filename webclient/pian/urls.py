@@ -12,4 +12,5 @@ urlpatterns = [
     path("odpojit/<str:dj_ident_cely>", views.odpojit, name="odpojit"),
     path("autocomplete/", PianAutocomplete.as_view(), name="pian-autocomplete"),
     path("importovat", views.ImportovatPianView.as_view(), name="importovat-pian"),
+    path("mapa-connections/<str:ident_cely>", views.mapaDj, name="mapaDj"),
 ]

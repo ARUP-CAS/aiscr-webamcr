@@ -22,6 +22,7 @@ from core.utils import (
     file_validate_geometry,
     get_validation_messages,
     update_all_katastr_within_akce_or_lokalita,
+    get_dj_akce_for_pian,
 )
 from dal import autocomplete
 from dj.models import DokumentacniJednotka
@@ -113,6 +114,8 @@ def detail(request, ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     response = redirect(dj.get_absolute_url())
+    if validation_results != "valid" and validation_results != PIAN_VALIDACE_VYPNUTA:
+        response = redirect(dj.get_absolute_url()+"/pian/edit/"+str(ident_cely))
     response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",
@@ -309,6 +312,28 @@ def create(request, dj_ident_cely):
         max_age=1000,
     )
     return response
+
+@login_required
+@require_http_methods(["POST"])
+def mapaDj(request, ident_cely):
+    """
+    Funkce ziskej Dj pro Pian
+    """
+    logger.debug("pian.views.create.start")
+    back=[]
+    for i in get_dj_akce_for_pian(ident_cely):
+        logger.debug(i)#G {'ident_cely': 'C-201339492A-D01', 'archeologicky_zaznam__ident_cely': 'C-201339492A'}
+        back.append({
+            "dj": str(i['ident_cely']),
+            "akce": str(i['archeologicky_zaznam__ident_cely']),
+            })
+
+    if back is not None:
+        return JsonResponse({"points": back}, status=200,
+        )
+    else:
+        return JsonResponse({"points": None}, status=200)
+
 
 class PianPermissionFilterMixin(PermissionFilterMixin):
     def add_ownership_lookup(self, ownership):

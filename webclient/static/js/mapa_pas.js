@@ -40,10 +40,10 @@ map.on('click', function (e) {
             if (!lock) {
                 if (map.getZoom() > 15) {
                     lock_sjtsk_low_precision=false;
-                    var [corY, corX] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
+                    var [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
                     jtsk_coor = amcr_static_coordinate_precision_jtsk(convertToJTSK(corX, corY));
                     point_global_WGS84 = [corX, corY];
-                    point_global_JTSK = jtsk_coor
+                    point_global_JTSK = [jtsk_coor[1],jtsk_coor[0]]
                     if (document.getElementById('detector_system_coordinates').value == 1) {
                         document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]
                         document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
@@ -65,6 +65,52 @@ map.on('click', function (e) {
         }
     }
 });
+
+map.on('popupclose', function (e) {
+
+    // make the tooltip for this feature visible again
+    // but check first, not all features will have tooltips!
+    var tooltip = e.popup._source.getTooltip();
+    if (tooltip) tooltip.setOpacity(0.9);
+
+});
+
+map.on('popupopen', function (e) {
+
+    var tooltip = e.popup._source.getTooltip();
+    // not all features will have tooltips!
+    if (tooltip) 
+    {
+        // close the open tooltip, if you have configured animations on the tooltip this looks snazzy
+        e.target.closeTooltip();
+        // use opacity to make the tooltip for this feature invisible while the popup is active.
+        e.popup._source.getTooltip().setOpacity(0);
+    }
+
+});
+
+function onMarkerClick(ident_cely,e) {
+    var popup = e.target.getPopup();
+    popup.setContent("");
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/pian/mapa-connections/'+ident_cely);
+    xhr.setRequestHeader('Content-type', 'application/json');
+    if (typeof global_csrftoken !== 'undefined') {
+        xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+    }
+    xhr.send();
+    xhr.onload = function () {
+        rs = JSON.parse(this.responseText).points
+        text=""
+        rs.forEach((i) => {
+            console.log(i)
+            let link='<a href="/arch-z/akce/detail/'+i.akce+'/dj/'+i.dj+'" target="_blank">'+i.dj+'</a></br>'
+            text=text+link
+        })
+        popup.setContent(text);
+        
+    }
+ }
 
 var debugText=(text)=>{
     if(GLOBAL_DEBUG_TEXT){
@@ -346,27 +392,32 @@ $(document).ready(function () {
     }
 
 })
-var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost4=false) => {
+var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost) => {
     //addLogText("arch_z_detail_map.addPointToPoiLayer")
     let coor = []
     let myIco = { icon: pinIconPurplePoint };
     let myIco2 = { icon: pinIconPurpleHW };
     let myColor = { color: "rgb(151, 0, 156)" };
-    if(presnost4){
+    if(presnost==4){
         myIco = { icon: pinIconPurpleHW};
     }
 
 
-    if (st_text.includes("POLYGON") && !presnost4) {
+    if (st_text.includes("POLYGON") && presnost!=4) {
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0].replace("(", "")]))
         })
-        L.polygon(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer);
+        L.polygon(coor, myColor)
+        .bindTooltip(text+' ('+presnost+')', { sticky: true })
+        .bindPopup("").on("click",onMarkerClick.bind(null,text))
+        .addTo(layer);
     } else if (st_text.includes("LINESTRING")) {
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
         })
-        L.polyline(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer);
+        .bindTooltip(text+' ('+presnost+')', { sticky: true })
+        .bindPopup("").on("click",onMarkerClick.bind(null,text))
+        .addTo(layer);
     } else if (st_text.includes("POINT")) {
         let i = st_text.split("(")[1].split(")")[0];
         coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
@@ -385,9 +436,15 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost4=fals
             }
         }
         if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
-            L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco2).bindTooltip(text).addTo(layer);
+            L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco2)
+            .bindTooltip(text+' ('+presnost+')', { sticky: true })
+            .bindPopup("").on("click",onMarkerClick.bind(null,text))
+            .addTo(layer);
         } else {
-            L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco).bindTooltip(text).addTo(layer);
+            L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco)
+            .bindTooltip(text+' ('+presnost+')', { sticky: true })
+            .bindPopup("").on("click",onMarkerClick.bind(null,text))
+            .addTo(layer);
         }
 
     }
@@ -407,7 +464,7 @@ switchMap = function (overview = false) {
             console.log("Change: " + northWest + "  " + southEast + " " + zoom);
             boundsLock = bounds;
             let xhr = new XMLHttpRequest();
-            xhr.open('POST', '/pas/akce-get-pas-pian');
+            xhr.open('POST', '/core/mapa-pian-pas');
             xhr.setRequestHeader('Content-type', 'application/json');
             if (typeof global_csrftoken !== 'undefined') {
                 xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -419,6 +476,8 @@ switchMap = function (overview = false) {
                     'northWest': northWest,
                     'southEast': southEast,
                     'zoom': zoom,
+                    'pian':map.hasLayer(poi_pian),
+                    'pas':map.hasLayer(poi_sn),
                 }));
 
             xhr.onload = function () {
@@ -433,9 +492,12 @@ switchMap = function (overview = false) {
 
                             if(i.type=="pas"){
                                 let ge = i.geom.split("(")[1].split(")")[0];
-                                L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurple3D }).bindPopup(i.ident_cely).addTo(poi_sn)
+                                L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurple3D })
+                                .bindTooltip(i.ident_cely, { sticky: true })
+                                .bindPopup('<a href="/pas/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
+                                .addTo(poi_sn)
                             } else if(i.type=="pian"){
-                                addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost==4)
+                                addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost)
                             }
                         })
                     } else {
@@ -454,7 +516,7 @@ switchMap = function (overview = false) {
 
                     }
                     map.spin(false);
-                } catch(e){map.spin(false);console.log(e)}
+                } catch(e){map.spin(false);/*console.log(e)*/}
             };
         }
     }

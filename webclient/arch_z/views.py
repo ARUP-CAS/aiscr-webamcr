@@ -1139,13 +1139,13 @@ def post_akce2kat(request):
     pian_ident_cely = body["pian"]
 
     if len(katastr_name) > 0:
-        [poi, geom, presnost] = get_centre_from_akce(katastr_name, pian_ident_cely)
-        if len(str(poi)) > 0:
+        [bod, geom, presnost,zoom] = get_centre_from_akce(katastr_name, pian_ident_cely)
+        if len(str(bod)) > 0:
             return JsonResponse(
                 {
-                    "lat": str(poi.lat),
-                    "lng": str(poi.lng),
-                    "zoom": str(poi.zoom),
+                    "lat": str(bod[0]),
+                    "lng": str(bod[1]),
+                    "zoom": str(zoom),
                     "geom": str(geom).split(";")[1].replace(", ", ",")
                     if geom
                     else None,
