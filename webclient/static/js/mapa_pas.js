@@ -103,7 +103,6 @@ function onMarkerClick(ident_cely,e) {
         rs = JSON.parse(this.responseText).points
         text=""
         rs.forEach((i) => {
-            console.log(i)
             let link='<a href="/arch-z/akce/detail/'+i.akce+'/dj/'+i.dj+'" target="_blank">'+i.dj+'</a></br>'
             text=text+link
         })
