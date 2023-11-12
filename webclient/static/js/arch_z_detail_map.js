@@ -1092,13 +1092,26 @@ function save_edited_geometry_session(){
      sessionStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:document.getElementById(global_map_element).value}))
 }
 
+function checkBlockedByQWuery(){
+    const currentUrl = window.location.href;
+    const urlParams = new URLSearchParams(window.location.search);
+    let myParamG = urlParams.get('geometry');
+    if(myParamG !==null){
+        return true
+    }
+    return false;
+}
+
 window.addEventListener("load", function(){
+    loadSession();
+});
+
+function loadSession(){
     const currentUrl = window.location.href;
     const urlParams = new URLSearchParams(window.location.search);
     let myParamG = urlParams.get('geometry');
     let myParamL = urlParams.get('label');
     if(myParamG !==null){
-        //console.log("query")
         global_blocked_by_query_geom=true;
         drawnItems.clearLayers();
         drawnItemsBuffer.clearLayers();
@@ -1113,6 +1126,7 @@ window.addEventListener("load", function(){
             geom_session=JSON.parse(geom_session)
             if(geom_session.url==currentUrl && geom_session.geometry !=null){
                 global_blocked_by_query_geom=true;
+                global_map_can_edit=true;
                 drawnItems.clearLayers();
                 drawnItemsBuffer.clearLayers();
                 //POLYGON ((13.2496364 50.0099953, 13.2502051 50.0099539, 13.2500978 50.0094364, 13.2496364 50.0099953))
@@ -1126,9 +1140,9 @@ window.addEventListener("load", function(){
             }
         }
     }
+}
 
 
-});
 
 window.addEventListener("load", (event) => {
     if(!global_map_projekt_ident || global_map_projekt_ident==="" || global_map_projekt_ident.charAt(0)!="C"){
