@@ -1447,8 +1447,8 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
             and check_permissions(p.actionChoices.pian_potvrdit,request.user,zaznam.ident_cely)
             else False
         )
-        logger.debug("test")
-        logger.debug(check_permissions(p.actionChoices.vb_smazat,request.user,zaznam.ident_cely))
+        logger.debug("arch_z.views.get_arch_z_context.check_permissions",
+                     extra={"check_permissions": check_permissions(p.actionChoices.vb_smazat,request.user,zaznam.ident_cely)})
         dj_form_detail = {
             "ident_cely": jednotka.ident_cely,
             "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
@@ -1862,8 +1862,8 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
             prefix=jednotka.ident_cely,
             not_readonly=show["editovat"],
         )
-    logger.debug("test")
-    logger.debug(check_permissions(p.actionChoices.vb_smazat,user,jednotka.ident_cely))
+    logger.debug("arch_z.views.get_dj_form_detail.check_permissions",
+                 extra={"check_permissions": check_permissions(p.actionChoices.vb_smazat,user,jednotka.ident_cely)})
     dj_form_detail = {
         "ident_cely": jednotka.ident_cely,
         "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",

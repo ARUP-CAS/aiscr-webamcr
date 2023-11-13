@@ -358,7 +358,7 @@ class PermissionAdmin(admin.ModelAdmin):
             elif self.check_status_regex(row[8 + i]):
                 status = row[8 + i]
             else:
-                logger.debug("status NOK")
+                logger.debug("core.admin.PermissionAdmin.status_NOK")
                 return False
         if row[12 + i] == "*":
             ownership = None
@@ -367,7 +367,7 @@ class PermissionAdmin(admin.ModelAdmin):
         elif row[12 + i].endswith(".ours"):
             ownership = Permissions.ownershipChoices.our
         else:
-            logger.debug("ownership NOK")
+            logger.debug("core.admin.PermissionAdmin.ownership_NOK")
             return False
         if row[16 + i] == "*":
             accessibility = None
@@ -376,7 +376,7 @@ class PermissionAdmin(admin.ModelAdmin):
         elif row[16 + i].endswith("(ours)"):
             accessibility = Permissions.ownershipChoices.our
         else:
-            logger.debug("accessibility NOK")
+            logger.debug("core.admin.PermissionAdmin.accessibility_NOK")
             return False
         if not (
             base == True
