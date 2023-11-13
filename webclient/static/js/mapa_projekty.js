@@ -157,26 +157,91 @@ map.on('click', function (e) {
             }
 });
 
-var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost4=false) => {
+map.on('overlayadd', function(eventlayer){
+    console.log("pridat mapu")
+    if(eventlayer.layer===poi_p1 || eventlayer.layer===poi_p2 || eventlayer.layer===poi_p3 || eventlayer.layer===poi_p46 || eventlayer.layer===poi_p78){
+        switchMap(false)
+    }
+});
+
+map.on('overlayremove', function(eventlayer){
+    console.log("ubrat mapu")
+    if(eventlayer.layer===poi_p1 || eventlayer.layer===poi_p2 || eventlayer.layer===poi_p3 || eventlayer.layer===poi_p46 || eventlayer.layer===poi_p78){
+        switchMap(false)
+    }
+});
+
+map.on('popupclose', function (e) {
+
+    // make the tooltip for this feature visible again
+    // but check first, not all features will have tooltips!
+    var tooltip = e.popup._source.getTooltip();
+    if (tooltip) tooltip.setOpacity(0.9);
+
+});
+
+map.on('popupopen', function (e) {
+
+    var tooltip = e.popup._source.getTooltip();
+    // not all features will have tooltips!
+    if (tooltip) 
+    {
+        // close the open tooltip, if you have configured animations on the tooltip this looks snazzy
+        e.target.closeTooltip();
+        // use opacity to make the tooltip for this feature invisible while the popup is active.
+        e.popup._source.getTooltip().setOpacity(0);
+    }
+
+});
+
+function onMarkerClick(ident_cely,e) {
+    var popup = e.target.getPopup();
+    popup.setContent("");
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/pian/mapa-connections/'+ident_cely);
+    xhr.setRequestHeader('Content-type', 'application/json');
+    if (typeof global_csrftoken !== 'undefined') {
+        xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+    }
+    xhr.send();
+    xhr.onload = function () {
+        rs = JSON.parse(this.responseText).points
+        text=""
+        rs.forEach((i) => {
+            let link='<a href="/arch-z/akce/detail/'+i.akce+'/dj/'+i.dj+'" target="_blank">'+i.dj+'</a></br>'
+            text=text+link
+        })
+        popup.setContent(text);
+        
+    }
+ }
+
+var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost=4) => {
     //addLogText("arch_z_detail_map.addPointToPoiLayer")
     let coor = []
     let myIco = { icon: pinIconGreenPoint };
-    let myIco2 = { icon: pinIconGreenleHW };
+    let myIco2 = { icon: pinIconGreenHW };
     let myColor = { color: "rgb(151, 0, 156)" };
-    if(presnost4){
+    if(presnost==4){
         myIco = { icon: pinIconGreenHW};
     }
 
-    if (st_text.includes("POLYGON") && !presnost4) {
+    if (st_text.includes("POLYGON") && presnost!=4) {
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0].replace("(", "")]))
         })
-        L.polygon(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer);
+        L.polygon(coor, myColor)
+        .bindTooltip(text+' ('+presnost+')', { sticky: true })
+        .bindPopup("").on("click",onMarkerClick.bind(null,text))
+        .addTo(layer);
     } else if (st_text.includes("LINESTRING")) {
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
         })
-        L.polyline(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer);
+        L.polyline(coor, myColor)
+        .bindTooltip(text+' ('+presnost+')', { sticky: true })
+        .bindPopup("").on("click",onMarkerClick.bind(null,text))
+        .addTo(layer);
     } else if (st_text.includes("POINT")) {
         let i = st_text.split("(")[1].split(")")[0];
         coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
@@ -195,9 +260,15 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost4=fals
             }
         }
         if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
-            L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco2).bindTooltip(text).addTo(layer);
+            L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco2)
+            .bindTooltip(text+' ('+presnost+')', { sticky: true })
+            .bindPopup("").on("click",onMarkerClick.bind(null,text))
+            .addTo(layer);
         } else {
-            L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco).bindTooltip(text).addTo(layer);
+            L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco)
+            .bindTooltip(text+' ('+presnost+')', { sticky: true })
+            .bindPopup("").on("click",onMarkerClick.bind(null,text))
+            .addTo(layer);
         }
 
     }
@@ -215,9 +286,9 @@ switchMap = function (overview = false) {
             let xhr_proj = new XMLHttpRequest();
             let xhr_pas = new XMLHttpRequest();
             let xhr_pian = new XMLHttpRequest();
-            xhr_proj.open('POST', '/projekt/akce-get-projekty');
-            xhr_pas.open('POST', '/projekt/akce-get-projekt-pas');
-            xhr_pian.open('POST', '/projekt/akce-get-projekt-pian');
+            xhr_proj.open('POST', '/projekt/mapa-projekty');
+            xhr_pas.open('POST', '/projekt/mapa-pas');
+            xhr_pian.open('POST', '/projekt/mapa-pian');
             xhr_proj.setRequestHeader('Content-type', 'application/json');
             if (typeof global_csrftoken !== 'undefined') {
                 xhr_proj.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -231,6 +302,11 @@ switchMap = function (overview = false) {
                     'northWest': northWest,
                     'southEast': southEast,
                     'zoom': zoom,
+                    'p1':map.hasLayer(poi_p1),
+                    'p2':map.hasLayer(poi_p2),
+                    'p3':map.hasLayer(poi_p3),
+                    'p46':map.hasLayer(poi_p46),
+                    'p78':map.hasLayer(poi_p78),
                 }));
             xhr_pas.send(JSON.stringify(
                     {
@@ -273,7 +349,10 @@ switchMap = function (overview = false) {
                             stav=poi_sugest;
                         }
                         if(stav!=null){
-                            L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurpleDf, zIndexOffset: 1000 }).bindPopup(i.ident_cely).addTo(stav)
+                           L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurpleDf, zIndexOffset: 1000 })
+                           .bindTooltip(i.ident_cely+' ('+i.stav+')')
+                           .bindPopup('<a href="/projekt/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
+                           .addTo(stav)
                         }
                     })
                 } else {
@@ -302,7 +381,10 @@ switchMap = function (overview = false) {
                     let resPoints = JSON.parse(this.responseText).points
                     resPoints.forEach((i) => {
                         let ge = i.geom.split("(")[1].split(")")[0];
-                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconGreenPin }).bindPopup(i.ident_cely).addTo(poi_sn)
+                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[0], ge.split(" ")[1]]), { icon: pinIconGreenPin })
+                        .bindTooltip(i.ident_cely, { sticky: true })
+                        .bindPopup('<a href="/pas/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
+                        .addTo(poi_sn)
                     })
 
                     map.spin(false);
@@ -313,7 +395,7 @@ switchMap = function (overview = false) {
                     poi_pian.clearLayers(poi_pian);
                     let resPoints = JSON.parse(this.responseText).points
                     resPoints.forEach((i) => {
-                        addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost==4)
+                        addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost)
                     })
                     map.spin(false);
                 } catch(e){map.spin(false);}

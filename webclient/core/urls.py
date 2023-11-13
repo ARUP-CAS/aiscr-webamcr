@@ -2,6 +2,10 @@ from django.urls import path
 
 from . import views
 
+from core.views import (
+    post_ajax_get_pas_and_pian_limit,
+)
+
 app_name = "core"
 
 urlpatterns = [
@@ -41,5 +45,10 @@ urlpatterns = [
         "metadata/stahnout/<str:model_name>/<str:ident_cely>",
         views.StahnoutMetadataIdentCelyView.as_view(),
         name="stahnout_metadata",
+    ),
+    path(
+        "core/mapa-pian-pas",
+        post_ajax_get_pas_and_pian_limit,
+        name="post_ajax_get_pas_pian_limit",
     ),
 ]

@@ -5,8 +5,8 @@ $('input[name="planovane_zahajeni"]').daterangepicker({
     parentEl: div_id,
     autoUpdateInput: false,
     locale: {
-        cancelLabel: "Zrušit",
-        applyLabel: "Vybrat odhad začátku prací"
+        cancelLabel: [drp_translations['cancelLabel']],  // "Zrušit"
+        applyLabel: [drp_translations['applyLabel']]  // "Vybrat odhad začátku prací"
     },
 });
 }

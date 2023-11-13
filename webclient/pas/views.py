@@ -47,13 +47,8 @@ from core.utils import (
     get_cadastre_from_point_with_geometry,
     get_pian_from_envelope,
     get_pas_from_envelope,
-    get_num_pass_from_envelope,
     get_num_pian_from_envelope,
-    get_heatmap_pas,
-    get_heatmap_pas_density,
     get_dj_pians_from_envelope,
-    get_heatmap_pian_density,
-    get_heatmap_pian,
 )
 from core.views import SearchListView, check_stav_changed
 from django.contrib import messages
@@ -230,12 +225,12 @@ def detail(request, ident_cely):
         )
         gx_wgs = geom.split(" ")[1]
         gy_wgs = geom.split(" ")[0]
-        gx_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
-        gy_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
+        gx_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
+        gy_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
         gx = gx_wgs if system == "WGS-84" else gx_sjtsk
         gy = gy_wgs if system == "WGS-84" else gy_sjtsk
-        if float(gy_sjtsk) > float(gx_sjtsk):
-            gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
+        #if float(gy_sjtsk) > float(gx_sjtsk):
+        #    gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
         context["formCoor"] = CoordinatesDokumentForm(
             initial={
                 "detector_coordinates_x": gx,
@@ -338,12 +333,12 @@ def edit(request, ident_cely):
             )
             gx_wgs = geom.split(" ")[1]
             gy_wgs = geom.split(" ")[0]
-            gx_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
-            gy_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
+            gx_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
+            gy_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
             gx = gx_wgs if system == "WGS-84" else gx_sjtsk
             gy = gy_wgs if system == "WGS-84" else gy_sjtsk
-            if float(gy_sjtsk) > float(gx_sjtsk):
-                gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
+            #if float(gy_sjtsk) > float(gx_sjtsk):
+            #    gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
             form_coor = CoordinatesDokumentForm(
                 initial={
                     "detector_coordinates_x": gx,
@@ -1096,96 +1091,3 @@ def get_required_fields(zaznam=None, next=0):
             "detector_coordinates_y",
         ]
     return required_fields
-
-@login_required
-@require_http_methods(["POST"])
-def post_ajax_get_pas_and_pian_limit(request):
-    """
-    Funkce pohledu pro získaní heatmapy.
-    """
-    body = json.loads(request.body.decode("utf-8"))
-    params= [
-            body["southEast"]["lng"],
-            body["northWest"]["lat"],
-            body["northWest"]["lng"],
-            body["southEast"]["lat"],
-            body["zoom"]
-            ]
-    num1 =  get_num_pass_from_envelope(*params[0:4],request)
-    num2 =  get_num_pian_from_envelope(*params[0:4],request)
-    req_pian=body["pian"]
-    req_pas=body["pas"]
-    logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"num": num1+num2})
-    num=0
-    if req_pas:
-        num=num+num1
-
-    if req_pian:
-        num=num+num2
-
-    if num< 5000:
-        back = []
-        remove_duplicity = []
-
-        if req_pas:
-            pases = get_pas_from_envelope(*params[0:4],request)
-            for pas in pases:
-                if pas.id not in remove_duplicity:
-                    remove_duplicity.append(pas.id)
-                    back.append(
-                        {
-                            "id": pas.id,
-                            "ident_cely": pas.ident_cely,
-                            "geom": pas.geom.wkt.replace(", ", ","),
-                            "type": "pas"
-                        }
-                    )
-
-        if req_pian:    
-            pians = get_pian_from_envelope(*params[0:4],request)    
-            for pian in pians:
-                if pian["pian__id"] not in remove_duplicity:
-                    remove_duplicity.append(pian["pian__id"])
-                    back.append(
-                        
-                        {
-                            "id": pian["pian__id"],
-                            "ident_cely": pian["pian__ident_cely"],
-                            "geom": pian["pian__geom"].wkt.replace(", ", ",")
-                            if num<500
-                            else pian["pian__centroid"].wkt.replace(", ", ","),
-                            "dj": pian["ident_cely"],
-                            "presnost": pian["pian__presnost__zkratka"],
-                            "type": "pian"
-                        
-                        }
-                    )
-        if num > 0:
-            return JsonResponse({"points": back, "algorithm": "detail","count":num}, status=200)
-        else:
-            return JsonResponse({"points": [], "algorithm": "detail","count":0}, status=200)
-    else:
-        density = get_heatmap_pas_density(*params)
-        logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.density", extra={"density": density})
-
-        heats = []
-        if req_pas:
-            heats=heats+get_heatmap_pas(*params)
-        if req_pian:
-            heats=heats+get_heatmap_pian(*params)
-        back = []
-        cid = 0
-        for heat in heats:
-            cid += 1
-            back.append(
-                {
-                    "id": str(cid),
-                    "pocet": heat["count"],
-                    "density": 0,
-                    "geom": heat["geometry"].replace(", ", ","),
-                }
-            )
-        if len(heats) > 0:
-            return JsonResponse({"heat": back, "algorithm": "heat","count":len(heats)}, status=200)
-        else:
-            return JsonResponse({"heat": [], "algorithm": "heat","count":len(heats)}, status=200)

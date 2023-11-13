@@ -183,6 +183,11 @@ def post_ajax_get_projects_limit(request):
         body["northWest"]["lat"],
         body["northWest"]["lng"],
         body["southEast"]["lat"],
+        body["p1"],
+        body["p2"],
+        body["p3"],
+        body["p46"],
+        body["p78"],
     )
     logger.debug("projekt.views.post_ajax_get_projects_limit.num", extra={"num": num})
     if num < 5000:
@@ -191,6 +196,11 @@ def post_ajax_get_projects_limit(request):
             body["northWest"]["lat"],
             body["northWest"]["lng"],
             body["southEast"]["lat"],
+            body["p1"],
+            body["p2"],
+            body["p3"],
+            body["p46"],
+            body["p78"],
         )
         back = []
         for pian in pians:
