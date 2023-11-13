@@ -39,7 +39,7 @@
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.potvrditPian.label' %}
           </button>
           {% endif %}
-          {% if j.pian_ident_cely %}
+          {% if j.pian_ident_cely and show.stahnout_metadata %}
             <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'pian' j.pian_ident_cely %}">{% trans "arch_z.dj.partials.dj_update.download_pian_metadata" %}</a>
           {% endif %}
           {% if j.show_uprav_pian and j.pian_ident_cely %}
@@ -67,7 +67,7 @@
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.smazatADB.label' %}
           </button>
           {% endif %}
-          {% if j.adb_pk %}
+          {% if j.adb_pk and show.stahnout_metadata %}
             <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'adb' j.adb_ident_cely %}">{% trans "adb.detail.toolbar.MetadataDownload" %}</a>
           {% endif %}
           {% if j.show_dj_smazat %}

@@ -660,6 +660,7 @@ def get_detail_template_shows(zaznam, user):
         "pripojit_eo": check_permissions(p.actionChoices.eo_pripojit_akce, user, zaznam.ident_cely),
         "paginace_edit": check_permissions(p.actionChoices.eo_edit_ez, user, zaznam.ident_cely),
         "smazat": check_permissions(p.actionChoices.ez_smazat, user, zaznam.ident_cely),
+        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, zaznam.ident_cely),
     }
     return show
 

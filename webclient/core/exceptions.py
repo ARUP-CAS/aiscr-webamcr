@@ -54,3 +54,7 @@ class MaximalEventCount(Exception):
         self.number = number
         self.message = message
         super().__init__(self.number)
+
+class WrongCSVError(Exception):
+    def __init__(self, message="CSV nema spravne sloupce"):
+        self.message = message

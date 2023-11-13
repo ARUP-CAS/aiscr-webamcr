@@ -847,6 +847,13 @@ class UzivatelSpolupraceListView(SearchListView):
         context = super().get_context_data(**kwargs)
         context["show_zadost"] = check_permissions(p.actionChoices.spoluprace_zadost, self.request.user)
         return context
+    
+    def get_table_kwargs(self):
+        if self.request.user.hlavni_role.id != ROLE_ADMIN_ID:
+            return {
+                    'exclude': ('smazani', )
+                }
+        return {}
 
 
 @login_required
@@ -998,6 +1005,10 @@ def get_detail_template_shows(sn, user):
         "arch_links": show_arch_links,
         "smazat": check_permissions(p.actionChoices.pas_smazat, user, sn.ident_cely),
         "ulozeni_edit": check_permissions(p.actionChoices.pas_ulozeni_edit, user, sn.ident_cely),
+        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, sn.ident_cely),
+        "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_pas, user, sn.ident_cely),
+        "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_pas, user, sn.ident_cely),
+        "soubor_nahradit": check_permissions(p.actionChoices.soubor_nahradit_pas, user, sn.ident_cely),
     }
     return show
 

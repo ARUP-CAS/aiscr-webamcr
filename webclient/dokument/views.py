@@ -589,7 +589,6 @@ class KomponentaDokumentDetailView(RelatedContext):
             ),
             ident_cely=self.kwargs["komp_ident_cely"],
         )
-        context["k"] = komponenta
         cast = komponenta.komponenta_vazby.casti_dokumentu
         self.get_cast(context, cast)
         old_nalez_post = self.request.session.pop("_old_nalez_post", None)
@@ -1570,11 +1569,16 @@ def get_detail_template_shows(dokument,user):
     """
     Funkce pro získaní kontextu pro zobrazování možností na stránkách.
     """
-    show_edit = (
-        check_permissions(p.actionChoices.model_edit, user, dokument.ident_cely)
-        if "3D" in dokument.ident_cely
-        else check_permissions(p.actionChoices.dok_edit, user, dokument.ident_cely)
-    )
+    if "3D" in dokument.ident_cely:
+        show_edit = check_permissions(p.actionChoices.model_edit, user, dokument.ident_cely)
+        soubor_stahnout_dokument = check_permissions(p.actionChoices.soubor_stahnout_model3d, user, dokument.ident_cely),
+        soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_model3d, user, dokument.ident_cely),
+        soubor_nahradit = False
+    else:
+        show_edit = check_permissions(p.actionChoices.dok_edit, user, dokument.ident_cely)
+        soubor_stahnout_dokument = check_permissions(p.actionChoices.soubor_stahnout_dokument, user, dokument.ident_cely),
+        soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_dokument, user, dokument.ident_cely),  
+        soubor_nahradit = check_permissions(p.actionChoices.soubor_nahradit_dokument, user, dokument.ident_cely)
     show_arch_links = dokument.stav == D_STAV_ARCHIVOVANY
     show_tvary = True if dokument.rada.zkratka in ["LD", "LN", "DL"] else False
     show = {
@@ -1588,6 +1592,10 @@ def get_detail_template_shows(dokument,user):
         "tvary_smazat": show_tvary and check_permissions(p.actionChoices.dok_tvary_smazat, user, dokument.ident_cely),
         "zapsat_cast": check_permissions(p.actionChoices.dok_cast_zapsat, user, dokument.ident_cely),
         "nalez_smazat": check_permissions(p.actionChoices.nalez_smazat_dokument, user, dokument.ident_cely),
+        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, dokument.ident_cely),
+        "soubor_stahnout": soubor_stahnout_dokument,
+        "soubor_smazat": soubor_smazat,
+        "soubor_nahradit": soubor_nahradit,
     }
     return show
 

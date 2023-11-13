@@ -44,7 +44,9 @@
           {% if show.smazat %}
           <button id="pas-smazat" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarPas.smazatNalez.label" %}</button>
           {% endif %}
+          {% if show.stahnout_metadata%}
           <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'samostatny_nalez' sn.ident_cely %}">{% trans "templates.toolbarPas.metadataDownload.label" %}</a>
+          {% endif %}
           <a class="dropdown-item" href="{% url 'historie:pas' sn.ident_cely %}">{% trans "templates.toolbarPas.historie.label" %}</a>
           {% if show.arch_links%}
           <a class="dropdown-item" href="{{Digi_archiv_link|add:sn.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarPas.digiArchivLink.label" %}</a>

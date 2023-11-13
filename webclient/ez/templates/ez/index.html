@@ -51,6 +51,7 @@
           </a>
         </div>
       {% endif %}
+      {% if show_ez_archivovat%}
       <div class="col">
         <a href="{% url 'ez:list' %}?stav=2" class="card app-card-entity app-card-potvrdit">
           <div class="card-body">
@@ -61,6 +62,7 @@
           </div>
         </a>
       </div>
+      {% endif %}
     </div>
   </div>
 
@@ -95,6 +97,7 @@
         {% trans "ez.template.index.vybratEZ.text" %}
       </div>
     </div>
+    {% if show_ez_archivovat%}
   <div class="app-collapse-potvrdit collapse">
       <div class="p-3">
         <h4>{% trans "ez.template.index.potvrditEZ.text.title" %}</h4>
@@ -102,6 +105,7 @@
         {% trans "ez.template.index.potvrditEZ.text" %}
       </div>
     </div>
+    {% endif %}
   </div>
 
   <script>
@@ -132,12 +136,14 @@
     $(".app-card-vybrat").mouseover(function(){
       $(".app-collapse-vybrat").show(100);
     });
+    {% if show_ez_archivovat%}
     $(".app-card-potvrdit").mouseleave(function(){
       $(".app-collapse-potvrdit").hide(100);
     });
     $(".app-card-potvrdit").mouseover(function(){
       $(".app-collapse-potvrdit").show(100);
     });
+    {% endif %}
 </script>
 {% endblock %}
 

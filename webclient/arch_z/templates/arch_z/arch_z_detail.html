@@ -254,7 +254,7 @@
         modalFormID: "#smazat-akci-form",
       })
       smazat_akci_modal = new Modal(options, "akce-smazat");
-      if ("{{show.zmenit_proj_akci}}" != "False"){
+      if ("{{show.zmenit_sam_akci}}" != "False"){
         var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'arch_z:zmenit-proj-akci' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
           formID: "zmenit-akci-form",
@@ -262,7 +262,7 @@
         })
         new Modal(options, "arch_z-proj-akce-change");
       }
-      if ("{{show.zmenit_sam_akci}}" != "False"){
+      if ("{{show.zmenit_proj_akci}}" != "False"){
         var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'arch_z:zmenit-sam-akci' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
           formID: "zmenit-akci-form",
