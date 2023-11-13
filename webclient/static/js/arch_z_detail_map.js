@@ -463,7 +463,8 @@ map.on('draw:created', function (e) {
             let corX = e.layer._latlng.lat;
             let corY = e.layer._latlng.lng;
             if (global_map_can_edit) {
-                L.marker([corX, corY], { icon: pinIconRedPoint }).bindPopup([map_translations['TempPIAN']]).addTo(drawnItems); //'Navržený pian'
+                //odebrano [map_translations['TempPIAN']])
+                L.marker([corX, corY], { icon: pinIconRedPoint }).bindTooltip('Navržený pian').addTo(drawnItems); //'Navržený pian'
 
             }
         } else {
