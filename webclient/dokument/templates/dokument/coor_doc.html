@@ -57,10 +57,6 @@
 <script >
   var static_url = "{% get_static_prefix %}";
 </script>
-<script src="{% static 'mapa_pins.js' %}"></script>
-<script src="{% static 'coor_precision.js' %}"></script>
-<script src="{% static 'spin/spin.min.js' %}"></script>
-<script src="{% static 'leaflet.spin.min.js' %}"></script>
 <script>
   var map_translations = {
     3DLibrary: '{%trans "mapa.3DLibrary" %}',
@@ -76,6 +72,7 @@
     FullscreenTitleClose: '{%trans "mapa.FullscreenTitleClose" %}',
     MeasureTitle: '{%trans "mapa.MeasureTitle" %}',
     openStreetMap: '{%trans "mapa.openStreetMap" %}',
+    openStreetMapSeda: '{%trans "mapa.openStreetMapSeda" %}',
     SearchText: '{%trans "mapa.SearchText" %}',
     SearchTextCancel: '{%trans "mapa.SearchTextCancel" %}',
     SearchTextError: '{%trans "mapa.SearchTextError" %}',
@@ -83,6 +80,10 @@
     zoomOutTitle: '{%trans "mapa.zoomOutTitle" %}'          
   };
 </script>
+<script src="{% static 'mapa_pins.js' %}"></script>
+<script src="{% static 'coor_precision.js' %}"></script>
+<script src="{% static 'spin/spin.min.js' %}"></script>
+<script src="{% static 'leaflet.spin.min.js' %}"></script>
 <script src="{% static 'mapa_basic_grey.js' %}"></script>
 <script src="{% static 'mapa_doc.js' %}"></script>
 <script>
