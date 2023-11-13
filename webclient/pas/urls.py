@@ -3,7 +3,6 @@ from pas import views
 from pas.views import (
     SamostatnyNalezListView,
     UzivatelSpolupraceListView,
-    post_ajax_get_pas_and_pian_limit,
 )
 
 app_name = "pas"
@@ -48,10 +47,5 @@ urlpatterns = [
     ),
     path(
         "spoluprace/smazat/<int:pk>", views.smazat_spolupraci, name="spoluprace_smazani"
-    ),
-    path(
-        "akce-get-pas-pian",
-        post_ajax_get_pas_and_pian_limit,
-        name="post_ajax_get_pas_pian_limit",
     ),
 ]
