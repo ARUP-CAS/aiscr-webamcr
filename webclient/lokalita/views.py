@@ -5,11 +5,9 @@ from arch_z.forms import CreateArchZForm
 from arch_z.models import ArcheologickyZaznam
 from arch_z.views import (
     AkceRelatedRecordUpdateView,
-    get_arch_z_context,
     get_areal_choices,
     get_detail_template_shows,
     get_dj_form_detail,
-    get_history_dates,
     get_komponenta_form_detail,
     get_obdobi_choices,
 )
@@ -121,34 +119,9 @@ class LokalitaDetailView(
     template_name = "lokalita/lokalita_detail.html"
     slug_field = "archeologicky_zaznam__ident_cely"
 
-    # def get_context_data(self, **kwargs):
-    #     logger.debug(self.slug_field)
-    #     logger.debug(self.get_object())
-    #     lokalita_obj = self.get_object()
-    #     context = get_arch_z_context(
-    #         self.request,
-    #         lokalita_obj.archeologicky_zaznam.ident_cely,
-    #         zaznam=lokalita_obj.archeologicky_zaznam,
-    #         app="lokalita",
-    #     )
-    #     context["form"] = LokalitaForm(
-    #         instance=lokalita_obj, readonly=True, required=False, detail=True
-    #     )
-    #     context["arch_z_form"] = CreateArchZForm(
-    #         instance=lokalita_obj.archeologicky_zaznam, readonly=True, required=False
-    #     )
-    #     context["zaznam"] = lokalita_obj.archeologicky_zaznam
-    #     context["app"] = "lokalita"
-    #     context["page_title"] = _("lokalita.views.lokalitaDetailView.pageTitle")
-    #     context["detail_view"] = True
-    #     context["next_url"] = lokalita_obj.get_absolute_url()
-    #     show = self.get_shows()
-    #     return context
-
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
-        logger.debug(context)
         return self.render_to_response(context)
 
     def get_archeologicky_zaznam(self):
@@ -163,24 +136,14 @@ class LokalitaDetailView(
         """
         self.object = self.get_object()
         context = super().get_context_data(**kwargs)
-        logger.debug("main context")
-        zaznam = self.get_archeologicky_zaznam()
-        context["zaznam"] = zaznam
-        context["dokumentacni_jednotky"] = self.get_jednotky()
-        # context["dokumenty"] = self.get_dokumenty()
-        context["history_dates"] = get_history_dates(zaznam.historie, self.request.user)
-        context["show"] = self.get_shows()
-        context["externi_odkazy"] = self.get_externi_odkazy()
-        context["app"] = "lokalita"
         context["page_title"] = _("lokalita.views.lokalitaDetailView.pageTitle")
         context["detail_view"] = True
         context["form"] = LokalitaForm(
             instance=self.object, readonly=True, required=False, detail=True
         )
         context["arch_z_form"] = CreateArchZForm(
-            instance=zaznam, readonly=True, required=False
+            instance=self.arch_zaznam, readonly=True, required=False
         )
-        logger.debug("done context")
         return context
 
     def get_shows(self):

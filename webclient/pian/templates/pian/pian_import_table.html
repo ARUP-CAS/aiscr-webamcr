@@ -19,10 +19,10 @@
                 
                 <td class="app-ident-cely">
                     {% if row.result == True %}
-                    <a href="{% url 'arch_z:update-pian' archz_ident dj_ident pian_ident %}?label={{row.label}}&geometry={{row.geometry}}">
+                      <a href="{{url}}?label={{row.label}}&geometry={{row.geometry}}">
                       <span class="material-icons">description</span>
-                      {{ row.label }}
-                    </a>
+                        {{ row.label }}
+                      </a>
                     {% else %}
                     {{ row.label }}
                     {% endif %}

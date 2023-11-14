@@ -165,10 +165,9 @@ class AkceRelatedRecordUpdateView(TemplateView):
         """
         Metóda pro získaní dokumentační jednotky navázané na akci.
         """
-        ident_cely = self.kwargs.get("ident_cely")
         return (
             DokumentacniJednotka.objects.filter(
-                archeologicky_zaznam__ident_cely=ident_cely
+                archeologicky_zaznam__ident_cely=self.arch_zaznam.ident_cely
             )
             .select_related("komponenty", "typ", "pian")
             .prefetch_related(
@@ -186,9 +185,8 @@ class AkceRelatedRecordUpdateView(TemplateView):
         """
         Metóda pro získaní dokumentů navázaných na akci.
         """
-        ident_cely = self.kwargs.get("ident_cely")
         return (
-            Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
+            Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=self.arch_zaznam.ident_cely)
             .select_related("soubory")
             .prefetch_related("soubory__soubory")
             .order_by("ident_cely")
@@ -198,9 +196,8 @@ class AkceRelatedRecordUpdateView(TemplateView):
         """
         Metóda pro získaní externích odkazů navázaných na akci.
         """
-        ident_cely = self.kwargs.get("ident_cely")
         return (
-            ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
+            ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=self.arch_zaznam.ident_cely)
             .select_related("externi_zdroj")
             .order_by("externi_zdroj__ident_cely")
         )
@@ -238,19 +235,10 @@ class AkceRelatedRecordUpdateView(TemplateView):
         Metóda pro získaní contextu akci pro template.
         """
         context = super().get_context_data(**kwargs)
-        zaznam = self.get_archeologicky_zaznam()
-        context["zaznam"] = zaznam
-        context["dokumentacni_jednotky"] = self.get_jednotky()
-        context["dokumenty"] = self.get_dokumenty()
-        context["history_dates"] = get_history_dates(zaznam.historie, self.request.user)
-        context["show"] = get_detail_template_shows(
-            zaznam, self.get_jednotky(), self.request.user
-        )
-        logger.debug("test")
-        context["externi_odkazy"] = self.get_externi_odkazy()
+        self.arch_zaznam = self.get_archeologicky_zaznam()
         context["showbackdetail"] = False
-        if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-            if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
+        if self.arch_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            if self.arch_zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
                 context["showbackdetail"] = True if self.request.user.hlavni_role.pk != ROLE_BADATEL_ID else False
                 context["app"] = "pr"
                 context[
@@ -261,13 +249,22 @@ class AkceRelatedRecordUpdateView(TemplateView):
                 context["arch_pr_link"] = None
             context["presna_specifikace"] = (
                 True
-                if zaznam.akce.specifikace_data
+                if self.arch_zaznam.akce.specifikace_data
                 == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
                 else False
             )
             self.get_vedouci(context)
-        context["app"] = "akce"
-        context["next_url"] = zaznam.get_absolute_url()
+        else:
+            context["app"] = "lokalita"
+        context["zaznam"] = self.arch_zaznam
+        context["dokumentacni_jednotky"] = self.get_jednotky()
+        context["dokumenty"] = self.get_dokumenty()
+        context["history_dates"] = get_history_dates(self.arch_zaznam.historie, self.request.user)
+        context["show"] = get_detail_template_shows(
+            self.arch_zaznam, self.get_jednotky(), self.request.user, context["app"]
+        )
+        context["externi_odkazy"] = self.get_externi_odkazy()            
+        context["next_url"] = self.arch_zaznam.get_absolute_url()
         return context
 
 
@@ -1199,9 +1196,9 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
     Returns:
         historie: dictionary možností pro zobrazení.
     """
-    show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY and check_permissions(p.actionChoices.archz_vratit, user, archeologicky_zaznam.ident_cely)
-    show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY and check_permissions(p.actionChoices.archz_odeslat, user, archeologicky_zaznam.ident_cely)
-    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY and app == "akce" and check_permissions(p.actionChoices.archz_archivovat, user, archeologicky_zaznam.ident_cely)
+    show_vratit = check_permissions(p.actionChoices.archz_vratit, user, archeologicky_zaznam.ident_cely)
+    show_odeslat = check_permissions(p.actionChoices.archz_odeslat, user, archeologicky_zaznam.ident_cely)
+    show_archivovat = check_permissions(p.actionChoices.archz_archivovat, user, archeologicky_zaznam.ident_cely)
     show_arch_links = archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
     zmenit_proj_akci = False
     zmenit_sam_akci = False
@@ -1327,245 +1324,6 @@ def post_ajax_get_akce_other_katastr(request):
         return JsonResponse({"points": back}, status=200)
     else:
         return JsonResponse({"points": []}, status=200)
-
-
-def get_arch_z_context(request, ident_cely, zaznam, app):
-    """
-    Funkce pro získaní dictionary contextu archeologického záznamu.
-
-    Args:     
-        ident_cely (string): string ident celý záznamu.
-        
-        zaznam (ArcheologickyZaznam): model ArcheologickyZaznam pro který se daný context počítá.
-
-        app (string): druh archeologického záznamu ro který se daný context počítá.
-
-    Returns:
-        context: dictionary kontextu pro správné zobrazení stránky.
-    """
-    context = {"warnings": request.session.pop("temp_data", None)}
-    if app == "akce":
-        context["arch_projekt_link"] = request.session.pop("arch_projekt_link", None)
-    else:
-        context["arch_projekt_link"] = None
-    old_nalez_post = request.session.pop("_old_nalez_post", None)
-    komp_ident_cely = request.session.pop("komp_ident_cely", None)
-    old_adb_post = request.session.pop("_old_adb_post", None)
-    adb_ident_cely = request.session.pop("adb_ident_cely", None)
-    obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
-    areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
-    druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
-    druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
-    specifikace_objekt_choices = heslar_12(
-        HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
-    )
-    specifikce_predmetu_choices = list(
-        Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
-            "id", "heslo"
-        )
-    )
-    dokumenty = (
-        Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
-        .select_related("soubory")
-        .prefetch_related("soubory__soubory")
-    ).order_by("ident_cely")
-    jednotky = (
-        DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
-        .select_related("komponenty", "typ", "pian")
-        .prefetch_related(
-            "komponenty__komponenty",
-            "komponenty__komponenty__aktivity",
-            "komponenty__komponenty__obdobi",
-            "komponenty__komponenty__areal",
-            "komponenty__komponenty__objekty",
-            "komponenty__komponenty__predmety",
-            "adb",
-        )
-    )
-    show = get_detail_template_shows(zaznam, jednotky, request.user)
-
-    dj_form_create = CreateDJForm(jednotky=jednotky, typ_arch_z=zaznam.typ_zaznamu)
-    pian_form_create = PianCreateForm()
-    komponenta_form_create = CreateKomponentaForm(obdobi_choices, areal_choices)
-    adb_form_create = CreateADBForm()
-    dj_forms_detail = []
-    komponenta_forms_detail = []
-    pian_forms_detail = []
-    NalezObjektFormset = inlineformset_factory(
-        Komponenta,
-        NalezObjekt,
-        form=create_nalez_objekt_form(
-            druh_objekt_choices,
-            specifikace_objekt_choices,
-            not_readonly=show["editovat"],
-        ),
-        extra=1 if show["editovat"] else 0,
-        can_delete=False,
-    )
-    NalezPredmetFormset = inlineformset_factory(
-        Komponenta,
-        NalezPredmet,
-        form=create_nalez_predmet_form(
-            druh_predmet_choices,
-            specifikce_predmetu_choices,
-            not_readonly=show["editovat"],
-        ),
-        extra=1 if show["editovat"] else 0,
-        can_delete=False,
-    )
-    for jednotka in jednotky:
-        jednotka: DokumentacniJednotka
-        vyskovy_bod_formset = inlineformset_factory(
-            Adb,
-            VyskovyBod,
-            form=create_vyskovy_bod_form(
-                pian=jednotka.pian, not_readonly=show["editovat"]
-            ),
-            extra=1,
-            can_delete=False,
-        )
-        has_adb = jednotka.has_adb()
-        show_adb_add = (
-            jednotka.pian
-            and jednotka.typ.id == TYP_DJ_SONDA_ID
-            and not has_adb
-            and check_permissions(p.actionChoices.archz_adb_zapsat,request.user,zaznam.ident_cely)
-        )
-        if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-            show_add_komponenta = not jednotka.negativni_jednotka and check_permissions(p.actionChoices.archz_komponenta_zapsat,request.user,zaznam.ident_cely)
-            show_add_pian = False if jednotka.pian else check_permissions(p.actionChoices.archz_pian_zapsat,request.user,zaznam.ident_cely)
-            show_uprav_pian = jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and check_permissions(p.actionChoices.archz_pian_edit,request.user,zaznam.ident_cely)
-        else:
-            show_add_komponenta = not jednotka.negativni_jednotka and check_permissions(p.actionChoices.lokalita_komponenta_zapsat,request.user,zaznam.ident_cely)
-            show_add_pian = False if jednotka.pian else check_permissions(p.actionChoices.lokalita_pian_zapsat,request.user,zaznam.ident_cely)
-            show_uprav_pian = jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and check_permissions(p.actionChoices.lokalita_pian_edit,request.user,zaznam.ident_cely)
-        show_approve_pian = (
-            True
-            if jednotka.pian
-            and jednotka.pian.stav == PIAN_NEPOTVRZEN
-            and check_permissions(p.actionChoices.pian_potvrdit,request.user,zaznam.ident_cely)
-            else False
-        )
-        logger.debug("arch_z.views.get_arch_z_context.check_permissions",
-                     extra={"check_permissions": check_permissions(p.actionChoices.vb_smazat,request.user,zaznam.ident_cely)})
-        dj_form_detail = {
-            "ident_cely": jednotka.ident_cely,
-            "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
-            "form": CreateDJForm(
-                instance=jednotka,
-                jednotky=jednotky,
-                prefix=jednotka.ident_cely,
-                not_readonly=show["editovat"],
-                typ_arch_z=zaznam.typ_zaznamu,
-            ),
-            "show_add_adb": show_adb_add,
-            "show_add_komponenta": show_add_komponenta,
-            "show_add_pian": show_add_pian,
-            "show_remove_pian": (not show_add_pian and check_permissions(p.actionChoices.pian_odpojit, request.user, jednotka.ident_cely)),
-            "show_uprav_pian": show_uprav_pian,
-            "show_approve_pian": show_approve_pian,
-            "show_pripojit_pian": True if jednotka.pian is None else False,
-            "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat,request.user,zaznam.ident_cely)
-        }
-        if has_adb:
-            logger.debug("arch_z.views.get_arch_z_context.adb", extra={"jednotka_ident_cely": jednotka.ident_cely})
-            dj_form_detail["adb_form"] = (
-                CreateADBForm(
-                    old_adb_post,
-                    instance=jednotka.adb,
-                    #prefix=jednotka.adb.ident_cely,
-                    readonly=not check_permissions(p.actionChoices.archz_adb_zapsat,request.user,zaznam.ident_cely),
-                )
-                if jednotka.adb.ident_cely == adb_ident_cely
-                else CreateADBForm(
-                    instance=jednotka.adb,
-                    #prefix=jednotka.adb.ident_cely,
-                    readonly=not check_permissions(p.actionChoices.archz_adb_zapsat,request.user,zaznam.ident_cely),
-                )
-            )
-            dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
-            dj_form_detail["adb_pk"] = jednotka.adb.pk
-            dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
-                instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
-            )
-            dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
-            dj_form_detail["show_remove_adb"] = True if check_permissions(p.actionChoices.adb_smazat,request.user,zaznam.ident_cely) else False
-        dj_forms_detail.append(dj_form_detail)
-        if jednotka.pian:
-            pian_forms_detail.append(
-                {
-                    "ident_cely": jednotka.pian.ident_cely,
-                    "center_point": "",
-                    "form": PianCreateForm(
-                        instance=jednotka.pian, prefix=jednotka.pian.ident_cely
-                    ),
-                }
-            )
-        for komponenta in jednotka.komponenty.komponenty.all():
-            komponenta_forms_detail.append(
-                {
-                    "ident_cely": komponenta.ident_cely,
-                    "form": CreateKomponentaForm(
-                        obdobi_choices,
-                        areal_choices,
-                        instance=komponenta,
-                        prefix=komponenta.ident_cely,
-                        readonly=not check_permissions(p.actionChoices.komponenta_archz_detail,request.user,zaznam.ident_cely),
-                    ),
-                    "form_nalezy_objekty": NalezObjektFormset(
-                        old_nalez_post,
-                        instance=komponenta,
-                        prefix=komponenta.ident_cely + "_o",
-                    )
-                    if komponenta.ident_cely == komp_ident_cely
-                    else NalezObjektFormset(
-                        instance=komponenta, prefix=komponenta.ident_cely + "_o"
-                    ),
-                    "form_nalezy_predmety": NalezPredmetFormset(
-                        old_nalez_post,
-                        instance=komponenta,
-                        prefix=komponenta.ident_cely + "_p",
-                    )
-                    if komponenta.ident_cely == komp_ident_cely
-                    else NalezPredmetFormset(
-                        instance=komponenta, prefix=komponenta.ident_cely + "_p"
-                    ),
-                    "helper_predmet": NalezFormSetHelper(typ="predmet",typ_vazby="akce"),
-                    "helper_objekt": NalezFormSetHelper(typ="objekt",typ_vazby="akce"),
-                }
-            )
-    externi_odkazy = (
-        ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
-        .select_related("externi_zdroj")
-        .order_by("externi_zdroj__ident_cely")
-    )
-
-    context["dj_form_create"] = dj_form_create
-    context["pian_form_create"] = pian_form_create
-    context["dj_forms_detail"] = dj_forms_detail
-    context["adb_form_create"] = adb_form_create
-    context["komponenta_form_create"] = komponenta_form_create
-    context["komponenta_forms_detail"] = komponenta_forms_detail
-    context["pian_forms_detail"] = pian_forms_detail
-    context["history_dates"] = get_history_dates(zaznam.historie, request.user)
-    context["zaznam"] = zaznam
-    context["dokumenty"] = dokumenty
-    context["dokumentacni_jednotky"] = jednotky
-    context["show"] = show
-    context["externi_odkazy"] = externi_odkazy
-    if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-        if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
-            context["showbackdetail"] = True if request.user.hlavni_role.pk != ROLE_BADATEL_ID else False
-            context["app"] = "pr"
-            context[
-                "arch_pr_link"
-            ] = '{% url "projekt:projekt_archivovat" zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true'
-        else:
-            context["showbackdetail"] = False
-            context["app"] = "sam"
-            context["arch_pr_link"] = None
-
-    return context
 
 
 class AkceIndexView(LoginRequiredMixin, TemplateView):
@@ -1840,11 +1598,10 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         and not has_adb
         and check_permissions(p.actionChoices.adb_zapsat,user, jednotka.ident_cely)
     )
-    show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
     show_add_pian = False if jednotka.pian else True
     show_approve_pian = (
         True
-        if jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and show["editovat"]
+        if jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and check_permissions(p.actionChoices.pian_potvrdit, user, jednotka.ident_cely)
         else False
     )
     if app == "akce":
@@ -1854,6 +1611,12 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
             prefix=jednotka.ident_cely,
             not_readonly=show["editovat"],
         )
+        show_uprav_pian = (
+            jednotka.pian
+            and jednotka.pian.stav == PIAN_NEPOTVRZEN
+            and check_permissions(p.actionChoices.archz_pian_edit, user, jednotka.ident_cely)
+            )
+        show_add_komponenta = not jednotka.negativni_jednotka and check_permissions(p.actionChoices.archz_komponenta_zapsat, user, jednotka.ident_cely)
     else:
         create_db_form = CreateDJForm(
             instance=jednotka,
@@ -1861,22 +1624,27 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
             prefix=jednotka.ident_cely,
             not_readonly=show["editovat"],
         )
-    logger.debug("arch_z.views.get_dj_form_detail.check_permissions",
-                 extra={"check_permissions": check_permissions(p.actionChoices.vb_smazat,user,jednotka.ident_cely)})
+        show_uprav_pian = (
+            jednotka.pian
+            and jednotka.pian.stav == PIAN_NEPOTVRZEN
+            and check_permissions(p.actionChoices.lokalita_pian_edit, user, jednotka.ident_cely)
+            )
+        show_add_komponenta = not jednotka.negativni_jednotka and check_permissions(p.actionChoices.lokalita_komponenta_zapsat, user, jednotka.ident_cely)
     dj_form_detail = {
         "ident_cely": jednotka.ident_cely,
         "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
         "form": create_db_form,
         "show_add_adb": show_adb_add,
         "show_add_komponenta": show_add_komponenta,
-        "show_add_pian": (show_add_pian),
+        "show_add_pian": show_add_pian,
         "show_add_pian_zapsat": (show_add_pian and check_permissions(p.actionChoices.pian_zapsat, user, jednotka.ident_cely)),
+        "show_add_pian_importovat": (show_add_pian and check_permissions(p.actionChoices.pian_zapsat, user, jednotka.ident_cely)),
         "show_remove_pian": (not show_add_pian and check_permissions(p.actionChoices.pian_odpojit, user, jednotka.ident_cely) and jednotka.typ.id != TYP_DJ_KATASTR),
-        "show_uprav_pian": jednotka.pian
-        and jednotka.pian.stav == PIAN_NEPOTVRZEN
-        and show["editovat"],
+        "show_uprav_pian": show_uprav_pian,
         "show_approve_pian": show_approve_pian,
         "show_pripojit_pian": True if jednotka.pian is None else False,
+        "show_import_pian_new": show_add_pian and check_permissions(p.actionChoices.pian_import_new, user, jednotka.ident_cely),
+        "show_import_pian_change": not show_add_pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and check_permissions(p.actionChoices.pian_import_change, user, jednotka.ident_cely),
         "show_change_katastr": True if jednotka.typ.id == TYP_DJ_KATASTR and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely) else False,
         "show_dj_smazat": check_permissions(p.actionChoices.dj_smazat, user, jednotka.ident_cely),
         "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat,user,jednotka.ident_cely)
