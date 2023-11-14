@@ -514,10 +514,10 @@ class Permissions(models.Model):
             if perm_check and not self.check_accessibility():
                 logger.debug("accessibility false")
                 perm_check = False
-            if not perm_check and status_check and not self.check_permission_skip():
-                logger.debug("skip false")
-                return False
-        return True
+            if not perm_check and status_check and self.check_permission_skip():
+                logger.debug("skip True")
+                perm_check =  True
+        return perm_check
 
     def check_base(self):
         if self.base:
