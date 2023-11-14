@@ -4,10 +4,12 @@ import logging
 from arch_z.forms import CreateArchZForm
 from arch_z.models import ArcheologickyZaznam
 from arch_z.views import (
+    AkceRelatedRecordUpdateView,
     get_arch_z_context,
     get_areal_choices,
     get_detail_template_shows,
     get_dj_form_detail,
+    get_history_dates,
     get_komponenta_form_detail,
     get_obdobi_choices,
 )
@@ -27,7 +29,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
-from django.views.generic import DetailView, TemplateView
+from django.views.generic import TemplateView
+from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import CreateView, UpdateView
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
@@ -46,6 +49,7 @@ class LokalitaIndexView(LoginRequiredMixin, TemplateView):
     """
     Třida pohledu pro zobrazení domovské stránky lokalit s navigačními možnostmi.
     """
+
     template_name = "lokalita/index.html"
 
     def get_context_data(self, **kwargs):
@@ -62,6 +66,7 @@ class LokalitaListView(SearchListView):
     """
     Třida pohledu pro zobrazení listu/tabulky s lokalitami.
     """
+
     table_class = LokalitaTable
     model = Lokalita
     filterset_class = LokalitaFilter
@@ -71,10 +76,18 @@ class LokalitaListView(SearchListView):
     toolbar = "toolbar_akce.html"
     search_sum = _("lokalita.views.lokalitaListView.pocetVyhledanych.text")
     pick_text = _("lokalita.views.lokalitaListView.pickText.text")
-    hasOnlyVybrat_header = _("lokalita.views.lokalitaListView.header.hasOnlyVybrat.text")
-    hasOnlyVlastnik_header = _("lokalita.views.lokalitaListView.header.hasOnlyVlastnik.text")
-    hasOnlyArchive_header = _("lokalita.views.lokalitaListView.header.hasOnlyArchive.text")
-    hasOnlyPotvrdit_header = _("lokalita.views.lokalitaListView.header.hasOnlyPotvrdit.text")
+    hasOnlyVybrat_header = _(
+        "lokalita.views.lokalitaListView.header.hasOnlyVybrat.text"
+    )
+    hasOnlyVlastnik_header = _(
+        "lokalita.views.lokalitaListView.header.hasOnlyVlastnik.text"
+    )
+    hasOnlyArchive_header = _(
+        "lokalita.views.lokalitaListView.header.hasOnlyArchive.text"
+    )
+    hasOnlyPotvrdit_header = _(
+        "lokalita.views.lokalitaListView.header.hasOnlyPotvrdit.text"
+    )
     default_header = _("lokalita.views.lokalitaListView.header.default.text")
     toolbar_name = _("lokalita.views.lokalitaListView.toolbar.title.text")
     permission_model_lookup = "archeologicky_zaznam__"
@@ -91,46 +104,99 @@ class LokalitaListView(SearchListView):
             "archeologicky_zaznam__hlavni_katastr__okres",
             "archeologicky_zaznam",
             "archeologicky_zaznam__pristupnost",
-        ).prefetch_related("archeologicky_zaznam__katastry","archeologicky_zaznam__katastry__okres")
+        ).prefetch_related(
+            "archeologicky_zaznam__katastry", "archeologicky_zaznam__katastry__okres"
+        )
         return self.check_filter_permission(qs)
 
 
-class LokalitaDetailView(LoginRequiredMixin, DetailView):
+class LokalitaDetailView(
+    LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecordUpdateView
+):
     """
     Třida pohledu pro zobrazení detailu lokality.
     """
+
     model = Lokalita
     template_name = "lokalita/lokalita_detail.html"
     slug_field = "archeologicky_zaznam__ident_cely"
 
+    # def get_context_data(self, **kwargs):
+    #     logger.debug(self.slug_field)
+    #     logger.debug(self.get_object())
+    #     lokalita_obj = self.get_object()
+    #     context = get_arch_z_context(
+    #         self.request,
+    #         lokalita_obj.archeologicky_zaznam.ident_cely,
+    #         zaznam=lokalita_obj.archeologicky_zaznam,
+    #         app="lokalita",
+    #     )
+    #     context["form"] = LokalitaForm(
+    #         instance=lokalita_obj, readonly=True, required=False, detail=True
+    #     )
+    #     context["arch_z_form"] = CreateArchZForm(
+    #         instance=lokalita_obj.archeologicky_zaznam, readonly=True, required=False
+    #     )
+    #     context["zaznam"] = lokalita_obj.archeologicky_zaznam
+    #     context["app"] = "lokalita"
+    #     context["page_title"] = _("lokalita.views.lokalitaDetailView.pageTitle")
+    #     context["detail_view"] = True
+    #     context["next_url"] = lokalita_obj.get_absolute_url()
+    #     show = self.get_shows()
+    #     return context
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        logger.debug(context)
+        return self.render_to_response(context)
+
+    def get_archeologicky_zaznam(self):
+        """
+        Metóda pro získaní akce z db.
+        """
+        return self.object.archeologicky_zaznam
+
     def get_context_data(self, **kwargs):
-        logger.debug(self.slug_field)
-        logger.debug(self.get_object())
-        lokalita_obj = self.get_object()
-        context = get_arch_z_context(
-            self.request,
-            lokalita_obj.archeologicky_zaznam.ident_cely,
-            zaznam=lokalita_obj.archeologicky_zaznam,
-            app="lokalita",
-        )
-        context["form"] = LokalitaForm(
-            instance=lokalita_obj, readonly=True, required=False, detail=True
-        )
-        context["arch_z_form"] = CreateArchZForm(
-            instance=lokalita_obj.archeologicky_zaznam, readonly=True, required=False
-        )
-        context["zaznam"] = lokalita_obj.archeologicky_zaznam
+        """
+        Metóda pro získaní contextu akci pro template.
+        """
+        self.object = self.get_object()
+        context = super().get_context_data(**kwargs)
+        logger.debug("main context")
+        zaznam = self.get_archeologicky_zaznam()
+        context["zaznam"] = zaznam
+        context["dokumentacni_jednotky"] = self.get_jednotky()
+        # context["dokumenty"] = self.get_dokumenty()
+        context["history_dates"] = get_history_dates(zaznam.historie, self.request.user)
+        context["show"] = self.get_shows()
+        context["externi_odkazy"] = self.get_externi_odkazy()
         context["app"] = "lokalita"
         context["page_title"] = _("lokalita.views.lokalitaDetailView.pageTitle")
         context["detail_view"] = True
-        context["next_url"] = lokalita_obj.get_absolute_url()
+        context["form"] = LokalitaForm(
+            instance=self.object, readonly=True, required=False, detail=True
+        )
+        context["arch_z_form"] = CreateArchZForm(
+            instance=zaznam, readonly=True, required=False
+        )
+        logger.debug("done context")
         return context
+
+    def get_shows(self):
+        return get_detail_template_shows(
+            self.get_object().archeologicky_zaznam,
+            self.get_jednotky(),
+            self.request.user,
+            app="lokalita",
+        )
 
 
 class LokalitaCreateView(LoginRequiredMixin, CreateView):
     """
     Třida pohledu pro vytvoření lokality.
     """
+
     model = Lokalita
     template_name = "lokalita/create.html"
     form_class = LokalitaForm
@@ -197,6 +263,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
     """
     Třida pohledu pro editaci lokality.
     """
+
     model = Lokalita
     template_name = "lokalita/create.html"
     form_class = LokalitaForm
@@ -252,9 +319,10 @@ class LokalitaRelatedView(LokalitaDetailView):
     """
     Třida pohledu pro získaní relací lokality, která je dedená v dalších pohledech.
     """
+
     model = Lokalita
     slug_field = "archeologicky_zaznam__ident_cely"
-
+    """
     def get_jednotky(self):
         ident_cely = self.kwargs.get("ident_cely")
         return (
@@ -280,12 +348,14 @@ class LokalitaRelatedView(LokalitaDetailView):
             self.request.user,
             app="lokalita",
         )
+    """
 
 
 class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
     """
     Třida pohledu pro vytvoření dokumentační jednotky lokality.
     """
+
     template_name = "lokalita/dj/dj_create.html"
 
     def get_context_data(self, **kwargs):
@@ -300,11 +370,12 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
     """
     Třida pohledu pro získaní dokumentačních jednotek lokality, která je dedená v dalších pohledech.
     """
+
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
         logger.debug(
             "arch_z.views.DokumentacniJednotkaUpdateView.get_object",
-            extra={"dj_ident_cely": dj_ident_cely}
+            extra={"dj_ident_cely": dj_ident_cely},
         )
         object = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return object
@@ -319,6 +390,7 @@ class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelated
     """
     Třida pohledu pro editaci dokumentační jednotky lokality.
     """
+
     template_name = "lokalita/dj/dj_update.html"
 
     def get_context_data(self, **kwargs):
@@ -333,6 +405,7 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
     """
     Třida pohledu pro vytvoření komponenty lokality.
     """
+
     template_name = "lokalita/dj/komponenta_create.html"
 
     def get_context_data(self, **kwargs):
@@ -348,6 +421,7 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
     """
     Třida pohledu pro editaci komponenty lokality.
     """
+
     template_name = "lokalita/dj/komponenta_detail.html"
 
     def get_komponenta(self):
@@ -371,6 +445,7 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
     """
     Třida pohledu pro vytvoření pianu dokumentační jednotky lokality.
     """
+
     template_name = "lokalita/dj/pian_create.html"
 
     def get_context_data(self, **kwargs):
@@ -383,6 +458,7 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
     """
     Třida pohledu pro editaci pianu dokumentační jednotky lokality.
     """
+
     template_name = "lokalita/dj/pian_update.html"
 
     def get_pian(self):
@@ -395,7 +471,7 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         context["pian_ident_cely"] = self.pian.ident_cely
         context["pian_form_update"] = PianCreateForm(instance=self.pian)
         return context
-    
+
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         if self.pian == PIAN_POTVRZEN:
@@ -407,7 +483,7 @@ def get_required_fields(zaznam=None, next=0):
     """
     Funkce pro získaní dictionary povinných polí podle stavu lokality.
 
-    Args:     
+    Args:
         zaznam (Lokalita): model Lokalita pro který se dané pole počítají.
 
         next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.

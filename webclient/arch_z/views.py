@@ -246,15 +246,8 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context["show"] = get_detail_template_shows(
             zaznam, self.get_jednotky(), self.request.user
         )
+        logger.debug("test")
         context["externi_odkazy"] = self.get_externi_odkazy()
-        if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-            context["presna_specifikace"] = (
-                True
-                if zaznam.akce.specifikace_data
-                == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
-                else False
-            )
-        context["app"] = "akce"
         context["showbackdetail"] = False
         if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
@@ -264,10 +257,16 @@ class AkceRelatedRecordUpdateView(TemplateView):
                     "arch_pr_link"
                 ] = '{% url "projekt:projekt_archivovat" zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true'
             else:
-                context["showbackdetail"] = False
                 context["app"] = "akce"
                 context["arch_pr_link"] = None
-        self.get_vedouci(context)
+            context["presna_specifikace"] = (
+                True
+                if zaznam.akce.specifikace_data
+                == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
+                else False
+            )
+            self.get_vedouci(context)
+        context["app"] = "akce"
         context["next_url"] = zaznam.get_absolute_url()
         return context
 
