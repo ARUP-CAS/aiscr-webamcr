@@ -447,6 +447,9 @@ class Permissions(models.Model):
         spoluprace_aktivovat = "spoluprace_aktivovat", _("core.models.permissions.actionChoices.spoluprace_aktivovat")
         spoluprace_deaktivovat = "spoluprace_deaktivovat", _("core.models.permissions.actionChoices.spoluprace_deaktivovat")
         spoluprace_smazat = "spoluprace_smazat", _("core.models.permissions.actionChoices.spoluprace_smazat")
+        pian_import_new = "pian_import_new", "core.models.permissions.actionChoices.pian_import_new"
+        pian_import_change = "pian_import_change", "core.models.permissions.actionChoices.pian_import_change"
+        
 
     pristupnost_to_groups = {
         PRISTUPNOST_ANONYM_ID: 0,
@@ -604,6 +607,9 @@ class Permissions(models.Model):
                 self.permission_object = self.object.get_permission_object()
         elif "notifikace-projekty/smazat" in self.address_in_app:
             self.permission_object = Pes.objects.get(id=self.ident)
+        elif "pian/stav/potvrdit" in self.address_in_app:
+            self.object = get_record_from_ident(self.ident)
+            self.permission_object = self.object.pian
         else:
             try:
                 self.object = get_record_from_ident(self.ident)
