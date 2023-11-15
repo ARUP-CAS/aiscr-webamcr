@@ -33,21 +33,28 @@
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pripojitPianZMapy.label' %}
           </a>
           {% endif %}
+          {% if j.show_import_pian_new %}
+            <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian">
+              {% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.importovatPianNew.label" %}
+            </button>
+          {% endif %}
           {% if j.show_approve_pian %}
           <button id="pian-potvrdit-{{j.pian_ident_cely}}" class="dropdown-item pian-potvrdit-btn" type="button"
                   name="button" href="{% url 'pian:potvrdit' j.ident_cely %}">
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.potvrditPian.label' %}
           </button>
           {% endif %}
-          {% if j.pian_ident_cely %}
+          {% if j.pian_ident_cely and show.stahnout_metadata %}
             <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'pian' j.pian_ident_cely %}">{% trans "arch_z.dj.partials.dj_update.download_pian_metadata" %}</a>
           {% endif %}
-          {% if j.show_uprav_pian and j.pian_ident_cely %}
-          <a id="pian-upravit-{{j.pian_ident_cely}}"  class="dropdown-item" href="{% url 'arch_z:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
-            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.upravitPian.label' %}
-          </a>
-            <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian">
-              {% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.importovatPian.label" %}
+          {% if j.show_uprav_pian %}
+            <a id="pian-upravit-{{j.pian_ident_cely}}"  class="dropdown-item" href="{% url 'arch_z:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
+              {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.upravitPian.label' %}
+            </a>
+          {% endif %}
+          {% if j.show_import_pian_change %}
+            <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian" data-action-id="change">
+              {% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.importovatPianChange.label" %}
             </button>
           {% endif %}
           {% if j.show_remove_pian %}
@@ -67,7 +74,7 @@
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.smazatADB.label' %}
           </button>
           {% endif %}
-          {% if j.adb_pk %}
+          {% if j.adb_pk and show.stahnout_metadata %}
             <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'adb' j.adb_ident_cely %}">{% trans "adb.detail.toolbar.MetadataDownload" %}</a>
           {% endif %}
           {% if j.show_dj_smazat %}

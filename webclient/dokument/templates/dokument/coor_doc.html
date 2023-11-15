@@ -57,12 +57,8 @@
 <script >
   var static_url = "{% get_static_prefix %}";
 </script>
-<script src="{% static 'mapa_pins.js' %}"></script>
-<script src="{% static 'coor_precision.js' %}"></script>
-<script src="{% static 'spin/spin.min.js' %}"></script>
-<script src="{% static 'leaflet.spin.min.js' %}"></script>
 <script>
-  const map_translations = {
+  var map_translations = {
     3DLibrary: '{%trans "mapa.3DLibrary" %}',
     3DLocation: '{%trans "mapa.3DLocation" %}',
     CurrentLocation: '{%trans "mapa.CurrentLocation" %}',
@@ -76,6 +72,7 @@
     FullscreenTitleClose: '{%trans "mapa.FullscreenTitleClose" %}',
     MeasureTitle: '{%trans "mapa.MeasureTitle" %}',
     openStreetMap: '{%trans "mapa.openStreetMap" %}',
+    openStreetMapSeda: '{%trans "mapa.openStreetMapSeda" %}',
     SearchText: '{%trans "mapa.SearchText" %}',
     SearchTextCancel: '{%trans "mapa.SearchTextCancel" %}',
     SearchTextError: '{%trans "mapa.SearchTextError" %}',
@@ -83,6 +80,10 @@
     zoomOutTitle: '{%trans "mapa.zoomOutTitle" %}'          
   };
 </script>
+<script src="{% static 'mapa_pins.js' %}"></script>
+<script src="{% static 'coor_precision.js' %}"></script>
+<script src="{% static 'spin/spin.min.js' %}"></script>
+<script src="{% static 'leaflet.spin.min.js' %}"></script>
 <script src="{% static 'mapa_basic_grey.js' %}"></script>
 <script src="{% static 'mapa_doc.js' %}"></script>
 <script>
@@ -101,6 +102,10 @@
         global_map_can_edit = false
         addReadOnlyUniquePointToPoiLayer(corX, corY);
         {% endif %}
+        {% else  %}
+        if(window.location.href.includes("/detail/")){
+          global_map_can_edit = false
+        }
         {% endif %}
       })
 

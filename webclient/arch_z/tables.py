@@ -150,43 +150,43 @@ class AkceTable(SearchTable):
         default="",
         accessor="akcevedouci_set__all",
     )
-    datum_zahajeni = AkceVedouciColumn(
+    datum_zahajeni = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.datum_zahajeni.label"),
         default="",
     )
-    datum_ukonceni = AkceVedouciColumn(
+    datum_ukonceni = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.datum_ukonceni.label"),
         default="",
     )
-    hlavni_typ = AkceVedouciColumn(
+    hlavni_typ = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.hlavni_typ.label"),
         default="",
     )
-    vedlejsi_typ = AkceVedouciColumn(
+    vedlejsi_typ = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.vedlejsi_typ.label"),
         default="",
     )
-    lokalizace_okolnosti = AkceVedouciColumn(
+    lokalizace_okolnosti = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.lokalizace_okolnosti.label"),
         default="",
     )
-    specifikace_data = AkceVedouciColumn(
+    specifikace_data = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.specifikace_data.label"),
         default="",
     )
-    ulozeni_nalezu = AkceVedouciColumn(
+    ulozeni_nalezu = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.ulozeni_nalezu.label"),
         default="",
     )
-    ulozeni_dokumentace = AkceVedouciColumn(
+    ulozeni_dokumentace = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.ulozeni_dokumentace.label"),
         default="",
     )
-    je_nz = AkceVedouciColumn(
+    je_nz = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.je_nz.label"),
         default="",
     )
-    odlozena_nz = AkceVedouciColumn(
+    odlozena_nz = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.odlozena_nz.label"),
         default="",
     )

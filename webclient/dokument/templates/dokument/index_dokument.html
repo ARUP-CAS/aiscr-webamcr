@@ -9,6 +9,7 @@
     {% include "toolbar_dokument.html" with is_3d=False index=True %}
 
     <div class="row app-entity-cards mb-3">
+      {% if show_dokumenty_zapsat %}
       <div class="col">
         <a href="{% url 'dokument:zapsat' %}" class="card app-card-entity app-card-zapsat-model">
           <div class="card-body">
@@ -19,6 +20,7 @@
           </div>
         </a>
       </div>
+      {% endif %}
       <div class="col">
         <a href="{% url 'dokument:list' %}?sort=organizace__nazev_zkraceny&sort=autori&sort=ident_cely" class="card app-card-entity app-card-vybrat">
           <div class="card-body">
@@ -41,7 +43,7 @@
       </div>
       {% if user.can_see_ours_item %}
       <div class="col">
-        <a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-nase-modely">
+        <a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-nase-modely">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -51,6 +53,7 @@
         </a>
       </div>
       {% endif %}
+      {% if show_dokumenty_archivovat %}
       <div class="col">
         <a href="{% url 'dokument:list' %}?stav=2&sort=ident_cely" class="card app-card-entity app-card-archivovat">
           <div class="card-body">
@@ -61,10 +64,12 @@
           </div>
         </a>
       </div>
+      {% endif %}
     </div>
   </div>
 
   <div class="app-card-desc-wrapper">
+    {% if show_dokumenty_zapsat %}
     <div class="app-collapse-zapsat-model collapse">
       <div class="p-3">
         <h4>{% trans "dokument.templates.indexDokument.cardZapsat.text.title" %}</h4>
@@ -72,6 +77,7 @@
         {% trans "dokument.templates.indexDokument.cardZapsat.text" %}
       </div>
     </div>
+    {% endif %}
     <div class="app-collapse-moje-modely collapse">
       <div class="p-3">
         <h4>{% trans "dokument.templates.indexDokument.cardMojeDokumenty.text.title" %}</h4>
@@ -95,6 +101,7 @@
         {% trans "dokument.templates.indexDokument.cardVybrat.text" %}
       </div>
     </div>
+    {% if show_dokumenty_archivovat %}
     <div class="app-collapse-archivovat collapse">
       <div class="p-3">
         <h4>{% trans "dokument.templates.indexDokument.cardArchivovat.text.title" %}</h4>
@@ -102,16 +109,19 @@
         {% trans "dokument.templates.indexDokument.cardArchivovat.text" %}
       </div>
     </div>
+    {% endif %}
   </div>
 
   <script>
     // show / hide card description
+    {% if show_dokumenty_zapsat %}
     $(".app-card-zapsat-model").mouseleave(function(){
       $(".app-collapse-zapsat-model").hide(100);
     });
     $(".app-card-zapsat-model").mouseover(function(){
       $(".app-collapse-zapsat-model").show(100);
     });
+    {% endif %}
     $(".app-card-moje-modely").mouseleave(function(){
       $(".app-collapse-moje-modely").hide(100);
     });
@@ -132,12 +142,14 @@
     $(".app-card-vybrat").mouseover(function(){
       $(".app-collapse-vybrat").show(100);
     });
+    {% if show_dokumenty_archivovat %}
     $(".app-card-archivovat").mouseleave(function(){
       $(".app-collapse-archivovat").hide(100);
     });
     $(".app-card-archivovat").mouseover(function(){
       $(".app-collapse-archivovat").show(100);
     });
+    {% endif %}
 </script>
 {% endblock %}
 

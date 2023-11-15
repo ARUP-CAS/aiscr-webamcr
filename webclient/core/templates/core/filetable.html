@@ -9,13 +9,15 @@
     <th scope="col">{% trans "core.templates.filetable.columnHeader.typ.label" %}</th>
     <th scope="col">{% trans "core.templates.filetable.columnHeader.velikost.label" %}</th>
     <th scope="col">{% trans "core.templates.filetable.columnHeader.Rozsah.label" %}</th>
-    {% if show %}
+    {% if show.soubor_smazat %}
       <th scope="col">{% trans "core.templates.filetable.columnHeader.smazat.label" %}</th>
-      {% if allow_replace %}
-        <th scope="col">{% trans "core.templates.filetable.columnHeader.nahradit.label" %}</th>
-      {% endif %}
     {% endif %}
+    {% if allow_replace and soubor_nahradit %}
+        <th scope="col">{% trans "core.templates.filetable.columnHeader.nahradit.label" %}</th>
+    {% endif %}
+    {% if show.soubor_stahnout %}
     <th scope="col">{% trans "core.templates.filetable.columnHeader.stahnout.label" %}</th>
+    {% endif %}
     <th scope="col">{% trans "core.templates.filetable.columnHeader.historie.label" %}</th>
   </tr>
   </thead>
@@ -45,11 +47,13 @@
           </td>
         {% endif %}
       {% endif %}
+      {% if show.soubor_stahnout_dokument %}
       <td>
         <a href="{% url 'core:download_file' vazba_trida ident soubor.id %}" target="_blank">
           <span class="material-icons">get_app</span>
         </a>
       </td>
+      {% endif %}
       <td>
         <a href="{% url 'historie:soubor' soubor.id %}">
           <span class="material-icons">history</span>

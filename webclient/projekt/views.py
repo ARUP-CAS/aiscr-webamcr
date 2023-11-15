@@ -183,6 +183,11 @@ def post_ajax_get_projects_limit(request):
         body["northWest"]["lat"],
         body["northWest"]["lng"],
         body["southEast"]["lat"],
+        body["p1"],
+        body["p2"],
+        body["p3"],
+        body["p46"],
+        body["p78"],
     )
     logger.debug("projekt.views.post_ajax_get_projects_limit.num", extra={"num": num})
     if num < 5000:
@@ -191,6 +196,11 @@ def post_ajax_get_projects_limit(request):
             body["northWest"]["lat"],
             body["northWest"]["lng"],
             body["southEast"]["lat"],
+            body["p1"],
+            body["p2"],
+            body["p3"],
+            body["p46"],
+            body["p78"],
         )
         back = []
         for pian in pians:
@@ -1357,7 +1367,7 @@ def get_detail_template_shows(projekt, user):
     show_pridat_sam_nalez = False
     show_pridat_oznamovatele = False
     if projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
-        show_pridat_akci = check_permissions(p.actionChoices.archz_pripojit_proj, user, projekt.ident_cely)
+        show_pridat_akci = check_permissions(p.actionChoices.archz_pripojit_do_proj, user, projekt.ident_cely)
     else:
         show_pridat_sam_nalez = check_permissions(p.actionChoices.pas_zapsat_do_projektu, user, projekt.ident_cely)
     if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
@@ -1392,6 +1402,9 @@ def get_detail_template_shows(projekt, user):
         "generovat_exp_list": check_permissions(p.actionChoices.projekt_generovat_exp_list, user, projekt.ident_cely),
         "smazat_link": check_permissions(p.actionChoices.projekt_smazat, user, projekt.ident_cely),
         "zapsat_dokumenty": check_permissions(p.actionChoices.dok_zapsat_do_projekt, user, projekt.ident_cely),
+        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, projekt.ident_cely),
+        "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_pas, user, projekt.ident_cely),
+        "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_projekt, user, projekt.ident_cely),
     }
     return show
 

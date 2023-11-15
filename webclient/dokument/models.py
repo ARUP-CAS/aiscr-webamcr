@@ -264,6 +264,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         # At least one soubor must be attached to the dokument
         if self.soubory.soubory.all().count() == 0:
             result.append(_("dokument.models.formCheckOdeslani.missingSoubor.text"))
+        result = [str(x) for x in result]
         return result
 
     def check_pred_archivaci(self):

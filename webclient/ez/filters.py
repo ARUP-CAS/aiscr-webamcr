@@ -138,12 +138,11 @@ class ExterniZdrojFilter(HistorieFilter):
         widget=SelectMultipleSeparator(),
     )
 
-    historie_zapsal_uzivatel_organizace = ModelMultipleChoiceFilter(
+    historie_uzivatel_organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
-        field_name="dokument__historie__historie__uzivatel",
-        label=_("ez.filters.ExterniZdrojFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        field_name="historie__historie__uzivatel__organizace",
+        label=_("ez.filters.ArchZaznamFilter.filter_historie_uzivatel_organizace.label"),
         widget=SelectMultipleSeparator(),
-        method="filter_historie_zapsal_uzivatel_organizace",
         distinct=True,
     )
 
@@ -179,18 +178,6 @@ class ExterniZdrojFilter(HistorieFilter):
             externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
             externi_odkazy_zdroje__archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
         )
-
-    def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
-        if value:
-            historie_subquery = Historie.objects.filter(vazba__externizdroj__isnull=False)\
-                .filter(typ_zmeny=ZAPSANI_EXT_ZD)\
-                .filter(vazba__externizdroj=OuterRef("pk"))\
-                .filter(uzivatel__organizace__in=value)\
-                .annotate(ez_ids=F("vazba__externizdroj"))
-            return queryset.annotate(ez_ids=Subquery(historie_subquery.values("vazba__externizdroj")))\
-                .filter(pk__in=F("ez_ids")).distinct()
-        else:
-            return queryset
 
     class Meta:
         model = ExterniZdroj
@@ -257,7 +244,7 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
                 Div("historie_uzivatel", css_class="col-sm-3"),
-                Div("historie_zapsal_uzivatel_organizace", css_class="col-sm-3"),
+                Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),

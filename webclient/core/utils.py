@@ -142,46 +142,6 @@ def get_cadastre_from_point_with_geometry(point):
         )
         return None
 
-
-def get_centre_point(bod, geom):
-    """
-    Funkce pro získani stredového bodu z bodu a geomu.
-    """
-    try:
-        [x0, x1, xlength] = [0.0, 0.0, 1]
-        bod.zoom = 17
-        if isinstance(geom[0], float):
-            [x0, x1, xlength] = [geom[0], geom[1], 1]
-        elif isinstance(geom[0][0], float):
-            for i in range(0, len(geom)):
-                [x0, x1, xlength] = [
-                    x0 + geom[i][0],
-                    x1 + geom[i][1],
-                    len(geom),
-                ]
-        elif isinstance(geom[0][0][0], tuple):
-            for i in range(0, len(geom) - 1):
-                [x0, x1, xlength] = [
-                    x0 + geom[0][0][i][0],
-                    x1 + geom[0][0][i][1],
-                    len(geom) - 1,
-                ]
-        else:
-            for i in range(0, len(geom[0]) - 1):
-                [x0, x1, xlength] = [
-                    x0 + geom[0][i][0],
-                    x1 + geom[0][i][1],
-                    len(geom[0]) - 1,
-                ]
-        bod.lat = x1 / xlength
-        bod.lng = x0 / xlength
-        return [bod, geom]
-    except Exception as e:
-        logger.error(
-            "core.utils.get_cadastre_from_point_with_geometry.error", extra={"e": e}
-        )
-
-
 def get_all_pians_with_akce(ident_cely):
     """
     Funkce pro získaní všech pianů s akci.
@@ -314,22 +274,27 @@ def get_centre_from_akce(katastr, pian):
     """
     Funkce pro bodu, geomu a presnosti z akce.
     """
+    from django.contrib.gis.db.models.functions import Centroid
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
         " from public.ruian_katastr where "
         " upper(nazev_stary)=upper(%s) and aktualni='t' limit 1"
     )
     try:
-        bod = RuianKatastr.objects.raw(query, [katastr])[0]
+        bod_ku = RuianKatastr.objects.raw(query, [katastr])[0]
+        bod=[bod_ku.lat,bod_ku.lng]
         geom = ""
         presnost = 4
-        bod.zoom = 14
+        zoom = 14
         if len(pian) > 1:
-            dj = DokumentacniJednotka.objects.get(ident_cely=pian)
+            dj = DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom")).get(ident_cely=pian)
             if dj.pian and dj.pian.geom:
-                [bod, geom] = get_centre_point(bod, dj.pian.geom)
+                bod = dj.pian__centroid
+                bod =[bod[1],bod[0]]
+                zoom = 17
+                geom = dj.pian.geom
                 presnost = dj.pian.presnost.zkratka
-        return [bod, geom, presnost]
+        return [bod, geom, presnost,zoom]
     except IndexError:
         logger.error(
             "core.utils.get_centre_from_akce.error",
@@ -458,7 +423,7 @@ def get_project_geom(ident_cely):
         return None
 
 
-def get_num_projects_from_envelope(left, bottom, right, top):
+def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78):
     """
     Funkce pro získaní počtu projektů ze čtverce.
     Bez pristupnosti
@@ -469,7 +434,18 @@ def get_num_projects_from_envelope(left, bottom, right, top):
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
-    queryset = Projekt.objects.filter(c1).filter(c2).count()
+    stavy=[]
+    if p1: stavy.append(1)
+    if p2: stavy.append(2)
+    if p3: stavy.append(3)
+    if p46: 
+        stavy.append(4)
+        stavy.append(5)
+        stavy.append(6)
+    if p78: 
+        stavy.append(7)
+        stavy.append(8)
+    queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy)).count()
     try:
         return queryset
     except IndexError:
@@ -480,7 +456,7 @@ def get_num_projects_from_envelope(left, bottom, right, top):
         return None
 
 
-def get_projects_from_envelope(left, bottom, right, top):
+def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78):
     """
     Funkce pro získaní projektů ze čtverce.
     Bez pristupnosti
@@ -491,7 +467,18 @@ def get_projects_from_envelope(left, bottom, right, top):
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
-    queryset = Projekt.objects.filter(c1).filter(c2)
+    stavy=[]
+    if p1: stavy.append(1)
+    if p2: stavy.append(2)
+    if p3: stavy.append(3)
+    if p46: 
+        stavy.append(4)
+        stavy.append(5)
+        stavy.append(6)
+    if p78: 
+        stavy.append(7)
+        stavy.append(8)
+    queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy))
     try:
         return queryset.only("id", "ident_cely", "geom", "stav")
     except IndexError:
@@ -593,6 +580,7 @@ def get_num_pass_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní počtu pas ze čtverce.
     @janhnat zohlednit pristupnost - done
+    musi zohlednit pristupnost [mapa_pas]
     """
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
@@ -619,6 +607,7 @@ def get_pas_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní pas ze čtverce.
     @janhnat zohlednit pristupnost - done
+    musi zohlednit pristupnost [mapa_pas]
     """
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
@@ -646,6 +635,7 @@ def get_num_pian_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní počtu pianu ze čtverce.
     @janhnat zohlednit pristupnost - done
+    musi zohlednit pristupnost [mapa_pian]
     """
     from dj.models import DokumentacniJednotka
     from django.contrib.gis.geos import Polygon
@@ -674,6 +664,7 @@ def get_pian_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní pianů ze čtverce.
     @janhnat zohlednit pristupnost - done
+    musi zohlednit pristupnost [mapa_pian]
     """
     from dj.models import DokumentacniJednotka
     from django.contrib.gis.db.models.functions import Centroid
@@ -706,6 +697,21 @@ def get_pian_from_envelope(left, bottom, right, top, request):
         logger.debug(
             "core.utils.get_pian_from_envelope.no_points",
             extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+def get_dj_akce_for_pian(pian_ident_cely):
+    """
+    Funkce pro pro ziskani dj/akce pro pian_ident_cely
+    """
+    from django.db.models import Q
+    queryset = DokumentacniJednotka.objects.filter(Q(pian__geom__isnull=False)).filter(Q(pian__ident_cely=pian_ident_cely))
+    try:
+        return queryset.values("ident_cely", "archeologicky_zaznam__ident_cely")
+    except IndexError:
+        logger.debug(
+            "core.utils.get_dj_akce_for_pian.no_records",
+            extra={"pian_ident_cely": pian_ident_cely},
         )
         return None
 

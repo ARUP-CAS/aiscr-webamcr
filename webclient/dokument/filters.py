@@ -351,12 +351,11 @@ class Model3DFilter(HistorieFilter):
         distinct=True,
     )
 
-    historie_zapsal_uzivatel_organizace = ModelMultipleChoiceFilter(
+    historie_uzivatel_organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
-        field_name="dokument__historie__historie__uzivatel",
-        label=_("dokument.filters.Model3DFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        field_name="historie__historie__uzivatel__organizace",
+        label=_("dokument.filters.Model3DFilter.filter_historie_uzivatel_organizace.label"),
         widget=SelectMultipleSeparator(),
-        method="filter_historie_zapsal_uzivatel_organizace",
         distinct=True,
     )
 
@@ -384,18 +383,6 @@ class Model3DFilter(HistorieFilter):
         Metóda pro filtrování podle areálu komponenty.
         """
         return queryset.filter(casti__komponenty__komponenty__areal__in=value)
-
-    def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
-        if value:
-            historie_subquery = Historie.objects.filter(vazba__dokument_historie__isnull=False)\
-                .filter(typ_zmeny=ZAPSANI_DOK)\
-                .filter(vazba__dokument_historie=OuterRef("pk"))\
-                .filter(uzivatel__organizace__in=value)\
-                .annotate(dok_ids=F("vazba__dokument_historie"))
-            return queryset.annotate(dok_ids=Subquery(historie_subquery.values("dok_ids")))\
-                .filter(pk__in=F("dok_ids")).distinct()
-        else:
-            return queryset
 
     class Meta:
         model = Dokument
@@ -457,7 +444,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
                 Div("historie_uzivatel", css_class="col-sm-3"),
-                Div("historie_zapsal_uzivatel_organizace", css_class="col-sm-3"),
+                Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),
@@ -847,15 +834,6 @@ class DokumentFilter(Model3DFilter):
         distinct=True,
     )
 
-    historie_zapsal_uzivatel_organizace = ModelMultipleChoiceFilter(
-        queryset=Organizace.objects.all(),
-        field_name="dokument__historie__historie__uzivatel",
-        label=_("dokument.filters.DokumentFilter.filter_historie_zapsal_uzivatel_organizace.label"),
-        widget=SelectMultipleSeparator(),
-        method="filter_historie_zapsal_uzivatel_organizace",
-        distinct=True,
-    )
-
     def filter_uzemni_prislusnost(self, queryset, name, value):
         """
         Metóda pro filtrování podle územní príslušnosti.
@@ -1040,18 +1018,6 @@ class DokumentFilter(Model3DFilter):
         else:
             return queryset.distinct()
 
-    def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
-        if value:
-            historie_subquery = Historie.objects.filter(vazba__dokument_historie__isnull=False)\
-                .filter(typ_zmeny=ZAPSANI_DOK)\
-                .filter(vazba__dokument_historie=OuterRef("pk"))\
-                .filter(uzivatel__organizace__in=value)\
-                .annotate(dok_ids=F("vazba__dokument_historie"))
-            return queryset.annotate(dok_ids=Subquery(historie_subquery.values("dok_ids")))\
-                .filter(pk__in=F("dok_ids")).distinct()
-        else:
-            return queryset
-
     def __init__(self, *args, **kwargs):
         super(DokumentFilter, self).__init__(*args, **kwargs)
         self.helper = DokumentFilterFormHelper()
@@ -1126,7 +1092,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
                 Div("historie_uzivatel", css_class="col-sm-3"),
-                Div("historie_zapsal_uzivatel_organizace", css_class="col-sm-3"),
+                Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),

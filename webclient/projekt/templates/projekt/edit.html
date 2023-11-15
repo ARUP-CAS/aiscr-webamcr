@@ -38,6 +38,12 @@
 
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
 	<!-- Date picker imports -->
+	<script>
+    		var drp_translations = {
+			cancelLabel: '{%trans "drp.cancelLabel" %}',
+			applyLabel: '{%trans "drp.applyLabel" %}'
+    		}
+  	</script> 
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
@@ -69,16 +75,8 @@
 
 
 {% block script %}
-  <script >
-    var static_url = "{% get_static_prefix %}";
-  </script>
-  <script src="{% static 'mapa_pins.js' %}"></script>
-  <script src="{% static 'coor_precision.js' %}"></script>
-  <script src="{% static 'mapa_basic_grey.js' %}"></script>
-  <script src="{% static 'spin/spin.min.js' %}"></script>
-  <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script>
-    const map_translations = {
+    var map_translations = {
       	CurrentLocationError: '{%trans "mapa.CurrentLocationError" %}',
 	cuzkKatastralniMapa: '{%trans "mapa.cuzkKatastralniMapa" %}',
 	cuzkKatastralniUzemi: '{%trans "mapa.cuzkKatastralniUzemi" %}',
@@ -93,6 +91,7 @@
 	lokalizaceProjektu: '{%trans "mapa.lokalizaceProjektu" %}',
 	MeasureTitle: '{%trans "mapa.MeasureTitle" %}',
 	openStreetMap: '{%trans "mapa.openStreetMap" %}',
+	openStreetMapSeda: '{%trans "mapa.openStreetMapSeda" %}',
 	projektyP1: '{%trans "mapa.projektyP1" %}',
 	projektyP2: '{%trans "mapa.projektyP2" %}',
 	projektyP3: '{%trans "mapa.projektyP3" %}',
@@ -108,6 +107,13 @@
 	zoomOutTitle: '{%trans "mapa.zoomOutTitle" %}'
     };
   </script>
+  <script >
+    var static_url = "{% get_static_prefix %}";
+  </script>
+  <script src="{% static 'mapa_pins.js' %}"></script>
+  <script src="{% static 'coor_precision.js' %}"></script>
+  <script src="{% static 'spin/spin.min.js' %}"></script>
+  <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script src="{% static 'mapa_projekty.js' %}"></script>
   <script>
       global_map_can_edit = true;

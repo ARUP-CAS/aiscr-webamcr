@@ -2,6 +2,10 @@ from django.urls import path
 
 from . import views
 
+from core.views import (
+    post_ajax_get_pas_and_pian_limit,
+)
+
 app_name = "core"
 
 urlpatterns = [
@@ -18,7 +22,7 @@ urlpatterns = [
         name="upload_file",
     ),
     path("soubor/stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>", views.DownloadFile.as_view(), name="download_file"),
-    path("soubor/stahnout-stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>", views.DownloadThumbnail.as_view(), name="download_thumbnail"),
+    path("soubor/stahnout-nahled/<str:typ_vazby>/<str:ident_cely>/<int:pk>", views.DownloadThumbnail.as_view(), name="download_thumbnail"),
     path("soubor/smazat/<str:typ_vazby>/<str:ident_cely>/<int:pk>", views.delete_file, name="delete_file"),
     path("id/<str:ident_cely>", views.redirect_ident_view, name="redirect_ident"),
     path("session/prodlouzit/", views.prolong_session, name="prolong_session"),
@@ -38,13 +42,13 @@ urlpatterns = [
         name="zmena_sloupcu_listu",
     ),
     path(
-        "metadata/stahnout/<str:model_name>/<int:pk>",
-        views.StahnoutMetadataView.as_view(),
-        name="stahnout_metadata",
-    ),
-    path(
         "metadata/stahnout/<str:model_name>/<str:ident_cely>",
         views.StahnoutMetadataIdentCelyView.as_view(),
         name="stahnout_metadata",
+    ),
+    path(
+        "core/mapa-pian-pas",
+        post_ajax_get_pas_and_pian_limit,
+        name="post_ajax_get_pas_pian_limit",
     ),
 ]

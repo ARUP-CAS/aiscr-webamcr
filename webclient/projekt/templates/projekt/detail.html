@@ -253,14 +253,8 @@
             <script >
               var static_url = "{% get_static_prefix %}";
             </script>
-            <script src="{% static 'mapa_pins.js' %}"></script>
-            <script src="{% static 'coor_precision.js' %}"></script>
-            <script src="{% static 'mapa_basic_grey.js' %}"></script>
-            <script src="{% static 'spin/spin.min.js' %}"></script>
-            <script src="{% static 'leaflet.spin.min.js' %}"></script>
-            <script src="{% static 'leaflet_subgroup.js' %}"></script>
             <script>
-              const map_translations = {
+              var map_translations = {
                 CurrentLocationError: '{%trans "mapa.CurrentLocationError" %}',
 	              cuzkKatastralniMapa: '{%trans "mapa.cuzkKatastralniMapa" %}',
 	              cuzkKatastralniUzemi: '{%trans "mapa.cuzkKatastralniUzemi" %}',
@@ -275,6 +269,7 @@
 	              lokalizaceProjektu: '{%trans "mapa.lokalizaceProjektu" %}',
 	              MeasureTitle: '{%trans "mapa.MeasureTitle" %}',
 	              openStreetMap: '{%trans "mapa.openStreetMap" %}',
+		      openStreetMapSeda: '{%trans "mapa.openStreetMapSeda" %}',
 	              projektyP1: '{%trans "mapa.projektyP1" %}',
 	              projektyP2: '{%trans "mapa.projektyP2" %}',
 	              projektyP3: '{%trans "mapa.projektyP3" %}',
@@ -290,6 +285,12 @@
 	              zoomOutTitle: '{%trans "mapa.zoomOutTitle" %}'
               };
             </script>
+            <script src="{% static 'mapa_pins.js' %}"></script>
+            <script src="{% static 'coor_precision.js' %}"></script>
+            <script src="{% static 'mapa_basic_grey.js' %}"></script>
+            <script src="{% static 'spin/spin.min.js' %}"></script>
+            <script src="{% static 'leaflet.spin.min.js' %}"></script>
+            <script src="{% static 'leaflet_subgroup.js' %}"></script>
             <script src="{% static 'mapa_projekty.js' %}"></script>
             <script>
                 global_map_can_edit=false;

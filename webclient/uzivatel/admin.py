@@ -110,7 +110,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     list_display = ("ident_cely", "email", "is_active", "organizace", "hlavni_role", "first_name", "last_name",
                     "telefon", "is_active", "date_joined", "last_login", "osoba")
     list_filter = ("is_active", "organizace", "groups")
-    readonly_fields = ("ident_cely", "is_superuser")
+    readonly_fields = ("ident_cely",)
     inlines = [UserNotificationTypeInline, PesKrajNotificationTypeInline, PesOkresNotificationTypeInline, PesKatastrNotificationTypeInline]
     fieldsets = (
         (
@@ -187,14 +187,11 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         user_db: Union[User, None]
         form_groups = form.cleaned_data["groups"]
         if obj.is_active:
-            if form_groups.filter(id=ROLE_ADMIN_ID).count() == 1:
-                if not request.user.is_superuser:
-                    obj.groups.remove(Group.objects.get(pk=ROLE_ADMIN_ID))
-                else:
+            if "is_superuser" in form.cleaned_data.keys():
+                if form.cleaned_data["is_superuser"]:
                     obj.is_superuser = True
                     obj.is_staff = True
-            else:
-                if request.user.is_superuser:
+                else:
                     obj.is_superuser = False
                     obj.is_staff = False
         else:
@@ -271,6 +268,13 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     def log_deletion(self, request, object, object_repr):
         object.deleted_by_user = request.user
         super().log_deletion(request, object, object_repr)
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request,obj)
+        if obj:
+            if request.user.ident_cely == obj.ident_cely:
+                return fields+("is_superuser",)
+        return fields
 
 
 class CustomGroupAdmin(admin.ModelAdmin):

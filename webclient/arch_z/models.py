@@ -248,6 +248,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                     "arch_z.models.ArcheologickyZaznam.dokument_warning",
                     extra={"ident_cely": dokument_cast.dokument.ident_cely, "dokument_warning": str(dokument_warning)}
                 )
+        result = [str(x) for x in result]
         return result
 
     def check_pred_archivaci(self):

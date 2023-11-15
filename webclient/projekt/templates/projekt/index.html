@@ -69,6 +69,7 @@
           </div>
         </a>
       </div>
+      {% if show_projekt_archivovat %}
       <div class="col">
         <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-archivovat-projekt">
           <div class="card-body">
@@ -79,6 +80,7 @@
           </div>
         </a>
       </div>
+      {% endif %}
     </div>
   </div>
 
@@ -125,6 +127,7 @@
         {% trans "projekt.templates.index.cardUzavritProjekt.text" %}
       </div>
     </div>
+    {% if show_projekt_archivovat %}
     <div class="app-collapse-archivovat-projekt collapse">
       <div class="p-3">
         <h4>{% trans "projekt.templates.index.cardArchivovatProjekt.title" %}</h4>
@@ -132,6 +135,7 @@
         {% trans "projekt.templates.index.cardArchivovatProjekt.text" %}
       </div>
     </div>
+    {% endif %}
   </div>
 
   <script>
@@ -172,12 +176,14 @@
     $(".app-card-uzavrit-projekt").mouseover(function(){
       $(".app-collapse-uzavrit-projekt").show(100);
     });
+    {% if show_projekt_archivovat %}
     $(".app-card-archivovat-projekt").mouseleave(function(){
       $(".app-collapse-archivovat-projekt").hide(100);
     });
     $(".app-card-archivovat-projekt").mouseover(function(){
       $(".app-collapse-archivovat-projekt").show(100);
     });
+    {% endif %}
 </script>
 {% endblock %}
 

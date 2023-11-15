@@ -15,7 +15,7 @@ map.on('click', function (e) {
                 document.getElementById('id_longitude').value = corY
                 //$("#detector_coordinates_x").change();
                 //$("#detector_coordinates_y").change();
-                addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru');
+                addPointToPoiLayer(corX, corY, [map_translations['lokalizaceZamer']]);  // 'Vámi vybraná poloha záměru'
                 let xhr = new XMLHttpRequest();
                 xhr.open('POST', '/oznameni/mapa-zjisti-katastr');
                 xhr.setRequestHeader('Content-type', 'application/json');
@@ -26,7 +26,7 @@ map.on('click', function (e) {
                     // do something to response
                     //console.log(JSON.parse(this.responseText).cadastre);
                     if (JSON.parse(this.responseText).cadastre == "None") {
-                        alert("Neplatny bod, klikli jste mimo území ČR")
+                        alert([map_translations['mimoCR']])  // "Neplatny bod, klikli jste mimo území ČR"
                         //console.log("Neplatny bod, klikli jste mimo území ČR")
                     } else {
                         const uzemi = document.getElementById('id_katastralni_uzemi');

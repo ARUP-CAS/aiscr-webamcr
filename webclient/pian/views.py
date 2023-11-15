@@ -22,6 +22,7 @@ from core.utils import (
     file_validate_geometry,
     get_validation_messages,
     update_all_katastr_within_akce_or_lokalita,
+    get_dj_akce_for_pian,
 )
 from dal import autocomplete
 from dj.models import DokumentacniJednotka
@@ -38,6 +39,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
 from django.db.models import OuterRef, Subquery, Q
+from django.urls import reverse
 from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA, PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from pian.forms import PianCreateForm
@@ -113,6 +115,8 @@ def detail(request, ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     response = redirect(dj.get_absolute_url())
+    if validation_results != "valid" and validation_results != PIAN_VALIDACE_VYPNUTA:
+        response = redirect(dj.get_absolute_url()+"/pian/edit/"+str(ident_cely))
     response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",
@@ -310,6 +314,28 @@ def create(request, dj_ident_cely):
     )
     return response
 
+@login_required
+@require_http_methods(["POST"])
+def mapaDj(request, ident_cely):
+    """
+    Funkce ziskej Dj pro Pian
+    """
+    logger.debug("pian.views.create.start")
+    back=[]
+    for i in get_dj_akce_for_pian(ident_cely):
+        logger.debug(i)#G {'ident_cely': 'C-201339492A-D01', 'archeologicky_zaznam__ident_cely': 'C-201339492A'}
+        back.append({
+            "dj": str(i['ident_cely']),
+            "akce": str(i['archeologicky_zaznam__ident_cely']),
+            })
+
+    if back is not None:
+        return JsonResponse({"points": back}, status=200,
+        )
+    else:
+        return JsonResponse({"points": None}, status=200)
+
+
 class PianPermissionFilterMixin(PermissionFilterMixin):
     def add_ownership_lookup(self, ownership):
         filtered_pian_history = Historie.objects.filter(typ_zmeny=ZAPSANI_PIAN,uzivatel=self.request.user)
@@ -385,12 +411,19 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
         if self.sheet.columns[2] != "geometry":
             return HttpResponseBadRequest()
         self.sheet["result"] = self.sheet.apply(self.check_save_row, axis=1)
-        logger.debug(self.sheet.info())
         context = self.get_context_data()
         context["table"] = self.sheet
-        context["archz_ident"] = request.POST.get("arch_ident")
-        context["dj_ident"] = request.POST.get("dj_ident")
-        context["pian_ident"] = request.POST.get("pian_ident")
+        if ArcheologickyZaznam.objects.get(ident_cely=request.POST.get("arch_ident")).typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            if request.POST.get("action",False) == "change":
+                context["url"] = reverse("arch_z:update-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident"),request.POST.get("pian_ident")])
+            else:
+                context["url"] = reverse("arch_z:create-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident")])
+        else:
+            if request.POST.get("action",False) == "change":
+                context["url"] = reverse("lokalita:update-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident"),request.POST.get("pian_ident")])
+            else:
+                context["url"] = reverse("lokalita:create-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident")])
+        logger.debug(context["url"])
         return self.render_to_response(context)
     
     def check_save_row(self, row):

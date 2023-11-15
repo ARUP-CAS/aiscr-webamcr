@@ -23,6 +23,8 @@ from django_filters import (
     MultipleChoiceFilter,
 )
 from django_filters.widgets import DateRangeWidget
+
+from core.forms import SelectMultipleSeparator
 from heslar.hesla import (
     HESLAR_AKCE_TYP,
     HESLAR_PAMATKOVA_OCHRANA,
@@ -483,6 +485,14 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
+    historie_uzivatel_organizace = ModelMultipleChoiceFilter(
+        queryset=Organizace.objects.all(),
+        field_name="historie__historie__uzivatel__organizace",
+        label=_("dokument.filters.Model3DFilter.filter_historie_uzivatel_organizace.label"),
+        widget=SelectMultipleSeparator(),
+        distinct=True,
+    )
+
     def filter_planovane_zahajeni(self, queryset, name, value):
         """
         Metóda pro filtrování podle plánovaného zahájení.
@@ -709,7 +719,8 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
-                Div("historie_uzivatel", css_class="col-sm-4"),
+                Div("historie_uzivatel", css_class="col-sm-3"),
+                Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),

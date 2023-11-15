@@ -7,19 +7,19 @@
 
 // colors
 .app-color-success {
-  color: $success  !important;
+  color: $success !important;
 }
 
 .app-color-info {
-  color: $info  !important;
+  color: $info !important;
 }
 
 .app-color-warning {
-  color: $warning  !important;
+  color: $warning !important;
 }
 
 .app-color-danger {
-  color: $danger  !important;
+  color: $danger !important;
 }
 
 // common
@@ -196,10 +196,10 @@ table {
   min-width: 100% !important;
   max-width: 100% !important;
 
-  .select2-selection--multiple{
-      height: $app-form-control-fix-height !important;
-      min-height: $app-form-control-fix-height !important;
-    }
+  .select2-selection--multiple {
+    height: $app-form-control-fix-height !important;
+    min-height: $app-form-control-fix-height !important;
+  }
 
   .select2-selection {
     border: 1px solid #ced4da !important;
@@ -226,7 +226,7 @@ table {
     height: 1.23rem;
     padding: 0 0.5rem;
   }
-  
+
   .dropdown-menu .dropdown-menu.inner {
     float: inline-end;
   }
@@ -290,7 +290,7 @@ form {
     margin-bottom: $app-form-label-mg-bottom;
   }
 
-  .form-check-label{
+  .form-check-label {
     font-weight: normal;
   }
 
@@ -310,17 +310,18 @@ form {
     left: -1.5rem;
     position: inherit;
   }
-  textarea[disabled]{
+
+  textarea[disabled] {
     padding-top: 0;
     padding-bottom: 0;
   }
 
-  textarea[disabled].textarea{
+  textarea[disabled].textarea {
     padding-top: 0;
     padding-bottom: 0;
   }
 
-  textarea.textarea.form-control{
+  textarea.textarea.form-control {
     padding-top: 0;
     padding-bottom: 0;
   }
@@ -389,6 +390,7 @@ form {
 
       #projectMap {
         @extend .w-100, .rounded, .h-100;
+
         @media (max-width: 576px) {
           min-height: 70vh;
         }
@@ -418,12 +420,14 @@ form {
       overflow-y: auto;
     }
   }
+
   &.app-card-casti-dokumentu {
     min-height: 300px;
 
     .card-body {
       max-height: 300px;
       overflow-y: auto;
+
       .cast-dokumentu-part1 {
         flex: 1;
       }
@@ -498,13 +502,13 @@ form {
 
 .app-alert-floating-import-pian {
   box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 0.2);
-    border-color: initial;
-    position: fixed;
-    top: 15px;
-    left: calc(300px + 15%);
-    z-index: 10000;
-    width: calc(70% - 300px);
-    text-align: center;
+  border-color: initial;
+  position: fixed;
+  top: 15px;
+  left: calc(300px + 15%);
+  z-index: 10000;
+  width: calc(70% - 300px);
+  text-align: center;
 }
 
 // tooltip
@@ -521,6 +525,7 @@ form {
   &.app-entity-historie {
     //height: 92% !important;
   }
+
   &.app-entity-historie.app-entity-soubor {
     //height: 85% !important;
     padding-bottom: 59px;
@@ -551,7 +556,8 @@ form {
     flex: 1 0 auto; //
     position: relative;
     max-height: fit-content;
-    &.add-pian-table{
+
+    &.add-pian-table {
       table thead tr th {
         color: #ffffff;
       }
@@ -647,7 +653,7 @@ form {
     td {
       vertical-align: middle;
 
-      .image-nahled{
+      .image-nahled {
         max-height: 100px;
         max-width: 100%;
         border-radius: 5px;
@@ -746,6 +752,7 @@ form {
       }
     }
   }
+
   #soubor-nahled {
     cursor: pointer;
     transition: 0.3s;
@@ -754,6 +761,7 @@ form {
   #soubor-nahled:hover {
     opacity: 0.7;
   }
+
   .image-nahled {
     cursor: pointer;
     transition: 0.3s;
@@ -829,6 +837,7 @@ form {
     }
   }
 }
+
 // line height for select2
 .select2-container--default .select2-selection--single .select2-selection__rendered {
   line-height: inherit !important;
@@ -870,14 +879,18 @@ span.badge-span .badge {
 
 .select2-input {
   .input-group {
-    .select2-container{
+    .select2-container {
       grid-column: 2 / span 1;
-      };
+    }
+
+    ;
     display: grid;
     grid-template-columns: 0 auto 15%;
-    .input-group-append{
+
+    .input-group-append {
       position: relative;
       grid-column: 3;
+
       .btn {
         height: 100% !important;
       }
@@ -891,4 +904,14 @@ span.badge-span .badge {
 
 .app-table-list-container .app-table-list-wrapper .app-table-list-inner .table-container .table thead tr th span {
   justify-content: left;
+}
+
+.table.table-striped.table-sm.table-fixed {
+  table-layout: fixed;
+}
+
+.btn-group:has(.dropdown-menu):first-child:not(:has(.dropdown-item)) {
+  #others.btn {
+    display: none;
+  }
 }

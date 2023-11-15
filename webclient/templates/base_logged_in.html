@@ -50,8 +50,12 @@
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.UzavritProjekt" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.vybratProjekty" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?organizace={{user.organizace.id}}&sort=stav&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.naseProjekty" %}</a></li>
+              {% if show_projekt_schvalit %}
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}&sort=planovane_zahajeni&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.schvalitOznameni" %}</a></li>
+              {% endif %}
+              {% if show_projekt_archivovat %}
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}&sort=datum_ukonceni&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.archivovatProjekty" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -74,9 +78,11 @@
               <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&sort=katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.vybrat" %}</a></li>
               <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.mojeAkce" %}</a></li>
               {% if user.can_see_ours_item %}
-                <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.naseAkce" %}</a></li>
+                <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.naseAkce" %}</a></li>
               {% endif %}
+              {% if show_samakce_archivovat %}
               <li><a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False&sort=datum_ukonceni&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.archivovat" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -99,9 +105,11 @@
               <li><a href="{% url 'lokalita:list' %}?sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.lokality.vybrat" %}</a></li>
               <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.lokality.mojelokality" %}</a></li>
               {% if user.can_see_ours_item %}
-                <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.lokality.naselokality" %}</a></li>
+                <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.lokality.naselokality" %}</a></li>
               {% endif %}
+              {% if show_lokalita_archivovat %}
               <li><a href="{% url 'lokalita:list' %}?stav=2&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.lokality.archivovat" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -124,9 +132,15 @@
               <li><a href="{% url 'pas:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.zapsat" %}</a></li>
               <li><a href="{% url 'pas:list' %}?sort=katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.vybrat" %}</a></li>
               <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.naseNalezy" %}</a></li>
+              {% if show_pas_nase %}
+              <li><a href="{% url 'pas:list' %}?projekt_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.naseNalezy" %}</a></li>
+              {% endif %}
+              {% if show_pas_potvrdit %}
               <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.potvrdit" %}</a></li>
+              {% endif %}
+              {% if show_pas_archivovat %}
               <li><a href="{% url 'pas:list' %}?stav=3&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.archivovat" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -149,9 +163,11 @@
               <li><a href="{% url 'dokument:list-model-3D' %}?sort=organizace__nazev_zkraceny&sort=autori&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.vybrat" %}</a></li>
               <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.mojeModely" %}</a></li>
               {% if user.can_see_ours_item %}
-                <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.naseModely" %}</a></li>
+                <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.naseModely" %}</a></li>
               {% endif %}
+              {% if show_knihovna_archivovat %}
               <li><a href="{% url 'dokument:list-model-3D' %}?stav=2&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.archivovat" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -170,13 +186,17 @@
           <div class="card-body">
             <ul>
               <li><a href="{% url 'dokument:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.home" %}</a></li>
+              {% if show_dokumenty_zapsat %}
               <li><a href="{% url 'dokument:zapsat' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.zapsat" %}</a></li>
+              {% endif %}
               <li><a href="{% url 'dokument:list' %}??sort=organizace__nazev_zkraceny&sort=autori&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.vybrat" %}</a></li>
               <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.mojeDokumenty" %}</a></li>
               {% if user.can_see_ours_item %}
-                <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.naseDokumenty" %}</a></li>
+                <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.naseDokumenty" %}</a></li>
               {% endif %}
+              {% if show_dokumenty_archivovat %}
               <li><a href="{% url 'dokument:list' %}?stav=2&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.archivovat" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -197,15 +217,18 @@
               <li><a href="{% url 'ez:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.home" %}</a></li>
               <li><a href="{% url 'ez:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.zapsat" %}</a></li>
               <li><a href="{% url 'ez:list' %}?sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.vybrat" %}</a></li>
-              <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}& sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.mojeExterniZdroje" %}</a></li>
+              <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.mojeExterniZdroje" %}</a></li>
               {% if user.can_see_ours_item %}
-                <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}& sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.naseExterniZdroje" %}</a></li>
+                <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.naseExterniZdroje" %}</a></li>
               {% endif %}
+              {% if show_ez_archivovat %}
               <li><a href="{% url 'ez:list' %}?stav=2&sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.archivovat" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
       </div>
+      {%if show_administrace %}
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
@@ -215,6 +238,7 @@
           </h2>
         </div>
       </div>
+      {% endif %}
     </div>
   </div>
 {% endblock %}

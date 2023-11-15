@@ -103,6 +103,14 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
+    historie_uzivatel_organizace = ModelMultipleChoiceFilter(
+        queryset=Organizace.objects.all(),
+        field_name="archeologicky_zaznam__historie__historie__uzivatel__organizace",
+        label=_("arch_z.filters.ArchZaznamFilter.historie_uzivatel_organizace.label"),
+        widget=SelectMultipleSeparator(),
+        distinct=True,
+    )
+
     # Dj a Pian
     dj_typ = ModelMultipleChoiceFilter(
         label=_("arch_z.filters.ArchZaznamFilter.dj_typ.label"),
@@ -253,23 +261,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         widget=SelectMultipleSeparator(),
     )
 
-    # historie_zapsal_uzivatel_organizace = CharFilter(
-    #     label=_("arch_z.filters.AkceFilter.filter_historie_zapsal_uzivatel_organizace.label"),
-    #     method="filter_historie_zapsal_uzivatel_organizace",
-    #     distinct=True,
-    # )
-
-    historie_zapsal_uzivatel_organizace = ModelMultipleChoiceFilter(
-        queryset=Organizace.objects.all(),
-        field_name="archeologicky_zaznam__historie__historie__uzivatel",
-        label=_("arch_z.filters.AkceFilter.filter_historie_zapsal_uzivatel_organizace.label"),
-        widget=SelectMultipleSeparator(),
-        method="filter_historie_zapsal_uzivatel_organizace",
-        distinct=True,
-    )
-
-
-
     def filtr_katastr(self, queryset, name, value):
         """
         Metóda pro filtrování podle hlavního i vedlejšího katastru.
@@ -386,18 +377,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         return queryset.filter(
             archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__objekty__specifikace__in=value
         ).distinct()
-
-    def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
-        if value:
-            historie_subquery = Historie.objects.filter(vazba__archeologickyzaznam__isnull=False)\
-                .filter(typ_zmeny=ZAPSANI_AZ)\
-                .filter(vazba__archeologickyzaznam=OuterRef("pk"))\
-                .filter(uzivatel__organizace__in=value)\
-                .annotate(arch_z_ids=F("vazba__archeologickyzaznam"))
-            return queryset.annotate(arch_z_ids=Subquery(historie_subquery.values("arch_z_ids")))\
-                .filter(pk__in=F("arch_z_ids")).distinct()
-        else:
-            return queryset
 
     def __init__(self, *args, **kwargs):
         super(ArchZaznamFilter, self).__init__(*args, **kwargs)
@@ -781,7 +760,7 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
                 Div("historie_uzivatel", css_class="col-sm-3"),
-                Div("historie_zapsal_uzivatel_organizace", css_class="col-sm-3"),
+                Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),
