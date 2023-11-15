@@ -27,6 +27,7 @@
               <input name="arch_ident" type="text" value={{zaznam.ident_cely}} />
               <input name="dj_ident" type="text" value={{j.ident_cely}} />
               <input name="pian_ident" type="text" value={{j.pian_ident_cely}} />
+              <input name="action" type="text" value="" />
             </div>
           </form>
           <small class="form-text text-muted" id="import-helptext">{% trans "pian.templates.importovatPianModal.tooltip" %}</small>
@@ -57,4 +58,11 @@
     $("#import-helptext").attr('style','display:');
     $('#modal-pian-import-table').empty();
   })
+  $('#importovat_pian').on('show.bs.modal', function(e) {
+    var actionId = $(e.relatedTarget).data('action-id');
+    if (actionId) {
+      console.log(actionId)
+      $(e.currentTarget).find('input[name="action"]').val(actionId)
+    }
+});
 </script>

@@ -39,6 +39,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
 from django.db.models import OuterRef, Subquery, Q
+from django.urls import reverse
 from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA, PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from pian.forms import PianCreateForm
@@ -410,12 +411,19 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
         if self.sheet.columns[2] != "geometry":
             return HttpResponseBadRequest()
         self.sheet["result"] = self.sheet.apply(self.check_save_row, axis=1)
-        logger.debug(self.sheet.info())
         context = self.get_context_data()
         context["table"] = self.sheet
-        context["archz_ident"] = request.POST.get("arch_ident")
-        context["dj_ident"] = request.POST.get("dj_ident")
-        context["pian_ident"] = request.POST.get("pian_ident")
+        if ArcheologickyZaznam.objects.get(ident_cely=request.POST.get("arch_ident")).typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            if request.POST.get("action",False) == "change":
+                context["url"] = reverse("arch_z:update-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident"),request.POST.get("pian_ident")])
+            else:
+                context["url"] = reverse("arch_z:create-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident")])
+        else:
+            if request.POST.get("action",False) == "change":
+                context["url"] = reverse("lokalita:update-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident"),request.POST.get("pian_ident")])
+            else:
+                context["url"] = reverse("lokalita:create-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident")])
+        logger.debug(context["url"])
         return self.render_to_response(context)
     
     def check_save_row(self, row):
