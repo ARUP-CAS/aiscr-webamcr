@@ -51,7 +51,7 @@
       </div>
       {% if show_pas_nase %}
         <div class="col">
-          <a href="{% url 'pas:list' %}}?historie_typ_zmeny=SN01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-nalezy">
+          <a href="{% url 'pas:list' %}}?projekt_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-nalezy">
             <div class="card-body">
               <img src="{% static 'logo-am-mark.png' %}" />
             </div>

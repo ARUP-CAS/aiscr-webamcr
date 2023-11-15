@@ -60,14 +60,6 @@ class LokalitaFilter(ArchZaznamFilter):
         distinct=True,
     )
 
-    historie_zapsal_uzivatel_organizace = ModelMultipleChoiceFilter(
-        queryset=Organizace.objects.all(),
-        field_name="lokalita__archeologicky_zaznam__historie__historie__uzivatel",
-        label=_("lokalita.filters.LokalitaFilter.filter_historie_zapsal_uzivatel_organizace.label"),
-        widget=SelectMultipleSeparator(),
-        method="filter_historie_zapsal_uzivatel_organizace",
-        distinct=True,
-    )
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
@@ -79,19 +71,6 @@ class LokalitaFilter(ArchZaznamFilter):
             | Q(poznamka__icontains=value)
             | Q(archeologicky_zaznam__uzivatelske_oznaceni__icontains=value)
         ).distinct()
-
-    def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
-        if value:
-            historie_subquery = Historie.objects.filter(vazba__archeologickyzaznam__isnull=False)\
-                .filter(typ_zmeny=ZAPSANI_AZ)\
-                .filter(vazba__archeologickyzaznam__lokalita=OuterRef("pk"))\
-                .filter(uzivatel__organizace__in=value)\
-                .annotate(lokalita_ids=F("vazba__archeologickyzaznam__lokalita"))
-            return queryset.annotate(lokalita_ids=Subquery(historie_subquery.values("lokalita_ids")))\
-                .filter(pk__in=F("lokalita_ids")).distinct()
-        else:
-            return queryset
-
 
     class Meta:
         model = Lokalita
@@ -156,7 +135,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
                 Div("historie_uzivatel", css_class="col-sm-3"),
-                Div("historie_zapsal_uzivatel_organizace", css_class="col-sm-3"),
+                Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),

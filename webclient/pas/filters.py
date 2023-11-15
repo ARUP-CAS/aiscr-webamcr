@@ -227,26 +227,13 @@ class SamostatnyNalezFilter(HistorieFilter):
         widget=SelectMultipleSeparator(),
     )
 
-    historie_zapsal_uzivatel_organizace = ModelMultipleChoiceFilter(
+    projekt_organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
-        field_name="samostatny_nalez__historie__historie__uzivatel",
-        label=_("lokalita.filters.SamostatnyNalezFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        field_name="projekt__organizace",
+        label=_("arch_z.filters.ArchZaznamFilter.historie_uzivatel_organizace.label"),
         widget=SelectMultipleSeparator(),
-        method="filter_historie_zapsal_uzivatel_organizace",
         distinct=True,
     )
-
-    def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
-        if value:
-            historie_subquery = Historie.objects.filter(vazba__sn_historie__isnull=False)\
-                .filter(typ_zmeny=ZAPSANI_SN)\
-                .filter(vazba__sn_historie=OuterRef("pk"))\
-                .filter(uzivatel__organizace__in=value)\
-                .annotate(sn_ids=F("vazba__sn_historie"))
-            return queryset.annotate(sn_ids=Subquery(historie_subquery.values("sn_ids")))\
-                .filter(pk__in=F("sn_ids")).distinct()
-        else:
-            return queryset
 
     class Meta:
         model = SamostatnyNalez
@@ -404,7 +391,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
                 Div("historie_uzivatel", css_class="col-sm-3"),
-                Div("historie_zapsal_uzivatel_organizace", css_class="col-sm-3"),
+                Div("projekt_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),
