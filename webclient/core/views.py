@@ -446,7 +446,7 @@ def post_upload(request):
                             )
                             + parent_ident
                             + ". "
-                            + _("core.views.post_upload.duplikat2.text2"),
+                            + str(_("core.views.post_upload.duplikat2.text2")),
                             "filename": s.nazev,
                             "id": s.pk,
                         },

@@ -104,6 +104,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
                         + _("lokalita.models.lokalita.checkPredArchivaci.djMaNepotvrzenyPian.part2"
                     )
                 )
+        result = [str(x) for x in result]
         return result
 
     def check_pred_odeslanim(self):

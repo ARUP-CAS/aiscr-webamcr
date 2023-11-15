@@ -286,6 +286,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                     + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.no_pian.text2"
                         )
                 )
+        result = [str(x) for x in result]
         return result
 
     def set_lokalita_permanent_ident_cely(self):

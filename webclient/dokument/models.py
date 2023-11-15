@@ -276,7 +276,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         # At least one soubor must be attached to the dokument
         result = []
         if self.soubory.soubory.all().count() == 0:
-            result.append(_("dokument.models.formCheckArchivace.missingSoubor.text"))
+            result.append(str(_("dokument.models.formCheckArchivace.missingSoubor.text")))
         return result
 
     def has_extra_data(self):

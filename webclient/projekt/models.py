@@ -407,6 +407,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 result[akce.archeologicky_zaznam.ident_cely] = _(
                     "projekt.models.projekt.checkPredArchivaci.akce.text"
                 )
+        result = {k:str(v) for (k, v) in result.items()}
         return result
 
     def check_pred_navrzeni_k_zruseni(self):
@@ -417,7 +418,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         has_event = len(self.akce_set.all()) > 0
         if has_event:
-            return {"has_event": _("projekt.models.projekt.checkPredNavrzeniKZruseni.akce.text")}
+            return {"has_event": str(_("projekt.models.projekt.checkPredNavrzeniKZruseni.akce.text"))}
         else:
             return {}
 
@@ -437,6 +438,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             resp.append(_("projekt.models.projekt.checkPredSmazanim.nalezy.text"))
         if has_soubory:
             resp.append(_("projekt.models.projekt.checkPredSmazanim.dokumentace.text"))
+        resp = [str(x) for x in resp]
         return resp
 
     def check_pred_uzavrenim(self):
@@ -454,6 +456,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 akce_warnings = a.check_pred_odeslanim()
                 if akce_warnings:
                     result[_("projekt.models.projekt.checkPredUzavrenim.akce.text") + a.archeologicky_zaznam.ident_cely] = akce_warnings
+        result = {k:str(v) for (k, v) in result.items()}
         return result
 
     def parse_ident_cely(self):

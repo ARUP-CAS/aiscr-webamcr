@@ -351,7 +351,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         """
         result = []
         if self.stav == SPOLUPRACE_AKTIVNI:
-            result.append(_("pas.models.uzivatelSpoluprace.checkPredAktivaci.stav.text"))
+            result.append(str(_("pas.models.uzivatelSpoluprace.checkPredAktivaci.stav.text")))
         return result
 
     def check_pred_deaktivaci(self):
@@ -361,7 +361,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         """
         result = []
         if self.stav == SPOLUPRACE_NEAKTIVNI:
-            result.append(_("pas.models.uzivatelSpoluprace.checkPredDeaktivaci.stav.text"))
+            result.append(str(_("pas.models.uzivatelSpoluprace.checkPredDeaktivaci.stav.text")))
         return result
 
     class Meta:
