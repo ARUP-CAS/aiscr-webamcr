@@ -296,7 +296,7 @@ var switch_coor_system = (new_system) => {
         document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
         document.getElementById('detector_coordinates_x').readOnly = false;
         document.getElementById('detector_coordinates_y').readOnly = false;
-        document.getElementById('id_coordinate_system').value="wgs84";
+        document.getElementById('id_coordinate_system').value="4326";
     } else if (new_system >1 && point_global_JTSK[0] != 0) {
         if(Math.abs(point_global_JTSK[0])<3000000){
             document.getElementById('detector_coordinates_x').value = -1*Math.abs(point_global_JTSK[0]);
@@ -305,9 +305,9 @@ var switch_coor_system = (new_system) => {
         document.getElementById('detector_coordinates_x').readOnly = false;
         document.getElementById('detector_coordinates_y').readOnly = false;
         if(!lock_sjtsk_low_precision){
-            document.getElementById('id_coordinate_system').value="sjtsk";
+            document.getElementById('id_coordinate_system').value="5514";
         } else {
-            document.getElementById('id_coordinate_system').value="sjtsk*";
+            document.getElementById('id_coordinate_system').value="5514*"
         }
     }
 };

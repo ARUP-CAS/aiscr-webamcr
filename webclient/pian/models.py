@@ -51,7 +51,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     )
     geom = pgmodels.GeometryField(null=False, srid=4326)
     geom_sjtsk = pgmodels.GeometryField(blank=True, null=True, srid=5514)
-    geom_system = models.CharField(max_length=6, default="wgs84")
+    geom_system = models.CharField(max_length=6, default="4326")
     zm10 = models.ForeignKey(
         "Kladyzm",
         models.RESTRICT,
@@ -106,8 +106,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         db_table = "pian"
         constraints = [
             CheckConstraint(
-                check=((Q(geom_system="sjtsk") & Q(geom_sjtsk__isnull=False))
-                       | (Q(geom_system="wgs84") & Q(geom__isnull=False))
+                check=((Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
+                       | (Q(geom_system="4326") & Q(geom__isnull=False))
                        | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
                 name='pian_geom_check',
             ),
@@ -255,7 +255,7 @@ def vytvor_pian(katastr):
         presnost = Heslar.objects.get(pk=PIAN_PRESNOST_KATASTR)
         typ = Heslar.objects.get(pk=GEOMETRY_PLOCHA)
         pian = Pian(stav=PIAN_POTVRZEN, zm10=zm10s, zm50=zm50s, typ=typ, presnost=presnost, geom=geom,
-                    geom_system="wgs84")
+                    geom_system="4326")
         pian.set_permanent_ident_cely()
         pian.save()
         pian.zaznamenej_zapsani(User.objects.filter(email="amcr@arup.cas.cz").first())

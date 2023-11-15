@@ -77,7 +77,7 @@ class CoordinatesDokumentForm(forms.Form):
     coordinate_sjtsk_x = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_sjtsk_y = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_system = forms.CharField(
-        required=False, widget=HiddenInput(), initial="wgs84"
+        required=False, widget=HiddenInput(), initial="4326"
     )
 
 

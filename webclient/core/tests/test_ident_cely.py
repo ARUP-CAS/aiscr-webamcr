@@ -47,7 +47,7 @@ class IdentTests(TestCase):
             presnost=Heslar.objects.get(pk=PRESNOST_DESITKY_METRU_ID),
             typ=Heslar.objects.get(pk=GEOMETRY_PLOCHA),
             geom=GEOSGeometry("0101000020E610000042D35729E77F3040234F91EAF9804840"),
-            geom_system="wgs84",
+            geom_system="4326",
             zm10=kl,
             zm50=kl,
             ident_cely="P-3412-900002",
