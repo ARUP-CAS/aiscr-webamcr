@@ -237,6 +237,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context = super().get_context_data(**kwargs)
         self.arch_zaznam = self.get_archeologicky_zaznam()
         context["showbackdetail"] = False
+        context["zaznam"] = self.arch_zaznam
         if self.arch_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if self.arch_zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
                 context["showbackdetail"] = True if self.request.user.hlavni_role.pk != ROLE_BADATEL_ID else False
@@ -256,7 +257,6 @@ class AkceRelatedRecordUpdateView(TemplateView):
             self.get_vedouci(context)
         else:
             context["app"] = "lokalita"
-        context["zaznam"] = self.arch_zaznam
         context["dokumentacni_jednotky"] = self.get_jednotky()
         context["dokumenty"] = self.get_dokumenty()
         context["history_dates"] = get_history_dates(self.arch_zaznam.historie, self.request.user)
