@@ -85,7 +85,6 @@ migration_scripts=("chyby_dat.sql"
 "99_set_DB_privileges.sql"
 "migrace_mazani.sql"
 "100_heatmap_pas.sql"
-"101_wgs84_to_4326.sql"
 )
 
 
