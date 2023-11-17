@@ -70,6 +70,8 @@ services:
       timeout: 30s
       retries: 5
       start_period: 30s
+    depends_on:
+      - redis
 
   celery_beat:
     image: aiscr/webamcr:${IMAGE_TAG}
@@ -90,6 +92,8 @@ services:
       timeout: 30s
       retries: 5
       start_period: 30s
+    depends_on:
+      - redis
 
   grafana:
     image: grafana/grafana-enterprise:8.2.0
