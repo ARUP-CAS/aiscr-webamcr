@@ -625,14 +625,12 @@ class AkceFilter(ArchZaznamFilter):
         if "True" not in value and "False" not in value:
             return queryset
         queryset = queryset.filter(archeologicky_zaznam__dokumentacni_jednotky_akce__isnull=False)
+        doumentacni_jednotka_subquery = DokumentacniJednotka.objects \
+            .filter(negativni_jednotka=False).values_list("archeologicky_zaznam__pk", flat=True)
         if "True" in value:
-            doumentacni_jednotka_subquery = DokumentacniJednotka.objects\
-                .filter(negativni_jednotka=False).values_list("archeologicky_zaznam__pk", flat=True)
             return queryset.filter(pk__in=doumentacni_jednotka_subquery).distinct()
         if "False" in value:
-            doumentacni_jednotka_subquery = DokumentacniJednotka.objects \
-                .filter(negativni_jednotka=True).values_list("archeologicky_zaznam__pk", flat=False)
-            return queryset.filter(pk__in=doumentacni_jednotka_subquery).distinct()
+            return queryset.filter(~Q(pk__in=doumentacni_jednotka_subquery)).distinct()
 
     def filter_adb_popisne_udaje(self, queryset, name, value):
         """
