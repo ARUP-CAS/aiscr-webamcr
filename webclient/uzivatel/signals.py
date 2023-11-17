@@ -113,5 +113,5 @@ def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
 
 
 @receiver(pre_delete, sender=Organizace)
-def osoba_delete_repository_container(sender, instance: Organizace, **kwargs):
+def organizace_delete_repository_container(sender, instance: Organizace, **kwargs):
     instance.record_deletion()

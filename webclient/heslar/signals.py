@@ -111,7 +111,7 @@ def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=RuianOkres)
+@receiver(pre_delete, sender=RuianOkres)
 def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwargs):
     instance.record_deletion()
 

@@ -26,6 +26,7 @@ def create_arch_z_vazby(sender, instance, **kwargs):
         hv.save()
         instance.historie = hv
 
+
 @receiver(post_save, sender=ArcheologickyZaznam)
 def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     """
