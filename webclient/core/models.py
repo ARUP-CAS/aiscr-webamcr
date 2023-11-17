@@ -501,11 +501,12 @@ class Permissions(models.Model):
         verbose_name_plural = _("core.model.permissions.modelTitles.label")
 
     def check_concrete_permission(self, user, ident=None, typ=None):
-        self.typ= typ
+        self.typ = typ
         self.object = None
         self.logged_in_user = user
         self.permission_object = None
         self.ident = ident
+        perm_check = False
         if not self.check_base():
             logger.debug("base false")
             return False
@@ -519,7 +520,7 @@ class Permissions(models.Model):
                 perm_check = False
             if not perm_check and status_check and self.check_permission_skip():
                 logger.debug("skip True")
-                perm_check =  True
+                perm_check = True
         return perm_check
 
     def check_base(self):
