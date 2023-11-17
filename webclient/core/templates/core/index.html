@@ -6,6 +6,7 @@
 
 {% block content %}
   <div class="row app-entity-cards mb-3">
+    {% if show_projekt %}
     <div class="col">
       <a href="{% url 'projekt:index' %}" class="card app-card-entity app-entity-projekt">
         <div class="card-body">
@@ -16,6 +17,7 @@
         </div>
       </a>
     </div>
+    {% endif %}
     <div class="col">
       <a href="{% url 'arch_z:index' %}" class="card app-card-entity app-entity-akce">
         <div class="card-body">
@@ -79,6 +81,7 @@
   </div>
 
   <div class="app-card-desc-wrapper">
+    {% if show_projekt %}
     <div class="app-collapse-projekt collapse">
       <div class="p-3">
         <h4>{% trans "core.templates.index.cardProjekt.text.title" %}</h4>
@@ -86,7 +89,8 @@
         {% trans "core.templates.index.cardProjekt.text" %}
       </div>
     </div>
-
+    {% endif %}
+    
     <div class="app-collapse-akce collapse">
       <div class="p-3">
         <h4>{% trans "core.templates.index.cardSamostatnaAkce.text.title" %}</h4>
@@ -138,12 +142,14 @@
 
 
   <script>
+      {% if show_projekt %}
       $(".app-entity-projekt").mouseleave(function(){
         $(".app-collapse-projekt").hide(100);
       });
       $(".app-entity-projekt").mouseover(function(){
         $(".app-collapse-projekt").show(100);
       });
+      {% endif %}
       $(".app-entity-akce").mouseleave(function(){
         $(".app-collapse-akce").hide(100);
       });
