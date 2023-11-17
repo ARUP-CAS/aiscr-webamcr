@@ -25,6 +25,7 @@ from core.constants import PROJEKT_STAV_UKONCENY_V_TERENU, PRIHLASENI_PROJ
 from core.models import Soubor
 from core.repository_connector import FedoraRepositoryConnector, RepositoryBinaryFile
 from historie.models import Historie
+from oznameni.models import Oznamovatel
 from .mlstripper import MLStripper
 from urllib.parse import urljoin
 
@@ -398,9 +399,13 @@ class Mailer:
             "lokalita": project.lokalizace,
             "organization": project.organizace.nazev,
         })
-        if project.oznamovatel is not None:
-            cls.__send(subject=subject, to=project.oznamovatel.email, html_content=html,
-                       notification_type=notification_type)
+        try:
+            if project.oznamovatel is not None:
+                cls.__send(subject=subject, to=project.oznamovatel.email, html_content=html,
+                           notification_type=notification_type)
+        except Oznamovatel.DoesNotExist as err:
+            logger.debug("services.mailer._send_ep03.no_oznammovatel",
+                         extra={"ident_cely": project.ident_cely, "err": err})
 
     @classmethod
     def send_ep03a(cls, project: 'projekt.models.Projekt'):
