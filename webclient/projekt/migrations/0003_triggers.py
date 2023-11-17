@@ -14,33 +14,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(
-            sql="""
-            CREATE OR REPLACE FUNCTION public.prevent_project_deletion()
-                RETURNS trigger
-                LANGUAGE 'plpgsql'
-                COST 100
-                VOLATILE NOT LEAKPROOF
-            AS $BODY$
-                    BEGIN
-                        IF EXISTS (SELECT FROM soubor_vazby AS sv inner join soubor AS s ON s.vazba = sv.id
-                        inner join projekt AS p on p.soubory = sv.id WHERE p.id = OLD.id) THEN
-                            RAISE EXCEPTION 'Nelze smazat projekt s projektovou dokumentací!';
-                        END IF;
-                        RETURN OLD;
-                    END;    
-            $BODY$;
-            """,
-            reverse_sql="DROP FUNCTION public.prevent_project_deletion;",
-        ),
-        migrations.RunSQL(
-            sql="""
-            CREATE TRIGGER prevent_project_deletion
-                BEFORE DELETE
-                ON projekt
-                FOR EACH ROW
-                EXECUTE FUNCTION prevent_project_deletion();
-            """,
-            reverse_sql="DROP TRIGGER public.prevent_project_deletion;",
-        ),
     ]
