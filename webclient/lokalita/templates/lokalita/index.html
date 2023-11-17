@@ -85,15 +85,6 @@
         {% trans "lokalita.templates.index.cardVybrat.text" %}
       </div>
     </div>
-    {% if show_lokalita_archivovat %}
-    <div class="app-collapse-archivovat collapse">
-      <div class="p-3">
-        <h4>{% trans "lokalita.templates.index.cardArchivovat.title" %}</h4>
-        <hr />
-        {% trans "lokalita.templates.index.cardArchivovat.text" %}
-      </div>
-    </div>
-    {% endif %}
   </div>
 
   <script>
@@ -124,14 +115,6 @@
     $(".app-card-vybrat").mouseover(function(){
       $(".app-collapse-vybrat").show(100);
     });
-    {% if show_lokalita_archivovat %}
-    $(".app-card-archivovat").mouseleave(function(){
-      $(".app-collapse-archivovat").hide(100);
-    });
-    $(".app-card-archivovat").mouseover(function(){
-      $(".app-collapse-archivovat").show(100);
-    });
-    {% endif %}
 </script>
 {% endblock %}
 
