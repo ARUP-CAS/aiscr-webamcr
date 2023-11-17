@@ -50,7 +50,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-spravovat-akce">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-spravovat-akce">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
