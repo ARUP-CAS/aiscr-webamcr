@@ -20,7 +20,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}" class="card app-card-entity app-card-prihlasit-projekt">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}&sort=planovane_zahajeni&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-prihlasit-projekt">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -30,7 +30,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-zahajit-vyzkum">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-zahajit-vyzkum">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -40,7 +40,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-ukoncit-teren">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-ukoncit-teren">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -50,7 +50,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}" class="card app-card-entity app-card-spravovat-akce">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-spravovat-akce">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -60,7 +60,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-uzavrit-projekt">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-uzavrit-projekt">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -69,18 +69,16 @@
           </div>
         </a>
       </div>
-      {% if show_projekt_archivovat %}
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-archivovat-projekt">
+        <a href="{% url 'projekt:list' %}?sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-vybrat-projekt">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "projekt.templates.index.cardArchivovatProjekt.label" %}
+            {% trans "projekt.templates.index.cardVybratProjekt.label" %}
           </div>
         </a>
       </div>
-      {% endif %}
     </div>
   </div>
 
@@ -127,15 +125,13 @@
         {% trans "projekt.templates.index.cardUzavritProjekt.text" %}
       </div>
     </div>
-    {% if show_projekt_archivovat %}
-    <div class="app-collapse-archivovat-projekt collapse">
+    <div class="app-collapse-vybrat-projekt collapse">
       <div class="p-3">
-        <h4>{% trans "projekt.templates.index.cardArchivovatProjekt.title" %}</h4>
+        <h4>{% trans "projekt.templates.index.cardVybratProjekt.title" %}</h4>
         <hr />
-        {% trans "projekt.templates.index.cardArchivovatProjekt.text" %}
+        {% trans "projekt.templates.index.cardVybratProjekt.text" %}
       </div>
     </div>
-    {% endif %}
   </div>
 
   <script>
@@ -176,14 +172,12 @@
     $(".app-card-uzavrit-projekt").mouseover(function(){
       $(".app-collapse-uzavrit-projekt").show(100);
     });
-    {% if show_projekt_archivovat %}
-    $(".app-card-archivovat-projekt").mouseleave(function(){
-      $(".app-collapse-archivovat-projekt").hide(100);
+    $(".app-card-vybrat-projekt").mouseleave(function(){
+      $(".app-collapse-vybrat-projekt").hide(100);
     });
-    $(".app-card-archivovat-projekt").mouseover(function(){
-      $(".app-collapse-archivovat-projekt").show(100);
+    $(".app-card-vybrat-projekt").mouseover(function(){
+      $(".app-collapse-vybrat-projekt").show(100);
     });
-    {% endif %}
 </script>
 {% endblock %}
 
