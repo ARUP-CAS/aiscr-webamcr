@@ -51,7 +51,7 @@
       </div>
       {% if show_pas_nase %}
         <div class="col">
-          <a href="{% url 'pas:list' %}}?projekt_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-nalezy">
+          <a href="{% url 'pas:list' %}?projekt_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-nalezy">
             <div class="card-body">
               <img src="{% static 'logo-am-mark.png' %}" />
             </div>
@@ -69,18 +69,6 @@
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardPotvrdit.label" %}
-          </div>
-        </a>
-      </div>
-      {% endif %}
-      {% if show_pas_archivovat %}
-      <div class="col">
-        <a href="{% url 'pas:list' %}?stav=3&sort=datum_nalezu&sort=ident_cely" class="card app-card-entity app-card-archivovat">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "pas.templates.index.cardArchivovat.label" %}
           </div>
         </a>
       </div>
@@ -135,15 +123,6 @@
       </div>
     </div>
     {% endif %}
-    {% if show_pas_archivovat %}
-  <div class="app-collapse-archivovat collapse">
-      <div class="p-3">
-        <h4>{% trans "pas.templates.index.cardArchivovat.title" %}</h4>
-        <hr />
-        {% trans "pas.templates.index.cardArchivovat.text" %}
-      </div>
-    </div>
-    {% endif %}
   </div>
 
   <script>
@@ -186,14 +165,6 @@
     });
     $(".app-card-potvrdit").mouseover(function(){
       $(".app-collapse-potvrdit").show(100);
-    });
-    {% endif %}
-    {% if show_pas_archivovat %}
-    $(".app-card-archivovat").mouseleave(function(){
-      $(".app-collapse-archivovat").hide(100);
-    });
-    $(".app-card-archivovat").mouseover(function(){
-      $(".app-collapse-archivovat").show(100);
     });
     {% endif %}
 </script>
