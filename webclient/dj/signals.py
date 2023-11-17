@@ -44,7 +44,7 @@ def create_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created
 
 
 @receiver(pre_delete, sender=DokumentacniJednotka)
-def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, **kwargs):
+def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
     logger.debug("dj.signals.create_dokumentacni_jednotka.start")
     pian: Pian = instance.pian
     dj_query = DokumentacniJednotka.objects.filter(pian=pian).filter(~Q(ident_cely=instance.ident_cely))
