@@ -102,6 +102,14 @@ class HistorieFilter(filters.FilterSet):
         distinct=True,
     )
 
+    historie_uzivatel_organizace = ModelMultipleChoiceFilter(
+        queryset=Organizace.objects.all(),
+        field_name="historie__historie__uzivatel__organizace",
+        label=_("ez.filters.historieFilter.filter_historie_uzivatel_organizace.label"),
+        widget=SelectMultipleSeparator(),
+        distinct=True,
+    )
+
     def filter_queryset(self, queryset):
         """
         Metóda pro filtrování podle historie s logickým operátorem AND.
@@ -109,6 +117,7 @@ class HistorieFilter(filters.FilterSet):
         zmena = self.form.cleaned_data["historie_typ_zmeny"]
         uzivatel = self.form.cleaned_data["historie_uzivatel"]
         datum = self.form.cleaned_data["historie_datum_zmeny_od"]
+        uzivatel_organizace = self.form.cleaned_data["historie_uzivatel_organizace"]
         filtered = Historie.objects.all()
         needs_filtering = False
         if zmena:
@@ -116,6 +125,9 @@ class HistorieFilter(filters.FilterSet):
             needs_filtering = True
         if uzivatel:
             filtered = filtered.filter(uzivatel__in=uzivatel)
+            needs_filtering = True
+        if uzivatel_organizace:
+            filtered = filtered.filter(uzivatel__organizace__in=uzivatel_organizace)
             needs_filtering = True
         if datum and datum.start:
             filtered = filtered.filter(datum_zmeny__gte=datum.start)
@@ -348,14 +360,6 @@ class Model3DFilter(HistorieFilter):
                 "data-live-search": "true",
             }
         ),
-        distinct=True,
-    )
-
-    historie_uzivatel_organizace = ModelMultipleChoiceFilter(
-        queryset=Organizace.objects.all(),
-        field_name="historie__historie__uzivatel__organizace",
-        label=_("dokument.filters.Model3DFilter.filter_historie_uzivatel_organizace.label"),
-        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 

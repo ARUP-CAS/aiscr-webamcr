@@ -63,6 +63,7 @@ def create_projekt_vazby(sender, instance, **kwargs):
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     if instance.soubory.exists():
         raise Exception(_("projekt.signals.projekt_pre_delete.cannot_delete"))
+    instance.record_deletion()
 
 
 @receiver(post_save, sender=Projekt)
@@ -79,8 +80,3 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
         logger.debug("projekt.signals.projekt_post_save.checked_hlidaci_pes",
                      extra={"instance": instance})
         check_hlidaci_pes.delay(instance.pk)
-
-
-@receiver(pre_delete, sender=Projekt)
-def projekt_post_delete(sender, instance: Projekt, **kwargs):
-    instance.record_deletion()
