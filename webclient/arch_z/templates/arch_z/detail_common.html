@@ -92,7 +92,7 @@
             {% if show.editovat and show.add_dj %}
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
-                <a id="button-add-dj" class="btn" href="{% if app == 'akce' %}{% url 'arch_z:create-dj' zaznam.ident_cely %}{% else %}{% url 'lokalita:create-dj' zaznam.ident_cely %}{% endif %}"
+                <a id="button-add-dj" class="btn" href="{% if app == 'akce' or app == 'pr' %}{% url 'arch_z:create-dj' zaznam.ident_cely %}{% else %}{% url 'lokalita:create-dj' zaznam.ident_cely %}{% endif %}"
                         rel="tooltip" data-placement="top"
                         title="{% trans 'arch_z.templates.arch_z.detail_common.cardDJ.pridatDJ.label' %}">
                   <span class="material-icons">add</span>
@@ -107,12 +107,12 @@
                 <li class="list-group-item">
                   <div class="d-flex align-items-center" id="el_div_dokumentacni_jednotka_{{ j.ident_cely_safe }}" {% if j.ident_cely == active_dj_ident and not active_komp_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
                     {% if j.pian.stav == 2 %} <!-- POTVRZENY JE 2 -->
-                      <a href="{% if app == 'akce' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip"
+                      <a href="{% if app == 'akce' or app == 'pr' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip"
                          data-placement="top" title="{% trans 'arch_z.templates.arch_z.detail_common.cardDJ.potvrzeniPian.tooltip' %}">
                         <span class="material-icons">my_location</span>
                       </a>
                     {% elif j.pian.stav == 1 %} <!-- NEPOTVRZENY JE 1 -->
-                      <a href="{% if app == 'akce' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="d-flex mr-2 text-decoration-none app-pian app-notconfirmed" rel="tooltip"
+                      <a href="{% if app == 'akce' or app == 'pr' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="d-flex mr-2 text-decoration-none app-pian app-notconfirmed" rel="tooltip"
                          data-placement="top" title="{% trans 'arch_z.templates.arch_z.detail_common.cardDJ.nepotvrzeniPian.tooltip' %}">
                         <span class="material-icons">my_location</span>
                       </a>
@@ -120,7 +120,7 @@
                       <span class="material-icons mr-2 text-decoration-none app-pian app-disabled" rel="tooltip"
                             data-placement="top" title="{% trans 'arch_z.templates.arch_z.detail_common.cardDJ.nemaPian.tooltip' %}">location_disabled</span>
                     {% endif %}
-                    <a href="{% if app == 'akce' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="flex-fill app-entity-color" id="el_dokumentacni_jednotka_{{ j.ident_cely_safe }}">
+                    <a href="{% if app == 'akce' or app == 'pr' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="flex-fill app-entity-color" id="el_dokumentacni_jednotka_{{ j.ident_cely_safe }}">
                       <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
                       {% if j.adb %}- {{ j.adb.ident_cely }}{% endif %}
                     </a>
@@ -130,7 +130,7 @@
                       {% for k in j.komponenty.komponenty.all %}
                         <li id="el_li_komponenta_{{ k.ident_cely_safe }}">
                           <div class="d-flex align-items-baseline" {% if k.ident_cely == active_komp_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
-                            <a href="{% if app == 'akce' %}{% url 'arch_z:update-komponenta' zaznam.ident_cely j.ident_cely k.ident_cely %}{% else %}{% url 'lokalita:update-komponenta' zaznam.ident_cely j.ident_cely k.ident_cely %}{% endif %}" class="flex-fill mr-2 app-entity-color"
+                            <a href="{% if app == 'akce' or app == 'pr' %}{% url 'arch_z:update-komponenta' zaznam.ident_cely j.ident_cely k.ident_cely %}{% else %}{% url 'lokalita:update-komponenta' zaznam.ident_cely j.ident_cely k.ident_cely %}{% endif %}" class="flex-fill mr-2 app-entity-color"
                                id="el_komponenta_{{ k.ident_cely_safe }}">
                               {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
                             </a>
