@@ -85,15 +85,6 @@
         {% trans "arch_z.templates.arch_z.index.cardVybrat.text" %}
       </div>
     </div>
-    {% if show_samakce_archivovat %}
-    <div class="app-collapse-archivovat collapse">
-      <div class="p-3">
-        <h4>{% trans "arch_z.templates.arch_z.index.cardArchivovat.text.title" %}</h4>
-        <hr />
-        {% trans "arch_z.templates.arch_z.index.cardArchivovat.text" %}
-      </div>
-    </div>
-    {% endif %}
   </div>
 
 
@@ -125,14 +116,6 @@
     $(".app-card-vybrat").mouseover(function(){
       $(".app-collapse-vybrat").show(100);
     });
-    {% if show_samakce_archivovat %}
-    $(".app-card-archivovat").mouseleave(function(){
-      $(".app-collapse-archivovat").hide(100);
-    });
-    $(".app-card-archivovat").mouseover(function(){
-      $(".app-collapse-archivovat").show(100);
-    });
-    {% endif %}
 </script>
 {% endblock %}
 
