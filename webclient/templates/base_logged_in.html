@@ -28,7 +28,8 @@
       </a>
     </div>
     <div class="accordion" id="accordionSidebar">
-      <div class="card">
+      {% if show_projekt %}
+      <div class="card">        
         <div class="card-header">
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
@@ -37,8 +38,7 @@
               <span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </h2>
-        </div>
-        {% if show_projekt %}
+        </div>        
         <div id="collapseProjekty" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
@@ -63,8 +63,8 @@
             </ul>
           </div>
         </div>
-        {% endif %}
       </div>
+      {% endif %}
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
