@@ -138,14 +138,6 @@ class ExterniZdrojFilter(HistorieFilter):
         widget=SelectMultipleSeparator(),
     )
 
-    historie_uzivatel_organizace = ModelMultipleChoiceFilter(
-        queryset=Organizace.objects.all(),
-        field_name="historie__historie__uzivatel__organizace",
-        label=_("ez.filters.ArchZaznamFilter.filter_historie_uzivatel_organizace.label"),
-        widget=SelectMultipleSeparator(),
-        distinct=True,
-    )
-
     def filter_popisne_udaje(self, queryset, name, value):
         """
         Metóda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.

@@ -230,7 +230,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     projekt_organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
         field_name="projekt__organizace",
-        label=_("arch_z.filters.ArchZaznamFilter.historie_uzivatel_organizace.label"),
+        label=_("arch_z.filters.samostatnyNalezFilter.projekt_roganizace.label"),
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
@@ -391,7 +391,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
                 Div("historie_uzivatel", css_class="col-sm-3"),
-                Div("projekt_organizace", css_class="col-sm-3"),
+                Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                 id="historieCollapse",
                 css_class="collapse row",
             ),

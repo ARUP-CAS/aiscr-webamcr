@@ -390,7 +390,8 @@
   <script>
       // Open sidebar based on the url i am viewing
       $(document).ready(function () {
-          if ((window.location.href.indexOf("projekt") > -1) && (window.location.href.indexOf("projektove") <= -1)) {
+          if ((window.location.href.indexOf("projekt") > -1) && (window.location.href.indexOf("projektove") <= -1)
+              && (window.location.href.indexOf("projekt_organizace") <= -1)) {
               $('#collapseProjekty').collapse('show')
           } else if (window.location.href.indexOf("model") > -1) {
               $('#collapse3d').collapse('show')
