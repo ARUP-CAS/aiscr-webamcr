@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 
 from adb.models import Adb, Kladysm5, AdbSekvence, VyskovyBod
 from arch_z.models import ArcheologickyZaznam
-from core.constants import IDENTIFIKATOR_DOCASNY_PREFIX
+from core.constants import IDENTIFIKATOR_DOCASNY_PREFIX, DOKUMENT_CAST_RELATION_TYPE
 from core.exceptions import (
     MaximalIdentNumberError,
     NelzeZjistitRaduError,
@@ -22,7 +22,7 @@ from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
 from ez.models import ExterniZdroj
-from komponenta.models import Komponenta
+from komponenta.models import Komponenta, KomponentaVazby
 from dj.models import DokumentacniJednotka
 
 logger = logging.getLogger(__name__)
@@ -166,6 +166,11 @@ def get_komponenta_ident(zaznam) -> str:
     max_count = 0
     if isinstance(zaznam, ArcheologickyZaznam):
         for dj in zaznam.dokumentacni_jednotky_akce.all():
+            if dj.komponenty is None:
+                k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
+                k.save()
+                dj.komponenty = k
+                dj.save()
             for komponenta in dj.komponenty.komponenty.all():
                 last_digits = int(komponenta.ident_cely[-last_digit_count:])
                 if max_count < last_digits:
