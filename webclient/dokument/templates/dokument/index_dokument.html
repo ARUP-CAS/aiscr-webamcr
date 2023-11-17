@@ -53,18 +53,6 @@
         </a>
       </div>
       {% endif %}
-      {% if show_dokumenty_archivovat %}
-      <div class="col">
-        <a href="{% url 'dokument:list' %}?stav=2&sort=ident_cely" class="card app-card-entity app-card-archivovat">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "dokument.templates.indexDokument.cardArchivovat.label" %}
-          </div>
-        </a>
-      </div>
-      {% endif %}
     </div>
   </div>
 
@@ -101,15 +89,6 @@
         {% trans "dokument.templates.indexDokument.cardVybrat.text" %}
       </div>
     </div>
-    {% if show_dokumenty_archivovat %}
-    <div class="app-collapse-archivovat collapse">
-      <div class="p-3">
-        <h4>{% trans "dokument.templates.indexDokument.cardArchivovat.text.title" %}</h4>
-        <hr />
-        {% trans "dokument.templates.indexDokument.cardArchivovat.text" %}
-      </div>
-    </div>
-    {% endif %}
   </div>
 
   <script>
@@ -142,14 +121,6 @@
     $(".app-card-vybrat").mouseover(function(){
       $(".app-collapse-vybrat").show(100);
     });
-    {% if show_dokumenty_archivovat %}
-    $(".app-card-archivovat").mouseleave(function(){
-      $(".app-collapse-archivovat").hide(100);
-    });
-    $(".app-card-archivovat").mouseover(function(){
-      $(".app-collapse-archivovat").show(100);
-    });
-    {% endif %}
 </script>
 {% endblock %}
 

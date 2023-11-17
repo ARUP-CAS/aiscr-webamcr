@@ -139,14 +139,16 @@ def main_shows(request):
         if request.user.is_archiver_or_more:
             main_show["show_projekt_schvalit"]= True
             main_show["show_projekt_archivovat"]= True
+            main_show["show_projekt_zrusit"]= True
             main_show["show_samakce_archivovat"]= True
             main_show["show_lokalita_archivovat"]= True 
             main_show["show_knihovna_archivovat"]= True 
             main_show["show_dokumenty_archivovat"]= True
             main_show["show_pas_archivovat"]= True 
             main_show["show_ez_archivovat"]= True
+            main_show["show_dokumenty_zapsat"]= True
         if request.user.is_archeolog_or_more:
             main_show["show_pas_nase"]= True 
             main_show["show_pas_potvrdit"]= True 
-            main_show["show_dokumenty_zapsat"]= True
+            main_show["show_projekt"]= True
     return main_show

@@ -38,6 +38,7 @@
             </button>
           </h2>
         </div>
+        {% if show_projekt %}
         <div id="collapseProjekty" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
@@ -56,9 +57,13 @@
               {% if show_projekt_archivovat %}
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}&sort=datum_ukonceni&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.archivovatProjekty" %}</a></li>
               {% endif %}
+              {% if show_projekt_zrusit %}
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_NAVRZEN_KE_ZRUSENI}}&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.zrusitProjekty" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card">
         <div class="card-header">
@@ -189,7 +194,7 @@
               {% if show_dokumenty_zapsat %}
               <li><a href="{% url 'dokument:zapsat' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.zapsat" %}</a></li>
               {% endif %}
-              <li><a href="{% url 'dokument:list' %}??sort=organizace__nazev_zkraceny&sort=autori&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.vybrat" %}</a></li>
+              <li><a href="{% url 'dokument:list' %}?sort=organizace__nazev_zkraceny&sort=autori&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.vybrat" %}</a></li>
               <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.mojeDokumenty" %}</a></li>
               {% if user.can_see_ours_item %}
                 <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.naseDokumenty" %}</a></li>
