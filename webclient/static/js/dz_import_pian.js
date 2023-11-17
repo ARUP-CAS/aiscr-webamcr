@@ -16,9 +16,9 @@ const show_upload_successful_message = (file, result = UploadResultsEnum.success
         }
         alert_element.setAttribute("role", "alert");
         if (result === UploadResultsEnum.success) {
-            alert_element.textContent = `alerts.importPian.upload_succesfull`;
+            alert_element.textContent = [dz_trans["alertsImportPianUploadSuccesfull"]];
         } else {
-            alert_element.textContent = `alerts.importPian.upload_error`;
+            alert_element.textContent = [dz_trans["alertsImportPianUploadError"]];
         } 
         const button_element = document.createElement("button");
         button_element.setAttribute('type', 'button');
