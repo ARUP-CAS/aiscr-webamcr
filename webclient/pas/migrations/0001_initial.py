@@ -54,6 +54,7 @@ class Migration(migrations.Migration):
             constraint=models.CheckConstraint(
                 check=models.Q(
                     models.Q(("geom_system", "5514"), ("geom_sjtsk__isnull", False)),
+                    models.Q(("geom_system", "5514*"), ("geom_sjtsk__isnull", False)),
                     models.Q(("geom_system", "4326"), ("geom__isnull", False)),
                     models.Q(("geom_sjtsk__isnull", True), ("geom__isnull", True)),
                     _connector="OR",
