@@ -139,6 +139,7 @@ def main_shows(request):
         if request.user.is_archiver_or_more:
             main_show["show_projekt_schvalit"]= True
             main_show["show_projekt_archivovat"]= True
+            main_show["show_projekt_zrusit"]= True
             main_show["show_samakce_archivovat"]= True
             main_show["show_lokalita_archivovat"]= True 
             main_show["show_knihovna_archivovat"]= True 
