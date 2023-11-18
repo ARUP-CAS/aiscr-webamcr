@@ -49,6 +49,7 @@ from core.message_constants import (
     DOKUMENT_NEKDO_ZMENIL_STAV,
     PROJEKT_NEKDO_ZMENIL_STAV,
     SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+    SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_SMAZAN,
 )
@@ -72,6 +73,7 @@ from datetime import datetime
 from heslar.hesla import HESLAR_PRISTUPNOST
 
 from heslar.models import Heslar
+from .exceptions import ZaznamSouborNotmatching
 from .models import Permissions, PermissionsSkip
 from historie.models import Historie
 
@@ -107,6 +109,14 @@ def delete_file(request, typ_vazby, ident_cely, pk):
     Funkce pohledu pro smazání souboru. Funkce maže jak záznam v DB tak i soubor na disku.
     """
     s = get_object_or_404(Soubor, pk=pk)
+    try:
+        check_soubor_vazba(typ_vazby, ident_cely, pk)
+    except ZaznamSouborNotmatching as e:
+        logger.debug(e)
+        messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+        return redirect(request.GET.get("next"))
     if request.method == "POST":
         s.deleted_by_user = request.user
         items_deleted: Soubor = s.delete()
@@ -157,7 +167,15 @@ class DownloadFile(LoginRequiredMixin, View):
     def _preprocess_image(file_content: BytesIO) -> BytesIO:
         return file_content
 
-    def get(self, request, pk, *args, **kwargs):
+    def get(self, request, typ_vazby, ident_cely, pk, *args, **kwargs):
+        try:
+            check_soubor_vazba(typ_vazby, ident_cely, pk)
+        except ZaznamSouborNotmatching as e:
+            logger.debug(e)
+            messages.add_message(
+                            request, messages.ERROR, SPATNY_ZAZNAM_SOUBOR_VAZBA
+                        )
+            return redirect(request.GET.get("next"))
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
         rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content()
         if soubor.repository_uuid is not None:
@@ -252,6 +270,15 @@ def update_file(request, typ_vazby, ident_cely, file_id):
     """
     Funkce pohledu pro zobrazení stránky pro upload souboru.
     """
+    try:
+        check_soubor_vazba(typ_vazby, ident_cely, file_id)
+    except ZaznamSouborNotmatching as e:
+        logger.debug(e)
+        messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_SOUBOR_VAZBA
+                    )
+        return redirect(request.GET.get("next"))
+        
     ident_cely = ""
     back_url = request.GET.get("next")
     return render(
@@ -289,6 +316,8 @@ class uploadFileView(LoginRequiredMixin, TemplateView):
         if self.typ_vazby == "pas":
             return get_object_or_404(SamostatnyNalez, ident_cely=self.ident)
         elif self.typ_vazby == "dokument":
+            return get_object_or_404(Dokument, ident_cely=self.ident)
+        elif self.typ_vazby == "model3d":
             return get_object_or_404(Dokument, ident_cely=self.ident)
         else:
             return get_object_or_404(Projekt, ident_cely=self.ident)
@@ -705,6 +734,7 @@ class PermissionFilterMixin():
     def filter_by_permission(self, qs, permission):
         filterdoc = {}
         if not permission.base:
+            logger.debug("no base")
             return qs.none()
         if permission.status:
             filterdoc.update(self.add_status_lookup(permission))
@@ -966,3 +996,16 @@ def post_ajax_get_pas_and_pian_limit(request):
             return JsonResponse({"heat": back, "algorithm": "heat","count":len(heats)}, status=200)
         else:
             return JsonResponse({"heat": [], "algorithm": "heat","count":len(heats)}, status=200)
+
+
+def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
+    if typ_vazby == 'model3d' or typ_vazby == 'dokument':
+        soubor = get_object_or_404(Dokument, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
+    elif typ_vazby == 'pas':
+        soubor = get_object_or_404(SamostatnyNalez, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
+    elif typ_vazby == 'projekt':
+        soubor = get_object_or_404(Projekt, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
+    if soubor.count() > 0:
+        return True
+    else:
+        raise ZaznamSouborNotmatching

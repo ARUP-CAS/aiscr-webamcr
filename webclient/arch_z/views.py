@@ -468,7 +468,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
     
 
 
-class AdbCreateView(DokumentacniJednotkaRelatedUpdateView):
+class AdbCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
     """
     Třida pohledu pro vytvoření PIANu dokumentační jednotky.
     """
@@ -1132,6 +1132,7 @@ def post_ajax_get_pians_limit(request):
             return JsonResponse({"heat": [], "algorithm": "heat"}, status=200)
 
 
+@login_required
 @require_http_methods(["POST"])
 def post_akce2kat(request):
     """
@@ -1300,29 +1301,32 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
     response = redirect(next_url)
     return response
 
+    
+class GetAkceOtherKatastrView(LoginRequiredMixin, View, PermissionFilterMixin):
+    typ_zmeny_lookup = ZAPSANI_AZ
 
-@login_required
-@require_http_methods(["POST"])
-def post_ajax_get_akce_other_katastr(request):
-    """
-    Funkce pohledu pro získaní souradnic dalších katastrů akce.
-    """
-    body = json.loads(request.body.decode("utf-8"))
-    dis = get_all_pians_with_akce(body["akce_ident_cely"])
-    back = []
-    for di in dis:
-        back.append(
-            {
-                # "id": pian.id,
-                "pian_ident_cely": di["pian_ident_cely"],
-                "pian_geom": di["pian_geom"].replace(", ", ","),
-                "dj": di["dj"],
-                "dj_katastr": di["dj_katastr"],
-            }
-        )
-    if len(dis) > 0:
-        return JsonResponse({"points": back}, status=200)
-    else:
+    def post(self, request):
+        """
+        Trida pohledu pro získaní souradnic dalších katastrů akce.
+        """
+        body = json.loads(request.body.decode("utf-8"))
+        arch_zaznam = ArcheologickyZaznam.objects.filter(ident_cely=body["akce_ident_cely"])
+        back = []
+
+        if self.check_filter_permission(arch_zaznam).count() > 0:
+            dis = get_all_pians_with_akce(body["akce_ident_cely"])
+            for di in dis:
+                back.append(
+                    {
+                        # "id": pian.id,
+                        "pian_ident_cely": di["pian_ident_cely"],
+                        "pian_geom": di["pian_geom"].replace(", ", ","),
+                        "dj": di["dj"],
+                        "dj_katastr": di["dj_katastr"],
+                    }
+                )
+            if len(dis) > 0:
+                return JsonResponse({"points": back}, status=200)
         return JsonResponse({"points": []}, status=200)
 
 

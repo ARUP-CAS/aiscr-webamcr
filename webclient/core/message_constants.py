@@ -17,6 +17,7 @@ MAXIMUM_IDENT_DOSAZEN: Final = _("common.message.MAXIMUM_IDENT_DOSAZEN.text")  #
 MAXIMUM_AKCII_DOSAZENO: Final = _("common.message.MAXIMUM_AKCI_DOSAZENO.text")  # Byl překročen limit akcí pro jeden projekt.
 MAXIMUM_DJ_DOSAZENO: Final = _("common.message.MAXIMUM_DJ_DOSAZENO.text")  # Byl překročen limit dokumentačních jednotek pro jednu akci.
 MAXIMUM_KOMPONENT_DOSAZENO: Final = _("common.message.MAXIMUM_KOMPONENT_DOSAZENO.text")  # Byl překročen limit komponent pro dokumentační jednotky.
+SPATNY_ZAZNAM_ZAZNAM_VAZBA: Final = _("common.message.SPATNY_ZAZNAM_ZAZNAM_VAZBA.text")
 
 # Projekt
 PROJEKT_USPESNE_PRIHLASEN: Final = _("common.message.PROJEKT_USPESNE_PRIHLASEN.text")  # Projekt byl úspěšně přihlášen.
@@ -33,6 +34,8 @@ PROJEKT_NELZE_ARCHIVOVAT: Final = _("common.message.PROJEKT_NELZE_ARCHIVOVAT.tex
 PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI: Final = _("common.message.PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI.text")  # Projekt nelze navrhnout ke zrušení. Nesmí mít žádné akce.
 PROJEKT_NELZE_SMAZAT: Final = _("common.message.PROJEKT_NELZE_SMAZAT.text")  # Projekt nelze smazat.
 PROJEKT_NEKDO_ZMENIL_STAV: Final = _("core.message_constants.projektZmenaStavuNekymJinym.text")
+PROJEKT_NENI_TYP_PRUZKUMNY: Final = _("common.message.PROJEKT_NENI_TYP_PRUZKUMNY.text")
+PROJEKT_NENI_TYP_ZACHRANNY: Final = _("common.message.PROJEKT_NENI_TYP_ZACHRANNY.text")
 
 AKCE_USPESNE_ZAPSANA: Final = _("common.message.AKCE_USPESNE_ZAPSANA.text")  # Akce úspěšně zapsána.
 AKCE_USPESNE_ODESLANA: Final = _("common.message.AKCE_USPESNE_ODESLANA.text")  # Akce úspěšně odeslána.

@@ -443,6 +443,9 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
                 "cast_ident_cely": self.ident_cely,
             },
         )
+    
+    def get_permission_object(self):
+        return self.dokument.get_permission_object()
 
 
 class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):

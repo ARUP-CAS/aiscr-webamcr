@@ -51,6 +51,8 @@ from core.message_constants import (
     PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI,
     PROJEKT_NELZE_SMAZAT,
     PROJEKT_NELZE_UZAVRIT,
+    PROJEKT_NENI_TYP_PRUZKUMNY,
+    PROJEKT_NENI_TYP_ZACHRANNY, 
     PROJEKT_USPESNE_ARCHIVOVAN,
     PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI,
     PROJEKT_USPESNE_PRIHLASEN,
@@ -188,6 +190,7 @@ def post_ajax_get_projects_limit(request):
         body["p3"],
         body["p46"],
         body["p78"],
+        request,
     )
     logger.debug("projekt.views.post_ajax_get_projects_limit.num", extra={"num": num})
     if num < 5000:
@@ -201,6 +204,7 @@ def post_ajax_get_projects_limit(request):
             body["p3"],
             body["p46"],
             body["p78"],
+            request,
         )
         back = []
         for pian in pians:
@@ -290,8 +294,10 @@ class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PermissionFilterMixin
             body["southEast"]["lat"],
             body["projekt_ident_cely"],
         )
-        if pians:
+        if pians.count() > 0:
+            logger.debug("Query before permission filter: %s", pians)
             pians = self.check_filter_permission(pians)
+            logger.debug("Query after permission filter: %s", pians)
         back = []
         for pian in pians:
             back.append(
@@ -322,9 +328,9 @@ class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilter
             body["southEast"]["lat"],
             body["projekt_ident_cely"],
         )
-        logger.debug(queries)
+        logger.debug("Query before permission filter: %s", queries)
         queries = self.check_filter_permission(queries)
-        logger.debug(queries)
+        logger.debug("Query after permission filter: %s", queries)
         back = []
         back_ident_cely = []
         for pian in queries:
@@ -732,7 +738,7 @@ def prihlasit(request, ident_cely):
         else:
             logger.debug("projekt.views.prihlasit.form_not_valid", extra={"errors": form.errors})
     else:
-        archivar = True if request.user.hlavni_role.id == ROLE_ARCHIVAR_ID else False
+        archivar = not request.user.is_archiver_or_more
         form = PrihlaseniProjektForm(
             instance=projekt,
             initial={"organizace": request.user.organizace, "old_stav": projekt.stav},
@@ -1236,8 +1242,12 @@ def odpojit_dokument(request, ident_cely, proj_ident_cely):
     """
     Funkce pohledu pro odpojení dokumentu z projektu pomoci modalu.
     """
-    projekt = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
-    return odpojit(request, ident_cely, proj_ident_cely, projekt)
+    proj = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
+    if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
+        logger.debug("Projekt neni typu pruzkumny")
+        messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_PRUZKUMNY)
+        return redirect(proj.get_absolute_url())
+    return odpojit(request, ident_cely, proj_ident_cely, proj)
 
 
 @login_required
@@ -1246,6 +1256,12 @@ def pripojit_dokument(request, proj_ident_cely):
     """
     Funkce pohledu pro pripojení dokumentu z projektu pomoci modalu.
     """
+    proj = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
+    if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
+        logger.debug("Projekt neni typu pruzkumny")
+        messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_PRUZKUMNY)
+        return redirect(proj.get_absolute_url())
+
     return pripojit(request, proj_ident_cely, None, Projekt)
 
 
@@ -1256,6 +1272,10 @@ def generovat_oznameni(request, ident_cely):
     Funkce pohledu pro generování oznámení projektu pomoci modalu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
+        logger.debug("Projekt neni typu pruzkumny")
+        messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
+        return redirect(projekt.get_absolute_url())
     projekt.create_confirmation_document(additional=True, user=request.user)
     if projekt.ident_cely[0] == OBLAST_CECHY:
         Mailer.send_ep01a(project=projekt)
@@ -1286,6 +1306,10 @@ def generovat_expertni_list(request, ident_cely):
     """
     popup_parametry = request.POST
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
+        logger.debug("Projekt neni typu pruzkumny")
+        messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
+        return redirect(projekt.get_absolute_url())
     output = projekt.create_expert_list(popup_parametry)
     response = StreamingHttpResponse(output, content_type="text/rtf")
     response['Content-Disposition'] = f'attachment; filename="expertni_list_{ident_cely}.rtf"'
@@ -1353,12 +1377,12 @@ def get_detail_template_shows(projekt, user):
                 show_oznamovatel = True
             elif (
                 projekt.stav in [PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU] 
-                and projekt.pristupnost.razeni >= Heslar.objects.get(id=user.hlavni_role.id).razeni
+                and projekt.organizace == user.organizace
                 ):
                 show_oznamovatel = True
             elif (
                 projekt.stav == PROJEKT_STAV_UZAVRENY
-                and projekt.pristupnost.razeni >= Heslar.objects.get(id=user.hlavni_role.id).razeni
+                and projekt.organizace == user.organizace
                 ):
                 last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
                 if last_uzavreni and last_uzavreni["datum"] >= datetime.now(last_uzavreni["datum"].tzinfo) - timedelta(days=90):

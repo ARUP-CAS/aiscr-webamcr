@@ -1,5 +1,7 @@
 import logging
 import os
+from typing import Any
+from django import http
 import simplejson as json
 
 from django.db.models.signals import post_save
@@ -43,6 +45,8 @@ from core.message_constants import (
     DOKUMENT_USPESNE_VRACEN,
     MAXIMUM_IDENT_DOSAZEN,
     PRISTUP_ZAKAZAN,
+    PROJEKT_NENI_TYP_PRUZKUMNY,
+    SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     VYBERTE_PROSIM_POLOHU,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
@@ -108,6 +112,7 @@ from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     PRISTUPNOST_BADATEL_ID,
+    TYP_PROJEKTU_PRUZKUM_ID,
 )
 from heslar.models import Heslar, HeslarHierarchie
 from heslar.views import heslar_12
@@ -598,6 +603,7 @@ class KomponentaDokumentDetailView(RelatedContext):
             komponenta, context["show"], old_nalez_post, komp_ident_cely
         )
         context["active_komp_ident"] = komponenta.ident_cely
+        context["show"]["komponenta_smazat"] = check_permissions(p.actionChoices.komponenta_dok_smazat, self.request.user, context["dokument"].ident_cely)
         return context
 
 
@@ -656,6 +662,16 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
     title = _("dokument.views.TvarSmazatView.title.text")
     id_tag = "smazat-tvar-form"
     button = _("dokument.views.TvarSmazatView.submitButton.text")
+
+    def dispatch(self, request, *args: Any, **kwargs: Any) -> HttpResponse:
+        tvar = self.get_zaznam()
+        if tvar.dokument.ident_cely != self.kwargs.get("ident_cely"):
+            logger.debug("tvat a dokument nemaji vazbu")
+            messages.add_message(
+                            request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                        )
+            return redirect(tvar.dokument.get_absolute_url())
+        return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
         id = self.kwargs.get("pk")
@@ -1178,12 +1194,16 @@ def zapsat_do_akce(request, arch_z_ident_cely):
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     return zapsat(request, zaznam)
 
-
+@login_required
 def zapsat_do_projektu(request, proj_ident_cely):
     """
     Funkce pohledu pro zapsání dokumentu do projektu.
     """
     zaznam = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
+    if zaznam.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
+        logger.debug("Projekt neni typu pruzkumny")
+        messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_PRUZKUMNY)
+        return redirect(zaznam.get_absolute_url())
     return zapsat(request, zaznam)
 
 
@@ -1513,7 +1533,7 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
-        qs = Dokument.objects.all()
+        qs = Dokument.objects.exclude(ident_cely__contains=Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D).zkratka)
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
         return self.check_filter_permission(qs)
@@ -1528,8 +1548,7 @@ class DokumentAutocompleteBezZapsanych(DokumentAutocomplete, PermissionFilterMix
     def get_queryset(self):
         qs = super(DokumentAutocompleteBezZapsanych, self).get_queryset()
         qs = (
-            qs.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY))
-            .annotate(ident_len=Length("ident_cely"))
+            qs.annotate(ident_len=Length("ident_cely"))
             .filter(ident_len__gt=0)
         )
         return self.check_filter_permission(qs)
@@ -1571,13 +1590,13 @@ def get_detail_template_shows(dokument,user):
     """
     if "3D" in dokument.ident_cely:
         show_edit = check_permissions(p.actionChoices.model_edit, user, dokument.ident_cely)
-        soubor_stahnout_dokument = check_permissions(p.actionChoices.soubor_stahnout_model3d, user, dokument.ident_cely),
-        soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_model3d, user, dokument.ident_cely),
+        soubor_stahnout_dokument = check_permissions(p.actionChoices.soubor_stahnout_model3d, user, dokument.ident_cely)
+        soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_model3d, user, dokument.ident_cely)
         soubor_nahradit = False
     else:
         show_edit = check_permissions(p.actionChoices.dok_edit, user, dokument.ident_cely)
-        soubor_stahnout_dokument = check_permissions(p.actionChoices.soubor_stahnout_dokument, user, dokument.ident_cely),
-        soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_dokument, user, dokument.ident_cely),  
+        soubor_stahnout_dokument = check_permissions(p.actionChoices.soubor_stahnout_dokument, user, dokument.ident_cely)
+        soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_dokument, user, dokument.ident_cely)
         soubor_nahradit = check_permissions(p.actionChoices.soubor_nahradit_dokument, user, dokument.ident_cely)
     show_arch_links = dokument.stav == D_STAV_ARCHIVOVANY
     show_tvary = True if dokument.rada.zkratka in ["LD", "LN", "DL"] else False
@@ -1586,6 +1605,7 @@ def get_detail_template_shows(dokument,user):
         "odeslat_link": check_permissions(p.actionChoices.dok_odeslat, user, dokument.ident_cely),
         "archivovat_link": check_permissions(p.actionChoices.dok_archivovat, user, dokument.ident_cely),
         "editovat": show_edit,
+        "smazat": check_permissions(p.actionChoices.dok_smazat, user, dokument.ident_cely),
         "arch_links": show_arch_links,
         "tvary": show_tvary,
         "tvary_edit": show_tvary and check_permissions(p.actionChoices.dok_tvary_edit, user, dokument.ident_cely),
@@ -1599,7 +1619,7 @@ def get_detail_template_shows(dokument,user):
     }
     return show
 
-
+@login_required
 def zapsat(request, zaznam=None):
     """
     Funkce pohledu pro zapsání dokumentu.
@@ -2031,6 +2051,7 @@ def post_ajax_get_3d_limit(request):
         body["northWest"]["lat"],
         body["northWest"]["lng"],
         body["southEast"]["lat"],
+        request,
     )
     back = []
     for pian in pians:

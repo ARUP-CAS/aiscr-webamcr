@@ -20,6 +20,7 @@ from django.utils.html import format_html
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from heslar.models import RuianKatastr
 from pian.models import Pian
+from core.constants import ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
 
 logger = logging.getLogger(__name__)
 
@@ -423,7 +424,7 @@ def get_project_geom(ident_cely):
         return None
 
 
-def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78):
+def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78, request):
     """
     Funkce pro získaní počtu projektů ze čtverce.
     Bez pristupnosti
@@ -431,6 +432,7 @@ def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p7
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
     from projekt.models import Projekt
+    from core.views import PermissionFilterMixin
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
@@ -446,8 +448,13 @@ def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p7
         stavy.append(7)
         stavy.append(8)
     queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy)).count()
+
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_PROJ
+
     try:
-        return queryset
+        return perm_object.check_filter_permission(queryset)
     except IndexError:
         logger.debug(
             "core.utils.get_num_projects_from_envelope.no_points",
@@ -456,7 +463,7 @@ def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p7
         return None
 
 
-def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78):
+def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78, request):
     """
     Funkce pro získaní projektů ze čtverce.
     Bez pristupnosti
@@ -464,6 +471,7 @@ def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78):
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
     from projekt.models import Projekt
+    from core.views import PermissionFilterMixin
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
@@ -479,8 +487,13 @@ def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78):
         stavy.append(7)
         stavy.append(8)
     queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy))
+
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_PROJ
+
     try:
-        return queryset.only("id", "ident_cely", "geom", "stav")
+        return perm_object.check_filter_permission(queryset).only("id", "ident_cely", "geom", "stav")
     except IndexError:
         logger.debug(
             "core.utils.get_projects_from_envelope.no_points",
@@ -554,7 +567,7 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
         return None
 
 
-def get_3d_from_envelope(left, bottom, right, top):
+def get_3d_from_envelope(left, bottom, right, top,request):
     """
     Funkce pro získaní 3d ze čtverce.
     Bez pristupnosti
@@ -562,12 +575,17 @@ def get_3d_from_envelope(left, bottom, right, top):
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
     from dokument.models import DokumentExtraData
+    from core.views import PermissionFilterMixin
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
     queryset = DokumentExtraData.objects.filter(c1).filter(c2)
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_DOK
+
     try:
-        return queryset.values("dokument__id", "dokument__ident_cely", "geom")
+        return perm_object.check_filter_permission(queryset).values("dokument__id", "dokument__ident_cely", "geom")
     except IndexError:
         logger.debug(
             "core.utils.get_3d_from_envelope.no_points",
@@ -593,8 +611,10 @@ def get_num_pass_from_envelope(left, bottom, right, top, request):
     queryset = SamostatnyNalez.objects.filter(c1).filter(c2)
     perm_object = PermissionFilterMixin()
     perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_SN
+
     try:
-        return perm_object.check_filter_permission(queryset, p.actionChoices.pas_mapa_pas).count()
+        return perm_object.check_filter_permission(queryset, p.actionChoices.mapa_pas).count()
     except IndexError:
         logger.debug(
             "core.utils.get_num_pas_from_envelope.no_points",
@@ -620,9 +640,10 @@ def get_pas_from_envelope(left, bottom, right, top, request):
     queryset = SamostatnyNalez.objects.filter(c2).filter(c1)
     perm_object = PermissionFilterMixin()
     perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_SN
 
     try:
-        return perm_object.check_filter_permission(queryset, p.actionChoices.pas_mapa_pas).only("id", "ident_cely", "geom")
+        return perm_object.check_filter_permission(queryset, p.actionChoices.mapa_pas).only("id", "ident_cely", "geom")
     except IndexError:
         logger.debug(
             "core.utils.get__pas_from_envelope.no_points",
@@ -640,18 +661,18 @@ def get_num_pian_from_envelope(left, bottom, right, top, request):
     from dj.models import DokumentacniJednotka
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
-    from core.views import PermissionFilterMixin
+    from pian.views import PianPermissionFilterMixin
     from core.models import Permissions as p
 
     queryset = DokumentacniJednotka.objects.filter(
         Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom]))
         | Q(pian__geom__intersects=Polygon.from_bbox([right, top, left, bottom]))
     )
-    perm_object = PermissionFilterMixin()
+    perm_object = PianPermissionFilterMixin()
     perm_object.request = request
 
     try:
-        return perm_object.check_filter_permission(queryset, p.actionChoices.pas_mapa_pian).count()
+        return perm_object.check_filter_permission(queryset, p.actionChoices.mapa_pian).count()
     except IndexError:
         logger.debug(
             "core.utils.get_num_pian_from_envelope.no_points",
@@ -670,7 +691,7 @@ def get_pian_from_envelope(left, bottom, right, top, request):
     from django.contrib.gis.db.models.functions import Centroid
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
-    from core.views import PermissionFilterMixin
+    from pian.views import PianPermissionFilterMixin
     from core.models import Permissions as p
 
     queryset = (
@@ -681,11 +702,11 @@ def get_pian_from_envelope(left, bottom, right, top, request):
         .annotate(pian__centroid=Centroid("pian__geom"))
         .distinct()
     )
-    perm_object = PermissionFilterMixin()
+    perm_object = PianPermissionFilterMixin()
     perm_object.request = request
 
     try:
-        return perm_object.check_filter_permission(queryset, p.actionChoices.pas_mapa_pian)[:10000].values(
+        return perm_object.check_filter_permission(queryset, p.actionChoices.mapa_pian)[:10000].values(
             "pian__id",
             "pian__ident_cely",
             "pian__geom",
@@ -700,14 +721,20 @@ def get_pian_from_envelope(left, bottom, right, top, request):
         )
         return None
 
-def get_dj_akce_for_pian(pian_ident_cely):
+def get_dj_akce_for_pian(pian_ident_cely,request):
     """
     Funkce pro pro ziskani dj/akce pro pian_ident_cely
     """
     from django.db.models import Q
+    from core.views import PermissionFilterMixin
     queryset = DokumentacniJednotka.objects.filter(Q(pian__geom__isnull=False)).filter(Q(pian__ident_cely=pian_ident_cely))
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_AZ
+    arch_zaznamy = ArcheologickyZaznam.objects.filter(dokumentacni_jednotky_akce__in=queryset)
+
     try:
-        return queryset.values("ident_cely", "archeologicky_zaznam__ident_cely")
+        return queryset.filter(archeologicky_zaznam__in=perm_object.check_filter_permission(arch_zaznamy)).values("ident_cely", "archeologicky_zaznam__ident_cely")
     except IndexError:
         logger.debug(
             "core.utils.get_dj_akce_for_pian.no_records",

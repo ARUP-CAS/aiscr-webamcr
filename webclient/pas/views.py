@@ -27,6 +27,7 @@ from core.message_constants import (
     FORM_NOT_VALID,
     MAXIMUM_IDENT_DOSAZEN,
     PRISTUP_ZAKAZAN,
+    PROJEKT_NENI_TYP_PRUZKUMNY,
     SAMOSTATNY_NALEZ_ARCHIVOVAN,
     SAMOSTATNY_NALEZ_NELZE_ODESLAT,
     SAMOSTATNY_NALEZ_ODESLAN,
@@ -62,7 +63,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.forms import CoordinatesDokumentForm
-from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID, TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
@@ -72,6 +73,7 @@ from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from services.mailer import Mailer
 from uzivatel.models import Organizace, User
 from core.models import Permissions as p, check_permissions
+from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
 
@@ -164,6 +166,11 @@ def create(request, ident_cely=None):
             logger.info("pas.views.create.form_invalid", extra={"errors": form.errors})
             messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
     else:
+        proj = get_object_or_404(Projekt, ident_cely=ident_cely)
+        if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
+            logger.debug("Projekt neni typu pruzkumny")
+            messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_PRUZKUMNY)
+            return redirect(proj.get_absolute_url())
         form = CreateSamostatnyNalezForm(
             user=request.user,
             required=required_fields,
@@ -571,7 +578,7 @@ def potvrdit(request, ident_cely):
     }
     return render(request, "core/transakce_modal.html", context)
 
-
+@login_required
 def archivovat(request, ident_cely):
     """
     Funkce pohledu pro archivaci samostatného nálezu pomocí modalu.
@@ -1013,6 +1020,7 @@ def get_detail_template_shows(sn, user):
     return show
 
 
+@login_required
 @require_http_methods(["POST"])
 def post_point_position_2_katastre(request):
     """
@@ -1032,6 +1040,7 @@ def post_point_position_2_katastre(request):
         return JsonResponse({"katastr_name": ""}, status=200)
 
 
+@login_required
 @require_http_methods(["POST"])
 def post_point_position_2_katastre_with_geom(request):
     """

@@ -322,7 +322,7 @@ def mapaDj(request, ident_cely):
     """
     logger.debug("pian.views.create.start")
     back=[]
-    for i in get_dj_akce_for_pian(ident_cely):
+    for i in get_dj_akce_for_pian(ident_cely, request):
         logger.debug(i)#G {'ident_cely': 'C-201339492A-D01', 'archeologicky_zaznam__ident_cely': 'C-201339492A'}
         back.append({
             "dj": str(i['ident_cely']),

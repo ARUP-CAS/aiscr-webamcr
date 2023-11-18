@@ -71,14 +71,14 @@
         new Modal(options, elements.item(i).id);
       }
     }
-    if ("{{show.pripojit_dokumenty}}" != "False"){
+    if ("{{show.pripojit_dokumenty}}"){
       var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-dokument-form",
         modalFormID: "#pripojit-dokument-form",
       })
       dokument_pripojit_modal = new Modal(options, "dokument-pripojit");
     };
-    if ("{{show.pripojit_dokumenty}}" != "False" && "{{app}}" != "lokalita"){
+    if ("{{show.pripojit_dokumenty}}" && "{{app}}" != "lokalita"){
       var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-dokument-form",
         modalFormID: "#pripojit-dokument-form",
