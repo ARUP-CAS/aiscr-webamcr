@@ -2,6 +2,7 @@ Dropzone.autoDiscover = false;
 
 const UploadResultsEnum = {
     success: 0,
+    error: 2,
 }
 
 const show_upload_successful_message = (file, result = UploadResultsEnum.success, message = "") => {
@@ -18,7 +19,7 @@ const show_upload_successful_message = (file, result = UploadResultsEnum.success
         if (result === UploadResultsEnum.success) {
             alert_element.textContent = [dz_trans["alertsImportPianUploadSuccesfull"]];
         } else {
-            alert_element.textContent = [dz_trans["alertsImportPianUploadError"]];
+            alert_element.textContent = [dz_trans["alertsImportPianUploadError"]] + " " + message;
         } 
         const button_element = document.createElement("button");
         button_element.setAttribute('type', 'button');
@@ -81,7 +82,7 @@ window.onload = function () {
         },
         error: function (file, response) {
             console.log(response);
-            show_upload_successful_message(file, UploadResultsEnum.error);
+            show_upload_successful_message(file, UploadResultsEnum.error, response);
             this.removeFile(file);
 
         },

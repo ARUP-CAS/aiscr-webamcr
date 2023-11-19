@@ -43,3 +43,10 @@
     }
   }
 }
+
+.app-modal-importovat-pian {
+  .modal-body-table{
+    max-height: calc(100vh - 3.5rem - 180px);
+    overflow-y: auto;
+  }
+}
