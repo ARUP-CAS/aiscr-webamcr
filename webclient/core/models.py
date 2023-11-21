@@ -395,8 +395,11 @@ class Permissions(models.Model):
         lokalita_edit = "lokalita_edit", _("core.models.permissions.actionChoices.lokalita_edit")
         komponenta_archz_detail = "komponenta_archz_detail", _("core.models.permissions.actionChoices.komponenta_archz_detail")
         komponenta_archz_smazat = "komponenta_archz_smazat", _("core.models.permissions.actionChoices.komponenta_archz_smazat")
+        komponenta_dok_smazat = "komponenta_dok_smazat", _("core.models.permissions.actionChoices.komponenta_dok_smazat")
         nalez_smazat_dokument = "nalez_smazat_dokument", _("core.models.permissions.actionChoices.nalez_smazat_dokument")
         nalez_smazat_akce = "nalez_smazat_akce", _("core.models.permissions.actionChoices.nalez_smazat_akce")
+        nalez_edit_dokument = "nalez_edit_dokument" , _("core.models.permissions.actionChoices.nalez_edit_dokument")
+        nalez_edit_akce = "nalez_edit_akce" , _("core.models.permissions.actionChoices.nalez_edit_akce")
         pas_edit = "pas_edit" , _("core.models.permissions.actionChoices.pas_edit")
         pas_archivovat = "pas_archivovat" , _("core.models.permissions.actionChoices.pas_archivovat")
         pas_odeslat = "pas_odeslat" , _("core.models.permissions.actionChoices.pas_odeslat")
@@ -405,8 +408,8 @@ class Permissions(models.Model):
         pas_smazat = "pas_smazat" , _("core.models.permissions.actionChoices.pas_smazat")
         pas_ulozeni_edit = "pas_ulozeni_edit", _("core.models.permissions.actionChoices.pas_ulozeni_edit")
         pas_zapsat_do_projektu = "pas_zapsat_do_projektu", _("core.models.permissions.actionChoices.pas_zapsat_do_projektu")
-        pas_mapa_pas = "pas_mapa_pas", _("core.models.permissions.actionChoices.pas_mapa_pas")
-        pas_mapa_pian = "pas_mapa_pian", _("core.models.permissions.actionChoices.pas_mapa_pian")
+        mapa_pas = "mapa_pas", _("core.models.permissions.actionChoices.mapa_pas")
+        mapa_pian = "mapa_pian", _("core.models.permissions.actionChoices.mapa_pian")
         pian_potvrdit = "pian_potvrdit", _("core.models.permissions.actionChoices.pian_potvrdit")
         pian_odpojit = "pian_odpojit", _("core.models.permissions.actionChoices.pian_odpojit")
         pian_zapsat = "pian_zapsat", _("core.models.permissions.actionChoices.pian_zapsat")
@@ -506,7 +509,7 @@ class Permissions(models.Model):
         self.logged_in_user = user
         self.permission_object = None
         self.ident = ident
-        perm_check = False
+        perm_check = True
         if not self.check_base():
             logger.debug("base false")
             return False
@@ -557,8 +560,8 @@ class Permissions(models.Model):
         if ownership:
             if not self.permission_object:
                 self.get_permission_object()
-                if self.permission_object == "error":
-                    return True
+            if self.permission_object == "error":
+                return True
             if self.permission_object.get_create_user() and self.permission_object.get_create_user() == self.logged_in_user:
                 return True
             if ownership == self.ownershipChoices.our:
@@ -588,8 +591,19 @@ class Permissions(models.Model):
             if self.permission_object == "error":
                 return True
         perm_skips = list(PermissionsSkip.objects.filter(user=self.logged_in_user).values_list("ident_list",flat=True))
-        if len(perm_skips) > 0 and self.permission_object.ident_cely in perm_skips[0].split(","):
-            return True
+        if len(perm_skips) > 0:
+            try:
+                id =  self.permission_object.ident_cely
+            except Exception as e:
+                logger.debug(e)
+                try:
+                    id =  self.permission_object.id
+                except Exception as e:
+                    logger.debug(e)
+                    id = None
+            finally:
+                if id in perm_skips[0].split(","):
+                    return True
         return False
 
     def get_permission_object(self):

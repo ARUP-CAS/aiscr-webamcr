@@ -58,3 +58,7 @@ class MaximalEventCount(Exception):
 class WrongCSVError(Exception):
     def __init__(self, message="CSV nema spravne sloupce"):
         self.message = message
+
+class ZaznamSouborNotmatching(Exception):
+    def __init__(self, message="Zaznam nema dany soubor"):
+        self.message = message

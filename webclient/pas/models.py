@@ -280,7 +280,11 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return self
     
     def get_create_user(self):
-        return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_SN)[0].uzivatel
+        try:
+            return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_SN)[0].uzivatel
+        except Exception as e:
+            logger.debug(e)
+            return None
     
     def get_create_org(self):
         return self.projekt.organizace

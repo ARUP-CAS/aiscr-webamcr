@@ -8,15 +8,15 @@
     <th scope="col">{% trans "core.templates.filetable.columnHeader.nazev.label" %}</th>
     <th scope="col">{% trans "core.templates.filetable.columnHeader.typ.label" %}</th>
     <th scope="col">{% trans "core.templates.filetable.columnHeader.velikost.label" %}</th>
-    <th scope="col">{% trans "core.templates.filetable.columnHeader.Rozsah.label" %}</th>
+    <th scope="col">{% trans "core.templates.filetable.columnHeader.Rozsah.label" %} {{show.soubor_stahnout}}</th>
     {% if show.soubor_smazat %}
       <th scope="col">{% trans "core.templates.filetable.columnHeader.smazat.label" %}</th>
     {% endif %}
-    {% if allow_replace and soubor_nahradit %}
+    {% if allow_replace and show.soubor_nahradit %}
         <th scope="col">{% trans "core.templates.filetable.columnHeader.nahradit.label" %}</th>
     {% endif %}
     {% if show.soubor_stahnout %}
-    <th scope="col">{% trans "core.templates.filetable.columnHeader.stahnout.label" %}</th>
+      <th scope="col">{% trans "core.templates.filetable.columnHeader.stahnout.label" %}</th>
     {% endif %}
     <th scope="col">{% trans "core.templates.filetable.columnHeader.historie.label" %}</th>
   </tr>
@@ -33,21 +33,21 @@
       <td>{{ soubor.mimetype }}</td>
       <td>{{ soubor.size_mb|floatformat:3 }} MB</td>
       <td>{{ soubor.rozsah|check_if_none }}</td>
-      {% if show %}
+      {% if show.soubor_smazat %}
         <td>
           <button id="file-smazat-{{soubor.id}}" class="file-smazat-btn" type="button" name="button" href="{% url 'core:delete_file' vazba_trida ident soubor.id %}?next={{ next_url }}{{ ident }}">
             <span class="material-icons app-color-danger">delete_forever</span>
           </button>
         </td>
-        {% if allow_replace %}
+      {% endif %}
+      {% if allow_replace and show.soubor_nahradit %}
           <td>
             <a href="{% url 'core:update_file' vazba_trida ident soubor.id %}?next={{ next_url }}{{ ident }}">
               <span class="material-icons app-color-danger">upgrade</span>
             </a>
           </td>
-        {% endif %}
       {% endif %}
-      {% if show.soubor_stahnout_dokument %}
+      {% if show.soubor_stahnout %}
       <td>
         <a href="{% url 'core:download_file' vazba_trida ident soubor.id %}" target="_blank">
           <span class="material-icons">get_app</span>

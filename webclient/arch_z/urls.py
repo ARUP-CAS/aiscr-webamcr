@@ -50,7 +50,7 @@ urlpatterns = [
     ),
     path(
         "mapa-dalsi-katastry",
-        views.post_ajax_get_akce_other_katastr,
+        views.GetAkceOtherKatastrView.as_view(),
         name="post_ajax_get_akce_other_katastr",
     ),
     path("akce/vyber", views.AkceListView.as_view(), name="list"),

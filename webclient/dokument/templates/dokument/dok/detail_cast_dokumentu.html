@@ -101,12 +101,13 @@
     <script>
         //modal scripts
         document.addEventListener('DOMContentLoaded', function (event) {
-          if ("{{show.editovat}}" != "False"){
+          if ("{{show_edit_cast}}" != "False"){
             var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
               formID: "edit-cast-form",
               modalFormID: "#edit-cast-form",
             })
             new Modal(options, "button-edit-cast");
+          };
             var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "pripojit-eo-form",
                 modalFormID: "#pripojit-eo-form",
@@ -148,7 +149,7 @@
                   })
                   new Modal(options, "smazat-neident-akce-btn");
               };
-          };
+          
           
           if (document.getElementsByClassName("komponenta-smazat-btn")){
             elements = document.getElementsByClassName("komponenta-smazat-btn")

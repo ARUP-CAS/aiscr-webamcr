@@ -190,10 +190,12 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             if "is_superuser" in form.cleaned_data.keys():
                 if form.cleaned_data["is_superuser"]:
                     obj.is_superuser = True
-                    obj.is_staff = True
                 else:
                     obj.is_superuser = False
-                    obj.is_staff = False
+            if form_groups.filter(id=ROLE_ADMIN_ID).count() == 1:
+                obj.is_staff = True
+            else:
+                obj.is_staff = False
         else:
             obj.is_superuser = False
             obj.is_staff = False

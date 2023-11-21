@@ -77,10 +77,16 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
         ordering = ["ident_cely"]
 
     def get_absolute_url(self):
-        return reverse("arch_z:update-komponenta", args=[self.ident_cely[:-5],self.komponenta_vazby.dokumentacni_jednotka.ident_cely,self.ident_cely])
+        if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
+            return reverse("arch_z:update-komponenta", args=[self.ident_cely[:-5],self.komponenta_vazby.dokumentacni_jednotka.ident_cely,self.ident_cely])
+        else:
+            return reverse("dokument:detail-model-3D", args=[self.ident_cely[:-5]])
     
     def get_permission_object(self):
-        return self.komponenta_vazby.dokumentacni_jednotka.get_permission_object()
+        if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
+            return self.komponenta_vazby.dokumentacni_jednotka.get_permission_object()
+        else:
+            return self.komponenta_vazby.casti_dokumentu.get_permission_object()
     
 
 
