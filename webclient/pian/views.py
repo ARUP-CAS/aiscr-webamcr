@@ -84,7 +84,8 @@ def detail(request, ident_cely):
                 logger.debug("pian.views.detail", extra={"validation_results": validation_results,
                                                          "validation_geom": validation_geom, "key": key})
                 c.execute("COMMIT")
-    except Exception:
+    except Exception as e:
+        logger.debug(e)
         validation_results = PIAN_VALIDACE_VYPNUTA
     finally:
         c.close()
@@ -400,16 +401,19 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
     def post(self, request):
         docfile = request.FILES["file"]
         try:
-            self.sheet = pd.read_csv(docfile, sep=";")
+            self.sheet = pd.read_csv(docfile, sep=",")
         except ValueError as e:
             logger.debug(e)
             return HttpResponseBadRequest()
-        if self.sheet.columns[0] != "label":
-            return HttpResponseBadRequest()
+        if self.sheet.columns[0].lower() != "label":
+            logger.debug("wrong label %s", self.sheet.columns[0].lower())
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongLabel") + " " + self.sheet.columns[0])
         if self.sheet.columns[1] != "epsg":
-            return HttpResponseBadRequest()
+            logger.debug("wrong epsg %s", self.sheet.columns[1].lower())
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongEpsg") + " " + self.sheet.columns[1])
         if self.sheet.columns[2] != "geometry":
-            return HttpResponseBadRequest()
+            logger.debug("wrong geomtery %s", self.sheet.columns[2].lower())
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongGeometry") + " " + self.sheet.columns[2])
         self.sheet["result"] = self.sheet.apply(self.check_save_row, axis=1)
         context = self.get_context_data()
         context["table"] = self.sheet
@@ -431,21 +435,15 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
             return _("pian.views.importovatPianView.check.notUniquelabel")
         if not self.check_geometry(row[2]):
             return _("pian.views.importovatPianView.check.wrongGeometry")
-        if not self.check_epsg(row[2]):
+        if not self.check_epsg(row[1]):
             return _("pian.views.importovatPianView.check.wrongEpsg")
         else:
             return True
     
     def check_geometry(self, geometry):
         # @jiribartos kontrola geometrie
-        if not file_validate_geometry(geometry)[0]:
-            return False
-        else:
-            return True
+        return file_validate_geometry(geometry)[0]
         
     def check_epsg(self, epsg):
         # @jiribartos kontrola geometrie
-        if not file_validate_epsg(epsg)[0]:
-            return False
-        else:
-            return True
+        return file_validate_epsg(epsg)
