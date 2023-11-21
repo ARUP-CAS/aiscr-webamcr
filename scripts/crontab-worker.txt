@@ -1,0 +1,2 @@
+* * * * * python3 /code/manage.py runcrons "cron.notifications.Notifications" --settings=webclient.settings.production
+* * * * */10 celery multi restart 1
