@@ -8,9 +8,11 @@ from django_tables2 import SingleTableMixin
 from simple_history.models import HistoricalRecords
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
+from dokument.models import Dokument
 from historie.models import Historie
 from historie.tables import HistorieTable, SimpleHistoryTable
 from core.models import Soubor
+from pas.models import SamostatnyNalez
 
 from projekt.models import Projekt
 from core.views import ExportMixinDate
@@ -182,6 +184,19 @@ class SouborHistorieListView(HistorieListView):
             context["projekt"] = soubor.vazba.projekt_souboru
         except Projekt.DoesNotExist:
             context["projekt"] = None
+        back_ident = None
+        back_model = None
+        if soubor.vazba and soubor.vazba.navazany_objekt:
+            navazany_objekt = soubor.vazba.navazany_objekt
+            back_ident = navazany_objekt.ident_cely
+            if isinstance(navazany_objekt, Projekt):
+                back_model = "Projekt"
+            elif isinstance(navazany_objekt, Dokument):
+                back_model = "Dokument"
+            elif isinstance(navazany_objekt, SamostatnyNalez):
+                back_model = "SamostatnyNalez"
+        context["back_ident"] = back_ident
+        context["back_model"] = back_model
         return context
 
     def get_queryset(self):
