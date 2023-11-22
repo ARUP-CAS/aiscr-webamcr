@@ -166,11 +166,12 @@ def create(request, ident_cely=None):
             logger.info("pas.views.create.form_invalid", extra={"errors": form.errors})
             messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
     else:
-        proj = get_object_or_404(Projekt, ident_cely=ident_cely)
-        if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
-            logger.debug("Projekt neni typu pruzkumny")
-            messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_PRUZKUMNY)
-            return redirect(proj.get_absolute_url())
+        if ident_cely:
+            proj = get_object_or_404(Projekt, ident_cely=ident_cely)
+            if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
+                logger.debug("Projekt neni typu pruzkumny")
+                messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_PRUZKUMNY)
+                return redirect(proj.get_absolute_url())
         form = CreateSamostatnyNalezForm(
             user=request.user,
             required=required_fields,

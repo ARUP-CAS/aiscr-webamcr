@@ -1158,6 +1158,7 @@ def edit_model_3D(request, ident_cely):
                 request,
                 "dokument/create_model_3D.html",
                 {
+                    "object": dokument,
                     "coordinate_x": geom.split(" ")[1],
                     "coordinate_y": geom.split(" ")[0],
                     "global_map_can_edit": True,
@@ -1174,6 +1175,7 @@ def edit_model_3D(request, ident_cely):
         request,
         "dokument/create_model_3D.html",
         {
+            "object": dokument,
             "global_map_can_edit": True,
             "formDokument": form_d,
             "formExtraData": form_extra,
@@ -1694,18 +1696,21 @@ def zapsat(request, zaznam=None):
             required=required_fields,
             required_next=required_fields_next,
         )
+    back_ident = None
+    back_model = None
     if zaznam:
         if isinstance(zaznam, ArcheologickyZaznam):
             back_ident = zaznam.ident_cely
-        else:
-            back_ident = None
-    else:
-        back_ident = None
+            back_model = "ArcheologickyZaznam"
+        elif isinstance(zaznam, Projekt):
+            back_ident = zaznam.ident_cely
+            back_model = "Projekt"
     return render(
         request,
         "dokument/create.html",
         {
             "back_ident": back_ident,
+            "back_model": back_model,
             "zaznam": zaznam,
             "TYP_ZAZNAMU_LOKALITA": ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
             "TYP_ZAZNAMU_AKCE": ArcheologickyZaznam.TYP_ZAZNAMU_AKCE,

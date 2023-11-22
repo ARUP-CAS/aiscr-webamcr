@@ -137,8 +137,18 @@
           <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'pas:spoluprace_list' %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
         {% elif typ == "ext_zdroj" %}
           <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'ez:detail' ident_cely %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+        {% elif typ == "lokalita" %}
+          <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'lokalita:detail' ident_cely %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
         {% elif typ == "soubor" %}
-
+          {% if back_model %}
+            {% if back_model == "Projekt" %}
+              <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'projekt:detail' back_ident %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+            {% elif back_model == "Dokument" %}
+              <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'dokument:detail' back_ident %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+            {% elif back_model == "SamostatnyNalez" %}
+              <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'pas:detail' back_ident %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+            {% endif %}
+          {% endif %}
         {% elif typ == "uzivatel" %}
 
         {% endif %}
