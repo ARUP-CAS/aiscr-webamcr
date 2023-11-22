@@ -388,6 +388,11 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         except Exception as e:
             logger.debug(e)
             return None
+        
+    @property
+    def thumbnail_image(self):
+        if self.soubory.soubory.count() > 0:
+            return self.soubory.soubory.first().pk
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     """

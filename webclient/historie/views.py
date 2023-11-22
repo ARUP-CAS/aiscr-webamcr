@@ -67,7 +67,7 @@ class ProjektHistorieListView(HistorieListView):
         projekt_ident = self.kwargs["ident_cely"]
         queryset = self.model.objects.filter(
             vazba__projekt_historie__ident_cely=projekt_ident
-        ).order_by("-datum_zmeny")
+        ).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -88,7 +88,7 @@ class AkceHistorieListView(HistorieListView):
         akce_ident = self.kwargs["ident_cely"]
         queryset = self.model.objects.filter(
             vazba__archeologickyzaznam__ident_cely=akce_ident
-        ).order_by("-datum_zmeny")
+        ).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -109,7 +109,7 @@ class DokumentHistorieListView(HistorieListView):
         dokument_ident = self.kwargs["ident_cely"]
         queryset = self.model.objects.filter(
             vazba__dokument_historie__ident_cely=dokument_ident
-        ).order_by("-datum_zmeny")
+        ).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -133,7 +133,7 @@ class SamostatnyNalezHistorieListView(HistorieListView):
         sn_ident = self.kwargs["ident_cely"]
         queryset = self.model.objects.filter(
             vazba__sn_historie__ident_cely=sn_ident
-        ).order_by("-datum_zmeny")
+        ).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -156,7 +156,7 @@ class SpolupraceHistorieListView(HistorieListView):
         spoluprace_ident = self.kwargs["pk"]
         queryset = self.model.objects.filter(
             vazba__spoluprace_historie__pk=spoluprace_ident
-        ).order_by("-datum_zmeny")
+        ).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -202,7 +202,7 @@ class LokalitaHistorieListView(HistorieListView):
         lokalita_ident = self.kwargs["ident_cely"]
         queryset = self.model.objects.filter(
             vazba__archeologickyzaznam__ident_cely=lokalita_ident
-        ).order_by("-datum_zmeny")
+        ).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -223,7 +223,7 @@ class UzivatelHistorieListView(HistorieListView):
         user_ident = self.kwargs["ident_cely"]
         queryset = self.model.objects.filter(
             vazba__uzivatelhistorievazba__ident_cely=user_ident
-        ).order_by("-datum_zmeny")
+        ).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -244,7 +244,7 @@ class ExterniZdrojHistorieListView(HistorieListView):
         ez_ident = self.kwargs["ident_cely"]
         queryset = self.model.objects.filter(
             vazba__externizdroj__ident_cely=ez_ident
-        ).order_by("-datum_zmeny")
+        ).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
