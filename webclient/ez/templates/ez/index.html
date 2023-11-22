@@ -20,7 +20,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'ez:list' %}?sort=autor&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-vybrat">
+        <a href="{% url 'ez:list' %}?sort=autori&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-vybrat">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -30,7 +30,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-moje-ez">
+        <a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}&sort=autori&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-moje-ez">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -41,7 +41,7 @@
       </div>
       {% if user.can_see_ours_item %}
         <div class="col">
-          <a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-nase-ez">
+          <a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=autori&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-nase-ez">
             <div class="card-body">
               <img src="{% static 'logo-am-mark.png' %}" />
             </div>

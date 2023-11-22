@@ -86,11 +86,6 @@ class AkceTable(SearchTable):
         verbose_name=_("arch_z.tables.AkceTable.ident_cely.label"),
         linkify=True, accessor="archeologicky_zaznam__ident_cely"
     )
-    katastr = tables.Column(
-        verbose_name=_("arch_z.tables.AkceTable.katastr.label"),
-        default="",
-        accessor="archeologicky_zaznam__hlavni_katastr",
-    )
     pristupnost = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.pristupnost.label"),
         default="",
@@ -134,21 +129,6 @@ class AkceTable(SearchTable):
         verbose_name=_("arch_z.tables.AkceTable.uzivatelske_oznaceni.label"),
         default="",
         accessor="archeologicky_zaznam__uzivatelske_oznaceni",
-    )
-    dalsi_katastry = DalsiKatastryColumn(
-        verbose_name=_("arch_z.tables.AkceTable.dalsi_katastry.label"),
-        default="",
-        accessor="archeologicky_zaznam__katastry__all",
-    )
-    akce_vedouci_organizace = AkceVedouciOrganizaceColumn(
-        verbose_name=_("arch_z.tables.AkceTable.akce_vedouci_organizace.label"),
-        default="",
-        accessor="akcevedouci_set__all",
-    )
-    akce_vedouci_vedouci = AkceVedouciColumn(
-        verbose_name=_("arch_z.tables.AkceTable.akce_vedouci_vedouci.label"),
-        default="",
-        accessor="akcevedouci_set__all",
     )
     datum_zahajeni = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.datum_zahajeni.label"),

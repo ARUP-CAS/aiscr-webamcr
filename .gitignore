@@ -1,4 +1,5 @@
 # Database and venv
+env/
 venv/
 db.sqlite3
 

@@ -31,7 +31,7 @@
                 <button id="btnGroupDropTable" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'templates.searchList.zobrazeniSloupcu.label' %}">
                   <span class="material-icons">table_chart</span>
                 </button>
-                <div class="dropdown-menu" aria-labelledby="btnGroupDropTable">
+                <div class="dropdown-menu column-table-selector" aria-labelledby="btnGroupDropTable">
                   {% for column in table.columns %}
                     {% if column.attrs.td.class in table.get_column_default_show %}
                       <a class="btn-shift-column dropdown-item"
@@ -100,6 +100,9 @@
           <div class="card app-card-form">
             <div class="card-body">
               {% crispy filter.form filter.helper %}
+              {% for key, value in sort_params.items %}
+                <input type="hidden" name="{{ key }}" value="{{ value }}">
+              {% endfor %}
               <button type="submit" class="btn btn-primary">
                 <span class="material-icons">check</span> {{pick_text}}
               </button>
