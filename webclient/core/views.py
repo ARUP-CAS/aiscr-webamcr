@@ -829,6 +829,10 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
     def get_paginate_by(self, queryset):
         return self.request.GET.get("per_page", self.paginate_by)
+    
+    def _get_sort_params(self):
+        sort_params =  {k:v for k,v in self.request.GET.items() if k.startswith("sort")}
+        return sort_params
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -844,6 +848,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["hasOnlyPotvrdit_header"] = self.hasOnlyPotvrdit_header
         context["default_header"] = self.default_header
         context["toolbar_name"] = self.toolbar_name
+        context["sort_params"] = self._get_sort_params()
         return context
     
 

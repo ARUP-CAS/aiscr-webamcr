@@ -232,6 +232,11 @@ table {
   }
 }
 
+.column-table-selector {
+  max-height: 80vh;
+  overflow-x: scroll;
+}
+
 // date range picker
 .app-daterangepicker {
   .form-group {

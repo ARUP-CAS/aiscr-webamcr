@@ -1,4 +1,9 @@
 <tr>
+    {% if d.thumbnail_image %}
+      <td><img src="{% url 'core:download_thumbnail' 'dokument' d.ident_cely d.thumbnail_image %}" class="image-nahled"></td>
+    {% else %}
+      <td></td>
+    {% endif %}
     <td class="app-ident-cely">
       {% if d.ident_cely %}
         <a href="{% url 'dokument:detail' d.ident_cely %}">
