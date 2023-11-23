@@ -13,8 +13,8 @@ map.addLayer(poi_model);
 var overlays = {
     [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
     [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
-    [map_translations['3DLocation']]:poi_model,
-    [map_translations['3DLibrary']]:poi_all,
+    [map_translations['Location3D']]:poi_model,
+    [map_translations['Library3D']]:poi_all,
 };
 global_map_layers.remove(map);//remove previous overlay
 L.control.layers(baseLayers, overlays).addTo(map);
