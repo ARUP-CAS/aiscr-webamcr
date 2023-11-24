@@ -189,6 +189,8 @@ class AkceTable(SearchTable):
          "ulozeni_dokumentace",
          "je_nz",
          "odlozena_nz",
+         "vedouci",
+         "vedouci_organizace",
          )
     first_columns = None
 

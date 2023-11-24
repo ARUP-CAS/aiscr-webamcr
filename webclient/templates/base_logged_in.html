@@ -195,9 +195,9 @@
               <li><a href="{% url 'dokument:zapsat' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.zapsat" %}</a></li>
               {% endif %}
               <li><a href="{% url 'dokument:list' %}?sort=typ_dokumentu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.vybrat" %}</a></li>
-              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=typ_dokumentu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.mojeDokumenty" %}</a></li>
+              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.mojeDokumenty" %}</a></li>
               {% if user.can_see_ours_item %}
-                <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=typ_dokumentu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.naseDokumenty" %}</a></li>
+                <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.naseDokumenty" %}</a></li>
               {% endif %}
               {% if show_dokumenty_archivovat %}
               <li><a href="{% url 'dokument:list' %}?stav=2&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.archivovat" %}</a></li>

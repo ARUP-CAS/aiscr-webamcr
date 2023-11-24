@@ -831,7 +831,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         return self.request.GET.get("per_page", self.paginate_by)
     
     def _get_sort_params(self):
-        sort_params =  {k:v for k,v in self.request.GET.items() if k.startswith("sort")}
+        sort_params = self.request.GET.getlist('sort')
         return sort_params
 
     def get_context_data(self, **kwargs):
