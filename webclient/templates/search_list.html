@@ -100,8 +100,8 @@
           <div class="card app-card-form">
             <div class="card-body">
               {% crispy filter.form filter.helper %}
-              {% for key, value in sort_params.items %}
-                <input type="hidden" name="{{ key }}" value="{{ value }}">
+              {% for value in sort_params %}
+                <input type="hidden" name="sort" value="{{ value }}">
               {% endfor %}
               <button type="submit" class="btn btn-primary">
                 <span class="material-icons">check</span> {{pick_text}}
