@@ -37,9 +37,6 @@
         </div>
         <div id="id-app-entity-item" class="app-entity-item">
           {{ident_cely}}
-          {% if typ == "soubor" and projekt %}
-            <a class="app-entity-color font-weight-normal" href="{% url 'projekt:detail' projekt.ident_cely %}">Zpět na detail projektu</a>
-          {% endif %}
         </div>
       </div>
     </div>
@@ -143,6 +140,8 @@
           {% if back_model %}
             {% if back_model == "Projekt" %}
               <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'projekt:detail' back_ident %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+            {% elif back_model == "DokumentModel3D" %}
+              <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'dokument:detail-model-3D' back_ident %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
             {% elif back_model == "Dokument" %}
               <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'dokument:detail' back_ident %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
             {% elif back_model == "SamostatnyNalez" %}
