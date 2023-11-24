@@ -192,7 +192,10 @@ class SouborHistorieListView(HistorieListView):
             if isinstance(navazany_objekt, Projekt):
                 back_model = "Projekt"
             elif isinstance(navazany_objekt, Dokument):
-                back_model = "Dokument"
+                if navazany_objekt.ident_cely.contains("3D"):
+                    back_model = "DokumentModel3D"
+                else:
+                    back_model = "Dokument"
             elif isinstance(navazany_objekt, SamostatnyNalez):
                 back_model = "SamostatnyNalez"
         context["back_ident"] = back_ident
