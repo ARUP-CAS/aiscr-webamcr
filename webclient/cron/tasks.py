@@ -46,18 +46,21 @@ def send_notifications():
 
      Každý den kontrola a odeslání emailů E-N-01 a E-N-02
     """
-    logger.debug("cron.Notifications.do.start")
-    Mailer.send_enz01()
-    logger.debug("cron.Notifications.do.send_enz_01.end")
-    Mailer.send_enz02()
-    logger.debug("cron.Notifications.do.send_enz_02.end")
-    dataEn01 = collect_en01_en02(stav=ODESLANI_SN)
-    for email, projekt_id_list in dataEn01.items():
-        Mailer.send_en01(send_to=email, projekt_id_list=projekt_id_list)
-    dataEn02 = collect_en01_en02(stav=ARCHIVACE_SN)
-    for email, ids in dataEn02.items():
-        Mailer.send_en02(send_to=email, projekt_id_list=projekt_id_list)
-    logger.debug("cron.Notifications.do.end")
+    try:
+        logger.debug("cron.Notifications.do.start")
+        Mailer.send_enz01()
+        logger.debug("cron.Notifications.do.send_enz_01.end")
+        Mailer.send_enz02()
+        logger.debug("cron.Notifications.do.send_enz_02.end")
+        dataEn01 = collect_en01_en02(stav=ODESLANI_SN)
+        for email, projekt_id_list in dataEn01.items():
+            Mailer.send_en01(send_to=email, projekt_id_list=projekt_id_list)
+        dataEn02 = collect_en01_en02(stav=ARCHIVACE_SN)
+        for email, ids in dataEn02.items():
+            Mailer.send_en02(send_to=email, projekt_id_list=projekt_id_list)
+        logger.debug("cron.Notifications.do.end")
+    except Exception as err:
+        logger.error("cron.send_notifications.do.error", extra={"error": err})
 
 
 @shared_task
@@ -125,8 +128,8 @@ def pian_to_jstk():
             logger.debug(e)
             logger.debug(traceback.format_exc())
             return None
-    except Exception as e:
-        logger.debug(e)
+    except Exception as err:
+        logger.error("cron.pian_to_jstk.do.error", extra={"error": err})
 
 
 @shared_task
@@ -219,8 +222,8 @@ def pian_to_wsg_84():
             logger.debug(e)
             logger.debug(traceback.format_exc())
             return None
-    except Exception as e:
-        logger.debug(e)
+    except Exception as err:
+        logger.error("cron.pian_to_wsg_84.do.error", extra={"error": err})
 
 
 @shared_task
@@ -290,8 +293,8 @@ def nalez_to_jsk():
             logger.debug(e)
             logger.debug(traceback.format_exc())
             return None
-    except Exception as e:
-        logger.debug(e)
+    except Exception as err:
+        logger.error("cron.nalez_to_jsk.do.error", extra={"error": err})
 
 
 @shared_task
@@ -386,8 +389,8 @@ def nalez_to_wsg84(self):
             logger.debug(e)
             logger.debug(traceback.format_exc())
             return None
-    except Exception as e:
-        logger.debug(e)
+    except Exception as err:
+        logger.error("cron.nalez_to_wsg84.do.error", extra={"error": err})
 
 
 def get_record(class_name, record_pk):
@@ -430,41 +433,47 @@ def get_record(class_name, record_pk):
 
 @shared_task
 def save_record_metadata(class_name, record_pk):
-    logger.debug("cron.send_notifications.do.start", extra={"class_name": class_name, "record_pk": record_pk})
-    from xml_generator.models import ModelWithMetadata
-    record = get_record(class_name, record_pk)
-    if record is not None:
-        record: ModelWithMetadata
-        from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(record)
-        connector.save_metadata(True)
-    else:
-        logger.warning("cron.send_notifications.do.is_null")
-    logger.debug("cron.send_notifications.do.end")
+    try:
+        logger.debug("cron.send_notifications.do.start", extra={"class_name": class_name, "record_pk": record_pk})
+        from xml_generator.models import ModelWithMetadata
+        record = get_record(class_name, record_pk)
+        if record is not None:
+            record: ModelWithMetadata
+            from core.repository_connector import FedoraRepositoryConnector
+            connector = FedoraRepositoryConnector(record)
+            connector.save_metadata(True)
+        else:
+            logger.warning("cron.send_notifications.do.is_null")
+        logger.debug("cron.send_notifications.do.end")
+    except Exception as err:
+        logger.error("cron.send_notifications.do.error", extra={"error": err})
 
 
 @shared_task
 def record_ident_change(class_name, record_pk, old_ident):
-    logger.debug("cron.record_ident_change.do.start", extra={"class_name": class_name, "record_pk": record_pk,
-                                                             "old_ident": old_ident})
-    from core.repository_connector import FedoraRepositoryConnector
-    record = get_record(class_name, record_pk)
-    if record.ident_cely == old_ident or old_ident is None:
-        logger.debug("cron.record_ident_change.do.no_change", extra={"class_name": class_name,
-                                                                     "record_pk": record_pk, "old_ident": old_ident})
-        return
-    connector = FedoraRepositoryConnector(record)
-    connector.record_ident_change(old_ident)
-    logger.debug("cron.record_ident_change.do.end", extra={"class_name": class_name, "record_pk": record_pk,
-                                                             "old_ident": old_ident})
-    if isinstance(record, ArcheologickyZaznam):
-        for i in record.casti_dokumentu.all():
-            i: DokumentCast
-            i.dokument.save_metadata()
-    elif isinstance(record, Dokument):
-        for i in record.casti.all():
-            i: DokumentCast
-            i.archeologicky_zaznam.save_metadata()
+    try:
+        logger.debug("cron.record_ident_change.do.start", extra={"class_name": class_name, "record_pk": record_pk,
+                                                                 "old_ident": old_ident})
+        from core.repository_connector import FedoraRepositoryConnector
+        record = get_record(class_name, record_pk)
+        if record.ident_cely == old_ident or old_ident is None:
+            logger.debug("cron.record_ident_change.do.no_change", extra={"class_name": class_name,
+                                                                         "record_pk": record_pk, "old_ident": old_ident})
+            return
+        connector = FedoraRepositoryConnector(record)
+        connector.record_ident_change(old_ident)
+        logger.debug("cron.record_ident_change.do.end", extra={"class_name": class_name, "record_pk": record_pk,
+                                                                 "old_ident": old_ident})
+        if isinstance(record, ArcheologickyZaznam):
+            for i in record.casti_dokumentu.all():
+                i: DokumentCast
+                i.dokument.save_metadata()
+        elif isinstance(record, Dokument):
+            for i in record.casti.all():
+                i: DokumentCast
+                i.archeologicky_zaznam.save_metadata()
+    except Exception as err:
+        logger.error("cron.record_ident_change.do.error", extra={"error": err})
 
 
 @shared_task
@@ -473,27 +482,30 @@ def delete_personal_data_canceled_projects():
      Rok po zrušení projektu nahradit související údaje v tabulce oznamovatel řetězcem “RRRR-MM-DD: údaj odstraněn”,
      kromě pole projekt.oznamovatel + odstranit projektovou dokumentaci a vytvořit log (jako při archivaci projektu).
     """
-    logger.debug("core.cron.delete_personal_data_canceled_projects.do.start")
-    deleted_string = _("core.tasks.nalez_to_jsk.data_deleted")
-    today = datetime.datetime.now().date()
-    year_ago = today - datetime.timedelta(days=365)
-    projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
-        .filter(~Q(oznamovatel__email__icontains=deleted_string))\
-        .filter(historie__historie__typ_zmeny=RUSENI_PROJ)\
-        .filter(historie__historie__datum_zmeny__lt=year_ago)
-    for item in projects:
-        item: Projekt
-        if item.has_oznamovatel():
-            logger.debug("core.cron.delete_personal_data_canceled_projects.do.project",
-                         extra={"project": item.ident_cely})
-            item.oznamovatel.email = f"{today.strftime('%Y%m%d')}: {deleted_string}"
-            item.oznamovatel.adresa = f"{today.strftime('%Y%m%d')}: {deleted_string}"
-            item.oznamovatel.odpovedna_osoba = f"{today.strftime('%Y%m%d')}: {deleted_string}"
-            item.oznamovatel.oznamovatel = f"{today.strftime('%Y%m%d')}: {deleted_string}"
-            item.oznamovatel.telefon = f"{today.strftime('%Y%m%d')}: {deleted_string}"
-            item.oznamovatel.save()
-            item.archive_project_documentation()
-    logger.debug("core.cron.delete_personal_data_canceled_projects.do.end")
+    try:
+        logger.debug("core.cron.delete_personal_data_canceled_projects.do.start")
+        deleted_string = _("core.tasks.nalez_to_jsk.data_deleted")
+        today = datetime.datetime.now().date()
+        year_ago = today - datetime.timedelta(days=365)
+        projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
+            .filter(~Q(oznamovatel__email__icontains=deleted_string))\
+            .filter(historie__historie__typ_zmeny=RUSENI_PROJ)\
+            .filter(historie__historie__datum_zmeny__lt=year_ago)
+        for item in projects:
+            item: Projekt
+            if item.has_oznamovatel():
+                logger.debug("core.cron.delete_personal_data_canceled_projects.do.project",
+                             extra={"project": item.ident_cely})
+                item.oznamovatel.email = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+                item.oznamovatel.adresa = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+                item.oznamovatel.odpovedna_osoba = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+                item.oznamovatel.oznamovatel = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+                item.oznamovatel.telefon = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+                item.oznamovatel.save()
+                item.archive_project_documentation()
+        logger.debug("core.cron.delete_personal_data_canceled_projects.do.end")
+    except Exception as err:
+        logger.error("core.cron.delete_personal_data_canceled_projects.do.error", extra={"error": err})
 
 
 @shared_task
@@ -502,17 +514,20 @@ def delete_reporter_data_canceled_projects():
      Deset let po zápisu projektu smazat související záznam z tabulky oznamovatel + odstranit projektovou dokumentaci
      a vytvořit log (jako při archivaci projektu).
     """
-    logger.debug("core.cron.delete_reporter_data_canceled_projects.do.start")
-    today = datetime.datetime.now().date()
-    ten_years_ago = today - datetime.timedelta(days=365*10)
-    projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
-        .filter(oznamovatel__isnull=False)\
-        .filter(historie__historie__datum_zmeny__lt=ten_years_ago)
-    for item in projects:
-        logger.debug("core.cron.delete_reporter_data_canceled_projects.do.project", extra={"project": item.ident_cely})
-        item.oznamovatel.delete()
-        item.archive_project_documentation()
-    logger.debug("core.cron.delete_reporter_data_canceled_projects.do.end")
+    try:
+        logger.debug("core.cron.delete_reporter_data_canceled_projects.do.start")
+        today = datetime.datetime.now().date()
+        ten_years_ago = today - datetime.timedelta(days=365*10)
+        projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
+            .filter(oznamovatel__isnull=False)\
+            .filter(historie__historie__datum_zmeny__lt=ten_years_ago)
+        for item in projects:
+            logger.debug("core.cron.delete_reporter_data_canceled_projects.do.project", extra={"project": item.ident_cely})
+            item.oznamovatel.delete()
+            item.archive_project_documentation()
+        logger.debug("core.cron.delete_reporter_data_canceled_projects.do.end")
+    except Exception as err:
+        logger.error("core.cron.delete_reporter_data_canceled_projects.do.error", extra={"error": err})
 
 
 @shared_task
@@ -522,21 +537,24 @@ def change_document_accessibility():
     v hesláři organizace (podle vazby dokument.organizace), ale nikdy ne na vyšší přístupnost, než má nejlépe
     přístupný připojený archeologický záznam (tj. když mají připojené AZ C a D, bude mít dokument nejvýše C).
     """
-    logger.debug("core.cron.change_document_accessibility.do.start")
-    documents = Dokument.objects\
-        .filter(datum_zverejneni__lte=datetime.datetime.now().date()) \
-        .annotate(min_pristupnost_razeni=Min(F("casti__archeologicky_zaznam__pristupnost__razeni"))) \
-        .filter(Q(pristupnost__razeni__gt=F("min_pristupnost_razeni"))
-                | ~Q(pristupnost__razeni=F('organizace__zverejneni_pristupnost__razeni')))
-    for item in documents:
-        item: Dokument
-        logger.debug("core.cron.change_document_accessibility.do.dokument", extra={"dokument": item.ident_cely})
-        pristupnost_razeni = min(*[x.archeologicky_zaznam.pristupnost.razeni for x in item.casti.all()],
-                                 item.organizace.zverejneni_pristupnost.razeni)
-        pristupnost = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST).filter(razeni=pristupnost_razeni).first()
-        item.pristupnost = pristupnost
-        item.save()
-    logger.debug("core.cron.change_document_accessibility.do.end")
+    try:
+        logger.debug("core.cron.change_document_accessibility.do.start")
+        documents = Dokument.objects\
+            .filter(datum_zverejneni__lte=datetime.datetime.now().date()) \
+            .annotate(min_pristupnost_razeni=Min(F("casti__archeologicky_zaznam__pristupnost__razeni"))) \
+            .filter(Q(pristupnost__razeni__gt=F("min_pristupnost_razeni"))
+                    | ~Q(pristupnost__razeni=F('organizace__zverejneni_pristupnost__razeni')))
+        for item in documents:
+            item: Dokument
+            logger.debug("core.cron.change_document_accessibility.do.dokument", extra={"dokument": item.ident_cely})
+            pristupnost_razeni = min(*[x.archeologicky_zaznam.pristupnost.razeni for x in item.casti.all()],
+                                     item.organizace.zverejneni_pristupnost.razeni)
+            pristupnost = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST).filter(razeni=pristupnost_razeni).first()
+            item.pristupnost = pristupnost
+            item.save()
+        logger.debug("core.cron.change_document_accessibility.do.end")
+    except Exception as err:
+        logger.error("core.cron.change_document_accessibility.do.error", extra={"error": err})
 
 
 @shared_task
@@ -544,11 +562,14 @@ def delete_unsubmited_projects():
     """
      Každý den smazat projekty ve stavu -1, které vznikly před více než 12 hodinami.
     """
-    logger.debug("core.cron.delete_unsubmited_projects.do.start")
-    now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
-    Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY).filter(historie__historie__typ_zmeny=OZNAMENI_PROJ)\
-        .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).delete()
-    logger.debug("core.cron.delete_unsubmited_projects.do.end")
+    try:
+        logger.debug("core.cron.delete_unsubmited_projects.do.start")
+        now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
+        Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY).filter(historie__historie__typ_zmeny=OZNAMENI_PROJ)\
+            .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).delete()
+        logger.debug("core.cron.delete_unsubmited_projects.do.end")
+    except Exception as err:
+        logger.error("core.cron.delete_unsubmited_projects.do.error", extra={"error": err})
 
 
 @shared_task
@@ -558,17 +579,20 @@ def cancel_old_projects():
      v minulosti. Do poznámky ke zrušení uvést “Automatické zrušení projektů starších tří let, u kterých již
      nelze očekávat zahájení.”
     """
-    logger.debug("core.cron.cancel_old_projects.do.start")
-    toady_minus_3_years = timezone.now() - datetime.timedelta(days=365 * 3)
-    toady_minus_1_year = timezone.now() - datetime.timedelta(days=365)
-    projects = Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY) \
-        .filter(Q(historie__historie__typ_zmeny=ZAPSANI_PROJ)
-                & Q(historie__historie__datum_zmeny__lt=toady_minus_3_years)) \
-        .annotate(upper=Upper('planovane_zahajeni')).annotate(new_upper=F('upper')) \
-        .filter(upper__lte=toady_minus_1_year)
-    cancelled_string = _("core.tasks.cancel_old_projects.cancelled")
-    for project in projects:
-        project: Projekt
-        project.set_zruseny(User.objects.get(email="amcr@arup.cas.cz"), cancelled_string)
-        logger.debug("core.cron.cancel_old_projects.do.project", extra={"ident_cely": project.ident_cely})
-    logger.debug("core.cron.cancel_old_projects.do.end")
+    try:
+        logger.debug("core.cron.cancel_old_projects.do.start")
+        toady_minus_3_years = timezone.now() - datetime.timedelta(days=365 * 3)
+        toady_minus_1_year = timezone.now() - datetime.timedelta(days=365)
+        projects = Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY) \
+            .filter(Q(historie__historie__typ_zmeny=ZAPSANI_PROJ)
+                    & Q(historie__historie__datum_zmeny__lt=toady_minus_3_years)) \
+            .annotate(upper=Upper('planovane_zahajeni')).annotate(new_upper=F('upper')) \
+            .filter(upper__lte=toady_minus_1_year)
+        cancelled_string = _("core.tasks.cancel_old_projects.cancelled")
+        for project in projects:
+            project: Projekt
+            project.set_zruseny(User.objects.get(email="amcr@arup.cas.cz"), cancelled_string)
+            logger.debug("core.cron.cancel_old_projects.do.project", extra={"ident_cely": project.ident_cely})
+        logger.debug("core.cron.cancel_old_projects.do.end")
+    except Exception as err:
+        logger.error("core.cron.cancel_old_projects.do.error", extra={"error": err})
