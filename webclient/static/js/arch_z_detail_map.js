@@ -1086,6 +1086,8 @@ switchMap = function (overview = false) {
                 } catch(e){map.spin(false);console.log(e)}
             };
         }
+    } else if(!map.hasLayer(poi_all) && !map.hasLayer(poi_sn)){
+        map.removeLayer(heatLayer);
     }
 }
 
