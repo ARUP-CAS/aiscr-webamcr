@@ -30,8 +30,8 @@ global_map_layers.remove(map);//remove previous overlay
 L.control.layers(baseLayers, overlays).addTo(map);
 
 var mem={
-    "detector_coordinates_x":0.0,
-    "detector_coordinates_y":0.0
+    "visible_x1":0.0,
+    "visible_x2":0.0
 }
 map.on('click', function (e) {
     //if(('{{context.archivovano}}' === 'undefined' || '{{context.archivovano}}'=='False')){
@@ -40,23 +40,22 @@ map.on('click', function (e) {
             if (!lock) {
                 if (map.getZoom() > 15) {
                     lock_sjtsk_low_precision=false;
-                    var [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
-                    jtsk_coor = amcr_static_coordinate_precision_jtsk(convertToJTSK(corX, corY));
-                    point_global_WGS84 = [corX, corY];
-                    point_global_JTSK = [jtsk_coor[1],jtsk_coor[0]]
-                    if (document.getElementById('detector_system_coordinates').value == 1) {
-                        document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]
-                        document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
-                    } else if (document.getElementById('detector_system_coordinates').value == 2) {
-                        document.getElementById('detector_coordinates_x').value = -1*Math.abs(point_global_JTSK[0])
-                        document.getElementById('detector_coordinates_y').value = -1*Math.abs(point_global_JTSK[1])
+                    point_global_WGS84= amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
+                    point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0], point_global_WGS84[1]));
+                    point_leaf= [...point_global_WGS84].reverse();
+                    if (document.getElementById('visible_ss_combo').value == 1) {
+                        document.getElementById('visible_x1').value = point_global_WGS84[0]
+                        document.getElementById('visible_x2').value = point_global_WGS84[1]
+                    } else if (document.getElementById('visible_ss_combo').value == 2) {
+                        document.getElementById('visible_x1').value = -1*Math.abs(point_global_JTSK[0])
+                        document.getElementById('visible_x2').value = -1*Math.abs(point_global_JTSK[1])
                     }
                     replace_coor();
-                    document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
-                    document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
-                    document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
-                    document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
-                    addUniquePointToPoiLayer(corX, corY, '', false, true)
+                    document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
+                    document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
+                    document.getElementById('id_coordinate_sjtsk_x1').value = point_global_JTSK[0]
+                    document.getElementById('id_coordinate_sjtsk_x2').value = point_global_JTSK[1]
+                    addUniquePointToPoiLayer(point_leaf, '', false, true)
                     fill_katastr();
                 } else {
                     map.setView(e.latlng, map.getZoom() + 2)
@@ -119,16 +118,16 @@ var debugText=(text)=>{
 
 var replace_coor = () => {
     dm=""
-    if (document.getElementById('detector_system_coordinates').value == 2) {
+    if (document.getElementById('visible_ss_combo').value == 2) {
         dm="-"
     }
-    var dx='detector_coordinates_x';
-    var dy='detector_coordinates_y';
-    if(document.getElementById(dx).value.length>1){
-        document.getElementById(dx).value=(dm+document.getElementById(dx).value.replace(".",",")).replace("--","-");
-        document.getElementById(dy).value=(dm+document.getElementById(dy).value.replace(".",",")).replace("--","-");
-        mem[dx]=document.getElementById(dx).value;
-        mem[dy]=document.getElementById(dy).value;
+    var dx1='visible_x1';
+    var dx2='visible_x2';
+    if(document.getElementById(dx1).value.length>1){
+        document.getElementById(dx1).value=(dm+document.getElementById(dx1).value.replace(".",",")).replace("--","-");
+        document.getElementById(dx2).value=(dm+document.getElementById(dx2).value.replace(".",",")).replace("--","-");
+        mem[dx1]=document.getElementById(dx1).value;
+        mem[dx2]=document.getElementById(dx2).value;
     }
 }
 
@@ -150,13 +149,13 @@ var fill_katastr = () => {
     };
     xhr.send(JSON.stringify(
         {
-            'cX': parseFloat(point_global_WGS84[1]),
-            'cY': parseFloat(point_global_WGS84[0]),
+            'x2': parseFloat(point_global_WGS84[1]),
+            'x1': parseFloat(point_global_WGS84[0]),
         }))
 };
 
 
-var transformSinglePoint = async(y_plus,x_plus,push,addComa) => {
+var transformSinglePoint = async(x1_plus,x2_plus,push,addComa) => {
     let xhr = new XMLHttpRequest();
     xhr.open('POST', '/transformace-single-wgs84');
     xhr.setRequestHeader('Content-type', 'application/json');
@@ -168,32 +167,30 @@ var transformSinglePoint = async(y_plus,x_plus,push,addComa) => {
     xhr.onload = function () {
         try{
             rs = JSON.parse(this.responseText)
-            point_global_WGS84 = amcr_static_coordinate_precision_wgs84([rs.cx,rs.cy])
-            addUniquePointToPoiLayer(point_global_WGS84[0], point_global_WGS84[1])
+            point_global_WGS84 = amcr_static_coordinate_precision_wgs84([rs.x1,rs.x2])
+            point_leaf= [...point_global_WGS84].reverse();
+            addUniquePointToPoiLayer(point_leaf)
             fill_katastr();
-            document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
-            document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
-            document.getElementById('id_coordinate_sjtsk_x').value = y_plus
-            document.getElementById('id_coordinate_sjtsk_y').value = x_plus
+            document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
+            document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
+            document.getElementById('id_coordinate_sjtsk_x1').value = x1_plus
+            document.getElementById('id_coordinate_sjtsk_x2').value = x2_plus
             if(push){
-               // document.getElementById('detector_coordinates_x').value = y_plus+ (addComa==true ? ',':'');
-               // document.getElementById('detector_coordinates_y').value = x_plus+ (addComa==true ? ',':'');
                 lock_sjtsk_low_precision=false;
                 switch_coordinate_system();
             }
         }
         catch(err){
-            $.getJSON("https://epsg.io/trans?x=-" + Number(Math.abs(y_plus)).toFixed(2) + "&y=-" + Number(Math.abs(x_plus)).toFixed(2) + "&s_srs=5514&t_srs=4326", async function (data) {
-                point_global_WGS84 = amcr_static_coordinate_precision_wgs84([data.y,data.x])
-                addUniquePointToPoiLayer(point_global_WGS84[0], point_global_WGS84[1])
+            $.getJSON("https://epsg.io/trans?x=-" + Number(Math.abs(x1_plus)).toFixed(2) + "&y=-" + Number(Math.abs(x2_plus)).toFixed(2) + "&s_srs=5514&t_srs=4326", async function (data) {
+                point_global_WGS84 = amcr_static_coordinate_precision_wgs84([data.x,data.y])
+                point_leaf= [...point_global_WGS84].reverse();
+                addUniquePointToPoiLayer(point_leaf)
                 fill_katastr();
-                document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
-                document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
-                document.getElementById('id_coordinate_sjtsk_x').value = y_plus
-                document.getElementById('id_coordinate_sjtsk_y').value = x_plus
+                document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
+                document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
+                document.getElementById('id_coordinate_sjtsk_x1').value = x1_plus
+                document.getElementById('id_coordinate_sjtsk_x2').value = x2_plus
                 if(push){
-                    //document.getElementById('detector_coordinates_x').value = y_plus+ (addComa==true ? ',':'');
-                    //document.getElementById('detector_coordinates_y').value = x_plus+ (addComa==true ? ',':'');
                     lock_sjtsk_low_precision=true;
                     switch_coordinate_system();
                     alert([map_translations['TransformationError']]) // "Přesná transformace ze systemu S-JTSK není v současnosti dostupná, proto bude použita méně přesná transformace!"
@@ -203,7 +200,7 @@ var transformSinglePoint = async(y_plus,x_plus,push,addComa) => {
         )}
 
     };
-    xhr.send(JSON.stringify({"cy" : y_plus, "cx" : x_plus}))
+    xhr.send(JSON.stringify({"c_x1" : x1_plus, "c_x2" : x2_plus}))
 };
 
 var transformMultiPoins = async(ipoints) => {
@@ -223,9 +220,9 @@ var transformMultiPoins = async(ipoints) => {
     xhr.send(JSON.stringify({"points" : ipoints}))
 };
 
-var is_in_czech_republic = (corX, corY) => {
-    if (document.getElementById('detector_system_coordinates').value == 1) {
-        if (corY >= 12.2401111182 && corY <= 18.8531441586 && corX >= 48.5553052842 && corX <= 51.1172677679) {
+var is_in_czech_republic = (x1, x2) => {
+    if (document.getElementById('visible_ss_combo').value == 1) {
+        if (x1 >= 12.2401111182 && x1 <= 18.8531441586 && x2 >= 48.5553052842 && x2 <= 51.1172677679) {
             disableSaveButton(false)
             return true;
         } else {
@@ -237,7 +234,7 @@ var is_in_czech_republic = (corX, corY) => {
             return false
         }
     } else {
-        if (corX >= -889110.16 && corX <= -448599.79 && corY >= -1231915.96 && corY <= -892235.44) {
+        if (x1 >= -889110.16 && x1 <= -448599.79 && x2 >= -1231915.96 && x2 <= -892235.44) {
             disableSaveButton(false)
             return true
         } else {
@@ -251,7 +248,6 @@ var is_in_czech_republic = (corX, corY) => {
     }
 };
 
-
 let disableSaveButton=(dis)=>{
     if(document.getElementById('submit-id-save')){
         document.getElementById('submit-id-save').disabled=dis;
@@ -260,23 +256,23 @@ let disableSaveButton=(dis)=>{
 }
 
 let set_numeric_coordinates = async (push=false,addComa=false) => {
-    corX = document.getElementById('detector_coordinates_x').value.replace(",",".");
-    corY = document.getElementById('detector_coordinates_y').value.replace(",",".");
-    if (corX!="" && is_in_czech_republic(corX, corY)) {
-        if (document.getElementById('detector_system_coordinates').value == 1) {
-            jtsk_coor = convertToJTSK(corX, corY);
-            point_global_WGS84 = amcr_static_coordinate_precision_wgs84([corX, corY]);
-            point_global_JTSK = amcr_static_coordinate_precision_jtsk(jtsk_coor, true);
-            addUniquePointToPoiLayer(corX, corY);
+    cor_x1 = document.getElementById('visible_x1').value.replace(",",".");
+    cor_x2 = document.getElementById('visible_x2').value.replace(",",".");
+    if (cor_x1!="" && is_in_czech_republic(cor_x1, cor_x2)) {
+        if (document.getElementById('visible_ss_combo').value == 1) {
+            point_global_WGS84 = amcr_static_coordinate_precision_wgs84([cor_x1, cor_x2]);
+            point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(cor_x1, cor_x2), true);
+            point_leaf=[cor_x2,cor_x1]
+            addUniquePointToPoiLayer(point_leaf);
             fill_katastr();
-            document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
-            document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
-            document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
-            document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
+            document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
+            document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
+            document.getElementById('id_coordinate_sjtsk_x1').value = point_global_JTSK[0]
+            document.getElementById('id_coordinate_sjtsk_x2').value = point_global_JTSK[1]
             return true;
-        } else if (document.getElementById('detector_system_coordinates').value == 2) {
-            point_global_JTSK = amcr_static_coordinate_precision_jtsk([corX, corY], false)
-            transformSinglePoint(Math.abs(Number(corX).toFixed(2)),Math.abs(Number(corY).toFixed(2)),false,addComa);//+y+x
+        } else if (document.getElementById('visible_ss_combo').value == 2) {
+            point_global_JTSK = amcr_static_coordinate_precision_jtsk([cor_x1, cor_x2], false)
+            transformSinglePoint(Math.abs(Number(cor_x1).toFixed(2)),Math.abs(Number(cor_x2).toFixed(2)),false,addComa);//+y+x
 
         }
     }
@@ -284,7 +280,7 @@ let set_numeric_coordinates = async (push=false,addComa=false) => {
 };
 
 var switch_coordinate_system = () => {
-    new_system = document.getElementById('detector_system_coordinates').value
+    new_system = document.getElementById('visible_ss_combo').value
     switch_coor_system(new_system)
     replace_coor();
 };
@@ -292,18 +288,18 @@ var switch_coordinate_system = () => {
 var switch_coor_system = (new_system) => {
     debugText("switch system: " + new_system)
     if (new_system == 1 && point_global_WGS84[0] != 0) {
-        document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]
-        document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
-        document.getElementById('detector_coordinates_x').readOnly = false;
-        document.getElementById('detector_coordinates_y').readOnly = false;
+        document.getElementById('visible_x1').value = point_global_WGS84[0]
+        document.getElementById('visible_x2').value = point_global_WGS84[1]
+        document.getElementById('visible_x1').readOnly = false;
+        document.getElementById('visible_x2').readOnly = false;
         document.getElementById('id_coordinate_system').value="4326";
     } else if (new_system >1 && point_global_JTSK[0] != 0) {
         if(Math.abs(point_global_JTSK[0])<3000000){
-            document.getElementById('detector_coordinates_x').value = -1*Math.abs(point_global_JTSK[0]);
-            document.getElementById('detector_coordinates_y').value = -1*Math.abs(point_global_JTSK[1]);
+            document.getElementById('visible_x1').value = -1*Math.abs(point_global_JTSK[0]);
+            document.getElementById('visible_x2').value = -1*Math.abs(point_global_JTSK[1]);
         }
-        document.getElementById('detector_coordinates_x').readOnly = false;
-        document.getElementById('detector_coordinates_y').readOnly = false;
+        document.getElementById('visible_x1').readOnly = false;
+        document.getElementById('visible_x2').readOnly = false;
         if(!lock_sjtsk_low_precision){
             document.getElementById('id_coordinate_system').value="5514";
         } else {
@@ -312,21 +308,21 @@ var switch_coor_system = (new_system) => {
     }
 };
 
-var addUniquePointToPoiLayer = (lat, long, text, zoom = true, redPin = false) => {
-    var [corX, corY] = amcr_static_coordinate_precision_wgs84([lat, long]);
+var addUniquePointToPoiLayer = (point_leaf, text, zoom = true, redPin = false) => {
+    var point_rec_leaf = amcr_static_coordinate_precision_wgs84(point_leaf);
     poi_sugest.clearLayers()
     if(redPin){
-        L.marker([corX, corY],{icon:pinIconRedPin, zIndexOffset: 2000}).bindPopup([map_translations['SetLocation']]).addTo(poi_sugest); //"Vámi vyznačená poloha"
+        L.marker(point_rec_leaf,{icon:pinIconRedPin, zIndexOffset: 2000}).bindPopup([map_translations['SetLocation']]).addTo(poi_sugest);
     } else {
-        L.marker([corX, corY],{icon:pinIconYellowPin, zIndexOffset: 2000}).bindPopup([map_translations['SetLocation']]).addTo(poi_sugest); // "Vámi vyznačená poloha"
+        L.marker(point_rec_leaf,{icon:pinIconYellowPin, zIndexOffset: 2000}).bindPopup([map_translations['SetLocation']]).addTo(poi_sugest);
     }
-    if (corX && corY && zoom) {
-        map.setView([corX, corY], 15);
+    if (point_rec_leaf[0] && point_rec_leaf[1] && zoom) {
+        map.setView(point_rec_leaf, 15);
     }
 
     if (point_global_WGS84[0] == 0) {
-        jtsk_coor = amcr_static_coordinate_precision_jtsk(convertToJTSK(corX, corY),true);
-        point_global_WGS84 = [corX, corY];
+        jtsk_coor = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_rec_leaf[0], point_rec_leaf[1]),true);
+        point_global_WGS84 = [point_rec_leaf[0], point_rec_leaf[1]];
         point_global_JTSK = jtsk_coor;
 
     }
@@ -344,10 +340,10 @@ function showPosition(position) {
     map.setView(latlng, 16);
     addUniquePointToPoiLayer(latitude, longitude, '', false, true)
 
-    document.getElementById('detector_system_coordinates').value = 1
+    document.getElementById('visible_ss_combo').value = 1
     point_global_WGS84 = [latitude, longitude];
-    document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]
-    document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
+    document.getElementById('visible_x1').value = point_global_WGS84[0]
+    document.getElementById('visible_x2').value = point_global_WGS84[1]
     replace_coor();
 
     L.marker(latlng,{icon:pinIconGreenPin}).addTo(poi_sugest)
@@ -357,37 +353,42 @@ function showPosition(position) {
 
 $(document).ready(function () {
     debugText(document.getElementById('id_coordinate_system').value)
-    my_wgs84_x = document.getElementById('id_coordinate_wgs84_x').value;
-    my_wgs84_y = document.getElementById('id_coordinate_wgs84_y').value;
-    my_sjtsk_x = document.getElementById('id_coordinate_sjtsk_x').value;
-    my_sjtsk_y = document.getElementById('id_coordinate_sjtsk_y').value;
+    my_wgs84_x1 = document.getElementById('id_coordinate_wgs84_x1').value;
+    my_wgs84_x2 = document.getElementById('id_coordinate_wgs84_x2').value;
+    my_sjtsk_x1 = document.getElementById('id_coordinate_sjtsk_x1').value;
+    my_sjtsk_x2 = document.getElementById('id_coordinate_sjtsk_x2').value;
     my_sys = document.getElementById('id_coordinate_system').value;
-    let [cor_wgs84_x, cor_wgs84_y] = amcr_static_coordinate_precision_wgs84([my_wgs84_x,my_wgs84_y]);
-    let [cor_sjtsk_x, cor_sjtsk_y] = amcr_static_coordinate_precision_jtsk([my_sjtsk_x,my_sjtsk_y]);
+    point_global_WGS84 = amcr_static_coordinate_precision_wgs84([my_wgs84_x1,my_wgs84_x2]);
+    point_global_JTSK= amcr_static_coordinate_precision_jtsk([my_sjtsk_x1,my_sjtsk_x2]);
+    console.log(my_sjtsk_x1)
 
-    point_global_WGS84=[cor_wgs84_x, cor_wgs84_y];
-    if(cor_sjtsk_x==0){
+    if(point_global_JTSK[0]==0){
+        console.log("---will-recalc")
         point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0],point_global_WGS84[1]))
-    } else{
-        point_global_JTSK =[cor_sjtsk_x, cor_sjtsk_y];
     }
-
-    if(my_wgs84_x){
+    console.log("---will-show")
+    console.log(point_global_WGS84)
+    console.log(point_global_JTSK)
+    if(my_wgs84_x1){
+        console.log("---will-show-yes")
+        point_leaf= [...point_global_WGS84].reverse();
         if(global_map_can_edit){
-            addUniquePointToPoiLayer(cor_wgs84_x, cor_wgs84_y)
+            console.log("---will-show-1"+point_leaf)
+            addUniquePointToPoiLayer(point_leaf)
         } else {
             global_map_can_edit=false
-            addReadOnlyUniquePointToPoiLayer(cor_wgs84_x, cor_wgs84_y)
+            console.log("---will-show-2"+point_leaf)
+            addReadOnlyUniquePointToPoiLayer(point_leaf)
         }
     }
 
     if(my_sys=="S-JTSK"){
-        document.getElementById('detector_system_coordinates').value = 2
+        document.getElementById('visible_ss_combo').value = 2
     }else if(my_sys=="S-JTSK*"){
         lock_sjtsk_low_precision=true;
-        document.getElementById('detector_system_coordinates').value = 2
+        document.getElementById('visible_ss_combo').value = 2
     }else {
-        document.getElementById('detector_system_coordinates').value = 1
+        document.getElementById('visible_ss_combo').value = 1
     }
 
 })
@@ -400,7 +401,6 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost) => {
     if(presnost==4){
         myIco = { icon: pinIconPurpleHW};
     }
-
 
     if (st_text.includes("POLYGON") && presnost!=4) {
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
@@ -445,7 +445,6 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost) => {
             .bindPopup("").on("click",onMarkerClick.bind(null,text))
             .addTo(layer);
         }
-
     }
 }
 
@@ -519,7 +518,6 @@ switchMap = function (overview = false) {
                         //poi_other.clearLayers();
                         //poi_other_dp.clearLayers();
                         //poi_dj.clearLayers();
-
                     }
                     map.spin(false);
                 } catch(e){map.spin(false);/*console.log(e)*/}

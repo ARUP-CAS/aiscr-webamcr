@@ -128,14 +128,14 @@ def create(request, ident_cely=None):
             geom = None
             geom_sjtsk = None
             try:
-                wgs84_dx = float(form_coor.data.get("coordinate_wgs84_x"))
-                wgs84_dy = float(form_coor.data.get("coordinate_wgs84_y"))
-                if wgs84_dx > 0 and wgs84_dy > 0:
-                    geom = Point(wgs84_dy, wgs84_dx)
-                sjtsk_dx = float(form_coor.data.get("coordinate_sjtsk_x"))
-                sjtsk_dy = float(form_coor.data.get("coordinate_sjtsk_y"))
-                if sjtsk_dx > 0 and sjtsk_dy > 0:
-                    geom_sjtsk = Point(-1 * sjtsk_dx, -1 * sjtsk_dy)
+                wgs84_x1 = float(form_coor.data.get("coordinate_wgs84_x1"))
+                wgs84_x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
+                if wgs84_x1 > 0 and wgs84_x2 > 0:
+                    geom = Point(wgs84_x1, wgs84_x2)
+                sjtsk_x1 = float(form_coor.data.get("coordinate_sjtsk_x1"))
+                sjtsk_x2 = float(form_coor.data.get("coordinate_sjtsk_x2"))
+                if sjtsk_x1 < 0 and sjtsk_x2 < 0:
+                    geom_sjtsk = Point(sjtsk_x1,sjtsk_x2)
             except Exception:
                 logger.info(
                     "pas.views.create.corrd_format_error",
@@ -231,22 +231,22 @@ def detail(request, ident_cely):
             "pas.views.create.detail",
             extra={"sn_geom_system": sn.geom_system, "system": system},
         )
-        gx_wgs = geom.split(" ")[1]
-        gy_wgs = geom.split(" ")[0]
-        gx_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
-        gy_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
-        gx = gx_wgs if system == "WGS-84" else gx_sjtsk
-        gy = gy_wgs if system == "WGS-84" else gy_sjtsk
+        x1_wgs = geom.split(" ")[0]
+        x2_wgs = geom.split(" ")[1]
+        x1_sjtsk = geom_sjtsk.split(" ")[0]
+        x2_sjtsk = geom_sjtsk.split(" ")[1]
+        x1 = x1_wgs if system == "4326" else x1_sjtsk
+        x2 = x2_wgs if system == "4326" else x2_sjtsk
         #if float(gy_sjtsk) > float(gx_sjtsk):
         #    gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
         context["formCoor"] = CoordinatesDokumentForm(
             initial={
-                "detector_coordinates_x": gx,
-                "detector_coordinates_y": gy,
-                "coordinate_wgs84_x": gx_wgs,
-                "coordinate_wgs84_y": gy_wgs,
-                "coordinate_sjtsk_x": gx_sjtsk,
-                "coordinate_sjtsk_y": gy_sjtsk,
+                "visible_x1": x1,
+                "visible_x2": x2,
+                "coordinate_wgs84_x1": x1_wgs,
+                "coordinate_wgs84_x2": x2_wgs,
+                "coordinate_sjtsk_x1": x1_sjtsk,
+                "coordinate_sjtsk_x2": x2_sjtsk,
                 "coordinate_system": system,
             }
         )  # Zmen musis poslat data do formulare
@@ -283,14 +283,14 @@ def edit(request, ident_cely):
         geom = None
         geom_sjtsk = None
         try:
-            wgs84_dx = float(form_coor.data.get("coordinate_wgs84_x"))
-            wgs84_dy = float(form_coor.data.get("coordinate_wgs84_y"))
-            if wgs84_dx > 0 and wgs84_dy > 0:
-                geom = Point(wgs84_dy, wgs84_dx)
-            sjtsk_dx = float(form_coor.data.get("coordinate_sjtsk_x"))
-            sjtsk_dy = float(form_coor.data.get("coordinate_sjtsk_y"))
-            if sjtsk_dx > 0 and sjtsk_dy > 0:
-                geom_sjtsk = Point(-1 * sjtsk_dx, -1 * sjtsk_dy)
+            wgs84_x1 = float(form_coor.data.get("coordinate_wgs84_x1"))
+            wgs84_x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
+            sjtsk_x1 = float(form_coor.data.get("coordinate_sjtsk_x1"))
+            sjtsk_x2 = float(form_coor.data.get("coordinate_sjtsk_x2"))
+            if wgs84_x1 > 0 and wgs84_x2 > 0:
+                geom = Point(wgs84_x1, wgs84_x2)
+            if sjtsk_x1 < 0 and sjtsk_x2 < 0:
+                geom_sjtsk = Point(sjtsk_x1,sjtsk_x2)
         except Exception as e:
             logger.info(
                 "pas.views.edit.corrd_format_error",
@@ -339,22 +339,22 @@ def edit(request, ident_cely):
                 if sn.geom_system == "4326"
                 else ("S-JTSK*" if sn.geom_system == "5514*" else "S-JTSK")
             )
-            gx_wgs = geom.split(" ")[1]
-            gy_wgs = geom.split(" ")[0]
-            gx_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
-            gy_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
-            gx = gx_wgs if system == "WGS-84" else gx_sjtsk
-            gy = gy_wgs if system == "WGS-84" else gy_sjtsk
+            x1_wgs = geom.split(" ")[0]
+            x2_wgs = geom.split(" ")[1]
+            x1_sjtsk = geom_sjtsk.split(" ")[0]
+            x2_sjtsk = geom_sjtsk.split(" ")[1]
+            x1 = x1_wgs if system == "4326" else x1_sjtsk
+            x2 = x2_wgs if system == "4326" else x2_sjtsk
             #if float(gy_sjtsk) > float(gx_sjtsk):
             #    gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
-            form_coor = CoordinatesDokumentForm(
+            form_coor= CoordinatesDokumentForm(
                 initial={
-                    "detector_coordinates_x": gx,
-                    "detector_coordinates_y": gy,
-                    "coordinate_wgs84_x": gx_wgs,
-                    "coordinate_wgs84_y": gy_wgs,
-                    "coordinate_sjtsk_x": gx_sjtsk,
-                    "coordinate_sjtsk_y": gy_sjtsk,
+                    "visible_x1": x1,
+                    "visible_x2": x2,
+                    "coordinate_wgs84_x1": x1_wgs,
+                    "coordinate_wgs84_x2": x2_wgs,
+                    "coordinate_sjtsk_x1": x1_sjtsk,
+                    "coordinate_sjtsk_x2": x2_sjtsk,
                     "coordinate_system": system,
                 }
             )  # Zmen musis poslat data do formulare
@@ -1026,7 +1026,7 @@ def post_point_position_2_katastre(request):
     """
     body = json.loads(request.body.decode("utf-8"))
     logger.warning("pas.views.post_point_position_2_katastre", extra={"body": body})
-    katastr_name = get_cadastre_from_point(Point(body["cX"], body["cY"]))
+    katastr_name = get_cadastre_from_point(Point(body["x1"], body["x2"]))
     if katastr_name is not None:
         return JsonResponse(
             {
@@ -1046,7 +1046,7 @@ def post_point_position_2_katastre_with_geom(request):
     """
     body = json.loads(request.body.decode("utf-8"))
     [katastr_name, katastr_db, katastr_geom] = get_cadastre_from_point_with_geometry(
-        Point(body["cX"], body["cY"])
+        Point(body["x1"], body["x2"])
     )
     if katastr_name is not None:
         return JsonResponse(
@@ -1093,8 +1093,8 @@ def get_required_fields(zaznam=None, next=0):
             "specifikace",
             "obdobi",
             "druh_nalezu",
-            "detector_system_coordinates",
-            "detector_coordinates_x",
-            "detector_coordinates_y",
+            "visible_ss_combo",
+            "visible_x1",
+            "visible_x2",
         ]
     return required_fields
