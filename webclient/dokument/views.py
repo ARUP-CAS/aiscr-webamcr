@@ -264,18 +264,21 @@ class Model3DListView(SearchListView):
     model = Dokument
     filterset_class = Model3DFilter
     export_name = "export_modely_"
-    page_title = _("dokument.views.Model3DListView.pageTitle.text")
     app = "knihovna_3d"
     toolbar = "toolbar_dokument.html"
-    search_sum = _("dokument.views.Model3DListView.search_sum.text")
-    pick_text = _("dokument.views.Model3DListView.pick_text.text")
-    hasOnlyVybrat_header = _("dokument.views.Model3DListView.hasOnlyVybrat_header.text")
-    hasOnlyVlastnik_header = _("dokument.views.Model3DListView.hasOnlyVlastnik_header.text")
-    hasOnlyArchive_header = _("dokument.views.Model3DListView.hasOnlyArchive_header.text")
-    hasOnlyPotvrdit_header = _("dokument.views.Model3DListView.hasOnlyPotvrdit_header.text")
-    default_header = _("dokument.views.Model3DListView.default_header.text")
-    toolbar_name = _("dokument.views.Model3DListView.toolbar_name.text")
     typ_zmeny_lookup = ZAPSANI_DOK
+
+    def init_translations(self):
+        self.page_title = _("dokument.views.Model3DListView.pageTitle.text")
+        self.search_sum = _("dokument.views.Model3DListView.search_sum.text")
+        self.pick_text = _("dokument.views.Model3DListView.pick_text.text")
+        self.hasOnlyVybrat_header = _("dokument.views.Model3DListView.hasOnlyVybrat_header.text")
+        self.hasOnlyVlastnik_header = _("dokument.views.Model3DListView.hasOnlyVlastnik_header.text")
+        self.hasOnlyArchive_header = _("dokument.views.Model3DListView.hasOnlyArchive_header.text")
+        self.hasOnlyPotvrdit_header = _("dokument.views.Model3DListView.hasOnlyPotvrdit_header.text")
+        self.default_header = _("dokument.views.Model3DListView.default_header.text")
+        self.toolbar_name = _("dokument.views.Model3DListView.toolbar_name.text")
+        self.toolbar_label = _("dokument.views.Model3DListView.toolbar_label.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -312,18 +315,22 @@ class DokumentListView(SearchListView):
     model = Dokument
     filterset_class = DokumentFilter
     export_name = "export_dokumenty_"
-    page_title = _("dokument.views.DokumentListView.pageTitle.text")
     app = "dokument"
     toolbar = "toolbar_dokument.html"
-    search_sum = _("dokument.views.DokumentListView.search_sum.text")
-    pick_text = _("dokument.views.DokumentListView.pick_text.text")
-    hasOnlyVybrat_header = _("dokument.views.DokumentListView.hasOnlyVybrat_header.text")
-    hasOnlyVlastnik_header = _("dokument.views.DokumentListView.hasOnlyVlastnik_header.text")
-    hasOnlyArchive_header = _("dokument.views.DokumentListView.hasOnlyArchive_header.text")
-    hasOnlyPotvrdit_header = _("dokument.views.DokumentListView.hasOnlyPotvrdit_header.text")
-    default_header = _("dokument.views.DokumentListView.default_header.text")
-    toolbar_name = _("dokument.views.DokumentListView.toolbar_name.text")
+    
     typ_zmeny_lookup = ZAPSANI_DOK
+
+    def init_translations(self):
+        self.page_title = _("dokument.views.DokumentListView.pageTitle.text")
+        self.search_sum = _("dokument.views.DokumentListView.search_sum.text")
+        self.pick_text = _("dokument.views.DokumentListView.pick_text.text")
+        self.hasOnlyVybrat_header = _("dokument.views.DokumentListView.hasOnlyVybrat_header.text")
+        self.hasOnlyVlastnik_header = _("dokument.views.DokumentListView.hasOnlyVlastnik_header.text")
+        self.hasOnlyArchive_header = _("dokument.views.DokumentListView.hasOnlyArchive_header.text")
+        self.hasOnlyPotvrdit_header = _("dokument.views.DokumentListView.hasOnlyPotvrdit_header.text")
+        self.default_header = _("dokument.views.DokumentListView.default_header.text")
+        self.toolbar_name = _("dokument.views.DokumentListView.toolbar_name.text")
+        self.toolbar_label = _("dokument.views.DokumentListView.toolbar_label.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -541,9 +548,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
     """
     model = DokumentCast
     template_name = "core/transakce_modal.html"
-    title = _("dokument.views.DokumentCastEditView.title.text")
     id_tag = "edit-cast-form"
-    button = _("dokument.views.DokumentCastEditView.submitButton.text")
     form_class = DokumentCastForm
     slug_field = "ident_cely"
 
@@ -552,9 +557,9 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         zaznam = self.object
         context = {
             "object": zaznam,
-            "title": self.title,
+            "title": _("dokument.views.DokumentCastEditView.title.text"),
             "id_tag": self.id_tag,
-            "button": self.button,
+            "button": _("dokument.views.DokumentCastEditView.submitButton.text"),
         }
         context["form"] = DokumentCastForm(
             instance=self.object,
@@ -659,9 +664,7 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
     Třida pohledu pro smazání tvaru dokumentu pomocí modalu.
     """
     template_name = "core/transakce_modal.html"
-    title = _("dokument.views.TvarSmazatView.title.text")
     id_tag = "smazat-tvar-form"
-    button = _("dokument.views.TvarSmazatView.submitButton.text")
 
     def dispatch(self, request, *args: Any, **kwargs: Any) -> HttpResponse:
         tvar = self.get_zaznam()
@@ -684,9 +687,9 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         zaznam = self.get_zaznam()
         context = {
             "object": zaznam,
-            "title": self.title,
+            "title": _("dokument.views.TvarSmazatView.title.text"),
             "id_tag": self.id_tag,
-            "button": self.button,
+            "button": _("dokument.views.TvarSmazatView.submitButton.text"),
         }
         return context
 
@@ -708,9 +711,7 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
     Třida pohledu pro vytvoření části dokumentu pomoci modalu.
     """
     template_name = "core/transakce_modal.html"
-    title = _("dokument.views.VytvoritCastView.title.text")
     id_tag = "vytvor-cast-form"
-    button = _("dokument.views.VytvoritCastView.submitButton.text")
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
@@ -725,9 +726,9 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
         context = {
             "object": zaznam,
             "form": form,
-            "title": self.title,
+            "title": _("dokument.views.VytvoritCastView.title.text"),
             "id_tag": self.id_tag,
-            "button": self.button,
+            "button": _("dokument.views.VytvoritCastView.submitButton.text"),
         }
         return context
 
@@ -768,12 +769,14 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     Třida pohledu pro změnu stavu a práci s dokumentama cez modal, která se dedí pro jednotlivá změny.
     """
     template_name = "core/transakce_modal.html"
-    title = "title"
     id_tag = "id_tag"
-    button = "button"
     allowed_states = [D_STAV_ZAPSANY, D_STAV_ODESLANY, D_STAV_ARCHIVOVANY]
     success_message = "success"
     action = ""
+
+    def init_translations(self):
+        self.title = "title"
+        self.button = "button"
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
@@ -828,10 +831,12 @@ class DokumentCastPripojitAkciView(TransakceView):
     Třida pohledu pro připojení akce do části dokumentu pomoci modalu.
     """
     template_name = "core/transakce_table_modal.html"
-    title = _("dokument.views.DokumentCastPripojitAkciView.title.text")
     id_tag = "pripojit-eo-form"
-    button = _("dokument.views.DokumentCastPripojitAkciView.submitButton.text")
     success_message = DOKUMENT_AZ_USPESNE_PRIPOJEN
+
+    def init_translations(self):
+        self.title = _("dokument.views.DokumentCastPripojitAkciView.title.text")
+        self.button = _("dokument.views.DokumentCastPripojitAkciView.submitButton.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -866,10 +871,12 @@ class DokumentCastPripojitProjektView(TransakceView):
     Třida pohledu pro připojení projektu do části dokumentu pomoci modalu.
     """
     template_name = "core/transakce_table_modal.html"
-    title = _("dokument.views.DokumentCastPripojitProjektView.title.text")
     id_tag = "pripojit-projekt-form"
-    button = _("dokument.views.DokumentCastPripojitProjektView.submitButton.text")
     success_message = DOKUMENT_PROJEKT_USPESNE_PRIPOJEN
+
+    def init_translations(self):
+        self.title = _("dokument.views.DokumentCastPripojitProjektView.title.text")
+        self.button = _("dokument.views.DokumentCastPripojitProjektView.submitButton.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -897,10 +904,13 @@ class DokumentCastOdpojitView(TransakceView):
     """
     Třida pohledu pro odpojení části dokumentu pomoci modalu.
     """
-    title = _("dokument.views.DokumentCastOdpojitView.title.text")
     id_tag = "odpojit-cast-form"
-    button = _("dokument.views.DokumentCastOdpojitView.submitButton.text")
+    
     success_message = DOKUMENT_CAST_USPESNE_ODPOJEN
+
+    def init_translations(self):
+        self.title = _("dokument.views.DokumentCastOdpojitView.title.text")
+        self.button = _("dokument.views.DokumentCastOdpojitView.submitButton.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -930,10 +940,12 @@ class DokumentCastSmazatView(TransakceView):
     """
     Třida pohledu pro smazání části dokumentu pomoci modalu.
     """
-    title = _("dokument.views.DokumentCastSmazatView.title.text")
     id_tag = "smazat-cast-form"
-    button = _("dokument.views.DokumentCastSmazatView.submitButton.text")
     success_message = DOKUMENT_CAST_USPESNE_SMAZANA
+
+    def init_translations(self):
+        self.title = _("dokument.views.DokumentCastSmazatView.title.text")
+        self.button = _("dokument.views.DokumentCastSmazatView.submitButton.text")
 
     def post(self, request, *args, **kwargs):
         cast = self.get_zaznam()
@@ -952,10 +964,12 @@ class DokumentNeidentAkceSmazatView(TransakceView):
     """
     Třida pohledu pro smazání neident akce z části dokumentu pomoci modalu.
     """
-    title = _("dokument.views.DokumentNeidentAkceSmazatView.title.text")
     id_tag = "smazat-neident-akce-form"
-    button = _("dokument.views.DokumentNeidentAkceSmazatView.submitButton.text")
     success_message = DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA
+
+    def init_translations(self):
+        self.title = _("dokument.views.DokumentNeidentAkceSmazatView.title.text")
+        self.button = _("dokument.views.DokumentNeidentAkceSmazatView.submitButton.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

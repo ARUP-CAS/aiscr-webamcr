@@ -5,6 +5,7 @@ from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import get_language
 from django_prometheus.models import ExportModelOperationsMixin
 
 from core.mixins import ManyToManyRestrictedClassMixin
@@ -61,10 +62,18 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
         verbose_name_plural = "Heslář"
 
     def __str__(self):
-        if self.heslo:
-            return self.heslo
+        if get_language() == "en":
+            if self.heslo_en:
+                return self.heslo_en
+            elif self.heslo:
+                return self.heslo
+            else:
+                return ""
         else:
-            return ""
+            if self.heslo:
+                return self.heslo
+            else:
+                return ""
 
 
 class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
