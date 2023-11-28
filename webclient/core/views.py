@@ -190,19 +190,22 @@ class DownloadFile(LoginRequiredMixin, View):
             )
             return response
 
-        path = os.path.join(settings.MEDIA_ROOT, soubor.path)
-        if os.path.exists(path):
-            content_type = mimetypes.guess_type(soubor.nazev)[
-                0
-            ]  # Use mimetypes to get file type
-            response = HttpResponse(soubor.path, content_type=content_type)
-            response["Content-Length"] = str(len(soubor.path))
-            response["Content-Disposition"] = (
-                    "attachment; filename=" + soubor.nazev
-            )
-            return response
+        if soubor.path is not None:
+            path = os.path.join(settings.MEDIA_ROOT, soubor.path)
+            if os.path.exists(path):
+                content_type = mimetypes.guess_type(soubor.nazev)[
+                    0
+                ]  # Use mimetypes to get file type
+                response = HttpResponse(soubor.path, content_type=content_type)
+                response["Content-Length"] = str(len(soubor.path))
+                response["Content-Disposition"] = (
+                        "attachment; filename=" + soubor.nazev
+                )
+                return response
+            else:
+                logger.debug("core.views.download_file.not_exists", extra={"soubor_name": soubor.nazev, "path": path})
         else:
-            logger.debug("core.views.download_file.not_exists", extra={"soubor_name": soubor.nazev, "path": path})
+            logger.debug("core.views.download_file.path_is_none", extra={"soubor_name": soubor.nazev, "pk": pk})
         return HttpResponse("")
 
 

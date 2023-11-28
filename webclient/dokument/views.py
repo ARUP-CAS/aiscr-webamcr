@@ -62,7 +62,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.forms import inlineformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -1496,7 +1496,10 @@ def smazat(request, ident_cely):
         soubory = d.soubory
         resp1 = d.delete()
         resp2 = historie.delete()
-        resp3 = soubory.delete()
+        try:
+            resp3 = soubory.delete()
+        except ObjectDoesNotExist:
+            logger.debug("dokument.views.smazat.not_exist", extra={"ident_cely": d.ident_cely})
 
         # Kdyz mazu dokument ktery reprezentuje 3D model, mazu i komponenty
         if "3D" in d.ident_cely:

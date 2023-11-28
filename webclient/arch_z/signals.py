@@ -86,7 +86,7 @@ def delete_arch_z_connected_documents(sender, instance: ArcheologickyZaznam, **k
         item: DokumentCast
         if item.komponenty.komponenty.exists():
             continue
-        if item.neident_akce.exist():
+        if item.neident_akce.exists():
             continue
         item.delete()
         logger.debug("arch_z.signals.delete_arch_z_repository_container.cast_dokumentu.delete.part_1",

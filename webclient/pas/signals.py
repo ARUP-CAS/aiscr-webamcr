@@ -1,6 +1,7 @@
 import logging
 
 from core.constants import SAMOSTATNY_NALEZ_RELATION_TYPE
+from django.core.exceptions import ObjectDoesNotExist
 from core.models import SouborVazby
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
@@ -35,8 +36,10 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, **kwargs):
 
 @receiver(pre_delete, sender=SamostatnyNalez)
 def dokument_delete_soubor_vazby(sender, instance: SamostatnyNalez, **kwargs):
-    instance.soubory.delete()
-
+    try:
+        instance.soubory.delete()
+    except ObjectDoesNotExist:
+        logger.debug("pas.signals.dokument_delete_soubor_vazby.not_exist", extra={"ident_cely": instance.ident_cely})
 
 @receiver(pre_delete, sender=SamostatnyNalez)
 def samostatny_nalez_okres_delete_repository_container(sender, instance: SamostatnyNalez, **kwargs):

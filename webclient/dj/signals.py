@@ -51,7 +51,7 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
         logger.debug("dj.signals.create_dokumentacni_jednotka.no_pian", extra={"ident_cely": instance.ident_cely})
         return
     dj_query = DokumentacniJednotka.objects.filter(pian=pian).filter(~Q(ident_cely=instance.ident_cely))
-    if not pian.ident_cely.startswith("N-") and not dj_query.exist():
+    if not pian.ident_cely.startswith("N-") and not dj_query.exists():
         logger.debug("dj.signals.create_dokumentacni_jednotka.delete", extra={"ident_cely": pian.ident_cely})
         if hasattr(instance, "deleted_by_user") and instance.deleted_by_user is not None:
             pian.deleted_by_user = instance.deleted_by_user
