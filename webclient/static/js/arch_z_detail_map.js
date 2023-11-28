@@ -98,7 +98,7 @@ var poi_pian =  L.featureGroup.subGroup(poi_all)
 var poi_model = L.layerGroup();
 var heatPoints = [];
 var heatmapOptions = settings_heatmap_options;
-var heatLayer = L.heatLayer(heatPoints, heatmapOptions);
+var heatLayer = new HeatmapOverlay( heatmapOptions);
 
 var drawnItems = new L.FeatureGroup();
 var drawnItemsBuffer = new L.FeatureGroup();
@@ -1062,14 +1062,21 @@ switchMap = function (overview = false) {
                            // map.addLayer(poi_pian_dp);
                         }*/
                     } else {
+                        heatPoints=[]
                         let resHeat = JSON.parse(this.responseText).heat
+                        let maxHeat=0;
                         resHeat.forEach((i) => {
                             geom = i.geom.split("(")[1].split(")")[0].split(" ");
-                            for (let j = 0; j < i.pocet; j++) {
-                                heatPoints.push([geom[1], geom[0]])//chyba je to geome
+                            if(i.pocet>maxHeat){
+                                maxHeat=i.pocet;
                             }
+                                //from: {"id": "1", "pocet": 32, "density": 0, "geom": "POINT(14.8 50.120000000000005)"}
+                                //to: {lat: 24.6408, lng:46.7728, count: 3}
+                            heatPoints.push({lat:parseFloat(geom[1]), lng:parseFloat(geom[0]), count:i.pocet});//chyba je to geome
                         })
-                        heatLayer = L.heatLayer(heatPoints, heatmapOptions);
+                        heatLayer = new HeatmapOverlay( heatmapOptions); //= L.heatLayer(heatPoints, heatmapOptions);
+                        //console.log({max:maxHeat,data:heatPoints})
+                        heatLayer.setData({max:maxHeat,data:heatPoints})
                         map.addLayer(heatLayer);
                         poi_pian.clearLayers();
                         poi_pian_dp.clearLayers();
@@ -1079,6 +1086,8 @@ switchMap = function (overview = false) {
                 } catch(e){map.spin(false);console.log(e)}
             };
         }
+    } else if(!map.hasLayer(poi_all) && !map.hasLayer(poi_sn)){
+        map.removeLayer(heatLayer);
     }
 }
 

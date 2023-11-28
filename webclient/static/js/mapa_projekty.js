@@ -24,7 +24,8 @@ map.addLayer(poi_pian);
 
 var heatPoints = [];
 var heatmapOptions = settings_heatmap_options;
-var heatLayer = L.heatLayer(heatPoints, heatmapOptions);
+//var heatLayer = L.heatLayer(heatPoints, heatmapOptions);
+heatLayer = new HeatmapOverlay( heatmapOptions)
 
 var global_clusters = false;
 var global_heat = false;
@@ -357,13 +358,26 @@ switchMap = function (overview = false) {
                     })
                 } else {
                     let resHeat = JSON.parse(this.responseText).heat
-                    resHeat.forEach((i) => {
+                    /*resHeat.forEach((i) => {
                         geom = i.geom.split("(")[1].split(")")[0].split(" ");
                         for (let j = 0; j < i.pocet; j++) {
                             heatPoints.push([geom[1], geom[0]])//chyba je to geome
                         }
+                    })*/
+                    let maxHeat=0;
+                    resHeat.forEach((i) => {
+                        geom = i.geom.split("(")[1].split(")")[0].split(" ");
+                        if(i.pocet>maxHeat){
+                            maxHeat=i.pocet;
+                        }
+                            //from: {"id": "1", "pocet": 32, "density": 0, "geom": "POINT(14.8 50.120000000000005)"}
+                            //to: {lat: 24.6408, lng:46.7728, count: 3}
+                        heatPoints.push({lat:parseFloat(geom[1]), lng:parseFloat(geom[0]), count:i.pocet});//chyba je to geome
                     })
-                    heatLayer = L.heatLayer(heatPoints, heatmapOptions);
+                    heatLayer = new HeatmapOverlay( heatmapOptions); //= L.heatLayer(heatPoints, heatmapOptions);
+                    //console.log({max:maxHeat,data:heatPoints})
+                    heatLayer.setData({max:maxHeat,data:heatPoints})
+                    //heatLayer = L.heatLayer(heatPoints, heatmapOptions);
                     map.addLayer(heatLayer);
                     poi_p1.clearLayers();
                     poi_p2.clearLayers();
