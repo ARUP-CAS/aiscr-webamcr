@@ -1492,14 +1492,7 @@ def smazat(request, ident_cely):
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
 
-        historie = d.historie
-        soubory = d.soubory
         resp1 = d.delete()
-        resp2 = historie.delete()
-        try:
-            resp3 = soubory.delete()
-        except ObjectDoesNotExist:
-            logger.debug("dokument.views.smazat.not_exist", extra={"ident_cely": d.ident_cely})
 
         # Kdyz mazu dokument ktery reprezentuje 3D model, mazu i komponenty
         if "3D" in d.ident_cely:
@@ -1508,7 +1501,7 @@ def smazat(request, ident_cely):
                 k.delete()
 
         if resp1:
-            logger.debug("dokument.views.smazat.deleted", extra={"resp1": resp1, "resp2": resp2, "resp3": resp3})
+            logger.debug("dokument.views.smazat.deleted", extra={"resp1": resp1})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             return JsonResponse({"redirect": reverse("core:home")})
         else:

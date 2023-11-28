@@ -55,7 +55,7 @@ from core.views import SearchListView, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -688,13 +688,10 @@ def smazat(request, ident_cely):
         soubory = nalez.soubory
         nalez.deleted_by_user = request.user
         resp1 = nalez.delete()
-        resp2 = historie.delete()
-        resp3 = soubory.delete()
-
         if resp1:
             logger.info(
                 "pas.views.smazat.deleted",
-                extra={"resp1": resp1, "resp2": resp2, "resp3": resp3},
+                extra={"resp1": resp1},
             )
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             return JsonResponse({"redirect": reverse("core:home")})

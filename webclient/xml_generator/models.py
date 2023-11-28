@@ -83,7 +83,8 @@ class ModelWithMetadata(models.Model):
         connector = FedoraRepositoryConnector(self)
         try:
             from core.models import SouborVazby
-            if hasattr(self, "soubory") and self.soubory is not None and isinstance(self.soubory, SouborVazby):
+            if hasattr(self, "soubory") and self.soubory is not None and isinstance(self.soubory, SouborVazby)\
+                    and self.soubory.pk is not None:
                 for soubor in self.soubory.soubory.all():
                     from core.models import Soubor
                     soubor: Soubor
@@ -92,9 +93,11 @@ class ModelWithMetadata(models.Model):
             from dokument.models import Dokument
             from pas.models import SamostatnyNalez
             if isinstance(self, Dokument):
-                self.soubory.delete()
+                if self.soubory.pk is not None:
+                    self.soubory.delete()
             elif isinstance(self, SamostatnyNalez):
-                self.soubory.delete()
+                if self.soubory.pk is not None:
+                    self.soubory.delete()
         except ObjectDoesNotExist as err:
             logger.debug("xml_generator.models.ModelWithMetadata.no_files_to_delete.end", extra={"err": err})
         return connector.record_deletion()

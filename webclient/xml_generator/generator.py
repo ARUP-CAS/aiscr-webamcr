@@ -269,7 +269,7 @@ class DocumentGenerator:
                 else:
                     related_record = getattr(record, record_name_split[0], None)
                     related_record = getattr(related_record, record_name_split[1], None)
-                    if hasattr(related_record, "all"):
+                    if hasattr(related_record, "all") and hasattr(related_record, "pk") and related_record.pk is not None:
                         attributes = [x for x in related_record.all()]
             elif len(record_name_split) == 3:
                 related_record = getattr(record, record_name_split[0])
