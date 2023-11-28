@@ -21,18 +21,18 @@ L.control.layers(baseLayers, overlays).addTo(map);
 
 map.on('click', function (e) {
     if (!global_measuring_toolbox._measuring) {
-        let [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
+        let point_leaf= amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
         if (global_map_can_edit) {
             if (!lock) {
-                point_global_WGS84 = [corX, corY];
-                document.getElementById('id_coordinate_x').value = point_global_WGS84[0]
-                document.getElementById('id_coordinate_y').value = point_global_WGS84[1]
-                document.getElementById('id_sirka').value = point_global_WGS84[0]
-                document.getElementById('id_vyska').value = point_global_WGS84[1]
+                point_global_WGS84 = [...point_leaf].reverse();
+                document.getElementById('id_visible_x1').value = point_global_WGS84[0] //visible
+                document.getElementById('id_visible_x2').value = point_global_WGS84[1]
+                document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0] //hiden
+                document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
 
-                $("#vyska").change();
-                $("#sirka").change();
-                addUniquePointToPoiLayer(corX, corY, '', false, true)
+                $("#visible_x1").change();
+                $("#visible_x2").change();
+                addUniquePointToPoiLayer(point_leaf, '', false, true)
                 replace_coor();
             }
         }
@@ -62,10 +62,10 @@ map.on('popupopen', function (e) {
 
 });
 
-var is_in_czech_republic = (corX, corY) => {
+var is_in_czech_republic = (x2, x1) => {
     console.log("Test coordinates for bounding box");
 
-    if (corY >= 12.2401111182 && corY <= 18.8531441586 && corX >= 48.5553052842 && corX <= 51.1172677679) {
+    if (x1 >= 12.2401111182 && x1 <= 18.8531441586 && x2 >= 48.5553052842 && x2 <= 51.1172677679) {
         return true;
     } else {
         console.log("Coordinates not inside CR");
@@ -75,31 +75,27 @@ var is_in_czech_republic = (corX, corY) => {
     }
 };
 
-
-//var addPointToPoiLayer = (lat, long, text) => {
-//    L.marker([lat, long]).bindPopup(text).addTo(poi);
-//};
-var addUniquePointToPoiLayer = (lat, long, text, zoom = true,redIcon= false) => {
-    var [corX, corY] = amcr_static_coordinate_precision_wgs84([lat, long]);
+var addUniquePointToPoiLayer = (arg_point_leaf, text, zoom = true,redIcon= false) => {
+    var point_leaf = amcr_static_coordinate_precision_wgs84(arg_point_leaf);
     poi_model.clearLayers()
     if(redIcon){
-        L.marker([corX, corY],{icon:pinIconRed3D, zIndexOffset: 2000})
+        L.marker(point_leaf,{icon:pinIconRed3D, zIndexOffset: 2000})
         .bindPopup("Vámi vyznačená poloha")
         .addTo(poi_model);
     }else{
-        L.marker([corX, corY],{icon:pinIconYellow3D, zIndexOffset: 2000})
+        L.marker(point_leaf,{icon:pinIconYellow3D, zIndexOffset: 2000})
         .bindPopup("Vámi vyznačená poloha")
         .addTo(poi_model);
     }
 
-    if (corX && corY && zoom) {
-        map.setView([corX, corY], 15);
+    if (point_leaf[0] && point_leaf[1] && zoom) {
+        map.setView(point_leaf, 15);
     }
-    point_global_WGS84 = [corX, corY];
+    point_global_WGS84 = [...point_leaf].reverse()
 }
 
-var addReadOnlyUniquePointToPoiLayer = (corX, corY, text) => {
-    addUniquePointToPoiLayer(corX, corY, text, true)
+var addReadOnlyUniquePointToPoiLayer = (point_leaf, text) => {
+    addUniquePointToPoiLayer(point_leaf, text, true)
     lock = false;
 };
 
@@ -109,13 +105,13 @@ function showPosition(position) {
     var latlng = new L.LatLng(latitude, longitude);
 
     map.setView(latlng, 16);
-    addUniquePointToPoiLayer(latitude, longitude, '', false, true)
+    addUniquePointToPoiLayer([latitude, longitude], '', false, true)
 
-    point_global_WGS84 = [latitude, longitude];
-    document.getElementById('id_coordinate_x').value = point_global_WGS84[0]
-    document.getElementById('id_coordinate_y').value = point_global_WGS84[1]
-    document.getElementById('id_sirka').value = point_global_WGS84[0]
-    document.getElementById('id_vyska').value = point_global_WGS84[1]
+    point_global_WGS84 = [longitude, latitude];
+    document.getElementById('id_visible_x1').value = point_global_WGS84[0] //visible
+    document.getElementById('id_visible_x2').value = point_global_WGS84[1]
+    document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0] //hiden
+    document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
 
     L.marker(latlng).addTo(poi_model)
         .bindPopup([map_translations['CurrentLocation']]) // "Vaše současná poloha"
@@ -124,14 +120,14 @@ function showPosition(position) {
 
 
 var replace_coor = () => {
-    var dx='id_sirka';
-    var dy='id_vyska';
+    var x1='id_visible_x1';
+    var x2='id_visible_x2';
     if(typeof InstallTrigger == 'undefined'){//!firefox
-        document.getElementById(dx).value=(document.getElementById(dx).value);
-        document.getElementById(dy).value=(document.getElementById(dy).value);
+        document.getElementById(x1).value=(document.getElementById(x1).value);
+        document.getElementById(x2).value=(document.getElementById(x2).value);
     }else{
-        document.getElementById(dx).value=(document.getElementById(dx).value.replace(".",","));
-        document.getElementById(dy).value=(document.getElementById(dy).value.replace(".",","));
+        document.getElementById(x1).value=(document.getElementById(x1).value.replace(".",","));
+        document.getElementById(x2).value=(document.getElementById(x2).value.replace(".",","));
     }
 }
 

@@ -55,27 +55,27 @@ class CoordinatesDokumentForm(forms.Form):
     """
     Hlavní formulář pro editaci souřadnic v PAS.
     """
-    detector_system_coordinates = forms.ChoiceField(
+    visible_ss_combo = forms.ChoiceField(
         label=_("pas.forms.coordinates.detector.label"),
         choices=COORDINATE_SYSTEM,
         required=False,
         help_text=_("pas.forms.coordinates.detector.tooltip"),
     )
-    detector_coordinates_x = forms.CharField(
-        label=_("pas.forms.coordinates.cor_x.label"),
+    visible_x1 = forms.CharField(
+        label=_("pas.forms.coordinates.cor_x1.label"),
         required=False,
-        help_text=_("pas.forms.coordinates.cor_x.tooltip"),
+        help_text=_("pas.forms.coordinates.cor_x1.tooltip"),
     )
-    detector_coordinates_y = forms.CharField(
-        label=_("pas.forms.coordinates.cor_y.label"),
+    visible_x2 = forms.CharField(
+        label=_("pas.forms.coordinates.cor_x2.label"),
         required=False,
-        help_text=_("pas.forms.coordinates.cor_y.tooltip"),
+        help_text=_("pas.forms.coordinates.cor_x2.tooltip"),
     )
 
-    coordinate_wgs84_x = forms.FloatField(required=False, widget=HiddenInput())
-    coordinate_wgs84_y = forms.FloatField(required=False, widget=HiddenInput())
-    coordinate_sjtsk_x = forms.FloatField(required=False, widget=HiddenInput())
-    coordinate_sjtsk_y = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_wgs84_x1 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_wgs84_x2 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_sjtsk_x1 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_sjtsk_x2 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_system = forms.CharField(
         required=False, widget=HiddenInput(), initial="4326"
     )
@@ -611,8 +611,19 @@ class CreateModelExtraDataForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení extra dat modelu 3D.
     """
-    coordinate_x = forms.FloatField(required=False, widget=HiddenInput())
-    coordinate_y = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_wgs84_x1 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_wgs84_x2 = forms.FloatField(required=False, widget=HiddenInput())
+
+    visible_x1 = forms.CharField(
+        label=_("pas.forms.coordinates.cor_x1.label"),
+        required=False,
+        help_text=_("pas.forms.coordinates.cor_x1.tooltip"),
+    )
+    visible_x2 = forms.CharField(
+        label=_("pas.forms.coordinates.cor_x2.label"),
+        required=False,
+        help_text=_("pas.forms.coordinates.cor_x2.tooltip"),
+    )
 
     class Meta:
         model = DokumentExtraData
@@ -661,8 +672,8 @@ class CreateModelExtraDataForm(forms.ModelForm):
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         # self.fields["format"].required = True
         # Disabled hodnoty se neposilaji na server
-        self.fields["vyska"].widget.attrs["disabled"] = "disabled"
-        self.fields["sirka"].widget.attrs["disabled"] = "disabled"
+        self.fields["visible_x1"].widget.attrs["disabled"] = "disabled"
+        self.fields["visible_x2"].widget.attrs["disabled"] = "disabled"
         self.fields["format"].choices = [("", "")] + list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT)
             .filter(heslo__startswith="3D")
