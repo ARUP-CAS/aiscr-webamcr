@@ -53,7 +53,7 @@ services:
 
   celery_worker:
     image: aiscr/webamcr:${IMAGE_TAG}
-    command: ["/scripts/start-celery-worker.sh"]
+    command: celery -A webclient worker -l INFO -n worker1@amcr
     secrets:
       - db_conf
       - mail_conf
@@ -75,7 +75,7 @@ services:
 
   celery_beat:
     image: aiscr/webamcr:${IMAGE_TAG}
-    command: celery -A webclient beat -l INFO
+    command: celery -A webclient beat -l INFO -n worker1@amcr
     secrets:
       - db_conf
       - mail_conf
