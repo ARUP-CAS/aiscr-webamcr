@@ -75,7 +75,7 @@ services:
 
   celery_beat:
     image: aiscr/webamcr:${IMAGE_TAG}
-    command: celery -A webclient beat -l INFO -n worker1@amcr
+    command: celery -A webclient beat -l INFO
     secrets:
       - db_conf
       - mail_conf
