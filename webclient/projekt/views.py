@@ -370,8 +370,8 @@ def create(request):
         form_oznamovatel = OznamovatelForm(request.POST, required=required)
         if form_projekt.is_valid():
             logger.debug("projekt.views.create.form_valid")
-            lat = form_projekt.cleaned_data["latitude"]
-            long = form_projekt.cleaned_data["longitude"]
+            x2 = form_projekt.cleaned_data["coordinate_x2"]
+            x1 = form_projekt.cleaned_data["coordinate_x1"]
             projekt = form_projekt.save(commit=False)
             if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                 # Kontrola oznamovatele
@@ -388,8 +388,8 @@ def create(request):
                             "button": _("projekt.views.create.submitButton.text"),
                         },
                     )
-            if long and lat:
-                projekt.geom = Point(long, lat)
+            if x1 and x2:
+                projekt.geom = Point(x1, x2)
             try:
                 projekt.set_permanent_ident_cely(False)
             except MaximalIdentNumberError:
@@ -458,14 +458,14 @@ def edit(request, ident_cely):
         )
         if form.is_valid():
             logger.debug("projekt.views.edit.form_valid")
-            lat = form.cleaned_data["latitude"]
-            long = form.cleaned_data["longitude"]
+            x1 = form.cleaned_data["coordinate_x1"]
+            x2 = form.cleaned_data["coordinate_x2"]
             # Workaroud to not check if long and lat has been changed, only geom is interesting
-            form.fields["latitude"].initial = lat
-            form.fields["longitude"].initial = long
+            form.fields["coordinate_x1"].initial = x1
+            form.fields["coordinate_x2"].initial = x2
             p = form.save()
             old_geom = p.geom
-            new_geom = Point(long, lat)
+            new_geom = Point(x1,x2)
             geom_changed = False
             if old_geom is None or new_geom.coords != old_geom.coords:
                 p.geom = new_geom
@@ -489,8 +489,8 @@ def edit(request, ident_cely):
             edit_fields = edit_fields
         )
         if projekt.geom is not None:
-            form.fields["latitude"].initial = projekt.geom.coords[1]
-            form.fields["longitude"].initial = projekt.geom.coords[0]
+            form.fields["coordinate_x1"].initial = projekt.geom.coords[0]
+            form.fields["coordinate_x2"].initial = projekt.geom.coords[1]
         else:
             logger.warning("projekt.views.edit.empty")
     return render(

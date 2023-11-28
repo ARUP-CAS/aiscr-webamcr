@@ -112,17 +112,21 @@
   </script>
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
+  <script src="{% static 'mapa_basic_grey.js' %}"></script>
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
+  <script src="{% static 'leaflet_subgroup.js' %}"></script>
   <script src="{% static 'mapa_projekty.js' %}"></script>
   <script>
+    window.addEventListener("DOMContentLoaded", function() {
       global_map_can_edit = true;
-      if (document.getElementById("id_latitude").value > 1) {
+      if (document.getElementById("id_coordinate_x2").value > 1) {
           console.log("Adding point to map.")
-          addPointOnLoad(document.getElementById("id_latitude").value, document.getElementById("id_longitude").value, "{%trans 'mapa.lokalizaceZamer' %}");
+          addPointOnLoad(document.getElementById("id_coordinate_x2").value, document.getElementById("id_coordinate_x1").value, "{%trans 'mapa.lokalizaceZamer' %}");
       } else {
           console.log("Not adding point to map!")
       }
+    })
   </script>
 
   <script src="{% static 'daterangepicker.js' %}"></script>
@@ -131,7 +135,6 @@
   <script>
       window.addEventListener("DOMContentLoaded", function() {
         var checked_field = document.getElementById("id_kulturni_pamatka");
-        console.log(checked_field)
         var fields = new Map()
         fields.set("id_kulturni_pamatka_cislo", "")
         fields.set("id_kulturni_pamatka_popis", "")
@@ -195,9 +198,7 @@
               if (disabled) {
                   $(field).val("");
               }
-              console.log(disabled)
           }
-          console.log(selectElement.selectedIndex )
           if (selectElement.selectedIndex != ZACHRANNY_OPTION) {
             makeFieldDisabled('#id_oznaceni_stavby', true)
           } else {
