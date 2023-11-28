@@ -913,7 +913,7 @@ def get_validation_messages(text):
         return text
 
 
-def get_transform_towgs84(cy, cx):
+def get_transform_towgs84(x1, x2):
     """
     Funkce pro transformaci na wgs84.
     """
@@ -927,7 +927,7 @@ def get_transform_towgs84(cy, cx):
         "targetXYorder=xy&"
         "sourceSixtiethView=false&"
         "targetSixtiethView=false&"
-        "coordinates=" + str(cy) + "+" + str(cx) + "+300"
+        "coordinates=" + str(x1) + "+" + str(x2) + "+300"
         "&time=2022-05-20"
     )
 

@@ -6,7 +6,7 @@ import requests
 logger = logging.getLogger("django_cron")
 
 
-def get_transform_to_wgs84(cy, cx):
+def get_transform_to_wgs84(x1, x2):
     url = "https://geoportal.cuzk.cz/(S(k10mxdjzq1pv5tkgcghghohf))/WCTSHandlerhld.ashx"
     query = (
         "source=Coordinates&"
@@ -16,7 +16,7 @@ def get_transform_to_wgs84(cy, cx):
         "targetXYorder=xy&"
         "sourceSixtiethView=false&"
         "targetSixtiethView=false&"
-        "coordinates=" + str(cy) + "+" + str(cx) + "+300"
+        "coordinates=" + str(x1) + "+" + str(x2) + "+300"
         "&time=2022-05-20"
     )
 

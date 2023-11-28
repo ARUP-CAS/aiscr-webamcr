@@ -460,11 +460,11 @@ map.on('draw:created', function (e) {
         if (type === 'marker') {
             drawnItems.clearLayers();
 
-            let corX = e.layer._latlng.lat;
-            let corY = e.layer._latlng.lng;
+            let x2 = e.layer._latlng.lat;
+            let x1 = e.layer._latlng.lng;
             if (global_map_can_edit) {
                 //odebrano [map_translations['TempPIAN']])
-                L.marker([corX, corY], { icon: pinIconRedPoint }).bindTooltip('Navržený pian').addTo(drawnItems); //'Navržený pian'
+                L.marker([x2, x1], { icon: pinIconRedPoint }).bindTooltip('Navržený pian').addTo(drawnItems); //'Navržený pian'
 
             }
         } else {
@@ -571,7 +571,7 @@ var clickOnMap=(e)=>{
         if(getFiltrTypeIsKuSafe()){
             console.log("Your zoom is: "+map.getZoom())
 
-            var [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
+            var [x1, x2] = amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
 
             let xhr = new XMLHttpRequest();
             xhr.open('POST', '/pas/mapa-zjisti-katastr-geom');
@@ -590,8 +590,8 @@ var clickOnMap=(e)=>{
             };
             xhr.send(JSON.stringify(
                 {
-                    'cX': parseFloat(corX),
-                    'cY': parseFloat(corY),
+                    'x1': parseFloat(x1),
+                    'x2': parseFloat(x2),
                 }))
         }
     } else if(!global_map_can_grab_geom_from_map){
