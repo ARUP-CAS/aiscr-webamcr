@@ -395,7 +395,7 @@ switchMap = function (overview = false) {
                     let resPoints = JSON.parse(this.responseText).points
                     resPoints.forEach((i) => {
                         let ge = i.geom.split("(")[1].split(")")[0];
-                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[0], ge.split(" ")[1]]), { icon: pinIconGreenPin })
+                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconGreenPin })
                         .bindTooltip(i.ident_cely, { sticky: true })
                         .bindPopup('<a href="/pas/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
                         .addTo(poi_sn)

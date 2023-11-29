@@ -340,7 +340,8 @@ class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilter
                     {
                         "id": pian.id,
                         "ident_cely": pian.ident_cely,
-                        "geom": pian.geom.wkt.replace(", ", ",")
+                        "geom": pian.geom.wkt.replace(", ", ","),
+                        "presnost":pian.presnost.zkratka,
                     }
                 )
         if len(back_ident_cely) > 0:
