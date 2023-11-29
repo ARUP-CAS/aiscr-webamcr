@@ -847,6 +847,22 @@ form {
 .select2-container--default .select2-selection--single .select2-selection__rendered {
   line-height: inherit !important;
 }
+.select2multiple .select2-selection__rendered {
+  height: 1.5rem !important;
+  overflow-y: auto !important;
+}
+
+.select2-container .select2-selection--multiple .select2-selection__rendered {
+  white-space: break-spaces !important;
+}
+
+.select2-selection__rendered li:first-of-type {
+  max-width: 92%;
+}
+
+#pes_table tbody tr:not(:last-child) .select2-selection__clear {
+  display: none;
+}
 
 // test
 /* .app-table-list-container {

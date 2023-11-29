@@ -87,6 +87,7 @@ class NeidentAkceForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
+        self.readonly = readonly
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):

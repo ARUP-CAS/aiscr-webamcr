@@ -506,8 +506,11 @@
     }
 
     const increase_ul_height = (parent_element) => {
+        console.log("yes")
+        console.log(parent_element)
         const li_elements = parent_element.querySelectorAll("li.select2-selection__choice");
         const select2_element = parent_element;
+        console.log(select2_element)
         const select2_element_selection_rendered = parent_element.querySelector(".select2-selection__rendered")
         const select2_element_selection = parent_element.querySelector(".select2-selection");
         let element_line_width_sum = 0;
@@ -548,6 +551,24 @@
 
     window.addEventListener("DOMContentLoaded", function() {
       $('select.select2multiple').each(function() {
+        setTimeout(() => {
+          if ($(this).next()[0].classList.contains("select2-container")){
+            increase_ul_height($(this).next()[0]);
+            $(this).on('change', function (e) {
+              increase_ul_height(e.currentTarget.nextSibling);
+            });
+          }
+          else{
+            setTimeout(() => {
+              increase_ul_height($(this).next()[0]);
+              $(this).on('change', function (e) {
+                increase_ul_height(e.currentTarget.nextSibling);
+              });
+            }, 2000);
+          }
+        }, 1000);
+      })
+      $('select.modelselect2multiple').each(function() {
         setTimeout(() => {
           if ($(this).next()[0].classList.contains("select2-container")){
             increase_ul_height($(this).next()[0]);

@@ -86,7 +86,7 @@
           </button>
           {% if j.show_pripojit_pian %}
           <button id="pian-pripojit-{{j.pian_ident_cely}}" class="dropdown-item pian-pripojit-btn" type="button"
-                  name="button" onclick="set_pian_by_id('{{j.ident_cely}}')")>
+                  name="button" onclick="set_pian_by_id('{{j.ident_cely}}',false)")>
             {% trans 'lokalita.templates.dj.djUpdate.moreActions.pripojitPianPodleId.label' %}
           </button>
           {% endif %}
@@ -102,7 +102,7 @@
   </div>
   <div class="card-body">
     {% if not j.adb_form %}
-    <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}"
+    <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" id="djEditForm"
           onsubmit="editDjSubmitButton.disabled = true; return true;">
       {% crispy j.form %}
       {% if show.editovat %}
@@ -183,12 +183,18 @@
     }
 </script>
 <script>
-  var set_pian_by_id = function (dj_ident) {
+  var set_pian_by_id = function (dj_ident, disabled=true) {
     id = "#id_" + dj_ident + "-pian"
-    $(id).prop('disabled', false);
+    $(id).prop('disabled', disabled);
     document.getElementById("pian_text").style.display = "none";
     document.getElementById("pian_select").style.display = "block";
-    //$(id).prop('disabled', true);
   };
+</script>
+<script>
+  jQuery(function ($) {        
+    $('#djEditForm').bind('submit', function () {
+      $(this).find('#pian_select').find(':input').prop('disabled', false);
+    });
+  });
 </script>
 {% endblock %}
