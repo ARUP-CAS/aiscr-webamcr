@@ -119,6 +119,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
             "ident_cely": _("uzivatel.forms.userChange.ident_cely.label"),
             "date_joined": _("uzivatel.forms.userChange.date_joined.label"),
             "organizace": _("uzivatel.forms.userChange.organizace.label"),
+            "hlavni_role": _("uzivatel.forms.userChange.hlavni_role.label"),
             "groups": _("uzivatel.forms.userChange.groups.label"),
         }
         help_texts = {
@@ -185,8 +186,18 @@ class UpdatePasswordSettings(forms.ModelForm):
     """
     Formulář pro změnu hesla.
     """
-    password1 = forms.CharField(required=False, widget=PasswordInput())
-    password2 = forms.CharField(required=False, widget=PasswordInput())
+    password1 = forms.CharField(
+        required=False,
+        widget=PasswordInput(),
+        label=_("uzivatel.forms.userChange.password1.label"),
+        help_text=_("uzivatel.forms.UpdatePasswordSettings.password1.tooltip")
+    )
+    password2 = forms.CharField(
+        required=False,
+        widget=PasswordInput(),
+        label=_("uzivatel.forms.userChange.password2.label"),
+        help_text=_("uzivatel.forms.UpdatePasswordSettings.password2.tooltip")
+    )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -204,14 +215,6 @@ class UpdatePasswordSettings(forms.ModelForm):
     class Meta:
         model = User
         fields = ("password1", "password2")
-        labels = {
-            "password1": _("uzivatel.forms.userChange.password1.label"),
-            "password2": _("uzivatel.forms.userChange.password2.label"),
-        }
-        help_texts = {
-            "password1": _("uzivatel.forms.UpdatePasswordSettings.password1.tooltip"),
-            "password2": _("uzivatel.forms.UpdatePasswordSettings.password2.tooltip"),
-        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
