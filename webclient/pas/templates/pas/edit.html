@@ -26,11 +26,11 @@
         </div>
       </div>      
     <div>
-      <input type="submit" name="save" value="{% translate 'Uložit změny' %}" class="btn btn-primary" id="submit-id-save">
+      <input type="submit" name="save" value="{% translate 'pas.templates.edit.submitButton' %}" class="btn btn-primary" id="submit-id-save">
       {% if sn %}
-        <a type="button" class="btn btn-secondary" href="{% url 'pas:detail' sn.ident_cely %}">{% trans "pas.templates.edit.backButton.sn" %}</a>
+        <a type="button" class="btn btn-secondary" href="{% url 'pas:detail' sn.ident_cely %}">{% trans "pas.templates.edit.backButton" %}</a>
       {% else %}
-        <a type="button" class="btn btn-secondary" href="{% url 'pas:index' %}">{% trans "pas.templates.edit.backButton.pas" %}</a>
+        <a type="button" class="btn btn-secondary" href="{% url 'pas:index' %}">{% trans "pas.templates.edit.backButton" %}</a>
       {% endif %}
     </div>
     </form>

@@ -31,9 +31,12 @@ def create_pes_form(not_readonly=True, model_typ=None):
             super(PesForm, self).__init__(*args, **kwargs)
             self.model_typ = model_typ
             if model_typ == KRAJ_CONTENT_TYPE:
+                if self.instance.pk is not None:
+                    new_choices = list(RuianKraj.objects.all().values_list("id", "nazev"))
+                else:
+                    new_choices = [("", "")] + list(RuianKraj.objects.all().values_list("id", "nazev"))
                 self.fields["object_id"] = forms.ChoiceField(
-                    choices=[("", "")]
-                    + list(RuianKraj.objects.all().values_list("id", "nazev")),
+                    choices=new_choices,
                     label=_("notifikaceProjekty.forms.pesForm.kraj.label"),
                     help_text=_("notifikaceProjekty.forms.pesForm.kraj.tooltip"),
                     required=True,
@@ -46,7 +49,10 @@ def create_pes_form(not_readonly=True, model_typ=None):
                     ),
                 )
             elif model_typ == OKRES_CONTENT_TYPE:
-                okresy_choices = [("", "")]
+                if self.instance.pk is not None:
+                    okresy_choices = []
+                else:
+                    okresy_choices = [("", "")]
                 kraje = RuianKraj.objects.all()
                 for kraj in kraje:
                     kraj_group = []

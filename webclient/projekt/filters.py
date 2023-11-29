@@ -373,7 +373,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
-    akce_vedouci_organizace = MultipleChoiceFilter(
+    akce_vedouc_organizace = MultipleChoiceFilter(
         choices=Organizace.objects.all().values_list("id", "nazev_zkraceny"),
         label=_("projekt.filters.projektFilter.akceVedouciOrganizace.label"),
         method="filtr_akce_organizace",
@@ -739,7 +739,7 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div("akce_ident_obsahuje", css_class="col-sm-2"),
                 Div("typ_akce", css_class="col-sm-2"),
                 Div("stav_akce", css_class="col-sm-2"),
-                Div("akce_vedouci_organizace", css_class="col-sm-2"),
+                Div("akce_vedouc_organizace", css_class="col-sm-2"),
                 Div("akce_vedouci", css_class="col-sm-2"),
                 Div("pristupnost_akce", css_class="col-sm-2"),
                 Div("akce_katastr", css_class="col-sm-2"),
