@@ -1092,7 +1092,7 @@ def edit_model_3D(request, ident_cely):
         )
         geom = None
         x1 = None
-        y1 = None
+        x2 = None
         try:
             x1 = float(form_coor.data.get("coordinate_wgs84_x1"))
             x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
