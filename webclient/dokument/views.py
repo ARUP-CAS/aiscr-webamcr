@@ -1099,7 +1099,7 @@ def edit_model_3D(request, ident_cely):
             if x1 > 0 and x2 > 0:
                 geom = Point(x1, x2)
         except Exception:
-            logger.debug("dokument.views.edit_model_3D.coord_error", extra={"dx": dx, "dy": dy})
+            logger.debug("dokument.views.edit_model_3D.coord_error", extra={"x1": x1, "x2": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             #save autors with order
             instance_d = form_d.save(commit=False)
