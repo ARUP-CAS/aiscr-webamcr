@@ -65,6 +65,20 @@ map.on('click', function (e) {
     }
 });
 
+map.on('overlayadd', function(eventlayer){
+    console.log("pridat mapu")
+    if(eventlayer.layer===poi_pian || eventlayer.layer===poi_sn){
+        switchMap(false)
+    }
+});
+
+map.on('overlayremove', function(eventlayer){
+    console.log("ubrat mapu")
+    if(eventlayer.layer===poi_pian || eventlayer.layer===poi_sn){
+        switchMap(false)
+    }
+});
+
 map.on('popupclose', function (e) {
 
     // make the tooltip for this feature visible again
