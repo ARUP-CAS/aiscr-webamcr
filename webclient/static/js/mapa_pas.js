@@ -374,24 +374,16 @@ $(document).ready(function () {
     my_sys = document.getElementById('id_coordinate_system').value;
     point_global_WGS84 = amcr_static_coordinate_precision_wgs84([my_wgs84_x1,my_wgs84_x2]);
     point_global_JTSK= amcr_static_coordinate_precision_jtsk([my_sjtsk_x1,my_sjtsk_x2]);
-    console.log(my_sjtsk_x1)
 
     if(point_global_JTSK[0]==0){
-        console.log("---will-recalc")
         point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0],point_global_WGS84[1]))
     }
-    console.log("---will-show")
-    console.log(point_global_WGS84)
-    console.log(point_global_JTSK)
     if(my_wgs84_x1){
-        console.log("---will-show-yes")
         point_leaf= [...point_global_WGS84].reverse();
         if(global_map_can_edit){
-            console.log("---will-show-1"+point_leaf)
             addUniquePointToPoiLayer(point_leaf)
         } else {
             global_map_can_edit=false
-            console.log("---will-show-2"+point_leaf)
             addReadOnlyUniquePointToPoiLayer(point_leaf)
         }
     }
@@ -428,6 +420,7 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost) => {
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
         })
+        L.polyline(coor, myColor)
         .bindTooltip(text+' ('+presnost+')', { sticky: true })
         .bindPopup("").on("click",onMarkerClick.bind(null,text))
         .addTo(layer);
