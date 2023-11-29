@@ -1,7 +1,7 @@
 import logging
 
 from django.db.models import Q
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 from dj.models import DokumentacniJednotka
@@ -43,7 +43,7 @@ def create_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created
     instance.archeologicky_zaznam.save_metadata()
 
 
-@receiver(pre_delete, sender=DokumentacniJednotka)
+@receiver(post_delete, sender=DokumentacniJednotka)
 def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
     logger.debug("dj.signals.create_dokumentacni_jednotka.start")
     pian: Pian = instance.pian

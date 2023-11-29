@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dokumentacnijednotka',
             name='pian',
-            field=models.ForeignKey(blank=True, db_column='pian', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='dokumentacni_jednotky_pianu', to='pian.pian'),
+            field=models.ForeignKey(blank=True, db_column='pian', null=True, on_delete=django.db.models.deletion.RESTRICT, related_name='dokumentacni_jednotky_pianu', to='pian.pian'),
         ),
         migrations.AddField(
             model_name='dokumentacnijednotka',
