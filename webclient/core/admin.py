@@ -158,7 +158,16 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
 
 
 admin.site.register(OdstavkaSystemu, OdstavkaSystemuAdmin)
-admin.site.register(CustomAdminSettings)
+
+class CustomAdminSettingsAdmin(admin.ModelAdmin):
+    """
+    Admin panel pro vlastních nastavení.
+    """
+    model = CustomAdminSettings
+    list_display = ("item_id", "item_group")
+
+
+admin.site.register(CustomAdminSettings, CustomAdminSettingsAdmin)
 
 
 @admin.register(Permissions)
