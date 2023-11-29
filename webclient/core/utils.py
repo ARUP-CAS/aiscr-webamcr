@@ -547,7 +547,6 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
                 (
                 DokumentacniJednotka.objects.filter(
                     Q(ident_cely__istartswith=i.archeologicky_zaznam.ident_cely)
-                    | Q(pian__geom__crosses=Polygon.from_bbox([right, top, left, bottom]))
                 )
                 .distinct()
                 .values_list("pian", flat=True)
