@@ -281,8 +281,17 @@ def get_centre_from_akce(katastr, pian):
         " from public.ruian_katastr where "
         " upper(nazev_stary)=upper(%s) and aktualni='t' limit 1"
     )
+    query_old = (
+        "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
+        " from public.ruian_katastr where "
+        " upper(nazev_stary)=upper(%s) and aktualni<>'t' limit 1"
+    )
     try:
-        bod_ku = RuianKatastr.objects.raw(query, [katastr])[0]
+        bod_ku = None
+        try:
+            bod_ku = RuianKatastr.objects.raw(query, [katastr])[0]
+        except:
+            bod_ku = RuianKatastr.objects.raw(query_old, [katastr])[0]
         bod=[bod_ku.lat,bod_ku.lng]
         geom = ""
         presnost = 4
