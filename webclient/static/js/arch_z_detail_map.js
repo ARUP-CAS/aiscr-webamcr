@@ -493,14 +493,15 @@ function geomToText() {//Desc: This fce moves edited geometry into HTML element
     let coordinates = [];
     drawnItems.eachLayer(function (layer) {
         if (layer instanceof L.Marker) {
+            addLogText('im an instance of L point');
             let latlngs = layer.getLatLng()
             text = "POINT(" + latlngs.lng + " " + latlngs.lat + ")"
-            jtsk_coor = convertToJTSK(latlngs.lat, latlngs.lng);
+            jtsk_coor = convertToJTSK(latlngs.lng, latlngs.lat);
             jtsk_text = "POINT(" + jtsk_coor[0] + " " + jtsk_coor[1] + ")"
             //coordinates.push([latlngs.lng, latlngs.lat])
         }
         else if (layer instanceof L.Polygon) {
-            //addLogText('im an instance of L polygon');
+            addLogText('im an instance of L polygon');
             text = "POLYGON(("
             jtsk_text = "POLYGON(("
             let latlngs = layer.getLatLngs()
@@ -508,19 +509,19 @@ function geomToText() {//Desc: This fce moves edited geometry into HTML element
                 for (var j = 0; j < latlngs[i].length; j++) {
                     coordinates.push([latlngs[i][j].lng, latlngs[i][j].lat])
                     text += (latlngs[i][j].lng + " " + latlngs[i][j].lat) + ", ";
-                    jtsk_coor = convertToJTSK(latlngs[i][j].lat, latlngs[i][j].lng);
+                    jtsk_coor = convertToJTSK(latlngs[i][j].lng, latlngs[i][j].lat);
                     jtsk_text += (jtsk_coor[0] + " " + jtsk_coor[1]) + ", ";
                 }
             }
             // Musi koncit na zacatek
             text += coordinates[0][0] + " " + coordinates[0][1]
             text += "))"
-            jtsk_coor = convertToJTSK(coordinates[0][1], coordinates[0][0]);
+            jtsk_coor = convertToJTSK(coordinates[0][0], coordinates[0][1]);
             jtsk_text += jtsk_coor[0] + " " + jtsk_coor[1]
             jtsk_text += "))"
         }
         else if (layer instanceof L.Polyline) {
-            //addLogText('im an instance of L polyline');
+            addLogText('im an instance of L polyline');
             text = "LINESTRING("
             jtsk_text = "LINESTRING("
             let it = 0;
@@ -530,7 +531,7 @@ function geomToText() {//Desc: This fce moves edited geometry into HTML element
 
                 it++;
                 text += (coordinates[i].lng + " " + coordinates[i].lat);
-                jtsk_coor = convertToJTSK(coordinates[i].lat, coordinates[i].lng);
+                jtsk_coor = convertToJTSK(coordinates[i].lng, coordinates[i].lat);
                 jtsk_text += (jtsk_coor[0] + " " + jtsk_coor[1]);
             }
             text += ")"
@@ -1182,7 +1183,9 @@ function loadSession(){
         global_blocked_by_query_geom=true;
         drawnItems.clearLayers();
         drawnItemsBuffer.clearLayers();
-        addPointQuery(null,  drawnItems,myParamL,myParamG,false)
+        addPointQuery(null,  drawnItems,myParamL,myParamG,false);
+        geomToText();
+        save_edited_geometry_session()
         //myParam="POINT (13.2164736 49.9596986)"
         //http://localhost:8000/arch-z/akce/detail/C-202211987A/dj/C-202211987A-D02?geometry=
         //myParam="POLYGON ((13.2164736 49.9596986,13.2154006 49.9589111,13.2178685 49.9583378,13.2183513 49.9593602,13.2164736 49.9596986))"
@@ -1200,7 +1203,8 @@ function loadSession(){
                 //POLYGON ((13.2491214 50.0100783, 13.2482845 50.0096987, 13.249218 50.0096021, 13.2491214 50.0100783))
                 //POLYGON((13.2496364 50.0099953, 13.2502051 50.0099539, 13.2500978 50.0094364, 13.2496364 50.0099953))
                 //myParam="POLYGON((13.2496364 50.0099953,13.2502051 50.0099539,13.2500978 50.0094364,13.2496364 50.0099953))"
-                addPointQuery(null,  drawnItems,"Refresh geom",geom_session.geometry,false)
+                addPointQuery(null,  drawnItems,"Refresh geom",geom_session.geometry,false);
+                geomToText();
 
             }else{
                 sessionStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:null}));
