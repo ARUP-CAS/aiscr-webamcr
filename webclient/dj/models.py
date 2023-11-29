@@ -26,7 +26,7 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
     ident_cely = models.TextField(unique=True)
     pian = models.ForeignKey(
         Pian,
-        models.RESTRICT,
+        models.SET_NULL,
         db_column="pian",
         blank=True,
         null=True,
