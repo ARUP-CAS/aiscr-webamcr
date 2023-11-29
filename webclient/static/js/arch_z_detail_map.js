@@ -1040,7 +1040,7 @@ switchMap = function (overview = false) {
 
                             if(i.type=="pas"){
                                 let ge = i.geom.split("(")[1].split(")")[0];
-                                L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurple }).bindPopup(i.ident_cely).addTo(poi_sn)
+                                L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurplePin }).bindPopup(i.ident_cely).addTo(poi_sn)
                             } else if(i.type=="pian"){
 
                                 if (i.dj == global_map_projekt_ident) {
