@@ -6,7 +6,7 @@ from django.db.models.functions import Concat
 from django.utils.encoding import force_str
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from lokalita.tables import DalsiKatastryColumn
 from core.utils import SearchTable
@@ -125,7 +125,7 @@ class AkceTable(SearchTable):
         default="",
         accessor="vedouci",
     )
-    uzivatelske_oznaceni = tables.Column(
+    uzivatelske_oznaceni = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.uzivatelske_oznaceni.label"),
         default="",
         accessor="archeologicky_zaznam__uzivatelske_oznaceni",

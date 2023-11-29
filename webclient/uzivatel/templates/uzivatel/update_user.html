@@ -48,7 +48,7 @@
                     <form method="post" action="{% url 'uzivatel:update-notifications' %}">
                         {% csrf_token %}
                         {{ form_notifications|crispy }}
-                        <input type="submit" value="{% trans 'uzivatel.templates.updateUser.submitButton.notifikave' %}" class="btn btn-primary mt-2">
+                        <input type="submit" value="{% trans 'uzivatel.templates.updateUser.submitButton.notifikace' %}" class="btn btn-primary mt-2">
                     </form>
                 </div>
             </div>

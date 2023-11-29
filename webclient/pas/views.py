@@ -626,18 +626,21 @@ class SamostatnyNalezListView(SearchListView):
     template_name = "pas/samostatny_nalez_list.html"
     filterset_class = SamostatnyNalezFilter
     export_name = "export_samostatny-nalez_"
-    page_title = _("pas.views.samostatnyNalezListView.pageTitle")
     app = "samostatny_nalez"
     toolbar = "toolbar_pas.html"
-    search_sum = _("pas.views.samostatnyNalezListView.pocetVyhledanych")
-    pick_text = _("pas.views.samostatnyNalezListView.pickText")
-    hasOnlyVybrat_header = _("pas.views.samostatnyNalezListView.header.hasOnlyVybrat")
-    hasOnlyVlastnik_header = _("pas.views.samostatnyNalezListView.header.hasOnlyVlastnik")
-    hasOnlyArchive_header = _("pas.views.samostatnyNalezListView.header.hasOnlyArchive")
-    hasOnlyPotvrdit_header = _("pas.views.samostatnyNalezListView.header.hasOnlyPotvrdit")
-    default_header = _("pas.views.samostatnyNalezListView.header.default")
-    toolbar_name = _("pas.views.samostatnyNalezListView.toolbar.title")
     typ_zmeny_lookup = ZAPSANI_SN
+
+    def init_translations(self):
+        self.page_title = _("pas.views.samostatnyNalezListView.pageTitle")
+        self.search_sum = _("pas.views.samostatnyNalezListView.pocetVyhledanych")
+        self.pick_text = _("pas.views.samostatnyNalezListView.pickText")
+        self.hasOnlyVybrat_header = _("pas.views.samostatnyNalezListView.header.hasOnlyVybrat")
+        self.hasOnlyVlastnik_header = _("pas.views.samostatnyNalezListView.header.hasOnlyVlastnik")
+        self.hasOnlyArchive_header = _("pas.views.samostatnyNalezListView.header.hasOnlyArchive")
+        self.hasOnlyPotvrdit_header = _("pas.views.samostatnyNalezListView.header.hasOnlyPotvrdit")
+        self.default_header = _("pas.views.samostatnyNalezListView.header.default")
+        self.toolbar_name = _("pas.views.samostatnyNalezListView.toolbar.title")
+        self.toolbar_label = _("pas.views.samostatnyNalezListView.toolbar_label.text")
 
     def get_queryset(self):
         # Only allow to view 3D models
@@ -816,13 +819,16 @@ class UzivatelSpolupraceListView(SearchListView):
     template_name = "pas/uzivatel_spoluprace_list.html"
     filterset_class = UzivatelSpolupraceFilter
     export_name = "export_spoluprace_"
-    page_title = _("pas.views.uzivatelSpolupraceListView.pageTitle")
     app = "spoluprace"
     toolbar = "toolbar_spoluprace.html"
-    search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")
-    pick_text = _("pas.views.uzivatelSpolupraceListView.pickText")
-    toolbar_name = _("pas.views.uzivatelSpolupraceListView.toolbar.title")
     typ_zmeny_lookup = SPOLUPRACE_ZADOST
+
+    def init_translations(self):
+        self.page_title = _("pas.views.uzivatelSpolupraceListView.pageTitle")
+        self.search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")
+        self.pick_text = _("pas.views.uzivatelSpolupraceListView.pickText")
+        self.toolbar_name = _("pas.views.uzivatelSpolupraceListView.toolbar.title")
+        self.toolbar_label = _("pas.views.uzivatelSpolupraceListView.toolbar_label.text")
 
     def get_queryset(self):
         qs = super().get_queryset()

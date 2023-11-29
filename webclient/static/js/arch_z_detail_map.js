@@ -464,7 +464,7 @@ map.on('draw:created', function (e) {
             let corY = e.layer._latlng.lng;
             if (global_map_can_edit) {
                 //odebrano [map_translations['TempPIAN']])
-                L.marker([corX, corY], { icon: pinIconRedPoint }).bindTooltip('Navržený pian').addTo(drawnItems); //'Navržený pian'
+                L.marker([corX, corY], { icon: pinIconRedPoint }).bindTooltip(map_translations['TempPIAN']).addTo(drawnItems); //'Navržený pian' aaaa
 
             }
         } else {
@@ -991,7 +991,7 @@ heatPoints = heatPoints.map(function (p) {
 
 map.on('overlayadd overlayremove', function (e) {
     if (control._handlingClick) {
-        if (e.name == "AMČR Piany") {
+        if (e.name == [map_translations['pian']]) {
             global_map_can_load_pians = !global_map_can_load_pians;
         }
     }

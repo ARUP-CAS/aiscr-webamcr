@@ -587,16 +587,20 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
     template_name = "projekt/projekt_list.html"
     filterset_class = ProjektFilter
     export_name = "export_projekty_"
-    page_title = _("projekt.views.projektListView.pageTitle")
     app = "projekt"
     toolbar = "toolbar_projekt.html"
-    search_sum = _("projekt.views.projektListView.pocetVyhledanych")
-    pick_text = _("projekt.views.projektListView.pickText")
-    hasOnlyVybrat_header = _("projekt.views.projektListView.header.hasOnlyVybrat")
-    hasOnlyArchive_header = _("projekt.views.projektListView.header.hasOnlyArchive")
-    default_header = _("projekt.views.projektListView.header.default")
-    toolbar_name = _("projekt.views.projektListView.toolbar.title")
     typ_zmeny_lookup = ZAPSANI_PROJ
+
+    def init_translations(self):
+        super().init_translations()
+        self.page_title = _("projekt.views.projektListView.pageTitle")
+        self.search_sum = _("projekt.views.projektListView.pocetVyhledanych")
+        self.pick_text = _("projekt.views.projektListView.pickText")
+        self.hasOnlyVybrat_header = _("projekt.views.projektListView.header.hasOnlyVybrat")
+        self.hasOnlyArchive_header = _("projekt.views.projektListView.header.hasOnlyArchive")
+        self.default_header = _("projekt.views.projektListView.header.default")
+        self.toolbar_name = _("projekt.views.projektListView.toolbar.title")
+        self.toolbar_label = _("projekt.views.projektListView.toolbar_label.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

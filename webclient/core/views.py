@@ -818,17 +818,20 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     paginate_by = 100
     allow_empty = True
     export_formats = ["csv", "json", "xlsx"]
-    page_title = _("core.views.AkceListView.page_title.text")
     app = "core"
     toolbar = "toolbar_akce.html"
-    search_sum = _("core.views.AkceListView.search_sum.text")
-    pick_text = _("core.views.AkceListView.pick_text.text")
-    hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
-    hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
-    hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
-    hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
-    default_header = _("core.views.AkceListView.default_header.text")
-    toolbar_name = _("core.views.AkceListView.toolbar_name.text")
+    
+    def init_translations(self):
+        self.page_title = _("core.views.AkceListView.page_title.text")
+        self.search_sum = _("core.views.AkceListView.search_sum.text")
+        self.pick_text = _("core.views.AkceListView.pick_text.text")
+        self.hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
+        self.hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
+        self.hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
+        self.hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
+        self.default_header = _("core.views.AkceListView.default_header.text")
+        self.toolbar_name = _("core.views.AkceListView.toolbar_name.text")
+        self.toolbar_label = _("core.views.AkceListView.toolbar_label.text")
 
     def get_paginate_by(self, queryset):
         return self.request.GET.get("per_page", self.paginate_by)
@@ -839,6 +842,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        self.init_translations()
         context["export_formats"] = self.export_formats
         context["page_title"] = self.page_title
         context["app"] = self.app
@@ -851,7 +855,9 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["hasOnlyPotvrdit_header"] = self.hasOnlyPotvrdit_header
         context["default_header"] = self.default_header
         context["toolbar_name"] = self.toolbar_name
+        context["toolbar_label"] = self.toolbar_label
         context["sort_params"] = self._get_sort_params()
+        logger.debug(context)
         return context
     
 
