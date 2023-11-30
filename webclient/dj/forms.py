@@ -84,6 +84,8 @@ class CreateDJForm(forms.ModelForm):
                 queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
             else:
                 queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
+            if jednotky.filter(typ__id=TYP_DJ_KATASTR).exists():
+                queryset = queryset.filter(id__neq=TYP_DJ_KATASTR)
         return queryset
 
     class Meta:
