@@ -405,6 +405,8 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
 
     class Meta:
         db_table = "notifikace_typ"
+        verbose_name = _("uzivatel.models.UserNotificationType.name")
+        verbose_name_plural = _("uzivatel.models.UserNotificationType.namePlural")
 
     def __str__(self):
         if get_language() == "en":
@@ -413,12 +415,12 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
             elif self.text_cs:
                 return self.text_cs
             else:
-                return ""
+                return self.ident_cely
         else:
             if self.text_cs:
                 return self.text_cs
             else:
-                return ""
+                return self.ident_cely
 
 
 class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Model):

@@ -824,6 +824,7 @@ class UzivatelSpolupraceListView(SearchListView):
     typ_zmeny_lookup = SPOLUPRACE_ZADOST
 
     def init_translations(self):
+        super().init_translations()
         self.page_title = _("pas.views.uzivatelSpolupraceListView.pageTitle")
         self.search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")
         self.pick_text = _("pas.views.uzivatelSpolupraceListView.pickText")

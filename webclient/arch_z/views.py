@@ -558,7 +558,7 @@ def edit(request, ident_cely):
         request,
         "arch_z/create.html",
         {
-            "object": zaznam,
+            "zaznam": zaznam,
             "formAZ": form_az,
             "formAkce": form_akce,
             "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
@@ -571,6 +571,8 @@ def edit(request, ident_cely):
             "heslar_specifikace_v_letech_presne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
             "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
             "arch_z_ident_cely":zaznam.ident_cely,
+            "toolbar_name": _("arch_z.views.edit.toolbar_name.text"),
+            "toolbar_label": _("arch_z.views.edit.toolbar_label.text"),
         },
     )
 

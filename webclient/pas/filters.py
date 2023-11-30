@@ -348,56 +348,58 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
     Třída pro správne zobrazení filtru.
     """
     form_method = "GET"
-    history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"pas.filters.samostatnyNalezFilterFormHelper.history.divider.label")
-    }
-    layout = Layout(
-        Div(
+    def __init__(self, form=None):
+        history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _(u"pas.filters.samostatnyNalezFilterFormHelper.history.divider.label")
+        }
+        self.layout = Layout(
             Div(
-                Div("ident_cely__icontains", css_class="col-sm-2"),
-                Div("nalezce", css_class="col-sm-2"),
-                Div("datum_nalezu", css_class="col-sm-4 app-daterangepicker"),
-                Div("predano_organizace", css_class="col-sm-2"),
-                Div("predano", css_class="col-sm-2"),
-                Div("katastr", css_class="col-sm-2"),
-                Div("okres", css_class="col-sm-2"),
-                Div("kraj", css_class="col-sm-2"),
-                Div("oblast", css_class="col-sm-2"),
-                Div("popisne_udaje", css_class="col-sm-4"),
-                Div("obdobi", css_class="col-sm-2"),
-                Div("druh_nalezu", css_class="col-sm-2"),
-                Div("specifikace", css_class="col-sm-2"),
-                Div("okolnosti", css_class="col-sm-2"),
-                Div("hloubka_od", css_class="col-sm-2"),
-                Div("hloubka_do", css_class="col-sm-2"),
-                Div("pristupnost", css_class="col-sm-2"),
-                Div("stav", css_class="col-sm-2"),
-                css_class="row",
-            ),
-            Div(
-                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
-                HTML(history_divider),
-                HTML('<hr class="mt-0" />'),
-                data_toggle="collapse",
-                href="#historieCollapse",
-                role="button",
-                aria_expanded="false",
-                aria_controls="historieCollapse",
-                css_class="col-sm-12 app-btn-show-more collapsed",
-            ),
-            Div(
-                Div("historie_typ_zmeny", css_class="col-sm-2"),
                 Div(
-                    "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
+                    Div("ident_cely__icontains", css_class="col-sm-2"),
+                    Div("nalezce", css_class="col-sm-2"),
+                    Div("datum_nalezu", css_class="col-sm-4 app-daterangepicker"),
+                    Div("predano_organizace", css_class="col-sm-2"),
+                    Div("predano", css_class="col-sm-2"),
+                    Div("katastr", css_class="col-sm-2"),
+                    Div("okres", css_class="col-sm-2"),
+                    Div("kraj", css_class="col-sm-2"),
+                    Div("oblast", css_class="col-sm-2"),
+                    Div("popisne_udaje", css_class="col-sm-4"),
+                    Div("obdobi", css_class="col-sm-2"),
+                    Div("druh_nalezu", css_class="col-sm-2"),
+                    Div("specifikace", css_class="col-sm-2"),
+                    Div("okolnosti", css_class="col-sm-2"),
+                    Div("hloubka_od", css_class="col-sm-2"),
+                    Div("hloubka_do", css_class="col-sm-2"),
+                    Div("pristupnost", css_class="col-sm-2"),
+                    Div("stav", css_class="col-sm-2"),
+                    css_class="row",
                 ),
-                Div("historie_uzivatel", css_class="col-sm-3"),
-                Div("historie_uzivatel_organizace", css_class="col-sm-3"),
-                id="historieCollapse",
-                css_class="collapse row",
+                Div(
+                    HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                    HTML(history_divider),
+                    HTML('<hr class="mt-0" />'),
+                    data_toggle="collapse",
+                    href="#historieCollapse",
+                    role="button",
+                    aria_expanded="false",
+                    aria_controls="historieCollapse",
+                    css_class="col-sm-12 app-btn-show-more collapsed",
+                ),
+                Div(
+                    Div("historie_typ_zmeny", css_class="col-sm-2"),
+                    Div(
+                        "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
+                    ),
+                    Div("historie_uzivatel", css_class="col-sm-3"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    id="historieCollapse",
+                    css_class="collapse row",
+                ),
             ),
-        ),
-    )
-    form_tag = False
+        )
+        self.form_tag = False
+        super().__init__(form)
 
 
 class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
@@ -405,12 +407,14 @@ class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
     Třída pro správne zobrazení filtru.
     """
     form_method = "GET"
-    layout = Layout(
-        Div(
-            Div("vedouci", css_class="col-sm-4"),
-            Div("spolupracovnik", css_class="col-sm-4"),
-            Div("stav", css_class="col-sm-4"),
-            css_class="row",
-        ),
-    )
-    form_tag = False
+    def __init__(self, form=None):
+        self.layout = Layout(
+            Div(
+                Div("vedouci", css_class="col-sm-4"),
+                Div("spolupracovnik", css_class="col-sm-4"),
+                Div("stav", css_class="col-sm-4"),
+                css_class="row",
+            ),
+        )
+        self.form_tag = False
+        super().__init__(form)

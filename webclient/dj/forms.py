@@ -142,6 +142,7 @@ class CreateDJForm(forms.ModelForm):
             except Exception as e:
                 pass
         self.fields["typ"] = forms.ModelChoiceField(
+            label=_("dj.forms.createDjForm.typ.label"),
             queryset=self.get_typ_queryset(
                 jednotky, self.instance, typ_arch_z, typ_akce
             ),
