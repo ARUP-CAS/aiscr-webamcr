@@ -787,6 +787,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
+        self.init_translations()
         zaznam = self.get_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": zaznam.dokument.stav})
         context = {
@@ -905,7 +906,6 @@ class DokumentCastOdpojitView(TransakceView):
     Třida pohledu pro odpojení části dokumentu pomoci modalu.
     """
     id_tag = "odpojit-cast-form"
-    
     success_message = DOKUMENT_CAST_USPESNE_ODPOJEN
 
     def init_translations(self):

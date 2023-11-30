@@ -182,7 +182,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         try:
             self.fields["dokument_osoba"] = forms.MultipleChoiceField(
                 choices=Osoba.objects.all().values_list("id", "vypis_cely"),
-                label="Dokumentované osoby",
+                label=_("dokument.forms.editDokumentExtraDataForm.dokumentovaneOsoby.label"),
                 required=False,
                 widget=autocomplete.Select2Multiple(url="heslar:osoba-autocomplete-choices"),
                 help_text=_("dokument.forms.editDokumentExtraDataForm.dokumentOsoba.tooltip"),
@@ -191,7 +191,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 choices=tuple(
                     [("", "")] + list(Let.objects.all().values_list("id", "ident_cely"))
                 ),
-                label="Let",
+                label=_("dokument.forms.editDokumentExtraDataForm.let.label"),
                 required=False,
                 widget=forms.Select(
                     attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}

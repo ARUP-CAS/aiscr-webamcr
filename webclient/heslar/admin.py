@@ -3,7 +3,7 @@ from django.http import StreamingHttpResponse
 
 from heslar.models import Heslar, HeslarNazev, HeslarDatace, HeslarDokumentTypMaterialRada, HeslarOdkaz, RuianKraj, \
     RuianOkres, RuianKatastr, HeslarHierarchie
-from uzivatel.models import Osoba, Organizace
+from uzivatel.models import Osoba, Organizace, UserNotificationType
 from django_object_actions import DjangoObjectActions, action
 
 
@@ -224,3 +224,18 @@ class HeslarRuianKatastrAdmin(HeslarRuianAdmin):
     fields = ("aktualni", "nazev", "kod", "nazev_stary", "okres")
     search_fields = ("okres__nazev", "aktualni", "nazev", "kod", "nazev_stary")
     list_filter = ("okres", "okres__kraj", "aktualni")
+
+@admin.register(UserNotificationType)
+class UserNotificationTypeAdmin(admin.ModelAdmin):
+    """
+    Admin část pro správu modelu user notifikací.
+    """
+    list_display = ("ident_cely", "text_cs", "text_en")
+    fields = ("ident_cely", "text_cs", "text_en")
+    search_fields = ("ident_cely", "text_cs", "text_en")
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
+    def has_add_permission(self, request, obj=None):
+        return False

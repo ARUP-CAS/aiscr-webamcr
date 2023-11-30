@@ -246,9 +246,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     Třida pohledu pro změnu stavu a práci s externíma zdrojama cez modal, která se dedí pro jednotlivá změny.
     """
     template_name = "core/transakce_modal.html"
-    title = "title"
     id_tag = "id_tag"
-    button = "button"
     allowed_states = []
     success_message = "success"
     action = ""
@@ -266,6 +264,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
+        self.init_translation()
         zaznam = self.get_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": zaznam.stav})
         context = {
@@ -483,18 +482,14 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
     form_class = ExterniOdkazForm
     slug_field = "id"
 
-    def init_translation(self):
-        self.title = _("ez.templates.ExterniOdkazPripojitView.title.text")
-        self.button = _("ez.templates.ExterniOdkazEditView.submitButton.text")
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         zaznam = self.object
         context = {
             "object": zaznam,
-            "title": self.title,
+            "title": _("ez.templates.ExterniOdkazPripojitView.title.text"),
             "id_tag": self.id_tag,
-            "button": self.button,
+            "button": _("ez.templates.ExterniOdkazEditView.submitButton.text"),
         }
         context["form"] = ExterniOdkazForm(
             instance=self.object,
