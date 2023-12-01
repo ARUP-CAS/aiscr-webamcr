@@ -56,11 +56,13 @@ def detail(request, ident_cely):
         logger.debug("dj.views.detail.form_is_valid")
         dj = form.save()
         if dj.pian is None:
+            logger.debug("dj.views.detail.empty_pian")
             if pian_db is not None and not(old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR):
-                logger.debug("dj.views.detail.empty_pian")
+                logger.debug("dj.views.detail.added_pian_from_db", extra={"pian_db": pian_db})
                 dj.pian = pian_db
                 dj.save()
-        elif dj.typ.id == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR:
+        elif old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR:
+            logger.debug("dj.views.detail.disconnected_pian")
             dj.pian = None
             dj.save()
         if form.changed_data:
