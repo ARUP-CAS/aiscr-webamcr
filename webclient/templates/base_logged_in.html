@@ -80,7 +80,7 @@
             <ul>
               <li><a href="{% url 'arch_z:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.home" %}</a></li>
               <li><a href="{% url 'arch_z:zapsat-akci' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.zapsat" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&sort=katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.vybrat" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&sort=hlavni_katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.vybrat" %}</a></li>
               <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.mojeAkce" %}</a></li>
               {% if user.can_see_ours_item %}
                 <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.naseAkce" %}</a></li>
