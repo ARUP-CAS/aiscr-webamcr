@@ -51,6 +51,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     """
     stav = MultipleChoiceFilter(
         choices=SamostatnyNalez.PAS_STATES,
+        label=_("pas.filters.samostatnyNalezFilter.stav.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -114,7 +115,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     vlastnik = ModelMultipleChoiceFilter(
         queryset=User.objects.select_related("organizace").all(),
         field_name="historie__historie__uzivatel",
-        label="Vlastník",
+        label=_("pas.filters.samostatnyNalezFilter.vlastnik.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -130,11 +131,13 @@ class SamostatnyNalezFilter(HistorieFilter):
 
     nalezce = ModelMultipleChoiceFilter(
         widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        label=_("pas.filters.samostatnyNalezFilter.nalezce.label"),
         queryset=Osoba.objects.all(),
     )
 
     predano_organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
+        label=_("pas.filters.samostatnyNalezFilter.predanoOrganizace.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -159,6 +162,7 @@ class SamostatnyNalezFilter(HistorieFilter):
 
     okolnosti = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_NALEZOVE_OKOLNOSTI),
+        label=_("pas.filters.samostatnyNalezFilter.okolnosti.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -183,6 +187,7 @@ class SamostatnyNalezFilter(HistorieFilter):
 
     specifikace = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE),
+        label=_("pas.filters.samostatnyNalezFilter.specifikace.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -200,7 +205,9 @@ class SamostatnyNalezFilter(HistorieFilter):
     )
 
     hloubka_od = NumberFilter(
-        field_name="hloubka", label=_("pas.filters.samostatnyNalezFilter.hloubkaOd.label"), lookup_expr="gte"
+        field_name="hloubka",
+        label=_("pas.filters.samostatnyNalezFilter.hloubkaOd.label"),
+        lookup_expr="gte"
     )
 
     hloubka_do = NumberFilter(field_name="hloubka", label=" ", lookup_expr="lte")
@@ -308,26 +315,26 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
             self.filters["vedouci"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.select_related("organizace"),
                 field_name="vedouci",
-                label="Vedoucí",
+                label=_("pas.filters.spolupraceFilter.vedouci.label"),
                 widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete")
             )
             self.filters["spolupracovnik"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.select_related("organizace"),
                 field_name="spolupracovnik",
-                label="Spolupracovník",
+                label=_("pas.filters.spolupraceFilter.spolupracovnik.label"),
                 widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete")
             )
         else:
             self.filters["vedouci"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.select_related("organizace"),
                 field_name="vedouci",
-                label="Vedoucí",
+                label=_("pas.filters.spolupraceFilter.vedouci.label"),
                 widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
             )
             self.filters["spolupracovnik"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.select_related("organizace"),
                 field_name="spolupracovnik",
-                label="Spolupracovník",
+                label=_("pas.filters.spolupraceFilter.spolupracovnik.label"),
                 widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
             )
         try:
