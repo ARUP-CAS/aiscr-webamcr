@@ -11,7 +11,6 @@
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
       {% if d.ident_cely %}
-      {% if is_edit %}{% if is_3d %}{% trans "templates.toolbarDokument.knihovna3D.edit.label" %}{% else %}{% trans "templates.toolbarDokument.dokument.edit.label" %}{% endif %}{% endif %}
       {{ d.ident_cely }}{% if showback %}<div id="document-back" style="display:none"><span class="app-pipe"></span><a href="" class="app-entity-color font-weight-normal"></a></div>{% endif %}
       {% elif index%}
       {% else %}
