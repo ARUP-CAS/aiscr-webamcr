@@ -307,6 +307,7 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
     class Meta:
         model = UzivatelSpoluprace
         fields = ["stav"]
+        labels = {"stav": _("pas.filters.uzivatelSpolupraceFilter.stav.label")}
 
     def __init__(self, *args, **kwargs):
         super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
