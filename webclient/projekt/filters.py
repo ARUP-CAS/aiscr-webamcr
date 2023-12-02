@@ -374,7 +374,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
-    akce_vedouc_organizace = MultipleChoiceFilter(
+    akce_vedouci_organizace = MultipleChoiceFilter(
         choices=Organizace.objects.all().values_list("id", "nazev_zkraceny"),
         label=_("projekt.filters.projektFilter.akceVedouciOrganizace.label"),
         method="filtr_akce_organizace",

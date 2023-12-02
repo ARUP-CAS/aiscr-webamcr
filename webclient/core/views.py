@@ -163,6 +163,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
 
 
 class DownloadFile(LoginRequiredMixin, View):
+    thumb = False
     @staticmethod
     def _preprocess_image(file_content: BytesIO) -> BytesIO:
         return file_content
@@ -177,7 +178,7 @@ class DownloadFile(LoginRequiredMixin, View):
                         )
             return redirect(request.GET.get("next"))
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
-        rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content()
+        rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content(thumb=self.thumb)
         if soubor.repository_uuid is not None:
             # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
             content = self._preprocess_image(rep_bin_file.content)
@@ -210,29 +211,7 @@ class DownloadFile(LoginRequiredMixin, View):
 
 
 class DownloadThumbnail(DownloadFile):
-    @staticmethod
-    def _preprocess_image(file_content: BytesIO) -> BytesIO:
-        logger.debug("core.views.DownloadFile._resize_image.start")
-        try:
-            image = Image.open(file_content)
-            max_size = 100
-            width, height = image.size
-            if width > height:
-                new_width = max_size
-                new_height = int((max_size / width) * height)
-            else:
-                new_height = max_size
-                new_width = int((max_size / height) * width)
-            image.thumbnail((new_width, new_height))
-            output_buffer = BytesIO()
-            image.save(output_buffer, format="JPEG")
-            output_buffer.seek(0)
-            logger.debug("core.views.DownloadFile._resize_image.end")
-            return output_buffer
-        except Exception as err:
-            logger.debug("core.views.DownloadFile._resize_image.error", extra={"err": err})
-            return file_content
-
+    thumb = True
 
 
 @login_required
