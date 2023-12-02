@@ -143,7 +143,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
     )
 
     pian_typ = ModelMultipleChoiceFilter(
-        label=_("lokalita.filter.pianTyp.label"),
+        label=_("arch_z.filters.ArchZaznamFilter.pianTyp.label"),
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PIAN_TYP),
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__pian__typ",
         widget=SelectMultipleSeparator(),
@@ -418,6 +418,7 @@ class AkceFilter(ArchZaznamFilter):
 
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
+        label=_("arch_z.filters.AkceFilter.organizace.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
