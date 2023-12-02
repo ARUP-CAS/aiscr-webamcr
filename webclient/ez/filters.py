@@ -90,6 +90,7 @@ class ExterniZdrojFilter(HistorieFilter):
 
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
+        label=_("ez.filters.organizace.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
