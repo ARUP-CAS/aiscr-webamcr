@@ -130,7 +130,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
     dj_zjisteni = MultipleChoiceFilter(
         method="filter_dj_zjisteni",
         label=_("arch_z.filters.ArchZaznamFilter.dj_zjisteni.label"),
-        choices=[("True", "pozitivní"), ("False", "negativní")],
+        choices=[("True", _("arch_z.filters.ArchZaznamFilter.dj_zjisteni.pozitivni")), ("False", _("arch_z.filters.ArchZaznamFilter.dj_zjisteni.negativni"))],
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
@@ -438,7 +438,7 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     zahrnout_projektove = ChoiceFilter(
-        choices=[("False", _("Ne")), ("True", _("Ano"))],
+        choices=[("False", _("arch_z.filters.AkceFilter.zahrnout_projektove.ne")), ("True", _("arch_z.filters.AkceFilter.zahrnout_projektove.ano"))],
         label=_("arch_z.filters.AkceFilter.zahrnout_projektove.label"),
         method="filtr_zahrnout_projektove",
         empty_label=None,
@@ -466,7 +466,7 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     je_nz = MultipleChoiceFilter(
-        choices=[(False, _("Ne")), (True, _("Ano"))],
+        choices=[(False, _("arch_z.filters.AkceFilter.je_nz.ne")), (True, _("arch_z.filters.AkceFilter.je_nz.ano"))],
         label=_("arch_z.filters.AkceFilter.je_nz.label"),
         field_name="je_nz",
         widget=SelectMultiple(
@@ -480,7 +480,7 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     odlozena_nz = MultipleChoiceFilter(
-        choices=[(False, _("Ne")), (True, _("Ano"))],
+        choices=[(False, _("arch_z.filters.AkceFilter.odlozena_nz.ne")), (True, _("arch_z.filters.AkceFilter.odlozena_nz.ano"))],
         label=_("arch_z.filters.AkceFilter.odlozena_nz.label"),
         field_name="odlozena_nz",
         widget=SelectMultiple(
@@ -496,7 +496,7 @@ class AkceFilter(ArchZaznamFilter):
     has_positive_find = MultipleChoiceFilter(
         method="filter_has_positive_find",
         label=_("arch_z.filters.AkceFilter.has_positive_find.label"),
-        choices=[("True", "pozitivní"), ("False", "negativní")],
+        choices=[("True", _("arch_z.filters.AkceFilter.has_positive_find.pozitivni")), ("False", _("arch_z.filters.AkceFilter.has_positive_find.negativni"))],
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
