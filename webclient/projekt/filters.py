@@ -222,6 +222,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
     )
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
+        label=_("projekt.filters.projektFilter.organizace.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
