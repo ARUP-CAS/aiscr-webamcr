@@ -180,13 +180,16 @@ class Model3DFilter(HistorieFilter):
     Třída pro zakladní filtrování modelu 3D a jejich potomků.
     """
 
-    ident_cely = CharFilter(lookup_expr="icontains", label="ID")
+    ident_cely = CharFilter(
+        lookup_expr="icontains",
+        label=_("dokument.filters.dokumentFilter.ident_cely.label")
+    )
 
     typ_dokumentu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(
             id__in=MODEL_3D_DOKUMENT_TYPES
         ),
-        label=_("dokument.filters.model3DFilter.typDokumentu.label"),
+        label=_("dokument.filters.dokumentFilter.typDokumentu.label"),
         field_name="typ_dokumentu",
         widget=SelectMultipleSeparator(),
     )
@@ -195,13 +198,14 @@ class Model3DFilter(HistorieFilter):
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(
             heslo__startswith="3D"
         ),
-        label=_("dokument.filters.model3DFilter.format.label"),
+        label=_("dokument.filters.dokumentFilter.format.label"),
         field_name="extra_data__format",
         widget=SelectMultipleSeparator(),
     )
 
     stav = MultipleChoiceFilter(
         choices=Dokument.STATES,
+        label=_("dokument.filters.dokumentFilter.stav.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -213,6 +217,7 @@ class Model3DFilter(HistorieFilter):
 
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
+        label=_("dokument.filters.dokumentFilter.organizace.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -223,14 +228,14 @@ class Model3DFilter(HistorieFilter):
     )
 
     autor = ModelMultipleChoiceFilter(
-        label=_("dokument.filters.model3DFilter.autor.label"),
+        label=_("dokument.filters.dokumentFilter.autor.label"),
         field_name="autori",
         widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
     )
 
     rok_vzniku_od = NumberFilter(
-        field_name="rok_vzniku", label=_("dokument.filters.model3DFilter.rokVznikuOd.label"), lookup_expr="gte"
+        field_name="rok_vzniku", label=_("dokument.filters.dokumentFilter.rokVznikuOd.label"), lookup_expr="gte"
     )
 
     rok_vzniku_do = NumberFilter(
@@ -239,20 +244,20 @@ class Model3DFilter(HistorieFilter):
 
     duveryhodnost = NumberFilter(
         field_name="extra_data__duveryhodnost",
-        label=_("dokument.filters.model3DFilter.duverihodnost.label"),
+        label=_("dokument.filters.dokumentFilter.duverihodnost.label"),
         lookup_expr="gte",
         widget=NumberInput(attrs={"min": "0", "max": "100"}),
         distinct=True,
     )
     popisne_udaje = CharFilter(
-        label=_("dokument.filters.model3DFilter.popisneUdaje.label"),
+        label=_("dokument.filters.dokumentFilter.popisneUdaje.label"),
         method="filter_popisne_udaje",
     )
 
     zeme = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_ZEME),
         field_name="extra_data__zeme",
-        label=_("dokument.filters.model3DFilter.zeme.label"),
+        label=_("dokument.filters.dokumentFilter.zeme.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -265,7 +270,7 @@ class Model3DFilter(HistorieFilter):
 
     obdobi = MultipleChoiceFilter(
         method="filter_obdobi",
-        label=_("dokument.filters.model3DFilter.obdobi.label"),
+        label=_("dokument.filters.dokumentFilter.obdobi.label"),
         choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
         widget=SelectMultiple(
             attrs={
@@ -278,7 +283,7 @@ class Model3DFilter(HistorieFilter):
 
     areal = MultipleChoiceFilter(
         method="filter_areal",
-        label=_("dokument.filters.model3DFilter.areal.label"),
+        label=_("dokument.filters.dokumentFilter.areal.label"),
         choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)[1:],
         widget=SelectMultiple(
             attrs={
@@ -295,7 +300,7 @@ class Model3DFilter(HistorieFilter):
             nazev_heslare=HESLAR_AKTIVITA
         ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
         field_name="casti__komponenty__komponenty__komponentaaktivita__aktivita",
-        label=_("dokument.filters.model3DFilter.aktivity.label"),
+        label=_("dokument.filters.dokumentFilter.aktivity.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -308,7 +313,7 @@ class Model3DFilter(HistorieFilter):
 
     predmet_druh = MultipleChoiceFilter(
         field_name="casti__komponenty__komponenty__predmety__druh",
-        label=_("dokument.filters.model3DFilter.predmetDruh.label"),
+        label=_("dokument.filters.dokumentFilter.predmetDruh.label"),
         choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
         widget=SelectMultiple(
             attrs={
@@ -325,7 +330,7 @@ class Model3DFilter(HistorieFilter):
             nazev_heslare=HESLAR_PREDMET_SPECIFIKACE
         ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
         field_name="casti__komponenty__komponenty__predmety__specifikace",
-        label=_("dokument.filters.model3DFilter.predmetSpecifikace.label"),
+        label=_("dokument.filters.dokumentFilter.predmetSpecifikace.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -337,7 +342,7 @@ class Model3DFilter(HistorieFilter):
     )
     objekt_druh = MultipleChoiceFilter(
         field_name="casti__komponenty__komponenty__objekty__druh",
-        label=_("dokument.filters.model3DFilter.objektDruh.label"),
+        label=_("dokument.filters.dokumentFilter.objektDruh.label"),
         choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)[1:],
         widget=SelectMultiple(
             attrs={
@@ -351,7 +356,7 @@ class Model3DFilter(HistorieFilter):
 
     objekt_specifikace = MultipleChoiceFilter(
         field_name="casti__komponenty__komponenty__objekty__specifikace",
-        label=_("dokument.filters.model3DFilter.objektSpecifikace.label"),
+        label=_("dokument.filters.dokumentFilter.objektSpecifikace.label"),
         choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT)[1:],
         widget=SelectMultiple(
             attrs={
