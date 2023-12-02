@@ -17,4 +17,4 @@ def adb_save_metadata(sender, instance: Adb, **kwargs):
 
 @receiver(pre_delete, sender=Adb)
 def adb_delete_repository_container(sender, instance: Adb, **kwargs):
-    instance.record_deletion()
+    instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata()

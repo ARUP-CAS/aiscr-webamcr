@@ -248,6 +248,7 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
     """
     def __init__(self, type_arch=None, dok=False, *args, **kwargs):
         super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
+        self.fields["paginace"].required = False
         if dok:
             ez_label = _("ez.forms.pripojitArchZaznamForm.dokument.vyberArchz.label")
             pagin = Div()
@@ -290,6 +291,7 @@ class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
     """
     def __init__(self, *args, **kwargs):
         super(PripojitExterniOdkazForm, self).__init__(*args, **kwargs)
+        self.fields["paginace"].required = False
         new_choices = list(
             ExterniZdroj.objects.filter().values_list("id", "ident_cely")
         )
