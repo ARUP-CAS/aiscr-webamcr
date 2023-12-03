@@ -400,22 +400,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
-    typ_akce = MultipleChoiceFilter(
-        # choices=Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP).values_list(
-        #    "id", "heslo"
-        # ),
-        choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
-        method="filter_akce_typ",
-        label=_("projekt.filters.projektFilter.akceTyp.label"),
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-        distinct=True,
-    )
+    
     pristupnost_akce = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
         field_name="akce__archeologicky_zaznam__pristupnost",
@@ -667,6 +652,19 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         # self.filters["historie_uzivatel"].choices = []
         # self.filters["akce_vedouci"].choices = []
         # self.filters["vedouci_projektu"].extra.update({"queryset": None})
+        self.filters["typ_akce"] = MultipleChoiceFilter(
+            choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
+            method="filter_akce_typ",
+            label=_("projekt.filters.projektFilter.akceTyp.label"),
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            distinct=True,
+        )
         self.helper = ProjektFilterFormHelper()
 
 

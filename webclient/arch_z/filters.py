@@ -158,20 +158,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
-    komponenta_obdobi = MultipleChoiceFilter(
-        method="filter_obdobi",
-        label=_("arch_z.filters.ArchZaznamFilter.komponenta_obdobi.label"),
-        choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
-        widget=SelectMultipleSeparator(),
-    )
-
-    komponenta_areal = MultipleChoiceFilter(
-        method="filter_areal",
-        label=_("arch_z.filters.ArchZaznamFilter.komponenta_areal.label"),
-        choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT),
-        widget=SelectMultipleSeparator(),
-        distinct=True,
-    )
+    
 
     komponenta_jistota = MultipleChoiceFilter(
         label=_("arch_z.filters.ArchZaznamFilter.komponenta_jistota.label"),
@@ -196,14 +183,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
-    predmet_druh = MultipleChoiceFilter(
-        method="filter_predmety_druh",
-        label=_("arch_z.filters.ArchZaznamFilter.predmet_druh.label"),
-        choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
-        widget=SelectMultipleSeparator(),
-        distinct=True,
-    )
-
     predmet_specifikace = ModelMultipleChoiceFilter(
         label=_("arch_z.filters.ArchZaznamFilter.predmet_specifikace.label"),
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE),
@@ -215,22 +194,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
     predmet_pozn_pocet = CharFilter(
         method="filter_predmet_pozn_pocet",
         label=_("arch_z.filters.ArchZaznamFilter.predmet_pozn_pocet.label"),
-        distinct=True,
-    )
-
-    objekt_druh = MultipleChoiceFilter(
-        method="filter_objekty_druh",
-        label=_("arch_z.filters.ArchZaznamFilter.objekt_druh.label"),
-        choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
-        widget=SelectMultipleSeparator(),
-        distinct=True,
-    )
-
-    objekt_specifikace = MultipleChoiceFilter(
-        method="filter_objekty_specifikace",
-        label=_("arch_z.filters.ArchZaznamFilter.objekt_specifikace.label"),
-        choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
-        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -397,24 +360,49 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
                 widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
                 distinct=True,
             )
+        self.filters["komponenta_obdobi"] = MultipleChoiceFilter(
+            method="filter_obdobi",
+            label=_("arch_z.filters.ArchZaznamFilter.komponenta_obdobi.label"),
+            choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
+            widget=SelectMultipleSeparator(),
+        )
+
+        self.filters["komponenta_areal"] = MultipleChoiceFilter(
+            method="filter_areal",
+            label=_("arch_z.filters.ArchZaznamFilter.komponenta_areal.label"),
+            choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT),
+            widget=SelectMultipleSeparator(),
+            distinct=True,
+        )
+
+        self.filters["objekt_druh"] = MultipleChoiceFilter(
+            method="filter_objekty_druh",
+            label=_("arch_z.filters.ArchZaznamFilter.objekt_druh.label"),
+            choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
+            widget=SelectMultipleSeparator(),
+            distinct=True,
+        )
+
+        self.filters["objekt_specifikace"] = MultipleChoiceFilter(
+            method="filter_objekty_specifikace",
+            label=_("arch_z.filters.ArchZaznamFilter.objekt_specifikace.label"),
+            choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
+            widget=SelectMultipleSeparator(),
+            distinct=True,
+        )
+
+        self.filters["predmet_druh"] = MultipleChoiceFilter(
+            method="filter_predmety_druh",
+            label=_("arch_z.filters.ArchZaznamFilter.predmet_druh.label"),
+            choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
+            widget=SelectMultipleSeparator(),
+            distinct=True,
+        )
 
 class AkceFilter(ArchZaznamFilter):
     """
     Class pro filtrování akce.
     """
-
-    typ = MultipleChoiceFilter(
-        method="filter_akce_typ",
-        label=_("arch_z.filters.AkceFilter.typ.label"),
-        choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT),
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-    )
 
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
@@ -698,6 +686,18 @@ class AkceFilter(ArchZaznamFilter):
 
     def __init__(self, *args, **kwargs):
         super(AkceFilter, self).__init__(*args, **kwargs)
+        self.filters["typ"] = MultipleChoiceFilter(
+            method="filter_akce_typ",
+            label=_("arch_z.filters.AkceFilter.typ.label"),
+            choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT),
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+        )
         self.helper = AkceFilterFormHelper()
 
 
