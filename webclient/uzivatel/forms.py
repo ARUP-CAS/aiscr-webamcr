@@ -106,7 +106,11 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
     """
     Formulář pro zobrazení detailu uživatele.
     """
-    hlavni_role = forms.CharField(widget=ForeignKeyReadOnlyTextInput())
+    hlavni_role = forms.CharField(
+        widget=ForeignKeyReadOnlyTextInput(),
+        label=_("uzivatel.forms.userChange.hlavni_role.label"),
+        help_text= _("uzivatel.forms.userChange.hlavni_role.tooltip")
+        )
 
     class Meta:
         model = User
@@ -119,7 +123,6 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
             "ident_cely": _("uzivatel.forms.userChange.ident_cely.label"),
             "date_joined": _("uzivatel.forms.userChange.date_joined.label"),
             "organizace": _("uzivatel.forms.userChange.organizace.label"),
-            "hlavni_role": _("uzivatel.forms.userChange.hlavni_role.label"),
             "groups": _("uzivatel.forms.userChange.groups.label"),
         }
         help_texts = {
@@ -129,8 +132,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
             "ident_cely": _("uzivatel.forms.userChange.ident_cely.tooltip"),
             "date_joined": _("uzivatel.forms.userChange.date_joined.tooltip"),
             "organizace": _("uzivatel.forms.userChange.organizace.tooltip"),
-            "hlavni_role": _("uzivatel.forms.userChange.hlavni_role.tooltip"),
-            "groups": _("uzivatel.forms.userChange.hlavni_role.tooltip"),
+            "groups": _("uzivatel.forms.userChange.groups.tooltip"),
         }
 
         widgets = {

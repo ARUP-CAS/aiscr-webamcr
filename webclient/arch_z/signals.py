@@ -100,6 +100,8 @@ def delete_arch_z_repository_container(sender, instance: ArcheologickyZaznam, **
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
     instance.record_deletion()
+    if instance.akce.projekt is not None:
+        instance.akce.projekt.save_metadata()
 
 
 @receiver(post_delete, sender=ExterniOdkaz)

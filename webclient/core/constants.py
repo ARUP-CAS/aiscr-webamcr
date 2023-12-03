@@ -105,8 +105,8 @@ IDENTIFIKATOR_DOCASNY_PREFIX: Final = "X-"
 OBLAST_CECHY = "C"
 OBLAST_MORAVA = "M"
 OBLAST_CHOICES = (
-    (OBLAST_CECHY, "Čechy"),
-    (OBLAST_MORAVA, "Morava"),
+    (OBLAST_CECHY, _("core.constants.cechy.text")),
+    (OBLAST_MORAVA, _("core.constants.morava.text")),
 )
 
 CESKY = "cs"
