@@ -46,6 +46,12 @@ def samostatny_nalez_okres_delete_repository_container(sender, instance: Samosta
     instance.record_deletion()
 
 
+@receiver(pre_save, sender=UzivatelSpoluprace)
+def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
+    instance.vedouci.save_metadata(use_celery=False)
+    instance.spolupracovnik.save_metadata(use_celery=False)
+
+
 @receiver(post_delete, sender=UzivatelSpoluprace)
 def delete_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     Historie.save_record_deletion_record(record=instance)
