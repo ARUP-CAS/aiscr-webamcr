@@ -1,5 +1,9 @@
 // --- ENTITY CARDS ---
 
+.no-background {
+    background-image: none !important;
+}
+
 .app-entity-cards {
   .col {
     @extend .pr-0;
@@ -11,6 +15,7 @@
       min-height: 400px;
       text-align: center;
       cursor: pointer;
+      min-width: 205px;
 
       .card-body {
         position: relative;
@@ -22,11 +27,6 @@
           position: absolute;
           bottom: 0;
           right: 0;
-          background-image: url('/static/static/img/bg-vrstevnice.png');
-          background-repeat: no-repeat;
-          background-size: 180px;
-          background-position: right bottom;
-          opacity: .3;
         }
       }
 
@@ -34,6 +34,14 @@
         font-size: 18px;
         font-weight: 500;
         font-family: museo;
+      }
+
+      .card-body-background {
+        background-image: url('/static/static/img/bg-vrstevnice.png');
+        background-repeat: no-repeat;
+        background-size: 180px;
+        background-position: right bottom;
+        opacity: .3;
       }
 
       img {

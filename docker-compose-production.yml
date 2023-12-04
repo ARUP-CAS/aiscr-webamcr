@@ -21,6 +21,11 @@ services:
       timeout: 10s
       retries: 10
       start_period: 1s
+    depends_on:
+      - redis
+      - celery_worker
+      - celery_beat
+
   memcached:
     image: memcached:latest
     networks:

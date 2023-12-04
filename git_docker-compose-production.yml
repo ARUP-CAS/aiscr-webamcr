@@ -20,6 +20,11 @@ services:
     ports:
       - "2525:2525"
     restart: always
+    depends_on:
+      celery_worker:
+        condition: service_started
+      redis:
+        condition: service_started
     deploy:
       resources:
         limits:
@@ -60,7 +65,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-DEV
-    command: ["/scripts/start-celery-worker.sh"]
+    command: celery -A webclient worker -l INFO -n worker1@amcr
     secrets:
       - db_conf
       - mail_conf
@@ -72,8 +77,6 @@ services:
       - git-reverse-proxy
     depends_on:
       redis:
-        condition: service_started
-      web:
         condition: service_started
     restart: always
     deploy:
@@ -98,8 +101,6 @@ services:
       - git-reverse-proxy
     depends_on:
       redis:
-        condition: service_started
-      web:
         condition: service_started
     restart: always
     deploy:

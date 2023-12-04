@@ -56,11 +56,13 @@ def detail(request, ident_cely):
         logger.debug("dj.views.detail.form_is_valid")
         dj = form.save()
         if dj.pian is None:
+            logger.debug("dj.views.detail.empty_pian")
             if pian_db is not None and not(old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR):
-                logger.debug("dj.views.detail.empty_pian")
+                logger.debug("dj.views.detail.added_pian_from_db", extra={"pian_db": pian_db})
                 dj.pian = pian_db
                 dj.save()
-        elif dj.typ.id == TYP_DJ_KATASTR and form.typ.id != TYP_DJ_KATASTR:
+        elif old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR:
+            logger.debug("dj.views.detail.disconnected_pian")
             dj.pian = None
             dj.save()
         if form.changed_data:
@@ -264,9 +266,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
     Třída pohledu pro editaci katastru dokumentační jednotky.
     """
     template_name = "core/transakce_modal.html"
-    title = _("dj.views.ChangeKatastrView.title.text")
     id_tag = "zmenit-katastr-form"
-    button = _("dj.views.ChangeKatastrView.submitButton.text")
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
@@ -281,9 +281,9 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         context = {
             "object": zaznam,
             "form": form,
-            "title": self.title,
+            "title": _("dj.views.ChangeKatastrView.title.text"),
             "id_tag": self.id_tag,
-            "button": self.button,
+            "button": _("dj.views.ChangeKatastrView.submitButton.text"),
         }
         return context
 

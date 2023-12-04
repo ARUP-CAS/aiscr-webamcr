@@ -1,7 +1,7 @@
 import logging
 
 from django.db.models import Q
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 from dj.models import DokumentacniJednotka
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=DokumentacniJednotka)
-def create_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, **kwargs):
+def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, **kwargs):
     """
         Metóda pro vytvoření pianu z katastru arch záznamu.
         Metóda se volá po uložením DJ.
@@ -43,17 +43,18 @@ def create_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created
     instance.archeologicky_zaznam.save_metadata()
 
 
-@receiver(pre_delete, sender=DokumentacniJednotka)
+@receiver(post_delete, sender=DokumentacniJednotka)
 def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
     logger.debug("dj.signals.create_dokumentacni_jednotka.start")
     pian: Pian = instance.pian
     if not pian:
-        logger.debug("dj.signals.create_dokumentacni_jednotka.no_pian", extra={"ident_cely": instance.ident_cely})
+        logger.debug("dj.signals.delete_dokumentacni_jednotka.no_pian", extra={"ident_cely": instance.ident_cely})
         return
     dj_query = DokumentacniJednotka.objects.filter(pian=pian).filter(~Q(ident_cely=instance.ident_cely))
     if not pian.ident_cely.startswith("N-") and not dj_query.exists():
-        logger.debug("dj.signals.create_dokumentacni_jednotka.delete", extra={"ident_cely": pian.ident_cely})
+        logger.debug("dj.signals.delete_dokumentacni_jednotka.delete", extra={"ident_cely": pian.ident_cely})
         if hasattr(instance, "deleted_by_user") and instance.deleted_by_user is not None:
             pian.deleted_by_user = instance.deleted_by_user
         pian.delete()
+    instance.archeologicky_zaznam.save_metadata()
     logger.debug("dj.signals.create_dokumentacni_jednotka.end")

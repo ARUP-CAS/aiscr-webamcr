@@ -1,6 +1,6 @@
 import django_tables2 as tables
 from django_tables2.utils import A
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.html import conditional_escape, mark_safe
 from django.utils.encoding import force_str
 from django.db import models

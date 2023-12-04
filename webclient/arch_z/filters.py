@@ -3,7 +3,7 @@ from dal import autocomplete
 from crispy_forms.layout import Div, Layout, HTML
 from django.db.models import Q, OuterRef, Subquery, F, Count
 from django.forms import SelectMultiple, Select
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django_filters import (
     CharFilter,
     ModelMultipleChoiceFilter,
@@ -130,7 +130,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
     dj_zjisteni = MultipleChoiceFilter(
         method="filter_dj_zjisteni",
         label=_("arch_z.filters.ArchZaznamFilter.dj_zjisteni.label"),
-        choices=[("True", "pozitivní"), ("False", "negativní")],
+        choices=[("True", _("arch_z.filters.ArchZaznamFilter.dj_zjisteni.pozitivni")), ("False", _("arch_z.filters.ArchZaznamFilter.dj_zjisteni.negativni"))],
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
@@ -143,7 +143,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
     )
 
     pian_typ = ModelMultipleChoiceFilter(
-        label=_("lokalita.filter.pianTyp.label"),
+        label=_("arch_z.filters.ArchZaznamFilter.pianTyp.label"),
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PIAN_TYP),
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__pian__typ",
         widget=SelectMultipleSeparator(),
@@ -158,20 +158,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
-    komponenta_obdobi = MultipleChoiceFilter(
-        method="filter_obdobi",
-        label=_("arch_z.filters.ArchZaznamFilter.komponenta_obdobi.label"),
-        choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
-        widget=SelectMultipleSeparator(),
-    )
-
-    komponenta_areal = MultipleChoiceFilter(
-        method="filter_areal",
-        label=_("arch_z.filters.ArchZaznamFilter.komponenta_areal.label"),
-        choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT),
-        widget=SelectMultipleSeparator(),
-        distinct=True,
-    )
+    
 
     komponenta_jistota = MultipleChoiceFilter(
         label=_("arch_z.filters.ArchZaznamFilter.komponenta_jistota.label"),
@@ -196,14 +183,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
-    predmet_druh = MultipleChoiceFilter(
-        method="filter_predmety_druh",
-        label=_("arch_z.filters.ArchZaznamFilter.predmet_druh.label"),
-        choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
-        widget=SelectMultipleSeparator(),
-        distinct=True,
-    )
-
     predmet_specifikace = ModelMultipleChoiceFilter(
         label=_("arch_z.filters.ArchZaznamFilter.predmet_specifikace.label"),
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE),
@@ -215,22 +194,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
     predmet_pozn_pocet = CharFilter(
         method="filter_predmet_pozn_pocet",
         label=_("arch_z.filters.ArchZaznamFilter.predmet_pozn_pocet.label"),
-        distinct=True,
-    )
-
-    objekt_druh = MultipleChoiceFilter(
-        method="filter_objekty_druh",
-        label=_("arch_z.filters.ArchZaznamFilter.objekt_druh.label"),
-        choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
-        widget=SelectMultipleSeparator(),
-        distinct=True,
-    )
-
-    objekt_specifikace = MultipleChoiceFilter(
-        method="filter_objekty_specifikace",
-        label=_("arch_z.filters.ArchZaznamFilter.objekt_specifikace.label"),
-        choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
-        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -397,27 +360,53 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
                 widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
                 distinct=True,
             )
+        self.filters["komponenta_obdobi"] = MultipleChoiceFilter(
+            method="filter_obdobi",
+            label=_("arch_z.filters.ArchZaznamFilter.komponenta_obdobi.label"),
+            choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
+            widget=SelectMultipleSeparator(),
+        )
+
+        self.filters["komponenta_areal"] = MultipleChoiceFilter(
+            method="filter_areal",
+            label=_("arch_z.filters.ArchZaznamFilter.komponenta_areal.label"),
+            choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT),
+            widget=SelectMultipleSeparator(),
+            distinct=True,
+        )
+
+        self.filters["objekt_druh"] = MultipleChoiceFilter(
+            method="filter_objekty_druh",
+            label=_("arch_z.filters.ArchZaznamFilter.objekt_druh.label"),
+            choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
+            widget=SelectMultipleSeparator(),
+            distinct=True,
+        )
+
+        self.filters["objekt_specifikace"] = MultipleChoiceFilter(
+            method="filter_objekty_specifikace",
+            label=_("arch_z.filters.ArchZaznamFilter.objekt_specifikace.label"),
+            choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
+            widget=SelectMultipleSeparator(),
+            distinct=True,
+        )
+
+        self.filters["predmet_druh"] = MultipleChoiceFilter(
+            method="filter_predmety_druh",
+            label=_("arch_z.filters.ArchZaznamFilter.predmet_druh.label"),
+            choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
+            widget=SelectMultipleSeparator(),
+            distinct=True,
+        )
 
 class AkceFilter(ArchZaznamFilter):
     """
     Class pro filtrování akce.
     """
 
-    typ = MultipleChoiceFilter(
-        method="filter_akce_typ",
-        label=_("arch_z.filters.AkceFilter.typ.label"),
-        choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT),
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-    )
-
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
+        label=_("arch_z.filters.AkceFilter.organizace.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -438,7 +427,7 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     zahrnout_projektove = ChoiceFilter(
-        choices=[("False", _("Ne")), ("True", _("Ano"))],
+        choices=[("False", _("arch_z.filters.AkceFilter.zahrnout_projektove.ne")), ("True", _("arch_z.filters.AkceFilter.zahrnout_projektove.ano"))],
         label=_("arch_z.filters.AkceFilter.zahrnout_projektove.label"),
         method="filtr_zahrnout_projektove",
         empty_label=None,
@@ -466,7 +455,7 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     je_nz = MultipleChoiceFilter(
-        choices=[(False, _("Ne")), (True, _("Ano"))],
+        choices=[(False, _("arch_z.filters.AkceFilter.je_nz.ne")), (True, _("arch_z.filters.AkceFilter.je_nz.ano"))],
         label=_("arch_z.filters.AkceFilter.je_nz.label"),
         field_name="je_nz",
         widget=SelectMultiple(
@@ -480,7 +469,7 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     odlozena_nz = MultipleChoiceFilter(
-        choices=[(False, _("Ne")), (True, _("Ano"))],
+        choices=[(False, _("arch_z.filters.AkceFilter.odlozena_nz.ne")), (True, _("arch_z.filters.AkceFilter.odlozena_nz.ano"))],
         label=_("arch_z.filters.AkceFilter.odlozena_nz.label"),
         field_name="odlozena_nz",
         widget=SelectMultiple(
@@ -496,7 +485,7 @@ class AkceFilter(ArchZaznamFilter):
     has_positive_find = MultipleChoiceFilter(
         method="filter_has_positive_find",
         label=_("arch_z.filters.AkceFilter.has_positive_find.label"),
-        choices=[("True", "pozitivní"), ("False", "negativní")],
+        choices=[("True", _("arch_z.filters.AkceFilter.has_positive_find.pozitivni")), ("False", _("arch_z.filters.AkceFilter.has_positive_find.negativni"))],
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -697,6 +686,18 @@ class AkceFilter(ArchZaznamFilter):
 
     def __init__(self, *args, **kwargs):
         super(AkceFilter, self).__init__(*args, **kwargs)
+        self.filters["typ"] = MultipleChoiceFilter(
+            method="filter_akce_typ",
+            label=_("arch_z.filters.AkceFilter.typ.label"),
+            choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT),
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+        )
         self.helper = AkceFilterFormHelper()
 
 
@@ -705,154 +706,156 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
     Class pro form helper pro zobrazení formuláře.
     """
     form_method = "GET"
-    dj_pian_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"arch_z.filters.AkceFilterFormHelper.djPian.divider.label")
-    }
-    history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"arch_z.filters.AkceFilterFormHelper.history.divider.label")
-    }
-    komponenta_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"arch_z.filters.AkceFilterFormHelper.komponenta.divider.label")
-    }
-    dok_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"arch_z.filters.AkceFilterFormHelper.dok.divider.label")
-    }
-    adb_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"arch_z.filters.AkceFilterFormHelper.adb.divider.label")
-    }
-    layout = Layout(
-        Div(
+    def __init__(self, form=None):
+        dj_pian_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("arch_z.filters.AkceFilterFormHelper.djPian.divider.label")
+        }
+        history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _(u"arch_z.filters.AkceFilterFormHelper.history.divider.label")
+        }
+        komponenta_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _(u"arch_z.filters.AkceFilterFormHelper.komponenta.divider.label")
+        }
+        dok_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _(u"arch_z.filters.AkceFilterFormHelper.dok.divider.label")
+        }
+        adb_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _(u"arch_z.filters.AkceFilterFormHelper.adb.divider.label")
+        }
+        self.layout = Layout(
             Div(
-                Div("ident_cely", css_class="col-sm-2"),
-                Div("typ", css_class="col-sm-2"),
-                Div("stav", css_class="col-sm-2"),
-                Div("organizace", css_class="col-sm-2"),
-                Div("vedouci", css_class="col-sm-2"),
-                Div("pristupnost", css_class="col-sm-2"),
-                Div("katastr", css_class="col-sm-2"),
-                Div("okres", css_class="col-sm-2"),
-                Div("kraj", css_class="col-sm-2"),
-                Div("popisne_udaje", css_class="col-sm-4"),
-                Div("zahrnout_projektove", css_class="col-sm-2"),
-                Div("datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
-                Div("datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
-                Div("has_positive_find", css_class="col-sm-2"),
-                Div("je_nz", css_class="col-sm-2"),
-                Div("odlozena_nz", css_class="col-sm-2"),
-                css_class="row",
-            ),
-            Div(
-                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
-                HTML(history_divider),
-                HTML('<hr class="mt-0" />'),
-                data_toggle="collapse",
-                href="#historieCollapse",
-                role="button",
-                aria_expanded="false",
-                aria_controls="historieCollapse",
-                css_class="col-sm-12 app-btn-show-more collapsed",
-            ),
-            Div(
-                Div("historie_typ_zmeny", css_class="col-sm-2"),
                 Div(
-                    "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
+                    Div("ident_cely", css_class="col-sm-2"),
+                    Div("typ", css_class="col-sm-2"),
+                    Div("stav", css_class="col-sm-2"),
+                    Div("organizace", css_class="col-sm-2"),
+                    Div("vedouci", css_class="col-sm-2"),
+                    Div("pristupnost", css_class="col-sm-2"),
+                    Div("katastr", css_class="col-sm-2"),
+                    Div("okres", css_class="col-sm-2"),
+                    Div("kraj", css_class="col-sm-2"),
+                    Div("popisne_udaje", css_class="col-sm-4"),
+                    Div("zahrnout_projektove", css_class="col-sm-2"),
+                    Div("datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
+                    Div("datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
+                    Div("has_positive_find", css_class="col-sm-2"),
+                    Div("je_nz", css_class="col-sm-2"),
+                    Div("odlozena_nz", css_class="col-sm-2"),
+                    css_class="row",
                 ),
-                Div("historie_uzivatel", css_class="col-sm-3"),
-                Div("historie_uzivatel_organizace", css_class="col-sm-3"),
-                id="historieCollapse",
-                css_class="collapse row",
+                Div(
+                    HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                    HTML(history_divider),
+                    HTML('<hr class="mt-0" />'),
+                    data_toggle="collapse",
+                    href="#historieCollapse",
+                    role="button",
+                    aria_expanded="false",
+                    aria_controls="historieCollapse",
+                    css_class="col-sm-12 app-btn-show-more collapsed",
+                ),
+                Div(
+                    Div("historie_typ_zmeny", css_class="col-sm-2"),
+                    Div(
+                        "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
+                    ),
+                    Div("historie_uzivatel", css_class="col-sm-3"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    id="historieCollapse",
+                    css_class="collapse row",
+                ),
+                Div(
+                    HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                    HTML(dj_pian_divider),
+                    HTML('<hr class="mt-0" />'),
+                    data_toggle="collapse",
+                    href="#DjPianCollapse",
+                    role="button",
+                    aria_expanded="false",
+                    aria_controls="DjPianCollapse",
+                    css_class="col-sm-12 app-btn-show-more collapsed",
+                ),
+                Div(
+                    Div("dj_typ", css_class="col-sm-2"),
+                    Div("dj_nazev", css_class="col-sm-2"),
+                    Div("dj_zjisteni", css_class="col-sm-2"),
+                    Div("pian_ident_obsahuje", css_class="col-sm-2"),
+                    Div("pian_typ", css_class="col-sm-2"),
+                    Div("pian_presnost", css_class="col-sm-2"),
+                    id="DjPianCollapse",
+                    css_class="collapse row",
+                ),
+                Div(
+                    HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                    HTML(komponenta_divider),
+                    HTML('<hr class="mt-0" />'),
+                    data_toggle="collapse",
+                    href="#KomponentaCollapse",
+                    role="button",
+                    aria_expanded="false",
+                    aria_controls="KomponentaCollapse",
+                    css_class="col-sm-12 app-btn-show-more collapsed",
+                ),
+                Div(
+                    Div("komponenta_obdobi", css_class="col-sm-2"),
+                    Div("komponenta_jistota", css_class="col-sm-2"),
+                    Div("komponenta_areal", css_class="col-sm-2"),
+                    Div("komponenta_aktivity", css_class="col-sm-2"),
+                    Div("komponenta_poznamka", css_class="col-sm-4"),
+                    Div("predmet_druh", css_class="col-sm-2"),
+                    Div("predmet_specifikace", css_class="col-sm-2"),
+                    Div("predmet_pozn_pocet", css_class="col-sm-4"),
+                    Div(css_class="col-sm-4"),
+                    Div("objekt_druh", css_class="col-sm-2"),
+                    Div("objekt_specifikace", css_class="col-sm-2"),
+                    Div("objekt_pozn_pocet", css_class="col-sm-4"),
+                    id="KomponentaCollapse",
+                    css_class="collapse row",
+                ),
+                Div(
+                    HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                    HTML(adb_divider),
+                    HTML('<hr class="mt-0" />'),
+                    data_toggle="collapse",
+                    href="#AdbCollapse",
+                    role="button",
+                    aria_expanded="false",
+                    aria_controls="AdbCollapse",
+                    css_class="col-sm-12 app-btn-show-more collapsed",
+                ),
+                Div(
+                    Div("adb_ident_obsahuje", css_class="col-sm-2"),
+                    Div("adb_typ_sondy", css_class="col-sm-2"),
+                    Div("adb_podnet", css_class="col-sm-2"),
+                    Div("adb_popisne_udaje", css_class="col-sm-4"),
+                    Div(css_class="col-sm-2"),
+                    Div("adb_autori", css_class="col-sm-2"),
+                    Div("adb_roky", css_class="col-sm-4 app-daterangepicker"),
+                    Div(css_class="col-sm-6"),
+                    Div("vb_ident_obsahuje", css_class="col-sm-2"),
+                    Div("vb_uroven", css_class="col-sm-2"),
+                    Div("vb_niveleta", css_class="col-sm-4 app-daterangepicker"),
+                    id="AdbCollapse",
+                    css_class="collapse row",
+                ),
+                Div(
+                    HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                    HTML(dok_divider),
+                    HTML('<hr class="mt-0" />'),
+                    data_toggle="collapse",
+                    href="#zaznamyCollapse",
+                    role="button",
+                    aria_expanded="false",
+                    aria_controls="zaznamyCollapse",
+                    css_class="col-sm-12 app-btn-show-more collapsed",
+                ),
+                Div(
+                    Div("dokument_ident", css_class="col-sm-2"),
+                    Div("zdroj_ident", css_class="col-sm-2"),
+                    id="zaznamyCollapse",
+                    css_class="collapse row",
+                ),
             ),
-            Div(
-                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
-                HTML(dj_pian_divider),
-                HTML('<hr class="mt-0" />'),
-                data_toggle="collapse",
-                href="#DjPianCollapse",
-                role="button",
-                aria_expanded="false",
-                aria_controls="DjPianCollapse",
-                css_class="col-sm-12 app-btn-show-more collapsed",
-            ),
-            Div(
-                Div("dj_typ", css_class="col-sm-2"),
-                Div("dj_nazev", css_class="col-sm-2"),
-                Div("dj_zjisteni", css_class="col-sm-2"),
-                Div("pian_ident_obsahuje", css_class="col-sm-2"),
-                Div("pian_typ", css_class="col-sm-2"),
-                Div("pian_presnost", css_class="col-sm-2"),
-                id="DjPianCollapse",
-                css_class="collapse row",
-            ),
-            Div(
-                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
-                HTML(komponenta_divider),
-                HTML('<hr class="mt-0" />'),
-                data_toggle="collapse",
-                href="#KomponentaCollapse",
-                role="button",
-                aria_expanded="false",
-                aria_controls="KomponentaCollapse",
-                css_class="col-sm-12 app-btn-show-more collapsed",
-            ),
-            Div(
-                Div("komponenta_obdobi", css_class="col-sm-2"),
-                Div("komponenta_jistota", css_class="col-sm-2"),
-                Div("komponenta_areal", css_class="col-sm-2"),
-                Div("komponenta_aktivity", css_class="col-sm-2"),
-                Div("komponenta_poznamka", css_class="col-sm-4"),
-                Div("predmet_druh", css_class="col-sm-2"),
-                Div("predmet_specifikace", css_class="col-sm-2"),
-                Div("predmet_pozn_pocet", css_class="col-sm-4"),
-                Div(css_class="col-sm-4"),
-                Div("objekt_druh", css_class="col-sm-2"),
-                Div("objekt_specifikace", css_class="col-sm-2"),
-                Div("objekt_pozn_pocet", css_class="col-sm-4"),
-                id="KomponentaCollapse",
-                css_class="collapse row",
-            ),
-            Div(
-                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
-                HTML(adb_divider),
-                HTML('<hr class="mt-0" />'),
-                data_toggle="collapse",
-                href="#AdbCollapse",
-                role="button",
-                aria_expanded="false",
-                aria_controls="AdbCollapse",
-                css_class="col-sm-12 app-btn-show-more collapsed",
-            ),
-            Div(
-                Div("adb_ident_obsahuje", css_class="col-sm-2"),
-                Div("adb_typ_sondy", css_class="col-sm-2"),
-                Div("adb_podnet", css_class="col-sm-2"),
-                Div("adb_popisne_udaje", css_class="col-sm-4"),
-                Div(css_class="col-sm-2"),
-                Div("adb_autori", css_class="col-sm-2"),
-                Div("adb_roky", css_class="col-sm-4 app-daterangepicker"),
-                Div(css_class="col-sm-6"),
-                Div("vb_ident_obsahuje", css_class="col-sm-2"),
-                Div("vb_uroven", css_class="col-sm-2"),
-                Div("vb_niveleta", css_class="col-sm-4 app-daterangepicker"),
-                id="AdbCollapse",
-                css_class="collapse row",
-            ),
-            Div(
-                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
-                HTML(dok_divider),
-                HTML('<hr class="mt-0" />'),
-                data_toggle="collapse",
-                href="#zaznamyCollapse",
-                role="button",
-                aria_expanded="false",
-                aria_controls="zaznamyCollapse",
-                css_class="col-sm-12 app-btn-show-more collapsed",
-            ),
-            Div(
-                Div("dokument_ident", css_class="col-sm-2"),
-                Div("zdroj_ident", css_class="col-sm-2"),
-                id="zaznamyCollapse",
-                css_class="collapse row",
-            ),
-        ),
-    )
-    form_tag = False
+        )
+        self.form_tag = False
+        super().__init__(form)

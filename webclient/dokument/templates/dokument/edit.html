@@ -9,7 +9,7 @@
 
 {% block content %}
   <div class="app-entity-dokument">
-    {% include "toolbar_dokument.html" with is_3d=False%}
+    {% include "toolbar_dokument.html" with is_3d=False is_edit=True d=dokument%}
     <form method="post" onsubmit="newDocumentSubmitBtn.disabled = true; return true;">
       <div>
         <div class="card app-card-form">

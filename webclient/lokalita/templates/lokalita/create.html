@@ -28,7 +28,7 @@
         {% include "lokalita/lokalita_detail_part.html" with create=True %} 
         <div class="mt-3">
           <div class="form-group">
-            <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary">{% trans "lokalita.templates.create.submitButton" %}</button>
+            <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary">{{submit_button}}</button>
             {% if object.ident_cely %}
               <a type="button" class="btn btn-secondary" href="{% url 'lokalita:detail' object.ident_cely %}">{% trans "lokalita.templates.create.backButton" %}</a>
             {% else %}

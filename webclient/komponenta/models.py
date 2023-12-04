@@ -28,6 +28,13 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
     class Meta:
         db_table = "komponenta_vazby"
 
+    @property
+    def navazany_objekt(self):
+        if hasattr(self, "casti_dokumentu") and self.casti_dokumentu:
+            return self.casti_dokumentu
+        elif hasattr(self, "dokumentacni_jednotka") and self.dokumentacni_jednotka:
+            return self.dokumentacni_jednotka
+
 
 class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
     """

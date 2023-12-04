@@ -163,6 +163,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
 
 
 class DownloadFile(LoginRequiredMixin, View):
+    thumb = False
     @staticmethod
     def _preprocess_image(file_content: BytesIO) -> BytesIO:
         return file_content
@@ -177,7 +178,7 @@ class DownloadFile(LoginRequiredMixin, View):
                         )
             return redirect(request.GET.get("next"))
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
-        rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content()
+        rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content(thumb=self.thumb)
         if soubor.repository_uuid is not None:
             # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
             content = self._preprocess_image(rep_bin_file.content)
@@ -210,29 +211,7 @@ class DownloadFile(LoginRequiredMixin, View):
 
 
 class DownloadThumbnail(DownloadFile):
-    @staticmethod
-    def _preprocess_image(file_content: BytesIO) -> BytesIO:
-        logger.debug("core.views.DownloadFile._resize_image.start")
-        try:
-            image = Image.open(file_content)
-            max_size = 100
-            width, height = image.size
-            if width > height:
-                new_width = max_size
-                new_height = int((max_size / width) * height)
-            else:
-                new_height = max_size
-                new_width = int((max_size / height) * width)
-            image.thumbnail((new_width, new_height))
-            output_buffer = BytesIO()
-            image.save(output_buffer, format="JPEG")
-            output_buffer.seek(0)
-            logger.debug("core.views.DownloadFile._resize_image.end")
-            return output_buffer
-        except Exception as err:
-            logger.debug("core.views.DownloadFile._resize_image.error", extra={"err": err})
-            return file_content
-
+    thumb = True
 
 
 @login_required
@@ -820,17 +799,20 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     paginate_by = 100
     allow_empty = True
     export_formats = ["csv", "json", "xlsx"]
-    page_title = _("core.views.AkceListView.page_title.text")
     app = "core"
     toolbar = "toolbar_akce.html"
-    search_sum = _("core.views.AkceListView.search_sum.text")
-    pick_text = _("core.views.AkceListView.pick_text.text")
-    hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
-    hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
-    hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
-    hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
-    default_header = _("core.views.AkceListView.default_header.text")
-    toolbar_name = _("core.views.AkceListView.toolbar_name.text")
+    
+    def init_translations(self):
+        self.page_title = _("core.views.AkceListView.page_title.text")
+        self.search_sum = _("core.views.AkceListView.search_sum.text")
+        self.pick_text = _("core.views.AkceListView.pick_text.text")
+        self.hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
+        self.hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
+        self.hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
+        self.hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
+        self.default_header = _("core.views.AkceListView.default_header.text")
+        self.toolbar_name = _("core.views.AkceListView.toolbar_name.text")
+        self.toolbar_label = _("core.views.AkceListView.toolbar_label.text")
 
     def get_paginate_by(self, queryset):
         return self.request.GET.get("per_page", self.paginate_by)
@@ -841,6 +823,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        self.init_translations()
         context["export_formats"] = self.export_formats
         context["page_title"] = self.page_title
         context["app"] = self.app
@@ -853,7 +836,9 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["hasOnlyPotvrdit_header"] = self.hasOnlyPotvrdit_header
         context["default_header"] = self.default_header
         context["toolbar_name"] = self.toolbar_name
+        context["toolbar_label"] = self.toolbar_label
         context["sort_params"] = self._get_sort_params()
+        logger.debug(context)
         return context
     
 

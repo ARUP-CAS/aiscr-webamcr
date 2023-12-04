@@ -558,7 +558,7 @@ def edit(request, ident_cely):
         request,
         "arch_z/create.html",
         {
-            "object": zaznam,
+            "zaznam": zaznam,
             "formAZ": form_az,
             "formAkce": form_akce,
             "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
@@ -571,6 +571,7 @@ def edit(request, ident_cely):
             "heslar_specifikace_v_letech_presne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
             "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
             "arch_z_ident_cely":zaznam.ident_cely,
+            "toolbar_name": _("arch_z.views.edit.toolbar_name.text"),
         },
     )
 
@@ -1354,19 +1355,22 @@ class AkceListView(SearchListView):
     model = Akce
     filterset_class = AkceFilter
     export_name = "export_akce_"
-    page_title = _("arch_z.views.AkceListView.page_title.text")
     app = "akce"
     toolbar = "toolbar_akce.html"
-    search_sum = _("arch_z.views.AkceListView.search_sum.text")
-    pick_text = _("arch_z.views.AkceListView.pick_text.text")
-    hasOnlyVybrat_header = _("arch_z.views.AkceListView.hasOnlyVybrat_header.text")
-    hasOnlyVlastnik_header = _("arch_z.views.AkceListView.hasOnlyVlastnik_header.text")
-    hasOnlyArchive_header = _("arch_z.views.AkceListView.hasOnlyArchive_header.text")
-    hasOnlyPotvrdit_header = _("arch_z.views.AkceListView.hasOnlyPotvrdit_header.text")
-    default_header = _("arch_z.views.AkceListView.default_header.text")
-    toolbar_name = _("arch_z.views.AkceListView.toolbar_name.text")
     permission_model_lookup = "archeologicky_zaznam__"
     typ_zmeny_lookup = ZAPSANI_AZ
+
+    def init_translations(self):
+        self.page_title = _("arch_z.views.AkceListView.page_title.text")
+        self.search_sum = _("arch_z.views.AkceListView.search_sum.text")
+        self.pick_text = _("arch_z.views.AkceListView.pick_text.text")
+        self.hasOnlyVybrat_header = _("arch_z.views.AkceListView.hasOnlyVybrat_header.text")
+        self.hasOnlyVlastnik_header = _("arch_z.views.AkceListView.hasOnlyVlastnik_header.text")
+        self.hasOnlyArchive_header = _("arch_z.views.AkceListView.hasOnlyArchive_header.text")
+        self.hasOnlyPotvrdit_header = _("arch_z.views.AkceListView.hasOnlyPotvrdit_header.text")
+        self.default_header = _("arch_z.views.AkceListView.default_header.text")
+        self.toolbar_name = _("arch_z.views.AkceListView.toolbar_name.text")
+        self.toolbar_label = _("core.views.AkceListView.toolbar_label.text")
 
     def get_queryset(self):
         qs = super().get_queryset()

@@ -86,18 +86,21 @@ class ExterniZdrojListView(SearchListView):
     model = ExterniZdroj
     filterset_class = ExterniZdrojFilter
     export_name = "export_externi-zdroje_"
-    page_title = _("ez.templates.ExterniZdrojListView.pageTitle.text")
     app = "ext_zdroj"
     toolbar = "toolbar_externi_zdroj.html"
-    search_sum = _("ez.templates.ExterniZdrojListView.search_sum.text")
-    pick_text = _("ez.templates.ExterniZdrojListView.pickText.text")
-    hasOnlyVybrat_header = _("ez.templates.ExterniZdrojListView.hasOnlyVybrat_header.text")
-    hasOnlyVlastnik_header = _("ez.templates.ExterniZdrojListView.hasOnlyVlastnik_header.text")
-    hasOnlyArchive_header = _("ez.templates.ExterniZdrojListView.hasOnlyPotvrdit_header.text")
-    hasOnlyPotvrdit_header = _("ez.templates.ExterniZdrojListView.hasOnlyPotvrdit_header.text")
-    default_header = _("ez.templates.ExterniZdrojListView.header.default_header.text")
-    toolbar_name = _("ez.templates.ExterniZdrojListView.toolbar_name.text")
     typ_zmeny_lookup = ZAPSANI_EXT_ZD
+
+    def init_translations(self):
+        self.page_title = _("ez.templates.ExterniZdrojListView.pageTitle.text")
+        self.search_sum = _("ez.templates.ExterniZdrojListView.search_sum.text")
+        self.pick_text = _("ez.templates.ExterniZdrojListView.pickText.text")
+        self.hasOnlyVybrat_header = _("ez.templates.ExterniZdrojListView.hasOnlyVybrat_header.text")
+        self.hasOnlyVlastnik_header = _("ez.templates.ExterniZdrojListView.hasOnlyVlastnik_header.text")
+        self.hasOnlyArchive_header = _("ez.templates.ExterniZdrojListView.hasOnlyPotvrdit_header.text")
+        self.hasOnlyPotvrdit_header = _("ez.templates.ExterniZdrojListView.hasOnlyPotvrdit_header.text")
+        self.default_header = _("ez.templates.ExterniZdrojListView.header.default_header.text")
+        self.toolbar_name = _("ez.templates.ExterniZdrojListView.toolbar_name.text")
+        self.toolbar_label = _("ez.views.ExterniZdrojListView.toolbar_label.text")
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -243,12 +246,14 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     Třida pohledu pro změnu stavu a práci s externíma zdrojama cez modal, která se dedí pro jednotlivá změny.
     """
     template_name = "core/transakce_modal.html"
-    title = "title"
     id_tag = "id_tag"
-    button = "button"
     allowed_states = []
     success_message = "success"
     action = ""
+
+    def init_translation(self):
+        self.title = "title"
+        self.button = "button"
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
@@ -259,6 +264,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
+        self.init_translation()
         zaznam = self.get_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": zaznam.stav})
         context = {
@@ -303,35 +309,41 @@ class ExterniZdrojOdeslatView(TransakceView):
     """
     Třida pohledu pro odeslání externího zdroje pomoci modalu.
     """
-    title = _("ez.templates.ExterniZdrojOdeslatView.title.text")
     id_tag = "odeslat-ez-form"
-    button = _("ez.templates.ExterniZdrojOdeslatView.submitButton.text")
     allowed_states = [EZ_STAV_ZAPSANY]
     success_message = EZ_USPESNE_ODESLAN
     action = "set_odeslany"
+
+    def init_translation(self):
+        self.title = _("ez.templates.ExterniZdrojOdeslatView.title.text")
+        self.button = _("ez.templates.ExterniZdrojOdeslatView.submitButton.text")
 
 
 class ExterniZdrojPotvrditView(TransakceView):
     """
     Třida pohledu pro potvrzení externího zdroje pomoci modalu.
     """
-    title = _("ez.templates.ExterniZdrojPotvrditView.title.text")
     id_tag = "potvrdit-ez-form"
-    button = _("ez.templates.ExterniZdrojPotvrditView.submitButton.text")
     allowed_states = [EZ_STAV_ODESLANY]
     success_message = EZ_USPESNE_POTVRZEN
     action = "set_potvrzeny"
+
+    def init_translation(self):
+        self.title = _("ez.templates.ExterniZdrojPotvrditView.title.text")
+        self.button = _("ez.templates.ExterniZdrojPotvrditView.submitButton.text")
 
 
 class ExterniZdrojSmazatView(TransakceView):
     """
     Třida pohledu pro smazání externího zdroje pomoci modalu.
     """
-    title = _("ez.templates.ExterniZdrojSmazatView.title.text")
     id_tag = "smazat-ez-form"
-    button = _("ez.templates.ExterniZdrojSmazatView.submitButton.text")
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
     success_message = ZAZNAM_USPESNE_SMAZAN
+
+    def init_translation(self):
+        self.title = _("ez.templates.ExterniZdrojSmazatView.title.text")
+        self.button = _("ez.templates.ExterniZdrojSmazatView.submitButton.text")
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
@@ -353,12 +365,14 @@ class ExterniZdrojVratitView(TransakceView):
     """
     Třida pohledu pro vrácení externího zdroje pomoci modalu.
     """
-    title = _("ez.templates.ExterniZdrojVratitView.title.text")
     id_tag = "vratit-ez-form"
-    button = _("ez.templates.ExterniZdrojVratitView.submitButton.text")
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY]
     success_message = EZ_USPESNE_VRACENA
     action = "set_vraceny"
+
+    def init_translation(self):
+        self.title = _("ez.templates.ExterniZdrojVratitView.title.text")
+        self.button = _("ez.templates.ExterniZdrojVratitView.submitButton.text")
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
@@ -387,11 +401,13 @@ class ExterniOdkazOdpojitView(TransakceView):
     """
     Třida pohledu pro odpojení externího odkazu pomoci modalu.
     """
-    title = _("ez.templates.ExterniOdkazOdpojitView.title.text")
     id_tag = "odpojit-az-form"
-    button = _("ez.templates.ExterniOdkazOdpojitView.submitButton.text")
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
     success_message = EO_USPESNE_ODPOJEN
+
+    def init_translation(self):
+        self.title = _("ez.templates.ExterniOdkazOdpojitView.title.text")
+        self.button = _("ez.templates.ExterniOdkazOdpojitView.submitButton.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -414,10 +430,12 @@ class ExterniOdkazPripojitView(TransakceView):
     Třida pohledu pro připojení externího odkazu pomoci modalu.
     """
     template_name = "core/transakce_table_modal.html"
-    title = _("ez.templates.ExterniOdkazPripojitView.title.text")
     id_tag = "pripojit-eo-form"
-    button = _("ez.templates.ExterniOdkazPripojitView.submitButton.text")
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
+
+    def init_translation(self):
+        self.title = _("ez.templates.ExterniOdkazPripojitView.title.text")
+        self.button = _("ez.templates.ExterniOdkazPripojitView.submitButton.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -458,9 +476,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
     """
     model = ExterniOdkaz
     template_name = "core/transakce_modal.html"
-    title = _("ez.templates.ExterniOdkazEditView.title.text")
     id_tag = "zmenit-eo-form"
-    button = _("ez.templates.ExterniOdkazEditView.submitButton.text")
     allowed_states = []
     success_message = "success"
     form_class = ExterniOdkazForm
@@ -471,9 +487,9 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         zaznam = self.object
         context = {
             "object": zaznam,
-            "title": self.title,
+            "title": _("ez.templates.ExterniOdkazPripojitView.title.text"),
             "id_tag": self.id_tag,
-            "button": self.button,
+            "button": _("ez.templates.ExterniOdkazEditView.submitButton.text"),
         }
         context["form"] = ExterniOdkazForm(
             instance=self.object,
@@ -581,10 +597,12 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
     Třída pohledu pro připojení externího odkazu do arch záznamu.
     """
     template_name = "core/transakce_table_modal.html"
-    title = _("ez.templates.ExterniOdkazPripojitDoAzView.title.text")
     id_tag = "pripojit-eo-doaz-form"
-    button = _("ez.templates.ExterniOdkazPripojitDoAzView.submitButton.text")
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
+
+    def init_translation(self):
+        self.title = _("ez.templates.ExterniOdkazPripojitDoAzView.title.text")
+        self.button = _("ez.templates.ExterniOdkazPripojitDoAzView.submitButton.text")
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")

@@ -4,7 +4,7 @@ import django_tables2 as tables
 from django.urls import reverse
 from django.utils.html import format_html
 from django_tables2.utils import A
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.template import Context, Template
 from django.template.loader import get_template
 

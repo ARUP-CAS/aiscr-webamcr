@@ -117,8 +117,8 @@
     <div class="mt-3">
       <div class="form-group">
         <button type="submit" id="actionSubmitBtn" class="btn btn-primary">{{ button }}</button>
-          {% if object %}
-            <a type="button" class="btn btn-secondary" href="{% url 'arch_z:detail' object.ident_cely %}">{% trans "arch_z.templates.arch_z.create.detailForm.button.zpet.label" %}</a>
+          {% if zaznam %}
+            <a type="button" class="btn btn-secondary" href="{% url 'arch_z:detail' zaznam.ident_cely %}">{% trans "arch_z.templates.arch_z.create.detailForm.button.zpet.label" %}</a>
           {% else %}
             {% if sam_akce %}
               <a type="button" class="btn btn-secondary" href="{% url 'arch_z:index' %}">{% trans "arch_z.templates.arch_z.create.detailForm.button.zpet.label" %}</a>

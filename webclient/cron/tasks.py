@@ -546,12 +546,14 @@ def change_document_accessibility():
                     | ~Q(pristupnost__razeni=F('organizace__zverejneni_pristupnost__razeni')))
         for item in documents:
             item: Dokument
-            logger.debug("core.cron.change_document_accessibility.do.dokument", extra={"dokument": item.ident_cely})
             pristupnost_razeni = min(*[x.archeologicky_zaznam.pristupnost.razeni for x in item.casti.all()],
                                      item.organizace.zverejneni_pristupnost.razeni)
-            pristupnost = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST).filter(razeni=pristupnost_razeni).first()
-            item.pristupnost = pristupnost
-            item.save()
+            pristupnost = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST)\
+                .filter(razeni=pristupnost_razeni).first()
+            if item.pristupnost != pristupnost:
+                item.pristupnost = pristupnost
+                item.save()
+                logger.debug("core.cron.change_document_accessibility.do.dokument", extra={"dokument": item.ident_cely})
         logger.debug("core.cron.change_document_accessibility.do.end")
     except Exception as err:
         logger.error("core.cron.change_document_accessibility.do.error", extra={"error": err})

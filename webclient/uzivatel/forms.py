@@ -106,7 +106,11 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
     """
     Formulář pro zobrazení detailu uživatele.
     """
-    hlavni_role = forms.CharField(widget=ForeignKeyReadOnlyTextInput())
+    hlavni_role = forms.CharField(
+        widget=ForeignKeyReadOnlyTextInput(),
+        label=_("uzivatel.forms.userChange.hlavni_role.label"),
+        help_text= _("uzivatel.forms.userChange.hlavni_role.tooltip")
+        )
 
     class Meta:
         model = User
@@ -128,8 +132,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
             "ident_cely": _("uzivatel.forms.userChange.ident_cely.tooltip"),
             "date_joined": _("uzivatel.forms.userChange.date_joined.tooltip"),
             "organizace": _("uzivatel.forms.userChange.organizace.tooltip"),
-            "hlavni_role": _("uzivatel.forms.userChange.hlavni_role.tooltip"),
-            "groups": _("uzivatel.forms.userChange.hlavni_role.tooltip"),
+            "groups": _("uzivatel.forms.userChange.groups.tooltip"),
         }
 
         widgets = {
@@ -185,8 +188,18 @@ class UpdatePasswordSettings(forms.ModelForm):
     """
     Formulář pro změnu hesla.
     """
-    password1 = forms.CharField(required=False, widget=PasswordInput())
-    password2 = forms.CharField(required=False, widget=PasswordInput())
+    password1 = forms.CharField(
+        required=False,
+        widget=PasswordInput(),
+        label=_("uzivatel.forms.userChange.password1.label"),
+        help_text=_("uzivatel.forms.UpdatePasswordSettings.password1.tooltip")
+    )
+    password2 = forms.CharField(
+        required=False,
+        widget=PasswordInput(),
+        label=_("uzivatel.forms.userChange.password2.label"),
+        help_text=_("uzivatel.forms.UpdatePasswordSettings.password2.tooltip")
+    )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -204,14 +217,6 @@ class UpdatePasswordSettings(forms.ModelForm):
     class Meta:
         model = User
         fields = ("password1", "password2")
-        labels = {
-            "password1": _("uzivatel.forms.userChange.password1.label"),
-            "password2": _("uzivatel.forms.userChange.password2.label"),
-        }
-        help_texts = {
-            "password1": _("uzivatel.forms.UpdatePasswordSettings.password1.tooltip"),
-            "password2": _("uzivatel.forms.UpdatePasswordSettings.password2.tooltip"),
-        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

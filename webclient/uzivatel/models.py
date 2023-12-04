@@ -33,6 +33,7 @@ from django.db.models import DEFERRED, CheckConstraint, Q
 from django.db.models.functions import Collate
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import get_language
 from django_prometheus.models import ExportModelOperationsMixin
 
 from heslar.hesla import HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
@@ -371,6 +372,8 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     Class pro db model typ user notifikace.
     """
     ident_cely = models.TextField(unique=True)
+    text_cs = models.TextField()
+    text_en = models.TextField()
 
     def _get_settings_dict(self) -> Optional[dict]:
         if self.ident_cely in notification_settings:
@@ -402,9 +405,22 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
 
     class Meta:
         db_table = "notifikace_typ"
+        verbose_name = _("uzivatel.models.UserNotificationType.name")
+        verbose_name_plural = _("uzivatel.models.UserNotificationType.namePlural")
 
     def __str__(self):
-        return self.ident_cely
+        if get_language() == "en":
+            if self.text_en:
+                return self.text_en
+            elif self.text_cs:
+                return self.text_cs
+            else:
+                return self.ident_cely
+        else:
+            if self.text_cs:
+                return self.text_cs
+            else:
+                return self.ident_cely
 
 
 class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Model):
