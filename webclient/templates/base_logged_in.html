@@ -251,12 +251,12 @@
 {% block navbar %}
   <nav class="navbar navbar-expand-xl navbar-light bg-light border-bottom">
     <button class="btn btn-light mb-0 mt-0" id="sidebar-toggle"><span class="material-icons">menu_open</span></button>
-    <span class="navbar-mobile-header-ident">
+    <span class="navbar-mobile-header-ident" id="navbar-mobile-header-ident">
       {% if projekt %}
         <span class="navbar-mobile-header-ident-projekt">{{ projekt.ident_cely }}</span>
       {% endif %}
     </span>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMobile"
+    <button class="navbar-toggler" id="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMobile"
             aria-controls="navbarMobile" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -323,7 +323,7 @@
 
 {% block footer %}
   <footer class="text-lg-start">
-    <div class="d-flex justify-content-between p-3 app-footer-wrapper">
+    <div class="d-lg-flex justify-content-lg-between p-3 app-footer-wrapper">
       <div>
         <a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerLicence">{% trans "templates.baseLogedIn.footer.licence" %}</a><span class="app-pipe"></span><!--
         --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerKontakt">{% trans "templates.baseLogedIn.footer.kontakt" %}</a><span class="app-pipe"></span><!--
@@ -345,9 +345,14 @@
 {% block script_sidebar %}
   <script>
     $("#sidebar-toggle").click(function (e) {
-      try {
-        setTimeout(function(){ map.invalidateSize()}, 400);
-      } catch (error) {/*No need for console.log()*/}
+      if (typeof map !== 'undefined') {
+          try {
+              setTimeout(function () {
+                  map.invalidateSize()
+              }, 400);
+          } catch (error) {/*No need for console.log()*/
+          }
+      }
       e.preventDefault();
       $("#app-wrapper").toggleClass("toggled");
     });
@@ -422,6 +427,24 @@
     var timer = new Timer();
     var interval = null;
     let document_title = document.title;
+
+    const sidebar_toggle = document.getElementById("sidebar-toggle");
+    sidebar_toggle.addEventListener("click", (e) => {
+        const width = screen.width;
+        const app_wrapper = document.getElementById("app-sidebar-wrapper");
+        const style = window.getComputedStyle(app_wrapper) || app_wrapper.currentStyle;
+        const margin_left = style.marginLeft;
+        const sideber_shown = margin_left === "-300px";
+        const navbar_toggler = document.getElementById("navbar-toggler");
+        const navbar_mobile_header_ident = document.getElementById("navbar-mobile-header-ident");
+        if (width < 600 && sideber_shown) {
+            navbar_toggler.style.display = "none";
+            navbar_mobile_header_ident.style.display = "none";
+        } else {
+            navbar_toggler.style.display = null;
+            navbar_mobile_header_ident.style.display = null;
+        }
+    });
 
     document.head = document.head || document.getElementsByTagName('head')[0];
 
@@ -587,20 +610,6 @@
         }, 1000);
       })
     })
-    /*setTimeout(() => {
-        const span_selection_rendered_query = document.body.querySelectorAll("span.select2.select2-container");
-        span_selection_rendered_query.forEach(item => {
-            item.addEventListener("mouseover", () => {
-                increase_ul_height(item);
-            });
-            item.addEventListener("keydown", () => {
-                increase_ul_height(item);
-            });
-            item.addEventListener("click", () => {
-                field_click(item);
-            });
-        })
-    }, 5000);*/
 
 </script>
 {% endblock %}
