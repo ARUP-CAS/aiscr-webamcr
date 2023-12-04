@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=DokumentacniJednotka)
-def create_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, **kwargs):
+def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, **kwargs):
     """
         Metóda pro vytvoření pianu z katastru arch záznamu.
         Metóda se volá po uložením DJ.

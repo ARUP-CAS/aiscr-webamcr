@@ -268,33 +268,6 @@ class Model3DFilter(HistorieFilter):
         distinct=True,
     )
 
-    obdobi = MultipleChoiceFilter(
-        method="filter_obdobi",
-        label=_("dokument.filters.dokumentFilter.obdobi.label"),
-        choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-    )
-
-    areal = MultipleChoiceFilter(
-        method="filter_areal",
-        label=_("dokument.filters.dokumentFilter.areal.label"),
-        choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)[1:],
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-        distinct=True,
-    )
-
     aktivity = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(
             nazev_heslare=HESLAR_AKTIVITA
@@ -311,53 +284,12 @@ class Model3DFilter(HistorieFilter):
         distinct=True,
     )
 
-    predmet_druh = MultipleChoiceFilter(
-        field_name="casti__komponenty__komponenty__predmety__druh",
-        label=_("dokument.filters.dokumentFilter.predmetDruh.label"),
-        choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-        distinct=True,
-    )
-
     predmet_specifikace = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(
             nazev_heslare=HESLAR_PREDMET_SPECIFIKACE
         ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
         field_name="casti__komponenty__komponenty__predmety__specifikace",
         label=_("dokument.filters.dokumentFilter.predmetSpecifikace.label"),
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-        distinct=True,
-    )
-    objekt_druh = MultipleChoiceFilter(
-        field_name="casti__komponenty__komponenty__objekty__druh",
-        label=_("dokument.filters.dokumentFilter.objektDruh.label"),
-        choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)[1:],
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-        distinct=True,
-    )
-
-    objekt_specifikace = MultipleChoiceFilter(
-        field_name="casti__komponenty__komponenty__objekty__specifikace",
-        label=_("dokument.filters.dokumentFilter.objektSpecifikace.label"),
-        choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT)[1:],
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -399,6 +331,73 @@ class Model3DFilter(HistorieFilter):
 
     def __init__(self, *args, **kwargs):
         super(Model3DFilter, self).__init__(*args, **kwargs)
+        self.filters["obdobi"] = MultipleChoiceFilter(
+            method="filter_obdobi",
+            label=_("dokument.filters.dokumentFilter.obdobi.label"),
+            choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+        )
+
+        self.filters["areal"] = MultipleChoiceFilter(
+            method="filter_areal",
+            label=_("dokument.filters.dokumentFilter.areal.label"),
+            choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)[1:],
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            distinct=True,
+        )
+        self.filters["objekt_druh"] = MultipleChoiceFilter(
+            field_name="casti__komponenty__komponenty__objekty__druh",
+            label=_("dokument.filters.dokumentFilter.objektDruh.label"),
+            choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)[1:],
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            distinct=True,
+        )
+
+        self.filters["objekt_specifikace"] = MultipleChoiceFilter(
+            field_name="casti__komponenty__komponenty__objekty__specifikace",
+            label=_("dokument.filters.dokumentFilter.objektSpecifikace.label"),
+            choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT)[1:],
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            distinct=True,
+        )
+
+        self.filters["predmet_druh"] = MultipleChoiceFilter(
+            field_name="casti__komponenty__komponenty__predmety__druh",
+            label=_("dokument.filters.dokumentFilter.predmetDruh.label"),
+            choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            distinct=True,
+        )
         self.helper = Model3DFilterFormHelper()
 
 

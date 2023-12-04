@@ -38,10 +38,10 @@
   <div class="form-group col-sm-2">
     {{ formExtraData.zeme|as_crispy_field }}
     {{ formExtraData.region|as_crispy_field }}
-    {{ formExtraData.sirka|as_crispy_field }}
-    {{ formExtraData.vyska|as_crispy_field }}
-    {{ formExtraData.coordinate_x|as_crispy_field }}
-    {{ formExtraData.coordinate_y|as_crispy_field }}
+    {{ formExtraData.visible_x1|as_crispy_field }}
+    {{ formExtraData.visible_x2|as_crispy_field }}
+    {{ formExtraData.coordinate_wgs84_x1|as_crispy_field }}
+    {{ formExtraData.coordinate_wgs84_x2|as_crispy_field }}
   </div>
   <div class="col-10" style="height: 300px">
     {% include "map.html" %}
@@ -88,19 +88,19 @@
 <script src="{% static 'mapa_doc.js' %}"></script>
 <script>
   $(document).ready(function () {
-        {% if coordinate_x is not None %}
-        let [corX, corY] = amcr_static_coordinate_precision_wgs84([{{ coordinate_x }}, {{ coordinate_y }}]);
+        {% if coordinate_wgs84_x1 is not None %}
+        let [cor_x1, cor_x2] = amcr_static_coordinate_precision_wgs84([{{ coordinate_wgs84_x1 }}, {{ coordinate_wgs84_x2 }}]);
 
-        document.getElementById('id_vyska').value = corY;
-        document.getElementById('id_sirka').value = corX;
+        document.getElementById('id_visible_x1').value = cor_x1;
+        document.getElementById('id_visible_x2').value = cor_x2;
         replace_coor();
 
         $('[readonly]').prop("disabled", true);
         {% if global_map_can_edit %}
-        addUniquePointToPoiLayer(corX, corY);
+        addUniquePointToPoiLayer([cor_x2,cor_x1]);
         {% else  %}
         global_map_can_edit = false
-        addReadOnlyUniquePointToPoiLayer(corX, corY);
+        addReadOnlyUniquePointToPoiLayer([cor_x2,cor_x1]);
         {% endif %}
         {% else  %}
         if(window.location.href.includes("/detail/")){

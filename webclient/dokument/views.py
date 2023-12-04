@@ -223,9 +223,8 @@ def detail_model_3D(request, ident_cely):
             .replace(", ", ",")
             .replace(")", "")
         )
-        context["coordinate_x"] = geom.split(" ")[1]
-        context["coordinate_y"] = geom.split(" ")[0]
-
+        context["coordinate_wgs84_x1"] = geom.split(" ")[0]
+        context["coordinate_wgs84_x2"] = geom.split(" ")[1]
     context["formExtraData"] = CreateModelExtraDataForm(
         instance=dokument.extra_data, readonly=True
     )
@@ -1106,15 +1105,15 @@ def edit_model_3D(request, ident_cely):
             required_next=required_fields_next,
         )
         geom = None
-        dx = None
-        dy = None
+        x1 = None
+        x2 = None
         try:
-            dx = float(form_coor.data.get("coordinate_x"))
-            dy = float(form_coor.data.get("coordinate_y"))
-            if dx > 0 and dy > 0:
-                geom = Point(dy, dx)
+            x1 = float(form_coor.data.get("coordinate_wgs84_x1"))
+            x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
+            if x1 > 0 and x2 > 0:
+                geom = Point(x1, x2)
         except Exception:
-            logger.debug("dokument.views.edit_model_3D.coord_error", extra={"dx": dx, "dy": dy})
+            logger.debug("dokument.views.edit_model_3D.coord_error", extra={"x1": x1, "x2": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             #save autors with order
             instance_d = form_d.save(commit=False)
@@ -1173,8 +1172,8 @@ def edit_model_3D(request, ident_cely):
                 "dokument/create_model_3D.html",
                 {
                     "object": dokument,
-                    "coordinate_x": geom.split(" ")[1],
-                    "coordinate_y": geom.split(" ")[0],
+                    "coordinate_wgs84_x1": geom.split(" ")[0],
+                    "coordinate_wgs84_x2": geom.split(" ")[1],
                     "global_map_can_edit": True,
                     "formDokument": form_d,
                     "formExtraData": form_extra,
@@ -1252,15 +1251,15 @@ def create_model_3D(request):
             required_next=required_fields_next,
         )
         geom = None
-        dx = None
-        dy = None
+        x1 = None
+        x2 = None
         try:
-            dx = float(form_extra.data.get("coordinate_x"))
-            dy = float(form_extra.data.get("coordinate_y"))
-            if dx > 0 and dy > 0:
-                geom = Point(dy, dx)
+            x1 = float(form_extra.data.get("coordinate_wgs84_x1"))
+            x2 = float(form_extra.data.get("coordinate_wgs84_x2"))
+            if x1 > 0 and x2 > 0:
+                geom = Point(x1, x2)
         except Exception:
-            logger.debug("dokument.views.create_model_3D.coord_error", extra={"dx": dx, "dy": dy})
+            logger.debug("dokument.views.create_model_3D.coord_error", extra={"x1": x1, "x2": x2})
 
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             logger.debug("dokument.views.create_model_3D.forms_valid")

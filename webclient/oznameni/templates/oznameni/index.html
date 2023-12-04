@@ -172,13 +172,13 @@
   <script>
     window.onload = function (){
       load_daterangepicker("div_id_planovane_zahajeni")
-      var addPointToPoiLayer = (lat, long, text) => {
-            L.marker([lat, long],{icon: pinIconRedProject}).bindPopup(text).addTo(poi);
+      var addPointToPoiLayer = (point_leaf, text) => {
+            L.marker(point_leaf,{icon: pinIconRedProject}).bindPopup(text).addTo(poi);
         }
-      corX=document.getElementById('id_latitude').value;
-      corY=document.getElementById('id_longitude').value;
-      if(corX>0 ){
-      addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru');
+      x1=document.getElementById('id_coordinate_x1').value;
+      x2=document.getElementById('id_coordinate_x2').value;
+      if(x1>0 ){
+        addPointToPoiLayer([x2, x1], 'Vámi vybraná poloha záměru');
       }
     };
   </script>

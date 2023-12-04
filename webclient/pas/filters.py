@@ -9,7 +9,7 @@ from django.contrib.auth.models import Group
 from django.db import utils
 from django.db.models import Q, OuterRef, Subquery, F
 from django.forms import Select, SelectMultiple
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django_filters import (
     CharFilter,
     ModelMultipleChoiceFilter,
@@ -49,6 +49,11 @@ class SamostatnyNalezFilter(HistorieFilter):
     """
     Třída pro zakladní filtrování samostatného nálezu a jejich potomků.
     """
+    ident_cely = CharFilter(
+        lookup_expr="icontains",
+        label=_("pas.filters.pasFilter.ident_cely.label")
+    )
+
     stav = MultipleChoiceFilter(
         choices=SamostatnyNalez.PAS_STATES,
         label=_("pas.filters.samostatnyNalezFilter.stav.label"),
@@ -147,35 +152,9 @@ class SamostatnyNalezFilter(HistorieFilter):
         ),
     )
 
-    obdobi = MultipleChoiceFilter(
-        method="filter_obdobi",
-        label=_("pas.filters.samostatnyNalezFilter.obdobi.label"),
-        choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-    )
-
     okolnosti = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_NALEZOVE_OKOLNOSTI),
         label=_("pas.filters.samostatnyNalezFilter.okolnosti.label"),
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-    )
-
-    druh_nalezu = MultipleChoiceFilter(
-        method="filter_druh_nalezu",
-        label=_("pas.filters.samostatnyNalezFilter.druhNalezu.label"),
-        choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -245,12 +224,35 @@ class SamostatnyNalezFilter(HistorieFilter):
     class Meta:
         model = SamostatnyNalez
         fields = {
-            "ident_cely": ["icontains"],
             "predano": ["exact"],
         }
 
     def __init__(self, *args, **kwargs):
         super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
+        self.filters["obdobi"] = MultipleChoiceFilter(
+            method="filter_obdobi",
+            label=_("pas.filters.samostatnyNalezFilter.obdobi.label"),
+            choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+        )
+        self.filters["druh_nalezu"] = MultipleChoiceFilter(
+            method="filter_druh_nalezu",
+            label=_("pas.filters.samostatnyNalezFilter.druhNalezu.label"),
+            choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+        )
         self.helper = SamostatnyNalezFilterFormHelper()
 
     def filter_obdobi(self, queryset, name, value):
@@ -304,10 +306,21 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
         widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
     )
 
+    stav = MultipleChoiceFilter(
+        choices=UzivatelSpoluprace.SPOLUPRACE_STATES,
+        label=_("pas.filters.UzivatelSpolupraceFilter.stav.label"),
+        widget=SelectMultiple(
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
+        ),
+    )
+
     class Meta:
         model = UzivatelSpoluprace
         fields = ["stav"]
-        labels = {"stav": _("pas.filters.uzivatelSpolupraceFilter.stav.label")}
 
     def __init__(self, *args, **kwargs):
         super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
@@ -363,7 +376,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
         self.layout = Layout(
             Div(
                 Div(
-                    Div("ident_cely__icontains", css_class="col-sm-2"),
+                    Div("ident_cely", css_class="col-sm-2"),
                     Div("nalezce", css_class="col-sm-2"),
                     Div("datum_nalezu", css_class="col-sm-4 app-daterangepicker"),
                     Div("predano_organizace", css_class="col-sm-2"),

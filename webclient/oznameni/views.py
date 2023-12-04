@@ -78,8 +78,8 @@ def index(request, test_run=False):
             p.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
             dalsi_katastry = form_projekt.cleaned_data["katastry"]
             p.geom = Point(
-                float(request.POST.get("longitude")),
-                float(request.POST.get("latitude")),
+                float(request.POST.get("coordinate_x1")),
+                float(request.POST.get("coordinate_x2")),
             )
             p.hlavni_katastr = get_cadastre_from_point(p.geom)
             logger.debug("oznameni.views.index.hlavni_katastr", extra={"hlavni_katastr": p.hlavni_katastr})
@@ -208,7 +208,7 @@ def post_poi2kat(request):
     """
     body = json.loads(request.body.decode("utf-8"))
     # logger.debug(body)
-    geom = Point(float(body["corY"]), float(body["corX"]))
+    geom = Point(float(body["x1"]), float(body["x2"]))
     katastr = get_cadastre_from_point(geom)
     # logger.debug(katastr)
     if len(str(katastr)) > 0:

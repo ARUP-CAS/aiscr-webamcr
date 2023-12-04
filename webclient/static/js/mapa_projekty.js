@@ -54,10 +54,10 @@ L.easyButton('bi bi-skip-backward-fill', function () {
         let ll = poi_sugest.getLayers()[0]._latlng;
         map.setView(ll, 18);
         try {
-            document.getElementById('id_latitude').value = ll.lat;
-            document.getElementById('id_longitude').value = ll.lng;
+            document.getElementById('id_coordinate_x2').value = ll.lat;
+            document.getElementById('id_coordinate_x1').value = ll.lng;
         } catch (e) {
-            console.log("Error: Element id_latitude/latitude doesn exists")
+            console.log("Error: Element coordinate_x1/x2 doesn exists")
         }
         //Vratit puvodni katastr
         const select = $("input[name='hlavni_katastr']");
@@ -117,14 +117,14 @@ heatPoints = heatPoints.map(function (p) {
 
 
 map.on('click', function (e) {
-    const addPointToPoiLayer = (lat, long, text) => {
+    const addPointToPoiLayer = (point_leaf, text) => {
         if (global_map_can_edit) {
             poi_correct.clearLayers();
-            L.marker([lat, long], { icon: pinIconRedDf }).bindPopup(text).addTo(poi_correct);
+            L.marker(point_leaf, { icon: pinIconRedDf }).bindPopup(text).addTo(poi_correct);
             const getUrl = window.location;
             const select = $("input[name='hlavni_katastr']");
             if (select) {
-                fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/mapa-zjisti-katastr/?long=${long}&lat=${lat}`)
+                fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/mapa-zjisti-katastr/?long=${point_leaf[1]}&lat=${point_leaf[0]}`)
                     .then(response => response.json())
                     .then(response => {
                         if (ORIGIN_KATASTR.length == 0) {
@@ -136,18 +136,18 @@ map.on('click', function (e) {
         }
     }
 
-    let [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
+    let point_leaf = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
     if (!global_measuring_toolbox._measuring)
-        if (corY >= 12.2401111182 && corY <= 18.8531441586 && corX >= 48.5553052842 && corX <= 51.1172677679)
+        if (point_leaf[1] >= 12.2401111182 && point_leaf[1] <= 18.8531441586 && point_leaf[0] >= 48.5553052842 && point_leaf[0] <= 51.1172677679)
             if (map.getZoom() > 15) {
                 try {
                     //console.log("Position is: "+corX+" "+corY)
-                    document.getElementById('id_latitude').value = corX
-                    document.getElementById('id_longitude').value = corY
+                    document.getElementById('id_coordinate_x2').value = point_leaf[0]
+                    document.getElementById('id_coordinate_x1').value = point_leaf[1]
                 } catch (e) {
-                    console.log("Error: Element id_latitude/latitude doesn exists")
+                    console.log("Error: Element coordinate_x1/x2 doesn exists")
                 }
-                addPointToPoiLayer(corX, corY, [map_translations['SelectedLocation']]); // 'Vámi vybraná poloha záměru'
+                addPointToPoiLayer(point_leaf, [map_translations['SelectedLocation']]); // 'Vámi vybraná poloha záměru'
 
             } else {
                 var zoom = 2;
@@ -395,7 +395,7 @@ switchMap = function (overview = false) {
                     let resPoints = JSON.parse(this.responseText).points
                     resPoints.forEach((i) => {
                         let ge = i.geom.split("(")[1].split(")")[0];
-                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[0], ge.split(" ")[1]]), { icon: pinIconGreenPin })
+                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconGreenPin })
                         .bindTooltip(i.ident_cely, { sticky: true })
                         .bindPopup('<a href="/pas/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
                         .addTo(poi_sn)

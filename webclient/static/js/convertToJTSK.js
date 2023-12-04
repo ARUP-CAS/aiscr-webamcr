@@ -1,4 +1,4 @@
-function convertToJTSK(lat, long) {
+function convertToJTSK(long,lat) {
     function sqr(x) {
         return x * x;
     }
@@ -72,5 +72,5 @@ function convertToJTSK(lat, long) {
     var eps = n * Math.atan(sinD / cosD);
     rho = rho0 * Math.exp(-n * Math.log((1 + sinS) / cosS));
 
-    return [rho * Math.sin(eps), rho * Math.cos(eps)]
+    return [-1*rho * Math.sin(eps), -1*rho * Math.cos(eps)]
 }

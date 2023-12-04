@@ -639,15 +639,17 @@ def tr_wgs84(request):
     Funkce pohledu pro transformaci souradnic na wsg84.
     """
     body = json.loads(request.body.decode("utf-8"))
-    [cx, cy] = get_transform_towgs84(body["cy"], body["cx"])
-    if cx is not None:
+    [c_x2, c_x1] = get_transform_towgs84(body["c_x1"], body["c_x2"])
+    if c_x1 is not None:
         return JsonResponse(
-            {"cx": cx, "cy": cy},
+            {"x1": c_x1, "x2": c_x2},
             status=200,
         )
     else:
-        return JsonResponse({"cx": "", "cy": ""}, status=200)
+        return JsonResponse({"x1": "", "x2": ""}, status=200)
 
+ 
+ 
 
 @login_required
 @require_http_methods(["POST"])
