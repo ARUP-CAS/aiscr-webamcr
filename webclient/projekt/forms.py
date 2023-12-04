@@ -23,8 +23,8 @@ class CreateProjektForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření projektu.
     """
-    latitude = forms.FloatField(required=False, widget=HiddenInput())
-    longitude = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_x1 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_x2 = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("projekt.forms.createProjekt.planovaneZahajeni.label"),
@@ -110,8 +110,8 @@ class CreateProjektForm(forms.ModelForm):
                                 Div("parcelni_cislo", css_class="col-sm-12"),
                                 Div("oznaceni_stavby", css_class="col-sm-6"),
                                 Div("planovane_zahajeni", css_class="col-sm-3"),
-                                Div("latitude", css_class="hidden"),
-                                Div("longitude", css_class="hidden"),
+                                Div("coordinate_x1", css_class="hidden"),
+                                Div("coordinate_x2", css_class="hidden"),
                                 css_class="row",
                             ),
                             css_class="col-sm-9 col-12",
@@ -148,8 +148,8 @@ class EditProjektForm(forms.ModelForm):
     """
     Hlavní formulář pro editaci projektu.
     """
-    latitude = forms.FloatField(required=False, widget=HiddenInput())
-    longitude = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_x1 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_x2 = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("projekt.forms.editProjekt.planovaneZahajeni.label"),
@@ -346,8 +346,8 @@ class EditProjektForm(forms.ModelForm):
                         Div("kulturni_pamatka", css_class="col-sm-3"),
                         Div("kulturni_pamatka_cislo", css_class="col-sm-3"),
                         Div("kulturni_pamatka_popis", css_class="col-sm-6"),
-                        Div("latitude", css_class="hidden"),
-                        Div("longitude", css_class="hidden"),
+                        Div("coordinate_x1", css_class="hidden"),
+                        Div("coordinate_x2", css_class="hidden"),
                         Div(
                             HTML('<span class="app-divider-label">'),
                             HTML(_("projekt.forms.editProjekt.terenniCast.divider")),

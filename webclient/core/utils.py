@@ -281,8 +281,17 @@ def get_centre_from_akce(katastr, pian):
         " from public.ruian_katastr where "
         " upper(nazev_stary)=upper(%s) and aktualni='t' limit 1"
     )
+    query_old = (
+        "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
+        " from public.ruian_katastr where "
+        " upper(nazev_stary)=upper(%s) and aktualni<>'t' limit 1"
+    )
     try:
-        bod_ku = RuianKatastr.objects.raw(query, [katastr])[0]
+        bod_ku = None
+        try:
+            bod_ku = RuianKatastr.objects.raw(query, [katastr])[0]
+        except:
+            bod_ku = RuianKatastr.objects.raw(query_old, [katastr])[0]
         bod=[bod_ku.lat,bod_ku.lng]
         geom = ""
         presnost = 4
@@ -547,7 +556,6 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
                 (
                 DokumentacniJednotka.objects.filter(
                     Q(ident_cely__istartswith=i.archeologicky_zaznam.ident_cely)
-                    | Q(pian__geom__crosses=Polygon.from_bbox([right, top, left, bottom]))
                 )
                 .distinct()
                 .values_list("pian", flat=True)
@@ -913,7 +921,7 @@ def get_validation_messages(text):
         return text
 
 
-def get_transform_towgs84(cy, cx):
+def get_transform_towgs84(x1, x2):
     """
     Funkce pro transformaci na wgs84.
     """
@@ -927,7 +935,7 @@ def get_transform_towgs84(cy, cx):
         "targetXYorder=xy&"
         "sourceSixtiethView=false&"
         "targetSixtiethView=false&"
-        "coordinates=" + str(cy) + "+" + str(cx) + "+300"
+        "coordinates=" + str(x1) + "+" + str(x2) + "+300"
         "&time=2022-05-20"
     )
 
