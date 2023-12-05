@@ -84,6 +84,8 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         related_name="ez_editori",
         blank=True,
     )
+    autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
+    editori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
 
     class Meta:
         db_table = "externi_zdroj"
@@ -172,6 +174,12 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def get_create_org(self):
         return self.get_create_user().organizace
+
+    def set_snapshots(self):
+        self.autori_snapshot = "; ".join([x.autor.vypis_cely
+                                          for x in self.externizdrojautor_set.order_by("poradi").all()])
+        self.editori_snapshot = "; ".join([x.editor.vypis_cely
+                                          for x in self.externizdrojeditor_set.order_by("poradi").all()])
 
 def get_perm_ez_ident():
     """

@@ -64,6 +64,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         db_column="archeologicky_zaznam",
         primary_key=True,
     )
+    dalsi_katastry_snapshot = models.CharField(max_length=5000, null=True, blank=True)
 
     class Meta:
         db_table = "lokalita"
@@ -183,3 +184,6 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
                                     "dokument_cast_dokument_ident_cely": dokument_cast.dokument.ident_cely})
         result = [str(x) for x in result]
         return result
+
+    def set_snapshots(self):
+        self.dalsi_katastry_snapshot = "; ".join([x.nazev for x in self.archeologicky_zaznam.katastry.order_by("nazev").all()])
