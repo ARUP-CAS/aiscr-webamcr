@@ -23,6 +23,7 @@ from dokument.models import Dokument, Let, DokumentCast
 from ez.models import ExterniZdroj
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.models import Heslar, RuianKatastr, RuianOkres, RuianKraj
+from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
@@ -598,3 +599,21 @@ def cancel_old_projects():
         logger.debug("core.cron.cancel_old_projects.do.end")
     except Exception as err:
         logger.error("core.cron.cancel_old_projects.do.error", extra={"error": err})
+
+
+@shared_task
+def update_snapshot_fields():
+    try:
+        logger.debug("core.cron.update_snapshot_fields.do.start")
+        for item in ExterniZdroj.objects.filter(Q(autori_snapshot__isnull=True) | Q(editori_snapshot__isnull=True)):
+            item.suppress_signal = True
+            item.save()
+        for item in Dokument.objects.filter(Q(autori_snapshot__isnull=True) | Q(osoby_snapshot__isnull=True)):
+            item.suppress_signal = True
+            item.save()
+        for item in Lokalita.objects.filter(dalsi_kastastry__isnull=True):
+            item.suppress_signal = True
+            item.save()
+        logger.debug("core.cron.update_snapshot_fields.do.end")
+    except Exception as err:
+        logger.error("core.cron.update_snapshot_fields.do.error", extra={"error": err})

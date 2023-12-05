@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(pre_save, sender=Dokument)
-def create_dokument_vazby(sender, instance, **kwargs):
+def create_dokument_vazby(sender, instance: Dokument, **kwargs):
     """
     Metóda pro vytvoření historických vazeb dokumentu.
     Metóda se volá pred uložením záznamu.
@@ -31,13 +31,15 @@ def create_dokument_vazby(sender, instance, **kwargs):
             instance.let.save_metadata()
     else:
         old_instance = Dokument.objects.get(pk=instance.pk)
-        if old_instance.let is None and instance.let is not None:
-            instance.let.save_metadata()
-        elif old_instance.let is not None and instance.let is None:
-            old_instance.let.save_metadata()
-        elif old_instance.let is not None and instance.let is not None and old_instance.let != instance.let:
-            old_instance.let.save_metadata()
-            instance.let.save_metadata()
+        if not instance.suppress_signal:
+            if old_instance.let is None and instance.let is not None:
+                instance.let.save_metadata()
+            elif old_instance.let is not None and instance.let is None:
+                old_instance.let.save_metadata()
+            elif old_instance.let is not None and instance.let is not None and old_instance.let != instance.let:
+                old_instance.let.save_metadata()
+                instance.let.save_metadata()
+    instance.set_snapshots()
 
 
 @receiver(pre_save, sender=DokumentCast)

@@ -157,6 +157,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     tvary = models.ManyToManyField(
         Heslar, through="Tvar", related_name="dokumenty_tvary"
     )
+    autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
+    osoby_snapshot = models.CharField(max_length=5000, null=True, blank=True)
 
     class Meta:
         db_table = "dokument"
@@ -393,6 +395,11 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     def thumbnail_image(self):
         if self.soubory.soubory.count() > 0:
             return self.soubory.soubory.first().pk
+
+    def set_snapshots(self):
+        self.autori_snapshot = "; ".join([x.autor.vypis_cely for x in self.dokumentautor_set.order_by("poradi").all()])
+        self.osoby_snapshot = "; ".join([x.osoba.vypis_cely for x in self.dokumentosoba_set.order_by("poradi").all()])
+
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     """
