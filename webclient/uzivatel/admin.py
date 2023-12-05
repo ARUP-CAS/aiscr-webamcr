@@ -211,22 +211,25 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             max_id = ROLE_BADATEL_ID
         main_group = Group.objects.get(pk=max_id)
 
-        if set(user.groups.values_list('id', flat=True)) != set(form_groups.values_list('id', flat=True)):
+        if (user_db is None
+                or (set(user.groups.values_list('id', flat=True)) != set(form_groups.values_list('id', flat=True)))):
             logger.debug("uzivatel.admin.save_model.role_changed",
-                         extra={"old": obj.hlavni_role, "new": user.groups.values_list('name', flat=True)})
+                         extra={"old": obj.hlavni_role, "new": form_groups.values_list('name', flat=True)})
             Historie(
                 typ_zmeny=ZMENA_HLAVNI_ROLE,
                 uzivatel=user,
-                poznamka="role: " + ", ".join(list(user.groups.values_list('name', flat=True))),
+                poznamka="role: " + ", ".join(list(form_groups.values_list('name', flat=True))),
                 vazba=obj.history_vazba,
             ).save()
-        Historie(
-            typ_zmeny=ZMENA_UDAJU_ADMIN,
-            uzivatel=user,
-            poznamka=", ".join([f"{fieldname}: {form.cleaned_data[fieldname]}" for fieldname in form.changed_data
-                                if fieldname != "groups"]),
-            vazba=obj.history_vazba,
-        ).save()
+        changed_data_without_groups = [fieldname for fieldname in form.changed_data if fieldname != "groups"]
+        if form.changed_data is not None and len([form.changed_data]) > 0:
+            Historie(
+                typ_zmeny=ZMENA_UDAJU_ADMIN,
+                uzivatel=user,
+                poznamka=", ".join([f"{fieldname}: {form.cleaned_data[fieldname]}" for fieldname in
+                                    changed_data_without_groups]),
+                vazba=obj.history_vazba,
+            ).save()
 
         if user_db is not None:
             logger.debug("uzivatel.admin.save_model.manage_user_groups",
