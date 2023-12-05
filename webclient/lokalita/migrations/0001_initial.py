@@ -25,6 +25,7 @@ class Migration(migrations.Migration):
                 ('jistota', models.ForeignKey(blank=True, db_column='jistota', limit_choices_to={'nazev_heslare': 48}, null=True, on_delete=django.db.models.deletion.RESTRICT, related_name='lokalita_jistota', to='heslar.heslar')),
                 ('typ_lokality', models.ForeignKey(db_column='typ_lokality', limit_choices_to={'nazev_heslare': 37}, on_delete=django.db.models.deletion.RESTRICT, related_name='lokalita_typ', to='heslar.heslar')),
                 ('zachovalost', models.ForeignKey(blank=True, db_column='zachovalost', limit_choices_to={'nazev_heslare': 49}, null=True, on_delete=django.db.models.deletion.RESTRICT, related_name='lokalita_zachovalost', to='heslar.heslar')),
+                ('dalsi_katastry_snapshot', models.CharField(blank=True, max_length=5000, null=True)),
             ],
             options={
                 'db_table': 'lokalita',

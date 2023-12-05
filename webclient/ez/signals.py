@@ -20,6 +20,7 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
         hv = HistorieVazby(typ_vazby=EXTERNI_ZDROJ_RELATION_TYPE)
         hv.save()
         instance.historie = hv
+    instance.set_snapshots()
 
 
 @receiver(post_save, sender=ExterniZdroj)
