@@ -16,57 +16,6 @@ from .models import Dokument
 logger = logging.getLogger(__name__)
 
 
-class AutorColumn(tables.Column):
-    """
-    Class pro definování sloupce autor a toho jak se zobrazuje aby bylo dodrženo pořadí.
-    """
-
-    def render(self, record, value):
-        osoby = record.ordered_autors
-        items = []
-        for autor in osoby:
-            content = conditional_escape(force_str(autor))
-            items.append(content)
-
-        return mark_safe(conditional_escape("; ").join(items))
-
-    def order(self, queryset, is_descending):
-        osoby = (
-            Osoba.objects.filter(dokumentautor__dokument=OuterRef("pk"))
-            .order_by("dokumentautor__poradi")
-            .values("vypis_cely")
-        )
-        queryset = queryset.annotate(main=Subquery(osoby[:1])).order_by(
-            ("-" if is_descending else "") + "main"
-        )
-        return queryset, True
-
-
-class OsobyColumn(tables.Column):
-    """
-    Class pro definování sloupce autor a toho jak se zobrazuje aby bylo dodrženo pořadí.
-    """
-
-    def render(self, record, value):
-        osoby = record.osoby.all()
-        items = []
-        for autor in osoby:
-            content = conditional_escape(force_str(autor))
-            items.append(content)
-
-        return mark_safe(conditional_escape("; ").join(items))
-
-    def order(self, queryset, is_descending):
-        osoby = (
-            Osoba.objects.filter(dokumentosoba__dokument=OuterRef("pk"))
-            .values("vypis_cely")
-        )
-        queryset = queryset.annotate(main=Subquery(osoby[:1])).order_by(
-            ("-" if is_descending else "") + "main"
-        )
-        return queryset, True
-
-
 class Model3DTable(SearchTable):
     """
     Class pro definování tabulky pro modelu 3D použitých pro zobrazení přehledu modelu 3D a exportu.
@@ -81,7 +30,7 @@ class Model3DTable(SearchTable):
     extra_data__duveryhodnost = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.extra_data__duveryhodnost.label"))
     extra_data__zeme = tables.Column(linkify=True, verbose_name=_("dokument.tables.dokumentTable.extra_data__zeme.label"))
     extra_data__region = tables.Column(linkify=True, verbose_name=_("dokument.tables.dokumentTable.extra_data__region.label"))
-    autori = AutorColumn(default="", verbose_name=_("dokument.tables.modelTable.autori.label"))
+    autori = tables.Column(default="", accessor="autori_snapshot", verbose_name=_("dokument.tables.modelTable.autori.label"))
     stav = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.stav.label"))
     app = "knihovna_3d"
     first_columns = None
@@ -159,8 +108,8 @@ class DokumentTable(SearchTable):
         default="", verbose_name=_("dokument.tables.dokumentTable.organizace.label")
     )
     rok_vzniku = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.rok_vzniku.label"))
-    autori = AutorColumn(default="", verbose_name=_("dokument.tables.dokumentTable.autori.label"))
-    osoby = OsobyColumn(default="", verbose_name=_("dokument.tables.dokumentTable.osoby.label"))
+    autori = tables.Column(default="", accessor="autori_snapshot", verbose_name=_("dokument.tables.dokumentTable.autori.label"))
+    osoby = tables.Column(default="", accessor="osoby_snapshot", verbose_name=_("dokument.tables.dokumentTable.osoby.label"))
     popis = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.popis.label"))
     pristupnost = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.pristupnost.label"))
     rada = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.rada.label"))

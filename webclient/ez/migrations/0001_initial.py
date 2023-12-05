@@ -33,6 +33,8 @@ class Migration(migrations.Migration):
                 ('stav', models.SmallIntegerField(choices=[(1, 'EZ1 - Zapsána'), (2, 'EZ2 - Odeslána'), (3, 'EZ3 - Potvrzená')])),
                 ('poznamka', models.TextField(blank=True, null=True)),
                 ('ident_cely', models.TextField(unique=True)),
+                ('autori_snapshot', models.CharField(blank=True, max_length=5000, null=True)),
+                ('editori_snapshot', models.CharField(blank=True, max_length=5000, null=True)),
             ],
             options={
                 'db_table': 'externi_zdroj',

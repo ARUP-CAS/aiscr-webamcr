@@ -11,37 +11,6 @@ from core.utils import SearchTable
 from .models import Lokalita
 
 
-class DalsiKatastryColumn(tables.Column):
-    """
-    Třída pro sloupec další katastry lokality.
-    """
-    def render(self, value):
-        if value:
-            items = []
-            for item in value:
-                content = conditional_escape(force_str(item))
-                items.append(content)
-
-            return mark_safe(conditional_escape("; ").join(items))
-        else:
-            return ""
-
-    def order(self, queryset, is_descending):
-        comments = (
-            RuianKatastr.objects.filter(
-                archeologickyzaznamkatastr__archeologicky_zaznam_id=models.OuterRef(
-                    "pk"
-                )
-            )
-            .order_by("nazev")
-            .values("nazev")
-        )
-        queryset = queryset.annotate(length=models.Subquery(comments[:1])).order_by(
-            ("-" if is_descending else "") + "length"
-        )
-        return (queryset, True)
-
-
 class LokalitaTable(SearchTable):
     """
     Class pro definování tabulky pro lokaity použitých pro zobrazení přehledu lokalit a exportu.
@@ -90,10 +59,10 @@ class LokalitaTable(SearchTable):
         default="",
         accessor="archeologicky_zaznam__uzivatelske_oznaceni",
     )
-    dalsi_katastry = DalsiKatastryColumn(
-        verbose_name=_("lokalita.tables.lokalitaTable.dalsiKatastry.label"),
+    dalsi_katastry = tables.columns.Column(
+        verbose_name=_("lokalita.tables.lokalitaTable.dalsi_katastry.label"),
         default="",
-        accessor="archeologicky_zaznam__katastry__all",
+        accessor="dalsi_katastray_snapshot"
     )
     pristupnost = tables.Column(
         verbose_name=_("lokalita.tables.lokalitaTable.pristupnost.label"),
@@ -127,6 +96,3 @@ class LokalitaTable(SearchTable):
             "zachovalost",
             "jistota",
         )
-
-        def __init__(self, *args, **kwargs):
-            super(LokalitaTable, self).__init__(*args, **kwargs)

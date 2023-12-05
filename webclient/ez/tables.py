@@ -11,69 +11,13 @@ from core.utils import SearchTable
 from .models import ExterniZdroj
 
 
-class ExtZdrojAutoriColumn(tables.Column):
-    """
-    Třída pro sloupec autori externího zdroje, kvůli zohlednení pořadí zadání.
-    """
-    def render(self, record, value):
-        if value:
-            osoby = record.ordered_autors
-            items = []
-            for autor in osoby:
-                content = conditional_escape(force_str(autor))
-                items.append(content)
-
-            return mark_safe(conditional_escape("; ").join(items))
-        else:
-            return ""
-
-    def order(self, queryset, is_descending):
-        comments = (
-            Osoba.objects.filter(externizdrojautor__externi_zdroj=OuterRef("pk"))
-            .order_by("externizdrojautor__poradi")
-            .values("vypis_cely")
-        )
-        queryset = queryset.annotate(length=Subquery(comments[:1])).order_by(
-            ("-" if is_descending else "") + "length"
-        )
-        return (queryset, True)
-
-
-class ExtZdrojEditoriColumn(ExtZdrojAutoriColumn):
-    """
-    Třída pro sloupec editori externího zdroje, kvůli zohlednení pořadí zadání.
-    """
-    def render(self, record, value):
-        if value:
-            osoby = record.ordered_editors
-            items = []
-            for autor in osoby:
-                content = conditional_escape(force_str(autor))
-                items.append(content)
-
-            return mark_safe(conditional_escape("; ").join(items))
-        else:
-            return ""
-
-    def order(self, queryset, is_descending):
-        comments = (
-            Osoba.objects.filter(externizdrojeditor__externi_zdroj=OuterRef("pk"))
-            .order_by("externizdrojeditor__poradi")
-            .values("vypis_cely")
-        )
-        queryset = queryset.annotate(length=Subquery(comments[:1])).order_by(
-            ("-" if is_descending else "") + "length"
-        )
-        return (queryset, True)
-
-
 class ExterniZdrojTable(SearchTable):
     """
     Class pro definování tabulky pro externí zdroj použitých pro zobrazení přehledu zdrojů a exportu.
     """
     ident_cely = tables.Column(linkify=True, verbose_name=_("ez.tables.ezTable.ident_cely.label"))
-    autori = ExtZdrojAutoriColumn(default="", accessor="autori__all", verbose_name=_("ez.tables.ezTable.autori.label"))
-    editori = ExtZdrojEditoriColumn(default="", accessor="editori__all", verbose_name=_("ez.tables.ezTable.editori.label"))
+    autori = tables.Column(default="", accessor="autori_snapshot", verbose_name=_("ez.tables.ezTable.autori.label"))
+    editori = tables.Column(default="", accessor="editori_snapshot", verbose_name=_("ez.tables.ezTable.editori.label"))
     casopis_denik_nazev = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.casopis_denik_nazev.label"))
     casopis_rocnik = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.casopis_rocnik.label"))
     sbornik_nazev = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.sbornik_nazev.label"))
