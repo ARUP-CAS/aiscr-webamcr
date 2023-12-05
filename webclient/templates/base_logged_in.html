@@ -254,6 +254,22 @@
     <span class="navbar-mobile-header-ident" id="navbar-mobile-header-ident">
       {% if projekt %}
         <span class="navbar-mobile-header-ident-projekt">{{ projekt.ident_cely }}</span>
+      {% elif app == "akce" %}
+        <span class="navbar-mobile-header-ident-arch-z">{{ zaznam.ident_cely }}</span>
+      {% elif app == "pr" %}
+        <span class="navbar-mobile-header-ident-arch-z">{{ zaznam.ident_cely }}</span>
+      {% elif app == "lokalita" %}
+        <span class="navbar-mobile-header-ident-lokalita">{{ zaznam.ident_cely }}</span>
+      {% elif app == "pas" %}
+        <span class="navbar-mobile-header-ident-pas">{{ sn.ident_cely }}</span>
+      {% elif dokument %}
+        {% if not "3D" in dokument.ident_cely %}
+          <span class="navbar-mobile-header-ident-dokument">{{ dokument.ident_cely }}</span>
+        {% else %}
+          <span class="navbar-mobile-header-ident-3d">{{ dokument.ident_cely }}</span>
+        {% endif %}
+      {% elif app == "ext_zdroj" %}
+        <span class="navbar-mobile-header-ident-ez">{{ zaznam.ident_cely }}</span>
       {% endif %}
     </span>
     <button class="navbar-toggler" id="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMobile"

@@ -94,6 +94,7 @@ def get_detail_context(sn, request):
         context["soubory"] = sn.soubory.soubory.all()
     else:
         context["soubory"] = None
+    context["app"] = "pas"
     return context
 
 
