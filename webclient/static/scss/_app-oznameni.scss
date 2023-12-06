@@ -38,6 +38,10 @@
       } 
     }
 
+    .bs-stepper {
+      overflow-x: auto;
+    }
+
     .jumbotron {
       @extend .p-4;
 

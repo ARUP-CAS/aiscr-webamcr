@@ -84,7 +84,7 @@
             </div>
         </form>
     </ul>        
-    <ul class="pagination  go-to-page col-6">
+    <ul class="pagination go-to-page col-6">
         {% if table.page.has_previous %}
         {% block pagination.previous %}
         <li class="previous page-item">
@@ -99,7 +99,7 @@
         {% if table.page.has_previous or table.page.has_next %}
         {% block pagination.range %}
         {% for p in table.page|table_page_range:table.paginator %}
-        <li class="page-item{% if table.page.number == p %} active{% endif %}">
+        <li class="page-item{% if table.page.number == p %} active{% endif %} pagination-range">
             <a class="page-link"
                {% if p != '...' %}href="{% querystring_multi table.prefixed_page_field=p %}" {% endif %}>
                 {{ p }}

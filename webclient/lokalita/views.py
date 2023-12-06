@@ -56,6 +56,7 @@ class LokalitaIndexView(LoginRequiredMixin, TemplateView):
         """
         context = {
             "toolbar_name": _("ez.views.lokalitaIndexView.toolbarName"),
+            "toolbar_icon": "tour",
         }
         return context
 

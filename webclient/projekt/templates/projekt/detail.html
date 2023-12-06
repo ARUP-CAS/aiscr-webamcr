@@ -188,21 +188,21 @@
         </div>
       {% endif %}
         <div class="row">
-          <div class="col-sm-9">
+          <div class="col-md-6">
             <div class="row">
-              <div class="col-sm-3">
+              <div class="col-md-6 col-lg-3">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.typProjektu.label" %}</label>
                   <input class="form-control" type="text" value="{{ projekt.typ_projektu|check_if_none }}" readonly>
                 </div>
               </div>
-              <div class="col-sm-3">
+              <div class="col-md-6 col-lg-3">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.hlavniKatastr.label" %}</label>
                   <input id="main_cadastre_id" class="form-control" type="text" value="{{ projekt.hlavni_katastr|check_if_none }}" readonly>
                 </div>
               </div>
-              <div class="col-sm-6">
+              <div class="col-md-12 col-lg-6">
                 <div class="form-group">
                   <label>{% trans "projekt.templates.detail.detailPart.dalsiKatastry.label" %}</label>
                   <div class="input-group">
@@ -216,31 +216,31 @@
                   </div>
                 </div>
               </div>
-              <div class="col-sm-12">
+              <div class="col-md-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.podnet.label" %}</label>
                   <textarea class="form-control" value="{{ projekt.podnet|check_if_none }}" rows="2" readonly>{{ projekt.podnet|check_if_none }}</textarea>
                 </div>
               </div>
-              <div class="col-sm-12">
+              <div class="col-md-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.lokalizace.label" %}</label>
                   <input class="form-control" type="text" value="{{ projekt.lokalizace|check_if_none }}" readonly>
                 </div>
               </div>
-              <div class="col-sm-12">
+              <div class="col-md-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.parcelniCislo.label" %}</label>
                   <input class="form-control" type="text" value="{{ projekt.parcelni_cislo|check_if_none }}" readonly>
                 </div>
               </div>
-              <div class="col-sm-6">
+              <div class="col-md-6">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.oznamceniStavby.label" %}</label>
                   <input class="form-control" type="text" value="{{ projekt.oznaceni_stavby|check_if_none }}" readonly>
                 </div>
               </div>
-              <div class="col-sm-3">
+              <div class="col-md-6 col-lg-3">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.planovaneZahajeni.label" %}</label>
                   <input class="form-control" type="text" value="{{ projekt.planovane_zahajeni|render_daterange|check_if_none }}" readonly>
@@ -248,7 +248,7 @@
               </div>
             </div>
           </div>
-          <div class="col-sm-3">
+          <div class="col-md-6">
             <div id="projectMap"></div>
             <script >
               var static_url = "{% get_static_prefix %}";
@@ -303,71 +303,71 @@
           </div>
         </div>
         <div class="row">
-          <div class="col-sm-12">
+          <div class="col-md-12">
             <span class="app-divider-label">{% trans "projekt.templates.detail.detailPart.prihlaseniProjektu.label" %}</span>
             <hr class="mt-0" />
           </div>
-          <div class="col-sm-4">
+          <div class="col-md-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.vedouciProjektu.label" %}</label>
               <input class="form-control" type="text" value="{{ projekt.vedouci_projektu|check_if_none}}" readonly>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="col-md-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.organizace.label" %}</label>
               <input class="form-control" type="text" value="{{ projekt.organizace|check_if_none}}" readonly>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="col-md-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.uzivatelskeOznaceni.label" %}</label>
               <input class="form-control" type="text" value="{{ projekt.uzivatelske_oznaceni|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-3">
+          <div class="col-md-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.kulturniPamatka.label" %}</label>
               <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-3">
+          <div class="col-md-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.kulturniPamatkaCislo.label" %}</label>
               <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka_cislo|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-6">
+          <div class="col-md-6">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.kulturniPamatkaPopis.label" %}</label>
               <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka_popis|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-12">
+          <div class="col-md-12">
             <span class="app-divider-label">{% trans "projekt.templates.detail.detailPart.terenniCast.divider" %}</span>
             <hr class="mt-0" />
           </div>
-          <div class="col-sm-3">
+          <div class="col-md-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.datumZahajeni.label" %}</label>
               <input class="form-control" type="text" value="{{ projekt.datum_zahajeni|date:'d.m.Y'|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-1">
+          <div class="col-md-1">
             <div class="form-group">
             </div>
           </div>
-          <div class="col-sm-3">
+          <div class="col-md-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.datumUkonceni.label" %}</label>
               <input class="form-control" type="text" value="{{ projekt.datum_ukonceni|date:'d.m.Y'|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-1">
+          <div class="col-md-1">
             <div class="form-group">
             </div>
           </div>
-          <div class="col-sm-3">
+          <div class="col-md-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.terminOdevzdani.label" %}</label>
               <input class="form-control" type="text" value="{{ projekt.termin_odevzdani_nz|date:'d.m.Y'|check_if_none }}" readonly><!--missings-->
@@ -394,31 +394,31 @@
         </div>
         <div class="card-body">
           <div class="row">
-            <div class="col-sm-6">
+            <div class="col-md-6">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "projekt.templates.detail.oznamovatelPart.oznamovatel.label" %}</label>
                 <input class="form-control" type="text" value="{{ oznamovatel.oznamovatel|check_if_none }}" readonly>
               </div>
             </div>
-            <div class="col-sm-6">
+            <div class="col-md-6">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "projekt.templates.detail.oznamovatelPart.odpovednaOsoba.label" %}</label>
                 <input class="form-control" type="text" value="{{ oznamovatel.odpovedna_osoba|check_if_none }}" readonly>
               </div>
             </div>
-            <div class="col-sm-6">
+            <div class="col-md-6">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "projekt.templates.detail.oznamovatelPart.adresa.label" %}</label>
                 <input class="form-control" type="text" value="{{ oznamovatel.adresa|check_if_none }}" readonly>
               </div>
             </div>
-            <div class="col-sm-3">
+            <div class="col-md-3">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "projekt.templates.detail.oznamovatelPart.telefon.label" %}</label>
                 <input class="form-control" type="text" value="{{ oznamovatel.telefon|check_if_none }}" readonly>
               </div>
             </div>
-            <div class="col-sm-3">
+            <div class="col-md-3">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "projekt.templates.detail.oznamovatelPart.email.label" %}</label>
                 <input class="form-control" type="text" value="{{ oznamovatel.email|check_if_none }}" readonly>
