@@ -270,6 +270,8 @@
         {% endif %}
       {% elif app == "ext_zdroj" %}
         <span class="navbar-mobile-header-ident-ez">{{ zaznam.ident_cely }}</span>
+      {% elif search_sum %}
+        {{search_sum}}: <strong>{{ table.rows|length }}</strong>
       {% endif %}
     </span>
     <button class="navbar-toggler" id="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMobile"

@@ -440,6 +440,24 @@ form {
   }
 }
 
+.app-card-cast-dokumentu {
+  @media (min-width: 576px) {
+    padding-left: 0!important;
+  }
+}
+
+.search-sum-text {
+  @media (max-width: 576px) {
+    display: none;
+  }
+}
+
+.pagination-range {
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
 // list group
 .list-group {
   .list-group-item {
