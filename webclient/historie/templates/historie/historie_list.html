@@ -16,23 +16,23 @@
           {% if typ == "projekt" %}
           <a href="{% url 'projekt:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.projekt.cardHeader" %}</a>
           {% elif typ == "akce" %}
-          <a href="{% url 'arch_z:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.akce.cardHeader" %}</a>
+          <a href="{% url 'arch_z:detail' ident_cely %}"><span class="material-icons">brush</span>{% trans "historie.templates.historieList.akce.cardHeader" %}</a>
           {% elif typ == "lokalita" %}
-          <a href="{% url 'lokalita:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.lokalita.cardHeader" %}</a>
+          <a href="{% url 'lokalita:detail' ident_cely %}"><span class="material-icons">tour</span>{% trans "historie.templates.historieList.lokalita.cardHeader" %}</a>
           {% elif typ == "knihovna_3d" %}
-          <a href="{% url 'dokument:detail-model-3D' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.model3D.cardHeader" %}</a>
+          <a href="{% url 'dokument:detail-model-3D' ident_cely %}"><span class="material-icons">3d_rotation</span>{% trans "historie.templates.historieList.model3D.cardHeader" %}</a>
           {% elif typ == "dokument" %}
-          <a href="{% url 'dokument:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.dokument.cardHeader" %}</a>
+          <a href="{% url 'dokument:detail' ident_cely %}"><span class="material-icons">description</span>{% trans "historie.templates.historieList.dokument.cardHeader" %}</a>
           {% elif typ == "samostatny_nalez" %}
-          <a href="{% url 'pas:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.sn.cardHeader" %}</a>
+          <a href="{% url 'pas:detail' ident_cely %}"><span class="material-icons">location_on</span>{% trans "historie.templates.historieList.sn.cardHeader" %}</a>
           {% elif typ == "spoluprace" %}
-          <a href="{% url 'pas:spoluprace_list' %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.spoluprace.cardHeader" %}</a>
+          <a href="{% url 'pas:spoluprace_list' %}"><span class="material-icons">location_on</span>{% trans "historie.templates.historieList.spoluprace.cardHeader" %}</a>
           {% elif typ == "ext_zdroj" %}
-          <a href="{% url 'ez:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.ext_zdroj.cardHeader" %}</a>
+          <a href="{% url 'ez:detail' ident_cely %}"><span class="material-icons">menu_book</span>{% trans "historie.templates.historieList.ext_zdroj.cardHeader" %}</a>
           {% elif typ == "soubor" %}
-          <a href="/"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.soubor.cardHeader" %}</a>
+          <a href="/"><span class="material-icons">file</span>{% trans "historie.templates.historieList.soubor.cardHeader" %}</a>
           {% elif typ == "uzivatel" %}
-          <a href="/"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.uzivatele.cardHeader" %}</a>
+          <a href="/"><span class="material-icons">person</span>{% trans "historie.templates.historieList.uzivatele.cardHeader" %}</a>
           {% endif %}
         </div>
         <div id="id-app-entity-item" class="app-entity-item">
