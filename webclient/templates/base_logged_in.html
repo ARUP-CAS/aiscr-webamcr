@@ -272,6 +272,28 @@
         <span class="navbar-mobile-header-ident-ez">{{ zaznam.ident_cely }}</span>
       {% elif search_sum %}
         {{search_sum}}: <strong>{{ table.rows|length }}</strong>
+      {% elif typ %}
+        {% if typ == "projekt" %}
+          <span class="navbar-mobile-header-ident-projekt">{{ ident_cely }}</span>
+        {% elif typ == "akce" %}
+          <span class="navbar-mobile-header-ident-arch-z">{{ ident_cely }}</span>
+        {% elif typ == "lokalita" %}
+          <span class="navbar-mobile-header-ident-lokalita">{{ ident_cely }}</span>
+        {% elif typ == "knihovna_3d" %}
+          <span class="navbar-mobile-header-ident-3d">{{ ident_cely }}</span>
+        {% elif typ == "dokument" %}
+          <span class="navbar-mobile-header-ident-dokument">{{ ident_cely }}</span>
+        {% elif typ == "samostatny_nalez" %}
+          <span class="navbar-mobile-header-ident-projekt">{{ ident_cely }}</span>
+        {% elif typ == "spoluprace" %}
+          <span class="navbar-mobile-header-ident-pas">{{ ident_cely }}</span>
+        {% elif typ == "ext_zdroj" %}
+          <span class="navbar-mobile-header-ident-ez">{{ ident_cely }}</span>
+        {% elif typ == "soubor" %}
+          <span class="navbar-mobile-header-ident-file">{{ ident_cely }}</span>
+        {% elif typ == "uzivatel" %}
+          <span class="navbar-mobile-header-ident-user">{{ ident_cely }}</span>
+        {% endif %}
       {% endif %}
     </span>
     <button class="navbar-toggler" id="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMobile"
