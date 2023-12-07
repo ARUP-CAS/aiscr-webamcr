@@ -30,9 +30,9 @@
                       {% trans 'lokalita.templates.dj.djUpdate.moreActions.nastavKatastralniUzemiZMapy.label' %}
                     </a>
           {% endif %}
-          {% if j.show_add_pian %}
+          {% if j.show_pripojit_pian_mapa %}
           <a id="show_menu_pian_from_map_id" class="dropdown-item" href="#"
-             onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
+             onclick="change_dj_action('lokalita_pripojit_pian_mapa', 'mapa','{{ j.ident_cely}}')">
             {% trans 'lokalita.templates.dj.djUpdate.moreActions.pripojPianZMapy.label' %}
           </a>
           {% endif %}
@@ -84,9 +84,9 @@
                   href="{% url 'dj:smazat' j.ident_cely %}">
             {% trans 'lokalita.templates.dj.djUpdate.moreActions.smazatDj.label' %}
           </button>
-          {% if j.show_pripojit_pian %}
+          {% if j.show_pripojit_pian_id %}
           <button id="pian-pripojit-{{j.pian_ident_cely}}" class="dropdown-item pian-pripojit-btn" type="button"
-                  name="button" onclick="set_pian_by_id('{{j.ident_cely}}',false)")>
+                  name="button" onclick="change_dj_action('lokalita_pripojit_pian_id', 'id','{{ j.ident_cely}}')">
             {% trans 'lokalita.templates.dj.djUpdate.moreActions.pripojitPianPodleId.label' %}
           </button>
           {% endif %}
@@ -102,7 +102,7 @@
   </div>
   <div class="card-body">
     {% if not j.adb_form %}
-    <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" id="djEditForm"
+    <form class="mb-3" method="POST" action="{% url 'dj:detail' 'lokalita_dj_zakladni' j.ident_cely %}" id="djEditForm"
           onsubmit="editDjSubmitButton.disabled = true; return true;">
       {% crispy j.form %}
       {% if show.editovat %}
@@ -114,7 +114,7 @@
     {% endif %}
 
     {% if j.adb_form %}
-    <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}"
+    <form class="mb-3" method="POST" action="{% url 'dj:detail' 'lokalita_dj_zakladni' j.ident_cely %}"
           onsubmit="editDjSubmitButton.disabled = true; return true;">
       {% crispy j.form %}
       <div class="card app-card-form app-card-inner">
@@ -145,6 +145,20 @@
     document.addEventListener('DOMContentLoaded', () => {
         show_form(`detail_dj_form_{{j.ident_cely}}`);
     });
+</script>
+<script>
+  function change_dj_action(new_action, type, ident){
+    if (type === "mapa") {
+      show_grap_geom_from_map(ident);
+      set_pian_by_id(ident, true)
+    }
+    else {
+      set_pian_by_id(ident, false)
+    };
+    string=document.getElementById("djEditForm").action
+    replaced_action= string.replace(/lokalita_dj_zakladni|lokalita_pripojit_pian_mapa|lokalita_pripojit_pian_id/g, new_action)
+    document.getElementById("djEditForm").action = replaced_action
+  }
 </script>
 <script>
   function show_grap_geom_from_map(dj){

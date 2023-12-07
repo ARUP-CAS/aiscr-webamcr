@@ -400,6 +400,7 @@ class Permissions(models.Model):
         nalez_smazat_akce = "nalez_smazat_akce", _("core.models.permissions.actionChoices.nalez_smazat_akce")
         nalez_edit_dokument = "nalez_edit_dokument" , _("core.models.permissions.actionChoices.nalez_edit_dokument")
         nalez_edit_akce = "nalez_edit_akce" , _("core.models.permissions.actionChoices.nalez_edit_akce")
+        notifikace_projekty = "notifikace_projekty", _("core.models.permissions.actionChoices.notifikace_projekty")
         pas_edit = "pas_edit" , _("core.models.permissions.actionChoices.pas_edit")
         pas_archivovat = "pas_archivovat" , _("core.models.permissions.actionChoices.pas_archivovat")
         pas_odeslat = "pas_odeslat" , _("core.models.permissions.actionChoices.pas_odeslat")
@@ -452,6 +453,12 @@ class Permissions(models.Model):
         spoluprace_smazat = "spoluprace_smazat", _("core.models.permissions.actionChoices.spoluprace_smazat")
         pian_import_new = "pian_import_new", "core.models.permissions.actionChoices.pian_import_new"
         pian_import_change = "pian_import_change", "core.models.permissions.actionChoices.pian_import_change"
+        akce_dj_zakladni = "akce_dj_zakladni", "core.models.permissions.actionChoices.akce_dj_zakladni"
+        akce_pripojit_pian_mapa = "akce_pripojit_pian_mapa", "core.models.permissions.actionChoices.akce_pripojit_pian_mapa"
+        akce_pripojit_pian_id = "akce_pripojit_pian_id", "core.models.permissions.actionChoices.akce_pripojit_pian_id"
+        lokalita_dj_zakladni = "lokalita_dj_zakladni", "core.models.permissions.actionChoices.lokalita_dj_zakladni"
+        lokalita_pripojit_pian_mapa = "lokalita_pripojit_pian_mapa", "core.models.permissions.actionChoices.lokalita_pripojit_pian_mapa"
+        lokalita_pripojit_pian_id = "lokalita_pripojit_pian_id", "core.models.permissions.actionChoices.lokalita_pripojit_pian_id"
         
 
     pristupnost_to_groups = {
@@ -524,6 +531,7 @@ class Permissions(models.Model):
             if not perm_check and status_check and self.check_permission_skip():
                 logger.debug("skip True")
                 perm_check = True
+        logger.debug("Permission check outcome: %s", perm_check)
         return perm_check
 
     def check_base(self):
@@ -553,6 +561,7 @@ class Permissions(models.Model):
                     return False
             else:
                 if not int(self.permission_object.stav) == int(subed_status):
+                    logger.debug("status nok: %s and %s", self.permission_object.stav, subed_status)
                     return False
         return True
 
@@ -562,12 +571,12 @@ class Permissions(models.Model):
                 self.get_permission_object()
             if self.permission_object == "error":
                 return True
-            if self.permission_object.get_create_user() and self.permission_object.get_create_user() == self.logged_in_user:
+            if self.permission_object.get_create_user() and  self.logged_in_user in self.permission_object.get_create_user():
                 return True
             if ownership == self.ownershipChoices.our:
                 if (
-                    self.permission_object.get_create_org() 
-                    == self.logged_in_user.organizace
+                    self.logged_in_user.organizace
+                    in self.permission_object.get_create_org() 
                 ):
                     return True
             return False
@@ -576,12 +585,16 @@ class Permissions(models.Model):
     def check_accessibility(self):
         if self.accessibility:
             if not self.check_ownership(self.accessibility):
-                if (
-                    not self.logged_in_user.hlavni_role.id
-                    >= self.pristupnost_to_groups.get(
-                        self.permission_object.pristupnost.id
-                    )
-                ):
+                try:
+                    if (
+                        not self.logged_in_user.hlavni_role.id
+                        >= self.pristupnost_to_groups.get(
+                            self.permission_object.pristupnost.id
+                        )
+                    ):
+                        return False
+                except Exception as e:
+                    logger.debug(e)
                     return False
         return True
     
@@ -639,8 +652,7 @@ def check_permissions(action, user, ident=None):
         main_role=user.hlavni_role,
         action=action,
     )
-    logger.debug("checking action permission")
-    logger.debug(permission_set)
+    logger.debug("checking action permission: %s", permission_set)
     if permission_set.count() > 0:
         tested = []
         for concrete_permission in permission_set:

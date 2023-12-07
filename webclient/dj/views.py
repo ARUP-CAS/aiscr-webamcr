@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 @login_required
 @require_http_methods(["POST"])
-def detail(request, ident_cely):
+def detail(request, typ_vazby, ident_cely):
     """
     Funkce pohledu pro editaci dokumentační jednotky a ADB.
     """

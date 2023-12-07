@@ -15,7 +15,7 @@ from core.constants import (
     ODESLANI_AZ,
     PIAN_POTVRZEN,
     VRACENI_AZ,
-    ZAPSANI_AZ, OBLAST_CECHY, OBLAST_MORAVA, DOKUMENT_CAST_RELATION_TYPE,
+    ZAPSANI_AZ, OBLAST_CECHY, OBLAST_MORAVA, DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
 )
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -340,7 +340,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         for dj in self.dokumentacni_jednotky_akce.all():
             dj.ident_cely = new_ident + dj.ident_cely[-4:]
             if dj.komponenty is None:
-                k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
+                k = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
                 k.save()
                 dj.komponenty = k
                 dj.save()
@@ -391,13 +391,16 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     
     def get_create_user(self):
         try:
-            return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_AZ)[0].uzivatel
+            return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_AZ)[0].uzivatel,)
         except Exception as e:
             logger.debug(e)
             return None
     
     def get_create_org(self):
-        return self.get_create_user().organizace
+        if self.get_create_user():
+            return (self.get_create_user()[0].organizace,)
+        else: 
+            return None
 
     def __init__(self, *args, **kwargs):
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)

@@ -281,13 +281,12 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     
     def get_create_user(self):
         try:
-            return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_SN)[0].uzivatel
+            return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_SN)[0].uzivatel,)
         except Exception as e:
-            logger.debug(e)
             return None
     
     def get_create_org(self):
-        return self.projekt.organizace
+        return (self.projekt.organizace,)
 
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):
@@ -377,7 +376,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         return self.spolupracovnik.last_name + " + " + self.vedouci.last_name
     
     def get_create_user(self):
-        return self.spolupracovnik
+        return (self.spolupracovnik,)
     
     def get_create_org(self):
-        return self.vedouci.organizace
+        return (self.vedouci.organizace,)

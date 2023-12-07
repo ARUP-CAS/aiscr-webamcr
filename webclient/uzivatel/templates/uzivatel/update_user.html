@@ -39,7 +39,9 @@
         <div class="card-header">
             <div class="app-fx app-left">
                 {% trans "uzivatel.templates.updateUser.nastaveniNotifikace" %}
+                {% if show_edit_notifikace %}
                 <a href="{% url "notifikace_projekty:list" %}" class="ml-3">{% trans "uzivatel.templates.updateUser.nastaveniNotifikace.link" %}</a>
+                {% endif %}
             </div>
         </div>
         <div class="card-body">

@@ -1,7 +1,7 @@
 import logging
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views import View
 
@@ -35,6 +35,7 @@ from core.message_constants import (
     EZ_USPESNE_VRACENA,
     EZ_USPESNE_ZAPSAN,
     PRISTUP_ZAKAZAN,
+    SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
@@ -311,12 +312,12 @@ class ExterniZdrojOdeslatView(TransakceView):
     """
     id_tag = "odeslat-ez-form"
     allowed_states = [EZ_STAV_ZAPSANY]
-    success_message = EZ_USPESNE_ODESLAN
     action = "set_odeslany"
 
     def init_translation(self):
         self.title = _("ez.templates.ExterniZdrojOdeslatView.title.text")
         self.button = _("ez.templates.ExterniZdrojOdeslatView.submitButton.text")
+        self.success_message = EZ_USPESNE_ODESLAN
 
 
 class ExterniZdrojPotvrditView(TransakceView):
@@ -325,12 +326,12 @@ class ExterniZdrojPotvrditView(TransakceView):
     """
     id_tag = "potvrdit-ez-form"
     allowed_states = [EZ_STAV_ODESLANY]
-    success_message = EZ_USPESNE_POTVRZEN
     action = "set_potvrzeny"
 
     def init_translation(self):
         self.title = _("ez.templates.ExterniZdrojPotvrditView.title.text")
         self.button = _("ez.templates.ExterniZdrojPotvrditView.submitButton.text")
+        self.success_message = EZ_USPESNE_POTVRZEN
 
 
 class ExterniZdrojSmazatView(TransakceView):
@@ -339,11 +340,11 @@ class ExterniZdrojSmazatView(TransakceView):
     """
     id_tag = "smazat-ez-form"
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
-    success_message = ZAZNAM_USPESNE_SMAZAN
 
     def init_translation(self):
         self.title = _("ez.templates.ExterniZdrojSmazatView.title.text")
         self.button = _("ez.templates.ExterniZdrojSmazatView.submitButton.text")
+        self.success_message = ZAZNAM_USPESNE_SMAZAN
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
@@ -367,12 +368,12 @@ class ExterniZdrojVratitView(TransakceView):
     """
     id_tag = "vratit-ez-form"
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY]
-    success_message = EZ_USPESNE_VRACENA
     action = "set_vraceny"
 
     def init_translation(self):
         self.title = _("ez.templates.ExterniZdrojVratitView.title.text")
         self.button = _("ez.templates.ExterniZdrojVratitView.submitButton.text")
+        self.success_message = EZ_USPESNE_VRACENA
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
@@ -403,11 +404,24 @@ class ExterniOdkazOdpojitView(TransakceView):
     """
     id_tag = "odpojit-az-form"
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
-    success_message = EO_USPESNE_ODPOJEN
+
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        eo = get_object_or_404(
+            ExterniOdkaz,
+            id=self.kwargs.get("eo_id"),
+        )
+        if eo.archeologicky_zaznam.ident_cely != self.kwargs["ident_cely"]:
+            logger.debug("Externi odkaz - Archeologicky zaznam wrong relation")
+            messages.add_message(
+                            request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                        )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
 
     def init_translation(self):
         self.title = _("ez.templates.ExterniOdkazOdpojitView.title.text")
         self.button = _("ez.templates.ExterniOdkazOdpojitView.submitButton.text")
+        self.success_message = EO_USPESNE_ODPOJEN
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -482,11 +496,26 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
     form_class = ExterniOdkazForm
     slug_field = "id"
 
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        eo = self.get_object()
+        if self.kwargs.get("typ_vazby") == "ez":
+            check = eo.externi_zdroj.ident_cely != self.kwargs.get("ident_cely")
+        elif self.kwargs.get("typ_vazby") == "akce":
+            check = eo.archeologicky_zaznam.ident_cely != self.kwargs.get("ident_cely")
+        else:
+            check = True
+        if check:
+            logger.debug("Externi odkaz - Externi Zdroj/ Archeologicky zaznam wrong relation")
+            messages.add_message(
+                            request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                        )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        zaznam = self.object
         context = {
-            "object": zaznam,
+            "object": self.object,
             "title": _("ez.templates.ExterniOdkazPripojitView.title.text"),
             "id_tag": self.id_tag,
             "button": _("ez.templates.ExterniOdkazEditView.submitButton.text"),
@@ -527,7 +556,22 @@ class ExterniOdkazOdpojitAZView(TransakceView):
     """
     id_tag = "odpojit-az-form"
     allowed_states = [AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY, AZ_STAV_ARCHIVOVANY]
-    success_message = EO_USPESNE_ODPOJEN
+
+    def init_translation(self):
+        self.success_message = EO_USPESNE_ODPOJEN
+
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        eo = get_object_or_404(
+            ExterniOdkaz,
+            id=self.kwargs.get("eo_id"),
+        )
+        if eo.archeologicky_zaznam.ident_cely != self.kwargs["ident_cely"]:
+            logger.debug("Externi odkaz - Archeologicky zaznam wrong relation")
+            messages.add_message(
+                            request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                        )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")

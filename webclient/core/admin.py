@@ -511,7 +511,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
                 return redirect(reverse("admin:core_permissionsskip_changelist"))
             try:
                 self.validate_sheet(sheet)
-            except WrongSheetError as e:
+            except WrongCSVError as e:
                 logger.debug(e)
                 self.message_user(
                     request,

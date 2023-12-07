@@ -87,6 +87,10 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         if len(pristupnosti_ids) > 0:
             return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
         return Heslar.objects.get(ident_cely="HES-000865")
+    
+    @property
+    def pristupnost(self):
+        return self.pristupnost_pom
 
     def evaluate_pristupnost_change(self, added_pristupnost_id=None, skip_zaznam_id=None):
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
@@ -124,11 +128,41 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
                 return dok_jednotka.get_absolute_url()
             
     def get_permission_object(self):
-        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
-        for dok_jednotka in dok_jednotky:
-            if dok_jednotka.archeologicky_zaznam is not None:
-                return dok_jednotka.get_permission_object()
+        return self
     
+    def get_create_user(self):
+        try:
+            my_list = []
+            dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+            for dok_jednotka in dok_jednotky:
+                if dok_jednotka.archeologicky_zaznam is not None:
+                    if dok_jednotka.archeologicky_zaznam.get_create_user():
+                        my_list.append(dok_jednotka.archeologicky_zaznam.get_create_user()[0])
+            if self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PIAN).count() > 0:
+                my_list.append(self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PIAN)[0].uzivatel)
+            logger.debug(my_list)
+            return my_list
+        except Exception as e:
+            logger.debug(e)
+            return None
+    
+    def get_create_org(self):
+        try:
+            our_list = []
+            dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+            for dok_jednotka in dok_jednotky:
+                if dok_jednotka.archeologicky_zaznam is not None:
+                    if dok_jednotka.archeologicky_zaznam.get_create_org():
+                        our_list.append(dok_jednotka.archeologicky_zaznam.get_create_org()[0])
+                    if dok_jednotka.archeologicky_zaznam.akce.projekt is not None:
+                        our_list.append(dok_jednotka.archeologicky_zaznam.akce.projekt.organizace)
+            if self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PIAN).count() > 0:
+                our_list.append(self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PIAN)[0].uzivatel.organizace)
+            logger.debug(our_list)
+            return our_list
+        except Exception as e:
+            logger.debug(e)
+            return None
 
     def set_permanent_ident_cely(self):
         """

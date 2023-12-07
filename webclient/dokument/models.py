@@ -379,14 +379,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     
     def get_create_user(self):
         try:
-            return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel
+            return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel,)
         except Exception as e:
             logger.debug(e)
             return None
         
     def get_create_org(self):
         try:
-            return self.get_create_user().organizace
+            return (self.get_create_user()[0].organizace,)
         except Exception as e:
             logger.debug(e)
             return None
@@ -398,7 +398,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def set_snapshots(self):
         self.autori_snapshot = "; ".join([x.autor.vypis_cely for x in self.dokumentautor_set.order_by("poradi").all()])
-        self.osoby_snapshot = "; ".join([x.osoba.vypis_cely for x in self.dokumentosoba_set.order_by("poradi").all()])
+        self.osoby_snapshot = "; ".join([x.osoba.vypis_cely for x in self.dokumentosoba_set.order_by("osoba__vypis_cely").all()])
 
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):

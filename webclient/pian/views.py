@@ -338,7 +338,7 @@ def mapaDj(request, ident_cely):
 
 
 class PianPermissionFilterMixin(PermissionFilterMixin):
-    def add_ownership_lookup(self, ownership):
+    def add_ownership_lookup(self, ownership, qs=None):
         filtered_pian_history = Historie.objects.filter(typ_zmeny=ZAPSANI_PIAN,uzivatel=self.request.user)
         filtered_pian_pian = set(Pian.objects.filter(historie__historie__in=filtered_pian_history).values_list("pk", flat=True))
         filtered_az_history = Historie.objects.filter(typ_zmeny=ZAPSANI_AZ,uzivatel=self.request.user)
@@ -358,15 +358,9 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
 
     
     def add_accessibility_lookup(self,permission, qs):
-        group_to_accessibility={
-            ROLE_BADATEL_ID: PRISTUPNOST_BADATEL_ID,
-            ROLE_ARCHEOLOG_ID: PRISTUPNOST_ARCHEOLOG_ID,
-            ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
-            ROLE_ADMIN_ID:PRISTUPNOST_ARCHIVAR_ID ,
-        }
         ownership_qs = qs.filter(**self.add_ownership_lookup(permission.accessibility))
         accessibility_key = self.permission_model_lookup+"pristupnost_filter__in"
-        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, razeni__lte=Heslar.objects.filter(id=group_to_accessibility.get(self.request.user.hlavni_role.id)).values_list("razeni",flat=True))
+        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id))
         filter = {accessibility_key:accessibilities}
         pristupnost = (
             ArcheologickyZaznam.objects.filter(dokumentacni_jednotky_akce__pian=OuterRef("pk"),pristupnost__isnull=False)

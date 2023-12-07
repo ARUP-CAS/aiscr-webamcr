@@ -441,46 +441,7 @@ def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p7
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
     from projekt.models import Projekt
-    from core.views import PermissionFilterMixin
-
-    c1 = Q(geom__isnull=False)
-    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
-    stavy=[]
-    if p1: stavy.append(1)
-    if p2: stavy.append(2)
-    if p3: stavy.append(3)
-    if p46: 
-        stavy.append(4)
-        stavy.append(5)
-        stavy.append(6)
-    if p78: 
-        stavy.append(7)
-        stavy.append(8)
-    queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy)).count()
-
-    perm_object = PermissionFilterMixin()
-    perm_object.request = request
-    perm_object.typ_zmeny_lookup = ZAPSANI_PROJ
-
-    try:
-        return perm_object.check_filter_permission(queryset)
-    except IndexError:
-        logger.debug(
-            "core.utils.get_num_projects_from_envelope.no_points",
-            extra={"left": left, "bottom": bottom, "right": right, "top": top},
-        )
-        return None
-
-
-def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78, request):
-    """
-    Funkce pro získaní projektů ze čtverce.
-    Bez pristupnosti
-    """
-    from django.contrib.gis.geos import Polygon
-    from django.db.models import Q
-    from projekt.models import Projekt
-    from core.views import PermissionFilterMixin
+    from projekt.views import ProjektPermissionFilterMixin
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
@@ -497,7 +458,46 @@ def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78, r
         stavy.append(8)
     queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy))
 
-    perm_object = PermissionFilterMixin()
+    perm_object = ProjektPermissionFilterMixin()
+    perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_PROJ
+
+    try:
+        return perm_object.check_filter_permission(queryset).count()
+    except IndexError:
+        logger.debug(
+            "core.utils.get_num_projects_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78, request):
+    """
+    Funkce pro získaní projektů ze čtverce.
+    Bez pristupnosti
+    """
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from projekt.models import Projekt
+    from projekt.views import ProjektPermissionFilterMixin
+
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    stavy=[]
+    if p1: stavy.append(1)
+    if p2: stavy.append(2)
+    if p3: stavy.append(3)
+    if p46: 
+        stavy.append(4)
+        stavy.append(5)
+        stavy.append(6)
+    if p78: 
+        stavy.append(7)
+        stavy.append(8)
+    queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy))
+
+    perm_object = ProjektPermissionFilterMixin()
     perm_object.request = request
     perm_object.typ_zmeny_lookup = ZAPSANI_PROJ
 
@@ -672,15 +672,17 @@ def get_num_pian_from_envelope(left, bottom, right, top, request):
     from pian.views import PianPermissionFilterMixin
     from core.models import Permissions as p
 
-    queryset = DokumentacniJednotka.objects.filter(
-        Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom]))
-        | Q(pian__geom__intersects=Polygon.from_bbox([right, top, left, bottom]))
+    pian_queryset = Pian.objects.filter(
+        Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+        | Q(geom__intersects=Polygon.from_bbox([right, top, left, bottom]))
     )
     perm_object = PianPermissionFilterMixin()
     perm_object.request = request
 
+    pian_filtered = perm_object.check_filter_permission(pian_queryset, p.actionChoices.mapa_pian)
+
     try:
-        return perm_object.check_filter_permission(queryset, p.actionChoices.mapa_pian).count()
+        return DokumentacniJednotka.objects.filter(pian__in=pian_filtered).count()
     except IndexError:
         logger.debug(
             "core.utils.get_num_pian_from_envelope.no_points",
@@ -702,26 +704,26 @@ def get_pian_from_envelope(left, bottom, right, top, request):
     from pian.views import PianPermissionFilterMixin
     from core.models import Permissions as p
 
-    queryset = (
-        DokumentacniJednotka.objects.filter(
-            Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom]))
-            | Q(pian__geom__intersects=Polygon.from_bbox([right, top, left, bottom]))
-        )
-        .annotate(pian__centroid=Centroid("pian__geom"))
-        .distinct()
+    pian_queryset = Pian.objects.filter(
+        Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+        | Q(geom__intersects=Polygon.from_bbox([right, top, left, bottom]))
     )
     perm_object = PianPermissionFilterMixin()
     perm_object.request = request
 
+    pian_filtered = perm_object.check_filter_permission(pian_queryset, p.actionChoices.mapa_pian)
+
     try:
-        return perm_object.check_filter_permission(queryset, p.actionChoices.mapa_pian)[:10000].values(
-            "pian__id",
-            "pian__ident_cely",
-            "pian__geom",
-            "pian__presnost__zkratka",
-            "ident_cely",
-            "pian__centroid",
-        )
+        return DokumentacniJednotka.objects.filter(
+                    pian__in=pian_filtered
+                ).annotate(pian__centroid=Centroid("pian__geom")).distinct()[:10000].values(
+                    "pian__id",
+                    "pian__ident_cely",
+                    "pian__geom",
+                    "pian__presnost__zkratka",
+                    "ident_cely",
+                    "pian__centroid",
+                )
     except IndexError:
         logger.debug(
             "core.utils.get_pian_from_envelope.no_points",

@@ -52,6 +52,7 @@ from core.message_constants import (
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_SMAZAN,
+    SPATNY_ZAZNAM_SOUBOR_VAZBA,
 )
 from core.models import Soubor
 from core.repository_connector import RepositoryBinaryFile, FedoraRepositoryConnector
@@ -116,7 +117,9 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                     )
-        return redirect(request.GET.get("next"))
+        if request.method == "POST":
+            return redirect(request.POST.get("next","core:home"))
+        return redirect(request.GET.get("next","core:home"))
     if request.method == "POST":
         s.deleted_by_user = request.user
         items_deleted: Soubor = s.delete()
@@ -679,6 +682,12 @@ class ExportMixinDate(ExportMixin):
 class PermissionFilterMixin():
     permission_model_lookup = ""
     typ_zmeny_lookup = ""
+    group_to_accessibility={
+            ROLE_BADATEL_ID: [PRISTUPNOST_BADATEL_ID,PRISTUPNOST_ANONYM_ID],
+            ROLE_ARCHEOLOG_ID: [PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_BADATEL_ID,PRISTUPNOST_ANONYM_ID],
+            ROLE_ARCHIVAR_ID:[PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_BADATEL_ID,PRISTUPNOST_ANONYM_ID],
+            ROLE_ADMIN_ID:[PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_BADATEL_ID,PRISTUPNOST_ANONYM_ID],
+        }
     
     def check_filter_permission(self, qs, action=None):
         if action:
@@ -777,19 +786,10 @@ class PermissionFilterMixin():
         return filterdoc
     
     def add_accessibility_lookup(self,permission, qs):
-        group_to_accessibility={
-            ROLE_BADATEL_ID: PRISTUPNOST_BADATEL_ID,
-            ROLE_ARCHEOLOG_ID: PRISTUPNOST_ARCHEOLOG_ID,
-            ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
-            ROLE_ADMIN_ID:PRISTUPNOST_ARCHIVAR_ID ,
-        }
-        qs_ownership = set(qs.filter(**self.add_ownership_lookup(permission.accessibility)).values_list("pk", flat=True))
         accessibility_key = self.permission_model_lookup+"pristupnost__in"
-        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, razeni__lte=Heslar.objects.filter(id=group_to_accessibility.get(self.request.user.hlavni_role.id)).values_list("razeni",flat=True))
+        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id))
         filter = {accessibility_key:accessibilities}
-        qs_access = set(qs.filter(**filter).values_list("pk", flat=True))
-        qs_set = qs_access.union(qs_ownership)
-        return qs.filter(pk__in=qs_set)
+        return qs.filter(Q(**filter)  |Q(**self.add_ownership_lookup(permission.accessibility,qs)))
 
 class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView, PermissionFilterMixin):
     """
@@ -838,7 +838,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["toolbar_name"] = self.toolbar_name
         context["toolbar_label"] = self.toolbar_label
         context["sort_params"] = self._get_sort_params()
-        logger.debug(context)
+        logger.debug(context["object_list"])
         return context
     
 

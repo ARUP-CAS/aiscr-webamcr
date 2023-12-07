@@ -50,7 +50,7 @@ class PermissionMiddleware:
                 permission_set = Permissions.objects.filter(**filter)
             else:
                 permission_set = Permissions.objects.none()
-            logger.debug(permission_set)
+            logger.debug("Permissions to check: %s", permission_set)
             if permission_set.count() > 0:
                 tested = []
                 if len(resolver.kwargs) > 0:
