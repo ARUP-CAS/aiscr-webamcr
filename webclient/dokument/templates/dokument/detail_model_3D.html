@@ -141,8 +141,10 @@
         <form class="mb-3" method="POST" action="{% url 'nalez:edit_nalez' 'dokument' komponenta.ident_cely %}"
               onsubmit="editNalezSubmitButton.disabled = true; return true;">
           {% if formset.objekt.forms %}
-          <div class="content-with-table-responsive">
-            {% crispy formset.objekt formset.helper_objekt %}
+          <div class="content-with-table-responsive-container">
+            <div class="content-with-table-responsive">
+              {% crispy formset.objekt formset.helper_objekt %}
+            </div>
           </div>
           {% else %}
           <div class="app-note">
@@ -152,8 +154,10 @@
           {% endif %}
         <h5>{% trans "dokument.templates.detail_model_3D.predmetyObjekty.Predmety" %}</h5>
           {% if formset.predmet.forms %}
-          <div class="content-with-table-responsive">
-            {% crispy formset.predmet formset.helper_predmet %}
+          <div class="content-with-table-responsive-container">
+            <div class="content-with-table-responsive">
+              {% crispy formset.predmet formset.helper_predmet %}
+            </div>
           </div>
           {% else %}
           <div class="app-note">

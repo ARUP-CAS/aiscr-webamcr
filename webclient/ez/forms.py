@@ -84,10 +84,12 @@ class ExterniZdrojForm(forms.ModelForm):
 
         widgets = {
             "typ": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container"}
             ),
             "typ_dokumentu": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container"}
             ),
             "rok_vydani_vzniku": forms.TextInput(),
             "nazev": forms.Textarea(attrs={"rows": 1}),
@@ -102,7 +104,8 @@ class ExterniZdrojForm(forms.ModelForm):
             "isbn": forms.TextInput(),
             "issn": forms.TextInput(),
             "organizace": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container"}
             ),
             "link": forms.TextInput(),
             "poznamka": forms.TextInput(),

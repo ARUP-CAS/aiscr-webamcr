@@ -107,6 +107,7 @@ class CreateDJForm(forms.ModelForm):
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
                     "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
                 }
             ),
             "nazev": forms.TextInput(),
@@ -119,6 +120,7 @@ class CreateDJForm(forms.ModelForm):
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
                     "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
                 },
             ),
         }
@@ -156,6 +158,7 @@ class CreateDJForm(forms.ModelForm):
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
                     "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
                 }
             ),
         )

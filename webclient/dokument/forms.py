@@ -110,19 +110,24 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         )
         widgets = {
             "zachovalost": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container",}
             ),
             "nahrada": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container",}
             ),
             "format": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container",}
             ),
             "zeme": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container",}
             ),
             "udalost_typ": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container",}
             ),
             "meritko": forms.TextInput(),
             "cislo_objektu": forms.TextInput(),
