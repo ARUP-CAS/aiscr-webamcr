@@ -440,6 +440,23 @@ form {
   }
 }
 
+a.dropdown-item span.text {
+  max-width: 100%!important;
+  white-space: normal!important;
+}
+
+a.dropdown-item {
+   max-width: 100%!important;
+}
+
+.dropdown-menu li {
+  max-width: 100%!important;
+}
+
+.bootstrap-select {
+  max-width: 100%!important;
+}
+
 .app-card-cast-dokumentu {
   @media (min-width: 576px) {
     padding-left: 0!important;
