@@ -43,6 +43,7 @@ from core.ident_cely import get_project_event_ident, get_temp_akce_ident
 from core.message_constants import (
     MAXIMUM_AKCII_DOSAZENO,
     PRISTUP_ZAKAZAN,
+    SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY, ZAZNAM_NELZE_SMAZAT_FEDORA,
@@ -77,7 +78,7 @@ from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
-from dokument.models import Dokument
+from dokument.models import Dokument, DokumentCast
 from dokument.views import get_komponenta_form_detail, odpojit, pripojit
 from heslar.hesla import (
     HESLAR_AREAL,
@@ -112,6 +113,7 @@ from nalez.forms import (
 )
 from nalez.models import NalezObjekt, NalezPredmet
 from pian.forms import PianCreateForm
+from pian.models import Pian
 from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer
@@ -299,6 +301,17 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
     """
     template_name = "arch_z/dj/dj_update.html"
 
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
+        az = get_object_or_404(ArcheologickyZaznam, ident_cely=self.kwargs["ident_cely"])
+        if not dj.archeologicky_zaznam == az:
+            logger.error("Archeologicky zaznam - Dokumentacni jednotka wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
+
     def get_dokumentacni_jednotka(self):
         """
         Metóda pro získani záznamu DJ z db podle ident_cely.
@@ -396,6 +409,17 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
     """
     template_name = "arch_z/dj/komponenta_detail.html"
 
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
+        komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komponenta_ident_cely"])
+        if not dj.komponenty == komponenta.komponenta_vazby:
+            logger.error("Komponenta - Dokumentacni jednotka wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
+
     def get_komponenta(self):
         """
         Metóda pro získani záznamu komponenty z db podle ident_cely.
@@ -450,6 +474,17 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
     Třida pohledu pro editaci PIANu dokumentační jednotky.
     """
     template_name = "arch_z/dj/pian_update.html"
+
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
+        pian = get_object_or_404(Pian, ident_cely=self.kwargs["pian_ident_cely"])
+        if not dj.pian == pian:
+            logger.error("Pian - Dokumentacni jednotka wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         """
@@ -1020,6 +1055,13 @@ def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
     Funkce volá další funkci pro odpojení s parametrem navíc - arch záznamem.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
+    relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_cely,archeologicky_zaznam=az)
+    if not relace_dokumentu.count() > 0:
+        logger.error("Archeologiky zaznam - Dokument wrong relation")
+        messages.add_message(
+                    request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                )
+        return redirect(request.GET.get("next","core:home"))
     return odpojit(request, ident_cely, arch_z_ident_cely, az)
 
 
@@ -1625,6 +1667,8 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
             and check_permissions(p.actionChoices.archz_pian_edit, user, jednotka.ident_cely)
             )
         show_add_komponenta = not jednotka.negativni_jednotka and check_permissions(p.actionChoices.archz_komponenta_zapsat, user, jednotka.ident_cely)
+        show_pripojit_pian_mapa = show_add_pian and check_permissions(p.actionChoices.akce_pripojit_pian_mapa, user, jednotka.ident_cely)
+        show_pripojit_pian_id = show_add_pian and check_permissions(p.actionChoices.akce_pripojit_pian_id, user, jednotka.ident_cely)
     else:
         create_db_form = CreateDJForm(
             instance=jednotka,
@@ -1638,6 +1682,8 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
             and check_permissions(p.actionChoices.lokalita_pian_edit, user, jednotka.ident_cely)
             )
         show_add_komponenta = not jednotka.negativni_jednotka and check_permissions(p.actionChoices.lokalita_komponenta_zapsat, user, jednotka.ident_cely)
+        show_pripojit_pian_mapa = show_add_pian and check_permissions(p.actionChoices.lokalita_pripojit_pian_mapa, user, jednotka.ident_cely)
+        show_pripojit_pian_id = show_add_pian and check_permissions(p.actionChoices.lokalita_pripojit_pian_id, user, jednotka.ident_cely)
     dj_form_detail = {
         "ident_cely": jednotka.ident_cely,
         "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
@@ -1652,10 +1698,12 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_approve_pian": show_approve_pian,
         "show_pripojit_pian": True if jednotka.pian is None else False,
         "show_import_pian_new": show_add_pian and check_permissions(p.actionChoices.pian_import_new, user, jednotka.ident_cely),
-        "show_import_pian_change": not show_add_pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and check_permissions(p.actionChoices.pian_import_change, user, jednotka.ident_cely),
+        "show_import_pian_change": not show_add_pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and check_permissions(p.actionChoices.pian_import_change, user, jednotka.pian.ident_cely),
         "show_change_katastr": True if jednotka.typ.id == TYP_DJ_KATASTR and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely) else False,
         "show_dj_smazat": check_permissions(p.actionChoices.dj_smazat, user, jednotka.ident_cely),
-        "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat,user,jednotka.ident_cely)
+        "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat,user,jednotka.ident_cely),
+        "show_pripojit_pian_mapa": show_pripojit_pian_mapa,
+        "show_pripojit_pian_id": show_pripojit_pian_id
     }
     if has_adb and app != "lokalita":
         logger.debug("arch_z.views.get_dj_form_detail", extra={"jednotka_ident_cely": jednotka.ident_cely})

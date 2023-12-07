@@ -607,13 +607,13 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     
     def get_create_user(self):
         try:
-            return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PROJ)[0].uzivatel
+            return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PROJ)[0].uzivatel,)
         except Exception as e:
             logger.debug(e)
             return None
     
     def get_create_org(self):
-        return self.organizace
+        return (self.organizace,)
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

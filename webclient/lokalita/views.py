@@ -15,6 +15,7 @@ from core.constants import AZ_STAV_ZAPSANY, PIAN_POTVRZEN, ZAPSANI_AZ
 from core.ident_cely import get_temp_lokalita_ident
 from core.message_constants import (
     LOKALITA_USPESNE_ZAPSANA,
+    SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
@@ -25,7 +26,7 @@ from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
 from django.views.generic import TemplateView
 from django.views.generic.detail import SingleObjectMixin
@@ -362,6 +363,17 @@ class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelated
 
     template_name = "lokalita/dj/dj_update.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
+        az = self.get_object().archeologicky_zaznam
+        if not dj.archeologicky_zaznam == az:
+            logger.error("Archeologicky zaznam - Dokumentacni jednotka wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["j"] = get_dj_form_detail(
@@ -392,6 +404,17 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
     """
 
     template_name = "lokalita/dj/komponenta_detail.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
+        komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komponenta_ident_cely"])
+        if not dj.komponenty == komponenta.komponenta_vazby:
+            logger.error("Komponenta - Dokumentacni jednotka wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
 
     def get_komponenta(self):
         dj_ident_cely = self.kwargs["komponenta_ident_cely"]
@@ -429,6 +452,17 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
     """
 
     template_name = "lokalita/dj/pian_update.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
+        pian = get_object_or_404(Pian, ident_cely=self.kwargs["pian_ident_cely"])
+        if not dj.pian == pian:
+            logger.error("Pian - Dokumentacni jednotka wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
 
     def get_pian(self):
         pian_ident_cely = self.kwargs["pian_ident_cely"]

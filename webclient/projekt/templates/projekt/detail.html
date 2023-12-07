@@ -434,7 +434,7 @@
         <div class="app-fx app-left">
           {% trans "projekt.templates.detail.cardHeader.projektovaDokumetace" %}
         </div>
-        {% if show.editovat %}
+        {% if show.soubor_nahrat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-projekt" href="{% url 'core:upload_file' 'projekt' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'projekt.templates.detail.dokumentacePart.nahrat' %}">

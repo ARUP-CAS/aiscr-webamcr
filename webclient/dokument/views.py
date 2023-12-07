@@ -530,6 +530,16 @@ class DokumentCastDetailView(RelatedContext):
     """
     template_name = "dokument/dok/detail_cast_dokumentu.html"
 
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        cast = get_object_or_404(DokumentCast, ident_cely=self.kwargs["cast_ident_cely"])
+        if cast.dokument.ident_cely != self.kwargs["ident_cely"]:
+            logger.error("Dokument - Dokument cast wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         cast = get_object_or_404(
@@ -590,6 +600,16 @@ class KomponentaDokumentDetailView(RelatedContext):
     """
     template_name = "dokument/dok/detail_komponenta.html"
 
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komp_ident_cely"])
+        if komponenta.komponenta_vazby.casti_dokumentu.dokument.ident_cely != self.kwargs["ident_cely"]:
+            logger.error("Dokument - Komponenta wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         komponenta = get_object_or_404(
@@ -616,6 +636,16 @@ class KomponentaDokumentCreateView(RelatedContext):
     Třida pohledu pro vytvoření komponenty části dokumentu.
     """
     template_name = "dokument/dok/create_komponenta.html"
+
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        cast = get_object_or_404(DokumentCast, ident_cely=self.kwargs["cast_ident_cely"])
+        if cast.dokument.ident_cely != self.kwargs["ident_cely"]:
+            logger.error("Dokument - Dokument cast wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -668,7 +698,7 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
     def dispatch(self, request, *args: Any, **kwargs: Any) -> HttpResponse:
         tvar = self.get_zaznam()
         if tvar.dokument.ident_cely != self.kwargs.get("ident_cely"):
-            logger.debug("tvat a dokument nemaji vazbu")
+            logger.debug("Dokument - Tvar wrong relation")
             messages.add_message(
                             request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                         )
@@ -832,11 +862,11 @@ class DokumentCastPripojitAkciView(TransakceView):
     """
     template_name = "core/transakce_table_modal.html"
     id_tag = "pripojit-eo-form"
-    success_message = DOKUMENT_AZ_USPESNE_PRIPOJEN
 
     def init_translations(self):
         self.title = _("dokument.views.DokumentCastPripojitAkciView.title.text")
         self.button = _("dokument.views.DokumentCastPripojitAkciView.submitButton.text")
+        self.success_message = DOKUMENT_AZ_USPESNE_PRIPOJEN
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -872,11 +902,11 @@ class DokumentCastPripojitProjektView(TransakceView):
     """
     template_name = "core/transakce_table_modal.html"
     id_tag = "pripojit-projekt-form"
-    success_message = DOKUMENT_PROJEKT_USPESNE_PRIPOJEN
 
     def init_translations(self):
         self.title = _("dokument.views.DokumentCastPripojitProjektView.title.text")
         self.button = _("dokument.views.DokumentCastPripojitProjektView.submitButton.text")
+        self.success_message = DOKUMENT_PROJEKT_USPESNE_PRIPOJEN
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -905,11 +935,11 @@ class DokumentCastOdpojitView(TransakceView):
     Třida pohledu pro odpojení části dokumentu pomoci modalu.
     """
     id_tag = "odpojit-cast-form"
-    success_message = DOKUMENT_CAST_USPESNE_ODPOJEN
 
     def init_translations(self):
         self.title = _("dokument.views.DokumentCastOdpojitView.title.text")
         self.button = _("dokument.views.DokumentCastOdpojitView.submitButton.text")
+        self.success_message = DOKUMENT_CAST_USPESNE_ODPOJEN
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -940,11 +970,11 @@ class DokumentCastSmazatView(TransakceView):
     Třida pohledu pro smazání části dokumentu pomoci modalu.
     """
     id_tag = "smazat-cast-form"
-    success_message = DOKUMENT_CAST_USPESNE_SMAZANA
 
     def init_translations(self):
         self.title = _("dokument.views.DokumentCastSmazatView.title.text")
         self.button = _("dokument.views.DokumentCastSmazatView.submitButton.text")
+        self.success_message = DOKUMENT_CAST_USPESNE_SMAZANA
 
     def post(self, request, *args, **kwargs):
         cast = self.get_zaznam()
@@ -964,11 +994,11 @@ class DokumentNeidentAkceSmazatView(TransakceView):
     Třida pohledu pro smazání neident akce z části dokumentu pomoci modalu.
     """
     id_tag = "smazat-neident-akce-form"
-    success_message = DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA
 
     def init_translations(self):
         self.title = _("dokument.views.DokumentNeidentAkceSmazatView.title.text")
         self.button = _("dokument.views.DokumentNeidentAkceSmazatView.submitButton.text")
+        self.success_message = DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1545,23 +1575,11 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
         qs = Dokument.objects.exclude(ident_cely__contains=Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D).zkratka)
+        if self.kwargs.get("bez_zapsanych",False):
+            logger.debug(self.kwargs.get("bez_zapsanych"))
+            qs.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY))
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
-        return self.check_filter_permission(qs)
-
-
-class DokumentAutocompleteBezZapsanych(DokumentAutocomplete, PermissionFilterMixin):
-    """
-    Třída pohledu pro autocomplete dokumentů bez zapsaných.
-    """
-    typ_zmeny_lookup = ZAPSANI_DOK
-    
-    def get_queryset(self):
-        qs = super(DokumentAutocompleteBezZapsanych, self).get_queryset()
-        qs = (
-            qs.annotate(ident_len=Length("ident_cely"))
-            .filter(ident_len__gt=0)
-        )
         return self.check_filter_permission(qs)
 
 

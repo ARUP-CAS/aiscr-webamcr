@@ -253,6 +253,15 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         db_table = "auth_user"
         verbose_name = "Uživatel"
         verbose_name_plural = "Uživatelé"
+    
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        return (self,)
+    
+    def get_create_org(self):
+        return None
 
 
 class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, ManyToManyRestrictedClassMixin):

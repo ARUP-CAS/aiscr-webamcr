@@ -44,6 +44,7 @@ from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, A
     UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
 from uzivatel.models import Osoba, User, UserNotificationType
 from core.views import PermissionFilterMixin
+from core.models import Permissions as p, check_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -238,6 +239,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         context["form_password"] = UpdatePasswordSettings(instance=self.request.user, prefix="pass")
         context["sign_in_history"] = self.get_object().history.all()[:5]
         context["form_notifications"] = NotificationsForm(instance=self.request.user)
+        context["show_edit_notifikace"] = check_permissions(p.actionChoices.notifikace_projekty, self.request.user, self.request.user.ident_cely)
         return context
 
     def _change_password(self, request, request_data):

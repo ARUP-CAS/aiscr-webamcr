@@ -34,4 +34,4 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
         ]
 
     def get_create_user(self):
-        return self.user
+        return (self.user,)

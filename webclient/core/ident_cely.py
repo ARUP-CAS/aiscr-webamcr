@@ -24,6 +24,7 @@ from projekt.models import Projekt
 from ez.models import ExterniZdroj
 from komponenta.models import Komponenta, KomponentaVazby
 from dj.models import DokumentacniJednotka
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -392,6 +393,9 @@ def get_record_from_ident(ident_cely):
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}-N\d{5}", ident_cely)):
         logger.debug("core.ident_cely.get_record_from_ident.samostatny_nalez", extra={"ident_cely": ident_cely})
         return get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    if bool(re.fullmatch("(U)-\d{6}", ident_cely)):
+        logger.debug("core.ident_cely.get_record_from_ident.uzivatel", extra={"ident_cely": ident_cely})
+        return get_object_or_404(User, ident_cely=ident_cely)
     if bool(re.fullmatch("(LET)-\d{7}", ident_cely)):
         logger.debug("core.ident_cely.get_record_from_ident.externi_zdroj", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect

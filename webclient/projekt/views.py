@@ -62,6 +62,7 @@ from core.message_constants import (
     PROJEKT_USPESNE_VRACEN,
     PROJEKT_USPESNE_ZAHAJEN_V_TERENU,
     PROJEKT_USPESNE_ZRUSEN,
+    SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
@@ -90,9 +91,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from dokument.models import Dokument
+from dokument.models import Dokument, DokumentCast
 from dokument.views import odpojit, pripojit
-from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_BADATEL_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_BADATEL_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from oznameni.forms import OznamovatelForm
 from projekt.filters import ProjektFilter
@@ -549,35 +550,22 @@ def smazat(request, ident_cely):
 class ProjektPermissionFilterMixin(PermissionFilterMixin):
     def add_ownership_lookup(self, ownership, qs=None):
         if ownership == Permissions.ownershipChoices.our:
-            filtered_our = Projekt.objects.filter(organizace=self.request.user.organizace)
-            filterdoc = {"pk__in":filtered_our}
+            filterdoc = {"organizace":self.request.user.organizace}
         else:
             filterdoc = {}
         return filterdoc
     
     def add_accessibility_lookup(self,permission, qs):
-        group_to_accessibility={
-            ROLE_BADATEL_ID: PRISTUPNOST_BADATEL_ID,
-            ROLE_ARCHEOLOG_ID: PRISTUPNOST_ARCHEOLOG_ID,
-            ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
-            ROLE_ADMIN_ID:PRISTUPNOST_ARCHIVAR_ID ,
-        }
-        ownership_qs = qs.filter(**self.add_ownership_lookup(permission.accessibility))
         accessibility_key = self.permission_model_lookup+"pristupnost_filter__in"
-        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, razeni__lte=Heslar.objects.filter(id=group_to_accessibility.get(self.request.user.hlavni_role.id)).values_list("razeni",flat=True))
+        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id))
         filter = {accessibility_key:accessibilities}
         pristupnost = (
             SamostatnyNalez.objects.filter(projekt=OuterRef("pk")).distinct()
             .order_by("pristupnost__razeni")
             .values("pristupnost")
         )
-        qs = qs.filter().annotate(pristupnost_filter=Subquery(pristupnost[:1]))
-        qs_access_1 = set(qs.filter(**filter).values_list("pk", flat=True))
-        qs_access_2 = set(qs.filter(pristupnost_filter__isnull=True).values_list("pk", flat=True))
-        ownership_qs_1 = set(ownership_qs.values_list("pk", flat=True))
-        ownership_qs_1.union(qs_access_1).union(qs_access_2)
-        qs = qs.filter(pk__in=ownership_qs_1)
-        return qs
+        qs_new = qs.annotate(pristupnost_filter=Subquery(pristupnost[:1]))
+        return qs_new.filter(Q(**filter) | Q(pristupnost_filter__isnull=True) | Q(**self.add_ownership_lookup(permission.accessibility)))
 
 class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
     """
@@ -618,6 +606,7 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
         )
         context["hasNaseProjekty_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
         context["has_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
+        logger.debug(context["object_list"].count())
         return context
 
     def get_queryset(self):
@@ -719,6 +708,12 @@ def prihlasit(request, ident_cely):
         )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
+    if not request.user.organizace.oao:
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse(
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
@@ -1252,6 +1247,13 @@ def odpojit_dokument(request, ident_cely, proj_ident_cely):
         logger.debug("Projekt neni typu pruzkumny")
         messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_PRUZKUMNY)
         return redirect(proj.get_absolute_url())
+    relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_cely,projekt=proj)
+    if not relace_dokumentu.count() > 0:
+        logger.error("Projekt - Dokument wrong relation")
+        messages.add_message(
+                    request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                )
+        return redirect(request.GET.get("next","core:home"))
     return odpojit(request, ident_cely, proj_ident_cely, proj)
 
 
@@ -1408,7 +1410,7 @@ def get_detail_template_shows(projekt, user):
     show_akce = projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID
     show = {
         "oznamovatel": show_oznamovatel,
-        "prihlasit_link": check_permissions(p.actionChoices.projekt_prihlasit, user, projekt.ident_cely),
+        "prihlasit_link": check_permissions(p.actionChoices.projekt_prihlasit, user, projekt.ident_cely) and user.organizace.oao,
         "vratit_link": check_permissions(p.actionChoices.projekt_vratit, user, projekt.ident_cely),
         "schvalit_link": check_permissions(p.actionChoices.projekt_schvalit, user, projekt.ident_cely),
         "zahajit_teren_link": check_permissions(p.actionChoices.projekt_zahajit_v_terenu, user, projekt.ident_cely),
@@ -1433,8 +1435,9 @@ def get_detail_template_shows(projekt, user):
         "smazat_link": check_permissions(p.actionChoices.projekt_smazat, user, projekt.ident_cely),
         "zapsat_dokumenty": check_permissions(p.actionChoices.dok_zapsat_do_projekt, user, projekt.ident_cely),
         "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, projekt.ident_cely),
-        "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_pas, user, projekt.ident_cely),
+        "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_projekt, user, projekt.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_projekt, user, projekt.ident_cely),
+        "soubor_nahrat": check_permissions(p.actionChoices.soubor_nahrat_projekt, user, projekt.ident_cely),
     }
     return show
 

@@ -18,6 +18,7 @@ MAXIMUM_AKCII_DOSAZENO: Final = _("common.message.MAXIMUM_AKCI_DOSAZENO.text")  
 MAXIMUM_DJ_DOSAZENO: Final = _("common.message.MAXIMUM_DJ_DOSAZENO.text")  # Byl překročen limit dokumentačních jednotek pro jednu akci.
 MAXIMUM_KOMPONENT_DOSAZENO: Final = _("common.message.MAXIMUM_KOMPONENT_DOSAZENO.text")  # Byl překročen limit komponent pro dokumentační jednotky.
 SPATNY_ZAZNAM_ZAZNAM_VAZBA: Final = _("common.message.SPATNY_ZAZNAM_ZAZNAM_VAZBA.text")
+SPATNY_ZAZNAM_SOUBOR_VAZBA: Final = _("common.message.SPATNY_ZAZNAM_SOUBOR_VAZBA.text")
 
 # Projekt
 PROJEKT_USPESNE_PRIHLASEN: Final = _("common.message.PROJEKT_USPESNE_PRIHLASEN.text")  # Projekt byl úspěšně přihlášen.

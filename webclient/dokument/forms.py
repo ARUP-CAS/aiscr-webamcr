@@ -6,6 +6,7 @@ from dal import autocomplete
 from django import forms
 from django.db import utils
 from django.forms import HiddenInput
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.db.models import Value, IntegerField
@@ -733,7 +734,7 @@ class PripojitDokumentForm(forms.Form):
                 ).values_list("id", "ident_cely")
             ),
             widget=autocomplete.Select2Multiple(
-                url="dokument:dokument-autocomplete-bez-zapsanych"
+                url=reverse("dokument:dokument-autocomplete", kwargs={"bez_zapsanych": True})
             ),
             help_text=_("dokument.forms.pripojitDokumentForm.dokument.tooltip")
         )
