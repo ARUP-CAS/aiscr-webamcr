@@ -155,7 +155,9 @@
     });
     // don't show tooltip
     $('[rel="tooltip"]').on('click', function () {
-      $(this).tooltip('hide')
+      if (window.innerWidth > 960) {
+        $(this).tooltip('hide')
+      }
     });
     // send change in columns shown
     const getCookie = (name) => {

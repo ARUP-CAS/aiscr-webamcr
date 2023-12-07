@@ -34,26 +34,28 @@
           {% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.cardHeader.label" %}
         </div>
       </div>
-      <div class="card-body formset-table content-with-table-responsive">
-        <h5>{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.objekty.label" %}</h5>
-          {% if k.form_nalezy_objekty.forms %}
-            <input type="hidden" name="nalez_edit_nalez" value="{{ k.ident_cely }}" />
-            {% crispy k.form_nalezy_objekty k.helper_objekt %}
-          {% else %}
-          <div class="app-note">
-            <span class="material-icons">info</span>
-            {% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.objekty.bezObjektovlabel." %}
-          </div>
-          {% endif %}
-        <h5>{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.predmety.label" %}</h5>
-          {% if k.form_nalezy_predmety.forms %}
-          {% crispy k.form_nalezy_predmety k.helper_predmet %}
-          {% else %}
-          <div class="app-note">
-            <span class="material-icons">info</span>
-            {% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.predmety.bezPredmetov.label" %}
-          </div>
-          {% endif %}
+      <div class="content-with-table-responsive-container">
+        <div class="card-body formset-table content-with-table-responsive">
+          <h5>{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.objekty.label" %}</h5>
+            {% if k.form_nalezy_objekty.forms %}
+              <input type="hidden" name="nalez_edit_nalez" value="{{ k.ident_cely }}" />
+              {% crispy k.form_nalezy_objekty k.helper_objekt %}
+            {% else %}
+            <div class="app-note">
+              <span class="material-icons">info</span>
+              {% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.objekty.bezObjektovlabel." %}
+            </div>
+            {% endif %}
+          <h5>{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.predmety.label" %}</h5>
+            {% if k.form_nalezy_predmety.forms %}
+            {% crispy k.form_nalezy_predmety k.helper_predmet %}
+            {% else %}
+            <div class="app-note">
+              <span class="material-icons">info</span>
+              {% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.predmety.bezPredmetov.label" %}
+            </div>
+            {% endif %}
+        </div>
       </div>
     </div>
     {% if show.editovat %}
