@@ -190,114 +190,114 @@
 {% endblock %}
 
 {% block script_detail %}
-{#    <script>#}
-{#    document.addEventListener('DOMContentLoaded', function (event) {#}
-{#        {% for row in akce_zaznam_ostatni_vedouci %}#}
-{#            i = {{ forloop.counter0 }};#}
-{#            vedouci_filed = document.getElementById(`id_akcevedouci_set-${i}-vedouci`);#}
-{#            vedouci_filed.value = "{{ row.0 }}";#}
-{#            organizace_field = document.getElementById(`id_akcevedouci_set-${i}-organizace`);#}
-{#            organizace_field.value = "{{ row.1 }}";#}
-{#        {% endfor %}#}
-{#      })#}
-{#  </script>#}
-{#  <script>#}
-{#    var global_map_projekt_ident='{{zaznam.akce.projekt.ident_cely}}';#}
-{#    if(global_map_projekt_ident.length==0){#}
-{#      global_map_projekt_ident=document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0];#}
-{#    }#}
-{#    //console.log("zaznam "+global_map_projekt_ident)#}
-{#    //modal scripts#}
-{#    document.addEventListener('DOMContentLoaded', function (event) {#}
-{#      {% if arch_projekt_link and arch_projekt_link.0 %}#}
-{#        if ("{{arch_projekt_link}}" !== "None"){#}
-{#          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",#}
-{#          formURL: "{% url 'projekt:projekt_archivovat' zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true",#}
-{#          formID: "archivovat-form",#}
-{#          modalFormID: "#archivovat-form",#}
-{#          })#}
-{#          try {#}
-{#            arch_projekt = new Modal(options, "archive_projekt");#}
-{#            document.getElementById("archive_projekt").click();#}
-{#          } catch (e) {#}
-{#            console.log(e);#}
-{#          }#}
-{#        };#}
-{#      {% endif %}#}
-{#      if ("{{show.odeslat_link}}" != "False"){#}
-{#      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",#}
-{#        formURL: "{% url 'arch_z:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",#}
-{#        formID: "odeslat-akci-form",#}
-{#        modalFormID: "#odeslat-akci-form",#}
-{#      })#}
-{#      odeslat_akci_modal = new Modal(options, "akce-odeslat");#}
-{#      };#}
-{#      if ("{{show.vratit_link}}" != "False"){#}
-{#      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",#}
-{#        formURL: "{% url 'arch_z:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",#}
-{#        formID: "vratit-akci-form",#}
-{#        modalFormID: "#vratit-akci-form",#}
-{#      })#}
-{#      vratit_akci_modal = new Modal(options, "akce-vratit");#}
-{#      }#}
-{#      if ("{{show.archivovat_link}}" != "False"){#}
-{#        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",#}
-{#          formURL: "{% url 'arch_z:archivovat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",#}
-{#          formID: "archivovat-akci-form",#}
-{#          modalFormID: "#archivovat-akci-form",#}
-{#        })#}
-{#      archivovat_akci_modal = new Modal(options, "akce-archivovat");#}
-{#      }#}
-{#      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",#}
-{#        formURL: "{% url 'arch_z:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",#}
-{#        formID: "smazat-akci-form",#}
-{#        modalFormID: "#smazat-akci-form",#}
-{#      })#}
-{#      smazat_akci_modal = new Modal(options, "akce-smazat");#}
-{#      if ("{{show.zmenit_proj_akci}}" != "False"){#}
-{#        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",#}
-{#          formURL: "{% url 'arch_z:zmenit-proj-akci' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",#}
-{#          formID: "zmenit-akci-form",#}
-{#          modalFormID: "#zmenit-akci-form",#}
-{#        })#}
-{#        new Modal(options, "arch_z-proj-akce-change");#}
-{#      }#}
-{#      if ("{{show.zmenit_sam_akci}}" != "False"){#}
-{#        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",#}
-{#          formURL: "{% url 'arch_z:zmenit-sam-akci' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",#}
-{#          formID: "zmenit-akci-form",#}
-{#          modalFormID: "#zmenit-akci-form",#}
-{#        })#}
-{#        new Modal(options, "arch_z-sam-akce-change");#}
-{#      }#}
-{#      if (document.getElementById("main_cadastre_id")!==null) {#}
-{#              const urlParams = new URLSearchParams(window.location.search);#}
-{#              if(urlParams.get('geometry') ==null){#}
-{#                  let xhr = new XMLHttpRequest();#}
-{#                  xhr.open('POST', '/arch-z/mapa-zoom');#}
-{#                  xhr.setRequestHeader('Content-type', 'application/json');#}
-{#                  if (typeof global_csrftoken !== 'undefined') {#}
-{#                      xhr.setRequestHeader('X-CSRFToken', global_csrftoken);#}
-{#                  } else {#}
-{#                      console.log("neni X-CSRFToken token")#}
-{#                  }#}
-{#                  xhr.onload = function () {#}
-{#                      rs = JSON.parse(this.responseText)#}
-{#                      if(rs.lat>0){#}
-{#                        map.setView([rs.lat, rs.lng], rs.zoom)#}
-{#                      }#}
-{#                      if (rs.zoom == 17) {#}
-{#                          drawnItems.clearLayers();#}
-{#                          addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom,rs.presnost)#}
-{#                      }#}
-{#                  };#}
-{#                  xhr.send(JSON.stringify(#}
-{#                      {#}
-{#                          'cadastre': document.getElementById("main_cadastre_id").value,#}
-{#                          'pian': "",#}
-{#                      }))#}
-{#              }#}
-{#        }#}
-{#    });#}
-{#  </script>#}
+    <script>
+    document.addEventListener('DOMContentLoaded', function (event) {
+        {% for row in akce_zaznam_ostatni_vedouci %}
+            i = {{ forloop.counter0 }};
+            vedouci_filed = document.getElementById(`id_akcevedouci_set-${i}-vedouci`);
+            vedouci_filed.value = "{{ row.0 }}";
+            organizace_field = document.getElementById(`id_akcevedouci_set-${i}-organizace`);
+            organizace_field.value = "{{ row.1 }}";
+        {% endfor %}
+      })
+  </script>
+  <script>
+    var global_map_projekt_ident='{{zaznam.akce.projekt.ident_cely}}';
+    if(global_map_projekt_ident.length==0){
+      global_map_projekt_ident=document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0];
+    }
+    //console.log("zaznam "+global_map_projekt_ident)
+    //modal scripts
+    document.addEventListener('DOMContentLoaded', function (event) {
+      {% if arch_projekt_link and arch_projekt_link.0 %}
+        if ("{{arch_projekt_link}}" !== "None"){
+          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+          formURL: "{% url 'projekt:projekt_archivovat' zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true",
+          formID: "archivovat-form",
+          modalFormID: "#archivovat-form",
+          })
+          try {
+            arch_projekt = new Modal(options, "archive_projekt");
+            document.getElementById("archive_projekt").click();
+          } catch (e) {
+            console.log(e);
+          }
+        };
+      {% endif %}
+      if ("{{show.odeslat_link}}" != "False"){
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        formURL: "{% url 'arch_z:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+        formID: "odeslat-akci-form",
+        modalFormID: "#odeslat-akci-form",
+      })
+      odeslat_akci_modal = new Modal(options, "akce-odeslat");
+      };
+      if ("{{show.vratit_link}}" != "False"){
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        formURL: "{% url 'arch_z:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+        formID: "vratit-akci-form",
+        modalFormID: "#vratit-akci-form",
+      })
+      vratit_akci_modal = new Modal(options, "akce-vratit");
+      }
+      if ("{{show.archivovat_link}}" != "False"){
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+          formURL: "{% url 'arch_z:archivovat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+          formID: "archivovat-akci-form",
+          modalFormID: "#archivovat-akci-form",
+        })
+      archivovat_akci_modal = new Modal(options, "akce-archivovat");
+      }
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        formURL: "{% url 'arch_z:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+        formID: "smazat-akci-form",
+        modalFormID: "#smazat-akci-form",
+      })
+      smazat_akci_modal = new Modal(options, "akce-smazat");
+      if ("{{show.zmenit_proj_akci}}" != "False"){
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+          formURL: "{% url 'arch_z:zmenit-proj-akci' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+          formID: "zmenit-akci-form",
+          modalFormID: "#zmenit-akci-form",
+        })
+        new Modal(options, "arch_z-proj-akce-change");
+      }
+      if ("{{show.zmenit_sam_akci}}" != "False"){
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+          formURL: "{% url 'arch_z:zmenit-sam-akci' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+          formID: "zmenit-akci-form",
+          modalFormID: "#zmenit-akci-form",
+        })
+        new Modal(options, "arch_z-sam-akce-change");
+      }
+      if (document.getElementById("main_cadastre_id")!==null) {
+              const urlParams = new URLSearchParams(window.location.search);
+              if(urlParams.get('geometry') ==null){
+                  let xhr = new XMLHttpRequest();
+                  xhr.open('POST', '/arch-z/mapa-zoom');
+                  xhr.setRequestHeader('Content-type', 'application/json');
+                  if (typeof global_csrftoken !== 'undefined') {
+                      xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+                  } else {
+                      console.log("neni X-CSRFToken token")
+                  }
+                  xhr.onload = function () {
+                      rs = JSON.parse(this.responseText)
+                      if(rs.lat>0){
+                        map.setView([rs.lat, rs.lng], rs.zoom)
+                      }
+                      if (rs.zoom == 17) {
+                          drawnItems.clearLayers();
+                          addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom,rs.presnost)
+                      }
+                  };
+                  xhr.send(JSON.stringify(
+                      {
+                          'cadastre': document.getElementById("main_cadastre_id").value,
+                          'pian': "",
+                      }))
+              }
+        }
+    });
+  </script>
 {% endblock %}
