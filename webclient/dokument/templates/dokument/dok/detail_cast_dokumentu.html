@@ -96,10 +96,17 @@
     <div class="card-body">
         {% crispy neident_akce_form %}
     </div>
+    <div class="modal osoba-form fade app-modal-form" tabindex="-1" role="dialog" id="modal-osoba-form">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+        <div class="modal-content osoba-form"></div>
+      </div>
+    </div>
 </div>
 {% endif %}
     <script>
         //modal scripts
+        var modal;
+        var heslar_url = "{% url 'heslar:create_osoba' %}";
         document.addEventListener('DOMContentLoaded', function (event) {
           if ("{{show_edit_cast}}" != "False"){
             var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
@@ -142,7 +149,7 @@
                   formID: "edit-neident-form",
                   modalFormID: "#edit-neident-form",
                 })
-                new Modal(options, "button-edit-neident");
+                modal = new Modal(options, "button-edit-neident");
                 var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                     formID: "smazat-neident-akce-form",
                     modalFormID: "#smazat-neident-akce-form",
