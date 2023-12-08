@@ -620,6 +620,9 @@ a.dropdown-item {
 
         .table {
           @extend .table-hover; // .table-striped
+          @media (min-width: 992px) {
+            table-layout: fixed;
+          }
 
           thead {
             tr {
