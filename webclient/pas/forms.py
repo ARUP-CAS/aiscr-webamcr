@@ -177,10 +177,12 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         widgets = {
             "nalezce": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
             "okolnosti": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container"}
             ),
             "specifikace": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container"}
             ),
             "presna_datace": forms.TextInput(),
             "pocet": forms.TextInput(),

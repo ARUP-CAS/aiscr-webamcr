@@ -51,8 +51,12 @@ class CreateADBForm(forms.ModelForm):
             "poznamka": _("adb.forms.createAdbForm.label.poznamka"),
         }
         widgets = {
-            "typ_sondy": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}),
-            "podnet": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}),
+            "typ_sondy": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ",
+                                             "data-live-search": "true",
+                                             "data-container": ".content-with-table-responsive-container"}),
+            "podnet": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ",
+                                          "data-live-search": "true",
+                                          "data-container": ".content-with-table-responsive-container"}),
             "uzivatelske_oznaceni_sondy": forms.TextInput(),
             "trat": forms.TextInput(),
             "cislo_popisne": forms.TextInput(),
