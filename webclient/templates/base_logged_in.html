@@ -438,6 +438,21 @@
     
   </script>
   <script>
+
+      const update_map_scale_padding = () => {
+          const leaflet_query = document.getElementsByClassName("leaflet-container");
+          if (leaflet_query.length > 0){
+              const leaflet = leaflet_query[0];
+              const control_panel = leaflet.querySelector(".leaflet-top.leaflet-left");
+              const control_panel_height = control_panel.offsetHeight;
+              const leaflet_height =  leaflet.offsetHeight;
+              const scale_panel = leaflet.querySelector(".leaflet-bottom.leaflet-left");
+              const scale_panel_height = scale_panel.offsetHeight;
+              if (leaflet_height < control_panel_height + scale_panel_height) {
+                  scale_panel.style.paddingLeft = "60px";
+              }
+          }
+      }
       // Open sidebar based on the url i am viewing
       $(document).ready(function () {
           if ((window.location.href.indexOf("projekt") > -1) && (window.location.href.indexOf("projektove") <= -1)
@@ -456,6 +471,7 @@
           } else if (window.location.href.indexOf("ext-zdroj") > -1) {
             $('#collapseEz').collapse('show')
           }
+          update_map_scale_padding();
       });
 
 </script>

@@ -3,46 +3,68 @@
 <div class="bs-stepper">
   <div class="bs-stepper-header">
     <div class="step {% if sn.stav == 1 %}active{% endif %}">
-      <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:pas' sn.ident_cely %}';">
+      <button type="button" class="btn step-trigger historie-link"
+              onclick="location.href='{% url 'historie:pas' sn.ident_cely %}';">
         <span class="bs-stepper-circle">1</span>
-        <span class="bs-stepper-label">
-              {% trans "pas.templates.state_component_pas.rozepsany" %}
-              <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
-                    title="{{ history_dates.datum_zapsani.uzivatel }}">
-                {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
-              </span>
-            </span>
+        <div class="row">
+          <div class="col-12">
+                <span class="bs-stepper-label">
+                    {% trans "pas.templates.state_component_pas.rozepsany" %}
+                </span>
+          </div>
+          <div class="col-12">
+                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                      title="{{ history_dates.datum_zapsani.uzivatel }}">
+                    {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
+                </span>
+          </div>
+        </div>
       </button>
     </div>
     <div class="line"></div>
     <div class="step {% if sn.stav == 2 %}active{% endif %}">
-      <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:pas' sn.ident_cely %}';">
+      <button type="button" class="btn step-trigger historie-link"
+              onclick="location.href='{% url 'historie:pas' sn.ident_cely %}';">
         <span class="bs-stepper-circle">2</span>
-        <span class="bs-stepper-label">
-              {% trans "pas.templates.state_component_pas.odeslany" %}
-              <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
-                    title="{{ history_dates.datum_odeslani.uzivatel }}">
-                {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
-              </span>
-            </span>
+        <div class="row">
+          <div class="col-12">
+                <span class="bs-stepper-label">
+                    {% trans "pas.templates.state_component_pas.odeslany" %}
+                </span>
+          </div>
+          <div class="col-12">
+                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                      title="{{ history_dates.datum_odeslani.uzivatel }}">
+                    {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
+                </span>
+          </div>
+        </div>
       </button>
     </div>
     <div class="line"></div>
     <div class="step {% if sn.stav == 3 %}active{% endif %}">
-      <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:pas' sn.ident_cely %}';">
+      <button type="button" class="btn step-trigger historie-link"
+              onclick="location.href='{% url 'historie:pas' sn.ident_cely %}';">
         <span class="bs-stepper-circle">3</span>
-        <span class="bs-stepper-label">
-              {% trans "pas.templates.state_component_pas.potvrzeny" %}
-              <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
-                    title="{{ history_dates.datum_potvrzeni.uzivatel }}">
-                {{ history_dates.datum_potvrzeni.datum|date:'Y-m-d'|default_if_none:"" }}
-              </span>
-            </span>
+        <div class="row">
+          <div class="col-12">
+                <span class="bs-stepper-label">
+                    {% trans "pas.templates.state_component_pas.potvrzeny" %}
+                </span>
+          </div>
+          <div class="col-12">
+                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                      title="{{ history_dates.datum_potvrzeni.uzivatel }}">
+                    {{ history_dates.datum_potvrzeni.datum|date:'Y-m-d'|default_if_none:"" }}
+                </span>
+          </div>
+        </div>
       </button>
     </div>
     <div class="line"></div>
     <div class="step {% if sn.stav == 4 %}active{% endif %}">
-      <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:pas' sn.ident_cely %}';">
+      <button type="button" class="btn step-trigger historie-link"
+              onclick="location.href='{% url 'historie:pas' sn.ident_cely %}';">
         <span class="bs-stepper-circle">4</span>
         <span class="bs-stepper-label">
               {% trans "pas.templates.state_component_pas.archivovany" %}
