@@ -3,42 +3,63 @@
 <div class="bs-stepper">
   <div class="bs-stepper-header">
     <div class="step {% if zaznam.stav == 1 %}active{% endif %}">
-      <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
+      <button type="button" class="btn step-trigger historie-link"
+              onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">1</span>
-        <span class="bs-stepper-label">
-              {% trans "ez.templates.stepper.zapsany.label" %}
-              <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
-                    title="{{ history_dates.datum_zapsani.uzivatel }}">
-                {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
-              </span>
-            </span>
+        <div class="row">
+          <div class="col-12">
+                <span class="bs-stepper-label">
+                    {% trans "ez.templates.stepper.zapsany.label" %}
+                </span>
+          </div>
+          <div class="col-12">
+                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                      title="{{ history_dates.datum_zapsani.uzivatel }}">
+                    {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
+                </span>
+          </div>
+        </div>
       </button>
     </div>
     <div class="line"></div>
     <div class="step {% if zaznam.stav == 2 %}active{% endif %}">
-      <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
+      <button type="button" class="btn step-trigger historie-link"
+              onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">2</span>
-        <span class="bs-stepper-label">
-              {% trans "ez.templates.stepper.odeslany.label" %}
-              <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
-                    title="{{ history_dates.datum_odeslani.uzivatel }}">
-                {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
-              </span>
-            </span>
+        <div class="row">
+          <div class="col-12">
+                <span class="bs-stepper-label">
+                    {% trans "ez.templates.stepper.odeslany.label" %}
+                </span>
+          </div>
+          <div class="col-12">
+                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                      title="{{ history_dates.datum_odeslani.uzivatel }}">
+                    {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
+                </span>
+          </div>
+        </div>
       </button>
     </div>
     <div class="line"></div>
     <div class="step {% if zaznam.stav == 3 %}active{% endif %}">
-      <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
+      <button type="button" class="btn step-trigger historie-link"
+              onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">3</span>
-        <span class="bs-stepper-label">
-              {% trans "ez.templates.stepper.potvrzeny.label" %}
-              <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
-                    title="{{ history_dates.datum_potvrzeni.uzivatel }}">
-                {{ history_dates.datum_potvrzeni.datum|date:'Y-m-d'|default_if_none:"" }}
-              </span>
-            </span>
+        <div class="row">
+          <div class="col-12">
+                <span class="bs-stepper-label">
+                    {% trans "ez.templates.stepper.potvrzeny.label" %}
+                </span>
+          </div>
+          <div class="col-12">
+                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                      title="{{ history_dates.datum_potvrzeni.uzivatel }}">
+                    {{ history_dates.datum_potvrzeni.datum|date:'Y-m-d'|default_if_none:"" }}
+                </span>
+          </div>
+        </div>
       </button>
     </div>
+
   </div>
-</div>
