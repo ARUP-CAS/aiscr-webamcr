@@ -6,7 +6,7 @@
 <div class="app-table-list-wrapper">
     <div class="app-table-list-inner">
         {% block table %}
-        <div class="table-container">
+        <div class="table-responsive">
             <table {% render_attrs table.attrs class="table" %} id="table">
                 {% block table.thead %}
                 {% if table.show_header %}
