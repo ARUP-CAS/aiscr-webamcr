@@ -60,10 +60,14 @@ class NeidentAkceForm(forms.ModelForm):
             "poznamka": _("neidentAkce.forms.neidentAkceForm.poznamka.tooltip"),
         }
 
+    class Media:
+        js = ["/static/static/js/create_osoba_modal.js"]
+
     def __init__(self, *args, readonly=False, **kwargs):
         super(NeidentAkceForm, self).__init__(*args, **kwargs)
         self.fields["katastr"].required = True
         self.fields["vedouci"].required = False
+        self.fields["vedouci"].widget.attrs["id"]="id_vedouci_modal"
         if readonly == False:
             if "class" in self.fields["katastr"].widget.attrs.keys():
                 self.fields["katastr"].widget.attrs["class"] = (
