@@ -17,6 +17,7 @@ build:
       - export CPLUS_INCLUDE_PATH=/usr/include/gdal
       - export C_INCLUDE_PATH=/usr/include/gdal
       - gdal-config --version
+      - python -m pip install sphinx_rtd_theme 
     post_install:
       - python -m pip install --exists-action=w --no-cache-dir GDAL==$(gdal-config --version)
 
