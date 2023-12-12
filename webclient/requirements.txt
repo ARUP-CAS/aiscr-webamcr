@@ -5,7 +5,7 @@ pytz==2023.3.post1
 simplejson==3.19.2
 django-crispy-forms==2.1
 crispy-bootstrap4
-django-recaptcha==3.0.0
+django-recaptcha==4.0.0
 django_registration==3.3
 django-filter==23.5
 django-tables2==2.6.0
