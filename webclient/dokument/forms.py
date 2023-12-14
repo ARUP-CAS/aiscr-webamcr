@@ -621,14 +621,14 @@ class CreateModelExtraDataForm(forms.ModelForm):
     coordinate_wgs84_x2 = forms.FloatField(required=False, widget=HiddenInput())
 
     visible_x1 = forms.CharField(
-        label=_("pas.forms.coordinates.cor_x1.label"),
+        label=_("dokument.forms.createModelExtraDataForm.cor_x1.label"),
         required=False,
-        help_text=_("pas.forms.coordinates.cor_x1.tooltip"),
+        help_text=_("dokument.forms.createModelExtraDataForm.cor_x1.tooltip"),
     )
     visible_x2 = forms.CharField(
-        label=_("pas.forms.coordinates.cor_x2.label"),
+        label=_("dokument.forms.createModelExtraDataForm.cor_x2.label"),
         required=False,
-        help_text=_("pas.forms.coordinates.cor_x2.tooltip"),
+        help_text=_("dokument.forms.createModelExtraDataForm.cor_x2.tooltip"),
     )
 
     class Meta:
