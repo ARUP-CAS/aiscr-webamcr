@@ -10,21 +10,23 @@
 
     <div class="row app-entity-cards mb-3">
       {% if show_dokumenty_zapsat %}
-      <div class="col">
-        <a href="{% url 'dokument:zapsat' %}" class="card app-card-entity app-card-zapsat-model">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "dokument.templates.indexDokument.cardZapsat.label" %}
-          </div>
-        </a>
-      </div>
+        <div class="col">
+          <a href="{% url 'dokument:zapsat' %}" class="card app-card-entity app-card-zapsat-model">
+            <div class="card-body card-body-background">
+              <img src="{% static 'logo-am-mark.png' %}" />
+              <div class="card-body-hint" style="display: none">{% trans "dokument.templates.indexDokument.cardZapsat.text" %}</div>
+            </div>
+            <div class="card-footer">
+              {% trans "dokument.templates.indexDokument.cardZapsat.label" %}
+            </div>
+          </a>
+        </div>
       {% endif %}
       <div class="col">
         <a href="{% url 'dokument:list' %}?sort=typ_dokumentu&sort=ident_cely" class="card app-card-entity app-card-vybrat">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "dokument.templates.indexDokument.cardVybrat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "dokument.templates.indexDokument.cardVybrat.label" %}
@@ -33,8 +35,9 @@
       </div>
       <div class="col">
         <a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-modely">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "dokument.templates.indexDokument.cardMojeDokumenty.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "dokument.templates.indexDokument.cardMojeDokumenty.label" %}
@@ -42,18 +45,19 @@
         </a>
       </div>
       {% if user.can_see_ours_item %}
-      <div class="col">
-        <a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-modely">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "dokument.templates.indexDokument.cardNaseDokumenty.label" %}
-          </div>
-        </a>
-      </div>
+        <div class="col">
+          <a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-modely">
+            <div class="card-body card-body-background">
+              <img src="{% static 'logo-am-mark.png' %}" />
+              <div class="card-body-hint" style="display: none">{% trans "dokument.templates.indexDokument.cardNaseDokumenty.text" %}</div>
+            </div>
+            <div class="card-footer">
+              {% trans "dokument.templates.indexDokument.cardNaseDokumenty.label" %}
+            </div>
+          </a>
+        </div>
       {% endif %}
-    </div>
+      </div>
   </div>
 
   <div class="app-card-desc-wrapper">

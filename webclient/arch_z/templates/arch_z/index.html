@@ -7,12 +7,12 @@
 {% block content %}
   <div class="app-entity-akce">
     {% include "toolbar_akce.html" %}
-
     <div class="row app-entity-cards mb-3">
       <div class="col">
         <a href="{% url 'arch_z:zapsat-akci' %}" class="card app-card-entity app-card-zapsat-akce">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "arch_z.templates.arch_z.index.cardZapsatSamostatnouAkci.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "arch_z.templates.arch_z.index.cardZapsatSamostatnouAkci.label" %}
@@ -21,8 +21,9 @@
       </div>
       <div class="col">
         <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-vybrat">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "arch_z.templates.arch_z.index.cardVybrat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "arch_z.templates.arch_z.index.cardVybrat.label" %}
@@ -31,8 +32,9 @@
       </div>
       <div class="col">
         <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-akce">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "arch_z.templates.arch_z.index.cardMojeAkce.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "arch_z.templates.arch_z.index.cardMojeAkce.label" %}
@@ -42,8 +44,9 @@
       {% if user.can_see_ours_item %}
         <div class="col">
           <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-akce">
-            <div class="card-body">
+            <div class="card-body card-body-background">
               <img src="{% static 'logo-am-mark.png' %}" />
+              <div class="card-body-hint" style="display: none">{% trans "arch_z.templates.arch_z.index.cardNaseAkce.text" %}</div>
             </div>
             <div class="card-footer">
               {% trans "arch_z.templates.arch_z.index.cardNaseAkce.label" %}

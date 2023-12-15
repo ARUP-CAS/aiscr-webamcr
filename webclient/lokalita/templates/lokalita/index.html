@@ -7,12 +7,12 @@
 {% block content %}
   <div class="app-entity-lokalita">
     {% include "toolbar_akce.html" %}
-
     <div class="row app-entity-cards mb-3">
       <div class="col">
         <a href="{% url 'lokalita:create' %}" class="card app-card-entity app-card-zapsat-lokalita">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "lokalita.templates.index.cardZapsat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "lokalita.templates.index.cardZapsat.label" %}
@@ -21,8 +21,9 @@
       </div>
       <div class="col">
         <a href="{% url 'lokalita:list' %}?sort=nazev" class="card app-card-entity app-card-vybrat">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "lokalita.templates.index.cardVybrat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "lokalita.templates.index.cardVybrat.label" %}
@@ -31,8 +32,9 @@
       </div>
       <div class="col">
         <a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-lokality">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "lokalita.templates.index.cardMojeLokality.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "lokalita.templates.index.cardMojeLokality.label" %}
@@ -42,8 +44,9 @@
       {% if user.can_see_ours_item %}
         <div class="col">
           <a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-lokality">
-            <div class="card-body">
+            <div class="card-body card-body-background">
               <img src="{% static 'logo-am-mark.png' %}" />
+              <div class="card-body-hint" style="display: none">{% trans "lokalita.templates.index.cardNaseLokality.text" %}</div>
             </div>
             <div class="card-footer">
               {% trans "lokalita.templates.index.cardNaseLokality.label" %}
