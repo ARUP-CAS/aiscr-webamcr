@@ -25,7 +25,7 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
     template_name = "core/transakce_modal.html"
     id_tag = "edit-neident-form"
     allowed_states = []
-    success_message = "success"
+    success_message = _("neidentAkce.views.neidentAkceEditView.success")
     form_class = NeidentAkceForm
     slug_field = "dokument_cast__ident_cely"
 
