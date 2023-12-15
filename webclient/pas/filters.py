@@ -72,18 +72,6 @@ class SamostatnyNalezFilter(HistorieFilter):
         widget=Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
     )
 
-    oblast = django_filters.ChoiceFilter(
-        choices=OBLAST_CHOICES,
-        label=_("pas.filters.samostatnyNalezFilter.oblast.label"),
-        method="filter_by_oblast",
-        widget=Select(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-    )
     kraj = MultipleChoiceFilter(
         choices=RuianKraj.objects.all().values_list("id", "nazev"),
         label=_("pas.filters.samostatnyNalezFilter.kraj.label"),
@@ -246,6 +234,18 @@ class SamostatnyNalezFilter(HistorieFilter):
             label=_("pas.filters.samostatnyNalezFilter.druhNalezu.label"),
             choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
             widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+        )
+        self.filters["oblast"] = django_filters.ChoiceFilter(
+            choices=OBLAST_CHOICES,
+            label=_("pas.filters.samostatnyNalezFilter.oblast.label"),
+            method="filter_by_oblast",
+            widget=Select(
                 attrs={
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
