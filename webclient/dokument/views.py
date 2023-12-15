@@ -800,7 +800,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
     id_tag = "id_tag"
     allowed_states = [D_STAV_ZAPSANY, D_STAV_ODESLANY, D_STAV_ARCHIVOVANY]
-    success_message = "success"
+    success_message = _("dokument.views.TransakceView.success")
     action = ""
 
     def init_translations(self):
