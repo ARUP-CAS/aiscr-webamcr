@@ -143,7 +143,7 @@ class HistorieFilter(filters.FilterSet):
             else:
                 queryset = queryset.filter(historie__historie__in=filtered).distinct()
         for name, value in self.form.cleaned_data.items():
-            if name not in ["historie_typ_zmeny","historie_uzivatel","historie_datum_zmeny_od"]:
+            if name not in ["historie_typ_zmeny", "historie_uzivatel", "historie_datum_zmeny_od"]:
                 queryset = self.filters[name].filter(queryset, value)
             assert isinstance(
                 queryset, models.QuerySet
@@ -313,18 +313,6 @@ class Model3DFilter(HistorieFilter):
             | Q(casti__komponenty__komponenty__predmety__poznamka__icontains=value)
         )
 
-    def filter_obdobi(self, queryset, name, value):
-        """
-        Metóda pro filtrování podle období komponenty.
-        """
-        return queryset.filter(casti__komponenty__komponenty__obdobi__in=value)
-
-    def filter_areal(self, queryset, name, value):
-        """
-        Metóda pro filtrování podle areálu komponenty.
-        """
-        return queryset.filter(casti__komponenty__komponenty__areal__in=value)
-
     class Meta:
         model = Dokument
         exclude = []
@@ -332,7 +320,7 @@ class Model3DFilter(HistorieFilter):
     def __init__(self, *args, **kwargs):
         super(Model3DFilter, self).__init__(*args, **kwargs)
         self.filters["obdobi"] = MultipleChoiceFilter(
-            method="filter_obdobi",
+            field_name="casti__komponenty__komponenty__obdobi",
             label=_("dokument.filters.dokumentFilter.obdobi.label"),
             choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
             widget=SelectMultiple(
@@ -345,7 +333,7 @@ class Model3DFilter(HistorieFilter):
         )
 
         self.filters["areal"] = MultipleChoiceFilter(
-            method="filter_areal",
+            field_name="casti__komponenty__komponenty__areal",
             label=_("dokument.filters.dokumentFilter.areal.label"),
             choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)[1:],
             widget=SelectMultiple(
