@@ -11,8 +11,9 @@
     <div class="row app-entity-cards mb-3">
       <div class="col">
         <a href="{% url 'pas:spoluprace_list' %}?sort=organizace_vedouci&sort=spolupracovnik" class="card app-card-entity app-card-spoluprace">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardSpoluprace.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardSpoluprace.label" %}
@@ -21,8 +22,9 @@
       </div>
       <div class="col">
         <a href="{% url 'pas:create' %}" class="card app-card-entity app-card-zapsat-nalez">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardZapsatNalez.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardZapsatNalez.label" %}
@@ -31,8 +33,9 @@
       </div>
       <div class="col">
         <a href="{% url 'pas:list' %}?sort=katastr&sort=ident_cely" class="card app-card-entity app-card-vybrat">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardVybrat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardVybrat.label" %}
@@ -41,8 +44,9 @@
       </div>
       <div class="col">
         <a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-nalezy">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardMojeNalezy.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardMojeNalezy.label" %}
@@ -52,8 +56,9 @@
       {% if show_pas_nase %}
         <div class="col">
           <a href="{% url 'pas:list' %}?projekt_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-nalezy">
-            <div class="card-body">
+            <div class="card-body card-body-background">
               <img src="{% static 'logo-am-mark.png' %}" />
+              <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardNaseNalezy.text" %}</div>
             </div>
             <div class="card-footer">
               {% trans "pas.templates.index.cardNaseNalezy.label" %}
@@ -62,16 +67,17 @@
         </div>
       {% endif %}
       {% if show_pas_potvrdit %}
-      <div class="col">
-        <a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" class="card app-card-entity app-card-potvrdit">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "pas.templates.index.cardPotvrdit.label" %}
-          </div>
-        </a>
-      </div>
+        <div class="col">
+          <a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" class="card app-card-entity app-card-potvrdit">
+            <div class="card-body card-body-background">
+              <img src="{% static 'logo-am-mark.png' %}" />
+              <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardPotvrdit.text" %}</div>
+            </div>
+            <div class="card-footer">
+              {% trans "pas.templates.index.cardPotvrdit.label" %}
+            </div>
+          </a>
+        </div>
       {% endif %}
     </div>
   </div>

@@ -11,8 +11,9 @@
     <div class="row app-entity-cards mb-3">
       <div class="col">
         <a href="{% url 'projekt:create' %}" class="card app-card-entity app-card-zapsat-projekt">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardZapsatProjekt.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardZapsatProjekt.label" %}
@@ -21,8 +22,9 @@
       </div>
       <div class="col">
         <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}&sort=planovane_zahajeni&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-prihlasit-projekt">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardPrihlasitProjekt.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardPrihlasitProjekt.label" %}
@@ -31,8 +33,9 @@
       </div>
       <div class="col">
         <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-zahajit-vyzkum">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardZahajitVyzkum.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardZahajitVyzkum.label" %}
@@ -41,8 +44,9 @@
       </div>
       <div class="col">
         <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-ukoncit-teren">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardUkoncitTeren.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardUkoncitTeren.label" %}
@@ -51,8 +55,9 @@
       </div>
       <div class="col">
         <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-spravovat-akce">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardSpravovatAkce.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardSpravovatAkce.label" %}
@@ -61,8 +66,9 @@
       </div>
       <div class="col">
         <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-uzavrit-projekt">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardUzavritProjekt.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardUzavritProjekt.label" %}
@@ -71,8 +77,9 @@
       </div>
       <div class="col">
         <a href="{% url 'projekt:list' %}?sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-vybrat-projekt">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardVybratProjekt.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardVybratProjekt.label" %}
@@ -134,51 +141,6 @@
     </div>
   </div>
 
-  <script>
-    // show / hide card description
-    $(".app-card-zapsat-projekt").mouseleave(function(){
-      $(".app-collapse-zapsat-projekt").hide(100);
-    });
-    $(".app-card-zapsat-projekt").mouseover(function(){
-      $(".app-collapse-zapsat-projekt").show(100);
-    });
-    $(".app-card-prihlasit-projekt").mouseleave(function(){
-      $(".app-collapse-prihlasit-projekt").hide(100);
-    });
-    $(".app-card-prihlasit-projekt").mouseover(function(){
-      $(".app-collapse-prihlasit-projekt").show(100);
-    });
-    $(".app-card-zahajit-vyzkum").mouseleave(function(){
-      $(".app-collapse-zahajit-vyzkum").hide(100);
-    });
-    $(".app-card-zahajit-vyzkum").mouseover(function(){
-      $(".app-collapse-zahajit-vyzkum").show(100);
-    });
-    $(".app-card-ukoncit-teren").mouseleave(function(){
-      $(".app-collapse-ukoncit-teren").hide(100);
-    });
-    $(".app-card-ukoncit-teren").mouseover(function(){
-      $(".app-collapse-ukoncit-teren").show(100);
-    });
-    $(".app-card-spravovat-akce").mouseleave(function(){
-      $(".app-collapse-spravovat-akce").hide(100);
-    });
-    $(".app-card-spravovat-akce").mouseover(function(){
-      $(".app-collapse-spravovat-akce").show(100);
-    });
-    $(".app-card-uzavrit-projekt").mouseleave(function(){
-      $(".app-collapse-uzavrit-projekt").hide(100);
-    });
-    $(".app-card-uzavrit-projekt").mouseover(function(){
-      $(".app-collapse-uzavrit-projekt").show(100);
-    });
-    $(".app-card-vybrat-projekt").mouseleave(function(){
-      $(".app-collapse-vybrat-projekt").hide(100);
-    });
-    $(".app-card-vybrat-projekt").mouseover(function(){
-      $(".app-collapse-vybrat-projekt").show(100);
-    });
-</script>
 {% endblock %}
 
 {% block script %}

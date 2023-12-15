@@ -252,7 +252,9 @@
   <nav class="navbar navbar-expand-xl navbar-light bg-light border-bottom">
     <button class="btn btn-light mb-0 mt-0" id="sidebar-toggle"><span class="material-icons">menu_open</span></button>
     <span class="navbar-mobile-header-ident" id="navbar-mobile-header-ident">
-      {% if projekt %}
+      {% if search_sum %}
+        {% trans "templates.baseLogedIn.navbar.pocetZaznamuShort" %}: <strong>{{ table.rows|length }}</strong>
+      {% elif projekt %}
         <span class="navbar-mobile-header-ident-projekt">{{ projekt.ident_cely }}</span>
       {% elif app == "akce" %}
         <span class="navbar-mobile-header-ident-arch-z">{{ zaznam.ident_cely }}</span>
@@ -270,8 +272,6 @@
         {% endif %}
       {% elif app == "ext_zdroj" %}
         <span class="navbar-mobile-header-ident-ez">{{ zaznam.ident_cely }}</span>
-      {% elif search_sum %}
-        {{search_sum}}: <strong>{{ table.rows|length }}</strong>
       {% elif typ %}
         {% if typ == "projekt" %}
           <span class="navbar-mobile-header-ident-projekt">{{ ident_cely }}</span>
@@ -666,6 +666,31 @@
         }, 1000);
       })
     })
+
+    const app_entity_cards_query = document.querySelectorAll(".app-card-entity");
+    for (const item of app_entity_cards_query) {
+      const card_body_background = item.querySelectorAll(".card-body-background");
+      if (card_body_background.length > 0) {
+        const current_item = card_body_background[0];
+        current_item.onclick = (e) => {
+          if (window.innerWidth < 576) {
+            e.preventDefault();
+            const card_body_hint = current_item.querySelector(".card-body-hint");
+            if (card_body_hint && card_body_hint.style.display === "none") {
+              card_body_hint.style.display = "";
+              current_item.classList.remove("card-body-background");
+            } else {
+                card_body_hint.style.display = "none";
+                current_item.classList.add("card-body-background");
+            }
+            const img_tag = current_item.querySelector("img");
+            if (img_tag) {
+              current_item.removeChild(img_tag);
+            }
+          }
+        }
+      }
+    }
 
 </script>
 {% endblock %}

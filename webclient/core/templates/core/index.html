@@ -9,8 +9,9 @@
     {% if show_projekt %}
     <div class="col">
       <a href="{% url 'projekt:index' %}" class="card app-card-entity app-entity-projekt">
-        <div class="card-body">
+        <div class="card-body card-body-background">
           <img src="{% static 'logo-am-mark.png' %}" />
+          <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardProjekt.text" %}</div>
         </div>
         <div class="card-footer">
           {% trans "core.templates.index.cardProjekt.label" %}
@@ -20,8 +21,9 @@
     {% endif %}
     <div class="col">
       <a href="{% url 'arch_z:index' %}" class="card app-card-entity app-entity-akce">
-        <div class="card-body">
+        <div class="card-body card-body-background">
           <img src="{% static 'logo-am-mark.png' %}" />
+          <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardSamostatneAkce.text" %}</div>
         </div>
         <div class="card-footer">
           {% trans "core.templates.index.cardSamostatneAkce.label" %}
@@ -30,8 +32,9 @@
     </div>
     <div class="col">
       <a href="{% url 'lokalita:index' %}" class="card app-card-entity app-entity-lokalita">
-        <div class="card-body">
+        <div class="card-body card-body-background">
           <img src="{% static 'logo-am-mark.png' %}" />
+          <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardLokality.text" %}</div>
         </div>
         <div class="card-footer">
           {% trans "core.templates.index.cardLokality.label" %}
@@ -40,18 +43,20 @@
     </div>
     <div class="col">
       <a href="{% url 'pas:index' %}" class="card app-card-entity app-entity-samostatny_nalez">
-        <div class="card-body">
+        <div class="card-body card-body-background">
           <img src="{% static 'logo-am-mark.png' %}" />
+          <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardSamostatneNalezy.text" %}</div>
         </div>
         <div class="card-footer">
           {% trans "core.templates.index.cardSamostatneNalezy.label" %}
         </div>
       </a>
     </div>
-  <div class="col">
+    <div class="col">
     <a href="{% url 'dokument:index-model-3D' %}" class="card app-card-entity app-entity-knihovna_3d">
-      <div class="card-body">
+      <div class="card-body card-body-background">
         <img src="{% static 'logo-am-mark.png' %}" />
+        <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardKnihovna3D.text" %}</div>
       </div>
       <div class="card-footer">
         {% trans "core.templates.index.cardKnihovna3D.label" %}
@@ -60,8 +65,9 @@
   </div>
   <div class="col">
     <a href="{% url 'dokument:index' %}" class="card app-card-entity app-entity-dokument">
-      <div class="card-body">
+      <div class="card-body card-body-background">
         <img src="{% static 'logo-am-mark.png' %}" />
+        <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardDokumenty.text" %}</div>
       </div>
       <div class="card-footer">
         {% trans "core.templates.index.cardDokumenty.label" %}
@@ -70,8 +76,9 @@
   </div>
   <div class="col">
     <a href="{% url 'ez:index' %}" class="card app-card-entity app-entity-ext_zdroj">
-      <div class="card-body">
+      <div class="card-body card-body-background">
         <img src="{% static 'logo-am-mark.png' %}" />
+        <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardExterniZdroje.text" %}</div>
       </div>
       <div class="card-footer">
         {% trans "core.templates.index.cardExterniZdroje.label" %}
