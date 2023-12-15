@@ -5,7 +5,7 @@ import zlib
 
 import core.message_constants as mc
 import requests
-from arch_z.models import ArcheologickyZaznam
+from arch_z.models import ArcheologickyZaznam, ArcheologickyZaznamKatastr
 from core.message_constants import (
     VALIDATION_EMPTY,
     VALIDATION_LINE_LENGTH,
@@ -224,7 +224,7 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
     ostatni_name = []
     ostatni_id = []
     for line in get_all_pians_with_akce(akce_ident_cely):
-        if hlavni_id == None:
+        if hlavni_id is None:
             hlavni_id = line["dj_katastr_id"]
             hlavni_name = line["dj_katastr"]
         elif (
@@ -235,39 +235,30 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
     ostatni_name = sorted(ostatni_name)
     # ostatni_id = sorted(ostatni_id)
 
-    query_select_archz = (
-        "select  id from PUBLIC.archeologicky_zaznam "
-        " where typ_zaznamu IN('A','L') and ident_cely = %s limit 1"
-    )
-    query_update_archz = (
-        "update PUBLIC.archeologicky_zaznam set hlavni_katastr=%s where id = %s"
-    )
-    query_select_other = (
-        "select katastr_id from PUBLIC.archeologicky_zaznam_katastr "
-        " where archeologicky_zaznam_id=%s and katastr_id in %s"
-    )
-    query_insert_other = "insert into PUBLIC.archeologicky_zaznam_katastr(archeologicky_zaznam_id,katastr_id)  values(%s,%s)"
-    query_delete_other = "delete from PUBLIC.archeologicky_zaznam_katastr where archeologicky_zaznam_id=%s and katastr_id not in %s"
-    try:
-        cursor = connection.cursor()
-        cursor.execute(query_select_archz, [akce_ident_cely])
-        zaznam_id = cursor.fetchone()[0]
-        if len(str(zaznam_id)) > 0:
-            if hlavni_id != None:
-                cursor.execute(query_update_archz, [hlavni_id, zaznam_id])
-            if len(ostatni_id):
-                cursor.execute(query_select_other, [zaznam_id, tuple(ostatni_id)])
-                ostatni_already_inserted = []
-                for ostatni_inserted in cursor.fetchall():
-                    ostatni_already_inserted.append(ostatni_inserted[0])
-                for ostatni_one in ostatni_id:
-                    if int(ostatni_one) not in ostatni_already_inserted:
-                        cursor.execute(query_insert_other, [zaznam_id, ostatni_one])
-            if len(ostatni_id) == 0:  # HotFix for delete DML
-                ostatni_id.append(0)
-            cursor.execute(query_delete_other, [zaznam_id, tuple(ostatni_id)])
-    except IndexError:
-        return None
+    zaznam = ArcheologickyZaznam.objects.filter(
+        typ_zaznamu__in=['A', 'L'],
+        ident_cely=akce_ident_cely
+    ).first()
+    if zaznam:
+        if hlavni_id is not None:
+            zaznam.hlavni_katastr_id = hlavni_id
+
+        if ostatni_id:
+            archeologicky_zaznam_katastr_query = ArcheologickyZaznamKatastr.objects.filter(
+                archeologicky_zaznam_id=zaznam.id,
+                katastr_id__in=ostatni_id
+            )
+            existing_ids = [x.katastr_id for x in archeologicky_zaznam_katastr_query]
+            new_ids = set(ostatni_id) - set(existing_ids)
+            for new_id in new_ids:
+                ArcheologickyZaznamKatastr.objects.create(
+                    archeologicky_zaznam_id=zaznam.id,
+                    katastr_id=new_id
+                )
+            ArcheologickyZaznamKatastr.objects.filter(
+                archeologicky_zaznam_id=zaznam.id
+            ).exclude(katastr_id__in=ostatni_id).delete()
+        zaznam.save()
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
 
 
