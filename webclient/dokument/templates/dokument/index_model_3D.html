@@ -7,22 +7,23 @@
 {% block content %}
   <div class="app-entity-knihovna_3d">
     {% include "toolbar_dokument.html" with is_3d=True index=True%}
-
     <div class="row app-entity-cards mb-3">
       <div class="col">
         <a href="{% url 'dokument:create-model-3D' %}" class="card app-card-entity app-card-zapsat-model">
           <div class="card-body card-body-background" id="app-card-zapsat-model-body">
             <img class="card-body-image" src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "dokument.templates.indexModel3D.cardZapsat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "dokument.templates.indexModel3D.cardZapsat.label" %}
           </div>
-        </a>
+      </a>
       </div>
       <div class="col">
         <a href="{% url 'dokument:list-model-3D' %}?sort=organizace__nazev_zkraceny&sort=autori&sort=ident_cely" class="card app-card-entity app-card-vybrat">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img class="card-body-image" src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "dokument.templates.indexModel3D.cardVybrat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "dokument.templates.indexModel3D.cardVybrat.label" %}
@@ -31,8 +32,9 @@
       </div>
       <div class="col">
         <a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-modely">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img class="card-body-image" src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "dokument.templates.indexModel3D.cardMojeModely.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "dokument.templates.indexModel3D.cardMojeModely.label" %}
@@ -42,8 +44,9 @@
       {% if user.can_see_ours_item %}
         <div class="col">
           <a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-modely">
-            <div class="card-body">
+            <div class="card-body card-body-background">
               <img class="card-body-image" src="{% static 'logo-am-mark.png' %}" />
+              <div class="card-body-hint" style="display: none">{% trans "dokument.templates.indexModel3D.cardNaseModely.text" %}</div>
             </div>
             <div class="card-footer">
               {% trans "dokument.templates.indexModel3D.cardNaseModely.label" %}
@@ -51,7 +54,7 @@
           </a>
         </div>
       {% endif %}
-    </div>
+      </div>
   </div>
 
   <div class="app-card-desc-wrapper">
@@ -115,22 +118,6 @@
     $(".app-card-vybrat").mouseover(function(){
       $(".app-collapse-vybrat").show(100);
     });
-    const app_card_zapsat_model_body = document.getElementById("app-card-zapsat-model-body");
-    document.getElementById("app-card-zapsat-model-body").onclick = (e) => {
-      if (window.innerWidth < 576) {
-        e.preventDefault();
-        if (!app_card_zapsat_model_body.querySelector(".card-body-hint")) {
-          const par = document.createElement("div");
-          par.classList.add("card-body-hint");
-          par.textContent = '{% trans "dokument.templates.indexModel3D.cardZapsat.text" %}';
-          app_card_zapsat_model_body.appendChild(par);
-          app_card_zapsat_model_body.backgroundImage = "";
-          app_card_zapsat_model_body.style.background = "";
-          app_card_zapsat_model_body.style.backgroundUrl = "";
-          app_card_zapsat_model_body.style.opacity = "1";
-        }
-      }
-    };
 </script>
 {% endblock %}
 
