@@ -72,7 +72,7 @@
 {% block pagination %}
 {% if table.page and table.paginator.num_pages > 1 %}
 <nav aria-label="Table navigation" class="table-navigation row">
-    <ul class="pagination  jump-page settings col-3">
+    <ul class="pagination  jump-page settings col-9 col-md-3">
         <form id="jump" method="get" action="">
             <div class="form-group row">
                 <div class="input-group">
@@ -84,14 +84,16 @@
             </div>
         </form>
     </ul>        
-    <ul class="pagination go-to-page col-6">
+    <ul class="pagination go-to-page col-3 col-md-6">
         {% if table.page.has_previous %}
         {% block pagination.previous %}
         <li class="previous page-item">
             <a href="{% querystring_multi table.prefixed_page_field=table.page.previous_page_number %}"
                class="page-link">
                 <span aria-hidden="true">&laquo;</span>
-                {% trans 'templates.bootstrap4TableBase.previous' %}
+                <div class="bootstrap-table-button-hint">
+                  {% trans 'templates.bootstrap4TableBase.previous' %}
+                </div>
             </a>
         </li>
         {% endblock pagination.previous %}
@@ -112,7 +114,9 @@
         {% block pagination.next %}
         <li class="next page-item">
             <a href="{% querystring_multi table.prefixed_page_field=table.page.next_page_number %}" class="page-link">
-                {% trans 'templates.bootstrap4TableBase.next' %}
+                <div class="bootstrap-table-button-hint">
+                  {% trans 'templates.bootstrap4TableBase.next' %}
+                </div>
                 <span aria-hidden="true">&raquo;</span>
             </a>
         </li>

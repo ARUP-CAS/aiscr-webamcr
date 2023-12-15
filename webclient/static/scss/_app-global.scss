@@ -469,6 +469,18 @@ a.dropdown-item {
   }
 }
 
+.bootstrap-table-button-hint {
+  @media (max-width: 720px) {
+    display: none;
+  }
+}
+
+.pagination.per-page.settings {
+  @media (max-width: 720px) {
+    display: none;
+  }
+}
+
 .pagination-range {
   @media (max-width: 768px) {
     display: none;

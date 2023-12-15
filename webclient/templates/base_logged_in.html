@@ -252,7 +252,9 @@
   <nav class="navbar navbar-expand-xl navbar-light bg-light border-bottom">
     <button class="btn btn-light mb-0 mt-0" id="sidebar-toggle"><span class="material-icons">menu_open</span></button>
     <span class="navbar-mobile-header-ident" id="navbar-mobile-header-ident">
-      {% if projekt %}
+      {% if search_sum %}
+        {% trans "templates.baseLogedIn.navbar.pocetZaznamuShort" %}: <strong>{{ table.rows|length }}</strong>
+      {% elif projekt %}
         <span class="navbar-mobile-header-ident-projekt">{{ projekt.ident_cely }}</span>
       {% elif app == "akce" %}
         <span class="navbar-mobile-header-ident-arch-z">{{ zaznam.ident_cely }}</span>
@@ -270,8 +272,6 @@
         {% endif %}
       {% elif app == "ext_zdroj" %}
         <span class="navbar-mobile-header-ident-ez">{{ zaznam.ident_cely }}</span>
-      {% elif search_sum %}
-        {{search_sum}}: <strong>{{ table.rows|length }}</strong>
       {% elif typ %}
         {% if typ == "projekt" %}
           <span class="navbar-mobile-header-ident-projekt">{{ ident_cely }}</span>
