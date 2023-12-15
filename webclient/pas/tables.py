@@ -115,7 +115,7 @@ class SamostatnyNalezTable(SearchTable):
         if soubor is not None:
             soubor_url = reverse("core:download_thumbnail", args=('pas', record.ident_cely ,soubor.id,))
             return format_html(
-                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
+                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" loading="lazy">',
                 soubor_url,
             )
         return ""

@@ -160,19 +160,6 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
-    oblast = MultipleChoiceFilter(
-        choices=OBLAST_CHOICES,
-        label=_("projekt.filters.projektFilter.oblast.label"),
-        method="filter_by_oblast",
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-        distinct=True,
-    )
 
     typ_projektu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PROJEKT_TYP),
@@ -656,6 +643,19 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
             choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
             method="filter_akce_typ",
             label=_("projekt.filters.projektFilter.akceTyp.label"),
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            distinct=True,
+        )
+        self.filters["oblast"] = MultipleChoiceFilter(
+            choices=OBLAST_CHOICES,
+            label=_("projekt.filters.projektFilter.oblast.label"),
+            method="filter_by_oblast",
             widget=SelectMultiple(
                 attrs={
                     "class": "selectpicker",
