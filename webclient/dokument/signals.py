@@ -39,7 +39,6 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
             elif old_instance.let is not None and instance.let is not None and old_instance.let != instance.let:
                 old_instance.let.save_metadata()
                 instance.let.save_metadata()
-    instance.set_snapshots()
 
 
 @receiver(pre_save, sender=DokumentCast)
@@ -59,6 +58,7 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
 def dokument_save_metadata(sender, instance: Dokument, **kwargs):
     if not instance.suppress_signal:
         instance.save_metadata()
+    instance.set_snapshots()
 
 
 @receiver(post_save, sender=Let)
