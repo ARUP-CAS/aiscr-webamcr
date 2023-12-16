@@ -20,13 +20,13 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
         hv = HistorieVazby(typ_vazby=EXTERNI_ZDROJ_RELATION_TYPE)
         hv.save()
         instance.historie = hv
-    instance.set_snapshots()
 
 
 @receiver(post_save, sender=ExterniZdroj)
 def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
     if not instance.suppress_signal:
         instance.save_metadata()
+    instance.set_snapshots()
 
 
 @receiver(pre_delete, sender=ExterniZdroj)
