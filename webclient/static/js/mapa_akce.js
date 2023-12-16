@@ -275,15 +275,17 @@ map.addControl(drawControl);
 
 L.control.measure().addTo(map)
 
-L.control.coordinates({
+map.addControl(new L.control.coordinates({
     position:"bottomright",
-    useDMS:true,
+    useDMS:false,
+    decimals: 7,
+	decimalSeperator: ",",
     labelTemplateLat:"N {y}",
     labelTemplateLng:"E {x}",
     useLatLngOrder:true,
     centerUserCoordinates: true,
     markerType: null
-}).addTo(map);
+}).addTo(map));
 
 
 map.on('draw:edited', function (e) {
