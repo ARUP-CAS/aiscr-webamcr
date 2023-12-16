@@ -49,7 +49,7 @@ from core.constants import (
     VRACENI_ZRUSENI,
     ZMENA_AZ,
     ZMENA_HLAVNI_ROLE,
-    ZMENA_UDAJU_ADMIN,
+    ZMENA_UDAJU_ADMIN, ZMENA_UDAJU_UZIVATEL, ZMENA_HESLA_UZIVATEL, ZMENA_HESLA_ADMIN,
 )
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -97,7 +97,10 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         # Uzivatel
         (ZMENA_HLAVNI_ROLE, _("historie.models.historieStav.uzivatel.HR")),
         (ZMENA_UDAJU_ADMIN, _("historie.models.historieStav.uzivatel.ZUA")),
-        (ADMIN_UPDATE, _("historie.models.historieStav.uzivatel.AU")),
+        (ADMIN_UPDATE, _("historie.models.historieStav.uzivatel.ZHA")),
+        (ZMENA_HESLA_ADMIN, _("historie.models.historieStav.uzivatel.ZUU")),
+        (ZMENA_UDAJU_UZIVATEL, _("historie.models.historieStav.uzivatel.ZUU")),
+        (ZMENA_HESLA_UZIVATEL, _("historie.models.historieStav.uzivatel.ZHU")),
         # Pian
         (ZAPSANI_PIAN, _("historie.models.historieStav.pian.PI01")),
         (POTVRZENI_PIAN, _("historie.models.historieStav.pian.PI12")),
