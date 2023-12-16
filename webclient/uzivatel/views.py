@@ -32,7 +32,7 @@ from django.utils import timezone
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 
-
+from core.constants import ZMENA_UDAJU_UZIVATEL, ZMENA_HESLA_UZIVATEL
 from core.decorators import odstavka_in_progress
 from core.message_constants import (
     OSOBA_JIZ_EXISTUJE,
@@ -40,6 +40,7 @@ from core.message_constants import (
     MAINTENANCE_AFTER_LOGOUT,
     AUTOLOGOUT_AFTER_LOGOUT,
 )
+from historie.models import Historie
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
     UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
 from uzivatel.models import Osoba, User, UserNotificationType
@@ -245,6 +246,11 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
     def _change_password(self, request, request_data):
         form = UpdatePasswordSettings(request_data, instance=self.request.user, prefix="pass")
         if form.is_valid():
+            Historie(
+                typ_zmeny=ZMENA_HESLA_UZIVATEL,
+                uzivatel=request.user,
+                vazba=self.request.user.history_vazba,
+            ).save()
             self.request.user.set_password(str(request_data["pass-password1"][0]))
             self.request.user.save()
             messages.add_message(request, messages.SUCCESS,
@@ -271,6 +277,14 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         if form.is_valid():
             obj = form.save(commit=False)
             obj.save(update_fields=("telefon",))
+            poznamka = ", ".join([f"{fieldname}: {form.cleaned_data[fieldname]}" for fieldname in form.changed_data])
+            if len(poznamka) > 0:
+                Historie(
+                    typ_zmeny=ZMENA_UDAJU_UZIVATEL,
+                    uzivatel=request.user,
+                    poznamka=poznamka,
+                    vazba=obj.history_vazba,
+                ).save()
             messages.add_message(request, messages.SUCCESS,
                                  _("uzivatel.views.UserAccountUpdateView.post.success"))
         else:

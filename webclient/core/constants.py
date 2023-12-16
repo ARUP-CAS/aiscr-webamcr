@@ -76,7 +76,10 @@ NAHRANI_SBR: Final = "SBR0"  # 0
 # Uzivatel
 ZMENA_HLAVNI_ROLE: Final = "HR"  # 0, 1
 ZMENA_UDAJU_ADMIN: Final = "ZUA"  # 0
+ZMENA_HESLA_ADMIN: Final = "ZHA"
 ADMIN_UPDATE: Final = "AU"  # 0
+ZMENA_UDAJU_UZIVATEL: Final = "ZUU"
+ZMENA_HESLA_UZIVATEL: Final = "ZHU"
 
 # Uzivatel
 ROLE_BADATEL_ID = 1

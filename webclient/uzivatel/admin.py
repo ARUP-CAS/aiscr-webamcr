@@ -4,12 +4,13 @@ from typing import Union
 
 from django import forms
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.admin.utils import unquote
+from django.contrib.auth.admin import UserAdmin, sensitive_post_parameters_m
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import StreamingHttpResponse
 from django_object_actions import DjangoObjectActions, action
 
-from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN
+from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN, ZMENA_HESLA_ADMIN
 from historie.models import Historie
 from services.mailer import Mailer, NOTIFICATION_GROUPS
 from notifikace_projekty.models import Pes
@@ -62,7 +63,7 @@ class PesNotificationTypeInline(admin.TabularInline):
     model_type = None
     model = Pes
     form = create_pes_form(model_typ=model_type)
-    
+
     def get_queryset(self, request):
         queryset = super(PesNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(
@@ -223,13 +224,15 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             ).save()
         changed_data_without_groups = [fieldname for fieldname in form.changed_data if fieldname != "groups"]
         if form.changed_data is not None and len([form.changed_data]) > 0:
-            Historie(
-                typ_zmeny=ZMENA_UDAJU_ADMIN,
-                uzivatel=user,
-                poznamka=", ".join([f"{fieldname}: {form.cleaned_data[fieldname]}" for fieldname in
-                                    changed_data_without_groups]),
-                vazba=obj.history_vazba,
-            ).save()
+            poznamka = ", ".join([f"{fieldname}: {form.cleaned_data[fieldname]}" for fieldname in
+                                  changed_data_without_groups if "password" not in fieldname])
+            if len(poznamka) > 0:
+                Historie(
+                    typ_zmeny=ZMENA_UDAJU_ADMIN,
+                    uzivatel=user,
+                    poznamka=poznamka,
+                    vazba=obj.history_vazba,
+                ).save()
 
         if user_db is not None:
             logger.debug("uzivatel.admin.save_model.manage_user_groups",
@@ -269,6 +272,18 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                 user.notification_types.add(group_obj)
             else:
                 user.notification_types.remove(group_obj)
+
+    def user_change_password(self, request, id, form_url=""):
+        if request.method == "POST":
+            user = self.get_object(request, unquote(id))
+            form = self.change_password_form(user, request.POST)
+            if form.is_valid():
+                Historie(
+                    typ_zmeny=ZMENA_HESLA_ADMIN,
+                    uzivatel=user,
+                    vazba=user.history_vazba,
+                ).save()
+        return super(CustomUserAdmin, self).user_change_password(request, id, form_url=form_url)
 
     def log_deletion(self, request, object, object_repr):
         object.deleted_by_user = request.user
