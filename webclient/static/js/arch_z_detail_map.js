@@ -359,7 +359,9 @@ map.addControl(global_measuring_toolbox);
 
 map.addControl(new L.control.coordinates({
     position: "bottomright",
-    useDMS: true,
+    useDMS:false,
+    decimals: 7,
+	decimalSeperator: ",",
     labelTemplateLat: "N {y}",
     labelTemplateLng: "E {x}",
     useLatLngOrder: true,
