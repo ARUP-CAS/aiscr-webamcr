@@ -31,10 +31,13 @@ class AkceTable(SearchTable):
         default="",
         accessor="archeologicky_zaznam__hlavni_katastr",
     )
-    katastry = tables.Column(
+    katastry = tables.ManyToManyColumn(
         verbose_name=_("arch_z.tables.AkceTable.katastry.label"),
         default="",
         accessor="archeologicky_zaznam__katastry",
+        order_by="archeologicky_zaznam__katastry",
+        orderable=True,
+        separator="; "
     )
     stav = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.stav.label"),
