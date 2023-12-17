@@ -256,6 +256,8 @@ def create(request, dj_ident_cely):
             + get_validation_messages(validation_results),
         )
         logger.debug("pian.views.create", extra={"error_message": PIAN_NEVALIDNI_GEOMETRIE})
+        response = redirect(dj.get_absolute_url()+"/pian/zapsat")
+        return response
     elif form.is_valid():
         logger.debug("pian.views.create.form_valid")
         pian = form.save(commit=False)
