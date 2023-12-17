@@ -111,7 +111,7 @@ def pian_to_jstk():
                         with connection.cursor() as cursor:
                             count_updated_sjtsk += 1
                             cursor.execute(
-                                query_update, [l4[i][1], l4[i][0], xx[i]]
+                                query_update, [l4[i][0], l4[i][1], xx[i]]
                             )
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -182,7 +182,7 @@ def pian_to_wsg_84():
                             with connection.cursor() as cursor:
                                 count_selected_wgs84 += 1
                                 cursor.execute(
-                                    query_update, [l4[i][1], l4[i][0], xx[i]]
+                                    query_update, [l4[i][0], l4[i][1], xx[i]]
                                 )
                     with connection.cursor() as cursor:
                         cursor.execute(
@@ -276,7 +276,7 @@ def nalez_to_jsk():
                         with connection.cursor() as cursor:
                             count_updated_sjtsk += 1
                             cursor.execute(
-                                query_update, [l4[i][1], l4[i][0], xx[i]]
+                                query_update, [l4[i][0], l4[i][1], xx[i]]
                             )
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -349,7 +349,7 @@ def nalez_to_wsg84(self):
                             with connection.cursor() as cursor:
                                 count_selected_wgs84 += 1
                                 cursor.execute(
-                                    query_update, [l4[i][1], l4[i][0], xx[i]]
+                                    query_update, [l4[i][0], l4[i][1], xx[i]]
                                 )
                     with connection.cursor() as cursor:
                         cursor.execute(
