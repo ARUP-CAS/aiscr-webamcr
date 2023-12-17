@@ -65,7 +65,7 @@ def send_notifications():
 
 
 @shared_task
-def pian_to_jstk():
+def pian_to_sjstk():
     try:
         count_selected_wgs84 = 0
         count_updated_sjtsk = 0
@@ -130,7 +130,7 @@ def pian_to_jstk():
             logger.debug(traceback.format_exc())
             return None
     except Exception as err:
-        logger.error("cron.pian_to_jstk.do.error", extra={"error": err})
+        logger.error("cron.pian_to_sjstk.do.error", extra={"error": err})
 
 
 @shared_task
@@ -228,7 +228,7 @@ def pian_to_wsg_84():
 
 
 @shared_task
-def nalez_to_jsk():
+def nalez_to_sjtsk():
     try:
         count_selected_wgs84 = 0
         count_updated_sjtsk = 0
@@ -295,7 +295,7 @@ def nalez_to_jsk():
             logger.debug(traceback.format_exc())
             return None
     except Exception as err:
-        logger.error("cron.nalez_to_jsk.do.error", extra={"error": err})
+        logger.error("cron.nalez_to_sjtsk.do.error", extra={"error": err})
 
 
 @shared_task
@@ -485,7 +485,7 @@ def delete_personal_data_canceled_projects():
     """
     try:
         logger.debug("core.cron.delete_personal_data_canceled_projects.do.start")
-        deleted_string = _("core.tasks.nalez_to_jsk.data_deleted")
+        deleted_string = _("core.tasks.nalez_to_sjtsk.data_deleted")
         today = datetime.datetime.now().date()
         year_ago = today - datetime.timedelta(days=365)
         projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
