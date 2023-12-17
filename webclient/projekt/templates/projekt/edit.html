@@ -122,7 +122,7 @@
       global_map_can_edit = true;
       if (document.getElementById("id_coordinate_x2").value > 1) {
           console.log("Adding point to map.")
-          addPointOnLoad(document.getElementById("id_coordinate_x2").value, document.getElementById("id_coordinate_x1").value, "{%trans 'mapa.lokalizaceZamer' %}");
+          addPointOnLoad(document.getElementById("id_coordinate_x2").value, document.getElementById("id_coordinate_x1").value, "{%trans 'mapa.lokalizaceZamer' %}", "{{ projekt.ident_cely }}");
       } else {
           console.log("Not adding point to map!")
       }
