@@ -104,6 +104,10 @@ map.on('moveend', function () {
     switchMap(false);
 });
 
+$(document).ready(function () {
+    switchMap(false);
+})
+
 heatPoints = heatPoints.map(function (p) {
     var bounds = map.getBounds();
     var northWest = bounds.getNorthWest(),

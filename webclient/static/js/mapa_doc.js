@@ -135,6 +135,10 @@ map.on('moveend', function () {
     switchMap(false);
 });
 
+$(document).ready(function () {
+    switchMap(false);
+})
+
 switchMap = function (overview = false) {
     var bounds = map.getBounds();
     let zoom = map.getZoom();
