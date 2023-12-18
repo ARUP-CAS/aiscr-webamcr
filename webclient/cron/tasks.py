@@ -74,7 +74,7 @@ def pian_to_sjstk():
             "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,ST_AsText(pian.geom_sjtsk) as geometry_sjtsk "
             " from public.pian pian "
             " where pian.geom is not null "
-            " and pian.geom_sjtsk is null "
+            " and (pian.geom_sjtsk is null or geom_system in ('5514*','sjtsk*'))"
             " and pian.id not in (select pian_id from public.amcr_geom_migrations_jobs_wgs84_errors)"
             " order by pian.id"
             " limit %s"
@@ -235,15 +235,15 @@ def nalez_to_sjtsk():
         count_error_sjtsk = 0
         query_select = (
             "select samostatny_nalez.id,samostatny_nalez.ident_cely,ST_AsText(samostatny_nalez.geom) as geometry,ST_AsText(samostatny_nalez.geom_sjtsk) as geometry_sjtsk "
-            " from public.pian pian "
+            " from public.samostatny_nalez "
             " where samostatny_nalez.geom is not null "
-            " and samostatny_nalez.geom_sjtsk is null "
+            " and (samostatny_nalez.geom_sjtsk is null or geom_system in ('5514*','sjtsk*'))"
             " and samostatny_nalez.id not in (select pian_id from public.amcr_geom_migrations_jobs_wgs84_errors)"
             " order by samostatny_nalez.id"
             " limit %s"
         )
         query_update = (
-            "update public.pian pian "
+            "update public.samostatny_nalez "
             " set geom_sjtsk = ST_GeomFromText(%s), geom_sjtsk_updated_at=CURRENT_TIMESTAMP "
             " where samostatny_nalez.geom_sjtsk is null and samostatny_nalez.id=%s "
             " and ST_AsText(samostatny_nalez.geom)=%s"
@@ -306,7 +306,7 @@ def nalez_to_wsg84(self):
         count_error_wgs84 = 0
         query_select = (
             "select samostatny_nalez.id,samostatny_nalez.ident_cely,ST_AsText(samostatny_nalez.geom) as geometry,ST_AsText(samostatny_nalez.geom_sjtsk) as geometry_sjtsk "
-            " from public.pian pian "
+            " from public.samostatny_nalez "
             " where samostatny_nalez.geom is null "
             " and samostatny_nalez.geom_sjtsk is not null "
             " and samostatny_nalez.id not in (select pian_id from public.amcr_geom_migrations_jobs_sjtsk_errors)"
@@ -314,7 +314,7 @@ def nalez_to_wsg84(self):
             " limit %s"
         )
         query_update = (
-            "update public.pian pian "
+            "update public.samostatny_nalez "
             " set geom = ST_GeomFromText(%s), geom_updated_at=CURRENT_TIMESTAMP "
             " where samostatny_nalez.geom is null and samostatny_nalez.id=%s "
             " and ST_AsText(samostatny_nalez.geom_sjtsk)=%s"
