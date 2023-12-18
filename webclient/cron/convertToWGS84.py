@@ -1,6 +1,6 @@
 import json
 import logging
-
+from math import fabs
 import requests
 
 logger = logging.getLogger("django_cron")
@@ -98,9 +98,9 @@ def get_multi_transform_to_wgs84(jtsk_points):
             + "PP"
             + str(incr)
             + "     "
-            + str(p[0])
+            + str(fabs(p[0]))
             + "    "
-            + str(p[1])
+            + str(fabs(p[1]))
             + "    300\r\n"
         )  # "TB02     646860.290    1060814.217    669.262   nepovinný popis\r\n" \
     query = query + "--amcr-multipart-block--\r\n"
@@ -116,7 +116,8 @@ def get_multi_transform_to_wgs84(jtsk_points):
             if len(line) > 5:
                 p = line.split("\t")[1].split(" ")
                 # logger.debug(p)
-                points.append([p[0], p[1]])
+                # poradi je obracene { "returnCode" : "0", "Coordinates" : "50.038564722 15.78217352 713.31"}
+                points.append([p[1], p[0]])
 
         return points
     except IndexError:

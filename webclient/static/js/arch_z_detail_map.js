@@ -627,6 +627,14 @@ map.on('overlayremove', function(eventlayer){
     }
 });
 
+/*map.on('overlayadd overlayremove', function (e) {
+    if (control._handlingClick) {
+        if (e.name == [map_translations['pian']]) {
+           global_map_can_load_pians = !global_map_can_load_pians;
+        }
+    }
+});*/
+
 var mouseOverGeometry =(geom, allowClick=true)=>{
     function getContent(e){
         let content="";
@@ -980,6 +988,10 @@ map.on('moveend', function () {
     switchMap(false)
 });
 
+$(document).ready(function () {
+    switchMap(false);
+})
+
 heatPoints = heatPoints.map(function (p) {
     var bounds = map.getBounds();
     var northWest = bounds.getNorthWest(),
@@ -991,13 +1003,6 @@ heatPoints = heatPoints.map(function (p) {
     }
 });
 
-map.on('overlayadd overlayremove', function (e) {
-    if (control._handlingClick) {
-        if (e.name == [map_translations['pian']]) {
-            global_map_can_load_pians = !global_map_can_load_pians;
-        }
-    }
-});
 switchMap = function (overview = false) {
     var bounds = map.getBounds();
     let zoom = map.getZoom();

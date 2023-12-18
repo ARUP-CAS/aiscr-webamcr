@@ -65,7 +65,7 @@ def send_notifications():
 
 
 @shared_task
-def pian_to_jstk():
+def pian_to_sjstk():
     try:
         count_selected_wgs84 = 0
         count_updated_sjtsk = 0
@@ -74,7 +74,7 @@ def pian_to_jstk():
             "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,ST_AsText(pian.geom_sjtsk) as geometry_sjtsk "
             " from public.pian pian "
             " where pian.geom is not null "
-            " and pian.geom_sjtsk is null "
+            " and (pian.geom_sjtsk is null or geom_system in ('5514*','sjtsk*'))"
             " and pian.id not in (select pian_id from public.amcr_geom_migrations_jobs_wgs84_errors)"
             " order by pian.id"
             " limit %s"
@@ -111,7 +111,7 @@ def pian_to_jstk():
                         with connection.cursor() as cursor:
                             count_updated_sjtsk += 1
                             cursor.execute(
-                                query_update, [l4[i][1], l4[i][0], xx[i]]
+                                query_update, [l4[i][0], l4[i][1], xx[i]]
                             )
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -130,7 +130,7 @@ def pian_to_jstk():
             logger.debug(traceback.format_exc())
             return None
     except Exception as err:
-        logger.error("cron.pian_to_jstk.do.error", extra={"error": err})
+        logger.error("cron.pian_to_sjstk.do.error", extra={"error": err})
 
 
 @shared_task
@@ -182,7 +182,7 @@ def pian_to_wsg_84():
                             with connection.cursor() as cursor:
                                 count_selected_wgs84 += 1
                                 cursor.execute(
-                                    query_update, [l4[i][1], l4[i][0], xx[i]]
+                                    query_update, [l4[i][0], l4[i][1], xx[i]]
                                 )
                     with connection.cursor() as cursor:
                         cursor.execute(
@@ -228,22 +228,22 @@ def pian_to_wsg_84():
 
 
 @shared_task
-def nalez_to_jsk():
+def nalez_to_sjtsk():
     try:
         count_selected_wgs84 = 0
         count_updated_sjtsk = 0
         count_error_sjtsk = 0
         query_select = (
             "select samostatny_nalez.id,samostatny_nalez.ident_cely,ST_AsText(samostatny_nalez.geom) as geometry,ST_AsText(samostatny_nalez.geom_sjtsk) as geometry_sjtsk "
-            " from public.pian pian "
+            " from public.samostatny_nalez "
             " where samostatny_nalez.geom is not null "
-            " and samostatny_nalez.geom_sjtsk is null "
+            " and (samostatny_nalez.geom_sjtsk is null or geom_system in ('5514*','sjtsk*'))"
             " and samostatny_nalez.id not in (select pian_id from public.amcr_geom_migrations_jobs_wgs84_errors)"
             " order by samostatny_nalez.id"
             " limit %s"
         )
         query_update = (
-            "update public.pian pian "
+            "update public.samostatny_nalez "
             " set geom_sjtsk = ST_GeomFromText(%s), geom_sjtsk_updated_at=CURRENT_TIMESTAMP "
             " where samostatny_nalez.geom_sjtsk is null and samostatny_nalez.id=%s "
             " and ST_AsText(samostatny_nalez.geom)=%s"
@@ -276,7 +276,7 @@ def nalez_to_jsk():
                         with connection.cursor() as cursor:
                             count_updated_sjtsk += 1
                             cursor.execute(
-                                query_update, [l4[i][1], l4[i][0], xx[i]]
+                                query_update, [l4[i][0], l4[i][1], xx[i]]
                             )
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -295,7 +295,7 @@ def nalez_to_jsk():
             logger.debug(traceback.format_exc())
             return None
     except Exception as err:
-        logger.error("cron.nalez_to_jsk.do.error", extra={"error": err})
+        logger.error("cron.nalez_to_sjtsk.do.error", extra={"error": err})
 
 
 @shared_task
@@ -306,7 +306,7 @@ def nalez_to_wsg84(self):
         count_error_wgs84 = 0
         query_select = (
             "select samostatny_nalez.id,samostatny_nalez.ident_cely,ST_AsText(samostatny_nalez.geom) as geometry,ST_AsText(samostatny_nalez.geom_sjtsk) as geometry_sjtsk "
-            " from public.pian pian "
+            " from public.samostatny_nalez "
             " where samostatny_nalez.geom is null "
             " and samostatny_nalez.geom_sjtsk is not null "
             " and samostatny_nalez.id not in (select pian_id from public.amcr_geom_migrations_jobs_sjtsk_errors)"
@@ -314,7 +314,7 @@ def nalez_to_wsg84(self):
             " limit %s"
         )
         query_update = (
-            "update public.pian pian "
+            "update public.samostatny_nalez "
             " set geom = ST_GeomFromText(%s), geom_updated_at=CURRENT_TIMESTAMP "
             " where samostatny_nalez.geom is null and samostatny_nalez.id=%s "
             " and ST_AsText(samostatny_nalez.geom_sjtsk)=%s"
@@ -349,7 +349,7 @@ def nalez_to_wsg84(self):
                             with connection.cursor() as cursor:
                                 count_selected_wgs84 += 1
                                 cursor.execute(
-                                    query_update, [l4[i][1], l4[i][0], xx[i]]
+                                    query_update, [l4[i][0], l4[i][1], xx[i]]
                                 )
                     with connection.cursor() as cursor:
                         cursor.execute(
@@ -485,7 +485,7 @@ def delete_personal_data_canceled_projects():
     """
     try:
         logger.debug("core.cron.delete_personal_data_canceled_projects.do.start")
-        deleted_string = _("core.tasks.nalez_to_jsk.data_deleted")
+        deleted_string = _("core.tasks.nalez_to_sjtsk.data_deleted")
         today = datetime.datetime.now().date()
         year_ago = today - datetime.timedelta(days=365)
         projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\

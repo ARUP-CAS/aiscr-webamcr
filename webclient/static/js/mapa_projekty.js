@@ -104,6 +104,10 @@ map.on('moveend', function () {
     switchMap(false);
 });
 
+$(document).ready(function () {
+    switchMap(false);
+})
+
 heatPoints = heatPoints.map(function (p) {
     var bounds = map.getBounds();
     var northWest = bounds.getNorthWest(),
@@ -223,6 +227,7 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost=4) =>
     let myIco = { icon: pinIconGreenPoint };
     let myIco2 = { icon: pinIconGreenHW };
     let myColor = { color: "rgb(151, 0, 156)" };
+    let myColorGreen = { color: "rgb(50, 89, 46)" };
     if(presnost==4){
         myIco = { icon: pinIconGreenHW};
     }
@@ -231,7 +236,7 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost=4) =>
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0].replace("(", "")]))
         })
-        L.polygon(coor, myColor)
+        L.polygon(coor, myColorGreen)
         .bindTooltip(text+' ('+presnost+')', { sticky: true })
         .bindPopup("").on("click",onMarkerClick.bind(null,text))
         .addTo(layer);
@@ -239,7 +244,7 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost=4) =>
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
         })
-        L.polyline(coor, myColor)
+        L.polyline(coor, myColorGreen)
         .bindTooltip(text+' ('+presnost+')', { sticky: true })
         .bindPopup("").on("click",onMarkerClick.bind(null,text))
         .addTo(layer);

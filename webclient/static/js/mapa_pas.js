@@ -187,8 +187,8 @@ var transformSinglePoint = async(x1_plus,x2_plus,push,addComa) => {
             fill_katastr();
             document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
             document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
-            document.getElementById('id_coordinate_sjtsk_x1').value = x1_plus
-            document.getElementById('id_coordinate_sjtsk_x2').value = x2_plus
+            document.getElementById('id_coordinate_sjtsk_x1').value = -1*x1_plus
+            document.getElementById('id_coordinate_sjtsk_x2').value = -1*x2_plus
             if(push){
                 lock_sjtsk_low_precision=false;
                 switch_coordinate_system();
@@ -202,8 +202,8 @@ var transformSinglePoint = async(x1_plus,x2_plus,push,addComa) => {
                 fill_katastr();
                 document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
                 document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
-                document.getElementById('id_coordinate_sjtsk_x1').value = x1_plus
-                document.getElementById('id_coordinate_sjtsk_x2').value = x2_plus
+                document.getElementById('id_coordinate_sjtsk_x1').value = -1*x1_plus
+                document.getElementById('id_coordinate_sjtsk_x2').value = -1*x2_plus
                 if(push){
                     lock_sjtsk_low_precision=true;
                     switch_coordinate_system();
@@ -270,12 +270,13 @@ let disableSaveButton=(dis)=>{
 }
 
 let set_numeric_coordinates = async (push=false,addComa=false) => {
+    debugText("switch set_numeric_coordinates");
     cor_x1 = document.getElementById('visible_x1').value.replace(",",".");
     cor_x2 = document.getElementById('visible_x2').value.replace(",",".");
     if (cor_x1!="" && is_in_czech_republic(cor_x1, cor_x2)) {
         if (document.getElementById('visible_ss_combo').value == 1) {
             point_global_WGS84 = amcr_static_coordinate_precision_wgs84([cor_x1, cor_x2]);
-            point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(cor_x1, cor_x2), true);
+            point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(cor_x1, cor_x2), false);
             point_leaf=[cor_x2,cor_x1]
             addUniquePointToPoiLayer(point_leaf);
             fill_katastr();
@@ -458,6 +459,10 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost) => {
 map.on('moveend', function () {
     switchMap(false);
 });
+
+$(document).ready(function () {
+    switchMap(false);
+})
 
 switchMap = function (overview = false) {
     var bounds = map.getBounds();

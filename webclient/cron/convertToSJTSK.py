@@ -5,7 +5,7 @@ def square(x):
     return math.pow(x, 2)
 
 
-def convertToJTSK(lat, long):
+def convertToJTSK(long, lat):
     d2r = math.pi / 180
     a = 6378137.0
     f1 = 298.257223563
@@ -76,12 +76,12 @@ def convertToJTSK(lat, long):
     eps = n * math.atan(sinD / cosD)
     rho = rho0 * math.exp(-n * math.log((1 + sinS) / cosS))
 
-    return [rho * math.sin(eps), rho * math.cos(eps)]
+    return [-1*rho * math.sin(eps), -1*rho * math.cos(eps)]
 
 
 def get_multi_transform_to_sjtsk(wgs_points):
     my = []
     for i in wgs_points:
-        [x, y] = convertToJTSK(float(i[1]), float(i[0]))
-        my.append([str(round(x, 2)), str(round(y, 2))])
+        [x1, x2] = convertToJTSK(float(i[0]), float(i[1]))
+        my.append([str(round(x1, 2)), str(round(x2, 2))])
     return my
