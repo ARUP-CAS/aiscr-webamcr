@@ -94,13 +94,17 @@
         document.getElementById('id_visible_x1').value = cor_x1;
         document.getElementById('id_visible_x2').value = cor_x2;
         replace_coor();
+        let ident_cely='';
+        try{
+          ident_cely=document.getElementById('id-app-entity-item').textContent.trim();
+        }catch(e){}
 
         $('[readonly]').prop("disabled", true);
         {% if global_map_can_edit %}
-        addUniquePointToPoiLayer([cor_x2,cor_x1]);
+        addUniquePointToPoiLayer([cor_x2,cor_x1],ident_cely);
         {% else  %}
         global_map_can_edit = false
-        addReadOnlyUniquePointToPoiLayer([cor_x2,cor_x1]);
+        addReadOnlyUniquePointToPoiLayer([cor_x2,cor_x1],ident_cely);
         {% endif %}
         {% else  %}
         if(window.location.href.includes("/detail/")){

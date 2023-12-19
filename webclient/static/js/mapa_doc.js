@@ -75,16 +75,18 @@ var is_in_czech_republic = (x2, x1) => {
     }
 };
 
-var addUniquePointToPoiLayer = (arg_point_leaf, text, zoom = true,redIcon= false) => {
+var addUniquePointToPoiLayer = (arg_point_leaf, ident_cely, zoom = true,redIcon= false) => {
     var point_leaf = amcr_static_coordinate_precision_wgs84(arg_point_leaf);
     poi_model.clearLayers()
     if(redIcon){
         L.marker(point_leaf,{icon:pinIconRed3D, zIndexOffset: 2000})
-        .bindPopup("Vámi vyznačená poloha")
+        .bindTooltip(ident_cely)
+        .bindPopup(ident_cely)
         .addTo(poi_model);
     }else{
         L.marker(point_leaf,{icon:pinIconYellow3D, zIndexOffset: 2000})
-        .bindPopup("Vámi vyznačená poloha")
+        .bindTooltip(ident_cely)
+        .bindPopup(ident_cely)
         .addTo(poi_model);
     }
 
@@ -94,8 +96,8 @@ var addUniquePointToPoiLayer = (arg_point_leaf, text, zoom = true,redIcon= false
     point_global_WGS84 = [...point_leaf].reverse()
 }
 
-var addReadOnlyUniquePointToPoiLayer = (point_leaf, text) => {
-    addUniquePointToPoiLayer(point_leaf, text, true)
+var addReadOnlyUniquePointToPoiLayer = (point_leaf, ident_cely) => {
+    addUniquePointToPoiLayer(point_leaf, ident_cely, true)
     lock = false;
 };
 
