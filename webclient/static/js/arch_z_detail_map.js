@@ -710,9 +710,12 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
 var addGoldPointOnLoad = (geom, layer, text, st_text, presnost) => {
     addLogText("arch_z_detail_map.addGoldPointOnLoad")
     let coor = []
+    //akce_ident_cely = document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0]
+    //let link='<a href="/arch-z/akce/detail/'+akce_ident_cely+'/dj/'+text+'" target="_blank">'+text+'</a></br>'
     if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
         //ToDo" 21.06.2022 pinIconYellow
         mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), { icon: pinIconYellowHW, zIndexOffset: 2000, changeIcon: true },presnost!=4)
+        //.bindTooltip(text+' ('+presnost+')', { sticky: true },presnost!=4)
         .bindPopup(text)
         .addTo(layer));
         if (st_text.includes("POLYGON")) {
@@ -1046,7 +1049,10 @@ switchMap = function (overview = false) {
 
                             if(i.type=="pas"){
                                 let ge = i.geom.split("(")[1].split(")")[0];
-                                L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurplePin }).bindPopup(i.ident_cely).addTo(poi_sn)
+                                L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurplePin })
+                                .bindTooltip(i.ident_cely, { sticky: true })
+                                .bindPopup('<a href="/pas/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
+                                .addTo(poi_sn)
                             } else if(i.type=="pian"){
 
                                 if (i.dj == global_map_projekt_ident) {
@@ -1243,7 +1249,9 @@ window.addEventListener("load", (event) => {
             resPoints.forEach((i) => {
                 try{
                     let ge = i.geom.split("(")[1].split(")")[0];
-                    L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconGreenPin }).bindPopup(i.ident_cely).addTo(poi_model)
+                    L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconGreenPin })
+                    .bindPopup(i.ident_cely)
+                    .addTo(poi_model)
                 } catch(e){
                     control.removeLayer(poi_model);
                     console.log("Projekt nema geometrii")
