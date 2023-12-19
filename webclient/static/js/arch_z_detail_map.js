@@ -707,7 +707,7 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
     })
 }
 
-var addGoldPointOnLoad = (geom, layer, text, st_text, presnost) => {
+var addGoldPointOnLoad = (geom, layer, pian_ident_cely, st_text, presnost) => {
     addLogText("arch_z_detail_map.addGoldPointOnLoad")
     let coor = []
     //akce_ident_cely = document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0]
@@ -715,29 +715,29 @@ var addGoldPointOnLoad = (geom, layer, text, st_text, presnost) => {
     if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
         //ToDo" 21.06.2022 pinIconYellow
         mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), { icon: pinIconYellowHW, zIndexOffset: 2000, changeIcon: true },presnost!=4)
-        //.bindTooltip(text+' ('+presnost+')', { sticky: true },presnost!=4)
-        .bindPopup(text)
+        .bindTooltip(text+' ('+presnost+')', { sticky: true },presnost!=4)
+        .bindPopup('')
         .addTo(layer));
         if (st_text.includes("POLYGON")) {
             st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]));
             })
             mouseOverGeometry(L.polygon(coor, { color: 'gold' })
-            .bindTooltip(text+' ('+presnost+')', { sticky: true },presnost!=4)
+            .bindTooltip(pian_ident_cely+' ('+presnost+')', { sticky: true },presnost!=4)
             .addTo(layer));
         } else if (st_text.includes("LINESTRING")) {
             st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
             })
             mouseOverGeometry(L.polyline(coor, { color: 'gold' })
-            .bindTooltip(text+' ('+presnost+')', { sticky: true },presnost!=4)
+            .bindTooltip(pian_ident_cely+' ('+presnost+')', { sticky: true },presnost!=4)
             .addTo(layer));
         }
     } else {
         //ToDo" 21.06.2022 pinIconYellowPoint
         mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), { icon: presnost!=4 ? pinIconYellowPoint: pinIconYellowHW, zIndexOffset: 2000,changeIcon: presnost==4 },presnost!=4)
-        .bindTooltip(text+' ('+presnost+')', { sticky: true })
-        .bindPopup(text)
+        .bindTooltip(pian_ident_cely+' ('+presnost+')', { sticky: true })
+        .bindPopup('')
         .addTo(layer));
     }
 

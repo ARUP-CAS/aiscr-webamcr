@@ -262,7 +262,7 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
 
 
-def get_centre_from_akce(katastr, pian):
+def get_centre_from_akce(katastr, dj_pian):
     """
     Funkce pro bodu, geomu a presnosti z akce.
     """
@@ -287,19 +287,21 @@ def get_centre_from_akce(katastr, pian):
         geom = ""
         presnost = 4
         zoom = 14
-        if len(pian) > 1:
-            dj = DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom")).get(ident_cely=pian)
+        pian_ident_cely = ''
+        if len(dj_pian) > 1:
+            dj = DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom")).get(ident_cely=dj_pian)
             if dj.pian and dj.pian.geom:
                 bod = dj.pian__centroid
                 bod =[bod[1],bod[0]]
                 zoom = 17
                 geom = dj.pian.geom
                 presnost = dj.pian.presnost.zkratka
-        return [bod, geom, presnost,zoom]
+                pian_ident_cely = dj.pian.ident_cely
+        return [bod, geom, presnost, zoom, pian_ident_cely]
     except IndexError:
         logger.error(
             "core.utils.get_centre_from_akce.error",
-            extra={"katastr": katastr, "pian": pian},
+            extra={"katastr": katastr, "dj_pian": dj_pian},
         )
         return None
 
