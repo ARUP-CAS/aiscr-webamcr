@@ -743,7 +743,7 @@ var addGoldPointOnLoad = (geom, layer, pian_ident_cely, st_text, presnost) => {
 
 }
 
-var addPointQuery = (geom, layer, text, st_text, presnost) => {
+var addPointQuery = (geom, layer, ident_cely, st_text, presnost) => {
     addLogText("arch_z_detail_map.addPointQuery")
     let coor = []
     if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
@@ -752,20 +752,21 @@ var addPointQuery = (geom, layer, text, st_text, presnost) => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1].trim(), i.split(" ")[0].trim()]));
             })
             mouseOverGeometry(L.polygon(coor, { color: 'gold' })
-            .bindTooltip(text+' ('+presnost+')', { sticky: true },presnost!=4)
+            .bindTooltip(ident_cely, { sticky: true },presnost!=4)
             .addTo(layer));
         } else if (st_text.includes("LINESTRING")) {
             st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1].trim(), i.split(" ")[0].trim()]))
             })
             mouseOverGeometry(L.polyline(coor, { color: 'gold' })
-            .bindTooltip(text+' ('+presnost+')', { sticky: true },presnost!=4)
+            .bindTooltip(ident_cely, { sticky: true },presnost!=4)
             .addTo(layer));
         }
     } else {
         i=st_text.split("(")[1].split(")")[0]
         coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1].trim(), i.split(" ")[0].trim()]));
         mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(coor[0]), { icon: presnost!=4 ? pinIconYellowPoint: pinIconYellowHW, zIndexOffset: 2000,changeIcon: presnost==4 },presnost!=4)
+        .bindTooltip(ident_cely, { sticky: true },presnost!=4)
         .addTo(layer));
     }
     map.setView(coor[0],17)
