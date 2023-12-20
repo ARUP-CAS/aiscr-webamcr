@@ -40,14 +40,14 @@
                   if (rs.zoom == 17) {
                       if(!checkBlockedByQWuery()){
                         drawnItems.clearLayers();
-                        addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,'{{ dj_ident_cely }}',rs.geom,rs.presnost)
+                        addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,rs.pian_ident_cely,rs.geom,rs.presnost)
                       }
                   }
               };
               xhr.send(JSON.stringify(
                   {
                       'cadastre': document.getElementById("main_cadastre_id").value,
-                      'pian': '{{ dj_ident_cely }}',
+                      'dj_pian': '{{ dj_ident_cely }}',
                   }))
 
 

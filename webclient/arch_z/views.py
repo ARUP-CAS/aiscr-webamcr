@@ -1184,10 +1184,10 @@ def post_akce2kat(request):
     body = json.loads(request.body.decode("utf-8"))
     logger.debug("arch_z.views.post_akce2kat.start", extra={"body": body})
     katastr_name = body["cadastre"]
-    pian_ident_cely = body["pian"]
+    dj_ident_cely = body["dj_pian"]
 
     if len(katastr_name) > 0:
-        [bod, geom, presnost,zoom] = get_centre_from_akce(katastr_name, pian_ident_cely)
+        [bod, geom, presnost,zoom,pian_ident_cely] = get_centre_from_akce(katastr_name, dj_ident_cely) 
         if len(str(bod)) > 0:
             return JsonResponse(
                 {
@@ -1198,10 +1198,11 @@ def post_akce2kat(request):
                     if geom
                     else None,
                     "presnost": str(presnost) if geom else 4,
+                    "pian_ident_cely": str(pian_ident_cely)
                 },
                 status=200,
             )
-    return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": ""}, status=200)
+    return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": "","pian_ident_cely":""}, status=200)
 
 
 def get_history_dates(historie_vazby, request_user):

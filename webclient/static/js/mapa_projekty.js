@@ -89,10 +89,13 @@ var button_map_lock = L.easyButton({
     }]
 }).addTo(map);
 
-var addPointOnLoad = (lat, long, text, ident_cely) => {
+var addPointOnLoad = (lat, long, ident_cely,stav) => {
     PROJEKT_IDENT_CELY=ident_cely;
-    if (text) {
-        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconYellowDf, zIndexOffset: 2000 }).bindPopup(text).addTo(poi_sugest);
+    if (ident_cely) {
+        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconYellowDf, zIndexOffset: 2000 })
+        .bindTooltip(ident_cely+" ("+stav+")")
+        .bindPopup(ident_cely)
+        .addTo(poi_sugest);
     } else {
         L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconYellowDf, zIndexOffset: 2000 }).addTo(poi_sugest);
     }

@@ -288,13 +288,13 @@
                       }
                       if (rs.zoom == 17) {
                           drawnItems.clearLayers();
-                          addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom,rs.presnost)
+                          addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,rs.pian_ident_cely,rs.geom,rs.presnost)
                       }
                   };
                   xhr.send(JSON.stringify(
                       {
                           'cadastre': document.getElementById("main_cadastre_id").value,
-                          'pian': "",
+                          'dj_pian': "",
                       }))
               }
         }

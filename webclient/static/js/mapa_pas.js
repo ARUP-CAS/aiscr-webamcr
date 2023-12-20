@@ -323,13 +323,17 @@ var switch_coor_system = (new_system) => {
     }
 };
 
-var addUniquePointToPoiLayer = (point_leaf, text, zoom = true, redPin = false) => {
+var addUniquePointToPoiLayer = (point_leaf, ident_cely, zoom = true, redPin = false) => {
     var point_rec_leaf = amcr_static_coordinate_precision_wgs84(point_leaf);
     poi_sugest.clearLayers()
     if(redPin){
-        L.marker(point_rec_leaf,{icon:pinIconRedPin, zIndexOffset: 2000}).bindPopup([map_translations['SetLocation']]).addTo(poi_sugest);
+        L.marker(point_rec_leaf,{icon:pinIconRedPin, zIndexOffset: 2000})
+        .bindTooltip(ident_cely)
+        .bindPopup(ident_cely)
+        .addTo(poi_sugest);
     } else {
-        L.marker(point_rec_leaf,{icon:pinIconYellowPin, zIndexOffset: 2000}).bindPopup([map_translations['SetLocation']]).addTo(poi_sugest);
+        L.marker(point_rec_leaf,{icon:pinIconYellowPin, zIndexOffset: 2000})
+        .addTo(poi_sugest);
     }
     if (point_rec_leaf[0] && point_rec_leaf[1] && zoom) {
         map.setView(point_rec_leaf, 15);
@@ -343,8 +347,8 @@ var addUniquePointToPoiLayer = (point_leaf, text, zoom = true, redPin = false) =
     }
 };
 
-var addReadOnlyUniquePointToPoiLayer = (lat, long, text) => {
-    addUniquePointToPoiLayer(lat, long, text, true)
+var addReadOnlyUniquePointToPoiLayer = (lat, long, ident_cely) => {
+    addUniquePointToPoiLayer(lat, long, ident_cely, true)
     lock = false;
 };
 
