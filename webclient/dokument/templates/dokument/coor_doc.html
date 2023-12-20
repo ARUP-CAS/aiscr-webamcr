@@ -97,6 +97,11 @@
         let ident_cely='';
         try{
           ident_cely=document.getElementById('id-app-entity-item').textContent.trim();
+          if(ident_cely.includes("-3D-")){
+            ident_cely ="{%trans 'mapa.lokalizace3D %}";
+          }else{
+            ident_cely="{%trans 'mapa.lokalizacePAS' %}";
+          }
         }catch(e){}
 
         $('[readonly]').prop("disabled", true);
