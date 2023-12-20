@@ -333,6 +333,8 @@ var addUniquePointToPoiLayer = (point_leaf, ident_cely, zoom = true, redPin = fa
         .addTo(poi_sugest);
     } else {
         L.marker(point_rec_leaf,{icon:pinIconYellowPin, zIndexOffset: 2000})
+        .bindTooltip(ident_cely)
+        .bindPopup(ident_cely)
         .addTo(poi_sugest);
     }
     if (point_rec_leaf[0] && point_rec_leaf[1] && zoom) {

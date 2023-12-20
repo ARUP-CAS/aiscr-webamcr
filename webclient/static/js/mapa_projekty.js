@@ -93,7 +93,7 @@ var addPointOnLoad = (lat, long, ident_cely,stav) => {
     PROJEKT_IDENT_CELY=ident_cely;
     if (ident_cely) {
         L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconYellowDf, zIndexOffset: 2000 })
-        .bindTooltip(ident_cely+" ("+stav+")")
+        .bindTooltip(ident_cely)
         .bindPopup(ident_cely)
         .addTo(poi_sugest);
     } else {
