@@ -98,7 +98,7 @@ class Mailer:
     @classmethod
     def _notification_was_sent(cls, notification_type: 'uzivatel.models.UserNotificationType',
                                user: 'uzivatel.models.User'):
-        notification_log = user.notification_log.filter(notification_type=notification_type).first()
+        notification_log = user.notification_log_items.filter(notification_type=notification_type).first()
         logger.debug("services.mailer._notification_was_sent",
                      extra={"notification_type": notification_type.ident_cely, "user": user})
         if notification_log:
