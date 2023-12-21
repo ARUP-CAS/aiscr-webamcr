@@ -8,6 +8,7 @@ from .models import Projekt
 
 logger = logging.getLogger(__name__)
 
+
 class ProjektTable(SearchTable):
     """
     Třída pro definování tabulky pro projekt použitých pro zobrazení přehledu projektů a exportu.
