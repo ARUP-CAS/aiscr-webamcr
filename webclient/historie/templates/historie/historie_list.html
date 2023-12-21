@@ -149,7 +149,7 @@
             {% endif %}
           {% endif %}
         {% elif typ == "uzivatel" %}
-
+          <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'uzivatel:update-uzivatel' %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
         {% endif %}
       </ul>
     </nav>
