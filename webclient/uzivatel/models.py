@@ -438,7 +438,7 @@ class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Mo
     """
     notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now=True)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="notification_log_items")
     receiver_address = models.CharField(max_length=254)
 
     class Meta:
