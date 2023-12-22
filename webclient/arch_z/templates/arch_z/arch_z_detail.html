@@ -283,12 +283,16 @@
                   }
                   xhr.onload = function () {
                       rs = JSON.parse(this.responseText)
-                      if(rs.lat>0){
-                        map.setView([rs.lat, rs.lng], rs.zoom)
-                      }
-                      if (rs.zoom == 17) {
-                          drawnItems.clearLayers();
-                          addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,rs.pian_ident_cely,rs.geom,rs.presnost)
+                      if(rs.lat>0 || rs.zoom == 17){
+                        if(rs.lat>0){
+                          map.setView([rs.lat, rs.lng], rs.zoom)
+                        }
+                        if (rs.zoom == 17) {
+                            drawnItems.clearLayers();
+                            addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,rs.pian_ident_cely,rs.geom,rs.presnost)
+                        }
+                      } else{
+                        switchMap(false);
                       }
                   };
                   xhr.send(JSON.stringify(

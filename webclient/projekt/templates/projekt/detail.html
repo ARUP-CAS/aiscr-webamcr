@@ -370,6 +370,8 @@
                 let coordinates='{{ projekt.geom.coords }}'.slice(1, -1).split(',');
                 if(coordinates && coordinates.length>1) {
                     addPointOnLoad(coordinates[1], coordinates[0], "{%trans 'mapa.lokalizaceProjektu' %}", "{{projekt.ident_cely}}", "{{projekt.stav}}");
+                } else{
+                    switchMap(false);
                 }
             </script>
           </div>
