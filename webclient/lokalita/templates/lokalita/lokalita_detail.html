@@ -88,11 +88,10 @@
                   xhr.send(JSON.stringify(
                       {
                           'cadastre': document.getElementById("main_cadastre_id").value,
-                          'dj_pian': "",
+                          'akce_ident_cely': '{{ zaznam.ident_cely }}',
                       }))
               }
         }
     });
-    console.log("*******************+++")
   </script>
 {% endblock %}

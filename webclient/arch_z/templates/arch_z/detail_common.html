@@ -346,7 +346,7 @@
               xhr.send(JSON.stringify(
                   {
                       'cadastre': document.getElementById("main_cadastre_id").value,
-                      'dj_pian': pian_id,
+                      'akce_ident_cely': '{{ zaznam.ident_cely }}',
                   }))
 //          }else if (form_id.includes("detail_pian_form_")){
 //            map_show_edit(true, false)
