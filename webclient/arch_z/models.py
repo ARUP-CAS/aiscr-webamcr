@@ -136,6 +136,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         poznamka_historie = None
         self.save()
         old_ident = None
+        ident_change_recorded = False
         if (
             self.typ_zaznamu == self.TYP_ZAZNAMU_AKCE
             and self.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
@@ -150,6 +151,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         ):
             old_ident = self.ident_cely
             self.set_lokalita_permanent_ident_cely()
+            ident_change_recorded = True
             poznamka_historie = f"{old_ident} -> {self.ident_cely}"
         Historie(
             typ_zmeny=ARCHIVACE_AZ,
@@ -157,7 +159,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             vazba=self.historie,
             poznamka=poznamka_historie,
         ).save()
-        if old_ident is not None:
+        if old_ident is not None and not ident_change_recorded:
             self.record_ident_change(old_ident)
 
     def set_vraceny(self, user, new_state, poznamka):

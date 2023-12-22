@@ -122,8 +122,9 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         return redirect(request.GET.get("next","core:home"))
     if request.method == "POST":
         s.deleted_by_user = request.user
-        items_deleted: Soubor = s.delete()
-        if not items_deleted:
+        soubor_pk = s.pk
+        s.delete()
+        if Soubor.objects.filter(pk=soubor_pk).exists():
             # Not sure if 404 is the only correct option
             logger.debug("core.views.delete_file.not_deleted", extra={"file": s})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
@@ -138,7 +139,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 )
             return JsonResponse({"messages": django_messages}, status=400)
         else:
-            logger.debug("core.views.delete_file.deleted", extra={"items_deleted": items_deleted})
+            logger.debug("core.views.delete_file.deleted", extra={"soubor_pk": soubor_pk})
             connector = FedoraRepositoryConnector(s.vazba.navazany_objekt)
             if not request.POST.get("dropzone", False):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
