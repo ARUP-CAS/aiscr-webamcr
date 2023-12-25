@@ -89,15 +89,16 @@ var button_map_lock = L.easyButton({
     }]
 }).addTo(map);
 
-var addPointOnLoad = (lat, long, ident_cely,stav) => {
+var addPointOnLoad = (lat, long, text, ident_cely,stav) => {
     PROJEKT_IDENT_CELY=ident_cely;
     if (ident_cely) {
         L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconYellowDf, zIndexOffset: 2000 })
-        .bindTooltip(ident_cely)
-        .bindPopup(ident_cely)
+        .bindTooltip(text)
+        .bindPopup(text)
         .addTo(poi_sugest);
     } else {
-        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconYellowDf, zIndexOffset: 2000 }).addTo(poi_sugest);
+        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconYellowDf, zIndexOffset: 2000 })
+        .addTo(poi_sugest);
     }
 
     map.setView([lat, long], 18)
@@ -107,9 +108,6 @@ map.on('moveend', function () {
     switchMap(false);
 });
 
-$(document).ready(function () {
-    switchMap(false);
-})
 
 heatPoints = heatPoints.map(function (p) {
     var bounds = map.getBounds();

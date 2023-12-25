@@ -262,11 +262,13 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
 
 
-def get_centre_from_akce(katastr, dj_pian):
+def get_centre_from_akce(katastr, akce_ident_cely):
     """
     Funkce pro bodu, geomu a presnosti z akce.
     """
     from django.contrib.gis.db.models.functions import Centroid
+    from dj.models import DokumentacniJednotka
+    from django.db.models import Q
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
         " from public.ruian_katastr where "
@@ -288,20 +290,22 @@ def get_centre_from_akce(katastr, dj_pian):
         presnost = 4
         zoom = 14
         pian_ident_cely = ''
-        if len(dj_pian) > 1:
-            dj = DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom")).get(ident_cely=dj_pian)
-            if dj.pian and dj.pian.geom:
-                bod = dj.pian__centroid
-                bod =[bod[1],bod[0]]
-                zoom = 17
-                geom = dj.pian.geom
-                presnost = dj.pian.presnost.zkratka
-                pian_ident_cely = dj.pian.ident_cely
+        if len(akce_ident_cely) > 1:
+            DJs = DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom")).filter(ident_cely__istartswith=akce_ident_cely).order_by('ident_cely')
+            for dj in DJs:
+                logger.debug(dj.ident_cely)
+                if dj.pian and dj.pian.geom:
+                    bod = dj.pian__centroid
+                    bod =[bod[1],bod[0]]
+                    zoom = 17
+                    geom = dj.pian.geom
+                    presnost = dj.pian.presnost.zkratka
+                    pian_ident_cely = dj.pian.ident_cely
         return [bod, geom, presnost, zoom, pian_ident_cely]
     except IndexError:
         logger.error(
             "core.utils.get_centre_from_akce.error",
-            extra={"katastr": katastr, "dj_pian": dj_pian},
+            extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely},
         )
         return None
 
