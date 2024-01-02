@@ -39,7 +39,7 @@ lxml==5.0.0
 # DEV requirements
 pre-commit==3.6.0
 isort==5.13.2
-coverage==7.3.4
+coverage==7.4.0
 django-debug-toolbar==4.2.0
 black==23.12.0
 django-livereload-server==0.5.1
@@ -49,7 +49,7 @@ django-object-actions==4.2.0
 
 pre-commit==3.6.0
 isort==5.13.2
-coverage==7.3.4
+coverage==7.4.0
 django-debug-toolbar==4.2.0
 black==23.12.0
 django-livereload-server==0.5.1
