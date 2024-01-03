@@ -8,6 +8,7 @@ from .models import Projekt
 
 logger = logging.getLogger(__name__)
 
+
 class ProjektTable(SearchTable):
     """
     Třída pro definování tabulky pro projekt použitých pro zobrazení přehledu projektů a exportu.
@@ -20,7 +21,8 @@ class ProjektTable(SearchTable):
     kulturni_pamatka = tables.columns.Column(verbose_name=_("projekt.tables.ProjektTable.kulturni_pamatka.label"),default="")
     uzivatelske_oznaceni = tables.columns.Column(verbose_name=_("projekt.tables.ProjektTable.uzivatelske_oznaceni.label"),default="")
     planovane_zahajeni = tables.columns.Column(verbose_name=_("projekt.tables.ProjektTable.planovane_zahajeni.label"),default="")
-    katastry = tables.columns.Column(verbose_name=_("projekt.tables.ProjektTable.katastry.label"),default="")
+    katastry = tables.ManyToManyColumn(verbose_name=_("projekt.tables.ProjektTable.katastry.label"), default="",
+                                       accessor="katastry", order_by="katastry", orderable=True, separator="; ")
     termin_odevzdani_nz = tables.columns.Column(verbose_name=_("projekt.tables.ProjektTable.termin_odevzdani_nz.label"),default="")
     lokalizace = tables.columns.Column(verbose_name=_("projekt.tables.ProjektTable.lokalizace.label"),default="")
     parcelni_cislo = tables.columns.Column(verbose_name=_("projekt.tables.ProjektTable.parcelni_cislo.label"),default="")

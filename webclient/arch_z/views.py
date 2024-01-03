@@ -1184,10 +1184,10 @@ def post_akce2kat(request):
     body = json.loads(request.body.decode("utf-8"))
     logger.debug("arch_z.views.post_akce2kat.start", extra={"body": body})
     katastr_name = body["cadastre"]
-    dj_ident_cely = body["dj_pian"]
+    akce_ident_cely = body["akce_ident_cely"]
 
     if len(katastr_name) > 0:
-        [bod, geom, presnost,zoom,pian_ident_cely] = get_centre_from_akce(katastr_name, dj_ident_cely) 
+        [bod, geom, presnost,zoom,pian_ident_cely] = get_centre_from_akce(katastr_name, akce_ident_cely) 
         if len(str(bod)) > 0:
             return JsonResponse(
                 {

@@ -144,7 +144,8 @@ class HistorieFilter(filters.FilterSet):
                 queryset = queryset.filter(historie__historie__in=filtered).distinct()
         for name, value in self.form.cleaned_data.items():
             if name not in ["historie_typ_zmeny", "historie_uzivatel", "historie_datum_zmeny_od"]:
-                queryset = self.filters[name].filter(queryset, value)
+                if value:
+                    queryset = self.filters[name].filter(queryset, value)
             assert isinstance(
                 queryset, models.QuerySet
             ), "Expected '%s.%s' to return a QuerySet, but got a %s instead." % (

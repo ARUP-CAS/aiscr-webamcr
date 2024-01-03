@@ -142,8 +142,14 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
             uzivatel = record.deleted_by_user
         else:
             uzivatel = User.objects.get(email="amcr@arup.cas.cz")
-        if hasattr(record, "ident_cely"):
-            historie_record = cls(uzivatel=uzivatel, poznamka=record.ident_cely, vazba=record.historie, typ_zmeny="DEL")
+        if isinstance(record, User):
+            vazba = record.history_vazba
+        elif hasattr("historie", record):
+            vazba = record.historie
+        else:
+            vazba = None
+        if hasattr(record, "ident_cely") and vazba:
+            historie_record = cls(uzivatel=uzivatel, poznamka=record.ident_cely, vazba=vazba, typ_zmeny="DEL")
             historie_record.save()
             logger.debug("history.models.save_record_deletion_record.delete", extra={"iden_cely": record.ident_cely})
         logger.debug("history.models.save_record_deletion_record.end")

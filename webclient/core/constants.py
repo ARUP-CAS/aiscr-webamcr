@@ -126,7 +126,7 @@ UZIVATEL_SPOLUPRACE_RELATION_TYPE: Final = "uzivatel_spoluprace"
 EXTERNI_ZDROJ_RELATION_TYPE: Final = "externi_zdroj"
 ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE: Final = "archeologicky_zaznam"
 DOKUMENTACNI_JEDNOTKA_RELATION_TYPE: Final = "dokumentacni_jednotka"
-DOKUMENT_CAST_RELATION_TYPE: Final = "dokument_cest"
+DOKUMENT_CAST_RELATION_TYPE: Final = "dokument_cast"
 SOUBOR_RELATION_TYPE: Final = "soubor"
 
 KLADYZM10 = 1
