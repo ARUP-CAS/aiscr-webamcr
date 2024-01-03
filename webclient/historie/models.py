@@ -144,7 +144,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
             uzivatel = User.objects.get(email="amcr@arup.cas.cz")
         if isinstance(record, User):
             vazba = record.history_vazba
-        elif hasattr("historie", record):
+        elif hasattr(record, "historie"):
             vazba = record.historie
         else:
             vazba = None
