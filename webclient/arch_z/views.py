@@ -48,6 +48,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
+from core.repository_connector import FedoraRepositoryConnector
 from core.utils import (
     get_all_pians_with_akce,
     get_dj_pians_centroid,
@@ -886,45 +887,52 @@ def zapsat(request, projekt_ident_cely=None):
             except MaximalEventCount:
                 messages.add_message(request, messages.ERROR, MAXIMUM_AKCII_DOSAZENO)
             else:
-                az.save()
-                form_az.save_m2m()
-                # This must be called to save many to many (katastry)
-                # since we are doing commit = False
-                az.set_zapsany(request.user)
-                akce = form_akce.save(commit=False)
-                if typ_akce == Akce.TYP_AKCE_PROJEKTOVA:
-                    akce.specifikace_data = Heslar.objects.get(
-                        id=SPECIFIKACE_DATA_PRESNE
+                repository_connector = FedoraRepositoryConnector(az)
+                if repository_connector.check_container_deleted_or_not_exists(az.ident_cely):
+                    az.save()
+                    form_az.save_m2m()
+                    # This must be called to save many to many (katastry)
+                    # since we are doing commit = False
+                    az.set_zapsany(request.user)
+                    akce = form_akce.save(commit=False)
+                    if typ_akce == Akce.TYP_AKCE_PROJEKTOVA:
+                        akce.specifikace_data = Heslar.objects.get(
+                            id=SPECIFIKACE_DATA_PRESNE
+                        )
+                    akce.archeologicky_zaznam = az
+                    akce.projekt = projekt
+                    akce.typ = typ_akce
+                    akce.save()
+
+                    ostatni_vedouci_objekt_formset = inlineformset_factory(
+                        Akce,
+                        AkceVedouci,
+                        form=create_akce_vedouci_objekt_form(readonly=False),
+                        extra=1,
+                        can_delete=False,
                     )
-                akce.archeologicky_zaznam = az
-                akce.projekt = projekt
-                akce.typ = typ_akce
-                akce.save()
+                    ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+                        request.POST,
+                        instance=akce,
+                        prefix="_osv",
+                    )
+                    if ostatni_vedouci_objekt_formset.is_valid():
+                        ostatni_vedouci_objekt_formset.save()
+                    else:
+                        logger.debug("arch_z.views.zapsat.form_not_valid",
+                                     extra={"errors": ostatni_vedouci_objekt_formset.errors})
 
-                ostatni_vedouci_objekt_formset = inlineformset_factory(
-                    Akce,
-                    AkceVedouci,
-                    form=create_akce_vedouci_objekt_form(readonly=False),
-                    extra=1,
-                    can_delete=False,
-                )
-                ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
-                    request.POST,
-                    instance=akce,
-                    prefix="_osv",
-                )
-                if ostatni_vedouci_objekt_formset.is_valid():
-                    ostatni_vedouci_objekt_formset.save()
+                    messages.add_message(
+                        request, messages.SUCCESS, get_message(az, "USPESNE_ZAPSANA")
+                    )
+                    logger.debug("arch_z.views.zapsat.success", extra={"akce": akce.pk, "projekt": projekt_ident_cely})
+                    return redirect("arch_z:detail", az.ident_cely)
                 else:
-                    logger.debug("arch_z.views.zapsat.form_not_valid",
-                                 extra={"errors": ostatni_vedouci_objekt_formset.errors})
-
-                messages.add_message(
-                    request, messages.SUCCESS, get_message(az, "USPESNE_ZAPSANA")
-                )
-                logger.debug("arch_z.views.zapsat.success", extra={"akce": akce.pk, "projekt": projekt_ident_cely})
-                return redirect("arch_z:detail", az.ident_cely)
-
+                    logger.debug("arch_z.views.zapsat.check_container_deleted_or_not_exists.incorrect",
+                                 extra={"ident_cely": az.ident_cely})
+                    messages.add_message(
+                        request, messages.ERROR, _("arch_z.views.zapsat.samostatnaAkce."
+                                                   "check_container_deleted_or_not_exists_error"))
         else:
             logger.debug("arch_z.views.zapsat.not_valid", extra={"form_az_errors": form_az,
                                                                  "form_akce_errors": form_akce.errors})

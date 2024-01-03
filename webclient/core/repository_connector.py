@@ -20,8 +20,10 @@ logger = logging.getLogger(__name__)
 class FedoraValidationError(Exception):
     pass
 
+
 class FedoraError(Exception):
-    def __init__(self, message, code):
+    def __init__(self, url, message, code):
+        self.url = url
         self.message = message
         self.code = code
         super().__init__(self.message)
@@ -99,6 +101,7 @@ class FedoraRequestType(Enum):
     GET_BINARY_FILE_CONTENT_THUMB = 32
     UPDATE_BINARY_FILE_CONTENT_THUMB = 33
     DELETE_DELETED_CONTAINER = 34
+    DELETE_DELETED_TOMBSTONE = 35
 
 
 class FedoraRepositoryConnector:
@@ -129,9 +132,13 @@ class FedoraRepositoryConnector:
             "User": "uzivatel",
         }.get(class_name)
 
+    @staticmethod
+    def get_base_url():
+        return (f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
+                f"{settings.FEDORA_SERVER_NAME}")
+
     def _get_request_url(self, request_type: FedoraRequestType, *, uuid=None, ident_cely=None) -> Optional[str]:
-        base_url = f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/" \
-                   f"{settings.FEDORA_SERVER_NAME}"
+        base_url = self.get_base_url()
         if request_type == FedoraRequestType.CREATE_CONTAINER:
             return f"{base_url}/record/"
         elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.CREATE_METADATA,
@@ -166,12 +173,38 @@ class FedoraRepositoryConnector:
         elif request_type in (FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3):
-            return f"{base_url}/record/{ident_cely}"
-        elif request_type in (FedoraRequestType.GET_DELETED_LINK, FedoraRequestType.CONNECT_DELETED_RECORD_3,
-                              FedoraRequestType.DELETE_DELETED_CONTAINER):
-            return f"{base_url}/model/deleted/member/{ident_cely}"
+            if ident_cely:
+                return f"{base_url}/record/{ident_cely}"
+            else:
+                return f"{base_url}/record/{self.record.ident_cely}"
+        elif request_type in (FedoraRequestType.GET_DELETED_LINK, FedoraRequestType.CONNECT_DELETED_RECORD_3,):
+            if ident_cely:
+                return f"{base_url}/model/deleted/member/{ident_cely}"
+            else:
+                return f"{base_url}/model/deleted/member/{self.record.ident_cely}"
         elif request_type in (FedoraRequestType.CONNECT_DELETED_RECORD_4,):
-            return f"{base_url}/model/deleted/member/{ident_cely}/fcr:tombstone"
+            if ident_cely:
+                return f"{base_url}/model/deleted/member/{ident_cely}/fcr:tombstone"
+            else:
+                return f"{base_url}/model/deleted/member/{self.record.ident_cely}/fcr:tombstone"
+        elif request_type == FedoraRequestType.DELETE_DELETED_TOMBSTONE:
+            return f"{base_url}/model/deleted/member/{self.record.ident_cely}/fcr:tombstone"
+
+    @classmethod
+    def check_container_deleted_or_not_exists(cls, ident_cely):
+        logger.debug("core_repository_connector.check_container_is_deleted.start",
+                     extra={"ident_cely": ident_cely})
+        result = cls._send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
+        regex = re.compile(r"dcterms:type *\"deleted\" *;")
+        if ((result.status_code == 404 or (hasattr(result, "text") and "not found" in result.text)) or
+                hasattr(result, "text") and regex.search(result.text)):
+            logger.debug("core_repository_connector.check_container_is_deleted.true",
+                         extra={"ident_cely": ident_cely})
+            return True
+        else:
+            logger.debug("core_repository_connector.check_container_is_deleted.false",
+                         extra={"ident_cely": ident_cely})
+            return False
 
     @staticmethod
     def _send_request(url: str, request_type: FedoraRequestType, *,
@@ -235,8 +268,7 @@ class FedoraRepositoryConnector:
                 if data and len(str(data)) < 10 ** 3:
                     extra["data"] = data
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
-                print(response.text)
-                raise FedoraError(response.text, response.status_code)
+                raise FedoraError(url, response.text, response.status_code)
         else:
             logger.debug("core_repository_connector._send_request.response",
                          extra={"text": response.text, "status_code": response.status_code,

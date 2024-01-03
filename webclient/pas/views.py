@@ -43,6 +43,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
+from core.repository_connector import FedoraRepositoryConnector
 from core.utils import (
     get_cadastre_from_point,
     get_cadastre_from_point_with_geometry,
@@ -148,20 +149,27 @@ def create(request, ident_cely=None):
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
             else:
-                sn.stav = SN_ZAPSANY
-                sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
-                sn.predano_organizace = sn.projekt.organizace
-                sn.geom_system = form_coor.data.get("coordinate_system")
-                if geom is not None:
-                    sn.katastr = get_cadastre_from_point(geom)
-                    sn.geom = geom
-                if geom_sjtsk is not None:
-                    sn.geom_sjtsk = geom_sjtsk
-                form.save()
-                sn.set_zapsany(request.user)
-                form.save_m2m()
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                return redirect("pas:detail", ident_cely=sn.ident_cely)
+                repository_connector = FedoraRepositoryConnector(sn)
+                if repository_connector.check_container_deleted_or_not_exists(sn.ident_cely):
+                    sn.stav = SN_ZAPSANY
+                    sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
+                    sn.predano_organizace = sn.projekt.organizace
+                    sn.geom_system = form_coor.data.get("coordinate_system")
+                    if geom is not None:
+                        sn.katastr = get_cadastre_from_point(geom)
+                        sn.geom = geom
+                    if geom_sjtsk is not None:
+                        sn.geom_sjtsk = geom_sjtsk
+                    form.save()
+                    sn.set_zapsany(request.user)
+                    form.save_m2m()
+                    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                    return redirect("pas:detail", ident_cely=sn.ident_cely)
+                else:
+                    logger.info("pas.views.create.check_container_deleted_or_not_exists.incorrect",
+                                extra={"ident_cely": sn.ident_cely})
+                    messages.add_message(request, messages.ERROR, _("pas.views.zapsat.create."
+                                                                    "check_container_deleted_or_not_exists_error"))
 
         else:
             logger.info("pas.views.create.form_invalid", extra={"errors": form.errors})
