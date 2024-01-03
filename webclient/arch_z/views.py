@@ -1261,7 +1261,7 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
             and dok_jednotky.count() == 1
             and dok_jednotky.first().typ == Heslar.objects.get(id=TYP_DJ_KATASTR)
             and not check_permissions(p.actionChoices.archz_dj_zapsat, user, archeologicky_zaznam.ident_cely)
-        ):
+        ) or dok_jednotky.filter(typ__id=TYP_DJ_KATASTR).exists():
             add_dj = False
         else:
             add_dj = True
