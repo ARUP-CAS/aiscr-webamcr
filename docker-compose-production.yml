@@ -139,8 +139,6 @@ services:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     networks:
       - prod-net
-    depends_on:
-      - elasticsearch
     secrets:
       - logstash_elastic_pass
 
