@@ -26,10 +26,6 @@ services:
       - celery_worker
       - celery_beat
 
-  memcached:
-    image: memcached:latest
-    networks:
-      - prod-net
   sidecar:
     image: eeacms/rsync:latest
     environment:
@@ -42,6 +38,7 @@ services:
 
   redis:
     image: aiscr/webamcr-redis:${IMAGE_TAG}
+    restart: always
     ports:
       - "6379:6379"
     secrets:
@@ -119,6 +116,7 @@ services:
 
   prometheus:
     image: prom/prometheus
+    restart: always
     volumes:
       - ./prometheus:/etc/prometheus
     networks:
@@ -132,6 +130,7 @@ services:
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.7.0
+    restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
     volumes:
@@ -145,6 +144,7 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
     hostname: elasticsearch
+    restart: always
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms750m -Xmx750m
