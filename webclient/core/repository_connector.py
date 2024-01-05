@@ -564,16 +564,20 @@ class FedoraRepositoryConnector:
     def delete_binary_file(self, soubor):
         from core.models import Soubor
         soubor: Soubor
-        logger.debug("core_repository_connector.delete_binary_file.start",
-                     extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely})
-        headers = {
-            'Content-Type': 'application/sparql-update'
-        }
-        data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'deleted'}"
-        url = self._get_request_url(FedoraRequestType.DELETE_BINARY_FILE, uuid=soubor.repository_uuid)
-        self._send_request(url, FedoraRequestType.DELETE_BINARY_FILE, headers=headers, data=data)
-        logger.debug("core_repository_connector.delete_binary_file.end",
-                     extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely})
+        if soubor.repository_uuid:
+            logger.debug("core_repository_connector.delete_binary_file.start",
+                         extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely})
+            headers = {
+                'Content-Type': 'application/sparql-update'
+            }
+            data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'deleted'}"
+            url = self._get_request_url(FedoraRequestType.DELETE_BINARY_FILE, uuid=soubor.repository_uuid)
+            self._send_request(url, FedoraRequestType.DELETE_BINARY_FILE, headers=headers, data=data)
+            logger.debug("core_repository_connector.delete_binary_file.end",
+                         extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely})
+        else:
+            logger.debug("core_repository_connector.delete_binary_file.no_repository_uuid",
+                         extra={"soubor_pk": soubor.pk, "ident_cely": self.record.ident_cely})
 
     def delete_binary_file_completely(self, soubor):
         logger.debug("core_repository_connector.delete_binary_file_completely.start",
