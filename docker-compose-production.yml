@@ -199,7 +199,7 @@ volumes:
 
 networks:
   prod-net:
-    driver: bridge
+    external: true
 
 secrets:
   db_conf:
