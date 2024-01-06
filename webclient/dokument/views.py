@@ -1534,15 +1534,7 @@ def smazat(request, ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
-
         resp1 = d.delete()
-
-        # Kdyz mazu dokument ktery reprezentuje 3D model, mazu i komponenty
-        if "3D" in d.ident_cely:
-            for k in Komponenta.objects.filter(ident_cely__startswith=d.ident_cely):
-                logger.debug("dokument.views.smazat.deleting", extra={"ident_cely": k.ident_cely})
-                k.delete()
-
         if resp1:
             logger.debug("dokument.views.smazat.deleted", extra={"resp1": resp1})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)

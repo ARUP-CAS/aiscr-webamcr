@@ -56,13 +56,24 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
 
 
 @receiver(pre_delete, sender=ArcheologickyZaznam)
-def delete_arch_z_repository_container(sender, instance: ArcheologickyZaznam, **kwargs):
+def delete_arch_z_repository_container_and_connections(sender, instance: ArcheologickyZaznam, **kwargs):
     """
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
     instance.record_deletion()
     if instance.akce.projekt is not None:
         instance.akce.projekt.save_metadata()
+    if instance.historie and instance.historie.pk:
+        instance.historie.delete()
+    komponenty_jednotek_vazby = []
+    for dj in instance.dokumentacni_jednotky_akce.all():
+        if dj.komponenty:
+            komponenty_jednotek_vazby.append(dj.komponenty)
+    for komponenta_vazba in komponenty_jednotek_vazby:
+        komponenta_vazba.delete()
+    if instance.externi_odkazy:
+        for eo in instance.externi_odkazy.all():
+            eo.delete()
 
 
 @receiver(post_delete, sender=ExterniOdkaz)

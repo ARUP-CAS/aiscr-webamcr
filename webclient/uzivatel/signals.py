@@ -95,6 +95,12 @@ def send_account_confirmed_email(sender, instance: User, created):
         Mailer.send_eu02(user=instance)
 
 
+@receiver(pre_delete, sender=User)
+def delete_user_connections(sender, instance, *args, **kwargs):
+    if instance.history_vazba:
+        instance.history_vazba.delete()
+
+
 @receiver(post_delete, sender=User)
 def delete_profile(sender, instance, *args, **kwargs):
     """

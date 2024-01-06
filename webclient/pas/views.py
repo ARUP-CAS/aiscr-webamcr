@@ -696,8 +696,6 @@ def smazat(request, ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}, status=403)
     if request.method == "POST":
-        historie = nalez.historie
-        soubory = nalez.soubory
         nalez.deleted_by_user = request.user
         resp1 = nalez.delete()
         if resp1:
@@ -965,14 +963,11 @@ def smazat_spolupraci(request, pk):
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
-        historie = spoluprace.historie
         resp1 = spoluprace.delete()
-        resp2 = historie.delete()
-
         if resp1:
             logger.info(
                 "pas.views.smazat_spolupraci.deleted",
-                extra={"resp1": resp1, "resp2": resp2},
+                extra={"resp1": resp1},
             )
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
@@ -982,7 +977,6 @@ def smazat_spolupraci(request, pk):
             return JsonResponse(
                 {"redirect": reverse("pas:spoluprace_list")}, status=403
             )
-
     else:
         context = {
             "object": spoluprace,

@@ -14,3 +14,9 @@ def soubor_save_update_record_metadata(sender, instance: Soubor, **kwargs):
     if instance.vazba is not None and isinstance(instance.vazba.navazany_objekt, ModelWithMetadata) \
             and instance.suppress_signal is False:
         instance.vazba.navazany_objekt.save_metadata()
+
+
+@receiver(pre_delete, sender=Soubor)
+def soubor_delete_connections(sender, instance: Soubor, **kwargs):
+    if instance.historie and instance.historie.pk:
+        instance.historie.delete()

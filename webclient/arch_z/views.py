@@ -983,7 +983,7 @@ def smazat(request, ident_cely):
     """
     Funkce pohledu pro zobrazení a spracováni smazání akce.
     Na začátku se kontroluje jestli nekdo nezmenil stav akce počas smazání.
-    Po post volání se volá metóda na modelu pro smazání akce, historických vazeb, komponent, externích odkazů a DJ.
+    Po post volání se volá metóda na modelu pro smazání akce.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if check_stav_changed(request, az):
@@ -999,20 +999,9 @@ def smazat(request, ident_cely):
     else:
         projekt = None
     if request.method == "POST":
-        # Parent records
-        historie_vazby = az.historie
-        komponenty_jednotek_vazby = []
-        for dj in az.dokumentacni_jednotky_akce.all():
-            if dj.komponenty:
-                komponenty_jednotek_vazby.append(dj.komponenty)
-        for eo in az.externi_odkazy.all():
-            eo.delete()
         try:
             az.deleted_by_user = request.user
             az.delete()
-            historie_vazby.delete()
-            for komponenta_vazba in komponenty_jednotek_vazby:
-                komponenta_vazba.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         except RestrictedError as err:
@@ -1032,7 +1021,10 @@ def smazat(request, ident_cely):
                 }
             )
         else:
-            return JsonResponse({"redirect": reverse("lokalita:index")})
+            if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
+                return JsonResponse({"redirect": reverse("lokalita:index")})
+            else:
+                return JsonResponse({"redirect": reverse("arch_z:index")})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
         context = {
