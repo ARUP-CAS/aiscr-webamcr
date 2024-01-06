@@ -73,5 +73,13 @@
               }
           }
       });
+      document.getElementById("filter-form").addEventListener("submit", (event) => {
+          const selects = document.querySelectorAll('.selectpicker');
+          selects.forEach(function (select) {
+              if (select.value === "") {
+                  select.removeAttribute("name");
+              }
+          });
+      });
   </script>
 {% endblock %}
