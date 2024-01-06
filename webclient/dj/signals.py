@@ -56,5 +56,6 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
         if hasattr(instance, "deleted_by_user") and instance.deleted_by_user is not None:
             pian.deleted_by_user = instance.deleted_by_user
         pian.delete()
+    instance.komponenty.delete()
     instance.archeologicky_zaznam.save_metadata()
     logger.debug("dj.signals.delete_dokumentacni_jednotka.end")
