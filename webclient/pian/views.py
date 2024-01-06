@@ -303,7 +303,7 @@ def create(request, dj_ident_cely):
             messages.add_message(
                 request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
             )
-        redirect("dj:detail", ident_cely=dj_ident_cely)
+        redirect(dj.get_absolute_url())
     else:
         logger.info("pian.views.create.not_valid", extra={"errors": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)

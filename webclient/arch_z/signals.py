@@ -55,54 +55,25 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
         instance.externi_zdroj.save_metadata()
 
 
-@receiver(post_delete, sender=ArcheologickyZaznam)
-def delete_arch_z_connected_documents(sender, instance: ArcheologickyZaznam, **kwargs):
-    """
-        Trigger delete_connected_documents
-    """
-    logger.debug("arch_z.signals.delete_arch_z_repository_container.start", extra={"arch_z": instance.ident_cely})
-    dokument_query = instance.casti_dokumentu.filter(~Q(dokument__ident_cely__startswith="X-"))
-    if hasattr(instance, "deleted_by_user") and instance.deleted_by_user is not None:
-        deleted_by_user = instance.deleted_by_user
-    else:
-        deleted_by_user = None
-    for item in dokument_query:
-        delete_dokument = True
-        item: Dokument
-        dokument_cast_query = DokumentCast.objects.filter(archeologicky_zaznam=instance).filter(dokument=item)
-        for inner_item in dokument_cast_query:
-            inner_item: DokumentCast
-            if inner_item.filter(dokument=item).filter(~Q(archeologicky_zaznam=instance)).exists():
-                delete_dokument = False
-        if delete_dokument:
-            item.deleted_by_user = deleted_by_user
-            item.delete()
-            logger.debug("arch_z.signals.delete_arch_z_repository_container.cast_dokumentu.delete.part_2",
-                         extra={"arch_z": item.ident_cely})
-        else:
-            logger.debug("arch_z.signals.delete_arch_z_repository_container.cast_dokumentu.not_delete.part_2",
-                         extra={"arch_z": item.ident_cely})
-
-    for item in instance.casti_dokumentu.all():
-        item: DokumentCast
-        if item.komponenty.komponenty.exists():
-            continue
-        if item.neident_akce.exists():
-            continue
-        item.delete()
-        logger.debug("arch_z.signals.delete_arch_z_repository_container.cast_dokumentu.delete.part_1",
-                     extra={"arch_z": item.ident_cely})
-    logger.debug("arch_z.signals.delete_arch_z_repository_container.end", extra={"arch_z": instance.ident_cely})
-
-
 @receiver(pre_delete, sender=ArcheologickyZaznam)
-def delete_arch_z_repository_container(sender, instance: ArcheologickyZaznam, **kwargs):
+def delete_arch_z_repository_container_and_connections(sender, instance: ArcheologickyZaznam, **kwargs):
     """
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
     instance.record_deletion()
     if instance.akce.projekt is not None:
         instance.akce.projekt.save_metadata()
+    if instance.historie and instance.historie.pk:
+        instance.historie.delete()
+    komponenty_jednotek_vazby = []
+    for dj in instance.dokumentacni_jednotky_akce.all():
+        if dj.komponenty:
+            komponenty_jednotek_vazby.append(dj.komponenty)
+    for komponenta_vazba in komponenty_jednotek_vazby:
+        komponenta_vazba.delete()
+    if instance.externi_odkazy:
+        for eo in instance.externi_odkazy.all():
+            eo.delete()
 
 
 @receiver(post_delete, sender=ExterniOdkaz)

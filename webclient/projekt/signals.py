@@ -61,9 +61,13 @@ def create_projekt_vazby(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=Projekt)
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
-    if instance.soubory.soubory.exists():
+    if instance.soubory and instance.soubory.soubory.exists():
         raise Exception(_("projekt.signals.projekt_pre_delete.cannot_delete"))
     instance.record_deletion()
+    if instance.historie and instance.historie.pk:
+        instance.historie.delete()
+    if instance.soubory and instance.soubory.pk:
+        instance.soubory.delete()
 
 
 @receiver(post_save, sender=Projekt)

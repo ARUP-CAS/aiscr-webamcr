@@ -7,7 +7,7 @@ from django.db.models.signals import pre_save, post_save, post_delete, pre_delet
 from django.dispatch import receiver
 from dokument.models import Dokument, DokumentAutor, DokumentCast, Let, Tvar
 from historie.models import HistorieVazby
-from komponenta.models import KomponentaVazby
+from komponenta.models import KomponentaVazby, Komponenta
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +78,14 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
             item.projekt.save_metadata()
     if instance.let:
         instance.let.save_metadata()
+    if "3D" in instance.ident_cely:
+        for k in Komponenta.objects.filter(ident_cely__startswith=instance.ident_cely):
+            logger.debug("dokument.views.smazat.deleting", extra={"ident_cely": k.ident_cely})
+            k.delete()
+    if instance.historie and instance.historie.pk:
+        instance.historie.delete()
+    if instance.soubory and instance.soubory.pk:
+        instance.soubory.delete()
 
 
 @receiver(pre_delete, sender=Let)

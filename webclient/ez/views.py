@@ -353,11 +353,7 @@ class ExterniZdrojSmazatView(TransakceView):
         if hasattr(zaznam, "container_creation_queued") and zaznam.container_creation_queued():
             messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
             return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=403)
-        historie_vazby = zaznam.historie
-        for eo in zaznam.externi_odkazy_zdroje.all():
-            eo.delete()
         zaznam.delete()
-        historie_vazby.delete()
         messages.add_message(request, messages.SUCCESS, self.success_message)
         return JsonResponse({"redirect": reverse("ez:index")})
 

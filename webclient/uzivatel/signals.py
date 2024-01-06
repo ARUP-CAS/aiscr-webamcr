@@ -95,16 +95,21 @@ def send_account_confirmed_email(sender, instance: User, created):
         Mailer.send_eu02(user=instance)
 
 
-@receiver(post_delete, sender=User)
-def delete_profile(sender, instance, *args, **kwargs):
-    """
-    Signál pro zaslání emailu uživately o jeho smazání.
-    """
-    instance: User
-    Mailer.send_eu03(user=instance)
+@receiver(pre_delete, sender=User)
+def delete_user_connections(sender, instance, *args, **kwargs):
     Historie.save_record_deletion_record(record=instance)
     instance.save_metadata(use_celery=False)
     instance.record_deletion()
+    if instance.history_vazba and instance.history_vazba.pk:
+        instance.history_vazba.delete()
+
+
+@receiver(post_delete, sender=User)
+def delete_profile(sender, instance: User, *args, **kwargs):
+    """
+    Signál pro zaslání emailu uživately o jeho smazání.
+    """
+    Mailer.send_eu03(user=instance)
 
 
 @receiver(pre_delete, sender=Osoba)
