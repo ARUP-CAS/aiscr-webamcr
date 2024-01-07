@@ -611,7 +611,7 @@ def update_snapshot_fields():
         for item in Dokument.objects.filter(Q(autori_snapshot__isnull=True) | Q(osoby_snapshot__isnull=True)):
             item.suppress_signal = True
             item.save()
-        for item in Lokalita.objects.filter(dalsi_kastastry__isnull=True):
+        for item in Lokalita.objects.filter(dalsi_katastry_snapshot__isnull=True):
             item.suppress_signal = True
             item.save()
         for item in Akce.objects.filter(vedouci_snapshot__isnull=True):
