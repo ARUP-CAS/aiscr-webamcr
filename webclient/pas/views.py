@@ -886,7 +886,9 @@ def aktivace(request, pk):
         spoluprace.set_aktivni(request.user)
         messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_AKTIVOVANA)
         Mailer.send_en06(cooperation=spoluprace)
-        return redirect("pas:spoluprace_list")
+        return JsonResponse(
+            {"redirect": reverse("pas:spoluprace_list")}, status=403
+        )
     else:
         warnings = spoluprace.check_pred_aktivaci()
         logger.info("pas.views.aktivace.warnings", extra={"warnings": warnings})
@@ -894,7 +896,9 @@ def aktivace(request, pk):
             messages.add_message(
                 request, messages.ERROR, f"{SPOLUPRACI_NELZE_AKTIVOVAT} {warnings[0]}"
             )
-            return redirect("pas:spoluprace_list")
+            return JsonResponse(
+                {"redirect": reverse("pas:spoluprace_list")}, status=403
+            )
     context = {
         "object": spoluprace,
         "title": (
