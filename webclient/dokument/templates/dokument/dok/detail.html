@@ -246,32 +246,32 @@
 
 </script>
 <script>
-  //Functionality for back button based on cookie
-  function getCookie(name) {
-    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-    return v ? v[2] : null;
-  }
-  const akce_back = "{% trans 'dokument.templates.dok.detail.back.akce.title' %}"
-  const lokalita_back = "{% trans 'dokument.templates.dok.detail.back.lokalita.title' %}"
-  const projekt_back = "{% trans 'dokument.templates.dok.detail.back.projekt.title' %}"
-  document.addEventListener('DOMContentLoaded', function (event) {
-    let back = document.getElementById("document-back")
-    if (back){
-      let zpet = getCookie("zpet")
-      if (zpet){
-        back.style.display = "inline";
-        back.querySelectorAll('a')[0].href=zpet.replace(/['"]+/g, '');
-        if (zpet.includes('akce')){
-          back.querySelectorAll('a')[0].textContent=akce_back;
-        }
-        if (zpet.includes('lokalita')){
-          back.querySelectorAll('a')[0].textContent=lokalita_back;
-        }
-        else{
-          back.querySelectorAll('a')[0].textContent=projekt_back;
-        }
-      }
+    //Functionality for back button based on cookie
+    function getCookie(name) {
+        var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+        return v ? v[2] : null;
     }
-  });
+
+    const akce_back = "{% trans 'dokument.templates.dok.detail.back.akce.title' %}";
+    const lokalita_back = "{% trans 'dokument.templates.dok.detail.back.lokalita.title' %}";
+    const projekt_back = "{% trans 'dokument.templates.dok.detail.back.projekt.title' %}";
+    document.addEventListener('DOMContentLoaded', function (event) {
+        let back = document.getElementById("document-back");
+        if (back) {
+            let zpet = getCookie("zpet");
+            if (zpet) {
+                back.style.display = "inline";
+                back.querySelectorAll('a')[0].href = zpet.replace(/['"]+/g, '');
+                if (zpet.includes('akce')) {
+                    back.querySelectorAll('a')[0].textContent = akce_back;
+                }
+                else if (zpet.includes('lokalita')) {
+                    back.querySelectorAll('a')[0].textContent = lokalita_back;
+                } else {
+                    back.querySelectorAll('a')[0].textContent = projekt_back;
+                }
+            }
+        }
+    });
 </script>
 {% endblock %}
