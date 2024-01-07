@@ -615,8 +615,9 @@ def update_snapshot_fields():
             item.suppress_signal = True
             item.save()
         for item in Akce.objects.filter(vedouci_snapshot__isnull=True):
+            item: Akce
             item.suppress_signal = True
-            item.save()
+            item.set_snapshots()
         logger.debug("core.cron.update_snapshot_fields.do.end")
     except Exception as err:
         logger.error("core.cron.update_snapshot_fields.do.error", extra={"error": err})
