@@ -53,13 +53,14 @@ def index(request, test_run=False):
     # First step of the form
     if request.method == "POST" and "oznamovatel" in request.POST:
         logger.debug(f"oznameni.views.index.first_part_start")
-        if request.POST.get("ident_cely"):
-            projekt = get_object_or_404(
-                Projekt, ident_cely=request.POST.get("ident_cely")
-            )
+        ident_cely = request.POST.get("ident_cely", None)
+        if ident_cely:
+            logger.debug(f"oznameni.views.index.first_part_start.ident_set", extra={"ident_cely": ident_cely})
+            projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
             form_ozn = OznamovatelForm(request.POST, instance=projekt.oznamovatel)
             form_projekt = ProjektOznameniForm(request.POST, instance=projekt)
         else:
+            logger.debug(f"oznameni.views.index.first_part_start.ident_not_set")
             form_ozn = OznamovatelForm(request.POST)
             form_projekt = ProjektOznameniForm(request.POST)
         form_captcha = FormWithCaptcha(request.POST)
@@ -84,7 +85,7 @@ def index(request, test_run=False):
             p.hlavni_katastr = get_cadastre_from_point(p.geom)
             logger.debug("oznameni.views.index.hlavni_katastr", extra={"hlavni_katastr": p.hlavni_katastr})
             # p.save()
-            if p.hlavni_katastr is not None:
+            if p.hlavni_katastr is not None and not ident_cely:
                 p.ident_cely = get_temporary_project_ident(
                     p.hlavni_katastr.okres.kraj.rada_id
                 )
