@@ -8,7 +8,7 @@ from django.db.models.functions import Upper
 from django.utils import timezone
 
 from adb.models import Adb
-from arch_z.models import ArcheologickyZaznam
+from arch_z.models import ArcheologickyZaznam, Akce
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
     OZNAMENI_PROJ, ZAPSANI_PROJ
 from core.models import Soubor
@@ -612,6 +612,9 @@ def update_snapshot_fields():
             item.suppress_signal = True
             item.save()
         for item in Lokalita.objects.filter(dalsi_kastastry__isnull=True):
+            item.suppress_signal = True
+            item.save()
+        for item in Akce.objects.filter(vedouci_snapshot__isnull=True):
             item.suppress_signal = True
             item.save()
         logger.debug("core.cron.update_snapshot_fields.do.end")

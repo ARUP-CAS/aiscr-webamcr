@@ -58,11 +58,8 @@ class AkceTable(SearchTable):
         verbose_name=_("arch_z.tables.AkceTable.hlavni_vedouci.label"),
         default=""
     )
-    vedouci = tables.Column(
-        verbose_name=_("arch_z.tables.AkceTable.vedouci.label"),
-        default="",
-        accessor="vedouci",
-    )
+    vedouci = tables.Column(default="", accessor="vedouci_snapshot",
+                            verbose_name=_("arch_z.tables.AkceTable.vedouci.label"))
     uzivatelske_oznaceni = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.uzivatelske_oznaceni.label"),
         default="",
