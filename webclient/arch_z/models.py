@@ -493,6 +493,9 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
     organizace = models.ForeignKey(
         Organizace, on_delete=models.RESTRICT, db_column="organizace", blank=True, null=True
     )
+    vedouci_snapshot = models.CharField(max_length=5000, null=True, blank=True)
+
+    suppress_signal = False
 
     class Meta:
         db_table = "akce"
@@ -524,6 +527,12 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
     @property
     def vedouci(self):
         return ', '.join([str(x.vedouci) for x in self.akcevedouci_set.all()])
+
+    def set_snapshots(self):
+        self.vedouci_snapshot = "; ".join([x.vedouci.vypis_cely for x in self.akcevedouci_set
+                                          .order_by("vedouci__prijmeni", "vedouci__jmeno").all()])
+        self.suppress_signal = True
+        self.save()
 
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):

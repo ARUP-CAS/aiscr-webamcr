@@ -562,10 +562,11 @@ def edit(request, ident_cely):
         ):
             logger.debug("arch_z.views.edit.form_valid")
             form_az.save()
-            form_akce.save()
+            akce = form_akce.save()
             ostatni_vedouci_objekt_formset.save()
             if form_az.changed_data or form_akce.changed_data:
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            akce.set_snapshots()
             return redirect("arch_z:detail", ident_cely=ident_cely)
         else:
             logger.warning("arch_z.views.edit.form_az_valid", extra={"form_az_errors": form_az.errors,
@@ -921,7 +922,7 @@ def zapsat(request, projekt_ident_cely=None):
                     else:
                         logger.debug("arch_z.views.zapsat.form_not_valid",
                                      extra={"errors": ostatni_vedouci_objekt_formset.errors})
-
+                    akce.set_snapshots()
                     messages.add_message(
                         request, messages.SUCCESS, get_message(az, "USPESNE_ZAPSANA")
                     )

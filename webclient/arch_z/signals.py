@@ -2,7 +2,7 @@ import logging
 
 from django.db.models import Q
 
-from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+from arch_z.models import ArcheologickyZaznam, ExterniOdkaz, Akce
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
