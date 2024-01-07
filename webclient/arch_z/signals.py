@@ -1,14 +1,11 @@
 import logging
 
-from django.db.models import Q
-
-from arch_z.models import ArcheologickyZaznam, ExterniOdkaz, Akce
-from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
-from dokument.models import DokumentCast, Dokument
-from historie.models import HistorieVazby, Historie
+from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
+from historie.models import HistorieVazby
 
 logger = logging.getLogger(__name__)
 
