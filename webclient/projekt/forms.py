@@ -269,7 +269,7 @@ class EditProjektForm(forms.ModelForm):
             ),
         }
 
-    def __init__(self, *args, required=None,required_next=None, edit_fields=None, **kwargs):
+    def __init__(self, *args, required=None, required_next=None, edit_fields=None, **kwargs):
         super(EditProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.helper = FormHelper(self)

@@ -168,7 +168,7 @@ class ProjektOznameniForm(forms.ModelForm):
         label=_("oznameni.forms.projektOznameniForm.katastralniUzemi.label"),
         help_text=_("oznameni.forms.projektOznameniForm.katastralniUzemi.tooltip"),
     )
-    ident_cely = forms.CharField(required=False,widget=forms.HiddenInput())
+    ident_cely = forms.CharField(required=False, widget=forms.HiddenInput())
 
     class Meta:
         model = Projekt
@@ -226,6 +226,7 @@ class ProjektOznameniForm(forms.ModelForm):
             ).__str__()
             self.fields["coordinate_x1"].initial = self.instance.geom[0]
             self.fields["coordinate_x2"].initial = self.instance.geom[1]
+            self.fields["ident_cely"].initial = self.instance.ident_cely
 
         self.helper = FormHelper(self)
         self.helper.form_tag = False
