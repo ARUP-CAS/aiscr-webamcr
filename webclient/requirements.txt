@@ -21,7 +21,7 @@ django-auto-logout==0.5.1
 reportlab==4.0.8
 PyRTF3==0.47.5
 pypdf==3.17.4
-Pillow==10.1.0
+Pillow==10.2.0
 beautifulsoup4==4.12.2
 django-extensions==3.2.3
 celery==5.3.6
