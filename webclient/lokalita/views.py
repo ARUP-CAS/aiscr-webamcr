@@ -141,6 +141,7 @@ class LokalitaDetailView(
         """
         self.object = self.get_object()
         context = super().get_context_data(**kwargs)
+        context["warnings"] = self.request.session.pop("temp_data", None)
         context["page_title"] = _("lokalita.views.lokalitaDetailView.pageTitle")
         context["detail_view"] = True
         context["form"] = LokalitaForm(
