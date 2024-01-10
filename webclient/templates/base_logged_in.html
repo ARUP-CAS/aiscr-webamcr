@@ -484,6 +484,18 @@
     var interval = null;
     let document_title = document.title;
 
+  const change_class_list = (sideber_shown) => {
+      if (sideber_shown) {
+          document.querySelectorAll('.app-alert-floating-file-upload').forEach(element => {
+              element.classList.remove('app-alert-floating-file-upload-no-left-bar');
+          });
+      } else {
+          document.querySelectorAll('.app-alert-floating-file-upload').forEach(element => {
+              element.classList.add('app-alert-floating-file-upload-no-left-bar');
+          });
+      }
+  }
+
     const sidebar_toggle = document.getElementById("sidebar-toggle");
     sidebar_toggle.addEventListener("click", (e) => {
         const width = screen.width;
@@ -500,6 +512,7 @@
             navbar_toggler.style.display = null;
             navbar_mobile_header_ident.style.display = null;
         }
+        change_class_list(sideber_shown);
     });
 
     document.head = document.head || document.getElementsByTagName('head')[0];

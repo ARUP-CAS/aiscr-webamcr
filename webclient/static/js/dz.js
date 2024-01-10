@@ -25,20 +25,32 @@ const UploadResultsEnum = {
     error: 3,
 }
 
+const check_sidebar_state = () => {
+    const width = screen.width;
+    const app_wrapper = document.getElementById("app-sidebar-wrapper");
+    if (app_wrapper) {
+        const style = window.getComputedStyle(app_wrapper) || app_wrapper.currentStyle;
+        const margin_left = style.marginLeft;
+        return margin_left === "-300px"
+    }
+    return false;
+}
+
 const show_upload_successful_message = (file, result = UploadResultsEnum.success, message = "") => {
     const collection = document.getElementsByClassName("message-container");
     if (collection.length > 0) {
+        const sidebar_affected_class = check_sidebar_state() ? "app-alert-floating-file-upload-no-left-bar " : "";
         const message_container_element = collection[0];
         // <div class="alert alert-success alert-dismissible fade show app-alert-floating" role="alert">
         const alert_element = document.createElement("div");
         const sidebar_element_query = document.getElementsByClassName("app-sidebar-wrapper");
         const floating_class = sidebar_element_query.length > 0 ? "app-alert-floating-file-upload" : "app-alert-floating-file-upload-oznameni";
         if (result === UploadResultsEnum.success) {
-            alert_element.setAttribute("class", `alert alert-success alert-dismissible fade show ${floating_class}`);
+            alert_element.setAttribute("class", `alert alert-success alert-dismissible fade show app-alert-floating-file-upload ${floating_class} ${sidebar_affected_class}`);
         } else if (result === UploadResultsEnum.duplicate) {
-            alert_element.setAttribute("class", `alert alert-warning alert-dismissible fade show ${floating_class}`);
+            alert_element.setAttribute("class", `alert alert-warning alert-dismissible fade show app-alert-floating-file-upload ${floating_class} ${sidebar_affected_class}`);
         } else if (result === UploadResultsEnum.reject || result === UploadResultsEnum.error) {
-            alert_element.setAttribute("class", `alert alert-danger alert-dismissible fade show ${floating_class}`);
+            alert_element.setAttribute("class", `alert alert-danger alert-dismissible fade show app-alert-floating-file-upload ${floating_class} ${sidebar_affected_class}`);
         }
         alert_element.setAttribute("role", "alert");
         if (result === UploadResultsEnum.success) {
