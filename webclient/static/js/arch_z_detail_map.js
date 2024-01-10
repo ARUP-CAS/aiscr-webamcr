@@ -715,7 +715,7 @@ var addGoldPointOnLoad = (geom, layer, pian_ident_cely, st_text, presnost) => {
     if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
         //ToDo" 21.06.2022 pinIconYellow
         mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), { icon: pinIconYellowHW, zIndexOffset: 2000, changeIcon: true },presnost!=4)
-        .bindTooltip(text+' ('+presnost+')', { sticky: true },presnost!=4)
+        .bindTooltip(pian_ident_cely+' ('+presnost+')', { sticky: true },presnost!=4)
         .bindPopup('')
         .addTo(layer));
         if (st_text.includes("POLYGON")) {
