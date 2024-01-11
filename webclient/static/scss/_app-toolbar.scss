@@ -6,7 +6,7 @@
   margin: -#{$spacer-3} -#{$spacer-3} #{$spacer-3} -#{$spacer-3};
 
   .app-controls-button-text{
-    @media (max-width: 576px) {
+    @media (max-width: 768px) {
       display: none;
     }
   }
@@ -58,7 +58,7 @@
     .app-entity-item {
       @extend .align-self-center;
       font-weight: 600;
-      @media (max-width: 576px) {
+      @media (max-width: 768px) {
         display: none;
       }
     }

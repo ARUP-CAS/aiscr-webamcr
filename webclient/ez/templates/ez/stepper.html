@@ -7,16 +7,16 @@
               onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">1</span>
         <div class="row">
-          <div class="col-12">
-                <span class="bs-stepper-label">
-                    {% trans "ez.templates.stepper.zapsany.label" %}
-                </span>
+          <div class="col-12 {% if not history_dates.datum_zapsani %}pl-0{% endif %}">
+            <span class="bs-stepper-label">
+                {% trans "ez.templates.stepper.zapsany.label" %}
+            </span>
           </div>
-          <div class="col-12">
-                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
-                      title="{{ history_dates.datum_zapsani.uzivatel }}">
-                    {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
-                </span>
+          <div class="col-12 app-stepper-date-container">
+            <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                  title="{{ history_dates.datum_zapsani.uzivatel }}">
+                {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
+            </span>
           </div>
         </div>
       </button>
@@ -27,16 +27,16 @@
               onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">2</span>
         <div class="row">
-          <div class="col-12">
-                <span class="bs-stepper-label">
-                    {% trans "ez.templates.stepper.odeslany.label" %}
-                </span>
+          <div class="col-12 {% if not history_dates.datum_odeslani %}pl-0{% endif %}">
+            <span class="bs-stepper-label">
+                {% trans "ez.templates.stepper.odeslany.label" %}
+            </span>
           </div>
-          <div class="col-12">
-                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
-                      title="{{ history_dates.datum_odeslani.uzivatel }}">
-                    {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
-                </span>
+          <div class="col-12 app-stepper-date-container">
+            <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                  title="{{ history_dates.datum_odeslani.uzivatel }}">
+                {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
+            </span>
           </div>
         </div>
       </button>
@@ -47,19 +47,19 @@
               onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">3</span>
         <div class="row">
-          <div class="col-12">
-                <span class="bs-stepper-label">
-                    {% trans "ez.templates.stepper.potvrzeny.label" %}
-                </span>
+          <div class="col-12 {% if not history_dates.datum_potvrzeni %}pl-0{% endif %}">
+            <span class="bs-stepper-label">
+                {% trans "ez.templates.stepper.potvrzeny.label" %}
+            </span>
           </div>
-          <div class="col-12">
-                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
-                      title="{{ history_dates.datum_potvrzeni.uzivatel }}">
-                    {{ history_dates.datum_potvrzeni.datum|date:'Y-m-d'|default_if_none:"" }}
-                </span>
+          <div class="col-12 app-stepper-date-container">
+            <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                  title="{{ history_dates.datum_potvrzeni.uzivatel }}">
+                {{ history_dates.datum_potvrzeni.datum|date:'Y-m-d'|default_if_none:"" }}
+            </span>
           </div>
         </div>
       </button>
     </div>
-
   </div>
+</div>

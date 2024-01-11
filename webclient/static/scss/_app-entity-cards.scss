@@ -12,10 +12,21 @@
     .app-card-entity {
       @include setEntityColor("card");
       @extend .h-100, .border-0, .app-card-shadow;
-      min-height: 400px;
+      @media (min-width: 768px) {
+        min-height: 400px;
+      }
+      @media (max-width: 768px) {
+        max-height: 200px;
+      }
+      @media (max-width: 440px) {
+        min-width: calc(100vw - 32px);
+      }
+      @media (min-width: 440px) {
+        max-width: 205px;
+      }
+      margin-bottom: 1rem;
       text-align: center;
       cursor: pointer;
-      min-width: 205px;
 
       .card-body {
         position: relative;

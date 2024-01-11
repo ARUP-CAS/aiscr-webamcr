@@ -534,10 +534,28 @@ a.dropdown-item {
     border-color: initial;
     position: fixed;
     top: 15px;
-    left: calc(300px + 15%);
+    @media (min-width: 768px) {
+      left: calc(300px + 15%);
+      width: calc(70% - 300px);
+    }
+    @media (max-width: 768px) {
+      left: calc(300px + 5%);
+      width: calc(90% - 300px);
+    }
     z-index: 1000;
-    width: calc(70% - 300px);
+
     text-align: center;
+  }
+
+  &.app-alert-floating-file-upload-no-left-bar {
+    @media (min-width: 768px) {
+      left: 15%;
+      width: 70%;
+    }
+    @media (max-width: 768px) {
+      left: 5%;
+      width: 90%;
+    }
   }
 
   ul {
