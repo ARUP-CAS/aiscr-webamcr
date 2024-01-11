@@ -6,7 +6,7 @@
 
 {% block content %}
   <div class="app-entity-akce">
-    {% include "toolbar_akce.html" %}
+    {% include "toolbar_akce.html" with type="akce" %}
     <div class="row app-entity-cards mb-3">
       <div class="col">
         <a href="{% url 'arch_z:zapsat-akci' %}" class="card app-card-entity app-card-zapsat-akce">

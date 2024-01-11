@@ -6,7 +6,7 @@
 
 {% block content %}
   <div class="app-entity-lokalita">
-    {% include "toolbar_akce.html" %}
+    {% include "toolbar_akce.html" with type="lokalita" %}
     <div class="row app-entity-cards mb-3">
       <div class="col">
         <a href="{% url 'lokalita:create' %}" class="card app-card-entity app-card-zapsat-lokalita">

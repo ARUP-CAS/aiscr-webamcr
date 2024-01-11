@@ -21,7 +21,7 @@
 
 {% block content %}
 <div class="app-entity-akce">
-  {% include "toolbar_akce.html" %}
+  {% include "toolbar_akce.html" with type="akce" %}
   <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;">
     <div class="card app-card-form">
       <div class="card-header">

@@ -53,7 +53,7 @@
     <div class="bs-stepper">
       <div class="bs-stepper-header">
         <div class="step {% if projekt.stav == 0 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt historie-link"
+          <button type="button" class="btn step-trigger projekt historie-link pl-0 pr-0"
                   onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">0</span>
             <div class="row">
@@ -62,7 +62,7 @@
                     {% trans "projekt.templates.detail.stepper.oznameny.label" %}
                 </span>
               </div>
-              <div class="col-12">
+              <div class="col-12 app-stepper-date-container">
                 <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                       title="{{ history_dates.datum_oznameni.uzivatel }}">
                     {{ history_dates.datum_oznameni.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -73,7 +73,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 1 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt historie-link"
+          <button type="button" class="btn step-trigger projekt historie-link pl-0 pr-0"
                   onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">1</span>
             <div class="row">
@@ -82,7 +82,7 @@
                     {% trans "projekt.templates.detail.stepper.zapsany.label" %}
                 </span>
               </div>
-              <div class="col-12">
+              <div class="col-12 app-stepper-date-container">
                 <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                       title="{{ history_dates.datum_zapsani.uzivatel }}">
                     {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -93,7 +93,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 2 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt historie-link"
+          <button type="button" class="btn step-trigger projekt historie-link pl-0 pr-0"
                   onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">2</span>
             <div class="row">
@@ -102,7 +102,7 @@
                     {% trans "projekt.templates.detail.stepper.prihlaseny.label" %}
                 </span>
               </div>
-              <div class="col-12">
+              <div class="col-12 app-stepper-date-container">
                 <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                       title="{{ history_dates.datum_prihlaseni.uzivatel }}">
                     {{ history_dates.datum_prihlaseni.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -113,7 +113,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 3 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt historie-link"
+          <button type="button" class="btn step-trigger projekt historie-link pl-0 pr-0"
                   onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">3</span>
             <div class="row">
@@ -122,7 +122,7 @@
                     {% trans "projekt.templates.detail.stepper.zahajenvTerenu.label" %}
                 </span>
               </div>
-              <div class="col-12">
+              <div class="col-12 app-stepper-date-container">
                 <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                       title="{{ history_dates.datum_zahajeni_v_terenu.uzivatel }}">
                     {{ history_dates.datum_zahajeni_v_terenu.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -133,7 +133,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 4 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt historie-link"
+          <button type="button" class="btn step-trigger projekt historie-link pl-0 pr-0"
                   onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">4</span>
             <div class="row">
@@ -142,7 +142,7 @@
                     {% trans "projekt.templates.detail.stepper.ukoncenvTerenu.label" %}
                 </span>
               </div>
-              <div class="col-12">
+              <div class="col-12 app-stepper-date-container">
                 <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                       title="{{ history_dates.datum_ukonceni_v_terenu.uzivatel }}">
                     {{ history_dates.datum_ukonceni_v_terenu.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -153,7 +153,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 5 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt historie-link"
+          <button type="button" class="btn step-trigger projekt historie-link pl-0 pr-0"
                   onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">5</span>
             <div class="row">
@@ -162,7 +162,7 @@
                     {% trans "projekt.templates.detail.stepper.uzavreny.label" %}
                 </span>
               </div>
-              <div class="col-12">
+              <div class="col-12 app-stepper-date-container">
                 <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                       title="{{ history_dates.datum_uzavreni.uzivatel }}">
                     {{ history_dates.datum_uzavreni.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -173,7 +173,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 6 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt historie-link"
+          <button type="button" class="btn step-trigger projekt historie-link pl-0 pr-0"
                   onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">6</span>
             <div class="row">
@@ -182,7 +182,7 @@
                     {% trans "projekt.templates.detail.stepper.archivovany.label" %}
                 </span>
               </div>
-              <div class="col-12">
+              <div class="col-12 app-stepper-date-container">
                 <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                       title="{{ history_dates.datum_archivace.uzivatel }}">
                     {{ history_dates.datum_archivace.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -193,7 +193,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 7 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt historie-link"
+          <button type="button" class="btn step-trigger projekt historie-link pl-0 pr-0"
                   onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">7</span>
             <div class="row">
@@ -202,7 +202,7 @@
                     {% trans "projekt.templates.detail.stepper.navrzenKeZruseni.label" %}
                 </span>
               </div>
-              <div class="col-12">
+              <div class="col-12 app-stepper-date-container">
                 <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                       title="{{ history_dates.datum_navrhu_ke_zruseni.uzivatel }}">
                     {{ history_dates.datum_navrhu_ke_zruseni.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -213,7 +213,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 8 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt historie-link"
+          <button type="button" class="btn step-trigger projekt historie-link pl-0 pr-0"
                   onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">8</span>
             <div class="row">
@@ -222,7 +222,7 @@
                     {% trans "projekt.templates.detail.stepper.zrusen.label" %}
                 </span>
               </div>
-              <div class="col-12">
+              <div class="col-12 app-stepper-date-container">
                 <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                       title="{{ history_dates.datum_zruseni.uzivatel }}">
                     {{ history_dates.datum_zruseni.datum|date:'Y-m-d'|default_if_none:"" }}

@@ -12,7 +12,7 @@
                 {% trans "pas.templates.state_component_pas.rozepsany" %}
             </span>
           </div>
-          <div class="col-12">
+          <div class="col-12 app-stepper-date-container">
             <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                   title="{{ history_dates.datum_zapsani.uzivatel }}">
                 {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -32,7 +32,7 @@
                 {% trans "pas.templates.state_component_pas.odeslany" %}
             </span>
           </div>
-          <div class="col-12">
+          <div class="col-12 app-stepper-date-container">
             <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                   title="{{ history_dates.datum_odeslani.uzivatel }}">
                 {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -52,7 +52,7 @@
                 {% trans "pas.templates.state_component_pas.potvrzeny" %}
             </span>
           </div>
-          <div class="col-12">
+          <div class="col-12 app-stepper-date-container">
             <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                   title="{{ history_dates.datum_potvrzeni.uzivatel }}">
                 {{ history_dates.datum_potvrzeni.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -72,7 +72,7 @@
               {% trans "pas.templates.state_component_pas.archivovany" %}
             </span>
           </div>
-          <div class="col-12">
+          <div class="col-12 app-stepper-date-container">
             <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                   title="{{ history_dates.datum_archivace.uzivatel }}">
                 {{ history_dates.datum_archivace.datum|date:'Y-m-d'|default_if_none:"" }}

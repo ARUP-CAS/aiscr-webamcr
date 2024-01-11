@@ -13,7 +13,7 @@ body {
   &.app-accounts,
   &.app-oznameni {
     &:not(.app-edit) {
-      padding: $spacer-4 $spacer-3;
+      padding: $spacer-3 $spacer-3 $spacer-4 $spacer-3;
 
       #app-page-wrapper {
         min-width: auto;
@@ -74,7 +74,7 @@ body {
 }
 
 #app-sidebar-wrapper {
-  z-index: 1;
+  z-index: 1001;
 }
 
 .form-group {

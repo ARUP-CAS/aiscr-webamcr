@@ -12,7 +12,7 @@
                 {% trans "templates.stateComponentDocument.rozepsany.label" %}
             </span>
           </div>
-          <div class="col-12">
+          <div class="col-12 app-stepper-date-container">
             <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                   title="{{ history_dates.datum_zapsani.uzivatel }}">
                 {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -32,7 +32,7 @@
                 {% trans "templates.stateComponentDocument.odeslany.label" %}
             </span>
           </div>
-          <div class="col-12">
+          <div class="col-12 app-stepper-date-container">
             <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                   title="{{ history_dates.datum_odeslani.uzivatel }}">
                 {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -52,7 +52,7 @@
                 {% trans "templates.stateComponentDocument.archivovany.label" %}
             </span>
           </div>
-          <div class="col-12">
+          <div class="col-12 app-stepper-date-container">
             <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                   title="{{ history_dates.datum_archivace.uzivatel }}">
                 {{ history_dates.datum_archivace.datum|date:'Y-m-d'|default_if_none:"" }}
