@@ -62,7 +62,7 @@
                                     <span class="material-icons app-color-danger">delete_forever</span>
                                 </button>
                             {% elif form_id %}
-                                {% if form_id == "objekt" or form_id == "predmet" and show.nalez_smazat %}
+                                {% if form_id == "objekt" and show.nalez_smazat or form_id == "predmet" and show.nalez_smazat %}
                                 <button id="objekt-smazat-{{form.id.value}}" class="objekt-smazat-btn" type="button" name="button" href="{% url 'nalez:smazat_nalez' typ_vazby form.typ.value form.id.value %}?next={{ request.get_full_path }}">
                                     <span class="material-icons app-color-danger">delete_forever</span>
                                 </button>

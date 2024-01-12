@@ -396,13 +396,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_AZ)[0].uzivatel,)
         except Exception as e:
             logger.debug(e)
-            return None
+            return ()
     
     def get_create_org(self):
         if self.get_create_user():
             return (self.get_create_user()[0].organizace,)
         else: 
-            return None
+            return ()
 
     def __init__(self, *args, **kwargs):
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)

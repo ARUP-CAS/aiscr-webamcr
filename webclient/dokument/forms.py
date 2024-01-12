@@ -734,7 +734,7 @@ class PripojitDokumentForm(forms.Form):
                 ).values_list("id", "ident_cely")
             ),
             widget=autocomplete.Select2Multiple(
-                url=reverse("dokument:dokument-autocomplete", kwargs={"bez_zapsanych": True})
+                url=reverse("dokument:dokument-autocomplete")
             ),
             help_text=_("dokument.forms.pripojitDokumentForm.dokument.tooltip")
         )

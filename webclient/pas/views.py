@@ -666,18 +666,13 @@ class SamostatnyNalezListView(SearchListView):
         return self.check_filter_permission(qs)
     
     def add_ownership_lookup(self, ownership, qs):
-        usr_org_key = "uzivatel"
-        usr_org_value = self.request.user
-        filter_historie = {"typ_zmeny":self.typ_zmeny_lookup,usr_org_key:usr_org_value}
+        filter_historie = {"uzivatel":self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
-        filtered = filtered_my
-        historie_key = self.permission_model_lookup + "historie__historie__pk__in"
-        qs_my = qs.filter(**{historie_key:filtered})
-        qs_values = qs_my.values_list("pk")
         if ownership == p.ownershipChoices.our:
-            qs_our = qs.exclude(pk__in=qs_my.values("pk")).filter(**{"projekt__organizace":self.request.user.organizace})
-            qs_values = qs_values.union(qs_our.values_list("pk"))
-        return {"pk__in":qs_values}
+            return Q(**{"historie_zapsat__in":filtered_my}) | Q(**{"projekt__organizace":self.request.user.organizace})
+        else:
+            return Q(**{"historie_zapsat__in":filtered_my})
+
 
 
 @login_required
@@ -850,14 +845,12 @@ class UzivatelSpolupraceListView(SearchListView):
         return self.check_filter_permission(qs).order_by("id")
     
     def add_ownership_lookup(self, ownership, qs=None):
-        filtered_my = UzivatelSpoluprace.objects.filter(spolupracovnik=self.request.user)
+        filtered_my = Q(spolupracovnik=self.request.user)
         if ownership == p.ownershipChoices.our:
-            filtered_our = UzivatelSpoluprace.objects.exclude(pk__in=filtered_my.values("pk")).filter(vedouci__organizace=self.request.user.organizace)
-            filtered = UzivatelSpoluprace.objects.filter(Q(pk__in=filtered_our.values("pk"))|Q(pk__in=filtered_my.values("pk")))
+            filtered_our = Q(vedouci__organizace=self.request.user.organizace)
+            return filtered_our | filtered_my
         else:
-            filtered = filtered_my
-        filterdoc = {"pk__in":filtered}
-        return filterdoc
+            return filtered_my
     
     def add_accessibility_lookup(self,permission, qs):
         return qs
@@ -1026,6 +1019,7 @@ def get_detail_template_shows(sn, user):
         "ulozeni_edit": check_permissions(p.actionChoices.pas_ulozeni_edit, user, sn.ident_cely),
         "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, sn.ident_cely),
         "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_pas, user, sn.ident_cely),
+        "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_pas, user, sn.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_pas, user, sn.ident_cely),
         "soubor_nahradit": check_permissions(p.actionChoices.soubor_nahradit_pas, user, sn.ident_cely),
     }

@@ -382,14 +382,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel,)
         except Exception as e:
             logger.debug(e)
-            return None
+            return ()
         
     def get_create_org(self):
         try:
             return (self.get_create_user()[0].organizace,)
         except Exception as e:
             logger.debug(e)
-            return None
+            return ()
         
     @property
     def thumbnail_image(self):

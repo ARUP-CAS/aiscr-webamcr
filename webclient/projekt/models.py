@@ -610,7 +610,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PROJ)[0].uzivatel,)
         except Exception as e:
             logger.debug(e)
-            return None
+            return ()
     
     def get_create_org(self):
         return (self.organizace,)

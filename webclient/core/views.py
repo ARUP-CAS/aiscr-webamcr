@@ -21,7 +21,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q
+from django.db.models import Q, FilteredRelation
 from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -180,7 +180,7 @@ class DownloadFile(LoginRequiredMixin, View):
             messages.add_message(
                             request, messages.ERROR, SPATNY_ZAZNAM_SOUBOR_VAZBA
                         )
-            return redirect(request.GET.get("next"))
+            return redirect(request.GET.get("next","core:home"))
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
         rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content(thumb=self.thumb)
         if soubor.repository_uuid is not None:
@@ -263,10 +263,10 @@ def update_file(request, typ_vazby, ident_cely, file_id):
         messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_SOUBOR_VAZBA
                     )
-        return redirect(request.GET.get("next"))
+        return redirect(request.GET.get("next","core:home"))
         
     ident_cely = ""
-    back_url = request.GET.get("next")
+    back_url = request.GET.get("next","core:home")
     return render(
         request,
         "core/upload_file.html",
@@ -726,15 +726,19 @@ class PermissionFilterMixin():
         return qs
     
     def filter_by_permission(self, qs, permission):
-        filterdoc = {}
+        qs = qs.annotate(
+            historie_zapsat=FilteredRelation(
+            self.permission_model_lookup + "historie__historie",
+            condition=Q(**{self.permission_model_lookup+"historie__historie__typ_zmeny":self.typ_zmeny_lookup}),
+            ),
+        )
         if not permission.base:
             logger.debug("no base")
             return qs.none()
         if permission.status:
-            filterdoc.update(self.add_status_lookup(permission))
+            qs.filter(**self.add_status_lookup(permission))
         if permission.ownership:
-            filterdoc.update(self.add_ownership_lookup(permission.ownership,qs))
-        qs = qs.filter(**filterdoc)
+            qs.filter(self.add_ownership_lookup(permission.ownership,qs))
         if permission.accessibility:
             qs = self.add_accessibility_lookup(permission,qs)
 
@@ -774,23 +778,21 @@ class PermissionFilterMixin():
         return filterdoc
     
     def add_ownership_lookup(self, ownership, qs=None):
-        filter_historie = {"typ_zmeny":self.typ_zmeny_lookup,"uzivatel":self.request.user}
-        filtered_my = set(Historie.objects.filter(**filter_historie).values_list("pk", flat=True))
+        filter_historie = {"uzivatel":self.request.user}
+        filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == Permissions.ownershipChoices.our:
-            filter_historie = {"typ_zmeny":self.typ_zmeny_lookup, "uzivatel__organizace":self.request.user.organizace}
-            filtered_our = set(Historie.objects.filter(**filter_historie).values_list("pk", flat=True))
-            filtered = filtered_my.union(filtered_our)
+            filter_historie = {"uzivatel__organizace":self.request.user.organizace}
+            filtered_our = Historie.objects.filter(**filter_historie)
+            return Q(**{"historie_zapsat__in":filtered_my}) | Q(**{"historie_zapsat__in":filtered_our})
         else:
-            filtered = filtered_my
-        historie_key = self.permission_model_lookup + "historie__historie__pk__in"
-        filterdoc = {historie_key:filtered}
-        return filterdoc
+            return Q(**{"historie_zapsat__in":filtered_my})
+
     
     def add_accessibility_lookup(self,permission, qs):
         accessibility_key = self.permission_model_lookup+"pristupnost__in"
         accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id))
         filter = {accessibility_key:accessibilities}
-        return qs.filter(Q(**filter)  |Q(**self.add_ownership_lookup(permission.accessibility,qs)))
+        return qs.filter(Q(**filter)  | self.add_ownership_lookup(permission.accessibility,qs))
 
 class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView, PermissionFilterMixin):
     """

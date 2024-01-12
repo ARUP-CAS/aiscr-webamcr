@@ -550,10 +550,9 @@ def smazat(request, ident_cely):
 class ProjektPermissionFilterMixin(PermissionFilterMixin):
     def add_ownership_lookup(self, ownership, qs=None):
         if ownership == Permissions.ownershipChoices.our:
-            filterdoc = {"organizace":self.request.user.organizace}
+            return Q(**{"organizace":self.request.user.organizace})
         else:
-            filterdoc = {}
-        return filterdoc
+            return Q()
     
     def add_accessibility_lookup(self,permission, qs):
         accessibility_key = self.permission_model_lookup+"pristupnost_filter__in"
@@ -565,7 +564,7 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
             .values("pristupnost")
         )
         qs_new = qs.annotate(pristupnost_filter=Subquery(pristupnost[:1]))
-        return qs_new.filter(Q(**filter) | Q(pristupnost_filter__isnull=True) | Q(**self.add_ownership_lookup(permission.accessibility)))
+        return qs_new.filter(Q(**filter) | Q(pristupnost_filter__isnull=True) | self.add_ownership_lookup(permission.accessibility))
 
 class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
     """
@@ -1436,6 +1435,7 @@ def get_detail_template_shows(projekt, user):
         "zapsat_dokumenty": check_permissions(p.actionChoices.dok_zapsat_do_projekt, user, projekt.ident_cely),
         "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, projekt.ident_cely),
         "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_projekt, user, projekt.ident_cely),
+        "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_projekt, user, projekt.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_projekt, user, projekt.ident_cely),
         "soubor_nahrat": check_permissions(p.actionChoices.soubor_nahrat_projekt, user, projekt.ident_cely),
     }
@@ -1559,7 +1559,7 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
                     new_qs = self.filter_by_permission(qs, perm).exclude(pk__in=new_qs.values("pk")) | new_qs
 
             qs = new_qs
-        return qs
+        return qs.none()
 
 
 class ProjectTableRowView(LoginRequiredMixin, View):

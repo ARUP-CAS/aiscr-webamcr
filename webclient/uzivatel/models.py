@@ -261,7 +261,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         return (self,)
     
     def get_create_org(self):
-        return None
+        return ()
 
 
 class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
