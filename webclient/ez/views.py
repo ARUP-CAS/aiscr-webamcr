@@ -406,12 +406,12 @@ class ExterniOdkazOdpojitView(TransakceView):
             ExterniOdkaz,
             id=self.kwargs.get("eo_id"),
         )
-        if eo.archeologicky_zaznam.ident_cely != self.kwargs["ident_cely"]:
-            logger.debug("Externi odkaz - Archeologicky zaznam wrong relation")
+        if eo.externi_zdroj.ident_cely != self.kwargs["ident_cely"]:
+            logger.debug("Externi odkaz - Externi zdroj wrong relation")
             messages.add_message(
                             request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                         )
-            return redirect(request.GET.get("next","core:home"))
+            return JsonResponse({"redirect": self.get_zaznam().get_absolute_url()},status=403)
         return super().dispatch(request, *args, **kwargs)
 
     def init_translation(self):
@@ -505,7 +505,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
             messages.add_message(
                             request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                         )
-            return redirect(request.GET.get("next","core:home"))
+            return JsonResponse({"redirect": self.get_object().get_absolute_url()},status=403)
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -554,6 +554,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
     allowed_states = [AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY, AZ_STAV_ARCHIVOVANY]
 
     def init_translation(self):
+        super().init_translation()
         self.success_message = EO_USPESNE_ODPOJEN
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
@@ -566,7 +567,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
             messages.add_message(
                             request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                         )
-            return redirect(request.GET.get("next","core:home"))
+            return JsonResponse({"redirect": self.get_zaznam().get_absolute_url()},status=403)
         return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):

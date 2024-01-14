@@ -28,7 +28,7 @@ urlpatterns = [
     path("stav/archivovat/<str:ident_cely>", views.archivovat, name="archivovat"),
     path("stav/vratit/<str:ident_cely>", views.vratit, name="vratit"),
     path("smazat/<str:ident_cely>", views.smazat, name="smazat"),
-    path("autocomplete/<str:bez_zapsanych>", DokumentAutocomplete.as_view(), name="dokument-autocomplete"),
+    path("autocomplete", DokumentAutocomplete.as_view(), name="dokument-autocomplete"),
     path("vyber", DokumentListView.as_view(), name="list"),
     # MODELY3D
     path("model/", views.index_model_3D, name="index-model-3D"),

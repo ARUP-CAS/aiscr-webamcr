@@ -709,7 +709,7 @@ def get_pian_from_envelope(left, bottom, right, top, request):
     perm_object.request = request
 
     pian_filtered = perm_object.check_filter_permission(pian_queryset, p.actionChoices.mapa_pian)
-
+    logger.debug(pian_filtered)
     try:
         return DokumentacniJednotka.objects.filter(
                     pian__in=pian_filtered

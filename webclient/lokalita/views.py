@@ -342,6 +342,17 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
     Třida pohledu pro získaní dokumentačních jednotek lokality, která je dedená v dalších pohledech.
     """
 
+    def dispatch(self, request, *args, **kwargs):
+        dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
+        az = self.get_object().archeologicky_zaznam
+        if not dj.archeologicky_zaznam == az:
+            logger.error("Archeologicky zaznam - Dokumentacni jednotka wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
+    
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
         logger.debug(
@@ -363,17 +374,6 @@ class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelated
     """
 
     template_name = "lokalita/dj/dj_update.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
-        az = self.get_object().archeologicky_zaznam
-        if not dj.archeologicky_zaznam == az:
-            logger.error("Archeologicky zaznam - Dokumentacni jednotka wrong relation")
-            messages.add_message(
-                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                    )
-            return redirect(request.GET.get("next","core:home"))
-        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

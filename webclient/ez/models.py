@@ -170,14 +170,14 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_EXT_ZD)[0].uzivatel,)
         except Exception as e:
             logger.debug(e)
-            return None
+            return ()
 
     def get_create_org(self):
         try:
             return (self.get_create_user()[0].organizace,)
         except Exception as e:
             logger.debug(e)
-            return None
+            return ()
 
     def set_snapshots(self):
         self.autori_snapshot = "; ".join([x.autor.vypis_cely

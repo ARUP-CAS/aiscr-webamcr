@@ -702,7 +702,7 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
             messages.add_message(
                             request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                         )
-            return redirect(tvar.dokument.get_absolute_url())
+            return JsonResponse({"redirect": tvar.dokument.get_absolute_url()},status=403)
         return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
@@ -1567,9 +1567,6 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
         qs = Dokument.objects.exclude(ident_cely__contains=Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D).zkratka)
-        if self.kwargs.get("bez_zapsanych",False):
-            logger.debug(self.kwargs.get("bez_zapsanych"))
-            qs.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY))
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
         return self.check_filter_permission(qs)
@@ -1612,11 +1609,13 @@ def get_detail_template_shows(dokument,user):
     if "3D" in dokument.ident_cely:
         show_edit = check_permissions(p.actionChoices.model_edit, user, dokument.ident_cely)
         soubor_stahnout_dokument = check_permissions(p.actionChoices.soubor_stahnout_model3d, user, dokument.ident_cely)
+        soubor_nahled = check_permissions(p.actionChoices.soubor_nahled_model3d, user, dokument.ident_cely)
         soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_model3d, user, dokument.ident_cely)
         soubor_nahradit = False
     else:
         show_edit = check_permissions(p.actionChoices.dok_edit, user, dokument.ident_cely)
         soubor_stahnout_dokument = check_permissions(p.actionChoices.soubor_stahnout_dokument, user, dokument.ident_cely)
+        soubor_nahled = check_permissions(p.actionChoices.soubor_nahled_dokument, user, dokument.ident_cely)
         soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_dokument, user, dokument.ident_cely)
         soubor_nahradit = check_permissions(p.actionChoices.soubor_nahradit_dokument, user, dokument.ident_cely)
     show_arch_links = dokument.stav == D_STAV_ARCHIVOVANY
@@ -1635,6 +1634,7 @@ def get_detail_template_shows(dokument,user):
         "nalez_smazat": check_permissions(p.actionChoices.nalez_smazat_dokument, user, dokument.ident_cely),
         "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, dokument.ident_cely),
         "soubor_stahnout": soubor_stahnout_dokument,
+        "soubor_nahled": soubor_nahled,
         "soubor_smazat": soubor_smazat,
         "soubor_nahradit": soubor_nahradit,
     }
