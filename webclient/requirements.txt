@@ -11,7 +11,7 @@ django-tables2==2.6.0
 django-tables2-column-shifter==2.2.0
 django-compressor==4.4
 django-libsass==0.9 
-django-autocomplete-light==3.9.8rc29
+django-autocomplete-light==3.11.0rc1
 django-widget-tweaks==1.5.0
 tablib[all]==3.5.0
 django-simple-history==3.4.0
