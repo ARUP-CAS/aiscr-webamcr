@@ -736,9 +736,9 @@ class PermissionFilterMixin():
             logger.debug("no base")
             return qs.none()
         if permission.status:
-            qs.filter(**self.add_status_lookup(permission))
+            qs = qs.filter(**self.add_status_lookup(permission))
         if permission.ownership:
-            qs.filter(self.add_ownership_lookup(permission.ownership,qs))
+            qs = qs.filter(self.add_ownership_lookup(permission.ownership,qs))
         if permission.accessibility:
             qs = self.add_accessibility_lookup(permission,qs)
 
