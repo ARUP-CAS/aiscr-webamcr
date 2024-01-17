@@ -403,6 +403,8 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
     """
     Třída pohledu pro získaní řádku tabulky s externím zdrojem.
     """
+    sheet = None
+
     http_method_names = [
         "post",
     ]
@@ -410,20 +412,39 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
 
     def post(self, request):
         docfile = request.FILES["file"]
+        if docfile.size > 0:
+            logger.debug("pian.views.ImportovatPianView.post.label_check.fileEmpty")
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.fileEmpty."))
         try:
             self.sheet = pd.read_csv(docfile, sep=",")
-        except ValueError as e:
-            logger.debug(e)
-            return HttpResponseBadRequest()
-        if self.sheet.columns[0].lower() != "label":
-            logger.debug("wrong label %s", self.sheet.columns[0].lower())
-            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongLabel") + " " + self.sheet.columns[0])
-        if self.sheet.columns[1] != "epsg":
-            logger.debug("wrong epsg %s", self.sheet.columns[1].lower())
-            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongEpsg") + " " + self.sheet.columns[1])
-        if self.sheet.columns[2] != "geometry":
-            logger.debug("wrong geomtery %s", self.sheet.columns[2].lower())
-            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongGeometry") + " " + self.sheet.columns[2])
+        except ValueError as err:
+            logger.debug("pian.views.ImportovatPianView.post.label_check.unreadable_or_empty",
+                         extra={"err": err})
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
+        if self.sheet.shape[1] != 3:
+            logger.debug("pian.views.ImportovatPianView.post.label_check.incorrect_column_count",
+                         extra={"columns": self.sheet.columns})
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.")} '
+                                          f'{self.sheet.columns}')
+        if self.sheet.shape[0] == 0:
+            logger.debug("pian.views.ImportovatPianView.post.label_check.no_data")
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.no_data")} '
+                                          f'{self.sheet.columns}')
+        if not isinstance(self.sheet.columns[0], str) or self.sheet.columns[0].lower() != "label":
+            logger.debug("pian.views.ImportovatPianView.post.label_check.column0",
+                         extra={"columns": self.sheet.columns})
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column0")} '
+                                          f'{self.sheet.columns[0]}')
+        if not isinstance(self.sheet.columns[1], str) or self.sheet.columns[1].lower() != "epsg":
+            logger.debug("pian.views.ImportovatPianView.post.label_check.column1",
+                         extra={"columns": self.sheet.columns})
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column1")} '
+                                          f'{self.sheet.columns[1]}')
+        if not isinstance(self.sheet.columns[2], str) or self.sheet.columns[2].lower() != "geometry":
+            logger.debug("pian.views.ImportovatPianView.post.label_check.column2",
+                         extra={"columns": self.sheet.columns})
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column2")} '
+                                          f'{self.sheet.columns[2]}')
         self.sheet["result"] = self.sheet.apply(self.check_save_row, axis=1)
         context = self.get_context_data()
         context["table"] = self.sheet
