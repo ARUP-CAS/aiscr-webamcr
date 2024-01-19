@@ -476,9 +476,13 @@ a.dropdown-item {
 }
 
 .pagination.per-page.settings {
-  @media (max-width: 720px) {
+  @media (max-width: 768px) {
     display: none;
   }
+}
+
+.leaflet-left.leaflet-top {
+  z-index: 1100;
 }
 
 .pagination-range {
