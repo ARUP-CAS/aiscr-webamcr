@@ -12,7 +12,7 @@
     <div class="app-fx app-right">
       <div class="btn-group" role="group">
         <div class="dropdown-menu" aria-labelledby="others">
-          <button id="komponenta-smazat-{{k.ident_cely}}" class="dropdown-item komponenta-smazat-btn" type="button" name="button" href="{% url 'komponenta:smazat' k.ident_cely %}">
+          <button id="komponenta-smazat-{{k.ident_cely}}" class="dropdown-item komponenta-smazat-btn" type="button" name="button" href="{% url 'komponenta:smazat' typ_vazby k.ident_cely %}">
             {% trans 'arch_z.templates.arch_z.dj.partials.komponenta_create.editButtons.smazatKomponentu.label' %}
           </button>
         </div>
@@ -25,7 +25,7 @@
     {% endif %}
   </div>
   <div class="card-body">
-    <form class="mb-3" method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="editKompSubmitButton.disabled = true; return true;">
+    <form class="mb-3" method="POST" action="{% url 'komponenta:detail' typ_vazby k.ident_cely %}" onsubmit="editKompSubmitButton.disabled = true; return true;">
       {% crispy k.form %}
 
     <div class="card app-card-form app-card-inner">

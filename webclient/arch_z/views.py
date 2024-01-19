@@ -1046,7 +1046,7 @@ def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
     Funkce volá další funkci pro připojení s parametrem třídou modelu navíc.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
-    if az.akce.projekt.ident_cely != proj_ident_cely:
+    if proj_ident_cely!= None and az.akce.projekt.ident_cely != proj_ident_cely:
         logger.error("Archeologiky zaznam - Projekt wrong relation")
         messages.add_message(
                     request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
