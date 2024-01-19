@@ -52,7 +52,7 @@ from core.utils import (
     get_num_pian_from_envelope,
     get_dj_pians_from_envelope,
 )
-from core.views import SearchListView, check_stav_changed
+from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
@@ -624,8 +624,15 @@ def archivovat(request, ident_cely):
         }
     return render(request, "core/transakce_modal.html", context)
 
-
-class SamostatnyNalezListView(SearchListView):
+class PasPermissionFilterMixin(PermissionFilterMixin):
+    def add_ownership_lookup(self, ownership, qs):
+        filter_historie = {"uzivatel":self.request.user}
+        filtered_my = Historie.objects.filter(**filter_historie)
+        if ownership == p.ownershipChoices.our:
+            return Q(**{"historie_zapsat__in":filtered_my}) | Q(**{"projekt__organizace":self.request.user.organizace})
+        else:
+            return Q(**{"historie_zapsat__in":filtered_my})
+class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     """
     Třída pohledu pro zobrazení přehledu samostatných nálezu s filtrem v podobe tabulky.
     """
@@ -665,13 +672,7 @@ class SamostatnyNalezListView(SearchListView):
         )
         return self.check_filter_permission(qs)
     
-    def add_ownership_lookup(self, ownership, qs):
-        filter_historie = {"uzivatel":self.request.user}
-        filtered_my = Historie.objects.filter(**filter_historie)
-        if ownership == p.ownershipChoices.our:
-            return Q(**{"historie_zapsat__in":filtered_my}) | Q(**{"projekt__organizace":self.request.user.organizace})
-        else:
-            return Q(**{"historie_zapsat__in":filtered_my})
+    
 
 
 
