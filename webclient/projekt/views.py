@@ -117,6 +117,7 @@ from pas.models import SamostatnyNalez
 from core.models import Permissions
 from heslar.hesla import HESLAR_PRISTUPNOST
 from pian.views import PianPermissionFilterMixin
+from pas.views import PasPermissionFilterMixin
 
 logger = logging.getLogger(__name__)
 
@@ -279,7 +280,7 @@ def post_ajax_get_project_one(request):
     else:
         return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
 
-class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PermissionFilterMixin):
+class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PasPermissionFilterMixin):
     """
     Trida pohledu pro získaní heatmapy pas.
     @jiri-bartos presunuto z post_ajax_get_project_pas_limit
@@ -1535,12 +1536,14 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
                 .annotate(ident_len=Length("ident_cely"))
                 .filter(ident_len__gt=0)
             )
-        else:
+        elif self.typ == "dokument":
             qs = (
                 Projekt.objects.filter(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
                 .annotate(ident_len=Length("ident_cely"))
                 .filter(ident_len__gt=0)
             )
+        else:
+            return Projekt.objects.none()
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
         return self.check_filter_permission(qs)
@@ -1559,7 +1562,7 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
                     new_qs = self.filter_by_permission(qs, perm).exclude(pk__in=new_qs.values("pk")) | new_qs
 
             qs = new_qs
-        return qs.none()
+        return qs
 
 
 class ProjectTableRowView(LoginRequiredMixin, View):

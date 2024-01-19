@@ -42,15 +42,11 @@ class PermissionMiddleware:
             if "nalez/smazat" in resolver.route:
                 i = 2
                 typ = resolver.kwargs.get("typ")
-            if resolver.route.startswith("/komponenta"):
-                object = get_record_from_ident(list(resolver.kwargs.values())[i])
-                if isinstance(object, Dokument):
-                    filter.update({"action__like": "dok"})
             if not "autocomplete" in resolver.route:
                 permission_set = Permissions.objects.filter(**filter)
             else:
                 permission_set = Permissions.objects.none()
-            logger.debug("Permissions to check: %s", permission_set)
+            logger.debug("Permissions to check: %s for url: %s", permission_set, resolver.route)
             if permission_set.count() > 0:
                 tested = []
                 if len(resolver.kwargs) > 0:

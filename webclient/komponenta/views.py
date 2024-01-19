@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 
 @login_required
 @require_http_methods(["POST"])
-def detail(request, ident_cely):
+def detail(request, typ_vazby, ident_cely):
     """
     Funkce pohledu pro zapsání editace komponenty.
     """
@@ -163,14 +163,13 @@ def detail(request, ident_cely):
 
 @login_required
 @require_http_methods(["POST"])
-def zapsat(request, dj_ident_cely):
+def zapsat(request, typ_vazby, dj_ident_cely):
     """
     Funkce pohledu pro zapsání vytvořeni komponenty.
     """
-    druh = request.GET.get("typ", None)
     dj = None
     cast = None
-    if druh:
+    if typ_vazby == "dok":
         cast = get_object_or_404(DokumentCast, ident_cely=dj_ident_cely)
     else:
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
@@ -253,7 +252,7 @@ def zapsat(request, dj_ident_cely):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def smazat(request, ident_cely):
+def smazat(request, typ_vazby, ident_cely):
     """
     Funkce pohledu pro smazání komponenty pomoci modalu.
     """
