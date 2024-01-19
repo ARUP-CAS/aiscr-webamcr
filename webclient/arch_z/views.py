@@ -1045,6 +1045,13 @@ def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
     Funkce pohledu pro připojení dokumentu do akce.
     Funkce volá další funkci pro připojení s parametrem třídou modelu navíc.
     """
+    az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
+    if proj_ident_cely!= None and az.akce.projekt.ident_cely != proj_ident_cely:
+        logger.error("Archeologiky zaznam - Projekt wrong relation")
+        messages.add_message(
+                    request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                )
+        return JsonResponse({"redirect": az.get_absolute_url()},status=403)
     return pripojit(request, arch_z_ident_cely, proj_ident_cely, ArcheologickyZaznam)
 
 
@@ -1062,7 +1069,7 @@ def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
         messages.add_message(
                     request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                 )
-        return redirect(request.GET.get("next","core:home"))
+        return JsonResponse({"redirect": az.get_absolute_url()},status=403)
     return odpojit(request, ident_cely, arch_z_ident_cely, az)
 
 
@@ -1285,7 +1292,7 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
         "zmenit_sam_akci": zmenit_sam_akci,
         "smazat": check_permissions(p.actionChoices.archz_smazat, user, archeologicky_zaznam.ident_cely),
         "dokument_odpojit": check_permissions(p.actionChoices.archz_odpojit_dokument, user, archeologicky_zaznam.ident_cely),
-        "komponenta_smazat": check_permissions(p.actionChoices.komponenta_archz_detail, user, archeologicky_zaznam.ident_cely),
+        "komponenta_smazat": check_permissions(p.actionChoices.komponenta_archz_smazat, user, archeologicky_zaznam.ident_cely),
         "pripojit_eo": check_permissions(p.actionChoices.eo_pripojit_ez, user, archeologicky_zaznam.ident_cely),
         "odpojit_eo": check_permissions(p.actionChoices.eo_odpojit_ez, user, archeologicky_zaznam.ident_cely),
         "paginace_edit": check_permissions(p.actionChoices.eo_edit_akce, user, archeologicky_zaznam.ident_cely),
@@ -1334,6 +1341,13 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
     Funkce pohledu pro smazání dalšího vedoucího akce.
     """
     zaznam = AkceVedouci.objects.get(id=akce_vedouci_id)
+    az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    if zaznam.akce.archeologicky_zaznam.ident_cely != ident_cely:
+        logger.error("Archeologiky zaznam - Dokument wrong relation")
+        messages.add_message(
+                    request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                )
+        return JsonResponse({"redirect": az.get_absolute_url()},status=403)
     zaznam.delete()
     next_url = request.GET.get("next")
     if next_url:
@@ -1692,7 +1706,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "form": create_db_form,
         "show_add_adb": show_adb_add,
         "show_add_komponenta": show_add_komponenta,
-        "show_add_pian": show_add_pian,
+        "show_add_pian": (show_add_pian and check_permissions(p.actionChoices.pian_zapsat, user, jednotka.ident_cely)),
         "show_add_pian_zapsat": (show_add_pian and check_permissions(p.actionChoices.pian_zapsat, user, jednotka.ident_cely)),
         "show_add_pian_importovat": (show_add_pian and check_permissions(p.actionChoices.pian_zapsat, user, jednotka.ident_cely)),
         "show_remove_pian": (not show_add_pian and check_permissions(p.actionChoices.pian_odpojit, user, jednotka.ident_cely) and jednotka.typ.id != TYP_DJ_KATASTR),
@@ -1700,7 +1714,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_approve_pian": show_approve_pian,
         "show_pripojit_pian": True if jednotka.pian is None else False,
         "show_import_pian_new": show_add_pian and check_permissions(p.actionChoices.pian_import_new, user, jednotka.ident_cely),
-        "show_import_pian_change": not show_add_pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and check_permissions(p.actionChoices.pian_import_change, user, jednotka.pian.ident_cely),
+        "show_import_pian_change": not show_add_pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and check_permissions(p.actionChoices.pian_import_change, user, jednotka.pian.ident_cely) and jednotka.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY,
         "show_change_katastr": True if jednotka.typ.id == TYP_DJ_KATASTR and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely) else False,
         "show_dj_smazat": check_permissions(p.actionChoices.dj_smazat, user, jednotka.ident_cely),
         "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat,user,jednotka.ident_cely),

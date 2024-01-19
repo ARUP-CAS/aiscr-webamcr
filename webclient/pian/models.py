@@ -144,7 +144,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return my_list
         except Exception as e:
             logger.debug(e)
-            return None
+            return ()
     
     def get_create_org(self):
         try:
@@ -162,7 +162,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return our_list
         except Exception as e:
             logger.debug(e)
-            return None
+            return ()
 
     def set_permanent_ident_cely(self):
         """

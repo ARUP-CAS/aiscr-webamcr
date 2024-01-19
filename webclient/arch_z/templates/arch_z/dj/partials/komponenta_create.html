@@ -10,7 +10,7 @@
     </div>
   </div>
   <div class="card-body">
-    <form method="POST" action="{% url 'komponenta:zapsat' j.ident_cely %}?typ={{type}}" id="create_komponenta_form_id"
+    <form method="POST" action="{% url 'komponenta:zapsat' type j.ident_cely %}" id="create_komponenta_form_id"
           onsubmit="createCompotSubmitButton.disabled = true; return true;">
       <!-- Action is filled using javascript -->
       {% crispy komponenta_form_create %}

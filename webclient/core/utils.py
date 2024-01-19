@@ -24,8 +24,9 @@ from core.constants import ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
 
 logger = logging.getLogger(__name__)
 
+
 def file_validate_epsg(epsg):
-    if epsg=='4326' or epsg==4326:
+    if epsg == '4326' or epsg == 4326:
         return True
     else:
         return False
@@ -709,7 +710,7 @@ def get_pian_from_envelope(left, bottom, right, top, request):
     perm_object.request = request
 
     pian_filtered = perm_object.check_filter_permission(pian_queryset, p.actionChoices.mapa_pian)
-
+    logger.debug(pian_filtered)
     try:
         return DokumentacniJednotka.objects.filter(
                     pian__in=pian_filtered

@@ -117,6 +117,7 @@ from pas.models import SamostatnyNalez
 from core.models import Permissions
 from heslar.hesla import HESLAR_PRISTUPNOST
 from pian.views import PianPermissionFilterMixin
+from pas.views import PasPermissionFilterMixin
 
 logger = logging.getLogger(__name__)
 
@@ -279,7 +280,7 @@ def post_ajax_get_project_one(request):
     else:
         return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
 
-class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PermissionFilterMixin):
+class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PasPermissionFilterMixin):
     """
     Trida pohledu pro získaní heatmapy pas.
     @jiri-bartos presunuto z post_ajax_get_project_pas_limit
@@ -550,10 +551,9 @@ def smazat(request, ident_cely):
 class ProjektPermissionFilterMixin(PermissionFilterMixin):
     def add_ownership_lookup(self, ownership, qs=None):
         if ownership == Permissions.ownershipChoices.our:
-            filterdoc = {"organizace":self.request.user.organizace}
+            return Q(**{"organizace":self.request.user.organizace})
         else:
-            filterdoc = {}
-        return filterdoc
+            return Q()
     
     def add_accessibility_lookup(self,permission, qs):
         accessibility_key = self.permission_model_lookup+"pristupnost_filter__in"
@@ -565,7 +565,7 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
             .values("pristupnost")
         )
         qs_new = qs.annotate(pristupnost_filter=Subquery(pristupnost[:1]))
-        return qs_new.filter(Q(**filter) | Q(pristupnost_filter__isnull=True) | Q(**self.add_ownership_lookup(permission.accessibility)))
+        return qs_new.filter(Q(**filter) | Q(pristupnost_filter__isnull=True) | self.add_ownership_lookup(permission.accessibility))
 
 class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
     """
@@ -1436,6 +1436,7 @@ def get_detail_template_shows(projekt, user):
         "zapsat_dokumenty": check_permissions(p.actionChoices.dok_zapsat_do_projekt, user, projekt.ident_cely),
         "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, projekt.ident_cely),
         "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_projekt, user, projekt.ident_cely),
+        "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_projekt, user, projekt.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_projekt, user, projekt.ident_cely),
         "soubor_nahrat": check_permissions(p.actionChoices.soubor_nahrat_projekt, user, projekt.ident_cely),
     }
@@ -1535,12 +1536,14 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
                 .annotate(ident_len=Length("ident_cely"))
                 .filter(ident_len__gt=0)
             )
-        else:
+        elif self.typ == "dokument":
             qs = (
                 Projekt.objects.filter(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
                 .annotate(ident_len=Length("ident_cely"))
                 .filter(ident_len__gt=0)
             )
+        else:
+            return Projekt.objects.none()
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
         return self.check_filter_permission(qs)

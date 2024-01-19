@@ -107,7 +107,7 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         return qs
     
     def add_ownership_lookup(self, ownership, qs=None):
-        return {}
+        return Q()
 
 class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     def get_result_label(self, result):

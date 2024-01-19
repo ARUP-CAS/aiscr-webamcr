@@ -40,8 +40,8 @@
 	<!-- Date picker imports -->
 	<script>
     		var drp_translations = {
-			cancelLabel: '{%trans "drp.cancelLabel" %}',
-			applyLabel: '{%trans "drp.applyLabel" %}'
+			cancelLabel: '{% trans "drp.cancelLabel" %}',
+			applyLabel: '{% trans "drp.applyLabel" %}'
     		}
   	</script> 
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
@@ -77,34 +77,34 @@
 {% block script %}
   <script>
     var map_translations = {
-      	CurrentLocationError: '{%trans "mapa.CurrentLocationError" %}',
-	cuzkKatastralniMapa: '{%trans "mapa.cuzkKatastralniMapa" %}',
-	cuzkKatastralniUzemi: '{%trans "mapa.cuzkKatastralniUzemi" %}',
-	cuzkOrtofotomapa: '{%trans "mapa.cuzkOrtofotomapa" %}',
-	cuzkStinovanyeelief5G: '{%trans "mapa.cuzkStinovanyeelief5G" %}',
-	cuzkzakladniMapyCr: '{%trans "mapa.cuzkzakladniMapyCr" %}',
-	DefaultTitle: '{%trans "mapa.DefaultTitle" %}',
-	EditTurnOff: '{%trans "mapa.EditTurnOff" %}',
-	EditTurnOn: '{%trans "mapa.EditTurnOn" %}',
-	FullscreenTitle: '{%trans "mapa.FullscreenTitle" %}',
-	FullscreenTitleClose: '{%trans "mapa.FullscreenTitleClose" %}',
-	lokalizaceProjektu: '{%trans "mapa.lokalizaceProjektu" %}',
-	MeasureTitle: '{%trans "mapa.MeasureTitle" %}',
-	openStreetMap: '{%trans "mapa.openStreetMap" %}',
-	openStreetMapSeda: '{%trans "mapa.openStreetMapSeda" %}',
-	projektyP1: '{%trans "mapa.projektyP1" %}',
-	projektyP2: '{%trans "mapa.projektyP2" %}',
-	projektyP3: '{%trans "mapa.projektyP3" %}',
-	projektyP46: '{%trans "mapa.projektyP46" %}',
-	projektyP78: '{%trans "mapa.projektyP78" %}',
-	projektyPAS: '{%trans "mapa.projektyPAS" %}',
-	projektyPIAN: '{%trans "mapa.projektyPIAN" %}',
-	SearchText: '{%trans "mapa.SearchText" %}',
-	SearchTextCancel: '{%trans "mapa.SearchTextCancel" %}',
-	SearchTextError: '{%trans "mapa.SearchTextError" %}',
-	SelectedLocation: '{%trans "mapa.SelectedLocation" %}',
-	zoomInTitle: '{%trans "mapa.zoomInTitle" %}',
-	zoomOutTitle: '{%trans "mapa.zoomOutTitle" %}'
+      	CurrentLocationError: '{% trans "mapa.CurrentLocationError" %}',
+	cuzkKatastralniMapa: '{% trans "mapa.cuzkKatastralniMapa" %}',
+	cuzkKatastralniUzemi: '{% trans "mapa.cuzkKatastralniUzemi" %}',
+	cuzkOrtofotomapa: '{% trans "mapa.cuzkOrtofotomapa" %}',
+	cuzkStinovanyeelief5G: '{% trans "mapa.cuzkStinovanyeelief5G" %}',
+	cuzkzakladniMapyCr: '{% trans "mapa.cuzkzakladniMapyCr" %}',
+	DefaultTitle: '{% trans "mapa.DefaultTitle" %}',
+	EditTurnOff: '{% trans "mapa.EditTurnOff" %}',
+	EditTurnOn: '{% trans "mapa.EditTurnOn" %}',
+	FullscreenTitle: '{% trans "mapa.FullscreenTitle" %}',
+	FullscreenTitleClose: '{% trans "mapa.FullscreenTitleClose" %}',
+	lokalizaceProjektu: '{% trans "mapa.lokalizaceProjektu" %}',
+	MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
+	openStreetMap: '{% trans "mapa.openStreetMap" %}',
+	openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
+	projektyP1: '{% trans "mapa.projektyP1" %}',
+	projektyP2: '{% trans "mapa.projektyP2" %}',
+	projektyP3: '{% trans "mapa.projektyP3" %}',
+	projektyP46: '{% trans "mapa.projektyP46" %}',
+	projektyP78: '{% trans "mapa.projektyP78" %}',
+	projektyPAS: '{% trans "mapa.projektyPAS" %}',
+	projektyPIAN: '{% trans "mapa.projektyPIAN" %}',
+	SearchText: '{% trans "mapa.SearchText" %}',
+	SearchTextCancel: '{% trans "mapa.SearchTextCancel" %}',
+	SearchTextError: '{% trans "mapa.SearchTextError" %}',
+	SelectedLocation: '{% trans "mapa.SelectedLocation" %}',
+	zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
+	zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
     };
   </script>
   <script >
@@ -122,7 +122,7 @@
       global_map_can_edit = true;
       if (document.getElementById("id_coordinate_x2").value > 1) {
           console.log("Adding point to map.")
-          addPointOnLoad(document.getElementById("id_coordinate_x2").value, document.getElementById("id_coordinate_x1").value,  '{%trans "mapa.lokalizaceProjektu" %}',"{{projekt.ident_cely}}", "{{projekt.stav}}");
+          addPointOnLoad(document.getElementById("id_coordinate_x2").value, document.getElementById("id_coordinate_x1").value,  '{% trans "mapa.lokalizaceProjektu" %}',"{{projekt.ident_cely}}", "{{projekt.stav}}");
       } else {
           switchMap(false);
           console.log("Not adding point to map!")

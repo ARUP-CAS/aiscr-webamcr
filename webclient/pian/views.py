@@ -38,7 +38,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
-from django.db.models import OuterRef, Subquery, Q
+from django.db.models import OuterRef, Subquery, Q, FilteredRelation
 from django.urls import reverse
 from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA, PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
@@ -340,27 +340,42 @@ def mapaDj(request, ident_cely):
 
 
 class PianPermissionFilterMixin(PermissionFilterMixin):
+
+    def filter_by_permission(self, qs, permission):
+        qs = qs.annotate(
+            historie_zapsat_pian=FilteredRelation(
+            "historie__historie",
+            condition=Q(**{"historie__historie__typ_zmeny":ZAPSANI_PIAN}),
+            ),
+            historie_zapsat_az=FilteredRelation(
+            "dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie",
+            condition=Q(**{"dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__typ_zmeny":ZAPSANI_AZ}),
+            )
+        )
+        if not permission.base:
+            logger.debug("no base")
+            return qs.none()
+        if permission.status:
+            qs = qs.filter(**self.add_status_lookup(permission))
+        if permission.ownership:
+            qs = qs.filter(self.add_ownership_lookup(permission.ownership,qs))
+        if permission.accessibility:
+            qs = self.add_accessibility_lookup(permission,qs)
+
+        return qs
+    
     def add_ownership_lookup(self, ownership, qs=None):
-        filtered_pian_history = Historie.objects.filter(typ_zmeny=ZAPSANI_PIAN,uzivatel=self.request.user)
-        filtered_pian_pian = set(Pian.objects.filter(historie__historie__in=filtered_pian_history).values_list("pk", flat=True))
-        filtered_az_history = Historie.objects.filter(typ_zmeny=ZAPSANI_AZ,uzivatel=self.request.user)
-        filtered_pian_az = set(Pian.objects.filter(dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__in=filtered_az_history).values_list("pk", flat=True))
-        filtered_pian_my = filtered_pian_pian.union(filtered_pian_az)
+        filtered_pian_history = Historie.objects.filter(uzivatel=self.request.user)
+        filtered_az_history = Historie.objects.filter(uzivatel=self.request.user)
         if ownership == Permissions.ownershipChoices.our:
-            filtered_pian_history_our = Historie.objects.filter(typ_zmeny=ZAPSANI_PIAN,uzivatel__organizace=self.request.user.organizace)
-            filtered_pian_pian_our = set(Pian.objects.filter(historie__historie__in=filtered_pian_history_our).values_list("pk", flat=True))
-            filtered_az_history_our = Historie.objects.filter(typ_zmeny=ZAPSANI_AZ,uzivatel__organizace=self.request.user.organizace)
-            filtered_pian_az_our = set(Pian.objects.filter(dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__in=filtered_az_history_our).values_list("pk", flat=True))
-            filtered_pian_projekt_our = set(Pian.objects.filter(dokumentacni_jednotky_pianu__archeologicky_zaznam__akce__projekt__organizace=self.request.user.organizace).values_list("pk", flat=True))
-            filtered_pian_my_our = filtered_pian_pian_our.union(filtered_pian_az_our).union(filtered_pian_projekt_our)
+            filtered_pian_history_our = Historie.objects.filter(uzivatel__organizace=self.request.user.organizace)
+            filtered_az_history_our = Historie.objects.filter(uzivatel__organizace=self.request.user.organizace)
+            return Q(**{"historie_zapsat_pian__in":filtered_pian_history}) | Q(**{"historie_zapsat_az__in":filtered_az_history}) | Q(**{"historie_zapsat_pian__in":filtered_pian_history_our}) | Q(**{"historie_zapsat_az__in":filtered_az_history_our}) | Q(**{"dokumentacni_jednotky_pianu__archeologicky_zaznam__akce__projekt__organizace":self.request.user.organizace})
         else:
-            filtered_pian_my_our = set()
-        filtered_pians = filtered_pian_my.union(filtered_pian_my_our)
-        return {"pk__in":filtered_pians}
+            return Q(**{"historie_zapsat_pian__in":filtered_pian_history}) | Q(**{"historie_zapsat_az__in":filtered_az_history})
 
     
     def add_accessibility_lookup(self,permission, qs):
-        ownership_qs = qs.filter(**self.add_ownership_lookup(permission.accessibility))
         accessibility_key = self.permission_model_lookup+"pristupnost_filter__in"
         accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id))
         filter = {accessibility_key:accessibilities}
@@ -370,8 +385,7 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
             .values("pristupnost")
         )
         qs = qs.annotate(pristupnost_filter=Subquery(pristupnost[:1]))
-        qs_access = qs.exclude(pk__in=ownership_qs.values("pk")).filter(Q(**filter)|Q(pristupnost_filter__isnull=True))
-        return (ownership_qs | qs_access)
+        return qs.filter(Q(**filter)|Q(pristupnost_filter__isnull=True)|Q(self.add_ownership_lookup(permission.accessibility)))
 
 
 class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, PianPermissionFilterMixin):
@@ -389,6 +403,8 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
     """
     Třída pohledu pro získaní řádku tabulky s externím zdrojem.
     """
+    sheet = None
+
     http_method_names = [
         "post",
     ]
@@ -396,20 +412,39 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
 
     def post(self, request):
         docfile = request.FILES["file"]
+        if docfile.size > 0:
+            logger.debug("pian.views.ImportovatPianView.post.label_check.fileEmpty")
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.fileEmpty."))
         try:
             self.sheet = pd.read_csv(docfile, sep=",")
-        except ValueError as e:
-            logger.debug(e)
-            return HttpResponseBadRequest()
-        if self.sheet.columns[0].lower() != "label":
-            logger.debug("wrong label %s", self.sheet.columns[0].lower())
-            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongLabel") + " " + self.sheet.columns[0])
-        if self.sheet.columns[1] != "epsg":
-            logger.debug("wrong epsg %s", self.sheet.columns[1].lower())
-            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongEpsg") + " " + self.sheet.columns[1])
-        if self.sheet.columns[2] != "geometry":
-            logger.debug("wrong geomtery %s", self.sheet.columns[2].lower())
-            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongGeometry") + " " + self.sheet.columns[2])
+        except ValueError as err:
+            logger.debug("pian.views.ImportovatPianView.post.label_check.unreadable_or_empty",
+                         extra={"err": err})
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
+        if self.sheet.shape[1] != 3:
+            logger.debug("pian.views.ImportovatPianView.post.label_check.incorrect_column_count",
+                         extra={"columns": self.sheet.columns})
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.")} '
+                                          f'{self.sheet.columns}')
+        if self.sheet.shape[0] == 0:
+            logger.debug("pian.views.ImportovatPianView.post.label_check.no_data")
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.no_data")} '
+                                          f'{self.sheet.columns}')
+        if not isinstance(self.sheet.columns[0], str) or self.sheet.columns[0].lower() != "label":
+            logger.debug("pian.views.ImportovatPianView.post.label_check.column0",
+                         extra={"columns": self.sheet.columns})
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column0")} '
+                                          f'{self.sheet.columns[0]}')
+        if not isinstance(self.sheet.columns[1], str) or self.sheet.columns[1].lower() != "epsg":
+            logger.debug("pian.views.ImportovatPianView.post.label_check.column1",
+                         extra={"columns": self.sheet.columns})
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column1")} '
+                                          f'{self.sheet.columns[1]}')
+        if not isinstance(self.sheet.columns[2], str) or self.sheet.columns[2].lower() != "geometry":
+            logger.debug("pian.views.ImportovatPianView.post.label_check.column2",
+                         extra={"columns": self.sheet.columns})
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column2")} '
+                                          f'{self.sheet.columns[2]}')
         self.sheet["result"] = self.sheet.apply(self.check_save_row, axis=1)
         context = self.get_context_data()
         context["table"] = self.sheet
