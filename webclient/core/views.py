@@ -946,8 +946,11 @@ def post_ajax_get_pas_and_pian_limit(request):
                         }
                     )
 
-        if req_pian:    
+        if req_pian:  
+            logger.debug("Start getting pians")  
             pians = get_pian_from_envelope(*params[0:4],request)    
+            logger.debug("End getting pians")  
+            logger.debug("Start building pians")  
             for pian in pians:
                 if pian["pian__id"] not in remove_duplicity:
                     remove_duplicity.append(pian["pian__id"])
@@ -965,6 +968,7 @@ def post_ajax_get_pas_and_pian_limit(request):
                         
                         }
                     )
+            logger.debug("End building pians")  
         if num > 0:
             return JsonResponse({"points": back, "algorithm": "detail","count":num}, status=200)
         else:
