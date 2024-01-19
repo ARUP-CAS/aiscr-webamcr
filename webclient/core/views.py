@@ -707,7 +707,7 @@ class PermissionFilterMixin():
                 if idx == 0:
                     new_qs = self.filter_by_permission(qs, perm)
                 else:
-                    new_qs = self.filter_by_permission(qs, perm).exclude(pk__in=new_qs.values("pk")) | new_qs
+                    new_qs = self.filter_by_permission(qs, perm) | new_qs
 
             perm_skips = list(PermissionsSkip.objects.filter(user=self.request.user).values_list("ident_list",flat=True))
             if len(perm_skips) > 0:
