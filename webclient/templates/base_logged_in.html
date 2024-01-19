@@ -253,7 +253,7 @@
     <button class="btn btn-light mb-0 mt-0" id="sidebar-toggle"><span class="material-icons">menu_open</span></button>
     <span class="navbar-mobile-header-ident" id="navbar-mobile-header-ident">
       {% if search_sum %}
-        {% trans "templates.baseLogedIn.navbar.pocetZaznamuShort" %}: <strong>{{ table.rows|length }}</strong>
+        {% trans "templates.baseLogedIn.navbar.pocetZaznamuShort" %}: {{ table.rows|length }}
       {% elif projekt %}
         <span class="navbar-mobile-header-ident-projekt">{{ projekt.ident_cely }}</span>
       {% elif app == "akce" %}
@@ -704,6 +704,19 @@
         }
       }
     }
+
+  $('.selectpicker.form-control').on('show.bs.select', function () {
+      const closestDiv = $(this).closest('.content-with-table-responsive');
+      if (closestDiv.length) {
+          closestDiv.css('overflow', 'visible');
+      }
+  });
+  $('.selectpicker.form-control').on('hide.bs.select', function () {
+      const closestDiv = $(this).closest('.content-with-table-responsive');
+      if (closestDiv.length) {
+          closestDiv.css('overflow', 'scroll');
+      }
+  });
 
 </script>
 {% endblock %}
