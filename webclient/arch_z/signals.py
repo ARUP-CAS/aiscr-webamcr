@@ -1,5 +1,7 @@
 import logging
 
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import RestrictedError
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
@@ -16,12 +18,15 @@ def create_arch_z_vazby(sender, instance, **kwargs):
         Metóda pro vytvoření historických vazeb arch záznamu.
         Metóda se volá pred uložením arch záznamu.
     """
+    logger.debug("arch_z.signals.create_arch_z_vazby.start")
     if instance.pk is None:
         logger.debug(
             "arch_z.create_arch_z_vazby", extra={"instance": str(instance)})
         hv = HistorieVazby(typ_vazby=ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE)
         hv.save()
         instance.historie = hv
+        logger.debug("arch_z.signals.create_arch_z_vazby.created_vazby", extra={"hv_pk": hv.pk})
+    logger.debug("arch_z.signals.create_arch_z_vazby.end", extra={"record_pk": instance.pk})
 
 
 @receiver(post_save, sender=ArcheologickyZaznam)
@@ -29,6 +34,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     """
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
+    logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"record_pk": instance.pk})
     if not instance.suppress_signal:
         instance.save_metadata()
     if instance.initial_pristupnost is not None and instance.pristupnost.id != instance.initial_pristupnost.id:
@@ -39,6 +45,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                 pristupnost = dok_jednotka.pian.evaluate_pristupnost_change(instance.pristupnost.id, instance.id)
                 if initial_pristupnost.id != pristupnost.id:
                     dok_jednotka.pian.save_metadata()
+    logger.debug("arch_z.signals.create_arch_z_metadata.end", extra={"record_pk": instance.pk})
 
 
 @receiver(post_save, sender=ExterniOdkaz)
@@ -46,10 +53,12 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
     """
         Funkce pro aktualizaci metadat externího odkazu.
     """
+    logger.debug("arch_z.signals.create_externi_odkaz_metadata.start", extra={"record_pk": instance.pk})
     if instance.archeologicky_zaznam is not None:
         instance.archeologicky_zaznam.save_metadata()
     if instance.externi_zdroj is not None:
         instance.externi_zdroj.save_metadata()
+    logger.debug("arch_z.signals.create_externi_odkaz_metadata.end", extra={"record_pk": instance.pk})
 
 
 @receiver(pre_delete, sender=ArcheologickyZaznam)
@@ -57,9 +66,15 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
     """
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
+    logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.start",
+                 extra={"record_pk": instance.pk})
     instance.record_deletion()
-    if instance.akce.projekt is not None:
-        instance.akce.projekt.save_metadata()
+    try:
+        if instance.akce.projekt is not None:
+            instance.akce.projekt.save_metadata()
+    except ObjectDoesNotExist as err:
+        logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.no_akce",
+                     extra={"record_pk": instance.pk, "err": err})
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
     komponenty_jednotek_vazby = []
@@ -70,7 +85,10 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
         komponenta_vazba.delete()
     if instance.externi_odkazy:
         for eo in instance.externi_odkazy.all():
+            eo.suppress_signal_arch_z = True
             eo.delete()
+    logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.end",
+                 extra={"record_pk": instance.pk})
 
 
 @receiver(post_delete, sender=ExterniOdkaz)
@@ -78,7 +96,11 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     """
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
-    if instance.archeologicky_zaznam is not None:
+    logger.debug("arch_z.signals.delete_externi_odkaz_repository_container.start",
+                 extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z})
+    if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
         instance.archeologicky_zaznam.save_metadata()
     if instance.externi_zdroj is not None:
         instance.externi_zdroj.save_metadata()
+    logger.debug("arch_z.signals.delete_externi_odkaz_repository_container.end",
+                 extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z})

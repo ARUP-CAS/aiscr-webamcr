@@ -47,9 +47,14 @@ class ModelWithMetadata(models.Model):
         return False
 
     def save_metadata(self, use_celery=True, include_files=False):
-        logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.start")
+        logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.start",
+                     extra={"ident_cely": self.ident_cely, "use_celery": use_celery, "record_pk": self.pk,
+                            "record_class": self.__class__.__name__})
         if use_celery:
             if self.update_queued(self.__class__.__name__, self.pk):
+                logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.already_scheduled",
+                             extra={"ident_cely": self.ident_cely, "use_celery": use_celery, "record_pk": self.pk,
+                                    "record_class": self.__class__.__name__})
                 return
             from cron.tasks import save_record_metadata
             save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
