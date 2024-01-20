@@ -873,6 +873,7 @@ def zapsat(request, projekt_ident_cely=None):
         ):
             logger.debug("arch_z.views.zapsat.form_valid", extra={"projekt_ident_cely": projekt_ident_cely})
             az = form_az.save(commit=False)
+            az: ArcheologickyZaznam
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
             try:
@@ -1006,7 +1007,7 @@ def smazat(request, ident_cely):
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         except RestrictedError as err:
-            logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely})
+            logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "err": err})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
             return JsonResponse(
                 {"redirect": az.get_absolute_url()},

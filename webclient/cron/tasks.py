@@ -435,7 +435,7 @@ def get_record(class_name, record_pk):
 @shared_task
 def save_record_metadata(class_name, record_pk):
     try:
-        logger.debug("cron.send_notifications.do.start", extra={"class_name": class_name, "record_pk": record_pk})
+        logger.debug("cron.save_record_metadata.do.start", extra={"class_name": class_name, "record_pk": record_pk})
         from xml_generator.models import ModelWithMetadata
         record = get_record(class_name, record_pk)
         if record is not None:
@@ -444,10 +444,12 @@ def save_record_metadata(class_name, record_pk):
             connector = FedoraRepositoryConnector(record)
             connector.save_metadata(True)
         else:
-            logger.warning("cron.send_notifications.do.is_null")
-        logger.debug("cron.send_notifications.do.end")
+            logger.warning("cron.save_record_metadata.do.is_null", extra={"class_name": class_name,
+                                                                          "record_pk": record_pk})
+        logger.debug("cron.save_record_metadata.do.end", extra={"class_name": class_name, "record_pk": record_pk})
     except Exception as err:
-        logger.error("cron.send_notifications.do.error", extra={"error": err})
+        logger.error("cron.save_record_metadata.do.error", extra={"class_name": class_name,
+                                                                  "record_pk": record_pk, "error": err})
 
 
 @shared_task

@@ -191,13 +191,19 @@ class FedoraRepositoryConnector:
             return f"{base_url}/model/deleted/member/{self.record.ident_cely}/fcr:tombstone"
 
     @classmethod
+    def check_container_deleted(cls, ident_cely):
+        result = cls._send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
+        regex = re.compile(r"dcterms:type *\"deleted\" *;")
+        return hasattr(result, "text") and regex.search(result.text)
+
+    @classmethod
     def check_container_deleted_or_not_exists(cls, ident_cely):
         logger.debug("core_repository_connector.check_container_is_deleted.start",
                      extra={"ident_cely": ident_cely})
         result = cls._send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
         regex = re.compile(r"dcterms:type *\"deleted\" *;")
         if ((result.status_code == 404 or (hasattr(result, "text") and "not found" in result.text)) or
-                hasattr(result, "text") and regex.search(result.text)):
+                cls.check_container_deleted(ident_cely)):
             logger.debug("core_repository_connector.check_container_is_deleted.true",
                          extra={"ident_cely": ident_cely})
             return True
@@ -209,7 +215,13 @@ class FedoraRepositoryConnector:
     @staticmethod
     def _send_request(url: str, request_type: FedoraRequestType, *,
                       headers=None, data=None) -> Optional[requests.Response]:
-        logger.debug("core_repository_connector._send_request.start", extra={"url": url, "request_type": request_type})
+        extra = {"url": url, "request_type": request_type}
+        if headers:
+            extra["headers"] = headers
+        if data and len(str(data)) < 10 ** 3:
+            extra["data"] = data
+
+        logger.debug("core_repository_connector._send_request.start", extra=extra)
         if request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
                             FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE,
                             FedoraRequestType.DELETE_DELETED_CONTAINER):
@@ -251,6 +263,9 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.DELETE_BINARY_FILE,
                               FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2):
             response = requests.patch(url, auth=auth, headers=headers, data=data)
+
+        extra["response_text"] = response.text
+        extra["status_code"] = response.status_code
         if request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
                                 FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
                                 FedoraRequestType.GET_LINK, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
@@ -258,21 +273,14 @@ class FedoraRepositoryConnector:
                                 FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3, FedoraRequestType.GET_DELETED_LINK,
                                 ):
             if str(response.status_code)[0] == "2":
-                logger.debug("core_repository_connector._send_request.response.ok",
-                             extra={"text": response.text, "status_code": response.status_code,
-                                    "request_type": request_type})
+                logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
             else:
                 extra = {"text": response.text, "status_code": response.status_code, "request_type": request_type}
-                if headers:
-                    extra["headers"] = headers
-                if data and len(str(data)) < 10 ** 3:
-                    extra["data"] = data
+
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
                 raise FedoraError(url, response.text, response.status_code)
         else:
-            logger.debug("core_repository_connector._send_request.response",
-                         extra={"text": response.text, "status_code": response.status_code,
-                                "request_type": request_type})
+            logger.debug("core_repository_connector._send_request.response", extra=extra)
         return response
 
     def _create_container(self):
