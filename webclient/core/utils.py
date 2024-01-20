@@ -6,6 +6,7 @@ import zlib
 import core.message_constants as mc
 import requests
 from arch_z.models import ArcheologickyZaznam, ArcheologickyZaznamKatastr
+from django.contrib.gis.db.models.functions import Centroid
 from core.message_constants import (
     VALIDATION_EMPTY,
     VALIDATION_LINE_LENGTH,
@@ -267,7 +268,6 @@ def get_centre_from_akce(katastr, akce_ident_cely):
     """
     Funkce pro bodu, geomu a presnosti z akce.
     """
-    from django.contrib.gis.db.models.functions import Centroid
     from dj.models import DokumentacniJednotka
     from django.db.models import Q
     query = (
@@ -680,7 +680,8 @@ def get_num_pian_from_envelope(left, bottom, right, top, request):
     pian_filtered = perm_object.check_filter_permission(pian_queryset, p.actionChoices.mapa_pian)
 
     try:
-        return DokumentacniJednotka.objects.filter(pian__in=pian_filtered).count()
+        return pian_filtered.annotate(centroid=Centroid("geom"))
+        #return DokumentacniJednotka.objects.filter(pian__in=pian_filtered).count()
     except IndexError:
         logger.debug(
             "core.utils.get_num_pian_from_envelope.no_points",
@@ -696,7 +697,6 @@ def get_pian_from_envelope(left, bottom, right, top, request):
     musi zohlednit pristupnost [mapa_pian]
     """
     from dj.models import DokumentacniJednotka
-    from django.contrib.gis.db.models.functions import Centroid
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
     from pian.views import PianPermissionFilterMixin
@@ -710,18 +710,9 @@ def get_pian_from_envelope(left, bottom, right, top, request):
     perm_object.request = request
 
     pian_filtered = perm_object.check_filter_permission(pian_queryset, p.actionChoices.mapa_pian)
-    logger.debug(pian_filtered)
+    #logger.debug(pian_filtered)
     try:
-        return DokumentacniJednotka.objects.filter(
-                    pian__in=pian_filtered
-                ).annotate(pian__centroid=Centroid("pian__geom")).distinct()[:10000].values(
-                    "pian__id",
-                    "pian__ident_cely",
-                    "pian__geom",
-                    "pian__presnost__zkratka",
-                    "ident_cely",
-                    "pian__centroid",
-                )
+        return pian_filtered.annotate(centroid=Centroid("geom"))
     except IndexError:
         logger.debug(
             "core.utils.get_pian_from_envelope.no_points",

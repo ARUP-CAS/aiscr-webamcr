@@ -20,8 +20,9 @@ from django.views.generic import TemplateView
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.gis.db.models.functions import AsWKT
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q, FilteredRelation
+from django.db.models import Q, FilteredRelation, Value, F, OuterRef, Subquery
 from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -74,6 +75,7 @@ from datetime import datetime
 from heslar.hesla import HESLAR_PRISTUPNOST
 
 from heslar.models import Heslar
+from dj.models import DokumentacniJednotka
 from .exceptions import ZaznamSouborNotmatching
 from .models import Permissions, PermissionsSkip
 from historie.models import Historie
@@ -916,58 +918,66 @@ def post_ajax_get_pas_and_pian_limit(request):
             body["southEast"]["lat"],
             body["zoom"]
             ]
-    num1 =  get_num_pass_from_envelope(*params[0:4],request)
-    num2 =  get_num_pian_from_envelope(*params[0:4],request)
+    num=0
     req_pian=body["pian"]
     req_pas=body["pas"]
-    logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"num": num1+num2})
-    num=0
     if req_pas:
-        num=num+num1
+        pases =  get_pas_from_envelope(*params[0:4],request).distinct()
+        num = num+pases.count()
 
     if req_pian:
-        num=num+num2
+        pians = get_pian_from_envelope(*params[0:4],request).distinct()
+        num = num + pians.count()
 
+    logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"num": num})
     if num< 5000:
         back = []
         remove_duplicity = []
 
         if req_pas:
-            pases = get_pas_from_envelope(*params[0:4],request)
-            for pas in pases:
-                if pas.id not in remove_duplicity:
-                    remove_duplicity.append(pas.id)
-                    back.append(
-                        {
-                            "id": pas.id,
-                            "ident_cely": pas.ident_cely,
-                            "geom": pas.geom.wkt.replace(", ", ","),
-                            "type": "pas"
-                        }
-                    )
+            #pases = get_pas_from_envelope(*params[0:4],request)
+            back=list(pases.values("id","ident_cely",type=Value("pas")).annotate(geom=AsWKT("geom")))
+            # for pas in pases:
+            #     if pas.id not in remove_duplicity:
+            #         remove_duplicity.append(pas.id)
+            #         back.append(
+            #             {
+            #                 "id": pas.id,
+            #                 "ident_cely": pas.ident_cely,
+            #                 "geom": pas.geom.wkt.replace(", ", ","),
+            #                 "type": "pas"
+            #             }
+            #         )
 
         if req_pian:  
             logger.debug("Start getting pians")  
-            pians = get_pian_from_envelope(*params[0:4],request)    
-            logger.debug("End getting pians")  
-            logger.debug("Start building pians")  
-            for pian in pians:
-                if pian["pian__id"] not in remove_duplicity:
-                    remove_duplicity.append(pian["pian__id"])
-                    back.append(
+            dok_jed = DokumentacniJednotka.objects.filter(
+                pian=OuterRef('pk')
+            ).order_by('-pk').values('ident_cely')
+            if num < 500:
+                back=list(pians.values("id","ident_cely",type=Value("pian")).annotate(geom=AsWKT("geom"),presnost=F("presnost__zkratka"),dj=Subquery(dok_jed[:1])))
+            else:
+                back=list(pians.values("id","ident_cely",type=Value("pian")).annotate(geom=AsWKT("centroid"),presnost=F("presnost__zkratka"),dj=Subquery(dok_jed[:1])))
+            # pians = get_pian_from_envelope(*params[0:4],request)    
+            # logger.debug("End getting pians")  
+            # logger.debug("Start building pians")  
+            # for pian in pians:
+            #     if pian["pian__id"] not in remove_duplicity:
+            #         remove_duplicity.append(pian["pian__id"])
+            #         back.append(
                         
-                        {
-                            "id": pian["pian__id"],
-                            "ident_cely": pian["pian__ident_cely"],
-                            "geom": pian["pian__geom"].wkt.replace(", ", ",")
-                            if num<500
-                            else pian["pian__centroid"].wkt.replace(", ", ","),
-                            "dj": pian["ident_cely"],
-                            "presnost": pian["pian__presnost__zkratka"],
-                            "type": "pian"
+            #             {
+            #                 "id": pian["pian__id"],
+            #                 "ident_cely": pian["pian__ident_cely"],
+            #                 "geom": pian["pian__geom"].wkt.replace(", ", ",")
+            #                 if num<500
+            #                 else pian["pian__centroid"].wkt.replace(", ", ","),
+            #                 "dj": pian["ident_cely"],
+            #                 "presnost": pian["pian__presnost__zkratka"],
+            #                 "type": "pian"
                         
-                        }
-                    )
+            #             }
+            #         )
             logger.debug("End building pians")  
         if num > 0:
             return JsonResponse({"points": back, "algorithm": "detail","count":num}, status=200)
