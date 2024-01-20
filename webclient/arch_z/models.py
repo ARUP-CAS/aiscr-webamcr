@@ -566,6 +566,7 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         db_column="archeologicky_zaznam",
         related_name="externi_odkazy",
     )
+    suppress_signal_arch_z = False
 
     class Meta:
         db_table = "externi_odkaz"
