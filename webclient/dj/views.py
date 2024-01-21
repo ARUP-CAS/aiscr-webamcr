@@ -49,12 +49,12 @@ def detail(request, typ_vazby, ident_cely):
     """
     logger.debug("dj.views.detail.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
-    pian_db = dj.pian
+    pian_db: Pian = dj.pian
     old_typ = dj.typ.id
     form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
         logger.debug("dj.views.detail.form_is_valid")
-        dj = form.save()
+        dj = form.save(commit=False)
         if dj.pian is None:
             logger.debug("dj.views.detail.empty_pian")
             if pian_db is not None and not(old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR):
@@ -64,6 +64,8 @@ def detail(request, typ_vazby, ident_cely):
         elif old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR:
             logger.debug("dj.views.detail.disconnected_pian")
             dj.pian = None
+            dj.save()
+        else:
             dj.save()
         if form.changed_data:
             logger.debug("dj.views.detail.changed")
@@ -112,6 +114,9 @@ def detail(request, typ_vazby, ident_cely):
             if len(new_ku) > 3:
                 update_main_katastr_within_ku(dj.ident_cely, new_ku)
         if dj.pian is not None and (pian_db is None or pian_db.pk != dj.pian.pk):
+            logger.debug("dj.views.detail.update_pian_metadata",
+                         extra={"pian_db": pian_db.ident_cely if pian_db else "None",
+                                "instance_pian": dj.pian.ident_cely})
             dj.pian.save_metadata()
         if pian_db is not None and (dj.pian is None or dj.pian.pk != pian_db.pk):
             pian_db.save_metadata()

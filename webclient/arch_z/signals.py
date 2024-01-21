@@ -43,7 +43,10 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                 initial_pristupnost \
                     = dok_jednotka.pian.evaluate_pristupnost_change(instance.initial_pristupnost.id, instance.id)
                 pristupnost = dok_jednotka.pian.evaluate_pristupnost_change(instance.pristupnost.id, instance.id)
-                if initial_pristupnost.id != pristupnost.id:
+                if initial_pristupnost.id != pristupnost.id and dok_jednotka.pian:
+                    logger.debug("arch_z.signals.create_arch_z_metadata.update_pian_metadata",
+                                 extra={"pian": dok_jednotka.pian.ident_cely,
+                                        "initial_pripustnost": initial_pristupnost.pk, "pripustnost": pristupnost.pk})
                     dok_jednotka.pian.save_metadata()
     logger.debug("arch_z.signals.create_arch_z_metadata.end", extra={"record_pk": instance.pk})
 

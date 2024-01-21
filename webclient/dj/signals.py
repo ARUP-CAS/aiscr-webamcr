@@ -36,6 +36,10 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
             except Exception as e:
                 logger.debug("pian not created")
     elif instance.pian != instance.initial_pian:
+        logger.debug("dj.signals.create_dokumentacni_jednotka.update_pian", extra={
+            "pian_db": instance.initial_pian.ident_cely if instance.initial_pian else "None",
+            "pian": instance.pian.ident_cely if instance.pian else "None",
+        })
         if instance.pian is not None:
             instance.pian.save_metadata()
         if instance.initial_pian is not None:
