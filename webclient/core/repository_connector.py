@@ -217,8 +217,6 @@ class FedoraRepositoryConnector:
         extra = {"url": url, "request_type": request_type}
         if headers:
             extra["headers"] = headers
-        if data and len(str(data)) < 10 ** 3:
-            extra["data"] = data
 
         logger.debug("core_repository_connector._send_request.start", extra=extra)
         if request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
