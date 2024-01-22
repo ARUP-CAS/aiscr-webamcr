@@ -89,18 +89,6 @@ def get_mime_type(file_name):
         mime_type = "text/csv"
     return mime_type
 
-
-def calculate_crc_32(file):
-    """
-    Počítá crc32 ze souboru (int32), transformuje ho na string a doplňuje ho na 13 znaků.
-    """
-    prev = 0
-    for eachLine in file:
-        prev = zlib.crc32(eachLine, prev)
-    checksum = "%d" % (prev & 0xFFFFFFFF)
-    return checksum.zfill(13)
-
-
 def get_cadastre_from_point(point):
     """
     Funkce pro získaní katastru z bodu geomu.

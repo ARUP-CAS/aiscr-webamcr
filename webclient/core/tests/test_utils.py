@@ -1,4 +1,4 @@
-from core.utils import calculate_crc_32, get_cadastre_from_point, get_mime_type
+from core.utils import get_cadastre_from_point, get_mime_type
 from django.contrib.gis.geos import Point
 from django.test import TestCase
 
@@ -19,12 +19,3 @@ class UtilsTests(TestCase):
         praha_centrum = Point(longitude, latitude)
         katastr = get_cadastre_from_point(praha_centrum)
         self.assertEqual(katastr.nazev, "JOSEFOV")
-
-    def test_calculate_crc_32(self):
-        with open("core/tests/resources/mime.txt", "rb") as file:
-            expected_checksum = "3775775224".zfill(13)  # For CRLF
-            other_expected = "2455176644".zfill(13)  # For LF
-            checksum = calculate_crc_32(file)
-            one = checksum == expected_checksum
-            two = checksum == other_expected
-            self.assertTrue(one or two)

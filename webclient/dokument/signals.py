@@ -105,7 +105,7 @@ def dokument_cast_save_metadata(sender, instance: DokumentCast, created, **kwarg
             extra.update({"archeologicky_zaznam": instance.archeologicky_zaznam.ident_cely})
         if instance.initial_archeologicky_zaznam is not None:
             instance.initial_archeologicky_zaznam.save_metadata()
-            extra.update({"initial_archeologicky_zaznam": instance.initial_projekt.initial_archeologicky_zaznam})
+            extra.update({"initial_archeologicky_zaznam": instance.initial_archeologicky_zaznam.ident_cely})
         if instance.projekt is not None:
             instance.projekt.save_metadata()
             extra.update({"projekt": instance.projekt.ident_cely})

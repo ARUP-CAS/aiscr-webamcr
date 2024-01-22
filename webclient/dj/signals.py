@@ -56,10 +56,15 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
     else:
         dj_query = DokumentacniJednotka.objects.filter(pian=pian).filter(~Q(ident_cely=instance.ident_cely))
         if pian.ident_cely.startswith("N-") and not dj_query.exists():
-            logger.debug("dj.signals.delete_dokumentacni_jednotka.delete", extra={"ident_cely": pian.ident_cely})
+            logger.debug("dj.signals.delete_dokumentacni_jednotka.delete",
+                         extra={"ident_cely": instance.ident_cely, "pian_ident_cely": pian.ident_cely})
             if hasattr(instance, "deleted_by_user") and instance.deleted_by_user is not None:
                 pian.deleted_by_user = instance.deleted_by_user
             pian.delete()
+        else:
+            logger.debug("dj.signals.delete_dokumentacni_jednotka.update_pian_metadata",
+                         extra={"ident_cely": instance.ident_cely, "pian_ident_cely": pian.ident_cely})
+            pian.save_metadata()
     if instance.komponenty:
         instance.komponenty.delete()
     instance.archeologicky_zaznam.save_metadata()

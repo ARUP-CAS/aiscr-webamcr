@@ -58,7 +58,6 @@ from core.message_constants import (
 from core.models import Soubor
 from core.repository_connector import RepositoryBinaryFile, FedoraRepositoryConnector
 from core.utils import (
-    calculate_crc_32,
     get_mime_type,
     get_multi_transform_towgs84,
     get_transform_towgs84,
@@ -358,7 +357,7 @@ def post_upload(request):
             )
     else:
         logger.debug("core.views.post_upload.updating", extra={"fileID": request.POST["fileID"]})
-        s = get_object_or_404(Soubor, id=request.POST["fileID"])
+        s: Soubor = get_object_or_404(Soubor, id=request.POST["fileID"])
         logger.debug("core.views.post_upload.update", extra={"s": s.pk})
         objekt = s.vazba.navazany_objekt
         new_name = s.nazev
@@ -367,22 +366,19 @@ def post_upload(request):
     soubor_data = BytesIO(soubor.read())
     rep_bin_file = None
     if soubor:
-        checksum = calculate_crc_32(soubor)
         if not update:
             conn = FedoraRepositoryConnector(objekt)
             mimetype = get_mime_type(soubor.name)
             rep_bin_file = conn.save_binary_file(new_name, get_mime_type(soubor.name), soubor_data)
             sha_512 = rep_bin_file.sha_512
-            s = Soubor(
+            s: Soubor = Soubor(
                 vazba=objekt.soubory,
                 nazev=new_name,
-                # Short name is new name without checksum
                 mimetype=mimetype,
                 size_mb=rep_bin_file.size_mb,
                 path=rep_bin_file.url_without_domain,
                 sha_512=sha_512,
             )
-            conn.validate_file_sha_512(s)
             duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
             if not duplikat.exists():
                 logger.debug("core.views.post_upload.saving", extra={"s": s})
@@ -445,8 +441,7 @@ def post_upload(request):
                 s.mimetype = mimetype
                 s.sha_512 = rep_bin_file.sha_512
                 s.save()
-                s.zaznamenej_nahrani_nove_verze(request.user, new_name)
-                conn.validate_file_sha_512(s)
+                s.zaznamenej_nahrani_nove_verze(request.user, old_name)
             if rep_bin_file is not None:
                 duplikat = (
                     Soubor.objects.filter(sha_512=rep_bin_file.sha_512)

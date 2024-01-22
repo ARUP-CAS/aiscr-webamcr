@@ -682,18 +682,3 @@ class FedoraRepositoryConnector:
                 item.save()
                 self.migrate_binary_file(item, include_content=True, check_if_exists=False,
                                          ident_cely_old=ident_cely_old)
-
-    def validate_file_sha_512(self, soubor):
-        logger.error("core_repository_connector.validate_file_sha_512.start",
-                     extra={"ident_cely": self.record.ident_cely, "soubor": soubor.pk})
-        from core.models import Soubor
-        soubor: Soubor
-        rep_bin_file: RepositoryBinaryFile = self.get_binary_file(soubor.repository_uuid)
-        if rep_bin_file.sha_512 != soubor.sha_512:
-            logger.error("core_repository_connector.validate_file_sha_512.error",
-                         extra={"ident_cely": self.record.ident_cely, "soubor": soubor.pk})
-            raise FedoraValidationError()
-        else:
-            logger.debug("core_repository_connector.validate_file_sha_512.ok",
-                         extra={"ident_cely": self.record.ident_cely, "soubor": soubor.pk})
-

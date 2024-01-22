@@ -7,6 +7,7 @@ from django.dispatch import receiver
 
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
+from dokument.models import DokumentCast
 from historie.models import HistorieVazby
 
 logger = logging.getLogger(__name__)
@@ -70,14 +71,14 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.start",
-                 extra={"record_pk": instance.pk})
+                 extra={"record_ident_cely": instance.ident_cely})
     instance.record_deletion()
     try:
         if instance.akce.projekt is not None:
             instance.akce.projekt.save_metadata()
     except ObjectDoesNotExist as err:
         logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.no_akce",
-                     extra={"record_pk": instance.pk, "err": err})
+                     extra={"record_ident_cely": instance.ident_cely, "err": err})
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
     komponenty_jednotek_vazby = []
@@ -91,7 +92,18 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
             eo.suppress_signal_arch_z = True
             eo.delete()
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.end",
-                 extra={"record_pk": instance.pk})
+                 extra={"record_ident_cely": instance.ident_cely})
+
+
+@receiver(pre_delete, sender=ArcheologickyZaznam)
+def delete_arch_z_repository_update_connected_records(sender, instance: ArcheologickyZaznam, **kwargs):
+    logger.debug("arch_z.signals.delete_arch_z_repository_update_connected_records.start",
+                 extra={"record_ident": instance.ident_cely})
+    for item in instance.casti_dokumentu.all():
+        item: DokumentCast
+        item.dokument.save_metadata()
+    logger.debug("arch_z.signals.delete_arch_z_repository_update_connected_records.end",
+                 extra={"record_ident": instance.ident_cely})
 
 
 @receiver(post_delete, sender=ExterniOdkaz)
