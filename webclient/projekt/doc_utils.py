@@ -9,7 +9,6 @@ import os
 from django.contrib.staticfiles.storage import staticfiles_storage
 
 from core.repository_connector import FedoraRepositoryConnector, RepositoryBinaryFile
-from core.utils import calculate_crc_32
 from webclient.settings.base import MEDIA_ROOT, STATIC_ROOT
 
 from reportlab.lib import utils

@@ -53,16 +53,14 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, created,
     """
     Funkce pro uložení metadat heslář - hierarchie.
     """
-    if created:
+    if instance.heslo_podrazene:
         instance.heslo_podrazene.save_metadata()
+    if instance.heslo_nadrazene:
         instance.heslo_nadrazene.save_metadata()
-    else:
-        if instance.heslo_nadrazene.pk != instance.initial_heslo_nadrazene.pk:
-            instance.heslo_nadrazene.save_metadata()
-            instance.initial_heslo_nadrazene.save_metadata()
-        if instance.heslo_podrazene.pk != instance.initial_heslo_podrazene.pk:
-            instance.heslo_podrazene.save_metadata()
-            instance.initial_heslo_podrazene.save_metadata()
+    if instance.initial_heslo_nadrazene and instance.heslo_nadrazene.pk != instance.initial_heslo_nadrazene.pk:
+        instance.initial_heslo_nadrazene.save_metadata()
+    if instance.initial_heslo_podrazene and instance.heslo_podrazene.pk != instance.initial_heslo_podrazene.pk:
+        instance.initial_heslo_podrazene.save_metadata()
 
 
 @receiver(post_save, sender=HeslarDatace)
@@ -70,8 +68,9 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarDatace, created, **k
     """
     Funkce pro uložení metadat heslář - hierarchie.
     """
-    if created:
-        instance.obdobi.save_metadata()
+    instance.obdobi.save_metadata()
+    if instance.initial_obdobi and instance.initial_obdobi != instance.obdobi:
+        instance.initial_obdobi.save_metadata()
 
 
 @receiver(post_save, sender=HeslarDokumentTypMaterialRada)

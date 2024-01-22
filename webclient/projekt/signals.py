@@ -1,4 +1,3 @@
-from datetime import timedelta
 import logging
 
 from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY, PROJEKT_STAV_VYTVORENY
@@ -6,6 +5,8 @@ from core.models import SouborVazby
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
+
+from dokument.models import Dokument, DokumentCast
 from historie.models import HistorieVazby
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
@@ -68,6 +69,10 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
         instance.historie.delete()
     if instance.soubory and instance.soubory.pk:
         instance.soubory.delete()
+    if instance.casti_dokumentu:
+        for item in instance.casti_dokumentu.all():
+            item: DokumentCast
+            item.dokument.save_metadata()
 
 
 @receiver(post_save, sender=Projekt)

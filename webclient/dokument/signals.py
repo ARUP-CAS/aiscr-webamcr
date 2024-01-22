@@ -95,12 +95,34 @@ def let_delete_repository_container(sender, instance: Let, **kwargs):
 
 @receiver(post_save, sender=DokumentCast)
 def dokument_cast_save_metadata(sender, instance: DokumentCast, created, **kwargs):
-    if created:
+    extra = {"dokument_cast": instance.pk, "signal_created": created}
+    logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra=extra)
+    if (created or instance.initial_projekt != instance.projekt or
+            instance.initial_archeologicky_zaznam != instance.archeologicky_zaznam):
         instance.dokument.save_metadata()
         if instance.archeologicky_zaznam is not None:
             instance.archeologicky_zaznam.save_metadata()
+            extra.update({"archeologicky_zaznam": instance.archeologicky_zaznam.ident_cely})
+        if instance.initial_archeologicky_zaznam is not None:
+            instance.initial_archeologicky_zaznam.save_metadata()
+            extra.update({"initial_archeologicky_zaznam": instance.initial_archeologicky_zaznam.ident_cely})
         if instance.projekt is not None:
             instance.projekt.save_metadata()
+            extra.update({"projekt": instance.projekt.ident_cely})
+        if instance.initial_projekt is not None:
+            instance.initial_projekt.save_metadata()
+            extra.update({"initial_projekt": instance.initial_projekt.ident_cely})
+        logger.debug("dokument.signals.dokument_cast_save_metadata.changed", extra=extra)
+    else:
+        logger.debug("dokument.signals.dokument_cast_save_metadata.no_change", extra=extra)
+    logger.debug("dokument.signals.dokument_cast_save_metadata.end", extra=extra)
+
+@receiver(post_delete, sender=DokumentCast)
+def dokument_cast_save_metadata(sender, instance: DokumentCast, **kwargs):
+    if instance.initial_archeologicky_zaznam is not None:
+        instance.initial_archeologicky_zaznam.save_metadata()
+    if instance.initial_projekt is not None:
+        instance.initial_projekt.save_metadata()
 
 
 @receiver(post_save, sender=Tvar)

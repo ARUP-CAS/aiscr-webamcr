@@ -99,6 +99,10 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
         db_table = "heslar_datace"
         verbose_name_plural = "Heslář datace"
 
+    def __init__(self, *args, **kwargs):
+        super(HeslarDatace, self).__init__(*args, **kwargs)
+        self.initial_obdobi = self.obdobi
+
 
 class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_typ_material_rada"), models.Model):
     """

@@ -127,7 +127,7 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     Admin část pro správu modelu heslař odkaz.
     """
     list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
-    fields = ("heslo__ident_cely", "heslo__heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
+    fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
     search_fields = ("heslo__ident_cely", "heslo__heslo", "zdroj", "nazev_kodu", "kod", "uri")
 
 
