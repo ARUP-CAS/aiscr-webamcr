@@ -412,7 +412,7 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
 
     def post(self, request):
         docfile = request.FILES["file"]
-        if docfile.size > 0:
+        if docfile.size == 0:
             logger.debug("pian.views.ImportovatPianView.post.label_check.fileEmpty")
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.fileEmpty."))
         try:

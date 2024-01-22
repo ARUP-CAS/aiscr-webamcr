@@ -547,7 +547,7 @@ function geomToText() {//Desc: This fce moves edited geometry into HTML element
 }
 
 function onMarkerClick(ident_cely,e) {
-    var popup = e.target.getPopup();
+    const popup = e.target.getPopup();
     popup.setContent("");
     let xhr = new XMLHttpRequest();
     xhr.open('POST', '/pian/mapa-connections/'+ident_cely);
@@ -707,7 +707,7 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
     })
 }
 
-var addGoldPointOnLoad = (geom, layer, pian_ident_cely, st_text, presnost) => {
+const addGoldPointOnLoad = (geom, layer, pian_ident_cely, st_text, presnost) => {
     addLogText("arch_z_detail_map.addGoldPointOnLoad")
     let coor = []
     //akce_ident_cely = document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0]
@@ -743,7 +743,7 @@ var addGoldPointOnLoad = (geom, layer, pian_ident_cely, st_text, presnost) => {
 
 }
 
-var addPointQuery = (geom, layer, ident_cely, st_text, presnost) => {
+const addPointQuery = (geom, layer, ident_cely, st_text, presnost, popup_text = "") => {
     addLogText("arch_z_detail_map.addPointQuery")
     let coor = []
     if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
@@ -753,6 +753,7 @@ var addPointQuery = (geom, layer, ident_cely, st_text, presnost) => {
             })
             mouseOverGeometry(L.polygon(coor, { color: 'gold' })
             .bindTooltip(ident_cely, { sticky: true },presnost!=4)
+            .bindPopup(popup_text)
             .addTo(layer));
         } else if (st_text.includes("LINESTRING")) {
             st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
@@ -760,6 +761,7 @@ var addPointQuery = (geom, layer, ident_cely, st_text, presnost) => {
             })
             mouseOverGeometry(L.polyline(coor, { color: 'gold' })
             .bindTooltip(ident_cely, { sticky: true },presnost!=4)
+            .bindPopup(popup_text)
             .addTo(layer));
         }
     } else {
@@ -767,6 +769,7 @@ var addPointQuery = (geom, layer, ident_cely, st_text, presnost) => {
         coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1].trim(), i.split(" ")[0].trim()]));
         mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(coor[0]), { icon: presnost!=4 ? pinIconYellowPoint: pinIconYellowHW, zIndexOffset: 2000,changeIcon: presnost==4 },presnost!=4)
         .bindTooltip(ident_cely, { sticky: true },presnost!=4)
+        .bindPopup(popup_text)
         .addTo(layer));
     }
     map.setView(coor[0],17)
@@ -1193,7 +1196,7 @@ function loadSession(){
         global_blocked_by_query_geom=true;
         drawnItems.clearLayers();
         drawnItemsBuffer.clearLayers();
-        addPointQuery(null,  drawnItems,myParamL,myParamG,false);
+        addPointQuery(null,  drawnItems,myParamL,myParamG,false, map_translations.importedPianFromFile);
         geomToText();
         save_edited_geometry_session()
         //myParam="POINT (13.2164736 49.9596986)"
@@ -1213,7 +1216,8 @@ function loadSession(){
                 //POLYGON ((13.2491214 50.0100783, 13.2482845 50.0096987, 13.249218 50.0096021, 13.2491214 50.0100783))
                 //POLYGON((13.2496364 50.0099953, 13.2502051 50.0099539, 13.2500978 50.0094364, 13.2496364 50.0099953))
                 //myParam="POLYGON((13.2496364 50.0099953,13.2502051 50.0099539,13.2500978 50.0094364,13.2496364 50.0099953))"
-                addPointQuery(null,  drawnItems,"Refresh geom",geom_session.geometry,false);
+                addPointQuery(null,  drawnItems,"Refresh geom",geom_session.geometry,false,
+                    map_translations.importedPianFromFile);
                 geomToText();
 
             }else{

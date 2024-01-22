@@ -323,18 +323,18 @@ var switch_coor_system = (new_system) => {
     }
 };
 
-var addUniquePointToPoiLayer = (point_leaf, ident_cely, zoom = true, redPin = false) => {
+const addUniquePointToPoiLayer = (point_leaf, text, zoom = true, redPin = false) => {
     var point_rec_leaf = amcr_static_coordinate_precision_wgs84(point_leaf);
     poi_sugest.clearLayers()
     if(redPin){
         L.marker(point_rec_leaf,{icon:pinIconRedPin, zIndexOffset: 2000})
-        .bindTooltip(ident_cely)
-        .bindPopup(ident_cely)
+        .bindTooltip(text)
+        .bindPopup(text)
         .addTo(poi_sugest);
     } else {
         L.marker(point_rec_leaf,{icon:pinIconYellowPin, zIndexOffset: 2000})
-        .bindTooltip(ident_cely)
-        .bindPopup(ident_cely)
+        .bindTooltip(text)
+        .bindPopup(text)
         .addTo(poi_sugest);
     }
     if (point_rec_leaf[0] && point_rec_leaf[1] && zoom) {
@@ -388,7 +388,7 @@ $(document).ready(function () {
     if(my_wgs84_x1){
         point_leaf= [...point_global_WGS84].reverse();
         if(global_map_can_edit){
-            addUniquePointToPoiLayer(point_leaf)
+            addUniquePointToPoiLayer(point_leaf, map_translations.lokalizacePAS)
         } else {
             global_map_can_edit=false
             addReadOnlyUniquePointToPoiLayer(point_leaf)
