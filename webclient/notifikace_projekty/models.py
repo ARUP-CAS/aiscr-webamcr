@@ -32,3 +32,6 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
                 fields=["user", "content_type", "object_id"], name="unique_pes"
             ),
         ]
+
+    def get_create_user(self):
+        return (self.user,)

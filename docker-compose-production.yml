@@ -21,10 +21,11 @@ services:
       timeout: 10s
       retries: 10
       start_period: 1s
-  memcached:
-    image: memcached:latest
-    networks:
-      - prod-net
+    depends_on:
+      - redis
+      - celery_worker
+      - celery_beat
+
   sidecar:
     image: eeacms/rsync:latest
     environment:
@@ -37,6 +38,7 @@ services:
 
   redis:
     image: aiscr/webamcr-redis:${IMAGE_TAG}
+    restart: always
     ports:
       - "6379:6379"
     secrets:
@@ -53,7 +55,7 @@ services:
 
   celery_worker:
     image: aiscr/webamcr:${IMAGE_TAG}
-    command: celery -A webclient worker -l INFO
+    command: celery -A webclient worker -l INFO -n worker1@amcr
     secrets:
       - db_conf
       - mail_conf
@@ -70,6 +72,8 @@ services:
       timeout: 30s
       retries: 5
       start_period: 30s
+    depends_on:
+      - redis
 
   celery_beat:
     image: aiscr/webamcr:${IMAGE_TAG}
@@ -90,6 +94,8 @@ services:
       timeout: 30s
       retries: 5
       start_period: 30s
+    depends_on:
+      - redis
 
   grafana:
     image: grafana/grafana-enterprise:8.2.0
@@ -110,6 +116,7 @@ services:
 
   prometheus:
     image: prom/prometheus
+    restart: always
     volumes:
       - ./prometheus:/etc/prometheus
     networks:
@@ -118,9 +125,12 @@ services:
       - "9090:9090"
     secrets:
       - prometheus_config
+    command:
+      - "--config.file=/run/secrets/prometheus_config"
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.7.0
+    restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
     volumes:
@@ -128,14 +138,13 @@ services:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     networks:
       - prod-net
-    depends_on:
-      - elasticsearch
     secrets:
       - logstash_elastic_pass
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
     hostname: elasticsearch
+    restart: always
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms750m -Xmx750m

@@ -13,7 +13,7 @@ body {
   &.app-accounts,
   &.app-oznameni {
     &:not(.app-edit) {
-      padding: $spacer-4 $spacer-3;
+      padding: $spacer-3 $spacer-3 $spacer-4 $spacer-3;
 
       #app-page-wrapper {
         min-width: auto;
@@ -39,7 +39,9 @@ body {
 }
 
 #app-page-wrapper {
-  min-width: 100vh;
+  @media (min-width: 768px) {
+     min-width: calc(100vh - 300px);
+  }
   width: 100%;
   -webkit-transition: margin .25s ease-out;
   -moz-transition: margin .25s ease-out;
@@ -71,12 +73,29 @@ body {
   }
 }
 
+#app-sidebar-wrapper {
+  z-index: 1001;
+}
+
 .form-group {
   margin-bottom: 0.15rem !important;
 }
 
 .card-body {
   padding: 0.75rem !important;
+}
+
+.content-with-table-responsive {
+  overflow-x: scroll;
+}
+
+.dj-map-div {
+  @media (min-width: 574px) {
+    padding-left: 0;
+  }
+  @media (max-width: 574px) {
+    padding-top: 1rem;
+  }
 }
 
 .mt-0 {

@@ -15,7 +15,7 @@ from core.constants import (
 from crispy_forms.layout import HTML, Div, Layout
 from django.db.models import Q, QuerySet
 from django.forms import SelectMultiple
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django_filters import (
     CharFilter,
     DateFromToRangeFilter,
@@ -23,6 +23,8 @@ from django_filters import (
     MultipleChoiceFilter,
 )
 from django_filters.widgets import DateRangeWidget
+
+from core.forms import SelectMultipleSeparator
 from heslar.hesla import (
     HESLAR_AKCE_TYP,
     HESLAR_PAMATKOVA_OCHRANA,
@@ -30,7 +32,7 @@ from heslar.hesla import (
     HESLAR_PROJEKT_TYP,
     HESLAR_AKCE_TYP_KAT,
 )
-from heslar.models import Heslar, RuianKraj, RuianOkres
+from heslar.models import Heslar, RuianKatastr, RuianKraj, RuianOkres
 from projekt.models import Projekt
 from psycopg2._range import DateRange
 from uzivatel.models import Organizace, Osoba
@@ -87,9 +89,11 @@ class KatastrFilter(filters.FilterSet):
         distinct=True,
     )
 
-    katastr = CharFilter(
+    katastr = ModelMultipleChoiceFilter(
+        queryset=RuianKatastr.objects.all(),
         method="filtr_katastr",
         label=_("projekt.filters.katastrFilter.katastr.label"),
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
         distinct=True,
     )
 
@@ -103,10 +107,12 @@ class KatastrFilter(filters.FilterSet):
         """
         Metóda pro filtrování podle názvu hlavního a dalších katastrů.
         """
-        return queryset.filter(
-            Q(hlavni_katastr__nazev__icontains=value)
-            | Q(katastry__nazev__icontains=value)
-        ).distinct()
+        if value:
+            return queryset.filter(
+                Q(hlavni_katastr__in=value)
+                | Q(katastry__in=value)
+            ).distinct()
+        return queryset
 
     def filtr_katastr_kraj(self, queryset, name, value):
         """
@@ -154,19 +160,6 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
-    oblast = MultipleChoiceFilter(
-        choices=OBLAST_CHOICES,
-        label=_("projekt.filters.projektFilter.oblast.label"),
-        method="filter_by_oblast",
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-        distinct=True,
-    )
 
     typ_projektu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PROJEKT_TYP),
@@ -216,6 +209,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
     )
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
+        label=_("projekt.filters.projektFilter.organizace.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -321,10 +315,12 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
-    akce_katastr = CharFilter(
+    akce_katastr = ModelMultipleChoiceFilter(
         method="filtr_akce_katastr",
+        queryset=RuianKatastr.objects.all(),
+        field_name="katastr",
         label=_("projekt.filters.projektFilter.akceKatastr.label"),
-        distinct=True,
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete")
     )
 
     akce_kraj = MultipleChoiceFilter(
@@ -357,6 +353,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     akce_vedouci = MultipleChoiceFilter(
         method="filtr_akce_vedouci",
+        label=_("projekt.filters.projektFilter.akceVedouci.label"),
         choices=Osoba.objects.all().values_list("id", "vypis_cely"),
         widget=autocomplete.Select2Multiple(
             url="heslar:osoba-autocomplete-choices",
@@ -390,22 +387,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
-    typ_akce = MultipleChoiceFilter(
-        # choices=Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP).values_list(
-        #    "id", "heslo"
-        # ),
-        choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
-        method="filter_akce_typ",
-        label=_("projekt.filters.projektFilter.akceTyp.label"),
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-        distinct=True,
-    )
+    
     pristupnost_akce = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
         field_name="akce__archeologicky_zaznam__pristupnost",
@@ -476,6 +458,14 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
+    historie_uzivatel_organizace = ModelMultipleChoiceFilter(
+        queryset=Organizace.objects.all(),
+        field_name="historie__historie__uzivatel__organizace",
+        label=_("dokument.filters.Model3DFilter.filter_historie_uzivatel_organizace.label"),
+        widget=SelectMultipleSeparator(),
+        distinct=True,
+    )
+
     def filter_planovane_zahajeni(self, queryset, name, value):
         """
         Metóda pro filtrování podle plánovaného zahájení.
@@ -513,7 +503,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         Metóda pro filtrování podle pozitivního nálezu akce.
         """
         if "True" in value and "False" in value:
-            return queryset
+            return queryset.filter(akce__archeologicky_zaznam__dokumentacni_jednotky_akce__isnull=False).distinct()
         elif "True" in value:
             return queryset.filter(
                 akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
@@ -579,10 +569,12 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         """
         Metóda pro filtrování podle katastru akce.
         """
-        return queryset.filter(
-            Q(akce__archeologicky_zaznam__hlavni_katastr__nazev__icontains=value)
-            | Q(akce__archeologicky_zaznam__katastry__nazev__icontains=value)
-        ).distinct()
+        if value:
+            return queryset.filter(
+                Q(akce__archeologicky_zaznam__hlavni_katastr__in=value)
+                | Q(akce__archeologicky_zaznam__katastry__in=value)
+            ).distinct()
+        return queryset
 
     def filtr_akce_katastr_kraj(self, queryset, name, value):
         """
@@ -647,6 +639,32 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         # self.filters["historie_uzivatel"].choices = []
         # self.filters["akce_vedouci"].choices = []
         # self.filters["vedouci_projektu"].extra.update({"queryset": None})
+        self.filters["typ_akce"] = MultipleChoiceFilter(
+            choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
+            method="filter_akce_typ",
+            label=_("projekt.filters.projektFilter.akceTyp.label"),
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            distinct=True,
+        )
+        self.filters["oblast"] = MultipleChoiceFilter(
+            choices=OBLAST_CHOICES,
+            label=_("projekt.filters.projektFilter.oblast.label"),
+            method="filter_by_oblast",
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            distinct=True,
+        )
         self.helper = ProjektFilterFormHelper()
 
 
@@ -655,103 +673,106 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
     Třída pro správne zobrazení filtru.
     """
     form_method = "GET"
-    history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"projekt.filters.history.divider.label")
-    }
-    akce_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"projekt.filters.akce.divider.label")
-    }
-    dok_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"projekt.filters.dok.divider.label")
-    }
-    layout = Layout(
-        Div(
+    def __init__(self, form=None):
+        history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _(u"projekt.filters.history.divider.label")
+        }
+        akce_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _(u"projekt.filters.akce.divider.label")
+        }
+        dok_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _(u"projekt.filters.dok.divider.label")
+        }
+        self.layout = Layout(
             Div(
-                Div("ident_cely", css_class="col-sm-2"),
-                Div("typ_projektu", css_class="col-sm-2"),
-                Div("stav", css_class="col-sm-2"),
-                Div("organizace", css_class="col-sm-2"),
-                Div("vedouci_projektu", css_class="col-sm-2"),
-                Div("kulturni_pamatka", css_class="col-sm-2"),
-                Div("katastr", css_class="col-sm-2"),
-                Div("okres", css_class="col-sm-2"),
-                Div("kraj", css_class="col-sm-2"),
-                Div("oblast", css_class="col-sm-2"),
-                Div("popisne_udaje", css_class="col-sm-4"),
-                Div("planovane_zahajeni", css_class="col-sm-4 app-daterangepicker"),
-                Div("datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
-                Div("datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
-                Div("termin_odevzdani_nz", css_class="col-sm-4 app-daterangepicker"),
-                css_class="row",
-            ),
-            Div(
-                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
-                HTML(history_divider),
-                HTML('<hr class="mt-0" />'),
-                data_toggle="collapse",
-                href="#historieCollapse",
-                role="button",
-                aria_expanded="false",
-                aria_controls="historieCollapse",
-                css_class="col-sm-12 app-btn-show-more collapsed",
-            ),
-            Div(
-                Div("historie_typ_zmeny", css_class="col-sm-2"),
                 Div(
-                    "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
+                    Div("ident_cely", css_class="col-sm-2"),
+                    Div("typ_projektu", css_class="col-sm-2"),
+                    Div("stav", css_class="col-sm-2"),
+                    Div("organizace", css_class="col-sm-2"),
+                    Div("vedouci_projektu", css_class="col-sm-2"),
+                    Div("kulturni_pamatka", css_class="col-sm-2"),
+                    Div("katastr", css_class="col-sm-2"),
+                    Div("okres", css_class="col-sm-2"),
+                    Div("kraj", css_class="col-sm-2"),
+                    Div("oblast", css_class="col-sm-2"),
+                    Div("popisne_udaje", css_class="col-sm-4"),
+                    Div("planovane_zahajeni", css_class="col-sm-4 app-daterangepicker"),
+                    Div("datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
+                    Div("datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
+                    Div("termin_odevzdani_nz", css_class="col-sm-4 app-daterangepicker"),
+                    css_class="row",
                 ),
-                Div("historie_uzivatel", css_class="col-sm-4"),
-                id="historieCollapse",
-                css_class="collapse row",
+                Div(
+                    HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                    HTML(history_divider),
+                    HTML('<hr class="mt-0" />'),
+                    data_toggle="collapse",
+                    href="#historieCollapse",
+                    role="button",
+                    aria_expanded="false",
+                    aria_controls="historieCollapse",
+                    css_class="col-sm-12 app-btn-show-more collapsed",
+                ),
+                Div(
+                    Div("historie_typ_zmeny", css_class="col-sm-2"),
+                    Div(
+                        "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
+                    ),
+                    Div("historie_uzivatel", css_class="col-sm-3"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    id="historieCollapse",
+                    css_class="collapse row",
+                ),
+                Div(
+                    HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                    HTML(akce_divider),
+                    HTML('<hr class="mt-0" />'),
+                    data_toggle="collapse",
+                    href="#akcieCollapse",
+                    role="button",
+                    aria_expanded="false",
+                    aria_controls="akcieCollapse",
+                    css_class="col-sm-12 app-btn-show-more collapsed",
+                ),
+                Div(
+                    Div("akce_ident_obsahuje", css_class="col-sm-2"),
+                    Div("typ_akce", css_class="col-sm-2"),
+                    Div("stav_akce", css_class="col-sm-2"),
+                    Div("akce_vedouci_organizace", css_class="col-sm-2"),
+                    Div("akce_vedouci", css_class="col-sm-2"),
+                    Div("pristupnost_akce", css_class="col-sm-2"),
+                    Div("akce_katastr", css_class="col-sm-2"),
+                    Div("akce_okres", css_class="col-sm-2"),
+                    Div("akce_kraj", css_class="col-sm-2"),
+                    Div("akce_popisne_udaje", css_class="col-sm-6"),
+                    Div("akce_datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
+                    Div("akce_datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
+                    Div("akce_zjisteni", css_class="col-sm-2"),
+                    Div("akce_je_nz", css_class="col-sm-2"),
+                    id="akcieCollapse",
+                    css_class="collapse row",
+                ),
+                Div(
+                    HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                    HTML(dok_divider),
+                    HTML('<hr class="mt-0" />'),
+                    data_toggle="collapse",
+                    href="#zaznamyCollapse",
+                    role="button",
+                    aria_expanded="false",
+                    aria_controls="zaznamyCollapse",
+                    css_class="col-sm-12 app-btn-show-more collapsed",
+                ),
+                Div(
+                    Div("dokument_ident_obsahuje", css_class="col-sm-2"),
+                    Div("pian_ident_obsahuje", css_class="col-sm-2"),
+                    Div("zdroj_ident_obsahuje", css_class="col-sm-2"),
+                    Div("adb_ident_obsahuje", css_class="col-sm-2"),
+                    id="zaznamyCollapse",
+                    css_class="collapse row",
+                ),
             ),
-            Div(
-                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
-                HTML(akce_divider),
-                HTML('<hr class="mt-0" />'),
-                data_toggle="collapse",
-                href="#akcieCollapse",
-                role="button",
-                aria_expanded="false",
-                aria_controls="akcieCollapse",
-                css_class="col-sm-12 app-btn-show-more collapsed",
-            ),
-            Div(
-                Div("akce_ident_obsahuje", css_class="col-sm-2"),
-                Div("typ_akce", css_class="col-sm-2"),
-                Div("stav_akce", css_class="col-sm-2"),
-                Div("akce_vedouci_organizace", css_class="col-sm-2"),
-                Div("akce_vedouci", css_class="col-sm-2"),
-                Div("pristupnost_akce", css_class="col-sm-2"),
-                Div("akce_katastr", css_class="col-sm-2"),
-                Div("akce_okres", css_class="col-sm-2"),
-                Div("akce_kraj", css_class="col-sm-2"),
-                Div("akce_popisne_udaje", css_class="col-sm-6"),
-                Div("akce_datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
-                Div("akce_datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
-                Div("akce_zjisteni", css_class="col-sm-2"),
-                Div("akce_je_nz", css_class="col-sm-2"),
-                id="akcieCollapse",
-                css_class="collapse row",
-            ),
-            Div(
-                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
-                HTML(dok_divider),
-                HTML('<hr class="mt-0" />'),
-                data_toggle="collapse",
-                href="#zaznamyCollapse",
-                role="button",
-                aria_expanded="false",
-                aria_controls="zaznamyCollapse",
-                css_class="col-sm-12 app-btn-show-more collapsed",
-            ),
-            Div(
-                Div("dokument_ident_obsahuje", css_class="col-sm-2"),
-                Div("pian_ident_obsahuje", css_class="col-sm-2"),
-                Div("zdroj_ident_obsahuje", css_class="col-sm-2"),
-                Div("adb_ident_obsahuje", css_class="col-sm-2"),
-                id="zaznamyCollapse",
-                css_class="collapse row",
-            ),
-        ),
-    )
-    form_tag = False
+        )
+        self.form_tag = False
+        super().__init__(form)

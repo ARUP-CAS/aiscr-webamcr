@@ -4,7 +4,7 @@
       <div class="app-fx app-left">
         {% trans "dokument.templates.dokument_table.cardHeader" %}
       </div>
-      {% if show.editovat and show.pripojit_dokumenty %}
+      
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
           <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
@@ -12,30 +12,37 @@
             <span class="material-icons">add</span>
           </button>
           <div class="dropdown-menu" aria-labelledby="others">
-              {% if type == "arch_z"%}
-            <a class="dropdown-item"
-               href="{% url 'dokument:zapsat-do-akce' zaznam.ident_cely %}">{% trans 'dokument.templates.dokument_table.pridatNovyDokument.label' %}</a>
-            <button id="dokument-pripojit" class="dropdown-item" type="button" name="button" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely %}">
-              {% trans "dokument.templates.dokument_table.pripojitExistDokument.label" %}
-            </button>
-            {% if app == "pr" %}
-            <button id="dokument-pripojit-z-projektu" class="dropdown-item" type="button" name="button" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely zaznam.akce.projekt.ident_cely %}">
-              {% trans "dokument.templates.dokument_table.pripojitExistDokumentZProjektu.label" %}
-            </button>
+            {% if type == "arch_z"%}
+              {% if show.zapsat_dokumenty %}
+                <a class="dropdown-item"
+                href="{% url 'dokument:zapsat-do-akce' zaznam.ident_cely %}">{% trans 'dokument.templates.dokument_table.pridatNovyDokument.label' %}</a>
+              {% endif %}
+              {% if show.pripojit_dokumenty %}
+                <button id="dokument-pripojit" class="dropdown-item" type="button" name="button" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely %}">
+                {% trans "dokument.templates.dokument_table.pripojitExistDokument.label" %}
+                </button>
+              {% endif %}
+              {% if app == "pr" and show.pripojit_dokumenty %}
+                <button id="dokument-pripojit-z-projektu" class="dropdown-item" type="button" name="button" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely zaznam.akce.projekt.ident_cely %}">
+                {% trans "dokument.templates.dokument_table.pripojitExistDokumentZProjektu.label" %}
+                </button>
+              {% endif %}
+            {% elif type == "projekt" %}
+              {% if show.zapsat_dokumenty %}
+                <a class="dropdown-item"
+                href="{% url 'dokument:zapsat-do-projektu' zaznam.ident_cely %}">{% trans 'dokument.templates.dokument_table.pridatNovyDokumentDoProjektu.label' %}</a>
+              {% endif %}
+              {% if show.pripojit_dokumenty %}
+                <button id="dokument-pripojit" class="dropdown-item" type="button" name="button" href="{% url 'projekt:pripojit_dokument' zaznam.ident_cely %}">
+                {% trans "dokument.templates.dokument_table.pripojitExistDokumentDoProjektu.label" %}
+                </button>
+              {% endif %}
             {% endif %}
-               {% elif type == "projekt" %}
-            <a class="dropdown-item"
-               href="{% url 'dokument:zapsat-do-projektu' zaznam.ident_cely %}">{% trans 'dokument.templates.dokument_table.pridatNovyDokumentDoProjektu.label' %}</a>
-            <button id="dokument-pripojit" class="dropdown-item" type="button" name="button" href="{% url 'projekt:pripojit_dokument' zaznam.ident_cely %}">
-              {% trans "dokument.templates.dokument_table.pripojitExistDokumentDoProjektu.label" %}
-            </button>
-               {% endif %}
           </div>
         </div>
       </div>
-      {% endif %}
     </div>
-        <div class="card-body">
+        <div class="card-body content-with-table-responsive">
     {% if dokumenty %}
       {% include "dokument/dokument_table_only.html" %}
     {% elif type == "arch_z" %}
@@ -64,14 +71,14 @@
         new Modal(options, elements.item(i).id);
       }
     }
-    if ("{{show.editovat}}" != "False"){
+    if ("{{show.pripojit_dokumenty}}"){
       var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-dokument-form",
         modalFormID: "#pripojit-dokument-form",
       })
       dokument_pripojit_modal = new Modal(options, "dokument-pripojit");
     };
-    if ("{{show.editovat}}" != "False" && "{{app}}" != "lokalita"){
+    if ("{{show.pripojit_dokumenty}}" && "{{app}}" != "lokalita"){
       var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-dokument-form",
         modalFormID: "#pripojit-dokument-form",

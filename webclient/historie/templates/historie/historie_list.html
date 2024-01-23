@@ -14,28 +14,29 @@
       <div class="app-left">
         <div class="app-entity-title">
           {% if typ == "projekt" %}
-          <a href="{% url 'projekt:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.projekt.cardHeader" %}</a>
+            <a href="{% url 'projekt:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span><span class="app-controls-button-text">{% trans "historie.templates.historieList.projekt.cardHeader" %}</span></a>
           {% elif typ == "akce" %}
-          <a href="{% url 'arch_z:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.akce.cardHeader" %}</a>
+            <a href="{% url 'arch_z:detail' ident_cely %}"><span class="material-icons">brush</span><span class="app-controls-button-text">{% trans "historie.templates.historieList.akce.cardHeader" %}</span></a>
+          {% elif typ == "lokalita" %}
+            <a href="{% url 'lokalita:detail' ident_cely %}"><span class="material-icons">tour</span><span class="app-controls-button-text">{% trans "historie.templates.historieList.lokalita.cardHeader" %}</span></a>
           {% elif typ == "knihovna_3d" %}
-          <a href="{% url 'dokument:detail-model-3D' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.model3D.cardHeader" %}</a>
+            <a href="{% url 'dokument:detail-model-3D' ident_cely %}"><span class="material-icons">3d_rotation</span><span class="app-controls-button-text">{% trans "historie.templates.historieList.model3D.cardHeader" %}</span></a>
           {% elif typ == "dokument" %}
-          <a href="{% url 'dokument:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.dokument.cardHeader" %}</a>
+            <a href="{% url 'dokument:detail' ident_cely %}"><span class="material-icons">description</span><span class="app-controls-button-text">{% trans "historie.templates.historieList.dokument.cardHeader" %}</span></a>
           {% elif typ == "samostatny_nalez" %}
-          <a href="{% url 'pas:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.sn.cardHeader" %}</a>
+            <a href="{% url 'pas:detail' ident_cely %}"><span class="material-icons">location_on</span><span class="app-controls-button-text">{% trans "historie.templates.historieList.sn.cardHeader" %}</span></a>
           {% elif typ == "spoluprace" %}
-          <a href="{% url 'pas:spoluprace_list' %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.spoluprace.cardHeader" %}</a>
+            <a href="{% url 'pas:spoluprace_list' %}"><span class="material-icons">location_on</span><span class="app-controls-button-text">{% trans "historie.templates.historieList.spoluprace.cardHeader" %}</span></a>
+          {% elif typ == "ext_zdroj" %}
+            <a href="{% url 'ez:detail' ident_cely %}"><span class="material-icons">menu_book</span><span class="app-controls-button-text">{% trans "historie.templates.historieList.ext_zdroj.cardHeader" %}</span></a>
           {% elif typ == "soubor" %}
-          <a href="/"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.soubor.cardHeader" %}</a>
+            <a href="/"><span class="material-icons">save</span><span class="app-controls-button-text">{% trans "historie.templates.historieList.soubor.cardHeader" %}</span></a>
           {% elif typ == "uzivatel" %}
-          <a href="/"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.uzivatele.cardHeader" %}</a>
+            <a href="/"><span class="material-icons">person</span><span class="app-controls-button-text">{% trans "historie.templates.historieList.uzivatele.cardHeader" %}</span></a>
           {% endif %}
         </div>
         <div id="id-app-entity-item" class="app-entity-item">
           {{ident_cely}}
-          {% if typ == "soubor" and projekt %}
-            <a class="app-entity-color font-weight-normal" href="{% url 'projekt:detail' projekt.ident_cely %}">Zpět na detail projektu</a>
-          {% endif %}
         </div>
       </div>
     </div>
@@ -119,7 +120,37 @@
     {% render_table table 'bootstrap4_table.html' %}
     <nav aria-label="Table navigation" class="table-navigation row">
       <ul class="pagination  jump-page settings col-3">
-  <button type="button" class="btn btn-secondary" style="max-width: fit-content;" onclick="goBack();">{% trans "historie.templates.historieList.zpet.label" %}</button>
+        {% if typ == "projekt" %}
+          <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'projekt:detail' ident_cely %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+        {% elif typ == "akce" %}
+          <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'arch_z:detail' ident_cely %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+        {% elif typ == "knihovna_3d" %}
+          <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'dokument:detail-model-3D' ident_cely %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+        {% elif typ == "dokument" %}
+          <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'dokument:detail' ident_cely %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+        {% elif typ == "samostatny_nalez" %}
+          <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'pas:detail' ident_cely %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+        {% elif typ == "spoluprace" %}
+          <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'pas:spoluprace_list' %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+        {% elif typ == "ext_zdroj" %}
+          <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'ez:detail' ident_cely %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+        {% elif typ == "lokalita" %}
+          <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'lokalita:detail' ident_cely %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+        {% elif typ == "soubor" %}
+          {% if back_model %}
+            {% if back_model == "Projekt" %}
+              <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'projekt:detail' back_ident %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+            {% elif back_model == "DokumentModel3D" %}
+              <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'dokument:detail-model-3D' back_ident %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+            {% elif back_model == "Dokument" %}
+              <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'dokument:detail' back_ident %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+            {% elif back_model == "SamostatnyNalez" %}
+              <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'pas:detail' back_ident %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+            {% endif %}
+          {% endif %}
+        {% elif typ == "uzivatel" %}
+          <a type="button" class="btn btn-secondary" style="max-width: fit-content;" href="{% url 'uzivatel:update-uzivatel' %}">{% trans "historie.templates.historieList.zpet.label" %}</a>
+        {% endif %}
       </ul>
     </nav>
   </div>

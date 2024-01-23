@@ -9,7 +9,6 @@
       {% trans "arch_z.templates.arch_z.dj.partials.dj_update.cardHeader.label" %} {{ j.ident_cely }}
     </div>
     <div class="app-fx app-right">
-      {% if show.editovat %}
       <div class="btn-group" role="group">
         <div class="dropdown-menu" aria-labelledby="others">
           {% if j.show_add_komponenta %}
@@ -17,7 +16,7 @@
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatKomponentu.label' %}
           </a>
           {% endif %}
-          {% if j.show_add_pian %}
+          {% if j.show_add_pian_zapsat %}
           <a id="show_menu_pian_new_id" class="dropdown-item" href="{% url 'arch_z:create-pian' zaznam.ident_cely j.ident_cely %}">
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatNovyPian.label' %}
           </a>
@@ -28,11 +27,16 @@
                       {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.nastavKatastrZMapy.label' %}
                     </a>
           {% endif %}
-          {% if j.show_add_pian %}
+          {% if j.show_pripojit_pian_mapa %}
           <a id="show_menu_pian_from_map_id" class="dropdown-item" href="#"
-             onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
+             onclick="change_dj_action('akce_pripojit_pian_mapa', 'mapa','{{ j.ident_cely}}')">
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pripojitPianZMapy.label' %}
           </a>
+          {% endif %}
+          {% if j.show_import_pian_new %}
+            <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian">
+              {% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.importovatPianNew.label" %}
+            </button>
           {% endif %}
           {% if j.show_approve_pian %}
           <button id="pian-potvrdit-{{j.pian_ident_cely}}" class="dropdown-item pian-potvrdit-btn" type="button"
@@ -40,13 +44,18 @@
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.potvrditPian.label' %}
           </button>
           {% endif %}
-          {% if j.pian_ident_cely %}
+          {% if j.pian_ident_cely and show.stahnout_metadata %}
             <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'pian' j.pian_ident_cely %}">{% trans "arch_z.dj.partials.dj_update.download_pian_metadata" %}</a>
           {% endif %}
-          {% if j.show_uprav_pian and j.pian_ident_cely %}
-          <a id="pian-upravit-{{j.pian_ident_cely}}"  class="dropdown-item" href="{% url 'arch_z:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
-            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.upravitPian.label' %}
-          </a>
+          {% if j.show_uprav_pian %}
+            <a id="pian-upravit-{{j.pian_ident_cely}}"  class="dropdown-item" href="{% url 'arch_z:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
+              {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.upravitPian.label' %}
+            </a>
+          {% endif %}
+          {% if j.show_import_pian_change %}
+            <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian" data-action-id="change">
+              {% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.importovatPianChange.label" %}
+            </button>
           {% endif %}
           {% if j.show_remove_pian %}
           <button id="pian-odpojit-{{j.pian_ident_cely}}" class="dropdown-item pian-odpojit-btn" type="button"
@@ -65,16 +74,18 @@
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.smazatADB.label' %}
           </button>
           {% endif %}
-          {% if j.adb_pk %}
-            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'adb' j.adb_pk %}">{% trans "adb.detail.toolbar.MetadataDownload" %}</a>
+          {% if j.adb_pk and show.stahnout_metadata %}
+            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'adb' j.adb_ident_cely %}">{% trans "adb.detail.toolbar.MetadataDownload" %}</a>
           {% endif %}
+          {% if j.show_dj_smazat %}
           <button id="dj-smazat-{{j.ident_cely}}" class="dropdown-item dj-smazat-btn" type="button" name="button"
                   href="{% url 'dj:smazat' j.ident_cely %}">
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.smazatDJ.label' %}
           </button>
-          {% if j.show_pripojit_pian %}
+          {% endif %}
+          {% if j.show_pripojit_pian_id %}
           <button id="pian-pripojit-{{j.pian_ident_cely}}" class="dropdown-item pian-pripojit-btn" type="button"
-                  name="button" onclick="set_pian_by_id('{{j.ident_cely}}')")>
+                  name="button" onclick="change_dj_action('akce_pripojit_pian_id', 'id','{{ j.ident_cely}}')">
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pripojitPianPodleID.label' %}
           </button>
           {% endif %}
@@ -91,12 +102,11 @@
           <span class="material-icons">more_vert</span>
         </button>
       </div>
-      {% endif %}
     </div>
   </div>
   <div class="card-body">
     {% if not j.adb_form %}
-    <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}"
+    <form class="mb-3" method="POST" action="{% url 'dj:detail' 'akce_dj_zakladni' j.ident_cely %}" id="djEditForm"
           onsubmit="editDjSubmitButton.disabled = true; return true;">
       {% crispy j.form %}
       {% if show.editovat %}
@@ -108,7 +118,7 @@
     {% endif %}
 
     {% if j.adb_form %}
-    <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}"
+    <form class="mb-3" method="POST" action="{% url 'dj:detail' 'akce_dj_zakladni' j.ident_cely %}"
           onsubmit="editDjSubmitButton.disabled = true; return true;">
       {% crispy j.form %}
       <div class="card app-card-form app-card-inner">
@@ -122,7 +132,11 @@
           {% crispy j.adb_form %}
           <h5>{% trans "arch_z.templates.arch_z.dj.partials.dj_update.editADB.vyskoveBody.label" %}</h5>
           <input type="hidden" name="adb_zapsat_vyskove_body" value="{{ j.adb_ident_cely }}"/>
-          {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
+          <div class="content-with-table-responsive-container">
+            <div class="content-with-table-responsive">
+              {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
+            </div>
+          </div>
         </div>
       </div>
       {% if show.editovat %}
@@ -136,3 +150,25 @@
 
 </div>
 {% include "arch_z/dj/partials/dj_show_on_map.html" %}
+{% include "pian/importovat_pian_modal.html" %}
+<script>
+  jQuery(function ($) {        
+    $('#djEditForm').bind('submit', function () {
+      $(this).find('#pian_select').find(':input').prop('disabled', false);
+    });
+  });
+</script>
+<script>
+  function change_dj_action(new_action, type, ident){
+    if (type === "mapa") {
+      show_grap_geom_from_map(ident);
+      set_pian_by_id(ident, true)
+    }
+    else {
+      set_pian_by_id(ident, false)
+    };
+    string=document.getElementById("djEditForm").action
+    replaced_action= string.replace(/akce_dj_zakladni|akce_pripojit_pian_mapa|akce_pripojit_pian_id/g, new_action)
+    document.getElementById("djEditForm").action = replaced_action
+  }
+</script>

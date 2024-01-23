@@ -18,6 +18,7 @@ from core.constants import (
     SPOLUPRACE_ZADOST,
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
     ZAPSANI_SN,
+    SPOLUPRACE_ZADOST,
 )
 from core.exceptions import MaximalIdentNumberError
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -26,6 +27,7 @@ from core.message_constants import (
     FORM_NOT_VALID,
     MAXIMUM_IDENT_DOSAZEN,
     PRISTUP_ZAKAZAN,
+    PROJEKT_NENI_TYP_PRUZKUMNY,
     SAMOSTATNY_NALEZ_ARCHIVOVAN,
     SAMOSTATNY_NALEZ_NELZE_ODESLAT,
     SAMOSTATNY_NALEZ_ODESLAN,
@@ -41,19 +43,28 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
-from core.utils import get_cadastre_from_point, get_cadastre_from_point_with_geometry
-from core.views import SearchListView, check_stav_changed
+from core.repository_connector import FedoraRepositoryConnector
+from core.utils import (
+    get_cadastre_from_point,
+    get_cadastre_from_point_with_geometry,
+    get_pian_from_envelope,
+    get_pas_from_envelope,
+    get_num_pian_from_envelope,
+    get_dj_pians_from_envelope,
+)
+from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.forms import CoordinatesDokumentForm
-from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID, TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
@@ -62,6 +73,8 @@ from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from services.mailer import Mailer
 from uzivatel.models import Organizace, User
+from core.models import Permissions as p, check_permissions
+from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
 
@@ -75,13 +88,14 @@ def get_detail_context(sn, request):
         instance=sn, readonly=True, user=request.user
     )
     context["ulozeni_form"] = PotvrditNalezForm(instance=sn, readonly=True)
-    context["history_dates"] = get_history_dates(sn.historie)
-    context["show"] = get_detail_template_shows(sn)
+    context["history_dates"] = get_history_dates(sn.historie, request.user)
+    context["show"] = get_detail_template_shows(sn, request.user)
     logger.debug("pas.views.get_detail_context", extra=context)
     if sn.soubory:
         context["soubory"] = sn.soubory.soubory.all()
     else:
         context["soubory"] = None
+    context["app"] = "pas"
     return context
 
 
@@ -116,14 +130,14 @@ def create(request, ident_cely=None):
             geom = None
             geom_sjtsk = None
             try:
-                wgs84_dx = float(form_coor.data.get("coordinate_wgs84_x"))
-                wgs84_dy = float(form_coor.data.get("coordinate_wgs84_y"))
-                if wgs84_dx > 0 and wgs84_dy > 0:
-                    geom = Point(wgs84_dy, wgs84_dx)
-                sjtsk_dx = float(form_coor.data.get("coordinate_sjtsk_x"))
-                sjtsk_dy = float(form_coor.data.get("coordinate_sjtsk_y"))
-                if sjtsk_dx > 0 and sjtsk_dy > 0:
-                    geom_sjtsk = Point(-1 * sjtsk_dx, -1 * sjtsk_dy)
+                wgs84_x1 = float(form_coor.data.get("coordinate_wgs84_x1"))
+                wgs84_x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
+                if wgs84_x1 > 0 and wgs84_x2 > 0:
+                    geom = Point(wgs84_x1, wgs84_x2)
+                sjtsk_x1 = float(form_coor.data.get("coordinate_sjtsk_x1"))
+                sjtsk_x2 = float(form_coor.data.get("coordinate_sjtsk_x2"))
+                if sjtsk_x1 < 0 and sjtsk_x2 < 0:
+                    geom_sjtsk = Point(sjtsk_x1,sjtsk_x2)
             except Exception:
                 logger.info(
                     "pas.views.create.corrd_format_error",
@@ -135,25 +149,38 @@ def create(request, ident_cely=None):
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
             else:
-                sn.stav = SN_ZAPSANY
-                sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
-                sn.predano_organizace = sn.projekt.organizace
-                sn.geom_system = form_coor.data.get("coordinate_system")
-                if geom is not None:
-                    sn.katastr = get_cadastre_from_point(geom)
-                    sn.geom = geom
-                if geom_sjtsk is not None:
-                    sn.geom_sjtsk = geom_sjtsk
-                form.save()
-                sn.set_zapsany(request.user)
-                form.save_m2m()
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                return redirect("pas:detail", ident_cely=sn.ident_cely)
+                repository_connector = FedoraRepositoryConnector(sn)
+                if repository_connector.check_container_deleted_or_not_exists(sn.ident_cely):
+                    sn.stav = SN_ZAPSANY
+                    sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
+                    sn.predano_organizace = sn.projekt.organizace
+                    sn.geom_system = form_coor.data.get("coordinate_system")
+                    if geom is not None:
+                        sn.katastr = get_cadastre_from_point(geom)
+                        sn.geom = geom
+                    if geom_sjtsk is not None:
+                        sn.geom_sjtsk = geom_sjtsk
+                    form.save()
+                    sn.set_zapsany(request.user)
+                    form.save_m2m()
+                    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                    return redirect("pas:detail", ident_cely=sn.ident_cely)
+                else:
+                    logger.info("pas.views.create.check_container_deleted_or_not_exists.incorrect",
+                                extra={"ident_cely": sn.ident_cely})
+                    messages.add_message(request, messages.ERROR, _("pas.views.zapsat.create."
+                                                                    "check_container_deleted_or_not_exists_error"))
 
         else:
             logger.info("pas.views.create.form_invalid", extra={"errors": form.errors})
             messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
     else:
+        if ident_cely:
+            proj = get_object_or_404(Projekt, ident_cely=ident_cely)
+            if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
+                logger.debug("Projekt neni typu pruzkumny")
+                messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_PRUZKUMNY)
+                return redirect(proj.get_absolute_url())
         form = CreateSamostatnyNalezForm(
             user=request.user,
             required=required_fields,
@@ -206,29 +233,29 @@ def detail(request, ident_cely):
             )
         system = (
             "WGS-84"
-            if sn.geom_system == "wgs84"
-            else ("S-JTSK*" if sn.geom_system == "sjtsk*" else "S-JTSK")
+            if sn.geom_system == "4326"
+            else ("S-JTSK*" if sn.geom_system == "5514*" else ("S-JTSK" if sn.geom_system == "5514" else "WGS-84"))
         )
         logger.debug(
             "pas.views.create.detail",
             extra={"sn_geom_system": sn.geom_system, "system": system},
         )
-        gx_wgs = geom.split(" ")[1]
-        gy_wgs = geom.split(" ")[0]
-        gx_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
-        gy_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
-        gx = gx_wgs if system == "WGS-84" else gx_sjtsk
-        gy = gy_wgs if system == "WGS-84" else gy_sjtsk
-        if float(gy_sjtsk) > float(gx_sjtsk):
-            gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
+        x1_wgs = geom.split(" ")[0]
+        x2_wgs = geom.split(" ")[1]
+        x1_sjtsk = geom_sjtsk.split(" ")[0]
+        x2_sjtsk = geom_sjtsk.split(" ")[1]
+        x1 = x1_wgs if system == "4326" else x1_sjtsk
+        x2 = x2_wgs if system == "4326" else x2_sjtsk
+        #if float(gy_sjtsk) > float(gx_sjtsk):
+        #    gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
         context["formCoor"] = CoordinatesDokumentForm(
             initial={
-                "detector_coordinates_x": gx,
-                "detector_coordinates_y": gy,
-                "coordinate_wgs84_x": gx_wgs,
-                "coordinate_wgs84_y": gy_wgs,
-                "coordinate_sjtsk_x": gx_sjtsk,
-                "coordinate_sjtsk_y": gy_sjtsk,
+                "visible_x1": x1,
+                "visible_x2": x2,
+                "coordinate_wgs84_x1": x1_wgs,
+                "coordinate_wgs84_x2": x2_wgs,
+                "coordinate_sjtsk_x1": x1_sjtsk,
+                "coordinate_sjtsk_x2": x2_sjtsk,
                 "coordinate_system": system,
             }
         )  # Zmen musis poslat data do formulare
@@ -265,14 +292,14 @@ def edit(request, ident_cely):
         geom = None
         geom_sjtsk = None
         try:
-            wgs84_dx = float(form_coor.data.get("coordinate_wgs84_x"))
-            wgs84_dy = float(form_coor.data.get("coordinate_wgs84_y"))
-            if wgs84_dx > 0 and wgs84_dy > 0:
-                geom = Point(wgs84_dy, wgs84_dx)
-            sjtsk_dx = float(form_coor.data.get("coordinate_sjtsk_x"))
-            sjtsk_dy = float(form_coor.data.get("coordinate_sjtsk_y"))
-            if sjtsk_dx > 0 and sjtsk_dy > 0:
-                geom_sjtsk = Point(-1 * sjtsk_dx, -1 * sjtsk_dy)
+            wgs84_x1 = float(form_coor.data.get("coordinate_wgs84_x1"))
+            wgs84_x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
+            sjtsk_x1 = float(form_coor.data.get("coordinate_sjtsk_x1"))
+            sjtsk_x2 = float(form_coor.data.get("coordinate_sjtsk_x2"))
+            if wgs84_x1 > 0 and wgs84_x2 > 0:
+                geom = Point(wgs84_x1, wgs84_x2)
+            if sjtsk_x1 < 0 and sjtsk_x2 < 0:
+                geom_sjtsk = Point(sjtsk_x1,sjtsk_x2)
         except Exception as e:
             logger.info(
                 "pas.views.edit.corrd_format_error",
@@ -318,25 +345,25 @@ def edit(request, ident_cely):
                 )
             system = (
                 "WGS-84"
-                if sn.geom_system == "wgs84"
-                else ("S-JTSK*" if sn.geom_system == "sjtsk*" else "S-JTSK")
+                if sn.geom_system == "4326"
+                else ("S-JTSK*" if sn.geom_system == "5514*" else ("S-JTSK" if sn.geom_system == "5514" else "WGS-84"))
             )
-            gx_wgs = geom.split(" ")[1]
-            gy_wgs = geom.split(" ")[0]
-            gx_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
-            gy_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
-            gx = gx_wgs if system == "WGS-84" else gx_sjtsk
-            gy = gy_wgs if system == "WGS-84" else gy_sjtsk
-            if float(gy_sjtsk) > float(gx_sjtsk):
-                gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
-            form_coor = CoordinatesDokumentForm(
+            x1_wgs = geom.split(" ")[0]
+            x2_wgs = geom.split(" ")[1]
+            x1_sjtsk = geom_sjtsk.split(" ")[0]
+            x2_sjtsk = geom_sjtsk.split(" ")[1]
+            x1 = x1_wgs if system == "4326" else x1_sjtsk
+            x2 = x2_wgs if system == "4326" else x2_sjtsk
+            #if float(gy_sjtsk) > float(gx_sjtsk):
+            #    gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
+            form_coor= CoordinatesDokumentForm(
                 initial={
-                    "detector_coordinates_x": gx,
-                    "detector_coordinates_y": gy,
-                    "coordinate_wgs84_x": gx_wgs,
-                    "coordinate_wgs84_y": gy_wgs,
-                    "coordinate_sjtsk_x": gx_sjtsk,
-                    "coordinate_sjtsk_y": gy_sjtsk,
+                    "visible_x1": x1,
+                    "visible_x2": x2,
+                    "coordinate_wgs84_x1": x1_wgs,
+                    "coordinate_wgs84_x2": x2_wgs,
+                    "coordinate_sjtsk_x1": x1_sjtsk,
+                    "coordinate_sjtsk_x2": x2_sjtsk,
                     "coordinate_system": system,
                 }
             )  # Zmen musis poslat data do formulare
@@ -346,6 +373,7 @@ def edit(request, ident_cely):
         request,
         "pas/edit.html",
         {
+            "sn": sn,
             "global_map_can_edit": True,
             "formCoor": form_coor,
             "form": form,
@@ -560,7 +588,7 @@ def potvrdit(request, ident_cely):
     }
     return render(request, "core/transakce_modal.html", context)
 
-
+@login_required
 def archivovat(request, ident_cely):
     """
     Funkce pohledu pro archivaci samostatného nálezu pomocí modalu.
@@ -596,8 +624,15 @@ def archivovat(request, ident_cely):
         }
     return render(request, "core/transakce_modal.html", context)
 
-
-class SamostatnyNalezListView(SearchListView):
+class PasPermissionFilterMixin(PermissionFilterMixin):
+    def add_ownership_lookup(self, ownership, qs):
+        filter_historie = {"uzivatel":self.request.user}
+        filtered_my = Historie.objects.filter(**filter_historie)
+        if ownership == p.ownershipChoices.our:
+            return Q(**{"historie_zapsat__in":filtered_my}) | Q(**{"projekt__organizace":self.request.user.organizace})
+        else:
+            return Q(**{"historie_zapsat__in":filtered_my})
+class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     """
     Třída pohledu pro zobrazení přehledu samostatných nálezu s filtrem v podobe tabulky.
     """
@@ -607,17 +642,21 @@ class SamostatnyNalezListView(SearchListView):
     template_name = "pas/samostatny_nalez_list.html"
     filterset_class = SamostatnyNalezFilter
     export_name = "export_samostatny-nalez_"
-    page_title = _("pas.views.samostatnyNalezListView.pageTitle")
     app = "samostatny_nalez"
     toolbar = "toolbar_pas.html"
-    search_sum = _("pas.views.samostatnyNalezListView.pocetVyhledanych")
-    pick_text = _("pas.views.samostatnyNalezListView.pickText")
-    hasOnlyVybrat_header = _("pas.views.samostatnyNalezListView.header.hasOnlyVybrat")
-    hasOnlyVlastnik_header = _("pas.views.samostatnyNalezListView.header.hasOnlyVlastnik")
-    hasOnlyArchive_header = _("pas.views.samostatnyNalezListView.header.hasOnlyArchive")
-    hasOnlyPotvrdit_header = _("pas.views.samostatnyNalezListView.header.hasOnlyPotvrdit")
-    default_header = _("pas.views.samostatnyNalezListView.header.default")
-    toolbar_name = _("pas.views.samostatnyNalezListView.toolbar.title")
+    typ_zmeny_lookup = ZAPSANI_SN
+
+    def init_translations(self):
+        self.page_title = _("pas.views.samostatnyNalezListView.pageTitle")
+        self.search_sum = _("pas.views.samostatnyNalezListView.pocetVyhledanych")
+        self.pick_text = _("pas.views.samostatnyNalezListView.pickText")
+        self.hasOnlyVybrat_header = _("pas.views.samostatnyNalezListView.header.hasOnlyVybrat")
+        self.hasOnlyVlastnik_header = _("pas.views.samostatnyNalezListView.header.hasOnlyVlastnik")
+        self.hasOnlyArchive_header = _("pas.views.samostatnyNalezListView.header.hasOnlyArchive")
+        self.hasOnlyPotvrdit_header = _("pas.views.samostatnyNalezListView.header.hasOnlyPotvrdit")
+        self.default_header = _("pas.views.samostatnyNalezListView.header.default")
+        self.toolbar_name = _("pas.views.samostatnyNalezListView.toolbar.title")
+        self.toolbar_label = _("pas.views.samostatnyNalezListView.toolbar_label.text")
 
     def get_queryset(self):
         # Only allow to view 3D models
@@ -631,7 +670,10 @@ class SamostatnyNalezListView(SearchListView):
             "katastr",
             "katastr__okres",
         )
-        return qs
+        return self.check_filter_permission(qs)
+    
+    
+
 
 
 @login_required
@@ -650,16 +692,12 @@ def smazat(request, ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}, status=403)
     if request.method == "POST":
-        historie = nalez.historie
-        soubory = nalez.soubory
+        nalez.deleted_by_user = request.user
         resp1 = nalez.delete()
-        resp2 = historie.delete()
-        resp3 = soubory.delete()
-
         if resp1:
             logger.info(
                 "pas.views.smazat.deleted",
-                extra={"resp1": resp1, "resp2": resp2, "resp3": resp3},
+                extra={"resp1": resp1},
             )
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             return JsonResponse({"redirect": reverse("core:home")})
@@ -784,12 +822,17 @@ class UzivatelSpolupraceListView(SearchListView):
     template_name = "pas/uzivatel_spoluprace_list.html"
     filterset_class = UzivatelSpolupraceFilter
     export_name = "export_spoluprace_"
-    page_title = _("pas.views.uzivatelSpolupraceListView.pageTitle")
     app = "spoluprace"
     toolbar = "toolbar_spoluprace.html"
-    search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")
-    pick_text = _("pas.views.uzivatelSpolupraceListView.pickText")
-    toolbar_name = _("pas.views.uzivatelSpolupraceListView.toolbar.title")
+    typ_zmeny_lookup = SPOLUPRACE_ZADOST
+
+    def init_translations(self):
+        super().init_translations()
+        self.page_title = _("pas.views.uzivatelSpolupraceListView.pageTitle")
+        self.search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")
+        self.pick_text = _("pas.views.uzivatelSpolupraceListView.pickText")
+        self.toolbar_name = _("pas.views.uzivatelSpolupraceListView.toolbar.title")
+        self.toolbar_label = _("pas.views.uzivatelSpolupraceListView.toolbar_label.text")
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -800,11 +843,29 @@ class UzivatelSpolupraceListView(SearchListView):
             "historie",
             "spolupracovnik__organizace",
         )
-        return qs.order_by("id")
-
+        return self.check_filter_permission(qs).order_by("id")
+    
+    def add_ownership_lookup(self, ownership, qs=None):
+        filtered_my = Q(spolupracovnik=self.request.user)
+        if ownership == p.ownershipChoices.our:
+            filtered_our = Q(vedouci__organizace=self.request.user.organizace)
+            return filtered_our | filtered_my
+        else:
+            return filtered_my
+    
+    def add_accessibility_lookup(self,permission, qs):
+        return qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["show_zadost"] = check_permissions(p.actionChoices.spoluprace_zadost, self.request.user)
+        return context
+    
     def get_table_kwargs(self):
-        if self.request.user.hlavni_role.id not in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
-            return {"exclude": ("smazani",)}
+        if self.request.user.hlavni_role.id != ROLE_ADMIN_ID:
+            return {
+                    'exclude': ('smazani', )
+                }
         return {}
 
 
@@ -819,7 +880,9 @@ def aktivace(request, pk):
         spoluprace.set_aktivni(request.user)
         messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_AKTIVOVANA)
         Mailer.send_en06(cooperation=spoluprace)
-        return redirect("pas:spoluprace_list")
+        return JsonResponse(
+            {"redirect": reverse("pas:spoluprace_list")}, status=403
+        )
     else:
         warnings = spoluprace.check_pred_aktivaci()
         logger.info("pas.views.aktivace.warnings", extra={"warnings": warnings})
@@ -827,7 +890,9 @@ def aktivace(request, pk):
             messages.add_message(
                 request, messages.ERROR, f"{SPOLUPRACI_NELZE_AKTIVOVAT} {warnings[0]}"
             )
-            return redirect("pas:spoluprace_list")
+            return JsonResponse(
+                {"redirect": reverse("pas:spoluprace_list")}, status=403
+            )
     context = {
         "object": spoluprace,
         "title": (
@@ -896,14 +961,11 @@ def smazat_spolupraci(request, pk):
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
-        historie = spoluprace.historie
         resp1 = spoluprace.delete()
-        resp2 = historie.delete()
-
         if resp1:
             logger.info(
                 "pas.views.smazat_spolupraci.deleted",
-                extra={"resp1": resp1, "resp2": resp2},
+                extra={"resp1": resp1},
             )
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
@@ -913,7 +975,6 @@ def smazat_spolupraci(request, pk):
             return JsonResponse(
                 {"redirect": reverse("pas:spoluprace_list")}, status=403
             )
-
     else:
         context = {
             "object": spoluprace,
@@ -929,42 +990,44 @@ def smazat_spolupraci(request, pk):
     return render(request, "core/transakce_modal.html", context)
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní historických datumu.
     """
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_SN),
-        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_SN),
-        "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_SN),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_SN),
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_SN, anonymized),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_SN, anonymized),
+        "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_SN, anonymized),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_SN, anonymized),
     }
     return historie
 
 
-def get_detail_template_shows(sn):
+def get_detail_template_shows(sn, user):
     """
     Funkce pro získaní kontextu pro zobrazování možností na stránkách.
     """
-    show_vratit = sn.stav > SN_ZAPSANY
-    show_odeslat = sn.stav == SN_ZAPSANY
-    show_potvrdit = sn.stav == SN_ODESLANY
-    show_archivovat = sn.stav == SN_POTVRZENY
-    show_edit = sn.stav not in [
-        SN_ARCHIVOVANY,
-    ]
     show_arch_links = sn.stav == SN_ARCHIVOVANY
     show = {
-        "vratit_link": show_vratit,
-        "odeslat_link": show_odeslat,
-        "potvrdit_link": show_potvrdit,
-        "archivovat_link": show_archivovat,
-        "editovat": show_edit,
+        "vratit_link": check_permissions(p.actionChoices.pas_vratit, user, sn.ident_cely),
+        "odeslat_link": check_permissions(p.actionChoices.pas_odeslat, user, sn.ident_cely),
+        "potvrdit_link": check_permissions(p.actionChoices.pas_potvrdit, user, sn.ident_cely),
+        "archivovat_link": check_permissions(p.actionChoices.pas_archivovat, user, sn.ident_cely),
+        "editovat": check_permissions(p.actionChoices.pas_edit, user, sn.ident_cely),
         "arch_links": show_arch_links,
+        "smazat": check_permissions(p.actionChoices.pas_smazat, user, sn.ident_cely),
+        "ulozeni_edit": check_permissions(p.actionChoices.pas_ulozeni_edit, user, sn.ident_cely),
+        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, sn.ident_cely),
+        "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_pas, user, sn.ident_cely),
+        "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_pas, user, sn.ident_cely),
+        "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_pas, user, sn.ident_cely),
+        "soubor_nahradit": check_permissions(p.actionChoices.soubor_nahradit_pas, user, sn.ident_cely),
     }
     return show
 
 
+@login_required
 @require_http_methods(["POST"])
 def post_point_position_2_katastre(request):
     """
@@ -972,7 +1035,7 @@ def post_point_position_2_katastre(request):
     """
     body = json.loads(request.body.decode("utf-8"))
     logger.warning("pas.views.post_point_position_2_katastre", extra={"body": body})
-    katastr_name = get_cadastre_from_point(Point(body["cX"], body["cY"]))
+    katastr_name = get_cadastre_from_point(Point(body["x1"], body["x2"]))
     if katastr_name is not None:
         return JsonResponse(
             {
@@ -984,6 +1047,7 @@ def post_point_position_2_katastre(request):
         return JsonResponse({"katastr_name": ""}, status=200)
 
 
+@login_required
 @require_http_methods(["POST"])
 def post_point_position_2_katastre_with_geom(request):
     """
@@ -991,7 +1055,7 @@ def post_point_position_2_katastre_with_geom(request):
     """
     body = json.loads(request.body.decode("utf-8"))
     [katastr_name, katastr_db, katastr_geom] = get_cadastre_from_point_with_geometry(
-        Point(body["cX"], body["cY"])
+        Point(body["x1"], body["x2"])
     )
     if katastr_name is not None:
         return JsonResponse(
@@ -1038,8 +1102,8 @@ def get_required_fields(zaznam=None, next=0):
             "specifikace",
             "obdobi",
             "druh_nalezu",
-            "detector_system_coordinates",
-            "detector_coordinates_x",
-            "detector_coordinates_y",
+            "visible_ss_combo",
+            "visible_x1",
+            "visible_x2",
         ]
     return required_fields

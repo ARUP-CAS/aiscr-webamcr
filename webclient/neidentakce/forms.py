@@ -4,7 +4,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from dal import autocomplete
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from .models import NeidentAkce
 
@@ -60,10 +60,14 @@ class NeidentAkceForm(forms.ModelForm):
             "poznamka": _("neidentAkce.forms.neidentAkceForm.poznamka.tooltip"),
         }
 
+    class Media:
+        js = ["/static/static/js/create_osoba_modal.js"]
+
     def __init__(self, *args, readonly=False, **kwargs):
         super(NeidentAkceForm, self).__init__(*args, **kwargs)
         self.fields["katastr"].required = True
         self.fields["vedouci"].required = False
+        self.fields["vedouci"].widget.attrs["id"]="id_vedouci_modal"
         if readonly == False:
             if "class" in self.fields["katastr"].widget.attrs.keys():
                 self.fields["katastr"].widget.attrs["class"] = (
@@ -87,6 +91,7 @@ class NeidentAkceForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
+        self.readonly = readonly
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):

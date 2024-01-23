@@ -10,7 +10,7 @@
         {% trans "dokument.templates.dok.detail_cast_dokumentu.cardHeader" %}  {{ cast.ident_cely }}
       </div>
       <div class="app-fx app-right">
-        {% if show.editovat %}
+        {% if show_edit_cast %}
         <div class="btn-group" role="group">
             <button id="button-edit-cast" class="btn" href="{% url 'dokument:edit-cast' cast.ident_cely %}"
             rel="tooltip" data-placement="top"
@@ -18,18 +18,23 @@
             <span class="material-icons">edit</span>
             </button>
         </div>
+        {% endif %}
         <div class="btn-group" role="group">
           <div class="dropdown-menu" aria-labelledby="others">
+            {% if show_zapsat_komponentu %}
             <a class="dropdown-item" href="{% url 'dokument:create-komponenta' dokument.ident_cely cast.ident_cely %}">
               {% trans 'dokument.templates.dok.detail_cast_dokumentu.pridatKomponentu.label' %}
             </a>
-            {% if show_pripojit %}
+            {% endif %}
+            {% if show_pripojit_archz %}
             <button id="button-pripojit-akci" class="dropdown-item" type="button" name="button" href="{% url 'dokument:pripojit-az-cast' cast.ident_cely %}?type=akce">
             {% trans 'dokument.templates.dok.detail_cast_dokumentu.pripojitAkci.label' %}
             </button>
             <button id="button-pripojit-lokalitu" class="dropdown-item" type="button" name="button" href="{% url 'dokument:pripojit-az-cast' cast.ident_cely %}?type=lokalita">
               {% trans 'dokument.templates.dok.detail_cast_dokumentu.pripojitLokalitu.label' %}
             </button>
+            {% endif %}
+            {% if show_pripojit_proj %}
             <button id="pripojit-projekt-btn" class="dropdown-item" type="button" name="button" href="{% url 'dokument:pripojit-projekt-cast' cast.ident_cely %}">
               {% trans 'dokument.templates.dok.detail_cast_dokumentu.pripojitProjekt.label' %}
             </button>
@@ -39,16 +44,17 @@
               {% trans 'dokument.templates.dok.detail_cast_dokumentu.odpojitCast.label' %}
             </button>
             {% endif %}
+            {% if show_smazat_cast %}
             <button id="smazat-cast-btn" class="dropdown-item" type="button" name="button" href="{% url 'dokument:smazat-cast' cast.ident_cely %}">
               {% trans 'dokument.templates.dok.detail_cast_dokumentu.smazatCast.label' %}
             </button>
+            {% endif %}
           </div>
           <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
                   aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'dokument.templates.dok.detail_cast_dokumentu.dalsiNabidka.label' %}">
             <span class="material-icons">more_vert</span>
           </button>
         </div>
-        {% endif %}
       </div>
     </div>
     <div class="card-body">
@@ -62,47 +68,58 @@
         {% trans "dokument.templates.dok.detail_cast_dokumentu.neidentAkce.cardHeader" %}
       </div>
       <div class="app-fx app-right">
-        {% if show.editovat %}
         <div class="btn-group" role="group">
-            <button id="button-edit-neident" class="btn" href="{% url 'neidentakce:edit' cast.id %}"
+          {% if show_neident_akce_edit %}
+            <button id="button-edit-neident" class="btn" href="{% url 'neidentakce:edit' cast.ident_cely %}"
             rel="tooltip" data-placement="top"
             title="{% trans 'dokument.templates.dok.detail_cast_dokumentu.editNeidentAkci.tooltip' %}">
             <span class="material-icons">edit</span>
             </button>
+            {% endif %}
         </div>
         <div class="btn-group" role="group">
           <div class="dropdown-menu" aria-labelledby="others">
+            {% if show_neident_akce_smazat %}
             <button id="smazat-neident-akce-btn" class="dropdown-item" type="button" name="button" href="{% url 'dokument:smazat-neident-akce' cast.ident_cely %}">
               {% trans 'dokument.templates.dok.detail_cast_dokumentu.smazatNeidentAkci.label' %}
             </button>
+            {% endif %}
           </div>
           <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
                   aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'dokument.templates.dok.detail_cast_dokumentu.neidentAkce.DalsiNabidka.label' %}">
             <span class="material-icons">more_vert</span>
           </button>
         </div>
-        {% endif %}
+        
       </div>
     </div>
     <div class="card-body">
         {% crispy neident_akce_form %}
     </div>
+    <div class="modal osoba-form fade app-modal-form" tabindex="-1" role="dialog" id="modal-osoba-form">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+        <div class="modal-content osoba-form"></div>
+      </div>
+    </div>
 </div>
 {% endif %}
     <script>
         //modal scripts
+        var modal;
+        var heslar_url = "{% url 'heslar:create_osoba' %}";
         document.addEventListener('DOMContentLoaded', function (event) {
-          if ("{{show.editovat}}" != "False"){
+          if ("{{show_edit_cast}}" != "False"){
             var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
               formID: "edit-cast-form",
               modalFormID: "#edit-cast-form",
             })
             new Modal(options, "button-edit-cast");
+          };
             var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "pripojit-eo-form",
                 modalFormID: "#pripojit-eo-form",
               })
-            {% if show_pripojit %}
+            {% if show_pripojit_archz or show_pripojit_proj %}
               new Modal(options, "button-pripojit-akci");
               var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "pripojit-eo-form",
@@ -132,14 +149,14 @@
                   formID: "edit-neident-form",
                   modalFormID: "#edit-neident-form",
                 })
-                new Modal(options, "button-edit-neident");
+                modal = new Modal(options, "button-edit-neident");
                 var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                     formID: "smazat-neident-akce-form",
                     modalFormID: "#smazat-neident-akce-form",
                   })
                   new Modal(options, "smazat-neident-akce-btn");
               };
-          };
+          
           
           if (document.getElementsByClassName("komponenta-smazat-btn")){
             elements = document.getElementsByClassName("komponenta-smazat-btn")

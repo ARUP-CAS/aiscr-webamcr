@@ -11,8 +11,9 @@
     <div class="row app-entity-cards mb-3">
       <div class="col">
         <a href="{% url 'projekt:create' %}" class="card app-card-entity app-card-zapsat-projekt">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardZapsatProjekt.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardZapsatProjekt.label" %}
@@ -20,9 +21,10 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}" class="card app-card-entity app-card-prihlasit-projekt">
-          <div class="card-body">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}&sort=planovane_zahajeni&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-prihlasit-projekt">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardPrihlasitProjekt.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardPrihlasitProjekt.label" %}
@@ -30,9 +32,10 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-zahajit-vyzkum">
-          <div class="card-body">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-zahajit-vyzkum">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardZahajitVyzkum.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardZahajitVyzkum.label" %}
@@ -40,9 +43,10 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-ukoncit-teren">
-          <div class="card-body">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-ukoncit-teren">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardUkoncitTeren.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardUkoncitTeren.label" %}
@@ -50,9 +54,10 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}" class="card app-card-entity app-card-spravovat-akce">
-          <div class="card-body">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-spravovat-akce">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardSpravovatAkce.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardSpravovatAkce.label" %}
@@ -60,9 +65,10 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-uzavrit-projekt">
-          <div class="card-body">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-uzavrit-projekt">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardUzavritProjekt.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "projekt.templates.index.cardUzavritProjekt.label" %}
@@ -70,12 +76,13 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-archivovat-projekt">
-          <div class="card-body">
+        <a href="{% url 'projekt:list' %}?sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-vybrat-projekt">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardVybratProjekt.text" %}</div>
           </div>
           <div class="card-footer">
-            {% trans "projekt.templates.index.cardArchivovatProjekt.label" %}
+            {% trans "projekt.templates.index.cardVybratProjekt.label" %}
           </div>
         </a>
       </div>
@@ -125,17 +132,16 @@
         {% trans "projekt.templates.index.cardUzavritProjekt.text" %}
       </div>
     </div>
-    <div class="app-collapse-archivovat-projekt collapse">
+    <div class="app-collapse-vybrat-projekt collapse">
       <div class="p-3">
-        <h4>{% trans "projekt.templates.index.cardArchivovatProjekt.title" %}</h4>
+        <h4>{% trans "projekt.templates.index.cardVybratProjekt.title" %}</h4>
         <hr />
-        {% trans "projekt.templates.index.cardArchivovatProjekt.text" %}
+        {% trans "projekt.templates.index.cardVybratProjekt.text" %}
       </div>
     </div>
   </div>
 
   <script>
-    // show / hide card description
     $(".app-card-zapsat-projekt").mouseleave(function(){
       $(".app-collapse-zapsat-projekt").hide(100);
     });
@@ -172,13 +178,14 @@
     $(".app-card-uzavrit-projekt").mouseover(function(){
       $(".app-collapse-uzavrit-projekt").show(100);
     });
-    $(".app-card-archivovat-projekt").mouseleave(function(){
-      $(".app-collapse-archivovat-projekt").hide(100);
+    $(".app-card-vybrat-projekt").mouseleave(function(){
+      $(".app-collapse-vybrat-projekt").hide(100);
     });
-    $(".app-card-archivovat-projekt").mouseover(function(){
-      $(".app-collapse-archivovat-projekt").show(100);
+    $(".app-card-vybrat-projekt").mouseover(function(){
+      $(".app-collapse-vybrat-projekt").show(100);
     });
 </script>
+
 {% endblock %}
 
 {% block script %}

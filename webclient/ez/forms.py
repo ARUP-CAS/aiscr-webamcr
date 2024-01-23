@@ -2,7 +2,7 @@ from django.urls import reverse
 
 
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import AppendedText
@@ -84,10 +84,12 @@ class ExterniZdrojForm(forms.ModelForm):
 
         widgets = {
             "typ": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container"}
             ),
             "typ_dokumentu": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container"}
             ),
             "rok_vydani_vzniku": forms.TextInput(),
             "nazev": forms.Textarea(attrs={"rows": 1}),
@@ -102,7 +104,8 @@ class ExterniZdrojForm(forms.ModelForm):
             "isbn": forms.TextInput(),
             "issn": forms.TextInput(),
             "organizace": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container"}
             ),
             "link": forms.TextInput(),
             "poznamka": forms.TextInput(),
@@ -248,6 +251,7 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
     """
     def __init__(self, type_arch=None, dok=False, *args, **kwargs):
         super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
+        self.fields["paginace"].required = False
         if dok:
             ez_label = _("ez.forms.pripojitArchZaznamForm.dokument.vyberArchz.label")
             pagin = Div()
@@ -290,6 +294,7 @@ class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
     """
     def __init__(self, *args, **kwargs):
         super(PripojitExterniOdkazForm, self).__init__(*args, **kwargs)
+        self.fields["paginace"].required = False
         new_choices = list(
             ExterniZdroj.objects.filter().values_list("id", "ident_cely")
         )

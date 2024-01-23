@@ -45,58 +45,58 @@
         </div>
       {% endif %}
         <div class="row">
-          <div class="col-sm-2">
+          <div class="col-md-4 col-lg-2">
             <div class="form-group">
               <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.hlavniKatastr.label" %}</label>
               <input id="main_cadastre_id" class="form-control" type="text" value="{{ zaznam.hlavni_katastr|check_if_none }}"
                      readonly>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="col-md-8 col-lg-4">
             <div class="form-group">
               <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.dalsiKatastry.label" %}</label>
               <input id="other_cadastre_id" class="form-control" type="text" value="{{ zaznam.katastry.all|katastry_to_list|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-2">
+          <div class="col-md-4 col-lg-2">
             <div class="form-group">
               <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.hlavniVedouci.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_vedouci|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-2">
+          <div class="col-md-4 col-lg-2">
             <div class="form-group">
               <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.organizace.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.organizace|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-2">
+          <div class="col-md-4 col-lg-2">
             <div class="form-group">
               <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.uzivatelskeOznaceni.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.uzivatelske_oznaceni|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-2">
+          <div class="col-md-4 col-lg-2">
             <div class="form-group">
               <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.hlavniTyp.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_typ|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-2">
+          <div class="col-md-4 col-lg-2">
             <div class="form-group">
               <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.vedlejsiTyp.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.vedlejsi_typ|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-md-2">
           </div>
-          <div class="col-sm-2">
+          <div class="col-md-4 col-lg-2">
             <div class="form-group">
               <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.specifikaceData.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.specifikace_data|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-2">
+          <div class="col-md-4 col-lg-2">
             <div class="form-group">
               <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.datumZahajeni.label" %}</label>
               {% if presna_specifikace %}
@@ -108,7 +108,7 @@
               {% endif %}
             </div>
           </div>
-          <div class="col-sm-2">
+          <div class="col-md-4 col-lg-2">
             <div class="form-group">
               <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.datumUkonceni.label" %}</label>
               {% if presna_specifikace %}
@@ -270,32 +270,38 @@
         })
         new Modal(options, "arch_z-sam-akce-change");
       }
-
-      /*if (document.getElementById("main_cadastre_id")!==null) {
-              let xhr = new XMLHttpRequest();
-              xhr.open('POST', '/arch-z/akce-zjisti-katastr');
-              xhr.setRequestHeader('Content-type', 'application/json');
-              if (typeof global_csrftoken !== 'undefined') {
-                  xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
-              } else {
-                  console.log("neni X-CSRFToken token")
+      if (document.getElementById("main_cadastre_id")!==null) {
+              const urlParams = new URLSearchParams(window.location.search);
+              if(urlParams.get('geometry') ==null){
+                  let xhr = new XMLHttpRequest();
+                  xhr.open('POST', '/arch-z/mapa-zoom');
+                  xhr.setRequestHeader('Content-type', 'application/json');
+                  if (typeof global_csrftoken !== 'undefined') {
+                      xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+                  } else {
+                      console.log("neni X-CSRFToken token")
+                  }
+                  xhr.onload = function () {
+                      rs = JSON.parse(this.responseText)
+                      if(rs.lat>0 || rs.zoom == 17){
+                        if(rs.lat>0){
+                          map.setView([rs.lat, rs.lng], rs.zoom)
+                        }
+                        if (rs.zoom == 17) {
+                            drawnItems.clearLayers();
+                            addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,rs.pian_ident_cely,rs.geom,rs.presnost)
+                        }
+                      } else{
+                        switchMap(false);
+                      }
+                  };
+                  xhr.send(JSON.stringify(
+                      {
+                          'cadastre': document.getElementById("main_cadastre_id").value,
+                          'akce_ident_cely': '{{ zaznam.ident_cely }}',
+                      }))
               }
-              xhr.onload = function () {
-                  rs = JSON.parse(this.responseText)
-                  if(rs.lat>0){
-                    map.setView([rs.lat, rs.lng], rs.zoom)
-                  }
-                  if (rs.zoom == 17) {
-                      drawnItems.clearLayers();
-                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom,rs.presnost==4)
-                  }
-              };
-              xhr.send(JSON.stringify(
-                  {
-                      'cadastre': document.getElementById("main_cadastre_id").value,
-                      'pian': "",
-                  }))
-          }*/
+        }
     });
   </script>
 {% endblock %}

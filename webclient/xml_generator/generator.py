@@ -270,7 +270,15 @@ class DocumentGenerator:
                     related_record = getattr(record, record_name_split[0], None)
                     related_record = getattr(related_record, record_name_split[1], None)
                     if hasattr(related_record, "all"):
-                        attributes = [x for x in related_record.all()]
+                        attributes = []
+                        try:
+                            for x in related_record.all():
+                                attributes.append(x)
+                        except Exception as err:
+                            logger.info(
+                                "xml_generator.generator._get_attribute_of_record_unbounded.attr.append.error",
+                                extra={"err": err}
+                            )
             elif len(record_name_split) == 3:
                 related_record = getattr(record, record_name_split[0])
                 if hasattr(related_record, "all"):

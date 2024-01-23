@@ -112,10 +112,11 @@ class Modal {
             type: $(settings.modalFormID).attr("method"),
             url: $(settings.modalFormID).attr("action"),
             data: new FormData($(settings.modalFormID)[0]),
-            async: false,
+            async: true,
             contentType: false,
             processData: false,
             beforeSend: function () {
+                $("#loader-spinner").show()
                 $("#submit-btn").prop("disabled", true);
             },
             success: function (response) {
@@ -127,6 +128,8 @@ class Modal {
                     settings.addEventHandlers(settings);
                     settings.resetScripts();
                     settings.formErrorFunction(settings,response);
+                    $("#loader-spinner").hide()
+                    $("#submit-btn").prop("disabled", false);
                 } else if ($(response).find(".alert-block").length > 0) {
                     // Form is not valid, update it with errors
                     $(settings.modalIDD).find(settings.modalContent).html(response);
@@ -135,6 +138,8 @@ class Modal {
                     settings.addEventHandlers(settings);
                     settings.resetScripts();
                     settings.formErrorFunction(settings,response);
+                    $("#loader-spinner").hide()
+                    $("#submit-btn").prop("disabled", false);
                 }
                  else {
                      // Form is valid
@@ -144,6 +149,8 @@ class Modal {
                         }
                      }
                      settings.succesFunction(settings,response)
+                     $("#loader-spinner").hide()
+                    $("#submit-btn").prop("disabled", false);
                 }
             },
             error: function (response) {

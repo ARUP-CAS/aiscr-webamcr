@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load template_filters %}
 
 <table class="table table-striped table-hover table-sm mb-0">
   <thead>
@@ -7,57 +8,57 @@
     <th scope="col">{% trans "core.templates.filetable.columnHeader.nazev.label" %}</th>
     <th scope="col">{% trans "core.templates.filetable.columnHeader.typ.label" %}</th>
     <th scope="col">{% trans "core.templates.filetable.columnHeader.velikost.label" %}</th>
-    <th scope="col">{% trans "core.templates.filetable.columnHeader.datumVytvoreni.label" %}</th>
-    {% if show %}
-      <th scope="col">{% trans "core.templates.filetable.columnHeader.smazat.label" %}</th>
-      {% if allow_replace %}
-        <th scope="col">{% trans "core.templates.filetable.columnHeader.nahradit.label" %}</th>
-      {% endif %}
-    {% endif %}
-    <th scope="col">{% trans "core.templates.filetable.columnHeader.stahnout.label" %}</th>
+    <th scope="col">{% trans "core.templates.filetable.columnHeader.Rozsah.label" %}</th>
     <th scope="col">{% trans "core.templates.filetable.columnHeader.historie.label" %}</th>
+    {% if show.soubor_stahnout %}
+      <th scope="col">{% trans "core.templates.filetable.columnHeader.stahnout.label" %}</th>
+    {% endif %}
+    {% if allow_replace and show.soubor_nahradit %}
+      <th scope="col">{% trans "core.templates.filetable.columnHeader.nahradit.label" %}</th>
+    {% endif %}
+    {% if show.soubor_smazat %}
+      <th scope="col">{% trans "core.templates.filetable.columnHeader.smazat.label" %}</th>
+    {% endif %}
   </tr>
   </thead>
   <tbody>
   {% for soubor in soubory %}
     <tr>
       <td>
-        {% if soubor.mimetype|slice:5 == "image" %}
-        <img id="soubor-nahled" src="{% url 'core:download_file' soubor.id %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" >
+        {% if soubor.mimetype|slice:5 == "image" and show.soubor_nahled %}
+          <img id="soubor-nahled" src="{% url 'core:download_thumbnail' vazba_trida ident soubor.id %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" >
         {% endif %}  
       </td>
       <td>{{ soubor.nazev }}</td>
       <td>{{ soubor.mimetype }}</td>
       <td>{{ soubor.size_mb|floatformat:3 }} MB</td>
-      {% if soubor.vytvoreno %}
-        <td>{{ soubor.vytvoreno|date:'Y-m-d' }}</td>
-      {% else %}
-        <td></td>
-      {% endif %}
-      {% if show %}
-        <td>
-          <button id="file-smazat-{{soubor.id}}" class="file-smazat-btn" type="button" name="button" href="{% url 'core:delete_file' soubor.id %}?next={{ next_url }}{{ ident }}">
-            <span class="material-icons app-color-danger">delete_forever</span>
-          </button>
-        </td>
-        {% if allow_replace %}
-          <td>
-            <a href="{% url 'core:update_file' vazba_trida soubor.id %}?next={{ next_url }}{{ ident }}">
-              <span class="material-icons app-color-danger">upgrade</span>
-            </a>
-          </td>
-        {% endif %}
-      {% endif %}
-      <td>
-        <a href="{% url 'core:download_file' soubor.id %}" target="_blank">
-          <span class="material-icons">get_app</span>
-        </a>
-      </td>
+      <td>{{ soubor.rozsah|check_if_none }}</td>
       <td>
         <a href="{% url 'historie:soubor' soubor.id %}">
           <span class="material-icons">history</span>
         </a>
       </td>
+      {% if show.soubor_stahnout %}
+      <td>
+        <a href="{% url 'core:download_file' vazba_trida ident soubor.id %}" target="_blank">
+          <span class="material-icons">get_app</span>
+        </a>
+      </td>
+      {% endif %}
+      {% if allow_replace and show.soubor_nahradit %}
+          <td>
+            <a href="{% url 'core:update_file' vazba_trida ident soubor.id %}?next={{ next_url }}{{ ident }}">
+              <span class="material-icons app-color-danger">upgrade</span>
+            </a>
+          </td>
+      {% endif %}
+      {% if show.soubor_smazat %}
+        <td>
+          <button id="file-smazat-{{soubor.id}}" class="file-smazat-btn" type="button" name="button" href="{% url 'core:delete_file' vazba_trida ident soubor.id %}?next={{ next_url }}{{ ident }}">
+            <span class="material-icons app-color-danger">delete_forever</span>
+          </button>
+        </td>
+      {% endif %}
     </tr>
   {% endfor %}
   </tbody>

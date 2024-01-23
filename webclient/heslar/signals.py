@@ -1,12 +1,22 @@
 import logging
 
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_save, pre_delete
 from django.dispatch import receiver
 
+from core.ident_cely import get_heslar_ident
 from .models import Heslar, RuianKatastr, RuianKraj, RuianOkres, HeslarDatace, HeslarHierarchie, \
     HeslarDokumentTypMaterialRada, HeslarOdkaz
 
 logger = logging.getLogger(__name__)
+
+
+@receiver(pre_save, sender=Heslar)
+def save_ident_cely(sender, instance: Heslar, **kwargs):
+    """
+    Funkce pro uložení metadat hesláře.
+    """
+    if not instance.ident_cely and not instance.pk:
+        instance.ident_cely = get_heslar_ident()
 
 
 @receiver(post_save, sender=Heslar)
@@ -43,16 +53,14 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, created,
     """
     Funkce pro uložení metadat heslář - hierarchie.
     """
-    if created:
+    if instance.heslo_podrazene:
         instance.heslo_podrazene.save_metadata()
+    if instance.heslo_nadrazene:
         instance.heslo_nadrazene.save_metadata()
-    else:
-        if instance.heslo_nadrazene.pk != instance.initial_heslo_nadrazene.pk:
-            instance.heslo_nadrazene.save_metadata()
-            instance.initial_heslo_nadrazene.save_metadata()
-        if instance.heslo_podrazene.pk != instance.initial_heslo_podrazene.pk:
-            instance.heslo_podrazene.save_metadata()
-            instance.initial_heslo_podrazene.save_metadata()
+    if instance.initial_heslo_nadrazene and instance.heslo_nadrazene.pk != instance.initial_heslo_nadrazene.pk:
+        instance.initial_heslo_nadrazene.save_metadata()
+    if instance.initial_heslo_podrazene and instance.heslo_podrazene.pk != instance.initial_heslo_podrazene.pk:
+        instance.initial_heslo_podrazene.save_metadata()
 
 
 @receiver(post_save, sender=HeslarDatace)
@@ -60,8 +68,9 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarDatace, created, **k
     """
     Funkce pro uložení metadat heslář - hierarchie.
     """
-    if created:
-        instance.obdobi.save_metadata()
+    instance.obdobi.save_metadata()
+    if instance.initial_obdobi and instance.initial_obdobi != instance.obdobi:
+        instance.initial_obdobi.save_metadata()
 
 
 @receiver(post_save, sender=HeslarDokumentTypMaterialRada)
@@ -76,29 +85,32 @@ def save_metadata_heslar_dokument_typ_material_rada(sender, instance: HeslarDoku
 
 
 @receiver(post_save, sender=HeslarOdkaz)
-def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, **kwargs):
+def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs):
     """
     Funkce pro uložení metadat heslář - odkaz.
     """
     instance.heslo.save_metadata()
+    if instance.initial_heslo != instance.heslo:
+        heslo = Heslar.objects.get(pk=instance.initial_heslo.pk)
+        heslo.save_metadata()
 
 
-@receiver(post_delete, sender=Heslar)
+@receiver(pre_delete, sender=Heslar)
 def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=RuianKatastr)
+@receiver(pre_delete, sender=RuianKatastr)
 def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=RuianKraj)
+@receiver(pre_delete, sender=RuianKraj)
 def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=RuianOkres)
+@receiver(pre_delete, sender=RuianOkres)
 def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwargs):
     instance.record_deletion()
 

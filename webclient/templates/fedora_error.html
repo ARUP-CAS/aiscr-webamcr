@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "templates.404.title" %}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<h2>{% trans "templates.fedorar_error.header" %}</h2>
+<p class="display-4">{% trans "templates.fedorar_error.text" %}</p>
+<p>{% trans "templates.fedorar_error.text.part2" %}</p>
+{% endblock %}

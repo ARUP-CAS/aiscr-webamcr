@@ -1,7 +1,7 @@
 import logging
 from django.db import models
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_EXTERNI_ZDROJ_TYP
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
@@ -18,7 +18,6 @@ from core.constants import (
 )
 from core.exceptions import MaximalIdentNumberError
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models.functions import Cast, Substr
 from django_prometheus.models import ExportModelOperationsMixin
 
 from xml_generator.models import ModelWithMetadata
@@ -85,6 +84,8 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         related_name="ez_editori",
         blank=True,
     )
+    autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
+    editori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
 
     class Meta:
         db_table = "externi_zdroj"
@@ -161,6 +162,28 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         ).save()
         self.save()
 
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        try:
+            return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_EXT_ZD)[0].uzivatel,)
+        except Exception as e:
+            logger.debug(e)
+            return ()
+
+    def get_create_org(self):
+        try:
+            return (self.get_create_user()[0].organizace,)
+        except Exception as e:
+            logger.debug(e)
+            return ()
+
+    def set_snapshots(self):
+        self.autori_snapshot = "; ".join([x.autor.vypis_cely
+                                          for x in self.externizdrojautor_set.order_by("poradi").all()])
+        self.editori_snapshot = "; ".join([x.editor.vypis_cely
+                                          for x in self.externizdrojeditor_set.order_by("poradi").all()])
 
 def get_perm_ez_ident():
     """

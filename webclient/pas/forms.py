@@ -10,7 +10,7 @@ from django import forms
 from django.contrib.auth.models import Group
 from django.contrib.gis.forms import ValidationError
 from django.forms import ModelChoiceField
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 from heslar.hesla import (
     HESLAR_OBDOBI,
@@ -25,7 +25,6 @@ from projekt.models import Projekt
 from uzivatel.models import User
 
 import logging
-import logstash
 
 logger = logging.getLogger(__name__)
 
@@ -178,16 +177,19 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         widgets = {
             "nalezce": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
             "okolnosti": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container"}
             ),
             "specifikace": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container"}
             ),
             "presna_datace": forms.TextInput(),
             "pocet": forms.TextInput(),
             "poznamka": forms.TextInput(),
         }
         labels = {
+            "projekt": _("pas.forms.createSamostatnyNalezForm.projekt.label"),
             "nalezce": _("pas.forms.createSamostatnyNalezForm.nalezce.label"),
             "datum_nalezu": _("pas.forms.createSamostatnyNalezForm.datumNalezu.label"),
             "lokalizace": _("pas.forms.createSamostatnyNalezForm.lokalizace.label"),
@@ -238,6 +240,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             help_text=_("pas.forms.createSamostatnyNalezForm.projekt.tooltip"),
+            label=_("pas.forms.createSamostatnyNalezForm.projekt.label"),
             initial=Projekt.objects.filter(ident_cely=project_ident)[0]
             if project_ident
             else None,
@@ -334,7 +337,12 @@ class CreateZadostForm(forms.Form):
         validators=[validate_uzivatel_email],
         help_text=_("pas.forms.createZadostForm.emailUzivatele.tooltip"),
     )
-    text = forms.CharField(widget=forms.Textarea, required=False, help_text=_("pas.forms.createZadostForm.text.tooltip"),)
+    text = forms.CharField(
+        widget=forms.Textarea,
+        required=False,
+        help_text=_("pas.forms.createZadostForm.text.tooltip"),
+        label=_("pas.forms.createZadostForm.text.label")
+    )
 
     def __init__(self, *args, **kwargs):
         super(CreateZadostForm, self).__init__(*args, **kwargs)

@@ -2,11 +2,16 @@
 {% load i18n %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load template_filters %}
+{% load template_tags %}
 
 {% block title %}{% trans "projekt.templates.edit.title" %}{% endblock %}
 
 {% block head %}
 	<script>
+    {% autoescape off %}
+      var settings_heatmap_options = {% get_settings "heatmap_options" "projekty_heatmap_options" %};
+    {% endautoescape %}
 		var global_csrftoken = '{{ csrf_token }}';
 		global_map_can_edit=false;
 	</script>
@@ -20,8 +25,8 @@
 	</script>
 
   <script src="{% static 'convertToJTSK.js' %}"></script>
-  <script src="{% static 'simpleheat.js' %}"></script>
-  <script src="{% static 'HeatLayer.js' %}"></script>
+  <script src="{% static 'heatmap/heatmap.js' %}"></script>
+  <script src="{% static 'heatmap/leaflet-heatmap.js' %}"></script>
   <script src="{% static 'leaflet.markercluster-src.js' %}"></script>
   <link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
   <link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
@@ -33,6 +38,12 @@
 
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
 	<!-- Date picker imports -->
+	<script>
+    		var drp_translations = {
+			cancelLabel: '{% trans "drp.cancelLabel" %}',
+			applyLabel: '{% trans "drp.applyLabel" %}'
+    		}
+  	</script> 
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
@@ -55,7 +66,7 @@
         <div class="form-group">
           <input type="submit" name="save" value="{% trans 'projekt.templates.edit.submitButton.text' %}"
                  class="btn btn-primary app-entity-projekt-btn" id="submit-id-save">
-          <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "projekt.templates.edit.backButton.text" %}</button>
+          <a type="button" class="btn btn-secondary" href="{% url 'projekt:detail' projekt.ident_cely %}">{% trans "projekt.templates.edit.backButton.text" %}</a>
         </div>
       </div>
 		</form>
@@ -64,6 +75,38 @@
 
 
 {% block script %}
+  <script>
+    var map_translations = {
+      	CurrentLocationError: '{% trans "mapa.CurrentLocationError" %}',
+	cuzkKatastralniMapa: '{% trans "mapa.cuzkKatastralniMapa" %}',
+	cuzkKatastralniUzemi: '{% trans "mapa.cuzkKatastralniUzemi" %}',
+	cuzkOrtofotomapa: '{% trans "mapa.cuzkOrtofotomapa" %}',
+	cuzkStinovanyeelief5G: '{% trans "mapa.cuzkStinovanyeelief5G" %}',
+	cuzkzakladniMapyCr: '{% trans "mapa.cuzkzakladniMapyCr" %}',
+	DefaultTitle: '{% trans "mapa.DefaultTitle" %}',
+	EditTurnOff: '{% trans "mapa.EditTurnOff" %}',
+	EditTurnOn: '{% trans "mapa.EditTurnOn" %}',
+	FullscreenTitle: '{% trans "mapa.FullscreenTitle" %}',
+	FullscreenTitleClose: '{% trans "mapa.FullscreenTitleClose" %}',
+	lokalizaceProjektu: '{% trans "mapa.lokalizaceProjektu" %}',
+	MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
+	openStreetMap: '{% trans "mapa.openStreetMap" %}',
+	openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
+	projektyP1: '{% trans "mapa.projektyP1" %}',
+	projektyP2: '{% trans "mapa.projektyP2" %}',
+	projektyP3: '{% trans "mapa.projektyP3" %}',
+	projektyP46: '{% trans "mapa.projektyP46" %}',
+	projektyP78: '{% trans "mapa.projektyP78" %}',
+	projektyPAS: '{% trans "mapa.projektyPAS" %}',
+	projektyPIAN: '{% trans "mapa.projektyPIAN" %}',
+	SearchText: '{% trans "mapa.SearchText" %}',
+	SearchTextCancel: '{% trans "mapa.SearchTextCancel" %}',
+	SearchTextError: '{% trans "mapa.SearchTextError" %}',
+	SelectedLocation: '{% trans "mapa.SelectedLocation" %}',
+	zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
+	zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
+    };
+  </script>
   <script >
     var static_url = "{% get_static_prefix %}";
   </script>
@@ -72,15 +115,19 @@
   <script src="{% static 'mapa_basic_grey.js' %}"></script>
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
+  <script src="{% static 'leaflet_subgroup.js' %}"></script>
   <script src="{% static 'mapa_projekty.js' %}"></script>
   <script>
+    window.addEventListener("DOMContentLoaded", function() {
       global_map_can_edit = true;
-      if (document.getElementById("id_latitude").value > 1) {
+      if (document.getElementById("id_coordinate_x2").value > 1) {
           console.log("Adding point to map.")
-          addPointOnLoad(document.getElementById("id_latitude").value, document.getElementById("id_longitude").value, "Uživatelem zadaná poloha záměru");
+          addPointOnLoad(document.getElementById("id_coordinate_x2").value, document.getElementById("id_coordinate_x1").value,  '{% trans "mapa.lokalizaceProjektu" %}',"{{projekt.ident_cely}}", "{{projekt.stav}}");
       } else {
+          switchMap(false);
           console.log("Not adding point to map!")
       }
+    })
   </script>
 
   <script src="{% static 'daterangepicker.js' %}"></script>
@@ -89,7 +136,6 @@
   <script>
       window.addEventListener("DOMContentLoaded", function() {
         var checked_field = document.getElementById("id_kulturni_pamatka");
-        console.log(checked_field)
         var fields = new Map()
         fields.set("id_kulturni_pamatka_cislo", "")
         fields.set("id_kulturni_pamatka_popis", "")
@@ -153,9 +199,7 @@
               if (disabled) {
                   $(field).val("");
               }
-              console.log(disabled)
           }
-          console.log(selectElement.selectedIndex )
           if (selectElement.selectedIndex != ZACHRANNY_OPTION) {
             makeFieldDisabled('#id_oznaceni_stavby', true)
           } else {

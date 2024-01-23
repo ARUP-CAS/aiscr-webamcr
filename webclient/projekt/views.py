@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import logging
 from django.views import View
 
@@ -27,7 +28,9 @@ from core.constants import (
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
     ROLE_ADMIN_ID,
+    ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
+    ROLE_BADATEL_ID,
     RUSENI_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
     UKONCENI_V_TERENU_PROJ,
@@ -36,6 +39,7 @@ from core.constants import (
     VRACENI_ZRUSENI,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ, OBLAST_CECHY,
+    ZAPSANI_SN,
 )
 from core.decorators import allowed_user_groups
 from core.exceptions import MaximalIdentNumberError
@@ -47,6 +51,8 @@ from core.message_constants import (
     PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI,
     PROJEKT_NELZE_SMAZAT,
     PROJEKT_NELZE_UZAVRIT,
+    PROJEKT_NENI_TYP_PRUZKUMNY,
+    PROJEKT_NENI_TYP_ZACHRANNY, 
     PROJEKT_USPESNE_ARCHIVOVAN,
     PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI,
     PROJEKT_USPESNE_PRIHLASEN,
@@ -56,6 +62,7 @@ from core.message_constants import (
     PROJEKT_USPESNE_VRACEN,
     PROJEKT_USPESNE_ZAHAJEN_V_TERENU,
     PROJEKT_USPESNE_ZRUSEN,
+    SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
@@ -65,24 +72,29 @@ from core.utils import (
     get_heatmap_project_density,
     get_num_projects_from_envelope,
     get_projects_from_envelope,
+    get_projekt_stav_label,
+    get_project_geom,
+    get_project_pas_from_envelope,
+    get_project_pian_from_envelope,
 )
-from core.views import SearchListView, check_stav_changed
+from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
+from core.models import Permissions as p, check_permissions
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q
+from django.db.models import Q, OuterRef, Subquery
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from dokument.models import Dokument
+from dokument.models import Dokument, DokumentCast
 from dokument.views import odpojit, pripojit
-from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
-from heslar.models import RuianKatastr
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_BADATEL_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.models import Heslar, RuianKatastr
 from oznameni.forms import OznamovatelForm
 from projekt.filters import ProjektFilter
 from projekt.forms import (
@@ -100,7 +112,12 @@ from projekt.models import Projekt
 from projekt.tables import ProjektTable
 from uzivatel.forms import OsobaForm
 from services.mailer import Mailer
-
+from uzivatel.models import User
+from pas.models import SamostatnyNalez
+from core.models import Permissions
+from heslar.hesla import HESLAR_PRISTUPNOST
+from pian.views import PianPermissionFilterMixin
+from pas.views import PasPermissionFilterMixin
 
 logger = logging.getLogger(__name__)
 
@@ -134,11 +151,11 @@ def detail(request, ident_cely):
     elif typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
         context["samostatne_nalezy"] = projekt.samostatne_nalezy.select_related(
             "obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr"
-        ).all()
+        ).all().order_by("ident_cely")
 
     akce = Akce.objects.filter(projekt=projekt).select_related(
         "archeologicky_zaznam__pristupnost", "hlavni_typ"
-    )
+    ).order_by("archeologicky_zaznam__ident_cely")
     dokumenty = (
         Dokument.objects.filter(casti__projekt__ident_cely=ident_cely)
         .select_related("soubory")
@@ -148,7 +165,7 @@ def detail(request, ident_cely):
     soubory = projekt.soubory.soubory.all()
     context["soubory"] = soubory
     context["dalsi_katastry"] = projekt.katastry.all()
-    context["history_dates"] = get_history_dates(projekt.historie)
+    context["history_dates"] = get_history_dates(projekt.historie, request.user)
     context["show"] = get_detail_template_shows(projekt, request.user)
     context["dokumenty"] = dokumenty
     context["generovatNovePotvrzeniForm"] = GenerovatNovePotvrzeniForm()
@@ -162,7 +179,7 @@ def detail(request, ident_cely):
 @require_http_methods(["POST"])
 def post_ajax_get_projects_limit(request):
     """
-    Funkce pohledu pro získaní heatmapy.
+    Funkce pohledu pro získaní heatmapy projektu.
     """
     body = json.loads(request.body.decode("utf-8"))
     num = get_num_projects_from_envelope(
@@ -170,6 +187,12 @@ def post_ajax_get_projects_limit(request):
         body["northWest"]["lat"],
         body["northWest"]["lng"],
         body["southEast"]["lat"],
+        body["p1"],
+        body["p2"],
+        body["p3"],
+        body["p46"],
+        body["p78"],
+        request,
     )
     logger.debug("projekt.views.post_ajax_get_projects_limit.num", extra={"num": num})
     if num < 5000:
@@ -178,6 +201,12 @@ def post_ajax_get_projects_limit(request):
             body["northWest"]["lat"],
             body["northWest"]["lng"],
             body["southEast"]["lat"],
+            body["p1"],
+            body["p2"],
+            body["p3"],
+            body["p46"],
+            body["p78"],
+            request,
         )
         back = []
         for pian in pians:
@@ -185,7 +214,8 @@ def post_ajax_get_projects_limit(request):
                 {
                     "id": pian.id,
                     "ident_cely": pian.ident_cely,
-                    "geom": pian.geometry.replace(", ", ","),
+                    "geom": pian.geom.wkt.replace(", ", ","),
+                    "stav": get_projekt_stav_label(pian.stav)
                 }
             )
         if len(pians) > 0:
@@ -226,6 +256,101 @@ def post_ajax_get_projects_limit(request):
         else:
             return JsonResponse({"heat": [], "algorithm": "heat"}, status=200)
 
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_project_one(request):
+    """
+    Funkce pohledu pro získaní geometrie projektu.
+    """
+    body = json.loads(request.body.decode("utf-8"))
+    pians = get_project_geom(
+        body["projekt_ident_cely"],
+    )
+    back = []
+    for pian in pians:
+        back.append(
+            {
+                "id": pian.id,
+                "ident_cely": pian.ident_cely,
+                "geom": pian.geom.wkt.replace(", ", ",")
+            }
+        )
+    if len(pians) > 0:
+        return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+    else:
+        return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+
+class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PasPermissionFilterMixin):
+    """
+    Trida pohledu pro získaní heatmapy pas.
+    @jiri-bartos presunuto z post_ajax_get_project_pas_limit
+    """
+    typ_zmeny_lookup = ZAPSANI_SN
+
+    def post (self, request):
+        body = json.loads(request.body.decode("utf-8"))
+        pians = get_project_pas_from_envelope(
+            body["southEast"]["lng"],
+            body["northWest"]["lat"],
+            body["northWest"]["lng"],
+            body["southEast"]["lat"],
+            body["projekt_ident_cely"],
+        )
+        if pians.count() > 0:
+            logger.debug("Query before permission filter: %s", pians)
+            pians = self.check_filter_permission(pians)
+            logger.debug("Query after permission filter: %s", pians)
+        back = []
+        for pian in pians:
+            back.append(
+                {
+                    "id": pian.id,
+                    "ident_cely": pian.ident_cely,
+                    "geom": pian.geom.wkt.replace(", ", ",")
+                }
+            )
+        if len(pians) > 0:
+            return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+        else:
+            return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+
+
+
+class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilterMixin):
+    """
+    Trida pohledu pro získaní heatmapy pianu.
+    @jiri-bartos presunuto z post_ajax_get_project_pian_limit upraveno na queryset
+    """
+    def post (self, request):
+        body = json.loads(request.body.decode("utf-8"))
+        queries = get_project_pian_from_envelope(
+            body["southEast"]["lng"],
+            body["northWest"]["lat"],
+            body["northWest"]["lng"],
+            body["southEast"]["lat"],
+            body["projekt_ident_cely"],
+        )
+        logger.debug("Query before permission filter: %s", queries)
+        queries = self.check_filter_permission(queries)
+        logger.debug("Query after permission filter: %s", queries)
+        back = []
+        back_ident_cely = []
+        for pian in queries:
+            if(pian.ident_cely not in back_ident_cely):
+                back_ident_cely.append(pian.ident_cely)
+                back.append(
+                    {
+                        "id": pian.id,
+                        "ident_cely": pian.ident_cely,
+                        "geom": pian.geom.wkt.replace(", ", ","),
+                        "presnost":pian.presnost.zkratka,
+                    }
+                )
+        if len(back_ident_cely) > 0:
+            return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+        else:
+            return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+      
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -248,8 +373,8 @@ def create(request):
         form_oznamovatel = OznamovatelForm(request.POST, required=required)
         if form_projekt.is_valid():
             logger.debug("projekt.views.create.form_valid")
-            lat = form_projekt.cleaned_data["latitude"]
-            long = form_projekt.cleaned_data["longitude"]
+            x2 = form_projekt.cleaned_data["coordinate_x2"]
+            x1 = form_projekt.cleaned_data["coordinate_x1"]
             projekt = form_projekt.save(commit=False)
             if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                 # Kontrola oznamovatele
@@ -266,8 +391,8 @@ def create(request):
                             "button": _("projekt.views.create.submitButton.text"),
                         },
                     )
-            if long and lat:
-                projekt.geom = Point(long, lat)
+            if x1 and x2:
+                projekt.geom = Point(x1, x2)
             try:
                 projekt.set_permanent_ident_cely(False)
             except MaximalIdentNumberError:
@@ -282,10 +407,11 @@ def create(request):
                     oznamovatel.projekt = projekt
                     oznamovatel.save()
                 if projekt.should_generate_confirmation_document:
-                    projekt.create_confirmation_document()
+                    projekt.create_confirmation_document(user=request.user)
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                 if projekt.ident_cely[0] == OBLAST_CECHY:
-                    Mailer.send_ep01a(project=projekt)
+                    pass
+                    # Mailer.send_ep01a(project=projekt)
                 else:
                     Mailer.send_ep01b(project=projekt)
                 return redirect("projekt:detail", ident_cely=projekt.ident_cely)
@@ -316,10 +442,14 @@ def edit(request, ident_cely):
     Funkce pohledu pro editaci projektu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
-        raise PermissionDenied()
     required_fields = get_required_fields(projekt)
     required_fields_next = get_required_fields(projekt, 1)
+    edit_fields = None
+    if request.user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
+        if projekt.stav == PROJEKT_STAV_PRIHLASENY:
+            edit_fields = ["vedouci_projektu", "uzivatelske_oznaceni", "kulturni_pamatka", "kulturni_pamatka_cislo", "kulturni_pamatka_popis"]
+        elif projekt.stav in [PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU]:
+            edit_fields =  ["uzivatelske_oznaceni"]
     if request.method == "POST":
         request.POST = katastr_text_to_id(request)
         form = EditProjektForm(
@@ -327,17 +457,18 @@ def edit(request, ident_cely):
             instance=projekt,
             required=required_fields,
             required_next=required_fields_next,
+            edit_fields = edit_fields
         )
         if form.is_valid():
             logger.debug("projekt.views.edit.form_valid")
-            lat = form.cleaned_data["latitude"]
-            long = form.cleaned_data["longitude"]
+            x1 = form.cleaned_data["coordinate_x1"]
+            x2 = form.cleaned_data["coordinate_x2"]
             # Workaroud to not check if long and lat has been changed, only geom is interesting
-            form.fields["latitude"].initial = lat
-            form.fields["longitude"].initial = long
+            form.fields["coordinate_x1"].initial = x1
+            form.fields["coordinate_x2"].initial = x2
             p = form.save()
             old_geom = p.geom
-            new_geom = Point(long, lat)
+            new_geom = Point(x1,x2)
             geom_changed = False
             if old_geom is None or new_geom.coords != old_geom.coords:
                 p.geom = new_geom
@@ -358,10 +489,11 @@ def edit(request, ident_cely):
             instance=projekt,
             required=required_fields,
             required_next=required_fields_next,
+            edit_fields = edit_fields
         )
         if projekt.geom is not None:
-            form.fields["latitude"].initial = projekt.geom.coords[1]
-            form.fields["longitude"].initial = projekt.geom.coords[0]
+            form.fields["coordinate_x1"].initial = projekt.geom.coords[0]
+            form.fields["coordinate_x2"].initial = projekt.geom.coords[1]
         else:
             logger.warning("projekt.views.edit.empty")
     return render(
@@ -385,6 +517,7 @@ def smazat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
+        projekt.deleted_by_user = request.user
         projekt.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         return JsonResponse({"redirect": reverse("projekt:list")})
@@ -415,8 +548,26 @@ def smazat(request, ident_cely):
         return render(request, "core/transakce_modal.html", context)
 
 
+class ProjektPermissionFilterMixin(PermissionFilterMixin):
+    def add_ownership_lookup(self, ownership, qs=None):
+        if ownership == Permissions.ownershipChoices.our:
+            return Q(**{"organizace":self.request.user.organizace})
+        else:
+            return Q()
+    
+    def add_accessibility_lookup(self,permission, qs):
+        accessibility_key = self.permission_model_lookup+"pristupnost_filter__in"
+        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id))
+        filter = {accessibility_key:accessibilities}
+        pristupnost = (
+            SamostatnyNalez.objects.filter(projekt=OuterRef("pk")).distinct()
+            .order_by("pristupnost__razeni")
+            .values("pristupnost")
+        )
+        qs_new = qs.annotate(pristupnost_filter=Subquery(pristupnost[:1]))
+        return qs_new.filter(Q(**filter) | Q(pristupnost_filter__isnull=True) | self.add_ownership_lookup(permission.accessibility))
 
-class ProjektListView(SearchListView):
+class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
     """
     Třida pohledu pro zobrazení listu/tabulky s projektami.
     """
@@ -425,15 +576,20 @@ class ProjektListView(SearchListView):
     template_name = "projekt/projekt_list.html"
     filterset_class = ProjektFilter
     export_name = "export_projekty_"
-    page_title = _("projekt.views.projektListView.pageTitle")
     app = "projekt"
     toolbar = "toolbar_projekt.html"
-    search_sum = _("projekt.views.projektListView.pocetVyhledanych")
-    pick_text = _("projekt.views.projektListView.pickText")
-    hasOnlyVybrat_header = _("projekt.views.projektListView.header.hasOnlyVybrat")
-    hasOnlyArchive_header = _("projekt.views.projektListView.header.hasOnlyArchive")
-    default_header = _("projekt.views.projektListView.header.default")
-    toolbar_name = _("projekt.views.projektListView.toolbar.title")
+    typ_zmeny_lookup = ZAPSANI_PROJ
+
+    def init_translations(self):
+        super().init_translations()
+        self.page_title = _("projekt.views.projektListView.pageTitle")
+        self.search_sum = _("projekt.views.projektListView.pocetVyhledanych")
+        self.pick_text = _("projekt.views.projektListView.pickText")
+        self.hasOnlyVybrat_header = _("projekt.views.projektListView.header.hasOnlyVybrat")
+        self.hasOnlyArchive_header = _("projekt.views.projektListView.header.hasOnlyArchive")
+        self.default_header = _("projekt.views.projektListView.header.default")
+        self.toolbar_name = _("projekt.views.projektListView.toolbar.title")
+        self.toolbar_label = _("projekt.views.projektListView.toolbar_label.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -450,6 +606,7 @@ class ProjektListView(SearchListView):
         )
         context["hasNaseProjekty_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
         context["has_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
+        logger.debug(context["object_list"].count())
         return context
 
     def get_queryset(self):
@@ -464,9 +621,12 @@ class ProjektListView(SearchListView):
                 "vedouci_projektu",
                 "hlavni_katastr__okres",
             )
+            .prefetch_related(
+                "katastry__okres"
+            )
             .defer("geom")
         )
-        return qs
+        return self.check_filter_permission(qs)
 
 
 @login_required
@@ -552,6 +712,12 @@ def prihlasit(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
+    if not request.user.organizace.oao:
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         form = PrihlaseniProjektForm(request.POST, instance=projekt)
         if form.is_valid():
@@ -572,7 +738,7 @@ def prihlasit(request, ident_cely):
         else:
             logger.debug("projekt.views.prihlasit.form_not_valid", extra={"errors": form.errors})
     else:
-        archivar = True if request.user.hlavni_role.id == ROLE_ARCHIVAR_ID else False
+        archivar = not request.user.is_archiver_or_more
         form = PrihlaseniProjektForm(
             instance=projekt,
             initial={"organizace": request.user.organizace, "old_stav": projekt.stav},
@@ -1076,8 +1242,19 @@ def odpojit_dokument(request, ident_cely, proj_ident_cely):
     """
     Funkce pohledu pro odpojení dokumentu z projektu pomoci modalu.
     """
-    projekt = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
-    return odpojit(request, ident_cely, proj_ident_cely, projekt)
+    proj = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
+    if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
+        logger.debug("Projekt neni typu pruzkumny")
+        messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_PRUZKUMNY)
+        return redirect(proj.get_absolute_url())
+    relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_cely,projekt=proj)
+    if not relace_dokumentu.count() > 0:
+        logger.error("Projekt - Dokument wrong relation")
+        messages.add_message(
+                    request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                )
+        return redirect(request.GET.get("next","core:home"))
+    return odpojit(request, ident_cely, proj_ident_cely, proj)
 
 
 @login_required
@@ -1086,6 +1263,12 @@ def pripojit_dokument(request, proj_ident_cely):
     """
     Funkce pohledu pro pripojení dokumentu z projektu pomoci modalu.
     """
+    proj = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
+    if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
+        logger.debug("Projekt neni typu pruzkumny")
+        messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_PRUZKUMNY)
+        return redirect(proj.get_absolute_url())
+
     return pripojit(request, proj_ident_cely, None, Projekt)
 
 
@@ -1096,6 +1279,10 @@ def generovat_oznameni(request, ident_cely):
     Funkce pohledu pro generování oznámení projektu pomoci modalu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
+        logger.debug("Projekt neni typu pruzkumny")
+        messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
+        return redirect(projekt.get_absolute_url())
     projekt.create_confirmation_document(additional=True, user=request.user)
     if projekt.ident_cely[0] == OBLAST_CECHY:
         Mailer.send_ep01a(project=projekt)
@@ -1126,13 +1313,17 @@ def generovat_expertni_list(request, ident_cely):
     """
     popup_parametry = request.POST
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
+        logger.debug("Projekt neni typu pruzkumny")
+        messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
+        return redirect(projekt.get_absolute_url())
     output = projekt.create_expert_list(popup_parametry)
     response = StreamingHttpResponse(output, content_type="text/rtf")
     response['Content-Disposition'] = f'attachment; filename="expertni_list_{ident_cely}.rtf"'
     return response
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní dátumů pro historii.
 
@@ -1142,29 +1333,32 @@ def get_history_dates(historie_vazby):
     Returns:
         historie: dictionary dátumů k historii.
     """
+    request_user: User
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ),
+        "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ, anonymized),
         "datum_zapsani": historie_vazby.get_last_transaction_date(
             [
                 VRACENI_NAVRHU_ZRUSENI,
                 SCHVALENI_OZNAMENI_PROJ,
                 ZAPSANI_PROJ,
                 VRACENI_ZRUSENI,
-            ]
+            ],
+            anonymized
         ),
-        "datum_prihlaseni": historie_vazby.get_last_transaction_date(PRIHLASENI_PROJ),
+        "datum_prihlaseni": historie_vazby.get_last_transaction_date(PRIHLASENI_PROJ, anonymized),
         "datum_zahajeni_v_terenu": historie_vazby.get_last_transaction_date(
-            ZAHAJENI_V_TERENU_PROJ
+            ZAHAJENI_V_TERENU_PROJ, anonymized
         ),
         "datum_ukonceni_v_terenu": historie_vazby.get_last_transaction_date(
-            UKONCENI_V_TERENU_PROJ
+            UKONCENI_V_TERENU_PROJ, anonymized
         ),
-        "datum_uzavreni": historie_vazby.get_last_transaction_date(UZAVRENI_PROJ),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_PROJ),
+        "datum_uzavreni": historie_vazby.get_last_transaction_date(UZAVRENI_PROJ, anonymized),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_PROJ, anonymized),
         "datum_navrhu_ke_zruseni": historie_vazby.get_last_transaction_date(
-            NAVRZENI_KE_ZRUSENI_PROJ
+            NAVRZENI_KE_ZRUSENI_PROJ, anonymized
         ),
-        "datum_zruseni": historie_vazby.get_last_transaction_date(RUSENI_PROJ),
+        "datum_zruseni": historie_vazby.get_last_transaction_date(RUSENI_PROJ, anonymized),
     }
     return historie
 
@@ -1179,93 +1373,72 @@ def get_detail_template_shows(projekt, user):
         user (AuthUser): uživatel pro kterého se dané akce počítají.
     
     Returns:
-        historie: dictionary možností pro zobrazení.
+        show: dictionary možností pro zobrazení.
     """
-    show_oznamovatel = (
-        projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID
-        and projekt.has_oznamovatel()
-    )
-    show_prihlasit = projekt.stav == PROJEKT_STAV_ZAPSANY
-    show_vratit = PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_ZAPSANY
-    show_schvalit = projekt.stav == PROJEKT_STAV_OZNAMENY
-    show_zahajit = projekt.stav == PROJEKT_STAV_PRIHLASENY
-    show_ukoncit = projekt.stav == PROJEKT_STAV_ZAHAJENY_V_TERENU
-    show_uzavrit = projekt.stav == PROJEKT_STAV_UKONCENY_V_TERENU
-    show_archivovat = projekt.stav == PROJEKT_STAV_UZAVRENY
-    show_navrzen_ke_zruseni = projekt.stav not in [
-        PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
-        PROJEKT_STAV_ZRUSENY,
-        PROJEKT_STAV_ARCHIVOVANY,
-        PROJEKT_STAV_OZNAMENY,
-    ]
-    show_zrusit = projekt.stav in [
-        PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
-    ]
-    show_znovu_zapsat = projekt.stav in [
-        PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
-        PROJEKT_STAV_ZRUSENY,
-    ]
+    show_oznamovatel = False
+    if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
+        if user.is_archiver_or_more:
+            show_oznamovatel = True
+        elif user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
+            if projekt.stav == PROJEKT_STAV_ZAPSANY:
+                show_oznamovatel = True
+            elif (
+                projekt.stav in [PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU] 
+                and projekt.organizace == user.organizace
+                ):
+                show_oznamovatel = True
+            elif (
+                projekt.stav == PROJEKT_STAV_UZAVRENY
+                and projekt.organizace == user.organizace
+                ):
+                last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
+                if last_uzavreni and last_uzavreni["datum"] >= datetime.now(last_uzavreni["datum"].tzinfo) - timedelta(days=90):
+                    show_oznamovatel = True
     show_samostatne_nalezy = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
-    archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
-    admin_group = Group.objects.get(id=ROLE_ADMIN_ID)
     show_pridat_akci = False
     show_pridat_sam_nalez = False
     show_pridat_oznamovatele = False
     if projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
-        if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
-            show_pridat_akci = (
-                PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY
-            )
-        else:
-            show_pridat_akci = (
-                PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_UZAVRENY
-            )
+        show_pridat_akci = check_permissions(p.actionChoices.archz_pripojit_do_proj, user, projekt.ident_cely)
     else:
-        if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
-            show_pridat_sam_nalez = (
-                PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY
-            )
-        else:
-            show_pridat_sam_nalez = (
-                PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_UZAVRENY
-            )
+        show_pridat_sam_nalez = check_permissions(p.actionChoices.pas_zapsat_do_projektu, user, projekt.ident_cely)
     if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
-        if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
-            if not projekt.has_oznamovatel():
-                if PROJEKT_STAV_ZAPSANY <= projekt.stav <= PROJEKT_STAV_UZAVRENY:
-                    show_pridat_oznamovatele = True
-    show_edit = projekt.stav not in [
-        PROJEKT_STAV_ARCHIVOVANY,
-    ]
+        if not projekt.has_oznamovatel():
+            show_pridat_oznamovatele = check_permissions(p.actionChoices.projekt_oznamovatel_zapsat, user, projekt.ident_cely)
     show_dokumenty = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
     show_arch_links = projekt.stav == PROJEKT_STAV_ARCHIVOVANY
     show_akce = projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID
-    show_pripojit_dokumenty = projekt.stav in [
-        PROJEKT_STAV_ZAHAJENY_V_TERENU,
-        PROJEKT_STAV_UKONCENY_V_TERENU,
-        PROJEKT_STAV_UZAVRENY,
-    ]
     show = {
         "oznamovatel": show_oznamovatel,
-        "prihlasit_link": show_prihlasit,
-        "vratit_link": show_vratit,
-        "schvalit_link": show_schvalit,
-        "zahajit_teren_link": show_zahajit,
-        "ukoncit_teren_link": show_ukoncit,
-        "uzavrit_link": show_uzavrit,
-        "archivovat_link": show_archivovat,
-        "navrhnout_zruseni_link": show_navrzen_ke_zruseni,
-        "zrusit_link": show_zrusit,
-        "znovu_zapsat_link": show_znovu_zapsat,
+        "prihlasit_link": check_permissions(p.actionChoices.projekt_prihlasit, user, projekt.ident_cely) and user.organizace.oao,
+        "vratit_link": check_permissions(p.actionChoices.projekt_vratit, user, projekt.ident_cely),
+        "schvalit_link": check_permissions(p.actionChoices.projekt_schvalit, user, projekt.ident_cely),
+        "zahajit_teren_link": check_permissions(p.actionChoices.projekt_zahajit_v_terenu, user, projekt.ident_cely),
+        "ukoncit_teren_link": check_permissions(p.actionChoices.projekt_ukoncit_v_terenu, user, projekt.ident_cely),
+        "uzavrit_link": check_permissions(p.actionChoices.projekt_uzavrit, user, projekt.ident_cely),
+        "archivovat_link": check_permissions(p.actionChoices.projekt_archivovat, user, projekt.ident_cely),
+        "navrhnout_zruseni_link": check_permissions(p.actionChoices.projekt_navrh_ke_zruseni, user, projekt.ident_cely),
+        "zrusit_link": check_permissions(p.actionChoices.projekt_zrusit, user, projekt.ident_cely),
+        "znovu_zapsat_link": check_permissions(p.actionChoices.projekt_vratit_navrh_zruseni, user, projekt.ident_cely),
         "samostatne_nalezy": show_samostatne_nalezy,
         "pridat_akci": show_pridat_akci,
-        "editovat": show_edit,
+        "editovat": check_permissions(p.actionChoices.projekt_edit, user, projekt.ident_cely),
         "dokumenty": show_dokumenty,
         "arch_links": show_arch_links,
         "akce": show_akce,
-        "pripojit_dokumenty": show_pripojit_dokumenty,
+        "pripojit_dokumenty": check_permissions(p.actionChoices.projekt_dok_pripojit, user, projekt.ident_cely),
         "pridat_sam_nalez": show_pridat_sam_nalez,
         "pridat_oznamovatele": show_pridat_oznamovatele,
+        "dokument_odpojit": check_permissions(p.actionChoices.projekt_dok_odpojit, user, projekt.ident_cely),
+        "generovat_potvrzeni": check_permissions(p.actionChoices.projekt_generovat_oznameni, user, projekt.ident_cely),
+        "generovat_exp_list": check_permissions(p.actionChoices.projekt_generovat_exp_list, user, projekt.ident_cely),
+        "smazat_link": check_permissions(p.actionChoices.projekt_smazat, user, projekt.ident_cely),
+        "zapsat_dokumenty": check_permissions(p.actionChoices.dok_zapsat_do_projekt, user, projekt.ident_cely),
+        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, projekt.ident_cely),
+        "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_projekt, user, projekt.ident_cely),
+        "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_projekt, user, projekt.ident_cely),
+        "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_projekt, user, projekt.ident_cely),
+        "soubor_nahrat": check_permissions(p.actionChoices.soubor_nahrat_projekt, user, projekt.ident_cely),
     }
     return show
 
@@ -1347,36 +1520,48 @@ def katastr_text_to_id(request):
         return request.POST.copy()
 
 
-class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView):
+class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektPermissionFilterMixin):
     """
     Třída pohledu získaní projektů pro autocomplete pro připojení do dokumentu.
     """
+    typ_zmeny_lookup = ZAPSANI_PROJ
+
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Projekt.objects.none()
-        typ = self.kwargs.get("typ")
-        if typ == "projekt":
+        self.typ = self.kwargs.get("typ")
+        if self.typ == "archz":
             qs = (
-                Projekt.objects.filter(
-                    stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU,
-                    stav__lte=PROJEKT_STAV_ARCHIVOVANY,
-                )
-                .exclude(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
+                Projekt.objects.exclude(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
+                .annotate(ident_len=Length("ident_cely"))
+                .filter(ident_len__gt=0)
+            )
+        elif self.typ == "dokument":
+            qs = (
+                Projekt.objects.filter(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
                 .annotate(ident_len=Length("ident_cely"))
                 .filter(ident_len__gt=0)
             )
         else:
-            qs = (
-                Projekt.objects.filter(
-                    stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU,
-                    stav__lte=PROJEKT_STAV_ARCHIVOVANY,
-                )
-                .filter(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
-                .annotate(ident_len=Length("ident_cely"))
-                .filter(ident_len__gt=0)
-            )
+            return Projekt.objects.none()
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
+        return self.check_filter_permission(qs)
+    
+    def check_filter_permission(self, qs):
+        permissions = Permissions.objects.filter(
+                main_role=self.request.user.hlavni_role,
+                address_in_app=self.request.resolver_match.route,
+                action__endswith=self.typ
+            )
+        if permissions.count()>0:
+            for idx, perm in enumerate(permissions):
+                if idx == 0:
+                    new_qs = self.filter_by_permission(qs, perm)
+                else:
+                    new_qs = self.filter_by_permission(qs, perm).exclude(pk__in=new_qs.values("pk")) | new_qs
+
+            qs = new_qs
         return qs
 
 

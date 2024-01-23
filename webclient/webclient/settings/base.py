@@ -154,6 +154,8 @@ MIDDLEWARE = [
     "django_auto_logout.middleware.auto_logout",
     "django.middleware.locale.LocaleMiddleware",
     'django_prometheus.middleware.PrometheusAfterMiddleware',
+    'core.middleware.PermissionMiddleware',
+    'core.middleware.ErrorMiddleware',
 ]
 
 CRON_CLASSES = [
@@ -187,6 +189,7 @@ TEMPLATES = [
                 "core.context_processors.constants_import",
                 "core.context_processors.digi_links_from_settings",
                 "core.context_processors.auto_logout_client",  # for auto logout aftert idle
+                "core.context_processors.main_shows",
             ],
         },
     },

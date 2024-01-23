@@ -5,7 +5,7 @@
       <div class="app-fx app-left">
         {% trans "ez.templates.azEzOdakzytable.table.cardHeader" %}
       </div>
-      {% if show.editovat %}
+      {% if show.pripojit_eo %}
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
           <button class="btn" id="eo-pripojit-do-az" type="button" type="button" rel="tooltip" data-placement="top" title="{% trans "ez.templates.azEzOdakzytable.pridat.label" %}" name="button" href="{% url 'ez:pripojit_eo_do_az' zaznam.ident_cely %}">
@@ -15,7 +15,7 @@
       </div>
       {% endif %}
     </div>
-        <div class="card-body">
+        <div class="card-body content-with-table-responsive">
     {% if externi_odkazy %}
     {%include "ez/az_ez_odkazy_table_only.html"%}
     {% else %}
@@ -29,7 +29,7 @@
 <script>
   //modal scripts
   document.addEventListener('DOMContentLoaded', function (event) {
-    if ("{{show.editovat}}" != "False"){
+    if ("{{show.pripojit_eo}}"){
       var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-eo-doaz-form",
         modalFormID: "#pripojit-eo-doaz-form",

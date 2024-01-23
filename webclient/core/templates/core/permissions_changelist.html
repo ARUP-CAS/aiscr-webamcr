@@ -1,0 +1,30 @@
+{% extends 'admin/change_list.html' %}
+
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+  {% if has_add_permission %}
+  <li>
+    {% url cl.opts|admin_urlname:'add' as add_url %}
+    <a href="{% add_preserved_filters add_url is_popup to_field %}" class="addlink">
+      {% blocktranslate with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktranslate %}
+    </a>
+  </li>
+  {% endif %}
+  {% if import_list %}
+  <li>
+    {% url cl.opts|admin_urlname:'import_permissions' as import_url %}
+    <a href="{% url 'admin:import_permissions' %}" class="addlink">
+      {% trans "core.admin.templates.permissionsChangeList.import.label" %}
+    </a>
+  </li>
+  {% endif %}
+  {% if import_skip_list %}
+  <li>
+    {% url cl.opts|admin_urlname:'import_permissions_skip' as import_url %}
+    <a href="{% url 'admin:import_permissions_skip' %}" class="addlink">
+      {% trans "core.admin.templates.permissionsSkipChangeList.import.label" %}
+    </a>
+  </li>
+  {% endif %}
+{% endblock %}

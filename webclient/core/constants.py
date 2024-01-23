@@ -1,6 +1,6 @@
 from typing import Final
 
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 # Stavy
 # Projekty
@@ -29,8 +29,8 @@ SN_POTVRZENY: Final = 3  # SN3
 SN_ARCHIVOVANY: Final = 4  # SN4
 # Uzivatel
 # Pian
-PIAN_NEPOTVRZEN: Final = 1  # PN
-PIAN_POTVRZEN: Final = 2  # PP
+PIAN_NEPOTVRZEN: Final = 1  # PI1
+PIAN_POTVRZEN: Final = 2  # PI2
 # Uzivatel_spoluprace
 SPOLUPRACE_NEAKTIVNI: Final = 1  # US1
 SPOLUPRACE_AKTIVNI: Final = 2  # US2
@@ -52,7 +52,6 @@ ARCHIVACE_PROJ: Final = "P56"  # 6
 NAVRZENI_KE_ZRUSENI_PROJ: Final = "P*7"  # 7
 RUSENI_PROJ: Final = "P78"  # 8
 VRACENI_PROJ: Final = "P-1"  # New
-PRIDANI_OZNAMOVATELE_PROJ: Final = "PO1"  # New
 VRACENI_NAVRHU_ZRUSENI: Final = "P71"  # New
 VRACENI_ZRUSENI: Final = "P81"  # New
 # Akce + Lokalita (archeologicke zaznamy)
@@ -77,7 +76,10 @@ NAHRANI_SBR: Final = "SBR0"  # 0
 # Uzivatel
 ZMENA_HLAVNI_ROLE: Final = "HR"  # 0, 1
 ZMENA_UDAJU_ADMIN: Final = "ZUA"  # 0
+ZMENA_HESLA_ADMIN: Final = "ZHA"
 ADMIN_UPDATE: Final = "AU"  # 0
+ZMENA_UDAJU_UZIVATEL: Final = "ZUU"
+ZMENA_HESLA_UZIVATEL: Final = "ZHU"
 
 # Uzivatel
 ROLE_BADATEL_ID = 1
@@ -106,8 +108,8 @@ IDENTIFIKATOR_DOCASNY_PREFIX: Final = "X-"
 OBLAST_CECHY = "C"
 OBLAST_MORAVA = "M"
 OBLAST_CHOICES = (
-    (OBLAST_CECHY, "Čechy"),
-    (OBLAST_MORAVA, "Morava"),
+    (OBLAST_CECHY, _("core.constants.cechy.text")),
+    (OBLAST_MORAVA, _("core.constants.morava.text")),
 )
 
 CESKY = "cs"
@@ -124,20 +126,8 @@ UZIVATEL_SPOLUPRACE_RELATION_TYPE: Final = "uzivatel_spoluprace"
 EXTERNI_ZDROJ_RELATION_TYPE: Final = "externi_zdroj"
 ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE: Final = "archeologicky_zaznam"
 DOKUMENTACNI_JEDNOTKA_RELATION_TYPE: Final = "dokumentacni_jednotka"
-DOKUMENT_CAST_RELATION_TYPE: Final = "dokument_cest"
+DOKUMENT_CAST_RELATION_TYPE: Final = "dokument_cast"
 SOUBOR_RELATION_TYPE: Final = "soubor"
-
-# Typy souboru
-IMPORTED_FILE: Final = "IMPORT"
-GENERATED_NOTIFICATION: Final = "AGPO"  # automaticky generována projektová oznameni
-PHOTO_DOCUMENTATION: Final = "FDN"  # fotodokumentace - samostatne nalezy
-OTHER_DOCUMENT_FILES: Final = (
-    "OSD"  # ostatní soubory dokumentace pri zápisu nového dokumentu
-)
-OTHER_PROJECT_FILES: Final = "OSPD"  # ostatní soubory projektové dokumentace z webu
-ZA_ZL_FILES: Final = (
-    "AGDZZ"  # automaticky generované dokumenty z rad ZA a ZL pri archivaci projektu
-)
 
 KLADYZM10 = 1
 KLADYZM25 = 2
@@ -168,7 +158,19 @@ DOK_TELEFON = {
 }
 DOK_EMAIL = (_("core.constants.dok.email_praha"), _("core.constants.dok.email_brno"))
 DOC_KOMU = (_("core.constants.dok.komu_praha"), _("core.constants.dok.komu_brno"))
-DOC_REDITEL = (_("core.constants.dok.reditel_praha"), _("core.constants.dok.reditel_brno"))
+DOC_REDITEL = (
+    _("core.constants.dok.reditel_praha"),
+    _("core.constants.dok.reditel_brno"),
+)
 
 ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT = 36
 ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX = 1200
+
+PERMISSIONS_IMPORT_SHEET = "URLs"
+PERMISSIONS_SHEET_ZAKLADNI_NAME = "Základní"
+PERMISSIONS_SHEET_STAV_NAME = "Stav"
+PERMISSIONS_SHEET_VLASTNICTVI_NAME = "Vlastnictví"
+PERMISSIONS_SHEET_PRISTUPNOST_NAME = "Přístupnost"
+PERMISSIONS_SHEET_APP_NAME = "app"
+PERMISSIONS_SHEET_URL_NAME = "URL"
+PERMISSIONS_SHEET_ACTION_NAME = "action"

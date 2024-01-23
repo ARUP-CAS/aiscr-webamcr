@@ -23,22 +23,20 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
     """
     model = NeidentAkce
     template_name = "core/transakce_modal.html"
-    title = _("neidentAkce.views.neidentAkceEditView.title.text")
     id_tag = "edit-neident-form"
-    button = _("neidentAkce.views.neidentAkceEditView.submitButton")
     allowed_states = []
-    success_message = "success"
+    success_message = _("neidentAkce.views.neidentAkceEditView.success")
     form_class = NeidentAkceForm
-    slug_field = "dokument_cast__id"
+    slug_field = "dokument_cast__ident_cely"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         zaznam = self.object
         context = {
             "object": zaznam,
-            "title": self.title,
+            "title": _("neidentAkce.views.neidentAkceEditView.title.text"),
             "id_tag": self.id_tag,
-            "button": self.button,
+            "button": _("neidentAkce.views.neidentAkceEditView.submitButton"),
         }
         context["form"] = NeidentAkceForm(
             instance=self.object,

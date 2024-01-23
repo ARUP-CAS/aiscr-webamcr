@@ -32,7 +32,8 @@ from django.db import models
 from django.db.models import DEFERRED, CheckConstraint, Q
 from django.db.models.functions import Collate
 from django.utils import timezone
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import get_language
 from django_prometheus.models import ExportModelOperationsMixin
 
 from heslar.hesla import HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
@@ -40,8 +41,6 @@ from heslar.models import Heslar
 from services.notfication_settings import notification_settings
 from uzivatel.managers import CustomUserManager
 from simple_history.models import HistoricalRecords
-from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.contenttypes.models import ContentType
 
 import logging
 
@@ -85,6 +84,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                                                 limit_choices_to={'ident_cely__icontains': 'S-E-'},
                                                 default=only_notification_groups)
     created_from_admin_panel = False
+    suppress_signal = False
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -168,6 +168,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     @property
     def is_archiver_or_more(self):
         return self.hlavni_role.pk in (ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
+    
+    @property
+    def is_archeolog_or_more(self):
+        return self.hlavni_role.pk in (ROLE_ARCHEOLOG_ID,ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
 
     def save(self, *args, **kwargs):
         """
@@ -211,11 +215,16 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
 
-    def save_metadata(self, **kwargs):
-        if ModelWithMetadata.update_queued(self.__class__.__name__, self.pk):
-            return
-        from cron.tasks import save_record_metadata
-        save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
+    def save_metadata(self, use_celery=True, **kwargs):
+        if use_celery is True:
+            if ModelWithMetadata.update_queued(self.__class__.__name__, self.pk):
+                return
+            from cron.tasks import save_record_metadata
+            save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
+        else:
+            from core.repository_connector import FedoraRepositoryConnector
+            connector = FedoraRepositoryConnector(self)
+            connector.save_metadata(True)
 
     def record_deletion(self):
         logger.debug("uzivatel.models.User.delete_repository_container.start")
@@ -224,10 +233,35 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         logger.debug("uzivatel.models.User.delete_repository_container.end")
         return connector.record_deletion()
 
+    @property
+    def can_see_users_details(self):
+        return self.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
+
+    @property
+    def full_details(self):
+        return f"{self.last_name}, {self.first_name} ({self.ident_cely}, {self.organizace})"
+
+    @property
+    def anonymous_details(self):
+        return f"{self.ident_cely} ({self.organizace})"
+
+    @property
+    def can_see_ours_item(self):
+        return self.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
+
     class Meta:
         db_table = "auth_user"
         verbose_name = "Uživatel"
         verbose_name_plural = "Uživatelé"
+    
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        return (self,)
+    
+    def get_create_org(self):
+        return ()
 
 
 class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
@@ -347,6 +381,8 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     Class pro db model typ user notifikace.
     """
     ident_cely = models.TextField(unique=True)
+    text_cs = models.TextField()
+    text_en = models.TextField()
 
     def _get_settings_dict(self) -> Optional[dict]:
         if self.ident_cely in notification_settings:
@@ -378,9 +414,22 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
 
     class Meta:
         db_table = "notifikace_typ"
+        verbose_name = _("uzivatel.models.UserNotificationType.name")
+        verbose_name_plural = _("uzivatel.models.UserNotificationType.namePlural")
 
     def __str__(self):
-        return _(self.ident_cely)
+        if get_language() == "en":
+            if self.text_en:
+                return self.text_en
+            elif self.text_cs:
+                return self.text_cs
+            else:
+                return self.ident_cely
+        else:
+            if self.text_cs:
+                return self.text_cs
+            else:
+                return self.ident_cely
 
 
 class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Model):
@@ -389,7 +438,7 @@ class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Mo
     """
     notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now=True)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="notification_log_items")
     receiver_address = models.CharField(max_length=254)
 
     class Meta:

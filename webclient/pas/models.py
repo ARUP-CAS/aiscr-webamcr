@@ -19,7 +19,7 @@ from core.models import SouborVazby, ModelWithMetadata
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
     HESLAR_OBDOBI,
@@ -48,7 +48,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     PREDANO_BOOLEAN = (
         (True, _('pas.models.samostatnyNalez.predano.ano')),
-        (False, _('pas.models.samostatnyNalez.predano.ano')))
+        (False, _('pas.models.samostatnyNalez.predano.ne')))
 
     evidencni_cislo = models.TextField(blank=True, null=True)
     projekt = models.ForeignKey(
@@ -79,7 +79,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     )
     geom = pgmodels.PointField(blank=True, null=True, srid=4326)
     geom_sjtsk = pgmodels.PointField(blank=True, null=True, srid=5514)
-    geom_system = models.TextField(default='wgs84')
+    geom_system = models.TextField(default="4326")
     pristupnost = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -248,14 +248,23 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.katastr.text"))
         if not self.soubory.soubory.exists():
             resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.soubory.text"))
+        resp = [str(x) for x in resp]
         return resp
+
+    @property
+    def nahled_soubor(self):
+        if self.soubory.soubory.count() > 0:
+            return self.soubory.soubory.first()
+        else:
+            return None
 
     class Meta:
         db_table = "samostatny_nalez"
         constraints = [
             CheckConstraint(
-                check=((Q(geom_system="sjtsk") & Q(geom_sjtsk__isnull=False))
-                       | (Q(geom_system="wgs84") & Q(geom__isnull=False))
+                check=((Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
+                       | (Q(geom_system="5514*") & Q(geom_sjtsk__isnull=False))
+                       | (Q(geom_system="4326") & Q(geom__isnull=False))
                        | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
                 name='samostatny_nalez_geom_check',
             ),
@@ -266,6 +275,18 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             return self.ident_cely
         else:
             return "Samostatny nalez [ident_cely not yet assigned]"
+        
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        try:
+            return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_SN)[0].uzivatel,)
+        except Exception as e:
+            return ()
+    
+    def get_create_org(self):
+        return (self.projekt.organizace,)
 
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):
@@ -334,7 +355,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         """
         result = []
         if self.stav == SPOLUPRACE_AKTIVNI:
-            result.append(_("pas.models.uzivatelSpoluprace.checkPredAktivaci.stav.text"))
+            result.append(str(_("pas.models.uzivatelSpoluprace.checkPredAktivaci.stav.text")))
         return result
 
     def check_pred_deaktivaci(self):
@@ -344,7 +365,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         """
         result = []
         if self.stav == SPOLUPRACE_NEAKTIVNI:
-            result.append(_("pas.models.uzivatelSpoluprace.checkPredDeaktivaci.stav.text"))
+            result.append(str(_("pas.models.uzivatelSpoluprace.checkPredDeaktivaci.stav.text")))
         return result
 
     class Meta:
@@ -353,3 +374,9 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     def __str__(self):
         return self.spolupracovnik.last_name + " + " + self.vedouci.last_name
+    
+    def get_create_user(self):
+        return (self.spolupracovnik,)
+    
+    def get_create_org(self):
+        return (self.vedouci.organizace,)

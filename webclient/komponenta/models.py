@@ -1,4 +1,6 @@
 import logging
+
+from django.urls import reverse
 from core.constants import (
     DOKUMENT_CAST_RELATION_TYPE,
     DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
@@ -25,6 +27,13 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
 
     class Meta:
         db_table = "komponenta_vazby"
+
+    @property
+    def navazany_objekt(self):
+        if hasattr(self, "casti_dokumentu") and self.casti_dokumentu:
+            return self.casti_dokumentu
+        elif hasattr(self, "dokumentacni_jednotka") and self.dokumentacni_jednotka:
+            return self.dokumentacni_jednotka
 
 
 class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
@@ -73,6 +82,19 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
     class Meta:
         db_table = "komponenta"
         ordering = ["ident_cely"]
+
+    def get_absolute_url(self):
+        if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
+            return reverse("arch_z:update-komponenta", args=[self.ident_cely[:-5],self.komponenta_vazby.dokumentacni_jednotka.ident_cely,self.ident_cely])
+        else:
+            return reverse("dokument:detail-model-3D", args=[self.ident_cely[:-5]])
+    
+    def get_permission_object(self):
+        if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
+            return self.komponenta_vazby.dokumentacni_jednotka.get_permission_object()
+        else:
+            return self.komponenta_vazby.casti_dokumentu.get_permission_object()
+    
 
 
 class KomponentaAktivita(ExportModelOperationsMixin("komponenta_aktivita"), models.Model):

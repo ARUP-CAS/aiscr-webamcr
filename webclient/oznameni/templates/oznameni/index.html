@@ -22,6 +22,12 @@
    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css'
          rel='stylesheet'/>
   <!-- Date picker imports -->
+  <script>
+    var drp_translations = {
+	cancelLabel: '{% trans "drp.cancelLabel" %}',
+	applyLabel: '{% trans "drp.applyLabel" %}'
+    }
+  </script>  
   <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
@@ -131,6 +137,33 @@
   <script >
     var static_url = "{% get_static_prefix %}";
   </script>
+  <script>
+    var map_translations = {
+        CurrentLocationError: '{% trans "mapa.CurrentLocationError" %}',
+	cuzkKatastralniMapa: '{% trans "mapa.cuzkKatastralniMapa" %}',
+	cuzkKatastralniUzemi: '{% trans "mapa.cuzkKatastralniUzemi" %}',
+	cuzkOrtofotomapa: '{% trans "mapa.cuzkOrtofotomapa" %}',
+	cuzkStinovanyeelief5G: '{% trans "mapa.cuzkStinovanyeelief5G" %}',
+	cuzkzakladniMapyCr: '{% trans "mapa.cuzkzakladniMapyCr" %}',
+	DefaultTitle: '{% trans "mapa.DefaultTitle" %}',
+	EditTurnOff: '{% trans "mapa.EditTurnOff" %}',
+    	EditTurnOn: '{% trans "mapa.EditTurnOn" %}',
+    	FullscreenTitle: '{% trans "mapa.FullscreenTitle" %}',
+    	FullscreenTitleClose: '{% trans "mapa.FullscreenTitleClose" %}',
+    	lokalizaceProjektu: '{% trans "mapa.lokalizaceProjektu" %}',
+    	MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
+    	openStreetMap: '{% trans "mapa.openStreetMap" %}',
+	openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
+    	SearchText: '{% trans "mapa.SearchText" %}',
+    	SearchTextCancel: '{% trans "mapa.SearchTextCancel" %}',
+    	SearchTextError: '{% trans "mapa.SearchTextError" %}',
+    	SelectedLocation: '{% trans "mapa.SelectedLocation" %}',
+    	zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
+    	zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}',
+        lokalizaceZamer: '{% trans "mapa.lokalizaceZamer" %}',
+        mimoCR: '{% trans "mapa.mimoCR" %}'
+    };
+  </script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'mapa_basic_grey.js' %}"></script>
   <script src="{% static 'mapa_pins.js' %}"></script>
@@ -139,13 +172,13 @@
   <script>
     window.onload = function (){
       load_daterangepicker("div_id_planovane_zahajeni")
-      var addPointToPoiLayer = (lat, long, text) => {
-            L.marker([lat, long],{icon: pinIconRedProject}).bindPopup(text).addTo(poi);
+      var addPointToPoiLayer = (point_leaf, text) => {
+            L.marker(point_leaf,{icon: pinIconRedProject}).bindPopup(text).addTo(poi);
         }
-      corX=document.getElementById('id_latitude').value;
-      corY=document.getElementById('id_longitude').value;
-      if(corX>0 ){
-      addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru');
+      x1=document.getElementById('id_coordinate_x1').value;
+      x2=document.getElementById('id_coordinate_x2').value;
+      if(x1>0 ){
+        addPointToPoiLayer([x2, x1], 'Vámi vybraná poloha záměru');
       }
     };
   </script>

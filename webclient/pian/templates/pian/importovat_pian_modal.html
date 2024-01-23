@@ -1,0 +1,70 @@
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block head %}
+  <link rel="stylesheet" type="text/css" href="{% static 'dropzone.min.css' %}"/>
+{% endblock %}
+
+<div class="modal fade app-modal-importovat-pian" id="importovat_pian" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-xl">
+    <div class="modal-content">
+      <div>
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "pian.templates.importovatPianModal.title" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form action="{% url 'pian:importovat-pian' %}" class="dropzone mb-0" id="my-awesome-dropzone"
+                enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="fallback">
+              <input name="file" type="file" multiple/>
+            </div>
+            <div class="d-none">
+              <input name="arch_ident" type="text" value={{zaznam.ident_cely}} />
+              <input name="dj_ident" type="text" value={{j.ident_cely}} />
+              <input name="pian_ident" type="text" value={{j.pian_ident_cely}} />
+              <input name="action" type="text" value="" />
+            </div>
+          </form>
+          <small class="form-text text-muted" id="import-helptext">{% trans "pian.templates.importovatPianModal.tooltip" %}</small>
+          <div class="modal-body-table" id="modal-pian-import-table">
+        </div>
+      </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "pian.templates.importovatPianModal.closeButton.text" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="{% static 'dropzone.min.js' %}"></script>
+<script>
+  const dz_trans = {
+    description: '{% trans "pian.templates.pian.importovat_pian_modal.dz.description" %}',
+    rejectedFileMessage: '{% trans "pian.templates.pian.importovat_pian_modal.dz.rejectedFileMessage" %}',
+    cancelUpload: '{% trans "pian.templates.pian.importovat_pian_modal.dz.cancelUpload" %}',
+    cancelUploadConfirm: '{% trans "pian.templates.pian.importovat_pian_modal.dz.cancelUploadConfirm" %}',
+    removeFile: '{% trans "pian.templates.pian.importovat_pian_modal.dz.removeFile" %}',
+    alertsImportPianUploadSuccesfull: '{% trans "pian.templates.pian.importovat_pian_modal.dz.uploadSuccesfull" %}',
+    alertsImportPianUploadError: '{% trans "pian.templates.pian.importovat_pian_modal.dz.uploadError" %}'
+  }
+</script>
+<script src="{% static 'dz_import_pian.js' %}"></script>
+<script>
+  $('#importovat_pian').on('hidden.bs.modal', function (e) {
+    $("#my-awesome-dropzone").attr('style','display:');
+    $("#import-helptext").attr('style','display:');
+    $('#modal-pian-import-table').empty();
+  })
+  $('#importovat_pian').on('show.bs.modal', function(e) {
+    var actionId = $(e.relatedTarget).data('action-id');
+    if (actionId) {
+      console.log(actionId)
+      $(e.currentTarget).find('input[name="action"]').val(actionId)
+    }
+});
+</script>

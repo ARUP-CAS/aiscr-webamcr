@@ -23,7 +23,7 @@
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
+            <a class="btn app-entity-dokument" href="{% url 'core:upload_file' 'dokument' dokument.ident_cely %}"
                rel="tooltip"
                data-placement="top" title="{% trans 'dokument.templates.dok.detail.soubory.NahratSoubory.tooltip' %}">
               <span class="material-icons">publish</span>
@@ -32,9 +32,9 @@
         </div>
         {% endif %}
       </div>
-      <div class="card-body">
+      <div class="card-body content-with-table-responsive">
         {% if soubory %}
-          {% include "core/filetable.html" with soubory=soubory show=show.editovat next_url='/dokument/detail/' ident=dokument.ident_cely allow_replace=True vazba_trida="dokument" %}
+          {% include "core/filetable.html" with next_url='/dokument/detail/' ident=dokument.ident_cely allow_replace=True vazba_trida="dokument" %}
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
@@ -82,14 +82,14 @@
       </div>
     </div>
 
-    <div class="row mb-3">
-      <div class="col-sm-4">
+    <div class="row">
+      <div class="col-sm-4 mb-3">
         <div class="card app-card-form app-card-casti-dokumentu">
           <div id="karta-casti-dokumentu" class="card-header">
             <div class="app-fx app-left">
               {% trans "dokument.templates.dok.detail.castiDokumentu.cardHeader" %}
             </div>
-            {% if show.editovat %}
+            {% if show.zapsat_cast %}
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
                 <button id="button-add-cast" class="btn" href="{% url 'dokument:vytvorit-cast' dokument.ident_cely %}"
@@ -155,7 +155,7 @@
           </div>
         </div>
       </div>
-      <div class="col-sm-8 pl-0">        
+      <div class="col-sm-8 app-card-cast-dokumentu mb-3">
         {% block cast_dokumentu %}
         {% endblock %}
       </div>
@@ -173,7 +173,7 @@
         {% if form_tvary %}  
         <form class="mb-3" method="POST" action="{% url 'dokument:edit-tvar' dokument.ident_cely %}" onsubmit="editTvarSubmitButton.disabled = true; return true;">
             {% crispy form_tvary tvary_helper %}
-            {% if show.editovat %}
+            {% if show.tvary_edit %}
           <button type="submit" id="editTvarSubmitButton"
                   class="btn btn-primary">{% trans "dokument.templates.dok.detail.tvary.submitButtonText" %}
           </button>
@@ -246,32 +246,32 @@
 
 </script>
 <script>
-  //Functionality for back button based on cookie
-  function getCookie(name) {
-    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-    return v ? v[2] : null;
-  }
-  const akce_back = "{% trans 'dokument.templates.dok.detail.back.akce.title' %}"
-  const lokalita_back = "{% trans 'dokument.templates.dok.detail.back.lokalita.title' %}"
-  const projekt_back = "{% trans 'dokument.templates.dok.detail.back.projekt.title' %}"
-  document.addEventListener('DOMContentLoaded', function (event) {
-    let back = document.getElementById("document-back")
-    if (back){
-      let zpet = getCookie("zpet")
-      if (zpet){
-        back.style.display = "inline";
-        back.querySelectorAll('a')[0].href=zpet.replace(/['"]+/g, '');
-        if (zpet.includes('akce')){
-          back.querySelectorAll('a')[0].textContent=akce_back;
-        }
-        if (zpet.includes('lokalita')){
-          back.querySelectorAll('a')[0].textContent=lokalita_back;
-        }
-        else{
-          back.querySelectorAll('a')[0].textContent=projekt_back;
-        }
-      }
+    //Functionality for back button based on cookie
+    function getCookie(name) {
+        var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+        return v ? v[2] : null;
     }
-  });
+
+    const akce_back = "{% trans 'dokument.templates.dok.detail.back.akce.title' %}";
+    const lokalita_back = "{% trans 'dokument.templates.dok.detail.back.lokalita.title' %}";
+    const projekt_back = "{% trans 'dokument.templates.dok.detail.back.projekt.title' %}";
+    document.addEventListener('DOMContentLoaded', function (event) {
+        let back = document.getElementById("document-back");
+        if (back) {
+            let zpet = getCookie("zpet");
+            if (zpet) {
+                back.style.display = "inline";
+                back.querySelectorAll('a')[0].href = zpet.replace(/['"]+/g, '');
+                if (zpet.includes('akce')) {
+                    back.querySelectorAll('a')[0].textContent = akce_back;
+                }
+                else if (zpet.includes('lokalita')) {
+                    back.querySelectorAll('a')[0].textContent = lokalita_back;
+                } else {
+                    back.querySelectorAll('a')[0].textContent = projekt_back;
+                }
+            }
+        }
+    });
 </script>
 {% endblock %}

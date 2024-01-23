@@ -34,6 +34,10 @@ class NeocekavanaRadaError(Exception):
     def __init__(self, message="Neocekavana rada dokumentu."):
         self.message = message
 
+class WrongSheetError(Exception):
+    def __init__(self, message="Excel nema spravne sloupce"):
+        self.message = message
+
 
 class NeznamaGeometrieError(Exception):
     def __init__(self, message="Neocekavana geometrie pianu."):
@@ -50,3 +54,11 @@ class MaximalEventCount(Exception):
         self.number = number
         self.message = message
         super().__init__(self.number)
+
+class WrongCSVError(Exception):
+    def __init__(self, message="CSV nema spravne sloupce"):
+        self.message = message
+
+class ZaznamSouborNotmatching(Exception):
+    def __init__(self, message="Zaznam nema dany soubor"):
+        self.message = message

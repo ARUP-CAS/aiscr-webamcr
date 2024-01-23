@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from arch_z.models import ArcheologickyZaznam
 from heslar.models import Heslar
 from django.urls import reverse
@@ -64,6 +64,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         db_column="archeologicky_zaznam",
         primary_key=True,
     )
+    dalsi_katastry_snapshot = models.CharField(max_length=5000, null=True, blank=True)
 
     class Meta:
         db_table = "lokalita"
@@ -104,6 +105,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
                         + _("lokalita.models.lokalita.checkPredArchivaci.djMaNepotvrzenyPian.part2"
                     )
                 )
+        result = [str(x) for x in result]
         return result
 
     def check_pred_odeslanim(self):
@@ -180,4 +182,8 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
                 logger.debug("lokalita.models.Lokalita.check_pred_odeslanim.nema_pian",
                              extra={"dokument_warning": dokument_warning,
                                     "dokument_cast_dokument_ident_cely": dokument_cast.dokument.ident_cely})
+        result = [str(x) for x in result]
         return result
+
+    def set_snapshots(self):
+        self.dalsi_katastry_snapshot = "; ".join([x.nazev for x in self.archeologicky_zaznam.katastry.order_by("nazev").all()])

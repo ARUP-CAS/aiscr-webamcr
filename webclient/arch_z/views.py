@@ -32,8 +32,10 @@ from core.constants import (
     PROJEKT_STAV_ZAPSANY,
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
+    ROLE_BADATEL_ID,
     ZAPSANI_AZ,
-    ZMENA_AZ
+    ZMENA_AZ,
+    PIAN_POTVRZEN
 )
 from core.exceptions import MaximalEventCount
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -41,21 +43,23 @@ from core.ident_cely import get_project_event_ident, get_temp_akce_ident
 from core.message_constants import (
     MAXIMUM_AKCII_DOSAZENO,
     PRISTUP_ZAKAZAN,
+    SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
+from core.repository_connector import FedoraRepositoryConnector
 from core.utils import (
     get_all_pians_with_akce,
-    get_all_pians_with_dj,
+    get_dj_pians_centroid,
     get_centre_from_akce,
     get_heatmap_pian,
     get_heatmap_pian_density,
     get_message,
     get_num_pians_from_envelope,
-    get_pians_from_envelope,
+    get_dj_pians_from_envelope,
 )
-from core.views import SearchListView, check_stav_changed
+from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
@@ -75,7 +79,7 @@ from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
-from dokument.models import Dokument
+from dokument.models import Dokument, DokumentCast
 from dokument.views import get_komponenta_form_detail, odpojit, pripojit
 from heslar.hesla import (
     HESLAR_AREAL,
@@ -110,10 +114,12 @@ from nalez.forms import (
 )
 from nalez.models import NalezObjekt, NalezPredmet
 from pian.forms import PianCreateForm
+from pian.models import Pian
 from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer
-
+from uzivatel.models import User
+from core.models import Permissions as p, check_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -162,10 +168,9 @@ class AkceRelatedRecordUpdateView(TemplateView):
         """
         Metóda pro získaní dokumentační jednotky navázané na akci.
         """
-        ident_cely = self.kwargs.get("ident_cely")
         return (
             DokumentacniJednotka.objects.filter(
-                archeologicky_zaznam__ident_cely=ident_cely
+                archeologicky_zaznam__ident_cely=self.arch_zaznam.ident_cely
             )
             .select_related("komponenty", "typ", "pian")
             .prefetch_related(
@@ -183,9 +188,8 @@ class AkceRelatedRecordUpdateView(TemplateView):
         """
         Metóda pro získaní dokumentů navázaných na akci.
         """
-        ident_cely = self.kwargs.get("ident_cely")
         return (
-            Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
+            Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=self.arch_zaznam.ident_cely)
             .select_related("soubory")
             .prefetch_related("soubory__soubory")
             .order_by("ident_cely")
@@ -195,11 +199,10 @@ class AkceRelatedRecordUpdateView(TemplateView):
         """
         Metóda pro získaní externích odkazů navázaných na akci.
         """
-        ident_cely = self.kwargs.get("ident_cely")
         return (
-            ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
+            ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=self.arch_zaznam.ident_cely)
             .select_related("externi_zdroj")
-            .order_by("id")
+            .order_by("externi_zdroj__ident_cely")
         )
 
     def get_vedouci(self, context):
@@ -219,7 +222,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
         akce_zaznam_ostatni_vedouci = []
         for vedouci in AkceVedouci.objects.filter(akce=context["zaznam"].akce).order_by(
-            "id"
+           "vedouci__prijmeni", "vedouci__jmeno"
         ):
             vedouci: AkceVedouci
             akce_zaznam_ostatni_vedouci.append(
@@ -235,29 +238,36 @@ class AkceRelatedRecordUpdateView(TemplateView):
         Metóda pro získaní contextu akci pro template.
         """
         context = super().get_context_data(**kwargs)
-        zaznam = self.get_archeologicky_zaznam()
-        context["zaznam"] = zaznam
-        context["dokumentacni_jednotky"] = self.get_jednotky()
-        context["dokumenty"] = self.get_dokumenty()
-        context["history_dates"] = get_history_dates(zaznam.historie)
-        context["show"] = get_detail_template_shows(
-            zaznam, self.get_jednotky(), self.request.user
-        )
-        context["externi_odkazy"] = self.get_externi_odkazy()
-        if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+        self.arch_zaznam = self.get_archeologicky_zaznam()
+        context["showbackdetail"] = False
+        context["zaznam"] = self.arch_zaznam
+        if self.arch_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            if self.arch_zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
+                context["showbackdetail"] = True if self.request.user.hlavni_role.pk != ROLE_BADATEL_ID else False
+                context["app"] = "pr"
+                context[
+                    "arch_pr_link"
+                ] = '{% url "projekt:projekt_archivovat" zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true'
+            else:
+                context["app"] = "akce"
+                context["arch_pr_link"] = None
             context["presna_specifikace"] = (
                 True
-                if zaznam.akce.specifikace_data
+                if self.arch_zaznam.akce.specifikace_data
                 == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
                 else False
             )
-        context["app"] = "akce"
-        context["showbackdetail"] = False
-        if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-            if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
-                context["showbackdetail"] = True
-        self.get_vedouci(context)
-        context["next_url"] = zaznam.get_absolute_url()
+            self.get_vedouci(context)
+        else:
+            context["app"] = "lokalita"
+        context["dokumentacni_jednotky"] = self.get_jednotky()
+        context["dokumenty"] = self.get_dokumenty()
+        context["history_dates"] = get_history_dates(self.arch_zaznam.historie, self.request.user)
+        context["show"] = get_detail_template_shows(
+            self.arch_zaznam, self.get_jednotky(), self.request.user, context["app"]
+        )
+        context["externi_odkazy"] = self.get_externi_odkazy()            
+        context["next_url"] = self.arch_zaznam.get_absolute_url()
         return context
 
 
@@ -291,6 +301,17 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
     Třida, která se dedí a která obsahuje metódy pro získaní relací DJ.
     """
     template_name = "arch_z/dj/dj_update.html"
+
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
+        az = get_object_or_404(ArcheologickyZaznam, ident_cely=self.kwargs["ident_cely"])
+        if not dj.archeologicky_zaznam == az:
+            logger.error("Archeologicky zaznam - Dokumentacni jednotka wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
 
     def get_dokumentacni_jednotka(self):
         """
@@ -360,7 +381,7 @@ class DokumentacniJednotkaUpdateView(
         jednotky = self.get_jednotky()
         # check po MR
         context["j"] = get_dj_form_detail(
-            "akce", jednotka, jednotky, show, old_adb_post
+            "akce", jednotka, jednotky, show, old_adb_post,self.request.user
         )
         return context
 
@@ -388,6 +409,17 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
     Třida pohledu pro editaci komponenty dokumentační jednotky.
     """
     template_name = "arch_z/dj/komponenta_detail.html"
+
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
+        komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komponenta_ident_cely"])
+        if not dj.komponenty == komponenta.komponenta_vazby:
+            logger.error("Komponenta - Dokumentacni jednotka wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
 
     def get_komponenta(self):
         """
@@ -444,6 +476,17 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
     """
     template_name = "arch_z/dj/pian_update.html"
 
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
+        pian = get_object_or_404(Pian, ident_cely=self.kwargs["pian_ident_cely"])
+        if not dj.pian == pian:
+            logger.error("Pian - Dokumentacni jednotka wrong relation")
+            messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+            return redirect(request.GET.get("next","core:home"))
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         """
         Metóda pro získaní context dat navíc oproti přepisované metóde, formulář pro editaci PIANu.
@@ -452,9 +495,16 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         context["j"] = self.get_dokumentacni_jednotka()
         context["pian_form_update"] = PianCreateForm()
         return context
+    
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        if context["j"].pian.stav == PIAN_POTVRZEN:
+            raise PermissionDenied
+        return self.render_to_response(context)
+    
 
 
-class AdbCreateView(DokumentacniJednotkaRelatedUpdateView):
+class AdbCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
     """
     Třida pohledu pro vytvoření PIANu dokumentační jednotky.
     """
@@ -512,10 +562,11 @@ def edit(request, ident_cely):
         ):
             logger.debug("arch_z.views.edit.form_valid")
             form_az.save()
-            form_akce.save()
+            akce = form_akce.save()
             ostatni_vedouci_objekt_formset.save()
             if form_az.changed_data or form_akce.changed_data:
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            akce.set_snapshots()
             return redirect("arch_z:detail", ident_cely=ident_cely)
         else:
             logger.warning("arch_z.views.edit.form_az_valid", extra={"form_az_errors": form_az.errors,
@@ -544,17 +595,20 @@ def edit(request, ident_cely):
         request,
         "arch_z/create.html",
         {
+            "zaznam": zaznam,
             "formAZ": form_az,
             "formAkce": form_akce,
             "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
             "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
-            "ostatni_vedouci_objekt_formset_readonly": False,
+            "ostatni_vedouci_objekt_formset_readonly": not check_permissions(p.actionChoices.archz_vedouci_smazat, request.user, zaznam.ident_cely),
             "title": _("arch_z.views.edit.title.text"),
             "header": _("arch_z.views.edit.header.text"),
             "button": _("arch_z.views.edit.submitButton.text"),
             "sam_akce": False if zaznam.akce.projekt else True,
             "heslar_specifikace_v_letech_presne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
             "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
+            "arch_z_ident_cely":zaznam.ident_cely,
+            "toolbar_name": _("arch_z.views.edit.toolbar_name.text"),
         },
     )
 
@@ -778,6 +832,7 @@ def zapsat(request, projekt_ident_cely=None):
             "title": _("arch_z.views.zapsat.projektovaAkce.title.text"),
             "header": _("arch_z.views.zapsat.projektovaAkce.header.text"),
             "create_akce": False,
+            "projekt_ident_cely": projekt_ident_cely,
         }
     else:
         projekt = None
@@ -818,6 +873,7 @@ def zapsat(request, projekt_ident_cely=None):
         ):
             logger.debug("arch_z.views.zapsat.form_valid", extra={"projekt_ident_cely": projekt_ident_cely})
             az = form_az.save(commit=False)
+            az: ArcheologickyZaznam
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
             try:
@@ -833,45 +889,52 @@ def zapsat(request, projekt_ident_cely=None):
             except MaximalEventCount:
                 messages.add_message(request, messages.ERROR, MAXIMUM_AKCII_DOSAZENO)
             else:
-                az.save()
-                form_az.save_m2m()
-                # This must be called to save many to many (katastry)
-                # since we are doing commit = False
-                az.set_zapsany(request.user)
-                akce = form_akce.save(commit=False)
-                if typ_akce == Akce.TYP_AKCE_PROJEKTOVA:
-                    akce.specifikace_data = Heslar.objects.get(
-                        id=SPECIFIKACE_DATA_PRESNE
+                repository_connector = FedoraRepositoryConnector(az)
+                if repository_connector.check_container_deleted_or_not_exists(az.ident_cely):
+                    az.save()
+                    form_az.save_m2m()
+                    # This must be called to save many to many (katastry)
+                    # since we are doing commit = False
+                    az.set_zapsany(request.user)
+                    akce = form_akce.save(commit=False)
+                    if typ_akce == Akce.TYP_AKCE_PROJEKTOVA:
+                        akce.specifikace_data = Heslar.objects.get(
+                            id=SPECIFIKACE_DATA_PRESNE
+                        )
+                    akce.archeologicky_zaznam = az
+                    akce.projekt = projekt
+                    akce.typ = typ_akce
+                    akce.save()
+
+                    ostatni_vedouci_objekt_formset = inlineformset_factory(
+                        Akce,
+                        AkceVedouci,
+                        form=create_akce_vedouci_objekt_form(readonly=False),
+                        extra=1,
+                        can_delete=False,
                     )
-                akce.archeologicky_zaznam = az
-                akce.projekt = projekt
-                akce.typ = typ_akce
-                akce.save()
-
-                ostatni_vedouci_objekt_formset = inlineformset_factory(
-                    Akce,
-                    AkceVedouci,
-                    form=create_akce_vedouci_objekt_form(readonly=False),
-                    extra=1,
-                    can_delete=False,
-                )
-                ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
-                    request.POST,
-                    instance=akce,
-                    prefix="_osv",
-                )
-                if ostatni_vedouci_objekt_formset.is_valid():
-                    ostatni_vedouci_objekt_formset.save()
+                    ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+                        request.POST,
+                        instance=akce,
+                        prefix="_osv",
+                    )
+                    if ostatni_vedouci_objekt_formset.is_valid():
+                        ostatni_vedouci_objekt_formset.save()
+                    else:
+                        logger.debug("arch_z.views.zapsat.form_not_valid",
+                                     extra={"errors": ostatni_vedouci_objekt_formset.errors})
+                    akce.set_snapshots()
+                    messages.add_message(
+                        request, messages.SUCCESS, get_message(az, "USPESNE_ZAPSANA")
+                    )
+                    logger.debug("arch_z.views.zapsat.success", extra={"akce": akce.pk, "projekt": projekt_ident_cely})
+                    return redirect("arch_z:detail", az.ident_cely)
                 else:
-                    logger.debug("arch_z.views.zapsat.form_not_valid",
-                                 extra={"errors": ostatni_vedouci_objekt_formset.errors})
-
-                messages.add_message(
-                    request, messages.SUCCESS, get_message(az, "USPESNE_ZAPSANA")
-                )
-                logger.debug("arch_z.views.zapsat.success", extra={"akce": akce.pk, "projekt": projekt_ident_cely})
-                return redirect("arch_z:detail", az.ident_cely)
-
+                    logger.debug("arch_z.views.zapsat.check_container_deleted_or_not_exists.incorrect",
+                                 extra={"ident_cely": az.ident_cely})
+                    messages.add_message(
+                        request, messages.ERROR, _("arch_z.views.zapsat.samostatnaAkce."
+                                                   "check_container_deleted_or_not_exists_error"))
         else:
             logger.debug("arch_z.views.zapsat.not_valid", extra={"form_az_errors": form_az,
                                                                  "form_akce_errors": form_akce.errors})
@@ -904,6 +967,9 @@ def zapsat(request, projekt_ident_cely=None):
             "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
             "ostatni_vedouci_objekt_formset_readonly": True,
             "button": _("arch_z.views.zapsat.submitButton.text"),
+            "toolbar_name": _("arch_z.views.zapsat.toolbarName"),
+            "heslar_specifikace_v_letech_presne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
+            "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
         }
     )
     return render(
@@ -919,7 +985,7 @@ def smazat(request, ident_cely):
     """
     Funkce pohledu pro zobrazení a spracováni smazání akce.
     Na začátku se kontroluje jestli nekdo nezmenil stav akce počas smazání.
-    Po post volání se volá metóda na modelu pro smazání akce, historických vazeb, komponent, externích odkazů a DJ.
+    Po post volání se volá metóda na modelu pro smazání akce.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if check_stav_changed(request, az):
@@ -935,23 +1001,13 @@ def smazat(request, ident_cely):
     else:
         projekt = None
     if request.method == "POST":
-        # Parent records
-        historie_vazby = az.historie
-        komponenty_jednotek_vazby = []
-        for dj in az.dokumentacni_jednotky_akce.all():
-            if dj.komponenty:
-                komponenty_jednotek_vazby.append(dj.komponenty)
-        for eo in az.externi_odkazy.all():
-            eo.delete()
         try:
+            az.deleted_by_user = request.user
             az.delete()
-            historie_vazby.delete()
-            for komponenta_vazba in komponenty_jednotek_vazby:
-                komponenta_vazba.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         except RestrictedError as err:
-            logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely})
+            logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "err": err})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
             return JsonResponse(
                 {"redirect": az.get_absolute_url()},
@@ -967,7 +1023,10 @@ def smazat(request, ident_cely):
                 }
             )
         else:
-            return JsonResponse({"redirect": reverse("lokalita:index")})
+            if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
+                return JsonResponse({"redirect": reverse("lokalita:index")})
+            else:
+                return JsonResponse({"redirect": reverse("arch_z:index")})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
         context = {
@@ -987,6 +1046,13 @@ def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
     Funkce pohledu pro připojení dokumentu do akce.
     Funkce volá další funkci pro připojení s parametrem třídou modelu navíc.
     """
+    az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
+    if proj_ident_cely!= None and az.akce.projekt.ident_cely != proj_ident_cely:
+        logger.error("Archeologiky zaznam - Projekt wrong relation")
+        messages.add_message(
+                    request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                )
+        return JsonResponse({"redirect": az.get_absolute_url()},status=403)
     return pripojit(request, arch_z_ident_cely, proj_ident_cely, ArcheologickyZaznam)
 
 
@@ -998,10 +1064,14 @@ def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
     Funkce volá další funkci pro odpojení s parametrem navíc - arch záznamem.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
-    if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-        return odpojit(request, ident_cely, arch_z_ident_cely, az)
-    else:
-        return odpojit(request, ident_cely, arch_z_ident_cely, az)
+    relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_cely,archeologicky_zaznam=az)
+    if not relace_dokumentu.count() > 0:
+        logger.error("Archeologiky zaznam - Dokument wrong relation")
+        messages.add_message(
+                    request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                )
+        return JsonResponse({"redirect": az.get_absolute_url()},status=403)
+    return odpojit(request, ident_cely, arch_z_ident_cely, az)
 
 
 @login_required
@@ -1011,7 +1081,7 @@ def post_ajax_get_pians(request):
     Vypada nepouzito check s J. Bartos
     """
     body = json.loads(request.body.decode("utf-8"))
-    pians = get_all_pians_with_dj(body["dj_ident_cely"], body["lat"], body["lng"])
+    pians = get_dj_pians_centroid(body["dj_ident_cely"], body["lat"], body["lng"])
     back = []
     for pian in pians:
         back.append(
@@ -1044,7 +1114,7 @@ def post_ajax_get_pians_limit(request):
     clusters = num >= 500
     logger.debug("arch_z.views.post_ajax_get_pians_limit.pocet_geometrii", extra={"num": num})
     if num < 5000:
-        pians = get_pians_from_envelope(
+        pians = get_dj_pians_from_envelope(
             body["southEast"]["lng"],
             body["northWest"]["lat"],
             body["northWest"]["lng"],
@@ -1114,6 +1184,7 @@ def post_ajax_get_pians_limit(request):
             return JsonResponse({"heat": [], "algorithm": "heat"}, status=200)
 
 
+@login_required
 @require_http_methods(["POST"])
 def post_akce2kat(request):
     """
@@ -1122,27 +1193,28 @@ def post_akce2kat(request):
     body = json.loads(request.body.decode("utf-8"))
     logger.debug("arch_z.views.post_akce2kat.start", extra={"body": body})
     katastr_name = body["cadastre"]
-    pian_ident_cely = body["pian"]
+    akce_ident_cely = body["akce_ident_cely"]
 
     if len(katastr_name) > 0:
-        [poi, geom, presnost] = get_centre_from_akce(katastr_name, pian_ident_cely)
-        if len(str(poi)) > 0:
+        [bod, geom, presnost,zoom,pian_ident_cely] = get_centre_from_akce(katastr_name, akce_ident_cely) 
+        if len(str(bod)) > 0:
             return JsonResponse(
                 {
-                    "lat": str(poi.lat),
-                    "lng": str(poi.lng),
-                    "zoom": str(poi.zoom),
+                    "lat": str(bod[0]),
+                    "lng": str(bod[1]),
+                    "zoom": str(zoom),
                     "geom": str(geom).split(";")[1].replace(", ", ",")
                     if geom
                     else None,
                     "presnost": str(presnost) if geom else 4,
+                    "pian_ident_cely": str(pian_ident_cely)
                 },
                 status=200,
             )
-    return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": ""}, status=200)
+    return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": "","pian_ident_cely":""}, status=200)
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní dátumů pro historii.
 
@@ -1152,10 +1224,12 @@ def get_history_dates(historie_vazby):
     Returns:
         historie: dictionary dátumů k historii.
     """
+    request_user: User
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_AZ),
-        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_AZ),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_AZ),
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_AZ, anonymized),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_AZ, anonymized),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_AZ, anonymized),
     }
     return historie
 
@@ -1176,44 +1250,56 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
     Returns:
         historie: dictionary možností pro zobrazení.
     """
-    show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
-    show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
-    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY and app == "akce"
-    show_edit = archeologicky_zaznam.stav not in [
-        AZ_STAV_ARCHIVOVANY,
-    ]
+    show_vratit = check_permissions(p.actionChoices.archz_vratit, user, archeologicky_zaznam.ident_cely)
+    show_odeslat = check_permissions(p.actionChoices.archz_odeslat, user, archeologicky_zaznam.ident_cely)
+    show_archivovat = check_permissions(p.actionChoices.archz_archivovat, user, archeologicky_zaznam.ident_cely)
     show_arch_links = archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
     zmenit_proj_akci = False
     zmenit_sam_akci = False
     if archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-        allowed_groups = Group.objects.filter(id__in=[ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])
-        if user.hlavni_role in allowed_groups:
-            if archeologicky_zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
-                zmenit_proj_akci = True
-            else:
-                zmenit_sam_akci = True
+        show_edit = check_permissions(p.actionChoices.archz_edit, user, archeologicky_zaznam.ident_cely)
+        logger.debug(show_edit)
+        if archeologicky_zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
+            zmenit_proj_akci = check_permissions(p.actionChoices.archz_zmenit_proj, user, archeologicky_zaznam.ident_cely)
+            show_pripojit_dokumenty = check_permissions(p.actionChoices.archz_pripojit_dok_proj, user, archeologicky_zaznam.ident_cely)
+        else:
+            zmenit_sam_akci = check_permissions(p.actionChoices.archz_zmenit_sam, user, archeologicky_zaznam.ident_cely)
+            show_pripojit_dokumenty = check_permissions(p.actionChoices.archz_pripojit_dok, user, archeologicky_zaznam.ident_cely)
         if (
             archeologicky_zaznam.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
             and dok_jednotky.count() == 1
             and dok_jednotky.first().typ == Heslar.objects.get(id=TYP_DJ_KATASTR)
-        ):
+            and not check_permissions(p.actionChoices.archz_dj_zapsat, user, archeologicky_zaznam.ident_cely)
+        ) or dok_jednotky.filter(typ__id=TYP_DJ_KATASTR).exists():
             add_dj = False
         else:
             add_dj = True
-    elif dok_jednotky.count() == 0:
-        add_dj = True
     else:
-        add_dj = False
+        show_edit = check_permissions(p.actionChoices.lokalita_edit, user, archeologicky_zaznam.ident_cely)
+        show_pripojit_dokumenty = check_permissions(p.actionChoices.archz_pripojit_dok, user, archeologicky_zaznam.ident_cely)
+        if dok_jednotky.count() == 0 and check_permissions(p.actionChoices.lokalita_dj_zapsat, user, archeologicky_zaznam.ident_cely):
+            add_dj = True
+        else:
+            add_dj = False
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
         "archivovat_link": show_archivovat,
         "editovat": show_edit,
         "arch_links": show_arch_links,
-        "pripojit_dokumenty": True,
+        "pripojit_dokumenty": show_pripojit_dokumenty,
         "add_dj": add_dj,
         "zmenit_proj_akci": zmenit_proj_akci,
         "zmenit_sam_akci": zmenit_sam_akci,
+        "smazat": check_permissions(p.actionChoices.archz_smazat, user, archeologicky_zaznam.ident_cely),
+        "dokument_odpojit": check_permissions(p.actionChoices.archz_odpojit_dokument, user, archeologicky_zaznam.ident_cely),
+        "komponenta_smazat": check_permissions(p.actionChoices.komponenta_archz_smazat, user, archeologicky_zaznam.ident_cely),
+        "pripojit_eo": check_permissions(p.actionChoices.eo_pripojit_ez, user, archeologicky_zaznam.ident_cely),
+        "odpojit_eo": check_permissions(p.actionChoices.eo_odpojit_ez, user, archeologicky_zaznam.ident_cely),
+        "paginace_edit": check_permissions(p.actionChoices.eo_edit_akce, user, archeologicky_zaznam.ident_cely),
+        "nalez_smazat": check_permissions(p.actionChoices.nalez_smazat_akce, user, archeologicky_zaznam.ident_cely),
+        "zapsat_dokumenty": check_permissions(p.actionChoices.dok_zapsat_do_archz, user, archeologicky_zaznam.ident_cely),
+        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, archeologicky_zaznam.ident_cely),
     }
     return show
 
@@ -1251,11 +1337,18 @@ def get_required_fields(zaznam=None, next=0):
 
 @login_required
 @require_http_methods(["GET"])
-def smazat_akce_vedoucí(request, akce_vedouci_id):
+def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
     """
     Funkce pohledu pro smazání dalšího vedoucího akce.
     """
     zaznam = AkceVedouci.objects.get(id=akce_vedouci_id)
+    az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    if zaznam.akce.archeologicky_zaznam.ident_cely != ident_cely:
+        logger.error("Archeologiky zaznam - Dokument wrong relation")
+        messages.add_message(
+                    request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                )
+        return JsonResponse({"redirect": az.get_absolute_url()},status=403)
     zaznam.delete()
     next_url = request.GET.get("next")
     if next_url:
@@ -1268,262 +1361,33 @@ def smazat_akce_vedoucí(request, akce_vedouci_id):
     response = redirect(next_url)
     return response
 
+    
+class GetAkceOtherKatastrView(LoginRequiredMixin, View, PermissionFilterMixin):
+    typ_zmeny_lookup = ZAPSANI_AZ
 
-@login_required
-@require_http_methods(["POST"])
-def post_ajax_get_akce_other_katastr(request):
-    """
-    Funkce pohledu pro získaní souradnic dalších katastrů akce.
-    """
-    body = json.loads(request.body.decode("utf-8"))
-    dis = get_all_pians_with_akce(body["akce_ident_cely"])
-    back = []
-    for di in dis:
-        back.append(
-            {
-                # "id": pian.id,
-                "pian_ident_cely": di["pian_ident_cely"],
-                "pian_geom": di["pian_geom"].replace(", ", ","),
-                "dj": di["dj"],
-                "dj_katastr": di["dj_katastr"],
-            }
-        )
-    if len(dis) > 0:
-        return JsonResponse({"points": back}, status=200)
-    else:
+    def post(self, request):
+        """
+        Trida pohledu pro získaní souradnic dalších katastrů akce.
+        """
+        body = json.loads(request.body.decode("utf-8"))
+        arch_zaznam = ArcheologickyZaznam.objects.filter(ident_cely=body["akce_ident_cely"])
+        back = []
+
+        if self.check_filter_permission(arch_zaznam).count() > 0:
+            dis = get_all_pians_with_akce(body["akce_ident_cely"])
+            for di in dis:
+                back.append(
+                    {
+                        # "id": pian.id,
+                        "pian_ident_cely": di["pian_ident_cely"],
+                        "pian_geom": di["pian_geom"].replace(", ", ","),
+                        "dj": di["dj"],
+                        "dj_katastr": di["dj_katastr"],
+                    }
+                )
+            if len(dis) > 0:
+                return JsonResponse({"points": back}, status=200)
         return JsonResponse({"points": []}, status=200)
-
-
-def get_arch_z_context(request, ident_cely, zaznam, app):
-    """
-    Funkce pro získaní dictionary contextu archeologického záznamu.
-
-    Args:     
-        ident_cely (string): string ident celý záznamu.
-        
-        zaznam (ArcheologickyZaznam): model ArcheologickyZaznam pro který se daný context počítá.
-
-        app (string): druh archeologického záznamu ro který se daný context počítá.
-
-    Returns:
-        context: dictionary kontextu pro správné zobrazení stránky.
-    """
-    context = {"warnings": request.session.pop("temp_data", None)}
-    if app == "akce":
-        context["arch_projekt_link"] = request.session.pop("arch_projekt_link", None)
-    else:
-        context["arch_projekt_link"] = None
-    old_nalez_post = request.session.pop("_old_nalez_post", None)
-    komp_ident_cely = request.session.pop("komp_ident_cely", None)
-    old_adb_post = request.session.pop("_old_adb_post", None)
-    adb_ident_cely = request.session.pop("adb_ident_cely", None)
-    obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
-    areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
-    druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
-    druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
-    specifikace_objekt_choices = heslar_12(
-        HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
-    )
-    specifikce_predmetu_choices = list(
-        Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
-            "id", "heslo"
-        )
-    )
-    dokumenty = (
-        Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
-        .select_related("soubory")
-        .prefetch_related("soubory__soubory")
-    ).order_by("ident_cely")
-    jednotky = (
-        DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
-        .select_related("komponenty", "typ", "pian")
-        .prefetch_related(
-            "komponenty__komponenty",
-            "komponenty__komponenty__aktivity",
-            "komponenty__komponenty__obdobi",
-            "komponenty__komponenty__areal",
-            "komponenty__komponenty__objekty",
-            "komponenty__komponenty__predmety",
-            "adb",
-        )
-    )
-    show = get_detail_template_shows(zaznam, jednotky, request.user)
-
-    dj_form_create = CreateDJForm(jednotky=jednotky, typ_arch_z=zaznam.typ_zaznamu)
-    pian_form_create = PianCreateForm()
-    komponenta_form_create = CreateKomponentaForm(obdobi_choices, areal_choices)
-    adb_form_create = CreateADBForm()
-    dj_forms_detail = []
-    komponenta_forms_detail = []
-    pian_forms_detail = []
-    NalezObjektFormset = inlineformset_factory(
-        Komponenta,
-        NalezObjekt,
-        form=create_nalez_objekt_form(
-            druh_objekt_choices,
-            specifikace_objekt_choices,
-            not_readonly=show["editovat"],
-        ),
-        extra=1 if show["editovat"] else 0,
-        can_delete=False,
-    )
-    NalezPredmetFormset = inlineformset_factory(
-        Komponenta,
-        NalezPredmet,
-        form=create_nalez_predmet_form(
-            druh_predmet_choices,
-            specifikce_predmetu_choices,
-            not_readonly=show["editovat"],
-        ),
-        extra=1 if show["editovat"] else 0,
-        can_delete=False,
-    )
-    for jednotka in jednotky:
-        jednotka: DokumentacniJednotka
-        vyskovy_bod_formset = inlineformset_factory(
-            Adb,
-            VyskovyBod,
-            form=create_vyskovy_bod_form(
-                pian=jednotka.pian, not_readonly=show["editovat"]
-            ),
-            extra=1,
-            can_delete=False,
-        )
-        has_adb = jednotka.has_adb()
-        show_adb_add = (
-            jednotka.pian
-            and jednotka.typ.id == TYP_DJ_SONDA_ID
-            and not has_adb
-            and show["editovat"]
-        )
-        show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
-        show_add_pian = False if jednotka.pian else True
-        show_approve_pian = (
-            True
-            if jednotka.pian
-            and jednotka.pian.stav == PIAN_NEPOTVRZEN
-            and show["editovat"]
-            else False
-        )
-        dj_form_detail = {
-            "ident_cely": jednotka.ident_cely,
-            "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
-            "form": CreateDJForm(
-                instance=jednotka,
-                jednotky=jednotky,
-                prefix=jednotka.ident_cely,
-                not_readonly=show["editovat"],
-                typ_arch_z=zaznam.typ_zaznamu,
-            ),
-            "show_add_adb": show_adb_add,
-            "show_add_komponenta": show_add_komponenta,
-            "show_add_pian": (show_add_pian and show["editovat"]),
-            "show_remove_pian": (not show_add_pian and show["editovat"]),
-            "show_uprav_pian": jednotka.pian
-            and jednotka.pian.stav == PIAN_NEPOTVRZEN
-            and show["editovat"],
-            "show_approve_pian": show_approve_pian,
-            "show_pripojit_pian": True if jednotka.pian is None else False,
-        }
-        if has_adb:
-            logger.debug("arch_z.views.get_arch_z_context.adb", extra={"jednotka_ident_cely": jednotka.ident_cely})
-            dj_form_detail["adb_form"] = (
-                CreateADBForm(
-                    old_adb_post,
-                    instance=jednotka.adb,
-                    prefix=jednotka.adb.ident_cely,
-                    readonly=not show["editovat"],
-                )
-                if jednotka.adb.ident_cely == adb_ident_cely
-                else CreateADBForm(
-                    instance=jednotka.adb,
-                    prefix=jednotka.adb.ident_cely,
-                    readonly=not show["editovat"],
-                )
-            )
-            dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
-            dj_form_detail["adb_pk"] = jednotka.adb.pk
-            dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
-                instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
-            )
-            dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
-            dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
-        dj_forms_detail.append(dj_form_detail)
-        if jednotka.pian:
-            pian_forms_detail.append(
-                {
-                    "ident_cely": jednotka.pian.ident_cely,
-                    "center_point": "",
-                    "form": PianCreateForm(
-                        instance=jednotka.pian, prefix=jednotka.pian.ident_cely
-                    ),
-                }
-            )
-        for komponenta in jednotka.komponenty.komponenty.all():
-            komponenta_forms_detail.append(
-                {
-                    "ident_cely": komponenta.ident_cely,
-                    "form": CreateKomponentaForm(
-                        obdobi_choices,
-                        areal_choices,
-                        instance=komponenta,
-                        prefix=komponenta.ident_cely,
-                        readonly=not show["editovat"],
-                    ),
-                    "form_nalezy_objekty": NalezObjektFormset(
-                        old_nalez_post,
-                        instance=komponenta,
-                        prefix=komponenta.ident_cely + "_o",
-                    )
-                    if komponenta.ident_cely == komp_ident_cely
-                    else NalezObjektFormset(
-                        instance=komponenta, prefix=komponenta.ident_cely + "_o"
-                    ),
-                    "form_nalezy_predmety": NalezPredmetFormset(
-                        old_nalez_post,
-                        instance=komponenta,
-                        prefix=komponenta.ident_cely + "_p",
-                    )
-                    if komponenta.ident_cely == komp_ident_cely
-                    else NalezPredmetFormset(
-                        instance=komponenta, prefix=komponenta.ident_cely + "_p"
-                    ),
-                    "helper_predmet": NalezFormSetHelper(typ="predmet"),
-                    "helper_objekt": NalezFormSetHelper(typ="objekt"),
-                }
-            )
-    externi_odkazy = (
-        ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
-        .select_related("externi_zdroj")
-        .order_by("id")
-    )
-
-    context["dj_form_create"] = dj_form_create
-    context["pian_form_create"] = pian_form_create
-    context["dj_forms_detail"] = dj_forms_detail
-    context["adb_form_create"] = adb_form_create
-    context["komponenta_form_create"] = komponenta_form_create
-    context["komponenta_forms_detail"] = komponenta_forms_detail
-    context["pian_forms_detail"] = pian_forms_detail
-    context["history_dates"] = get_history_dates(zaznam.historie)
-    context["zaznam"] = zaznam
-    context["dokumenty"] = dokumenty
-    context["dokumentacni_jednotky"] = jednotky
-    context["show"] = show
-    context["externi_odkazy"] = externi_odkazy
-    if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-        if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
-            context["showbackdetail"] = True
-            context["app"] = "pr"
-            context[
-                "arch_pr_link"
-            ] = '{% url "projekt:projekt_archivovat" zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true'
-        else:
-            context["showbackdetail"] = False
-            context["app"] = "sam"
-            context["arch_pr_link"] = None
-
-    return context
 
 
 class AkceIndexView(LoginRequiredMixin, TemplateView):
@@ -1531,6 +1395,15 @@ class AkceIndexView(LoginRequiredMixin, TemplateView):
     Třida pohledu pro zobrazení domovské stránky akcií s navigačními možnostmi.
     """
     template_name = "arch_z/index.html"
+
+    def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní kontextu podlehu.
+        """
+        context = {
+            "toolbar_name": _("arch_z.views.akceIndexView.toolbarName"),
+        }
+        return context
 
 
 class AkceListView(SearchListView):
@@ -1541,30 +1414,36 @@ class AkceListView(SearchListView):
     model = Akce
     filterset_class = AkceFilter
     export_name = "export_akce_"
-    page_title = _("arch_z.views.AkceListView.page_title.text")
     app = "akce"
     toolbar = "toolbar_akce.html"
-    search_sum = _("arch_z.views.AkceListView.search_sum.text")
-    pick_text = _("arch_z.views.AkceListView.pick_text.text")
-    hasOnlyVybrat_header = _("arch_z.views.AkceListView.hasOnlyVybrat_header.text")
-    hasOnlyVlastnik_header = _("arch_z.views.AkceListView.hasOnlyVlastnik_header.text")
-    hasOnlyArchive_header = _("arch_z.views.AkceListView.hasOnlyArchive_header.text")
-    hasOnlyPotvrdit_header = _("arch_z.views.AkceListView.hasOnlyPotvrdit_header.text")
-    default_header = _("arch_z.views.AkceListView.default_header.text")
-    toolbar_name = _("arch_z.views.AkceListView.toolbar_name.text")
+    permission_model_lookup = "archeologicky_zaznam__"
+    typ_zmeny_lookup = ZAPSANI_AZ
+
+    def init_translations(self):
+        self.page_title = _("arch_z.views.AkceListView.page_title.text")
+        self.search_sum = _("arch_z.views.AkceListView.search_sum.text")
+        self.pick_text = _("arch_z.views.AkceListView.pick_text.text")
+        self.hasOnlyVybrat_header = _("arch_z.views.AkceListView.hasOnlyVybrat_header.text")
+        self.hasOnlyVlastnik_header = _("arch_z.views.AkceListView.hasOnlyVlastnik_header.text")
+        self.hasOnlyArchive_header = _("arch_z.views.AkceListView.hasOnlyArchive_header.text")
+        self.hasOnlyPotvrdit_header = _("arch_z.views.AkceListView.hasOnlyPotvrdit_header.text")
+        self.default_header = _("arch_z.views.AkceListView.default_header.text")
+        self.toolbar_name = _("arch_z.views.AkceListView.toolbar_name.text")
+        self.toolbar_label = _("core.views.AkceListView.toolbar_label.text")
 
     def get_queryset(self):
         qs = super().get_queryset()
         qs = (
-            qs.all()
-            .select_related(
+            qs.select_related(
                 "archeologicky_zaznam__hlavni_katastr",
                 "archeologicky_zaznam__hlavni_katastr__okres",
                 "organizace",
                 "hlavni_vedouci",  
+                "archeologicky_zaznam__pristupnost",
+                "archeologicky_zaznam",
             ).prefetch_related("archeologicky_zaznam__katastry","archeologicky_zaznam__katastry__okres")
         )
-        return qs
+        return self.check_filter_permission(qs)
 
 
 class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
@@ -1715,10 +1594,12 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         return redirect(az.get_absolute_url())
 
 
-class ArchZAutocomplete(autocomplete.Select2QuerySetView):
+class ArchZAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, PermissionFilterMixin):
     """
     Třida pohledu pro vrácení výsledku pro autocomplete arch záznamů.
     """
+    typ_zmeny_lookup = ZAPSANI_AZ
+
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return ArcheologickyZaznam.objects.none()
@@ -1733,7 +1614,7 @@ class ArchZAutocomplete(autocomplete.Select2QuerySetView):
             )
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
-        return qs
+        return self.check_filter_permission(qs)
 
 
 class ArchZTableRowView(LoginRequiredMixin, View):
@@ -1752,7 +1633,7 @@ class ArchZTableRowView(LoginRequiredMixin, View):
         return HttpResponse(render_to_string("ez/ez_odkazy_table_row.html", context))
 
 
-def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=None):
+def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=None, user=None):
     """
     Funkce pro získaní dictionary contextu dokumentační jednotky.
 
@@ -1782,13 +1663,12 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         jednotka.pian
         and jednotka.typ.id == TYP_DJ_SONDA_ID
         and not has_adb
-        and show["editovat"]
+        and check_permissions(p.actionChoices.adb_zapsat,user, jednotka.ident_cely)
     )
-    show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
     show_add_pian = False if jednotka.pian else True
     show_approve_pian = (
         True
-        if jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and show["editovat"]
+        if jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and check_permissions(p.actionChoices.pian_potvrdit, user, jednotka.ident_cely)
         else False
     )
     if app == "akce":
@@ -1798,6 +1678,14 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
             prefix=jednotka.ident_cely,
             not_readonly=show["editovat"],
         )
+        show_uprav_pian = (
+            jednotka.pian
+            and jednotka.pian.stav == PIAN_NEPOTVRZEN
+            and check_permissions(p.actionChoices.archz_pian_edit, user, jednotka.ident_cely)
+            )
+        show_add_komponenta = not jednotka.negativni_jednotka and check_permissions(p.actionChoices.archz_komponenta_zapsat, user, jednotka.ident_cely)
+        show_pripojit_pian_mapa = show_add_pian and check_permissions(p.actionChoices.akce_pripojit_pian_mapa, user, jednotka.ident_cely)
+        show_pripojit_pian_id = show_add_pian and check_permissions(p.actionChoices.akce_pripojit_pian_id, user, jednotka.ident_cely)
     else:
         create_db_form = CreateDJForm(
             instance=jednotka,
@@ -1805,27 +1693,41 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
             prefix=jednotka.ident_cely,
             not_readonly=show["editovat"],
         )
+        show_uprav_pian = (
+            jednotka.pian
+            and jednotka.pian.stav == PIAN_NEPOTVRZEN
+            and check_permissions(p.actionChoices.lokalita_pian_edit, user, jednotka.ident_cely)
+            )
+        show_add_komponenta = not jednotka.negativni_jednotka and check_permissions(p.actionChoices.lokalita_komponenta_zapsat, user, jednotka.ident_cely)
+        show_pripojit_pian_mapa = show_add_pian and check_permissions(p.actionChoices.lokalita_pripojit_pian_mapa, user, jednotka.ident_cely)
+        show_pripojit_pian_id = show_add_pian and check_permissions(p.actionChoices.lokalita_pripojit_pian_id, user, jednotka.ident_cely)
     dj_form_detail = {
         "ident_cely": jednotka.ident_cely,
         "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
         "form": create_db_form,
         "show_add_adb": show_adb_add,
         "show_add_komponenta": show_add_komponenta,
-        "show_add_pian": (show_add_pian and show["editovat"]),
-        "show_remove_pian": (not show_add_pian and show["editovat"] and jednotka.typ.id != TYP_DJ_KATASTR),
-        "show_uprav_pian": jednotka.pian
-        and jednotka.pian.stav == PIAN_NEPOTVRZEN
-        and show["editovat"],
+        "show_add_pian": (show_add_pian and check_permissions(p.actionChoices.pian_zapsat, user, jednotka.ident_cely)),
+        "show_add_pian_zapsat": (show_add_pian and check_permissions(p.actionChoices.pian_zapsat, user, jednotka.ident_cely)),
+        "show_add_pian_importovat": (show_add_pian and check_permissions(p.actionChoices.pian_zapsat, user, jednotka.ident_cely)),
+        "show_remove_pian": (not show_add_pian and check_permissions(p.actionChoices.pian_odpojit, user, jednotka.ident_cely) and jednotka.typ.id != TYP_DJ_KATASTR),
+        "show_uprav_pian": show_uprav_pian,
         "show_approve_pian": show_approve_pian,
         "show_pripojit_pian": True if jednotka.pian is None else False,
-        "show_change_katastr": True if jednotka.typ.id == TYP_DJ_KATASTR else False,
+        "show_import_pian_new": show_add_pian and check_permissions(p.actionChoices.pian_import_new, user, jednotka.ident_cely),
+        "show_import_pian_change": not show_add_pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and check_permissions(p.actionChoices.pian_import_change, user, jednotka.pian.ident_cely) and jednotka.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY,
+        "show_change_katastr": True if jednotka.typ.id == TYP_DJ_KATASTR and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely) else False,
+        "show_dj_smazat": check_permissions(p.actionChoices.dj_smazat, user, jednotka.ident_cely),
+        "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat,user,jednotka.ident_cely),
+        "show_pripojit_pian_mapa": show_pripojit_pian_mapa,
+        "show_pripojit_pian_id": show_pripojit_pian_id
     }
     if has_adb and app != "lokalita":
         logger.debug("arch_z.views.get_dj_form_detail", extra={"jednotka_ident_cely": jednotka.ident_cely})
         dj_form_detail["adb_form"] = CreateADBForm(
             old_adb_post,
             instance=jednotka.adb,
-            prefix=jednotka.adb.ident_cely,
+            #prefix=jednotka.adb.ident_cely,
             readonly=not show["editovat"],
         )
         dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely

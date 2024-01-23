@@ -25,6 +25,7 @@ from core.constants import PROJEKT_STAV_UKONCENY_V_TERENU, PRIHLASENI_PROJ
 from core.models import Soubor
 from core.repository_connector import FedoraRepositoryConnector, RepositoryBinaryFile
 from historie.models import Historie
+from oznameni.models import Oznamovatel
 from .mlstripper import MLStripper
 from urllib.parse import urljoin
 
@@ -97,7 +98,7 @@ class Mailer:
     @classmethod
     def _notification_was_sent(cls, notification_type: 'uzivatel.models.UserNotificationType',
                                user: 'uzivatel.models.User'):
-        notification_log = user.notification_log.filter(notification_type=notification_type).first()
+        notification_log = user.notification_log_items.filter(notification_type=notification_type).first()
         logger.debug("services.mailer._notification_was_sent",
                      extra={"notification_type": notification_type.ident_cely, "user": user})
         if notification_log:
@@ -222,23 +223,22 @@ class Mailer:
 
     @classmethod
     def send_enz01(cls):
-        now = datetime.datetime.now()
-        in_90_days = now + datetime.timedelta(days=90)
+        today_minus_90_days = (datetime.datetime.now() - datetime.timedelta(days=90)).date()
         IDENT_CELY = 'E-NZ-01'
         logger.debug("services.mailer.send_enz01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        projects = projekt.models.Projekt.objects.filter(stav=PROJEKT_STAV_UKONCENY_V_TERENU,
-                                                         termin_odevzdani_nz=in_90_days)
+        projects = projekt.models.Projekt.objects.filter(stav__lt=PROJEKT_STAV_UKONCENY_V_TERENU,
+                                                         termin_odevzdani_nz=today_minus_90_days)
         cls._send_notification_for_projects(projects, notification_type)
 
     @classmethod
     def send_enz02(cls):
-        today = datetime.datetime.now().date()
+        today_plus_1_day = (datetime.datetime.now() + datetime.timedelta(days=1)).date()
         IDENT_CELY = 'E-NZ-02'
         logger.debug("services.mailer.send_enz02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        projects = projekt.models.Projekt.objects.filter(stav=PROJEKT_STAV_UKONCENY_V_TERENU,
-                                                         termin_odevzdani_nz__lt=today)
+        projects = projekt.models.Projekt.objects.filter(stav__lt=PROJEKT_STAV_UKONCENY_V_TERENU,
+                                                         termin_odevzdani_nz__lt=today_plus_1_day)
         cls._send_notification_for_projects(projects, notification_type)
 
     @classmethod
@@ -344,7 +344,7 @@ class Mailer:
         project_files = list(projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
                                                             nazev__startswith=f"oznameni_{project.ident_cely}",
                                                             nazev__endswith=".pdf"))
-        project_files = list(sorted(project_files, key=lambda x: x.vytvoreno))
+        project_files = list(sorted(project_files, key=lambda x: x.vytvoreno.datum_zmeny))
         if len(project_files) > 0:
             project_file = project_files[0]
         else:
@@ -399,9 +399,13 @@ class Mailer:
             "lokalita": project.lokalizace,
             "organization": project.organizace.nazev,
         })
-        if project.oznamovatel is not None:
-            cls.__send(subject=subject, to=project.oznamovatel.email, html_content=html,
-                       notification_type=notification_type)
+        try:
+            if project.oznamovatel is not None:
+                cls.__send(subject=subject, to=project.oznamovatel.email, html_content=html,
+                           notification_type=notification_type)
+        except Oznamovatel.DoesNotExist as err:
+            logger.debug("services.mailer._send_ep03.no_oznammovatel",
+                         extra={"ident_cely": project.ident_cely, "err": err})
 
     @classmethod
     def send_ep03a(cls, project: 'projekt.models.Projekt'):

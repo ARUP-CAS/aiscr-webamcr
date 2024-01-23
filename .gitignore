@@ -1,4 +1,5 @@
 # Database and venv
+env/
 venv/
 db.sqlite3
 
@@ -104,3 +105,4 @@ logstash/logstash.conf
 
 # rewrite preklady
 /preklady
+/prometheus/prometheus.yml

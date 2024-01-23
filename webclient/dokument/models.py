@@ -3,17 +3,15 @@ import datetime
 import logging
 import math
 import os
-import re
 from string import ascii_uppercase as letters
 
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import CheckConstraint, Q, IntegerField
-from django.db.models.functions import Cast, Substr
+from django.db.models import CheckConstraint, Q
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from projekt.models import Projekt
@@ -50,7 +48,6 @@ from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
 from uzivatel.models import Organizace, Osoba
-from core.utils import calculate_crc_32
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +57,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     Class pro db model dokument.
     """
     STATES = (
-        (D_STAV_ZAPSANY, "D1 - Zapsán"),
-        (D_STAV_ODESLANY, "D2 - Odeslán"),
-        (D_STAV_ARCHIVOVANY, "D3 - Archivován"),
+        (D_STAV_ZAPSANY, _("dokument.models.dokument.states.D1")),
+        (D_STAV_ODESLANY, _("dokument.models.dokument.states.D2")),
+        (D_STAV_ARCHIVOVANY, _("dokument.models.dokument.states.D3")),
     )
 
     let = models.ForeignKey(
@@ -160,6 +157,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     tvary = models.ManyToManyField(
         Heslar, through="Tvar", related_name="dokumenty_tvary"
     )
+    autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
+    osoby_snapshot = models.CharField(max_length=5000, null=True, blank=True)
 
     class Meta:
         db_table = "dokument"
@@ -267,6 +266,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         # At least one soubor must be attached to the dokument
         if self.soubory.soubory.all().count() == 0:
             result.append(_("dokument.models.formCheckOdeslani.missingSoubor.text"))
+        result = [str(x) for x in result]
         return result
 
     def check_pred_archivaci(self):
@@ -278,7 +278,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         # At least one soubor must be attached to the dokument
         result = []
         if self.soubory.soubory.all().count() == 0:
-            result.append(_("dokument.models.formCheckArchivace.missingSoubor.text"))
+            result.append(str(_("dokument.models.formCheckArchivace.missingSoubor.text")))
         return result
 
     def has_extra_data(self):
@@ -346,25 +346,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         self.save()
         self.save_metadata(use_celery=False)
 
-        from core.repository_connector import FedoraRepositoryConnector
-        from core.utils import get_mime_type
-        from core.views import get_projekt_soubor_name
-        connector = FedoraRepositoryConnector(self)
-        connector.record_ident_change(old_ident_cely)
-        for soubor in self.soubory.soubory.all():
-            soubor: Soubor
-            repository_binary_file = soubor.get_repository_content()
-            if repository_binary_file is not None:
-                rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
-                                                          get_mime_type(soubor.nazev),
-                                                          repository_binary_file.content)
+        self.record_ident_change(old_ident_cely)
+
         for dc in self.casti.all():
-            if "3D" in perm_ident_cely:
-                for komponenta in dc.komponenty.komponenty.all():
-                    komponenta.ident_cely = perm_ident_cely + komponenta.ident_cely[-5:]
-                    komponenta.save()
-                    logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_components",
-                                   extra={"ident_cely": komponenta.ident_cely})
+            for komponenta in dc.komponenty.komponenty.all():
+                komponenta.ident_cely = perm_ident_cely + komponenta.ident_cely[-5:]
+                komponenta.save()
+                logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_components",
+                               extra={"ident_cely": komponenta.ident_cely})
             dc.ident_cely = perm_ident_cely + dc.ident_cely[-5:]
             dc.save()
             logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_dokumentacni_casti",
@@ -384,6 +373,32 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         last_day_of_month = calendar.monthrange(new_date.year, month)[1]
         day = min(new_date.day, last_day_of_month)
         self.datum_zverejneni = datetime.date(year, month, day)
+
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        try:
+            return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel,)
+        except Exception as e:
+            logger.debug(e)
+            return ()
+        
+    def get_create_org(self):
+        try:
+            return (self.get_create_user()[0].organizace,)
+        except Exception as e:
+            logger.debug(e)
+            return ()
+        
+    @property
+    def thumbnail_image(self):
+        if self.soubory.soubory.count() > 0:
+            return self.soubory.soubory.first().pk
+
+    def set_snapshots(self):
+        self.autori_snapshot = "; ".join([x.autor.vypis_cely for x in self.dokumentautor_set.order_by("poradi").all()])
+        self.osoby_snapshot = "; ".join([x.osoba.vypis_cely for x in self.dokumentosoba_set.order_by("osoba__vypis_cely").all()])
 
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
@@ -440,6 +455,14 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
                 "cast_ident_cely": self.ident_cely,
             },
         )
+    
+    def get_permission_object(self):
+        return self.dokument.get_permission_object()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.initial_projekt = self.projekt
+        self.initial_archeologicky_zaznam = self.archeologicky_zaznam
 
 
 class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):
@@ -611,6 +634,7 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     class Meta:
         db_table = "tvar"
         unique_together = (("dokument", "tvar", "poznamka"),)
+        ordering = ["tvar__razeni"]
 
 
 class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.Model):

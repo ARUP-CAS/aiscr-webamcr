@@ -14,15 +14,15 @@
     {% include toolbar with name=toolbar_name %}
 
     {% if filter %}
-      <form method="get">
+      <form method="get" id="filter-form">
         <div class="mb-1 d-flex flex-row align-items-center justify-content-between">
           <div class="app-left">
-            {% if  app == "spoluprace" %} <a class="btn btn-primary mb-1 mt-1" href="{% url 'pas:spoluprace_zadost' %}">{% trans 'templates.searchList.zadostOSpolupraci' %}</a> {% endif %}
+            {% if  app == "spoluprace" and show_zadost %} <a class="btn btn-primary mb-1 mt-1" href="{% url 'pas:spoluprace_zadost' %}">{% trans 'templates.searchList.zadostOSpolupraci' %}</a> {% endif %}
             <button class="btn btn-primary collapsed mr-1 mt-1 mb-1" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
               <span class="material-icons mr-1">filter_alt</span>{% trans "templates.searchList.filtr.label" %}<span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </div>
-          <div class="app-middle text-muted">
+          <div class="app-middle text-muted search-sum-text">
             {{search_sum}}: <strong>{{ table.rows|length }}</strong>
           </div>
           <div class="app-right">
@@ -31,7 +31,7 @@
                 <button id="btnGroupDropTable" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'templates.searchList.zobrazeniSloupcu.label' %}">
                   <span class="material-icons">table_chart</span>
                 </button>
-                <div class="dropdown-menu" aria-labelledby="btnGroupDropTable">
+                <div class="dropdown-menu column-table-selector" aria-labelledby="btnGroupDropTable">
                   {% for column in table.columns %}
                     {% if column.attrs.td.class in table.get_column_default_show %}
                       <a class="btn-shift-column dropdown-item"
@@ -100,6 +100,9 @@
           <div class="card app-card-form">
             <div class="card-body">
               {% crispy filter.form filter.helper %}
+              {% for value in sort_params %}
+                <input type="hidden" name="sort" value="{{ value }}">
+              {% endfor %}
               <button type="submit" class="btn btn-primary">
                 <span class="material-icons">check</span> {{pick_text}}
               </button>
@@ -151,8 +154,10 @@
         });
     });
     // don't show tooltip
-    $('[rel="tooltip"]').on('click', function () {
-      $(this).tooltip('hide')
+    $('table [rel="tooltip"]').on('click', function () {
+      if (window.innerWidth > 960) {
+        $(this).tooltip('hide')
+      }
     });
     // send change in columns shown
     const getCookie = (name) => {

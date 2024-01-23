@@ -1,4 +1,8 @@
+import logging
+from typing import Union
+
 from core.constants import (
+    ADMIN_UPDATE,
     ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE,
     ARCHIVACE_AZ,
     ARCHIVACE_DOK,
@@ -17,12 +21,14 @@ from core.constants import (
     POTVRZENI_EXT_ZD,
     POTVRZENI_PIAN,
     POTVRZENI_SN,
-    PRIDANI_OZNAMOVATELE_PROJ,
     PRIHLASENI_PROJ,
     PROJEKT_RELATION_TYPE,
     RUSENI_PROJ,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     SCHVALENI_OZNAMENI_PROJ,
+    SPOLUPRACE_AKTIVACE,
+    SPOLUPRACE_DEAKTIVACE,
+    SPOLUPRACE_ZADOST,
     UKONCENI_V_TERENU_PROJ,
     UZAVRENI_PROJ,
     UZIVATEL_RELATION_TYPE,
@@ -42,12 +48,15 @@ from core.constants import (
     VRACENI_NAVRHU_ZRUSENI,
     VRACENI_ZRUSENI,
     ZMENA_AZ,
+    ZMENA_HLAVNI_ROLE,
+    ZMENA_UDAJU_ADMIN, ZMENA_UDAJU_UZIVATEL, ZMENA_HESLA_UZIVATEL, ZMENA_HESLA_ADMIN,
 )
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from uzivatel.models import User
 from django_prometheus.models import ExportModelOperationsMixin
 
+logger = logging.getLogger(__name__)
 
 class Historie(ExportModelOperationsMixin("historie"), models.Model):
     """
@@ -55,49 +64,57 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     """
     CHOICES = (
         # Project related choices
-        (OZNAMENI_PROJ, "Oznámení projektu"),
-        (SCHVALENI_OZNAMENI_PROJ, "Schválení oznámení projektu"),
-        (ZAPSANI_PROJ, "Zapsání projektu"),
-        (PRIHLASENI_PROJ, "Přihlášení projektu"),
-        (ZAHAJENI_V_TERENU_PROJ, "Zahájení v terénu projektu"),
-        (UKONCENI_V_TERENU_PROJ, "Ukončení v terénu projektu"),
-        (UZAVRENI_PROJ, "Uzavření projektu"),
-        (ARCHIVACE_PROJ, "Archivace projektu"),
-        (NAVRZENI_KE_ZRUSENI_PROJ, "Navržení ke zrušení projektu"),
-        (RUSENI_PROJ, "Rušení projektu"),
-        (VRACENI_PROJ, "Vrácení projektu"),
-        (PRIDANI_OZNAMOVATELE_PROJ, "Přidání oznamovatele do projektu"),
-        (VRACENI_NAVRHU_ZRUSENI, "Vrácení návrhu ke zrušení projektu"),
-        (VRACENI_ZRUSENI, "Vrácení zrušení projektu"),
+        (OZNAMENI_PROJ, _("historie.models.historieStav.projekt.Px0")),
+        (SCHVALENI_OZNAMENI_PROJ, _("historie.models.historieStav.projekt.P01")),
+        (ZAPSANI_PROJ, _("historie.models.historieStav.projekt.Px1")),
+        (PRIHLASENI_PROJ, _("historie.models.historieStav.projekt.P12")),
+        (ZAHAJENI_V_TERENU_PROJ, _("historie.models.historieStav.projekt.P23")),
+        (UKONCENI_V_TERENU_PROJ, _("historie.models.historieStav.projekt.P34")),
+        (UZAVRENI_PROJ, _("historie.models.historieStav.projekt.P45")),
+        (ARCHIVACE_PROJ, _("historie.models.historieStav.projekt.P56")),
+        (NAVRZENI_KE_ZRUSENI_PROJ, _("historie.models.historieStav.projekt.P*7")),
+        (RUSENI_PROJ, _("historie.models.historieStav.projekt.P78")),
+        (VRACENI_PROJ, _("historie.models.historieStav.projekt.P-1")),
+        (VRACENI_NAVRHU_ZRUSENI, _("historie.models.historieStav.projekt.P71")),
+        (VRACENI_ZRUSENI, _("historie.models.historieStav.projekt.P81")),
         # Akce + Lokalita (archeologicke zaznamy)
-        (ZAPSANI_AZ, "Zápis archeologického záznamu"),
-        (ODESLANI_AZ, "Odeslání archeologického záznamu"),
-        (ARCHIVACE_AZ, "Archivace archeologického záznamu"),
-        (VRACENI_AZ, "Vrácení archeologického záznamu"),
-        (ZMENA_AZ, "Změna typu archeologického záznamu"),
+        (ZAPSANI_AZ, _("historie.models.historieStav.az.AZ01")),
+        (ODESLANI_AZ, _("historie.models.historieStav.az.AZ12")),
+        (ARCHIVACE_AZ, _("historie.models.historieStav.az.AZ23")),
+        (VRACENI_AZ, _("historie.models.historieStav.az.AZ-1")),
+        (ZMENA_AZ, _("historie.models.historieStav.az.AZ-2")),
         # Dokument
-        (ZAPSANI_DOK, "Zápis dokumentu"),
-        (ODESLANI_DOK, "Odeslání dokumentu"),
-        (ARCHIVACE_DOK, "Archivace dokumentu"),
-        (VRACENI_DOK, "Vrácení dokumentu"),
+        (ZAPSANI_DOK, _("historie.models.historieStav.dokument.D01")),
+        (ODESLANI_DOK, _("historie.models.historieStav.dokument.D12")),
+        (ARCHIVACE_DOK, _("historie.models.historieStav.dokument.D23")),
+        (VRACENI_DOK, _("historie.models.historieStav.dokument.D-1")),
         # Samostatny nalez
-        (ZAPSANI_SN, "Zápis samostatného nálezu"),
-        (ODESLANI_SN, "Odeslání samostatného nálezu"),
-        (POTVRZENI_SN, "Potvrzení samostatného nálezu"),
-        (ARCHIVACE_SN, "Archivace samostatného nálezu"),
-        (VRACENI_SN, "Vrácení samostatného nálezu"),
+        (ZAPSANI_SN, _("historie.models.historieStav.sn.SN01")),
+        (ODESLANI_SN, _("historie.models.historieStav.sn.SN12")),
+        (POTVRZENI_SN, _("historie.models.historieStav.sn.SN23")),
+        (ARCHIVACE_SN, _("historie.models.historieStav.sn.SN34")),
+        (VRACENI_SN, _("historie.models.historieStav.sn.SN-1")),
         # Uzivatel
+        (ZMENA_HLAVNI_ROLE, _("historie.models.historieStav.uzivatel.HR")),
+        (ZMENA_UDAJU_ADMIN, _("historie.models.historieStav.uzivatel.ZUA")),
+        (ADMIN_UPDATE, _("historie.models.historieStav.uzivatel.ZHA")),
+        (ZMENA_HESLA_ADMIN, _("historie.models.historieStav.uzivatel.ZUU")),
+        (ZMENA_UDAJU_UZIVATEL, _("historie.models.historieStav.uzivatel.ZUU")),
+        (ZMENA_HESLA_UZIVATEL, _("historie.models.historieStav.uzivatel.ZHU")),
         # Pian
-        (ZAPSANI_PIAN, "Zápis pian"),
-        (POTVRZENI_PIAN, "Potvrzení pian"),
+        (ZAPSANI_PIAN, _("historie.models.historieStav.pian.PI01")),
+        (POTVRZENI_PIAN, _("historie.models.historieStav.pian.PI12")),
         # Uzivatel_spoluprace
+        (SPOLUPRACE_ZADOST, _("historie.models.historieStav.spoluprace.SP01")),
+        (SPOLUPRACE_AKTIVACE, _("historie.models.historieStav.spoluprace.SP12")),
+        (SPOLUPRACE_DEAKTIVACE, _("historie.models.historieStav.spoluprace.SP-1")),
         # Externi_zdroj
-        (ZAPSANI_EXT_ZD, "Import externí zdroj"),
-        (ODESLANI_EXT_ZD, "Zápis externí zdroj"),
-        (POTVRZENI_EXT_ZD, "Potvrzení externí zdroj"),
-        (VRACENI_EXT_ZD, "Vrácení externí zdroj"),
+        (ZAPSANI_EXT_ZD, _("historie.models.historieStav.ez.EZ01")),
+        (ODESLANI_EXT_ZD, _("historie.models.historieStav.ez.EZ12")),
+        (POTVRZENI_EXT_ZD, _("historie.models.historieStav.ez.EZ23")),
+        (VRACENI_EXT_ZD, _("historie.models.historieStav.ez.EZ-1")),
         # Soubor
-        (NAHRANI_SBR, "Nahrání souboru"),
+        (NAHRANI_SBR, _("historie.models.historieStav.soubor.SBR0")),
     )
 
     datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("historie.models.historie.datumZmeny.label"))
@@ -110,9 +127,37 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         "HistorieVazby", on_delete=models.CASCADE, db_column="vazba"
     )
 
+    def uzivatel_protected(self, anonymized=True):
+        if anonymized:
+            return f"{self.uzivatel.ident_cely} ({self.uzivatel.organizace})"
+        else:
+            return f"{self.uzivatel.last_name}, {self.uzivatel.first_name} ({self.uzivatel.ident_cely}, {self.uzivatel.organizace})"
+
+    @classmethod
+    def save_record_deletion_record(cls, record):
+        logger.debug("history.models.save_record_deletion_record.start")
+        from arch_z.models import ArcheologickyZaznam
+        record: Union[ArcheologickyZaznam]
+        if hasattr(record, "deleted_by_user") and record.deleted_by_user is not None:
+            uzivatel = record.deleted_by_user
+        else:
+            uzivatel = User.objects.get(email="amcr@arup.cas.cz")
+        if isinstance(record, User):
+            vazba = record.history_vazba
+        elif hasattr(record, "historie"):
+            vazba = record.historie
+        else:
+            vazba = None
+        if hasattr(record, "ident_cely") and vazba:
+            historie_record = cls(uzivatel=uzivatel, poznamka=record.ident_cely, vazba=vazba, typ_zmeny="DEL")
+            historie_record.save()
+            logger.debug("history.models.save_record_deletion_record.delete", extra={"iden_cely": record.ident_cely})
+        logger.debug("history.models.save_record_deletion_record.end")
+
     class Meta:
         db_table = "historie"
         verbose_name = "historie"
+        ordering = ["datum_zmeny", ]
 
 
 class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
@@ -121,14 +166,14 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
     Model se používa k napojení na jednotlivé záznamy.
     """
     CHOICES = (
-        (PROJEKT_RELATION_TYPE, _("Projekt")),
-        (DOKUMENT_RELATION_TYPE, _("Dokument")),
-        (SAMOSTATNY_NALEZ_RELATION_TYPE, _("Samostatný nález")),
-        (UZIVATEL_RELATION_TYPE, _("Uživatel")),
-        (PIAN_RELATION_TYPE, _("Pian")),
-        (UZIVATEL_SPOLUPRACE_RELATION_TYPE, _("Uživatel spolupráce")),
-        (EXTERNI_ZDROJ_RELATION_TYPE, _("Externí zdroj")),
-        (ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, _("Archeologický záznam")),
+        (PROJEKT_RELATION_TYPE, _("historie.models.historieVazby.projekt")),
+        (DOKUMENT_RELATION_TYPE, _("historie.models.historieVazby.dokument")),
+        (SAMOSTATNY_NALEZ_RELATION_TYPE, _("historie.models.historieVazby.nalez")),
+        (UZIVATEL_RELATION_TYPE, _("historie.models.historieVazby.uzivatel")),
+        (PIAN_RELATION_TYPE, _("historie.models.historieVazby.pian")),
+        (UZIVATEL_SPOLUPRACE_RELATION_TYPE, _("historie.models.historieVazby.spoluprace")),
+        (EXTERNI_ZDROJ_RELATION_TYPE, _("historie.models.historieVazby.ez")),
+        (ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, _("historie.models.historieVazby.az")),
     )
 
     typ_vazby = models.TextField(max_length=24, choices=CHOICES, db_index=True)
@@ -140,7 +185,7 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
     def __str__(self):
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 
-    def get_last_transaction_date(self, transaction_type):
+    def get_last_transaction_date(self, transaction_type, anonymized=True):
         """
         Metóda pro zjištení datumu posledné transakce daného typu.
         """
@@ -159,7 +204,7 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
             )
         if len(transakce_list) > 0:
             resp["datum"] = transakce_list[0].datum_zmeny
-            resp["uzivatel"] = transakce_list[0].uzivatel
+            resp["uzivatel"] = transakce_list[0].uzivatel_protected(anonymized)
         return resp
 
     @property

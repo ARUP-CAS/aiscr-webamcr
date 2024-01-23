@@ -15,10 +15,10 @@ from core.constants import (
     ODESLANI_AZ,
     PIAN_POTVRZEN,
     VRACENI_AZ,
-    ZAPSANI_AZ, OBLAST_CECHY, OBLAST_MORAVA,
+    ZAPSANI_AZ, OBLAST_CECHY, OBLAST_MORAVA, DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
 )
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 
 from ez.models import ExterniZdroj
@@ -33,6 +33,7 @@ from heslar.hesla_dynamicka import (
 )
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
+from komponenta.models import KomponentaVazby
 from uzivatel.models import Organizace, Osoba
 from core.exceptions import MaximalIdentNumberError
 from django.core.exceptions import ObjectDoesNotExist
@@ -53,9 +54,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     CHOICES = ((TYP_ZAZNAMU_LOKALITA, "Lokalita"), (TYP_ZAZNAMU_AKCE, "Akce"))
     STATES = (
-        (AZ_STAV_ZAPSANY, "A1 - Zapsána"),
-        (AZ_STAV_ODESLANY, "A2 - Odeslána"),
-        (AZ_STAV_ARCHIVOVANY, "A3 - Archivována"),
+        (AZ_STAV_ZAPSANY, _("arch_z.models.ArcheologickyZaznam.states.AZ1")),
+        (AZ_STAV_ODESLANY, _("arch_z.models.ArcheologickyZaznam.states.AZ2")),
+        (AZ_STAV_ARCHIVOVANY, _("arch_z.models.ArcheologickyZaznam.states.AZ3")),
     )
 
     typ_zaznamu = models.CharField(max_length=1, choices=CHOICES)
@@ -135,6 +136,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         poznamka_historie = None
         self.save()
         old_ident = None
+        ident_change_recorded = False
         if (
             self.typ_zaznamu == self.TYP_ZAZNAMU_AKCE
             and self.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
@@ -149,6 +151,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         ):
             old_ident = self.ident_cely
             self.set_lokalita_permanent_ident_cely()
+            ident_change_recorded = True
             poznamka_historie = f"{old_ident} -> {self.ident_cely}"
         Historie(
             typ_zmeny=ARCHIVACE_AZ,
@@ -156,7 +159,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             vazba=self.historie,
             poznamka=poznamka_historie,
         ).save()
-        if old_ident is not None:
+        if old_ident is not None and not ident_change_recorded:
             self.record_ident_change(old_ident)
 
     def set_vraceny(self, user, new_state, poznamka):
@@ -248,6 +251,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                     "arch_z.models.ArcheologickyZaznam.dokument_warning",
                     extra={"ident_cely": dokument_cast.dokument.ident_cely, "dokument_warning": str(dokument_warning)}
                 )
+        result = [str(x) for x in result]
         return result
 
     def check_pred_archivaci(self):
@@ -277,6 +281,15 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                         + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text2"
                     )
                 )
+            elif dj.pian is None:
+                result.append(
+                    _(
+                        "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.no_pian.text1")
+                    + str(dj.ident_cely)
+                    + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.no_pian.text2"
+                        )
+                )
+        result = [str(x) for x in result]
         return result
 
     def set_lokalita_permanent_ident_cely(self):
@@ -328,6 +341,11 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             new_ident = get_akce_ident(self.hlavni_katastr.okres.kraj.rada_id)
         for dj in self.dokumentacni_jednotky_akce.all():
             dj.ident_cely = new_ident + dj.ident_cely[-4:]
+            if dj.komponenty is None:
+                k = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
+                k.save()
+                dj.komponenty = k
+                dj.save()
             for komponenta in dj.komponenty.komponenty.all():
                 komponenta.ident_cely = new_ident + komponenta.ident_cely[-5:]
                 komponenta.save()
@@ -358,20 +376,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         """
         Metóda pro získaní redirect záznamu podle typu arch záznamu a argumentu dj_ident_cely.
         """
-        if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-            if dj_ident_cely is None:
-                return redirect(reverse("arch_z:detail", self.ident_cely))
-            else:
-                return redirect(
-                    reverse("arch_z:detail-dj", args=[self.ident_cely, dj_ident_cely])
-                )
-        else:
-            if dj_ident_cely is None:
-                return redirect(reverse("lokalita:detail", self.ident_cely))
-            else:
-                return redirect(
-                    reverse("lokalita:detail-dj", args=[self.ident_cely, dj_ident_cely])
-                )
+        return redirect(self.get_absolute_url(dj_ident_cely))
+        
 
     def __str__(self):
         """
@@ -381,6 +387,29 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             return self.ident_cely
         else:
             return "[ident_cely not yet assigned]"
+        
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        try:
+            return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_AZ)[0].uzivatel,)
+        except Exception as e:
+            logger.debug(e)
+            return ()
+    
+    def get_create_org(self):
+        if self.get_create_user():
+            return (self.get_create_user()[0].organizace,)
+        else: 
+            return ()
+
+    def __init__(self, *args, **kwargs):
+        super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
+        if hasattr(self, "pristupnost") and self.pristupnost is not None:
+            self.initial_pristupnost = self.pristupnost
+        else:
+            self.initial_pristupnost = None
 
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):
@@ -464,6 +493,9 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
     organizace = models.ForeignKey(
         Organizace, on_delete=models.RESTRICT, db_column="organizace", blank=True, null=True
     )
+    vedouci_snapshot = models.CharField(max_length=5000, null=True, blank=True)
+
+    suppress_signal = False
 
     class Meta:
         db_table = "akce"
@@ -488,6 +520,20 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         connector = FedoraRepositoryConnector(self)
         return connector.save_metadata(True)
 
+    @property
+    def vedouci_organizace(self):
+        return ', '.join([str(x.organizace) for x in self.akcevedouci_set.all()])
+
+    @property
+    def vedouci(self):
+        return ', '.join([str(x.vedouci) for x in self.akcevedouci_set.all()])
+
+    def set_snapshots(self):
+        self.vedouci_snapshot = "; ".join([x.vedouci.vypis_cely for x in self.akcevedouci_set
+                                          .order_by("vedouci__prijmeni", "vedouci__jmeno").all()])
+        self.suppress_signal = True
+        self.save()
+
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     """
@@ -500,7 +546,7 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     class Meta:
         db_table = "akce_vedouci"
         unique_together = (("akce", "vedouci"),)
-        ordering = ["id"]
+        ordering = ["vedouci__prijmeni", "vedouci__jmeno"]
 
 
 class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
@@ -520,6 +566,7 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         db_column="archeologicky_zaznam",
         related_name="externi_odkazy",
     )
+    suppress_signal_arch_z = False
 
     class Meta:
         db_table = "externi_odkaz"

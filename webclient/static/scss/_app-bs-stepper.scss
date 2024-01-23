@@ -28,11 +28,13 @@
       }
 
       .app-stepper-date {
-        display: block;
         margin-top: -3px;
         font-weight: normal;
         color: inherit;
         font-size: 13px;
+      }
+      .app-stepper-date-container {
+        line-height: 1;
       }
     }
   }

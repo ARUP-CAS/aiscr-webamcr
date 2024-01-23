@@ -114,6 +114,16 @@
   align-items: center;
 }
 
+.navbar {
+  .navbar-collapse {
+    @media (max-width: 1200px) {
+      background-color: white !important;
+      z-index: 1;
+      padding: 1rem;
+    }
+  }
+}
+
 // Button for toggling the navbar when in its collapsed state
 .navbar-toggler {
   padding: $navbar-toggler-padding-y $navbar-toggler-padding-x;

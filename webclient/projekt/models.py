@@ -1,19 +1,15 @@
 import datetime
 import io
 import logging
-import os
 import zlib
 
 from django.contrib.gis.db import models as pgmodels
-from django.contrib.gis.db.models.functions import AsGML, AsWKT
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.files.base import ContentFile
 from django.db import models
-from django.db.models.functions import Cast, Substr
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from core.constants import (
@@ -89,7 +85,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         db_column="typ_projektu",
         related_name="projekty_typu",
         limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP},
-        verbose_name=_("Typ projektů"),
+        verbose_name=_("projekt.models.projekt.typProjektu.label"),
         db_index=True,
     )
     lokalizace = models.TextField(blank=True, null=True)
@@ -207,7 +203,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             poznamka=f"{old_ident} -> {self.ident_cely}",
         ).save()
         self.save()
-        self.record_ident_change(old_ident)
         logger.debug("projekt.models.Projekt.set_schvaleny.end", extra={"old_ident": old_ident})
 
     def set_zapsany(self, user):
@@ -218,7 +213,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Historie(typ_zmeny=ZAPSANI_PROJ, uzivatel=user, vazba=self.historie).save()
         self.save()
         if self.typ_projektu == TYP_PROJEKTU_ZACHRANNY_ID:
-            self.create_confirmation_document(user)
+            self.create_confirmation_document(user=user)
 
     def set_prihlaseny(self, user):
         """
@@ -268,6 +263,47 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         ).save()
         self.save()
 
+    def archive_project_documentation(self):
+        # making txt file with deleted files
+        today = datetime.datetime.now()
+        soubory = self.soubory.soubory.exclude(
+            nazev__regex="^log_dokumentace_"
+        )
+        if soubory.count() > 0:
+            filename = (
+                    "log_dokumentace_" + today.strftime("%Y-%m-%d-%H-%M") + ".txt"
+            )
+            file_content = (
+                    "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
+                    % today.strftime("%d. %m. %Y")
+            )
+            file_content += "\n".join(soubory.values_list("nazev", flat=True))
+            prev = 0
+            prev = zlib.crc32(bytes(file_content, "utf-8"), prev)
+            new_filename = "%d_%s" % (prev & 0xFFFFFFFF, filename)
+            file = io.BytesIO()
+            file.write(file_content.encode("utf-8"))
+            file.seek(0)
+            conn = FedoraRepositoryConnector(self)
+            mimetype = get_mime_type(new_filename)
+            rep_bin_file = conn.save_binary_file(new_filename, mimetype, file)
+            aktual_soubor = Soubor(
+                vazba=self.soubory,
+                nazev=new_filename,
+                mimetype=mimetype,
+                size_mb=rep_bin_file.size_mb,
+                path=rep_bin_file.url_without_domain,
+                sha_512=rep_bin_file.sha_512,
+            )
+            file_deleted_pk_list = [x.pk for x in soubory]
+            aktual_soubor.save()
+            for file in soubory:
+                if file.repository_uuid is not None:
+                    conn.delete_binary_file(file)
+                file.delete()
+            logger.debug("projekt.models.Projekt.set_archivovany.files_deleted",
+                         extra={"deleted": len(file_deleted_pk_list), "deleted_list": file_deleted_pk_list})
+
     def set_archivovany(self, user):
         """
         Metóda pro nastavení stavu archivovaný a uložení změny do historie.
@@ -278,46 +314,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             # Removing personal information from the projekt announcement
             if self.has_oznamovatel():
                 self.oznamovatel.delete()
-            # making txt file with deleted files
-            today = datetime.datetime.now()
-            soubory = self.soubory.soubory.exclude(
-                nazev__regex="^log_dokumentace_"
-            )
-            if soubory.count() > 0:
-                filename = (
-                        "log_dokumentace_" + today.strftime("%Y-%m-%d-%H-%M") + ".txt"
-                )
-                file_content = (
-                        "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
-                        % today.strftime("%d. %m. %Y")
-                )
-                file_content += "\n".join(soubory.values_list("nazev", flat=True))
-                prev = 0
-                prev = zlib.crc32(bytes(file_content, "utf-8"), prev)
-                new_filename = "%d_%s" % (prev & 0xFFFFFFFF, filename)
-                file = io.BytesIO()
-                file.write(file_content.encode("utf-8"))
-                file.seek(0)
-                conn = FedoraRepositoryConnector(self)
-                mimetype = get_mime_type(new_filename)
-                rep_bin_file = conn.save_binary_file(new_filename, mimetype, file)
-                aktual_soubor = Soubor(
-                    vazba=self.soubory,
-                    nazev=new_filename,
-                    mimetype=mimetype,
-                    size_mb=rep_bin_file.size_mb,
-                    path=rep_bin_file.url_without_domain,
-                    sha_512=rep_bin_file.sha_512,
-                )
-                file_deleted_pk_list = [x.pk for x in soubory]
-                aktual_soubor.save()
-                for file in soubory:
-                    if file.repository_uuid is not None:
-                        conn.delete_binary_file(file)
-                    file.delete()
-                logger.debug("projekt.models.Projekt.set_archivovany.files_deleted",
-                             extra={"deleted": len(file_deleted_pk_list), "deleted_list": file_deleted_pk_list})
-
+                self.archive_project_documentation()
         self.stav = PROJEKT_STAV_ARCHIVOVANY
         Historie(typ_zmeny=ARCHIVACE_PROJ, uzivatel=user, vazba=self.historie).save()
         Mailer.send_ea01(project=self, user=user)
@@ -410,6 +407,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 result[akce.archeologicky_zaznam.ident_cely] = _(
                     "projekt.models.projekt.checkPredArchivaci.akce.text"
                 )
+        result = {k:str(v) for (k, v) in result.items()}
         return result
 
     def check_pred_navrzeni_k_zruseni(self):
@@ -420,7 +418,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         has_event = len(self.akce_set.all()) > 0
         if has_event:
-            return {"has_event": _("projekt.models.projekt.checkPredNavrzeniKZruseni.akce.text")}
+            return {"has_event": str(_("projekt.models.projekt.checkPredNavrzeniKZruseni.akce.text"))}
         else:
             return {}
 
@@ -440,6 +438,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             resp.append(_("projekt.models.projekt.checkPredSmazanim.nalezy.text"))
         if has_soubory:
             resp.append(_("projekt.models.projekt.checkPredSmazanim.dokumentace.text"))
+        resp = [str(x) for x in resp]
         return resp
 
     def check_pred_uzavrenim(self):
@@ -457,6 +456,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 akce_warnings = a.check_pred_odeslanim()
                 if akce_warnings:
                     result[_("projekt.models.projekt.checkPredUzavrenim.akce.text") + a.archeologicky_zaznam.ident_cely] = akce_warnings
+        result = {k:str(v) for (k, v) in result.items()}
         return result
 
     def parse_ident_cely(self):
@@ -566,8 +566,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def expert_list_can_be_created(self):
         if self.typ_projektu.pk != TYP_PROJEKTU_ZACHRANNY_ID:
             return False
-        if self.stav not in (PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_UZAVRENY, PROJEKT_STAV_UKONCENY_V_TERENU):
-            return False
         return True
 
     def create_expert_list(self, popup_parametry=None):
@@ -604,6 +602,18 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             return ""
 
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        try:
+            return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PROJ)[0].uzivatel,)
+        except Exception as e:
+            logger.debug(e)
+            return ()
+    
+    def get_create_org(self):
+        return (self.organizace,)
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

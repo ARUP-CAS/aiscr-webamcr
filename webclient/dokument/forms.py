@@ -6,7 +6,8 @@ from dal import autocomplete
 from django import forms
 from django.db import utils
 from django.forms import HiddenInput
-from django.utils.translation import gettext as _
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 from django.db.models import Value, IntegerField
 from crispy_forms.bootstrap import AppendedText
@@ -53,31 +54,31 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
 
 class CoordinatesDokumentForm(forms.Form):
     """
-    Hlavní formulář pro editaci souradnic u modelu 3D.
+    Hlavní formulář pro editaci souřadnic v PAS.
     """
-    detector_system_coordinates = forms.ChoiceField(
+    visible_ss_combo = forms.ChoiceField(
         label=_("pas.forms.coordinates.detector.label"),
         choices=COORDINATE_SYSTEM,
         required=False,
         help_text=_("pas.forms.coordinates.detector.tooltip"),
     )
-    detector_coordinates_x = forms.CharField(
-        label=_("pas.forms.coordinates.cor_x.label"),
+    visible_x1 = forms.CharField(
+        label=_("pas.forms.coordinates.cor_x1.label"),
         required=False,
-        help_text=_("pas.forms.coordinates.cor_x.tooltip"),
+        help_text=_("pas.forms.coordinates.cor_x1.tooltip"),
     )
-    detector_coordinates_y = forms.CharField(
-        label=_("pas.forms.coordinates.cor_y.label"),
+    visible_x2 = forms.CharField(
+        label=_("pas.forms.coordinates.cor_x2.label"),
         required=False,
-        help_text=_("pas.forms.coordinates.cor_y.tooltip"),
+        help_text=_("pas.forms.coordinates.cor_x2.tooltip"),
     )
 
-    coordinate_wgs84_x = forms.FloatField(required=False, widget=HiddenInput())
-    coordinate_wgs84_y = forms.FloatField(required=False, widget=HiddenInput())
-    coordinate_sjtsk_x = forms.FloatField(required=False, widget=HiddenInput())
-    coordinate_sjtsk_y = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_wgs84_x1 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_wgs84_x2 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_sjtsk_x1 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_sjtsk_x2 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_system = forms.CharField(
-        required=False, widget=HiddenInput(), initial="wgs84"
+        required=False, widget=HiddenInput(), initial="4326"
     )
 
 
@@ -85,7 +86,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení Extra dat u dokumentu a modelu 3D.
     """
-    rada = forms.CharField(label="Řada", required=False, help_text=_("dokument.forms.editDokumentExtraDataForm.rada.tooltip"),)
+    rada = forms.CharField(label=_("dokument.forms.editDokumentExtraDataForm.rada.label"), required=False, help_text=_("dokument.forms.editDokumentExtraDataForm.rada.tooltip"),)
 
     class Meta:
         model = DokumentExtraData
@@ -110,19 +111,24 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         )
         widgets = {
             "zachovalost": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container",}
             ),
             "nahrada": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container",}
             ),
             "format": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container",}
             ),
             "zeme": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container",}
             ),
             "udalost_typ": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                       "data-container": ".content-with-table-responsive-container",}
             ),
             "meritko": forms.TextInput(),
             "cislo_objektu": forms.TextInput(),
@@ -182,7 +188,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         try:
             self.fields["dokument_osoba"] = forms.MultipleChoiceField(
                 choices=Osoba.objects.all().values_list("id", "vypis_cely"),
-                label="Dokumentované osoby",
+                label=_("dokument.forms.editDokumentExtraDataForm.dokumentovaneOsoby.label"),
                 required=False,
                 widget=autocomplete.Select2Multiple(url="heslar:osoba-autocomplete-choices"),
                 help_text=_("dokument.forms.editDokumentExtraDataForm.dokumentOsoba.tooltip"),
@@ -191,7 +197,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 choices=tuple(
                     [("", "")] + list(Let.objects.all().values_list("id", "ident_cely"))
                 ),
-                label="Let",
+                label=_("dokument.forms.editDokumentExtraDataForm.let.label"),
                 required=False,
                 widget=forms.Select(
                     attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
@@ -201,13 +207,13 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         except utils.ProgrammingError:
             self.fields["dokument_osoba"] = forms.MultipleChoiceField(
                 choices=tuple(("", "")),
-                label="Dokumentované osoby",
+                label=_("dokument.forms.editDokumentExtraDataForm.osoby.label"),
                 required=False,
                 widget=autocomplete.Select2Multiple(url="heslar:osoba-autocomplete-choices"),
             )
             self.fields["let"] = forms.ChoiceField(
                 choices=tuple(("", "")),
-                label="Let",
+                label=_("dokument.forms.editDokumentExtraDataForm.let.label"),
                 required=False,
                 widget=forms.Select(
                     attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
@@ -362,6 +368,8 @@ class EditDokumentForm(forms.ModelForm):
             "pristupnost": _("dokument.forms.editDokumentForm.pristupnost.label"),
             "datum_zverejneni": _("dokument.forms.editDokumentForm.datumZverejneni.label"),
             "licence": _("dokument.forms.editDokumentForm.licence.label"),
+            "jazyky": _("dokument.forms.editDokumentForm.jazyky.label"),
+            "posudky": _("dokument.forms.editDokumentForm.posudky.label"),
         }
         help_texts = {
             "organizace": _("dokument.forms.editDokumentForm.organizace.tooltip"),
@@ -491,7 +499,9 @@ class CreateModelDokumentForm(forms.ModelForm):
     """
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
-            ),)
+            ),
+            help_text= _("dokument.forms.createModelDokumentForm.autori.tooltip"),
+            label = _("dokument.forms.createModelDokumentForm.autori.label"),)
     class Meta:
         model = Dokument
         fields = (
@@ -607,8 +617,19 @@ class CreateModelExtraDataForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení extra dat modelu 3D.
     """
-    coordinate_x = forms.FloatField(required=False, widget=HiddenInput())
-    coordinate_y = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_wgs84_x1 = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_wgs84_x2 = forms.FloatField(required=False, widget=HiddenInput())
+
+    visible_x1 = forms.CharField(
+        label=_("dokument.forms.createModelExtraDataForm.cor_x1.label"),
+        required=False,
+        help_text=_("dokument.forms.createModelExtraDataForm.cor_x1.tooltip"),
+    )
+    visible_x2 = forms.CharField(
+        label=_("dokument.forms.createModelExtraDataForm.cor_x2.label"),
+        required=False,
+        help_text=_("dokument.forms.createModelExtraDataForm.cor_x2.tooltip"),
+    )
 
     class Meta:
         model = DokumentExtraData
@@ -657,8 +678,8 @@ class CreateModelExtraDataForm(forms.ModelForm):
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         # self.fields["format"].required = True
         # Disabled hodnoty se neposilaji na server
-        self.fields["vyska"].widget.attrs["disabled"] = "disabled"
-        self.fields["sirka"].widget.attrs["disabled"] = "disabled"
+        self.fields["visible_x1"].widget.attrs["disabled"] = "disabled"
+        self.fields["visible_x2"].widget.attrs["disabled"] = "disabled"
         self.fields["format"].choices = [("", "")] + list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT)
             .filter(heslo__startswith="3D")
@@ -713,7 +734,7 @@ class PripojitDokumentForm(forms.Form):
                 ).values_list("id", "ident_cely")
             ),
             widget=autocomplete.Select2Multiple(
-                url="dokument:dokument-autocomplete-bez-zapsanych"
+                url=reverse("dokument:dokument-autocomplete")
             ),
             help_text=_("dokument.forms.pripojitDokumentForm.dokument.tooltip")
         )

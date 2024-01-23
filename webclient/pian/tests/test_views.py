@@ -21,7 +21,7 @@ class UrlTests(TestCase):
     #         "stav": "2",
     #         "geom": "SRID=4326;POINT (14.4268084 50.0846009)",
     #     }
-    #     request = self.factory.post("/pian/create/", data)
+    #     request = self.factory.post("/pian/zapsat/", data)
     #     request.user = self.existing_user
     #     request = add_middleware_to_request(request, SessionMiddleware)
     #     request = add_middleware_to_request(request, MessageMiddleware)

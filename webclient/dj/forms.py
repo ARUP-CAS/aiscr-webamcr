@@ -5,7 +5,7 @@ from dal import autocomplete
 from dj.models import DokumentacniJednotka
 from django import forms
 from django.db.models import Q
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_DJ_TYP
 from heslar.hesla_dynamicka import TYP_DJ_KATASTR, TYP_DJ_SONDA_ID, TYP_DJ_CAST, TYP_DJ_CELEK, TYP_DJ_LOKALITA
 from heslar.models import Heslar, RuianKatastr
@@ -84,6 +84,10 @@ class CreateDJForm(forms.ModelForm):
                 queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
             else:
                 queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
+            if jednotky.filter(typ__id=TYP_DJ_KATASTR).exists() and (hasattr(instance, "typ")
+                    and instance.typ != Heslar.objects.get(id=TYP_DJ_KATASTR)) or not hasattr(instance, "typ") or \
+                (hasattr(instance, "typ") and instance.typ is None):
+                queryset = queryset.filter(~Q(id=TYP_DJ_KATASTR))
         return queryset
 
     class Meta:
@@ -103,6 +107,7 @@ class CreateDJForm(forms.ModelForm):
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
                     "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
                 }
             ),
             "nazev": forms.TextInput(),
@@ -115,6 +120,7 @@ class CreateDJForm(forms.ModelForm):
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
                     "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
                 },
             ),
         }
@@ -142,6 +148,7 @@ class CreateDJForm(forms.ModelForm):
             except Exception as e:
                 pass
         self.fields["typ"] = forms.ModelChoiceField(
+            label=_("dj.forms.createDjForm.typ.label"),
             queryset=self.get_typ_queryset(
                 jednotky, self.instance, typ_arch_z, typ_akce
             ),
@@ -151,6 +158,7 @@ class CreateDJForm(forms.ModelForm):
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
                     "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
                 }
             ),
         )

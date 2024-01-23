@@ -5,7 +5,7 @@
 {% block content %}  
   <form method="POST" id="{{ id_tag }}">
     <div class="modal-header">
-      <h5 class="modal-title">{{ title }} {{ object.ident_cely }}</h5>
+      <h5 class="modal-title">{{ title }} {{ object_identification }}</h5>
       <button type="button" class="close" data-dismiss="modal" aria-label="Close">
         <span aria-hidden="true">&times;</span>
       </button>
@@ -38,7 +38,10 @@
     <input name="next" type="hidden" value="{{ request.GET.next }}">
     <div class="modal-footer">
       <button type="button" class="btn btn-default" data-dismiss="modal">{% translate "core.templates.transakce_modal.closeButton.text" %}</button>
-      <button type="submit" class="btn btn-primary" id="submit-btn">{{ button }}</button>
+      <button type="submit" class="btn btn-primary" id="submit-btn">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" id="loader-spinner" style="display: none"></span>
+        {{ button }}
+      </button>
     </div>
   </form>
 {% endblock %}

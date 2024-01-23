@@ -1,17 +1,17 @@
 from core.forms import HeslarChoiceFieldField, TwoLevelSelectField
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Fieldset, Layout, Div, HTML
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from nalez.models import NalezObjekt, NalezPredmet
 
 
 class NalezFormSetHelper(FormHelper):
-    def __init__(self,typ=None, *args, **kwargs):
+    def __init__(self,typ=None,typ_vazby="dokument", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
         self.form_id = typ
+        self.typ_vazby = typ_vazby
 
 
 # Will subclass this function so that I can pass choices to formsets in formsetfactory call as arguments
@@ -46,7 +46,8 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                 label=_("nalez.forms.nalezObjekt.druh.label"),
                 widget=forms.Select(
                     choices=druh_objekt_choices,
-                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                           "data-container": ".content-with-table-responsive-container"},
                 ),
                 help_text=_("nalez.forms.nalezObjekt.druh.tooltip"),
             )
@@ -54,7 +55,8 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                 label=_("nalez.forms.nalezObjekt.specifikace.label"),
                 widget=forms.Select(
                     choices=specifikace_objekt_choices,
-                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                           "data-container": ".content-with-table-responsive-container"},
                 ),
                 help_text=_("nalez.forms.nalezObjekt.specifikace.tooltip"),
             )
@@ -107,7 +109,8 @@ def create_nalez_predmet_form(
                 label=_("nalez.forms.nalezPredmet.druh.label"),
                 widget=forms.Select(
                     choices=druh_projekt_choices,
-                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
+                           "data-container": ".content-with-table-responsive-container"},
                 ),
                 help_text=_("nalez.forms.nalezPredmet.druh.tooltip"),
             )

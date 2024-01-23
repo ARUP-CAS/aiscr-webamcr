@@ -1,7 +1,7 @@
 import logging
+import pandas as pd
 
-
-from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN
+from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN, PIAN_POTVRZEN, ROLE_ADMIN_ID, ZAPSANI_AZ, ZAPSANI_PIAN, ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from core.exceptions import MaximalIdentNumberError, NeznamaGeometrieError
 from core.ident_cely import get_temporary_pian_ident
 from core.message_constants import (
@@ -18,8 +18,11 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.utils import (
+    file_validate_epsg,
+    file_validate_geometry,
     get_validation_messages,
     update_all_katastr_within_akce_or_lokalita,
+    get_dj_akce_for_pian,
 )
 from dal import autocomplete
 from dj.models import DokumentacniJednotka
@@ -28,15 +31,24 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
+from django.core.exceptions import PermissionDenied
 from django.db import connection
-from django.http import JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
+from django.views.generic import TemplateView
+from django.db.models import OuterRef, Subquery, Q, FilteredRelation
+from django.urls import reverse
+from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA, PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from pian.forms import PianCreateForm
 from pian.models import Kladyzm, Pian
+from core.views import PermissionFilterMixin
+from core.models import Permissions
+from historie.models import Historie
+from arch_z.models import ArcheologickyZaznam
+from heslar.hesla import HESLAR_PRISTUPNOST
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +62,8 @@ def detail(request, ident_cely):
     dj_ident_cely = request.POST["dj_ident_cely"]
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = get_object_or_404(Pian, ident_cely=ident_cely)
+    if pian == PIAN_POTVRZEN:
+            raise PermissionDenied
     form = PianCreateForm(
         request.POST,
         instance=pian,
@@ -70,7 +84,8 @@ def detail(request, ident_cely):
                 logger.debug("pian.views.detail", extra={"validation_results": validation_results,
                                                          "validation_geom": validation_geom, "key": key})
                 c.execute("COMMIT")
-    except Exception:
+    except Exception as e:
+        logger.debug(e)
         validation_results = PIAN_VALIDACE_VYPNUTA
     finally:
         c.close()
@@ -101,6 +116,8 @@ def detail(request, ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     response = redirect(dj.get_absolute_url())
+    if validation_results != "valid" and validation_results != PIAN_VALIDACE_VYPNUTA:
+        response = redirect(dj.get_absolute_url()+"/pian/edit/"+str(ident_cely))
     response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",
@@ -167,6 +184,8 @@ def potvrdit(request, dj_ident_cely):
     """
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = dj.pian
+    if pian == PIAN_POTVRZEN:
+            raise PermissionDenied
     if request.method == "POST":
         redirect_view = dj.archeologicky_zaznam.get_absolute_url(dj_ident_cely)
         try:
@@ -237,6 +256,8 @@ def create(request, dj_ident_cely):
             + get_validation_messages(validation_results),
         )
         logger.debug("pian.views.create", extra={"error_message": PIAN_NEVALIDNI_GEOMETRIE})
+        response = redirect(dj.get_absolute_url()+"/pian/zapsat")
+        return response
     elif form.is_valid():
         logger.debug("pian.views.create.form_valid")
         pian = form.save(commit=False)
@@ -282,7 +303,7 @@ def create(request, dj_ident_cely):
             messages.add_message(
                 request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
             )
-        redirect("dj:detail", ident_cely=dj_ident_cely)
+        redirect(dj.get_absolute_url())
     else:
         logger.info("pian.views.create.not_valid", extra={"errors": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
@@ -296,8 +317,78 @@ def create(request, dj_ident_cely):
     )
     return response
 
+@login_required
+@require_http_methods(["POST"])
+def mapaDj(request, ident_cely):
+    """
+    Funkce ziskej Dj pro Pian
+    """
+    logger.debug("pian.views.create.start")
+    back=[]
+    for i in get_dj_akce_for_pian(ident_cely, request):
+        logger.debug(i)#G {'ident_cely': 'C-201339492A-D01', 'archeologicky_zaznam__ident_cely': 'C-201339492A'}
+        back.append({
+            "dj": str(i['ident_cely']),
+            "akce": str(i['archeologicky_zaznam__ident_cely']),
+            })
 
-class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    if back is not None:
+        return JsonResponse({"points": back}, status=200,
+        )
+    else:
+        return JsonResponse({"points": None}, status=200)
+
+
+class PianPermissionFilterMixin(PermissionFilterMixin):
+
+    def filter_by_permission(self, qs, permission):
+        qs = qs.annotate(
+            historie_zapsat_pian=FilteredRelation(
+            "historie__historie",
+            condition=Q(**{"historie__historie__typ_zmeny":ZAPSANI_PIAN}),
+            ),
+            historie_zapsat_az=FilteredRelation(
+            "dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie",
+            condition=Q(**{"dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__typ_zmeny":ZAPSANI_AZ}),
+            )
+        )
+        if not permission.base:
+            logger.debug("no base")
+            return qs.none()
+        if permission.status:
+            qs = qs.filter(**self.add_status_lookup(permission))
+        if permission.ownership:
+            qs = qs.filter(self.add_ownership_lookup(permission.ownership,qs))
+        if permission.accessibility:
+            qs = self.add_accessibility_lookup(permission,qs)
+
+        return qs
+    
+    def add_ownership_lookup(self, ownership, qs=None):
+        filtered_pian_history = Historie.objects.filter(uzivatel=self.request.user)
+        filtered_az_history = Historie.objects.filter(uzivatel=self.request.user)
+        if ownership == Permissions.ownershipChoices.our:
+            filtered_pian_history_our = Historie.objects.filter(uzivatel__organizace=self.request.user.organizace)
+            filtered_az_history_our = Historie.objects.filter(uzivatel__organizace=self.request.user.organizace)
+            return Q(**{"historie_zapsat_pian__in":filtered_pian_history}) | Q(**{"historie_zapsat_az__in":filtered_az_history}) | Q(**{"historie_zapsat_pian__in":filtered_pian_history_our}) | Q(**{"historie_zapsat_az__in":filtered_az_history_our}) | Q(**{"dokumentacni_jednotky_pianu__archeologicky_zaznam__akce__projekt__organizace":self.request.user.organizace})
+        else:
+            return Q(**{"historie_zapsat_pian__in":filtered_pian_history}) | Q(**{"historie_zapsat_az__in":filtered_az_history})
+
+    
+    def add_accessibility_lookup(self,permission, qs):
+        accessibility_key = self.permission_model_lookup+"pristupnost_filter__in"
+        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id))
+        filter = {accessibility_key:accessibilities}
+        pristupnost = (
+            ArcheologickyZaznam.objects.filter(dokumentacni_jednotky_akce__pian=OuterRef("pk"),pristupnost__isnull=False)
+            .order_by("pristupnost__razeni")
+            .values("pristupnost")
+        )
+        qs = qs.annotate(pristupnost_filter=Subquery(pristupnost[:1]))
+        return qs.filter(Q(**filter)|Q(pristupnost_filter__isnull=True)|Q(self.add_ownership_lookup(permission.accessibility)))
+
+
+class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, PianPermissionFilterMixin):
     """
     Třída pohledu pro autocomplete pianu.
     """
@@ -305,4 +396,85 @@ class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
         qs = Pian.objects.all().order_by("ident_cely")
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q).exclude(presnost__zkratka="4")
-        return qs
+        return self.check_filter_permission(qs)
+    
+
+class ImportovatPianView(LoginRequiredMixin, TemplateView):
+    """
+    Třída pohledu pro získaní řádku tabulky s externím zdrojem.
+    """
+    sheet = None
+
+    http_method_names = [
+        "post",
+    ]
+    template_name = "pian/pian_import_table.html"
+
+    def post(self, request):
+        docfile = request.FILES["file"]
+        if docfile.size == 0:
+            logger.debug("pian.views.ImportovatPianView.post.label_check.fileEmpty")
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.fileEmpty."))
+        try:
+            self.sheet = pd.read_csv(docfile, sep=",")
+        except ValueError as err:
+            logger.debug("pian.views.ImportovatPianView.post.label_check.unreadable_or_empty",
+                         extra={"err": err})
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
+        if self.sheet.shape[1] != 3:
+            logger.debug("pian.views.ImportovatPianView.post.label_check.incorrect_column_count",
+                         extra={"columns": self.sheet.columns})
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.")} '
+                                          f'{self.sheet.columns}')
+        if self.sheet.shape[0] == 0:
+            logger.debug("pian.views.ImportovatPianView.post.label_check.no_data")
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.no_data")} '
+                                          f'{self.sheet.columns}')
+        if not isinstance(self.sheet.columns[0], str) or self.sheet.columns[0].lower() != "label":
+            logger.debug("pian.views.ImportovatPianView.post.label_check.column0",
+                         extra={"columns": self.sheet.columns})
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column0")} '
+                                          f'{self.sheet.columns[0]}')
+        if not isinstance(self.sheet.columns[1], str) or self.sheet.columns[1].lower() != "epsg":
+            logger.debug("pian.views.ImportovatPianView.post.label_check.column1",
+                         extra={"columns": self.sheet.columns})
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column1")} '
+                                          f'{self.sheet.columns[1]}')
+        if not isinstance(self.sheet.columns[2], str) or self.sheet.columns[2].lower() != "geometry":
+            logger.debug("pian.views.ImportovatPianView.post.label_check.column2",
+                         extra={"columns": self.sheet.columns})
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column2")} '
+                                          f'{self.sheet.columns[2]}')
+        self.sheet["result"] = self.sheet.apply(self.check_save_row, axis=1)
+        context = self.get_context_data()
+        context["table"] = self.sheet
+        if ArcheologickyZaznam.objects.get(ident_cely=request.POST.get("arch_ident")).typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            if request.POST.get("action",False) == "change":
+                context["url"] = reverse("arch_z:update-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident"),request.POST.get("pian_ident")])
+            else:
+                context["url"] = reverse("arch_z:create-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident")])
+        else:
+            if request.POST.get("action",False) == "change":
+                context["url"] = reverse("lokalita:update-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident"),request.POST.get("pian_ident")])
+            else:
+                context["url"] = reverse("lokalita:create-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident")])
+        logger.debug(context["url"])
+        return self.render_to_response(context)
+    
+    def check_save_row(self, row):
+        if self.sheet['label'].value_counts()[row[0]] > 1:
+            return _("pian.views.importovatPianView.check.notUniquelabel")
+        if not self.check_geometry(row[2]):
+            return _("pian.views.importovatPianView.check.wrongGeometry")
+        if not self.check_epsg(row[1]):
+            return _("pian.views.importovatPianView.check.wrongEpsg")
+        else:
+            return True
+    
+    def check_geometry(self, geometry):
+        # @jiribartos kontrola geometrie
+        return file_validate_geometry(geometry)[0]
+        
+    def check_epsg(self, epsg):
+        # @jiribartos kontrola geometrie
+        return file_validate_epsg(epsg)

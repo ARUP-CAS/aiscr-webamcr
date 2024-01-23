@@ -28,7 +28,8 @@
       </a>
     </div>
     <div class="accordion" id="accordionSidebar">
-      <div class="card">
+      {% if show_projekt %}
+      <div class="card">        
         <div class="card-header">
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
@@ -37,25 +38,33 @@
               <span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </h2>
-        </div>
+        </div>        
         <div id="collapseProjekty" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
               <li><a href="{% url 'projekt:index' %}">{% trans "templates.baseLogedIn.sidebar.projekty.home" %}</a></li>
               <li><a href="{% url 'projekt:create' %}">{% trans "templates.baseLogedIn.sidebar.projekty.zapsat" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}">{% trans "templates.baseLogedIn.sidebar.projekty.prihlasit" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}">{% trans "templates.baseLogedIn.sidebar.projekty.zahajitVyzkum" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "templates.baseLogedIn.sidebar.projekty.ukoncitTeren" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "templates.baseLogedIn.sidebar.projekty.spravovatAkce" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "templates.baseLogedIn.sidebar.projekty.UzavritProjekt" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}">{% trans "templates.baseLogedIn.sidebar.projekty.vybratProjekty" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?organizace={{user.organizace.id}}">{% trans "templates.baseLogedIn.sidebar.projekty.naseProjekty" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}">{% trans "templates.baseLogedIn.sidebar.projekty.schvalitOznameni" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}">{% trans "templates.baseLogedIn.sidebar.projekty.archivovatProjekty" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}&sort=planovane_zahajeni&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.prihlasit" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.zahajitVyzkum" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.ukoncitTeren" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.spravovatAkce" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.UzavritProjekt" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.vybratProjekty" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?organizace={{user.organizace.id}}&sort=stav&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.naseProjekty" %}</a></li>
+              {% if show_projekt_schvalit %}
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}&sort=planovane_zahajeni&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.schvalitOznameni" %}</a></li>
+              {% endif %}
+              {% if show_projekt_archivovat %}
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}&sort=datum_ukonceni&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.archivovatProjekty" %}</a></li>
+              {% endif %}
+              {% if show_projekt_zrusit %}
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_NAVRZEN_KE_ZRUSENI}}&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.zrusitProjekty" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
       </div>
+      {% endif %}
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
@@ -71,9 +80,14 @@
             <ul>
               <li><a href="{% url 'arch_z:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.home" %}</a></li>
               <li><a href="{% url 'arch_z:zapsat-akci' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.zapsat" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.vybrat" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.mojeAkce" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.archivovat" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&sort=hlavni_katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.vybrat" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.mojeAkce" %}</a></li>
+              {% if user.can_see_ours_item %}
+                <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.naseAkce" %}</a></li>
+              {% endif %}
+              {% if show_samakce_archivovat %}
+              <li><a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False&sort=datum_ukonceni&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.archivovat" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -93,9 +107,14 @@
             <ul>
               <li><a href="{% url 'lokalita:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.home" %}</a></li>
               <li><a href="{% url 'lokalita:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.zapsat" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.vybrat" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.mojelokality" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}?stav=2" title="">{% trans "templates.baseLogedIn.sidebar.lokality.archivovat" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}?sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.lokality.vybrat" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.lokality.mojelokality" %}</a></li>
+              {% if user.can_see_ours_item %}
+                <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.lokality.naselokality" %}</a></li>
+              {% endif %}
+              {% if show_lokalita_archivovat %}
+              <li><a href="{% url 'lokalita:list' %}?stav=2&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.lokality.archivovat" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -114,12 +133,19 @@
           <div class="card-body">
             <ul>
               <li><a href="{% url 'pas:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.home" %}</a></li>
-              <li><a href="{% url 'pas:spoluprace_list' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.spoluprace" %}</a></li>
+              <li><a href="{% url 'pas:spoluprace_list' %}?sort=organizace_vedouci&sort=spolupracovnik" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.spoluprace" %}</a></li>
               <li><a href="{% url 'pas:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.zapsat" %}</a></li>
-              <li><a href="{% url 'pas:list' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.vybrat" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.potvrdit" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?stav=3" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.archivovat" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?sort=katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.vybrat" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy" %}</a></li>
+              {% if show_pas_nase %}
+              <li><a href="{% url 'pas:list' %}?projekt_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.naseNalezy" %}</a></li>
+              {% endif %}
+              {% if show_pas_potvrdit %}
+              <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.potvrdit" %}</a></li>
+              {% endif %}
+              {% if show_pas_archivovat %}
+              <li><a href="{% url 'pas:list' %}?stav=3&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.archivovat" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -139,9 +165,14 @@
             <ul>
               <li><a href="{% url 'dokument:index-model-3D' %}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.home" %}</a></li>
               <li><a href="{% url 'dokument:create-model-3D' %}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.zapsat" %}</a></li>
-              <li><a href="{% url 'dokument:list-model-3D' %}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.vybrat" %}</a></li>
-              <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.mojeModely" %}</a></li>
-              <li><a href="{% url 'dokument:list-model-3D' %}?stav=2" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.archivovat" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}?sort=organizace__nazev_zkraceny&sort=autori&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.vybrat" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.mojeModely" %}</a></li>
+              {% if user.can_see_ours_item %}
+                <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.naseModely" %}</a></li>
+              {% endif %}
+              {% if show_knihovna_archivovat %}
+              <li><a href="{% url 'dokument:list-model-3D' %}?stav=2&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.archivovat" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -160,10 +191,17 @@
           <div class="card-body">
             <ul>
               <li><a href="{% url 'dokument:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.home" %}</a></li>
+              {% if show_dokumenty_zapsat %}
               <li><a href="{% url 'dokument:zapsat' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.zapsat" %}</a></li>
-              <li><a href="{% url 'dokument:list' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.vybrat" %}</a></li>
-              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.mojeDokumenty" %}</a></li>
-              <li><a href="{% url 'dokument:list' %}?stav=2" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.archivovat" %}</a></li>
+              {% endif %}
+              <li><a href="{% url 'dokument:list' %}?sort=typ_dokumentu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.vybrat" %}</a></li>
+              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.mojeDokumenty" %}</a></li>
+              {% if user.can_see_ours_item %}
+                <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.naseDokumenty" %}</a></li>
+              {% endif %}
+              {% if show_dokumenty_archivovat %}
+              <li><a href="{% url 'dokument:list' %}?stav=2&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.archivovat" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -183,13 +221,19 @@
             <ul>
               <li><a href="{% url 'ez:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.home" %}</a></li>
               <li><a href="{% url 'ez:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.zapsat" %}</a></li>
-              <li><a href="{% url 'ez:list' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.vybrat" %}</a></li>
-              <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.mojeExterniZdroje" %}</a></li>
-              <li><a href="{% url 'ez:list' %}?stav=2" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.archivovat" %}</a></li>
+              <li><a href="{% url 'ez:list' %}?sort=autori&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.vybrat" %}</a></li>
+              <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}&sort=autori&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.mojeExterniZdroje" %}</a></li>
+              {% if user.can_see_ours_item %}
+                <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=autori&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.naseExterniZdroje" %}</a></li>
+              {% endif %}
+              {% if show_ez_archivovat %}
+              <li><a href="{% url 'ez:list' %}?stav=2&sort=autori&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.archivovat" %}</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>
       </div>
+      {%if show_administrace %}
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
@@ -199,15 +243,60 @@
           </h2>
         </div>
       </div>
+      {% endif %}
     </div>
   </div>
 {% endblock %}
 
 {% block navbar %}
-  <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+  <nav class="navbar navbar-expand-xl navbar-light bg-light border-bottom">
     <button class="btn btn-light mb-0 mt-0" id="sidebar-toggle"><span class="material-icons">menu_open</span></button>
-
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMobile"
+    <span class="navbar-mobile-header-ident" id="navbar-mobile-header-ident">
+      {% if search_sum %}
+        {% trans "templates.baseLogedIn.navbar.pocetZaznamuShort" %}: {{ table.rows|length }}
+      {% elif projekt %}
+        <span class="navbar-mobile-header-ident-projekt">{{ projekt.ident_cely }}</span>
+      {% elif app == "akce" %}
+        <span class="navbar-mobile-header-ident-arch-z">{{ zaznam.ident_cely }}</span>
+      {% elif app == "pr" %}
+        <span class="navbar-mobile-header-ident-arch-z">{{ zaznam.ident_cely }}</span>
+      {% elif app == "lokalita" %}
+        <span class="navbar-mobile-header-ident-lokalita">{{ zaznam.ident_cely }}</span>
+      {% elif app == "pas" %}
+        <span class="navbar-mobile-header-ident-pas">{{ sn.ident_cely }}</span>
+      {% elif dokument %}
+        {% if not "3D" in dokument.ident_cely %}
+          <span class="navbar-mobile-header-ident-dokument">{{ dokument.ident_cely }}</span>
+        {% else %}
+          <span class="navbar-mobile-header-ident-3d">{{ dokument.ident_cely }}</span>
+        {% endif %}
+      {% elif app == "ext_zdroj" %}
+        <span class="navbar-mobile-header-ident-ez">{{ zaznam.ident_cely }}</span>
+      {% elif typ %}
+        {% if typ == "projekt" %}
+          <span class="navbar-mobile-header-ident-projekt">{{ ident_cely }}</span>
+        {% elif typ == "akce" %}
+          <span class="navbar-mobile-header-ident-arch-z">{{ ident_cely }}</span>
+        {% elif typ == "lokalita" %}
+          <span class="navbar-mobile-header-ident-lokalita">{{ ident_cely }}</span>
+        {% elif typ == "knihovna_3d" %}
+          <span class="navbar-mobile-header-ident-3d">{{ ident_cely }}</span>
+        {% elif typ == "dokument" %}
+          <span class="navbar-mobile-header-ident-dokument">{{ ident_cely }}</span>
+        {% elif typ == "samostatny_nalez" %}
+          <span class="navbar-mobile-header-ident-projekt">{{ ident_cely }}</span>
+        {% elif typ == "spoluprace" %}
+          <span class="navbar-mobile-header-ident-pas">{{ ident_cely }}</span>
+        {% elif typ == "ext_zdroj" %}
+          <span class="navbar-mobile-header-ident-ez">{{ ident_cely }}</span>
+        {% elif typ == "soubor" %}
+          <span class="navbar-mobile-header-ident-file">{{ ident_cely }}</span>
+        {% elif typ == "uzivatel" %}
+          <span class="navbar-mobile-header-ident-user">{{ ident_cely }}</span>
+        {% endif %}
+      {% endif %}
+    </span>
+    <button class="navbar-toggler" id="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMobile"
             aria-controls="navbarMobile" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -215,9 +304,9 @@
     <div class="collapse navbar-collapse" id="navbarMobile">
       <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
         <li class="nav-item d-lg-none d-xl-block">
-          <span class="nav-link">
+          <span class="nav-link" rel="tooltip" data-placement="top"  title="{{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
             <small>
-              <strong>{% trans "templates.baseLogedIn.navbar.prihlasen" %}</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})
+              <strong>{% trans "templates.baseLogedIn.navbar.prihlasen" %}</strong> {{ user.ident_cely }}
             </small>
           </span>
         </li>
@@ -251,12 +340,13 @@
         </li>
         <li class="nav-item app-pipe"></li>
         <li class="nav-item app-flags">
-          <a class="nav-link app-active" href="#">
+          {% get_current_language as LANGUAGE_CODE %}
+          <button id="czech" class="nav-link {% if "cs" in LANGUAGE_CODE  %}app-active{% endif %}" >
             <img src="{% static 'flag-cs.svg' %}" alt="" class="app-flag" />
-          </a>
-          <a class="nav-link" href="#">
+          </button>
+          <button id="english" class="nav-link {% if "en" in LANGUAGE_CODE %}app-active{% endif %}">
             <img src="{% static 'flag-en.svg' %}" alt="" class="app-flag" />
-          </a>
+          </button>
         </li>
       </ul>
     </div>
@@ -273,7 +363,7 @@
 
 {% block footer %}
   <footer class="text-lg-start">
-    <div class="d-flex justify-content-between p-3 app-footer-wrapper">
+    <div class="d-lg-flex justify-content-lg-between p-3 app-footer-wrapper">
       <div>
         <a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerLicence">{% trans "templates.baseLogedIn.footer.licence" %}</a><span class="app-pipe"></span><!--
         --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerKontakt">{% trans "templates.baseLogedIn.footer.kontakt" %}</a><span class="app-pipe"></span><!--
@@ -281,8 +371,7 @@
       </div>
       <div>
         <small>
-          © 2023 
-          <a class="text-dark" href="https://amcr-info.aiscr.cz/">AMČR</a><span class="app-pipe"></span>Verze: 1.0.0
+          {% trans "templates.baseLogedIn.footer.copyright" %}<span class="app-pipe"></span>{% trans "templates.baseLogedIn.footer.verze" %}: 1.0.0
         </small>
       </div>
     </div>
@@ -296,9 +385,14 @@
 {% block script_sidebar %}
   <script>
     $("#sidebar-toggle").click(function (e) {
-      try {
-        setTimeout(function(){ map.invalidateSize()}, 400);
-      } catch (error) {/*No need for console.log()*/}
+      if (typeof map !== 'undefined') {
+          try {
+              setTimeout(function () {
+                  map.invalidateSize()
+              }, 400);
+          } catch (error) {/*No need for console.log()*/
+          }
+      }
       e.preventDefault();
       $("#app-wrapper").toggleClass("toggled");
     });
@@ -310,11 +404,59 @@
       html : true
     });
   </script>
-
   <script>
+    $('#english').click(function(){
+      this.disabled=true;
+      $('#czech').attr("disabled", "disabled"); 
+      $.ajax({
+        type: "POST",
+        url: "{% url 'set_language' %}",
+        data: {'language': 'en', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+        success: function(response) {
+             location.reload();
+         },
+         error: function(rs, e) {
+                alert(e);
+         }
+   });
+    });
+    $('#czech').click(function(){
+      this.disabled=true;
+      $('#english').attr("disabled", "disabled"); 
+      $.ajax({
+        type: "POST",
+        url: "{% url 'set_language' %}",
+        data: {'language': 'cs', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+        success: function(response) {
+             location.reload();
+         },
+         error: function(rs, e) {
+                alert(e);
+         }
+   });
+    });
+    
+  </script>
+  <script>
+
+      const update_map_scale_padding = () => {
+          const leaflet_query = document.getElementsByClassName("leaflet-container");
+          if (leaflet_query.length > 0){
+              const leaflet = leaflet_query[0];
+              const control_panel = leaflet.querySelector(".leaflet-top.leaflet-left");
+              const control_panel_height = control_panel.offsetHeight;
+              const leaflet_height =  leaflet.offsetHeight;
+              const scale_panel = leaflet.querySelector(".leaflet-bottom.leaflet-left");
+              const scale_panel_height = scale_panel.offsetHeight;
+              if (leaflet_height < control_panel_height + scale_panel_height) {
+                  scale_panel.style.paddingLeft = "60px";
+              }
+          }
+      }
       // Open sidebar based on the url i am viewing
       $(document).ready(function () {
-          if ((window.location.href.indexOf("projekt") > -1) && (window.location.href.indexOf("projektove") <= -1)) {
+          if ((window.location.href.indexOf("projekt") > -1) && (window.location.href.indexOf("projektove") <= -1)
+              && (window.location.href.indexOf("projekt_organizace") <= -1)) {
               $('#collapseProjekty').collapse('show')
           } else if (window.location.href.indexOf("model") > -1) {
               $('#collapse3d').collapse('show')
@@ -329,10 +471,8 @@
           } else if (window.location.href.indexOf("ext-zdroj") > -1) {
             $('#collapseEz').collapse('show')
           }
+          update_map_scale_padding();
       });
-      const goBack = () => {
-          window.history.back();
-      }
 
 </script>
 <script src="{% static '/js/create_message.js' %}"></script>
@@ -343,6 +483,37 @@
     var timer = new Timer();
     var interval = null;
     let document_title = document.title;
+
+  const change_class_list = (sideber_shown) => {
+      if (sideber_shown) {
+          document.querySelectorAll('.app-alert-floating-file-upload').forEach(element => {
+              element.classList.remove('app-alert-floating-file-upload-no-left-bar');
+          });
+      } else {
+          document.querySelectorAll('.app-alert-floating-file-upload').forEach(element => {
+              element.classList.add('app-alert-floating-file-upload-no-left-bar');
+          });
+      }
+  }
+
+    const sidebar_toggle = document.getElementById("sidebar-toggle");
+    sidebar_toggle.addEventListener("click", (e) => {
+        const width = screen.width;
+        const app_wrapper = document.getElementById("app-sidebar-wrapper");
+        const style = window.getComputedStyle(app_wrapper) || app_wrapper.currentStyle;
+        const margin_left = style.marginLeft;
+        const sideber_shown = margin_left === "-300px";
+        const navbar_toggler = document.getElementById("navbar-toggler");
+        const navbar_mobile_header_ident = document.getElementById("navbar-mobile-header-ident");
+        if (width < 600 && sideber_shown) {
+            navbar_toggler.style.display = "none";
+            navbar_mobile_header_ident.style.display = "none";
+        } else {
+            navbar_toggler.style.display = null;
+            navbar_mobile_header_ident.style.display = null;
+        }
+        change_class_list(sideber_shown);
+    });
 
     document.head = document.head || document.getElementsByTagName('head')[0];
 
@@ -427,8 +598,11 @@
     }
 
     const increase_ul_height = (parent_element) => {
+        console.log("yes")
+        console.log(parent_element)
         const li_elements = parent_element.querySelectorAll("li.select2-selection__choice");
         const select2_element = parent_element;
+        console.log(select2_element)
         const select2_element_selection_rendered = parent_element.querySelector(".select2-selection__rendered")
         const select2_element_selection = parent_element.querySelector(".select2-selection");
         let element_line_width_sum = 0;
@@ -486,21 +660,63 @@
           }
         }, 1000);
       })
+      $('select.modelselect2multiple').each(function() {
+        setTimeout(() => {
+          if ($(this).next()[0].classList.contains("select2-container")){
+            increase_ul_height($(this).next()[0]);
+            $(this).on('change', function (e) {
+              increase_ul_height(e.currentTarget.nextSibling);
+            });
+          }
+          else{
+            setTimeout(() => {
+              increase_ul_height($(this).next()[0]);
+              $(this).on('change', function (e) {
+                increase_ul_height(e.currentTarget.nextSibling);
+              });
+            }, 2000);
+          }
+        }, 1000);
+      })
     })
-    /*setTimeout(() => {
-        const span_selection_rendered_query = document.body.querySelectorAll("span.select2.select2-container");
-        span_selection_rendered_query.forEach(item => {
-            item.addEventListener("mouseover", () => {
-                increase_ul_height(item);
-            });
-            item.addEventListener("keydown", () => {
-                increase_ul_height(item);
-            });
-            item.addEventListener("click", () => {
-                field_click(item);
-            });
-        })
-    }, 5000);*/
+
+    const app_entity_cards_query = document.querySelectorAll(".app-card-entity");
+    for (const item of app_entity_cards_query) {
+      const card_body_background = item.querySelectorAll(".card-body-background");
+      if (card_body_background.length > 0) {
+        const current_item = card_body_background[0];
+        current_item.onclick = (e) => {
+          if (window.innerWidth < 576) {
+            e.preventDefault();
+            const card_body_hint = current_item.querySelector(".card-body-hint");
+            if (card_body_hint && card_body_hint.style.display === "none") {
+              card_body_hint.style.display = "";
+              current_item.classList.remove("card-body-background");
+            } else {
+                card_body_hint.style.display = "none";
+                current_item.classList.add("card-body-background");
+            }
+            const img_tag = current_item.querySelector("img");
+            if (img_tag) {
+              current_item.removeChild(img_tag);
+            }
+          }
+        }
+      }
+    }
+
+  $('.selectpicker.form-control').on('show.bs.select', function () {
+      const closestDiv = $(this).closest('.content-with-table-responsive');
+      if (closestDiv.length) {
+          closestDiv.css('overflow', 'visible');
+      }
+  });
+  $('.selectpicker.form-control').on('hide.bs.select', function () {
+      const closestDiv = $(this).closest('.content-with-table-responsive');
+      if (closestDiv.length) {
+          closestDiv.css('overflow', 'scroll');
+      }
+  });
 
 </script>
 {% endblock %}

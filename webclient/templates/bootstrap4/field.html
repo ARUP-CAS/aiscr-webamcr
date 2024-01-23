@@ -9,14 +9,16 @@
             <div class="{% for offset in bootstrap_checkbox_offsets %}{{ offset }} {% endfor %}{{ field_class }}">
         {% endif %}
     {% endif %}
-    <{% if tag %}{{ tag }}{% else %}div{% endif %} id="div_{{ field.auto_id }}" class="{% if not field|is_checkbox %}form-group{% if 'form-horizontal' in form_class %} row{% endif %}{% else %}{%if use_custom_control%}{% if tag != 'td' %}custom-control {%endif%} custom-checkbox{% else %}form-check{% endif %}{% endif %}{% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if field.css_classes %} {{ field.css_classes }}{% endif %}">
+    <{% if tag %}{{ tag }}{% else %}div{% endif %} id="div_{{ field.auto_id }}" class="{% if not field|is_checkbox %}form-group{% if 'form-horizontal' in form_class %} row{% endif %}{% else %}{%if use_custom_control%}{% if tag != 'td' %}custom-control {%endif%} custom-checkbox{% else %}form-check{% endif %}{% endif %}{% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if field.css_classes %} {{ field.css_classes }}{% endif %} {% if vedouci %} {{ vedouci }}{% endif %}">
         {% if field.label and not field|is_checkbox and form_show_labels %}
         {# not field|is_radioselect in row below can be removed once Django 3.2 is no longer supported #}    
         <label {% if field.id_for_label and not field|is_radioselect %}for="{{ field.id_for_label }}" {% endif %}class="{% if 'form-horizontal' in form_class %}col-form-label {% endif %}{{ label_class }}{% if field.field.required %} requiredField{% endif %}">
                 {{ field.label }}{% if field.field.required %}<span class="asteriskField">*</span>{% endif %}
             </label>
         {% endif %}
-
+        {% if not "akce_vedouci" in field.id_for_label and "vedouci" in field.id_for_label and not form.readonly%}
+        <div class="input-osoba select2-input">
+            {% endif %}
         {% if field|is_checkboxselectmultiple %}
             {% include 'bootstrap4/layout/checkboxselectmultiple.html' %}
         {% endif %}
@@ -47,7 +49,7 @@
             {% elif field|is_file and use_custom_control  %}
                 {% include 'bootstrap4/layout/field_file.html' %}
             {% else %}
-                <div{% if field_class %} class="{{ field_class }}"{% endif %}>
+                <div{% if not "akce_vedouci" in field.id_for_label and  "vedouci" in field.id_for_label and not form.readonly%} class="input-group"{% elif field_class %}class="{{ field_class }} "{% endif %}>
                     {% if field|is_file %}
                         {% if field.errors %}                 
                             {% crispy_field field 'class' 'form-control-file is-invalid' %}
@@ -60,11 +62,20 @@
                         {% else %}
                             {% crispy_field field 'class' 'form-control' %}
                         {% endif %}
+                        {% if not "akce_vedouci" in field.id_for_label and "vedouci" in field.id_for_label and not form.readonly%}
+                        <div class="input-group-append{% if active %} active{% endif %}">
+                            <span class="input-group-text"><button id="create-vedouci-{{field.id_for_label}}" ref="{{field.id_for_label}}" class="btn btn-sm app-btn-in-form create-vedouci" type="button" name="button"><span class="material-icons">add</span></button></span>
+                        </div>
+                        {% endif %}
                     {% endif %}
                     {% include 'bootstrap4/layout/help_text_and_errors.html' %}
                 </div>
             {% endif %}
         {% endif %}
+        
+        {% if not "akce_vedouci" in field.id_for_label and "vedouci" in field.id_for_label and not form.readonly%}
+                </div>
+                {% endif %}
     </{% if tag %}{{ tag }}{% else %}div{% endif %}>
     {% if field|is_checkbox %}
         {% if label_class %}

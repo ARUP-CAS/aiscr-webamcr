@@ -4,9 +4,15 @@
 {% load crispy_forms_tags %}
 {% load template_filters %}
 {% load crispy_forms_field %}
+{% load template_tags %}
 
 {% block head %}
 <!-- Map imports -->
+<script>
+  {% autoescape off %}
+    var settings_heatmap_options = {% get_settings "heatmap_options" "pas_heatmap_options" %};
+  {% endautoescape %}
+</script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
 integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
 crossorigin=""/>
@@ -14,6 +20,12 @@ crossorigin=""/>
   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
   crossorigin="">
 </script>
+<script src="{% static 'leaflet.markercluster-src.js' %}"></script>
+<link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
+<link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
+<script src="{% static 'heatmap/heatmap.js' %}"></script>
+<script src="{% static 'heatmap/leaflet-heatmap.js' %}"></script>
+
 <!--Leaflet FullScreen-->
 <script src="https://unpkg.com/lerc@1.0.1/LercDecode.js"></script>
 <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
@@ -44,10 +56,10 @@ crossorigin=""/>
 
 <div style="display: none;">
   {{ formCoor.coordinate_system|as_crispy_field }}
-  {{ formCoor.coordinate_wgs84_x|as_crispy_field }}
-  {{ formCoor.coordinate_wgs84_y|as_crispy_field }}
-  {{ formCoor.coordinate_sjtsk_x|as_crispy_field }}
-  {{ formCoor.coordinate_sjtsk_y|as_crispy_field }}
+  {{ formCoor.coordinate_wgs84_x1|as_crispy_field }}
+  {{ formCoor.coordinate_wgs84_x2|as_crispy_field }}
+  {{ formCoor.coordinate_sjtsk_x1|as_crispy_field }}
+  {{ formCoor.coordinate_sjtsk_x2|as_crispy_field }}
 </div>
 <div class="row">
     <div class="form-group col-sm-4">
@@ -81,20 +93,19 @@ crossorigin=""/>
       <div class="form-group col-sm-6">
         <!-- Koordinaty-->
         <div class="form-group">
-            <label for="detector_system_coordinates">{{ formCoor.detector_system_coordinates.label }}</label>
-            <label for="detector_system_cordinates">{% trans "pas.templates.coor.sourSystem.label" %}</label>
+            <label for="visible_ss_combo">{{ formCoor.visible_ss_combo.label }}</label>
             {% if global_map_can_edit %}
-            {% render_field formCoor.detector_system_coordinates class="form-control form-control-sm sysCord" id="detector_system_coordinates" onchange="switch_coordinate_system()" %}
-            <small class="form-text text-muted" id="hint_id_detector_system_coordinates">{% trans "pas.templates.coor.sourSystem.tooltip" %}</small>
+            {% render_field formCoor.visible_ss_combo class="form-control form-control-sm sysCord" id="visible_ss_combo" onchange="switch_coordinate_system()" %}
+            <small class="form-text text-muted" id="hint_id_visible_ss_combo">{% trans "pas.templates.coor.sourSystem.tooltip" %}</small>
             {% else %}
-            {% render_field formCoor.detector_system_coordinates|append_attr:"readonly:readonly" class="form-control form-control-sm sysCord" id="detector_system_coordinates" onchange="switch_coordinate_system()" %}
+            {% render_field formCoor.visible_ss_combo|append_attr:"readonly:readonly" class="form-control form-control-sm sysCord" id="visible_ss_combo" onchange="switch_coordinate_system()" %}
             {% endif %}
         </div>
       </div>
       <div class="form-group col-sm-6">
           <!-- Current Location -->
         <div class="form-group map">
-            <label for="detector_coordinates_y">{% trans "pas.templates.coor.poloha.label" %}</label>
+            <label for="visible_x2">{% trans "pas.templates.coor.poloha.label" %}</label>
             {% if global_map_can_edit %}
             <button type="button" data-toggle="tooltip" data-placement="top" title="{% trans "pas.templates.coor.soucasnaPloha.label" %}" class="btn btn-amcr btn-primary btn-sm form-control form-control-sm" onclick="getLocation()" id="currentLocation">
               <i class="bi bi-geo-alt" style="font-size: 1rem;"></i>
@@ -110,24 +121,24 @@ crossorigin=""/>
       <div class="form-group col-sm-6">
         <!-- Koordinaty X -->
         <div class="form-group">
-            <label for="detector_coordinates_x">{{ formCoor.detector_coordinates_x.label }}</label>
+            <label for="visible_x1">{{ formCoor.visible_x1.label }}</label>
             {% if global_map_can_edit %}
-            {% render_field formCoor.detector_coordinates_x class="form-control form-control-sm float required-next" id="detector_coordinates_x" %}
-            <small class="form-text text-muted" id="hint_id_detector_coordinates_x">{% trans "pas.templates.coor.detector_coordinates_x.tooltip" %}</small>
+            {% render_field formCoor.visible_x1 class="form-control form-control-sm float required-next" id="visible_x1" %}
+            <small class="form-text text-muted" id="hint_id_visible_x1">{% trans "pas.templates.coor.visible_x1.tooltip" %}</small>
             {% else %}
-            {% render_field formCoor.detector_coordinates_x|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="detector_coordinates_x" lang="cs-CZ" %}
+            {% render_field formCoor.visible_x1|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="visible_x1" lang="cs-CZ" %}
             {% endif %}
         </div>
       </div>
       <div class="form-group col-sm-6">
         <!-- Koordinaty Y -->
         <div class="form-group">
-            <label for="detector_coordinates_y">{{ formCoor.detector_coordinates_y.label }}</label>
+            <label for="visible_x2">{{ formCoor.visible_x2.label }}</label>
             {% if global_map_can_edit %}
-            {% render_field formCoor.detector_coordinates_y class="form-control form-control-sm float required-next"  id="detector_coordinates_y" %}
-            <small class="form-text text-muted" id="hint_id_detector_coordinates_z">{% trans "pas.templates.coor.detector_coordinates_y.tooltip" %}</small>
+            {% render_field formCoor.visible_x2 class="form-control form-control-sm float required-next"  id="visible_x2" %}
+            <small class="form-text text-muted" id="hint_id_visible_x2">{% trans "pas.templates.coor.visible_x2.tooltip" %}</small>
             {% else %}
-            {% render_field formCoor.detector_coordinates_y|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="detector_coordinates_y" %}
+            {% render_field formCoor.visible_x2|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="visible_x2" %}
             {% endif %}
         </div>
       </div>
@@ -143,23 +154,27 @@ crossorigin=""/>
       <span class="app-divider-label">{% trans "pas.templates.pas.nalezDivider.text" %}</span>
       <hr class="mt-0" />
     </div>
-    <div class="col-sm-4 row">
-      <div class="form-group col-sm-6">
-      {{ form.obdobi|as_crispy_field }}
-      </div>
-      <div class="form-group col-sm-6">
-      {{ form.presna_datace|as_crispy_field }}
+    <div class="col-sm-4">
+      <div class="row">
+        <div class="form-group col-sm-6">
+        {{ form.obdobi|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-6">
+        {{ form.presna_datace|as_crispy_field }}
+        </div>
       </div>
     </div>
-    <div class="col-sm-8 row">
-      <div class="form-group col-sm-3">
-        {{ form.druh_nalezu|as_crispy_field }}
-      </div>
-      <div class="form-group col-sm-3">
-        {{ form.specifikace|as_crispy_field }}
-      </div>
-      <div class="form-group col-sm-3">
-        {{ form.pocet|as_crispy_field }}
+    <div class="col-sm-8">
+      <div class="row">
+        <div class="form-group col-sm-3">
+          {{ form.druh_nalezu|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-3">
+          {{ form.specifikace|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-3">
+          {{ form.pocet|as_crispy_field }}
+        </div>
       </div>
     </div>
     <div class="form-group col-sm-12">
@@ -175,10 +190,40 @@ crossorigin=""/>
 <script >
     var static_url = "{% get_static_prefix %}";
 </script>
+<script>
+    var map_translations = {
+      CurrentLocationError: '{% trans "mapa.CurrentLocationError" %}',
+      cuzkKatastralniMapa: '{% trans "mapa.cuzkKatastralniMapa" %}',
+      cuzkKatastralniUzemi: '{% trans "mapa.cuzkKatastralniUzemi" %}',
+      cuzkOrtofotomapa: '{% trans "mapa.cuzkOrtofotomapa" %}',
+      cuzkStinovanyeelief5G: '{% trans "mapa.cuzkStinovanyeelief5G" %}',
+      cuzkzakladniMapyCr: '{% trans "mapa.cuzkzakladniMapyCr" %}',
+      lokalizacePAS: '{% trans "mapa.lokalizacePAS" %}',
+      FindLocation: '{% trans "mapa.FindLocation" %}',
+      FullscreenTitle: '{% trans "mapa.FullscreenTitle" %}',
+      FullscreenTitleClose: '{% trans "mapa.FullscreenTitleClose" %}',
+      MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
+      openStreetMap: '{% trans "mapa.openStreetMap" %}',
+      openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
+      pian: '{% trans "mapa.pian" %}',
+      samostatneNalezy: '{% trans "mapa.samostatneNalezy" %}',
+      SearchText: '{% trans "mapa.SearchText" %}',
+      SearchTextCancel: '{% trans "mapa.SearchTextCancel" %}',
+      SearchTextError: '{% trans "mapa.SearchTextError" %}',
+      SetLocation: '{% trans "mapa.SetLocation" %}',
+      TransformationError: '{% trans "mapa.TransformationError" %}',
+      zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
+      zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
+    };
+</script>
 <script src="{% static 'mapa_pins.js' %}"></script>
 <script src="{% static 'coor_precision.js' %}"></script>
 <script src="{% static 'mapa_basic_grey.js' %}"></script>
 <script src="{% static 'convertToJTSK.js' %}"></script>
+<script src="{% static 'convertToJTSK.js' %}"></script>
+<script src="{% static 'leaflet_subgroup.js' %}"></script>
+<script src="{% static 'spin/spin.min.js' %}"></script>
+<script src="{% static 'leaflet.spin.min.js' %}"></script>
 <script src="{% static 'mapa_pas.js' %}"></script>
     <script>
         $(document).ready(function () {
@@ -189,15 +234,15 @@ crossorigin=""/>
 
               this.value = this.value.replace(".",",")
 
-              if(this.id=="detector_coordinates_x" || this.id=="detector_coordinates_y"){
-                var res_system="wgs84";
+              if(this.id=="visible_x1" || this.id=="visible_x2"){
+                var res_system="4326";
                 var re  = new RegExp("^(\-?[1-9][0-9]{0,1})$|^(\-?[1-9][0-9]{0,1},[0-9]{0,7})$");
                 var re1 = new RegExp("^(\-?[1-9][0-9]{0,1}),?");
                 var re2 = new RegExp("^(\-?[1-9][0-9]{0,1},[0-9]{0,8})$");
                 var re3 = new RegExp("^(\-?[1-9][0-9]{0,1}),$");
                 var pos=this.selectionStart;
-                if(document.getElementById('detector_system_coordinates').value == 2){
-                  res_system="sjtsk";
+                if(document.getElementById('visible_ss_combo').value == 2){
+                  res_system="5514";
                   re  = new RegExp("^(-[1]{0,1}[0-9][0-9]{0,5})$|^(-[1]{0,1}[0-9][0-9]{0,5},[0-9]{0,2})$");
                   re1 = new RegExp("^(-[1]{0,1}[0-9][0-9]{0,5}),?");
                   re2 = new RegExp("^(-[1]{0,1}[0-9][0-9]{0,5},[0-9]{0,3})$");
@@ -243,7 +288,7 @@ crossorigin=""/>
         });
         $(settings.modalIDD).modal("hide");
       };
-    
+
       document.addEventListener('DOMContentLoaded', function (event) {
         var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'heslar:create_osoba' %}",
@@ -252,8 +297,8 @@ crossorigin=""/>
         modalIDD : "#modal-form",
         successFunc:successFunction,
       })
-      new Modal(options, "create-nalezce-osoba"); 
-      
+      new Modal(options, "create-nalezce-osoba");
+
     });
       </script>
 {% endblock %}

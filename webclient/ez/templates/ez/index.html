@@ -2,17 +2,17 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}{%trans ez.templates.index.Title%}{% endblock %}
+{% block title %}{% trans "ez.templates.index.Title" %}{% endblock %}
 
 {% block content %}
   <div class="app-entity-ext_zdroj">
     {% include "toolbar_externi_zdroj.html" %}
-
     <div class="row app-entity-cards mb-3">
       <div class="col">
         <a href="{% url 'ez:create' %}" class="card app-card-entity app-card-zapsat-ez">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "ez.templates.index.zapsatEZ.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "ez.templates.index.zapsatEZ.label" %}
@@ -20,9 +20,10 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'ez:list' %}" class="card app-card-entity app-card-vybrat">
-          <div class="card-body">
+        <a href="{% url 'ez:list' %}?sort=autori&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-vybrat">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "ez.templates.index.vybratEZ.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "ez.templates.index.vybratEZ.label" %}
@@ -30,25 +31,29 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'ez:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-ez">
-          <div class="card-body">
+        <a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}&sort=autori&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-moje-ez">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "ez.templates.index.mojeEZ.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "ez.templates.index.mojeEZ.label" %}
           </div>
         </a>
       </div>
-      <div class="col">
-        <a href="{% url 'ez:list' %}?stav=2" class="card app-card-entity app-card-potvrdit">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "ez.templates.index.potvrditEZ.label" %}
-          </div>
-        </a>
-      </div>
+      {% if user.can_see_ours_item %}
+        <div class="col">
+          <a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=autori&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-nase-ez">
+            <div class="card-body card-body-background">
+              <img src="{% static 'logo-am-mark.png' %}" />
+              <div class="card-body-hint" style="display: none">{% trans "ez.templates.index.naseEZ.text" %}</div>
+            </div>
+            <div class="card-footer">
+              {% trans "ez.templates.index.naseEZ.label" %}
+            </div>
+          </a>
+        </div>
+      {% endif %}
     </div>
   </div>
 
@@ -67,18 +72,20 @@
         {% trans "ez.template.index.mojeEZ.text" %}
       </div>
     </div>
+    {% if user.can_see_ours_item %}
+      <div class="app-collapse-nase-ez collapse">
+        <div class="p-3">
+          <h4>{% trans "ez.template.index.naseEZ.text.title" %}</h4>
+          <hr />
+          {% trans "ez.template.index.naseEZ.text" %}
+        </div>
+      </div>
+    {% endif %}
     <div class="app-collapse-vybrat collapse">
       <div class="p-3">
         <h4>{% trans "ez.template.index.vybratEZ.text.title" %}</h4>
         <hr />
         {% trans "ez.template.index.vybratEZ.text" %}
-      </div>
-    </div>
-  <div class="app-collapse-potvrdit collapse">
-      <div class="p-3">
-        <h4>{% trans "ez.template.index.potvrditEZ.text.title" %}</h4>
-        <hr />
-        {% trans "ez.template.index.potvrditEZ.text" %}
       </div>
     </div>
   </div>
@@ -97,17 +104,19 @@
     $(".app-card-moje-ez").mouseover(function(){
       $(".app-collapse-moje-ez").show(100);
     });
+    {% if user.can_see_ours_item %}
+      $(".app-card-nase-ez").mouseleave(function(){
+        $(".app-collapse-nase-ez").hide(100);
+      });
+      $(".app-card-nase-ez").mouseover(function(){
+        $(".app-collapse-nase-ez").show(100);
+      });
+    {% endif %}
     $(".app-card-vybrat").mouseleave(function(){
       $(".app-collapse-vybrat").hide(100);
     });
     $(".app-card-vybrat").mouseover(function(){
       $(".app-collapse-vybrat").show(100);
-    });
-    $(".app-card-potvrdit").mouseleave(function(){
-      $(".app-collapse-potvrdit").hide(100);
-    });
-    $(".app-card-potvrdit").mouseover(function(){
-      $(".app-collapse-potvrdit").show(100);
     });
 </script>
 {% endblock %}

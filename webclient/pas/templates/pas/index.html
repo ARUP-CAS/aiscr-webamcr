@@ -10,9 +10,10 @@
 
     <div class="row app-entity-cards mb-3">
       <div class="col">
-        <a href="{% url 'pas:spoluprace_list' %}" class="card app-card-entity app-card-spoluprace">
-          <div class="card-body">
+        <a href="{% url 'pas:spoluprace_list' %}?sort=organizace_vedouci&sort=spolupracovnik" class="card app-card-entity app-card-spoluprace">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardSpoluprace.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardSpoluprace.label" %}
@@ -21,8 +22,9 @@
       </div>
       <div class="col">
         <a href="{% url 'pas:create' %}" class="card app-card-entity app-card-zapsat-nalez">
-          <div class="card-body">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardZapsatNalez.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardZapsatNalez.label" %}
@@ -30,9 +32,10 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'pas:list' %}" class="card app-card-entity app-card-vybrat">
-          <div class="card-body">
+        <a href="{% url 'pas:list' %}?sort=katastr&sort=ident_cely" class="card app-card-entity app-card-vybrat">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardVybrat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardVybrat.label" %}
@@ -40,35 +43,42 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'pas:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-nalezy">
-          <div class="card-body">
+        <a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-nalezy">
+          <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
+            <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardMojeNalezy.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardMojeNalezy.label" %}
           </div>
         </a>
       </div>
-      <div class="col">
-        <a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}" class="card app-card-entity app-card-potvrdit">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "pas.templates.index.cardPotvrdit.label" %}
-          </div>
-        </a>
-      </div>
-      <div class="col">
-        <a href="{% url 'pas:list' %}?stav=3" class="card app-card-entity app-card-archivovat">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "pas.templates.index.cardArchivovat.label" %}
-          </div>
-        </a>
-      </div>
+      {% if show_pas_nase %}
+        <div class="col">
+          <a href="{% url 'pas:list' %}?projekt_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-nalezy">
+            <div class="card-body card-body-background">
+              <img src="{% static 'logo-am-mark.png' %}" />
+              <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardNaseNalezy.text" %}</div>
+            </div>
+            <div class="card-footer">
+              {% trans "pas.templates.index.cardNaseNalezy.label" %}
+            </div>
+          </a>
+        </div>
+      {% endif %}
+      {% if show_pas_potvrdit %}
+        <div class="col">
+          <a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" class="card app-card-entity app-card-potvrdit">
+            <div class="card-body card-body-background">
+              <img src="{% static 'logo-am-mark.png' %}" />
+              <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardPotvrdit.text" %}</div>
+            </div>
+            <div class="card-footer">
+              {% trans "pas.templates.index.cardPotvrdit.label" %}
+            </div>
+          </a>
+        </div>
+      {% endif %}
     </div>
   </div>
 
@@ -87,6 +97,15 @@
         {% trans "pas.templates.index.cardMojeNalezy.text" %}
       </div>
     </div>
+    {% if show_pas_nase %}
+      <div class="app-collapse-nase-nalezy collapse">
+        <div class="p-3">
+          <h4>{% trans "pas.templates.index.cardNaseNalezy.title" %}</h4>
+          <hr />
+          {% trans "pas.templates.index.cardNaseNalezy.text" %}
+        </div>
+      </div>
+    {% endif %}
     <div class="app-collapse-vybrat collapse">
       <div class="p-3">
         <h4>{% trans "pas.templates.index.cardVybrat.title" %}</h4>
@@ -101,6 +120,7 @@
         {% trans "pas.templates.index.cardSpolupraceNalez.text" %}
       </div>
     </div>
+    {% if show_pas_potvrdit %}
   <div class="app-collapse-potvrdit collapse">
       <div class="p-3">
         <h4>{% trans "pas.templates.index.cardPotvrdit.title" %}</h4>
@@ -108,13 +128,7 @@
         {% trans "pas.templates.index.cardPotvrdit.text" %}
       </div>
     </div>
-  <div class="app-collapse-archivovat collapse">
-      <div class="p-3">
-        <h4>{% trans "pas.templates.index.cardArchivovat.title" %}</h4>
-        <hr />
-        {% trans "pas.templates.index.cardArchivovat.text" %}
-      </div>
-    </div>
+    {% endif %}
   </div>
 
   <script>
@@ -131,6 +145,14 @@
     $(".app-card-moje-nalezy").mouseover(function(){
       $(".app-collapse-moje-nalezy").show(100);
     });
+    {% if show_pas_nase %}
+      $(".app-card-nase-nalezy").mouseleave(function(){
+        $(".app-collapse-nase-nalezy").hide(100);
+      });
+      $(".app-card-nase-nalezy").mouseover(function(){
+        $(".app-collapse-nase-nalezy").show(100);
+      });
+    {% endif %}
     $(".app-card-vybrat").mouseleave(function(){
       $(".app-collapse-vybrat").hide(100);
     });
@@ -143,18 +165,14 @@
     $(".app-card-spoluprace").mouseover(function(){
       $(".app-collapse-spoluprace").show(100);
     });
+    {% if show_pas_potvrdit %}
     $(".app-card-potvrdit").mouseleave(function(){
       $(".app-collapse-potvrdit").hide(100);
     });
     $(".app-card-potvrdit").mouseover(function(){
       $(".app-collapse-potvrdit").show(100);
     });
-    $(".app-card-archivovat").mouseleave(function(){
-      $(".app-collapse-archivovat").hide(100);
-    });
-    $(".app-card-archivovat").mouseover(function(){
-      $(".app-collapse-archivovat").show(100);
-    });
+    {% endif %}
 </script>
 {% endblock %}
 

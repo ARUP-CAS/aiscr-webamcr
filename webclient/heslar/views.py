@@ -5,6 +5,7 @@ from django.db import OperationalError, ProgrammingError
 from django.http import JsonResponse
 from django.db.models import Value, IntegerField
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.translation import get_language
 
 from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_DOKUMENT_FORMAT, HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
@@ -33,13 +34,20 @@ def merge_heslare(first, second):
     Pomocní funkce pro vytvoření dvoustupňového selectu.
     """
     data = [("", "")]
+    logger.debug(get_language())
     try:
         for k in first:
             druhy_kategorie = []
             for druh in second:
                 if druh["hierarchie__heslo_nadrazene"] == k["id"]:
-                    druhy_kategorie.append((druh["id"], druh["heslo"]))
-            data.append((k["heslo"], tuple(druhy_kategorie)))
+                    if get_language() == "en":
+                        druhy_kategorie.append((druh["id"], druh["heslo_en"]))
+                    else:
+                        druhy_kategorie.append((druh["id"], druh["heslo"]))
+            if get_language() == "en":
+                data.append((k["heslo_en"], tuple(druhy_kategorie)))
+            else:
+                data.append((k["heslo"], tuple(druhy_kategorie)))
     except ProgrammingError as err:
         # This error will always be shown before
         logger.debug("heslar.views.merge_heslare.error", extra={"err": err})
@@ -56,13 +64,13 @@ def heslar_12(druha, prvni_kat,id=False):
     druha = (
         Heslar.objects.filter(nazev_heslare=druha)
         .order_by("razeni")
-        .values("id", "hierarchie__heslo_nadrazene", "heslo")
+        .values("id", "hierarchie__heslo_nadrazene", "heslo","heslo_en")
     )
     if id:
         kategorie=Heslar.objects.filter(nazev_heslare=prvni_kat,id__in=id)
     else:
         kategorie=Heslar.objects.filter(nazev_heslare=prvni_kat)
-    prvni = kategorie.order_by("razeni").values("id", "heslo")
+    prvni = kategorie.order_by("razeni").values("id", "heslo","heslo_en")
     return merge_heslare(prvni, druha)
 
 

@@ -79,6 +79,9 @@ class AuthUserChangeForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ("telefon",)
+        labels = {
+            "telefon": _("uzivatel.forms.userChange.telefon.label"),
+        }
         help_texts = {
             "telefon": _("uzivatel.forms.userChange.telefon.tooltip"),
         }
@@ -103,12 +106,25 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
     """
     Formulář pro zobrazení detailu uživatele.
     """
-    hlavni_role = forms.CharField(widget=ForeignKeyReadOnlyTextInput())
+    hlavni_role = forms.CharField(
+        widget=ForeignKeyReadOnlyTextInput(),
+        label=_("uzivatel.forms.userChange.hlavni_role.label"),
+        help_text= _("uzivatel.forms.userChange.hlavni_role.tooltip")
+        )
 
     class Meta:
         model = User
         fields = (
             "first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "groups")
+        labels = {
+            "first_name": _("uzivatel.forms.userChange.first_name.label"),
+            "last_name": _("uzivatel.forms.userChange.last_name.label"),
+            "email": _("uzivatel.forms.userChange.email.label"),
+            "ident_cely": _("uzivatel.forms.userChange.ident_cely.label"),
+            "date_joined": _("uzivatel.forms.userChange.date_joined.label"),
+            "organizace": _("uzivatel.forms.userChange.organizace.label"),
+            "groups": _("uzivatel.forms.userChange.groups.label"),
+        }
         help_texts = {
             "first_name": _("uzivatel.forms.userChange.first_name.tooltip"),
             "last_name": _("uzivatel.forms.userChange.last_name.tooltip"),
@@ -116,8 +132,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
             "ident_cely": _("uzivatel.forms.userChange.ident_cely.tooltip"),
             "date_joined": _("uzivatel.forms.userChange.date_joined.tooltip"),
             "organizace": _("uzivatel.forms.userChange.organizace.tooltip"),
-            "hlavni_role": _("uzivatel.forms.userChange.hlavni_role.tooltip"),
-            "groups": _("uzivatel.forms.userChange.hlavni_role.tooltip"),
+            "groups": _("uzivatel.forms.userChange.groups.tooltip"),
         }
 
         widgets = {
@@ -173,8 +188,18 @@ class UpdatePasswordSettings(forms.ModelForm):
     """
     Formulář pro změnu hesla.
     """
-    password1 = forms.CharField(required=False, widget=PasswordInput())
-    password2 = forms.CharField(required=False, widget=PasswordInput())
+    password1 = forms.CharField(
+        required=False,
+        widget=PasswordInput(),
+        label=_("uzivatel.forms.userChange.password1.label"),
+        help_text=_("uzivatel.forms.UpdatePasswordSettings.password1.tooltip")
+    )
+    password2 = forms.CharField(
+        required=False,
+        widget=PasswordInput(),
+        label=_("uzivatel.forms.userChange.password2.label"),
+        help_text=_("uzivatel.forms.UpdatePasswordSettings.password2.tooltip")
+    )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -191,11 +216,7 @@ class UpdatePasswordSettings(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["password1", "password2"]
-        help_texts = {
-            "password1": _("uzivatel.forms.UpdatePasswordSettings.password1.tooltip"),
-            "password2": _("uzivatel.forms.UpdatePasswordSettings.password2.tooltip"),
-        }
+        fields = ("password1", "password2")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -234,6 +255,7 @@ class AuthUserLoginForm(AuthenticationForm):
 class UserPasswordResetForm(PasswordResetForm):
     def __init__(self, *args, **kwargs):
         super(UserPasswordResetForm, self).__init__(*args, **kwargs)
+        self.fields["email"].label= _("uzivatel.forms.passwordReset.email.label")
         self.fields["email"].help_text= _("uzivatel.forms.passwordReset.email.tooltip")
 
 
@@ -259,16 +281,16 @@ class OsobaForm(forms.ModelForm):
         labels = {
             "jmeno": _("uzivatel.forms.osoba.jmeno.label"),
             "prijmeni": _("uzivatel.forms.osoba.prijmeni.label"),
-            # "rok_narozeni": _("Rok narození"),
-            # "rok_umrti": _("Rok úmrtí"),
-            # "rodne_prijmeni": _("Rodné příjmení"),
+            # "rok_narozeni": _("uzivatel.forms.osoba.rok_narozeni.label"),
+            # "rok_umrti": _("uzivatel.forms.osoba.rok_umrti.label"),
+            # "rodne_prijmeni": _("uzivatel.forms.osoba.rodne_prijmeni.label"),
         }
         help_texts = {
             "jmeno": _("uzivatel.forms.osoba.jmeno.tooltip"),
             "prijmeni": _("uzivatel.forms.osoba.prijmeni.tooltip"),
-            # "rok_narozeni": _("Lorem ipsum."),
-            # "rok_umrti": _("Lorem ipsum."),
-            # "rodne_prijmeni": _("Lorem ipsum."),
+            # "rok_narozeni": _("uzivatel.forms.osoba.rok_narozeni.tooltip"),
+            # "rok_umrti": _("uzivatel.forms.osoba.rok_umrti.tooltip"),
+            # "rodne_prijmeni": _("uzivatel.forms.osoba.rodne_prijmeni.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):

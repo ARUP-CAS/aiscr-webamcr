@@ -9,46 +9,58 @@ const get_params = () => {
     return {}
 };
 const get_description = () => {
-    if (typeof object_id !== 'undefined') {
-        return "Přiložte dokumentaci";
+    if (typ_uploadu == 'upload') {
+        return [dz_trans["descriptionUpload"]]; // Přiložte dokumentaci
     }
-    if (typeof file_id !== 'undefined') {
-        return "Přiložte aktualizovaný soubor";
+    if (typ_uploadu == 'nahradit') {
+        return [dz_trans["descriptionNahradit"]]; // Přiložte aktualizovaný soubor
     }
     return "";
 };
 
 const UploadResultsEnum = {
-	success: 0,
+    success: 0,
     duplicate: 1,
     reject: 2,
     error: 3,
 }
 
-const show_upload_successful_message = (file, result=UploadResultsEnum.success, message="") => {
+const check_sidebar_state = () => {
+    const width = screen.width;
+    const app_wrapper = document.getElementById("app-sidebar-wrapper");
+    if (app_wrapper) {
+        const style = window.getComputedStyle(app_wrapper) || app_wrapper.currentStyle;
+        const margin_left = style.marginLeft;
+        return margin_left === "-300px"
+    }
+    return false;
+}
+
+const show_upload_successful_message = (file, result = UploadResultsEnum.success, message = "") => {
     const collection = document.getElementsByClassName("message-container");
     if (collection.length > 0) {
+        const sidebar_affected_class = check_sidebar_state() ? "app-alert-floating-file-upload-no-left-bar " : "";
         const message_container_element = collection[0];
         // <div class="alert alert-success alert-dismissible fade show app-alert-floating" role="alert">
         const alert_element = document.createElement("div");
         const sidebar_element_query = document.getElementsByClassName("app-sidebar-wrapper");
         const floating_class = sidebar_element_query.length > 0 ? "app-alert-floating-file-upload" : "app-alert-floating-file-upload-oznameni";
         if (result === UploadResultsEnum.success) {
-            alert_element.setAttribute("class", `alert alert-success alert-dismissible fade show ${floating_class}`);
+            alert_element.setAttribute("class", `alert alert-success alert-dismissible fade show app-alert-floating-file-upload ${floating_class} ${sidebar_affected_class}`);
         } else if (result === UploadResultsEnum.duplicate) {
-            alert_element.setAttribute("class", `alert alert-warning alert-dismissible fade show ${floating_class}`);
+            alert_element.setAttribute("class", `alert alert-warning alert-dismissible fade show app-alert-floating-file-upload ${floating_class} ${sidebar_affected_class}`);
         } else if (result === UploadResultsEnum.reject || result === UploadResultsEnum.error) {
-            alert_element.setAttribute("class", `alert alert-danger alert-dismissible fade show ${floating_class}`);
+            alert_element.setAttribute("class", `alert alert-danger alert-dismissible fade show app-alert-floating-file-upload ${floating_class} ${sidebar_affected_class}`);
         }
         alert_element.setAttribute("role", "alert");
         if (result === UploadResultsEnum.success) {
-            alert_element.textContent = `alerts.upload_succesfull.part_1 ${file.name} alerts.upload_succesfull.part_2`;
+            alert_element.textContent = [dz_trans["alertsUploadSuccesfullPart1"]] + file.name + [dz_trans["alertsUploadSuccesfullPart2"]];
         } else if (result === UploadResultsEnum.duplicate) {
             alert_element.textContent = message;
         } else if (result === UploadResultsEnum.reject) {
-            alert_element.textContent = `alerts.upload_reject.part_1 ${file.name} alerts.upload_reject.part_2 ${message}`;
+            alert_element.textContent = [dz_trans["alertsUploadRejectPart1"]] + file.name + [dz_trans["alertsUploadRejectPart2"]] + message;
         } else if (result === UploadResultsEnum.error) {
-            alert_element.textContent = `alerts.upload_error.part_1 ${file.name} alerts.upload_error.part_2 ${message}`;
+            alert_element.textContent = [dz_trans["alertsUploadErrorPart1"]] + file.name + [dz_trans["alertsUploadErrorPart2"]] + message;
         }
         const button_element = document.createElement("button");
         button_element.setAttribute('type', 'button');
@@ -82,10 +94,10 @@ window.onload = function () {
         return cookieValue;
     };
     var currentLocation = window.location.pathname;
-    if (currentLocation.includes("nahrat-soubor/pas/")) {
+    if (currentLocation.includes("soubor/nahrat/pas/")) {
         acceptFile = "image/*"
         RejectedFileMessage = reject_dict["rejected_pas"] //pridat do message constants po merge AMCR-1 a otestovat
-    } else if (currentLocation.includes("nahrat-soubor/dokument/")) {
+    } else if (currentLocation.includes("soubor/nahrat/dokument/")) {
         acceptFile = ".jpeg, " +
             ".JPEG, " +
             ".jpg, " +
@@ -127,9 +139,9 @@ window.onload = function () {
         acceptedFiles: acceptFile,
         dictInvalidFileType: RejectedFileMessage,
         addRemoveLinks: true,
-        dictCancelUpload: "Zrušit nahrávání",
-        dictCancelUploadConfirmation: "Naozaj chcete zrušit nahrávání?",
-        dictRemoveFile: "Odstranit soubor",
+        dictCancelUpload: [dz_trans["cancelUpload"]],
+        dictCancelUploadConfirmation: [dz_trans["cancelUploadConfirm"]],
+        dictRemoveFile: [dz_trans["removeFile"]],
         maxFilesize: 100, // MB
         maxFiles: maxFiles,
         addRemoveLinks: addRemoveLinks,
@@ -149,7 +161,7 @@ window.onload = function () {
             });
             this.on("removedfile", function (file) {
                 if (file.id) {
-                    xhttp.open("POST", "/smazat-soubor/" + file.id);
+                    xhttp.open("POST", "/soubor/smazat/" + typ_vazby + "/" + object_id + "/" + file.id);
                     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                     xhttp.setRequestHeader('X-CSRFToken', csrfcookie());
                     xhttp.send("dropzone=true");

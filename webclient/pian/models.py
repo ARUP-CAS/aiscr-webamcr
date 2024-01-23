@@ -11,7 +11,7 @@ from core.constants import (
 from django.contrib.gis.db import models as pgmodels
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
 from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR
 from heslar.models import Heslar
@@ -51,7 +51,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     )
     geom = pgmodels.GeometryField(null=False, srid=4326)
     geom_sjtsk = pgmodels.GeometryField(blank=True, null=True, srid=5514)
-    geom_system = models.CharField(max_length=6, default="wgs84")
+    geom_system = models.CharField(max_length=6, default="4326")
     zm10 = models.ForeignKey(
         "Kladyzm",
         models.RESTRICT,
@@ -87,13 +87,32 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         if len(pristupnosti_ids) > 0:
             return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
         return Heslar.objects.get(ident_cely="HES-000865")
+    
+    @property
+    def pristupnost(self):
+        return self.pristupnost_pom
+
+    def evaluate_pristupnost_change(self, added_pristupnost_id=None, skip_zaznam_id=None):
+        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+        pristupnosti_ids = set()
+        for dok_jednotka in dok_jednotky:
+            if dok_jednotka.archeologicky_zaznam is not None \
+                    and dok_jednotka.archeologicky_zaznam.pristupnost is not None\
+                    and (skip_zaznam_id is None or skip_zaznam_id != dok_jednotka.archeologicky_zaznam.id):
+                pristupnosti_ids.add(dok_jednotka.archeologicky_zaznam.pristupnost.id)
+        if added_pristupnost_id is not None:
+            pristupnosti_ids.add(added_pristupnost_id)
+        if len(pristupnosti_ids) > 0:
+            return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
+        return Heslar.objects.get(ident_cely="HES-000865")
 
     class Meta:
         db_table = "pian"
         constraints = [
             CheckConstraint(
-                check=((Q(geom_system="sjtsk") & Q(geom_sjtsk__isnull=False))
-                       | (Q(geom_system="wgs84") & Q(geom__isnull=False))
+                check=((Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
+                       | (Q(geom_system="5514*") & Q(geom_sjtsk__isnull=False))
+                       | (Q(geom_system="4326") & Q(geom__isnull=False))
                        | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
                 name='pian_geom_check',
             ),
@@ -101,18 +120,61 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     def __str__(self):
         return self.ident_cely + " (" + self.get_stav_display() + ")"
+    
+    def get_absolute_url(self):
+        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+        for dok_jednotka in dok_jednotky:
+            if dok_jednotka.archeologicky_zaznam is not None:
+                return dok_jednotka.get_absolute_url()
+            
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        try:
+            my_list = []
+            dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+            for dok_jednotka in dok_jednotky:
+                if dok_jednotka.archeologicky_zaznam is not None:
+                    if dok_jednotka.archeologicky_zaznam.get_create_user():
+                        my_list.append(dok_jednotka.archeologicky_zaznam.get_create_user()[0])
+            if self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PIAN).count() > 0:
+                my_list.append(self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PIAN)[0].uzivatel)
+            logger.debug(my_list)
+            return my_list
+        except Exception as e:
+            logger.debug(e)
+            return ()
+    
+    def get_create_org(self):
+        try:
+            our_list = []
+            dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+            for dok_jednotka in dok_jednotky:
+                if dok_jednotka.archeologicky_zaznam is not None:
+                    if dok_jednotka.archeologicky_zaznam.get_create_org():
+                        our_list.append(dok_jednotka.archeologicky_zaznam.get_create_org()[0])
+                    if dok_jednotka.archeologicky_zaznam.akce.projekt is not None:
+                        our_list.append(dok_jednotka.archeologicky_zaznam.akce.projekt.organizace)
+            if self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PIAN).count() > 0:
+                our_list.append(self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PIAN)[0].uzivatel.organizace)
+            logger.debug(our_list)
+            return our_list
+        except Exception as e:
+            logger.debug(e)
+            return ()
 
     def set_permanent_ident_cely(self):
         """
         Metóda pro nastavení permanentního ident celý pro pian.
         Metóda vráti ident podle sekvence pianu.
         """
-        MAXIMUM: int = 999999
         katastr = True if self.presnost.zkratka == "4" else False
+        maximum: int = 999999 if katastr else 899999
         sequence = PianSekvence.objects.filter(kladyzm50=self.zm50).filter(
             katastr=katastr
         )[0]
-        if sequence.sekvence < MAXIMUM:
+        if sequence.sekvence < maximum:
             perm_ident_cely = (
                 "P-"
                 + str(self.zm50.cislo).replace("-", "").zfill(4)
@@ -120,7 +182,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
                 + f"{sequence.sekvence:06}"
             )
         else:
-            raise MaximalIdentNumberError(MAXIMUM)
+            raise MaximalIdentNumberError(maximum)
         # Loop through all of the idents that have been imported
         while True:
             if Pian.objects.filter(ident_cely=perm_ident_cely).exists():
@@ -224,7 +286,7 @@ def vytvor_pian(katastr):
         presnost = Heslar.objects.get(pk=PIAN_PRESNOST_KATASTR)
         typ = Heslar.objects.get(pk=GEOMETRY_PLOCHA)
         pian = Pian(stav=PIAN_POTVRZEN, zm10=zm10s, zm50=zm50s, typ=typ, presnost=presnost, geom=geom,
-                    geom_system="wgs84")
+                    geom_system="4326")
         pian.set_permanent_ident_cely()
         pian.save()
         pian.zaznamenej_zapsani(User.objects.filter(email="amcr@arup.cas.cz").first())

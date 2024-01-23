@@ -7,22 +7,26 @@
       </div>
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
+          {% if show.pripojit_eo %}
           <button class="btn" id="eo-pripojit-{{card_type}}" type="button" type="button" rel="tooltip" data-placement="top" title="{{pridatLabel}}" name="button" href="{% url 'ez:pripojit_eo' zaznam.ident_cely %}?type={{ card_type | urlencode }}">
             <span class="material-icons">add</span>
           </button>
+          {% endif %}
         </div>
       </div>
     </div>
-        <div class="card-body">
-    {% if zaznamy %}
-    {%include "ez/ez_odkazy_table_only.html"%}
-    {% else %}
-    <div class="app-note">
-      <span class="material-icons">info</span>
-      {{tabletext}}
+    <div class="content-with-table-responsive-container">
+      <div class="card-body content-with-table-responsive">
+        {% if zaznamy %}
+          {%include "ez/ez_odkazy_table_only.html"%}
+        {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {{tabletext}}
+          </div>
+        {% endif %}
+      </div>
     </div>
-    {% endif %}
-  </div>
 </div>
 <script>
   //modal scripts

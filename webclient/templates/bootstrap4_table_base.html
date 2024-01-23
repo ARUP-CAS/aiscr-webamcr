@@ -6,7 +6,7 @@
 <div class="app-table-list-wrapper">
     <div class="app-table-list-inner">
         {% block table %}
-        <div class="table-container">
+        <div class="table-responsive">
             <table {% render_attrs table.attrs class="table" %} id="table">
                 {% block table.thead %}
                 {% if table.show_header %}
@@ -72,29 +72,28 @@
 {% block pagination %}
 {% if table.page and table.paginator.num_pages > 1 %}
 <nav aria-label="Table navigation" class="table-navigation row">
-    <ul class="pagination  jump-page settings col-3">
+    <ul class="pagination  jump-page settings col-9 col-md-3">
         <form id="jump" method="get" action="">
             <div class="form-group row">
-                <label for="jump-page" class="col-sm-3 col-form-label">{% trans "templates.bootstrap4TableBase.jumpToPage.label" %}</label>
-                <div class="col-sm-6 input">
-                    <div class="input-group lg-3 ">
+                <div class="input-group">
+                    <input type="submit" class=" btn btn-primary mt-0" value="{% trans "templates.bootstrap4TableBase.jumpToPage.label" %}"/>
+                    <div class="input-group-append">
                         <input type="number" class="textinput textInput form-control" max="{{table.paginator.num_pages}}" value="{{table.page.number}}" min="1" id="jump-page"/>
-                        <div class="input-group-append">
-                            <input type="submit" class="btn btn-primary mt-0" value="{% trans 'templates.bootstrap4TableBase.jumpToPage.button' %}"/>
-                        </div>
-                      </div>
+                    </div>
                 </div>
-              </div>
+            </div>
         </form>
     </ul>        
-    <ul class="pagination  go-to-page col-6">
+    <ul class="pagination go-to-page col-3 col-md-6">
         {% if table.page.has_previous %}
         {% block pagination.previous %}
         <li class="previous page-item">
             <a href="{% querystring_multi table.prefixed_page_field=table.page.previous_page_number %}"
                class="page-link">
                 <span aria-hidden="true">&laquo;</span>
-                {% trans 'templates.bootstrap4TableBase.previous' %}
+                <div class="bootstrap-table-button-hint">
+                  {% trans 'templates.bootstrap4TableBase.previous' %}
+                </div>
             </a>
         </li>
         {% endblock pagination.previous %}
@@ -102,7 +101,7 @@
         {% if table.page.has_previous or table.page.has_next %}
         {% block pagination.range %}
         {% for p in table.page|table_page_range:table.paginator %}
-        <li class="page-item{% if table.page.number == p %} active{% endif %}">
+        <li class="page-item{% if table.page.number == p %} active{% endif %} pagination-range">
             <a class="page-link"
                {% if p != '...' %}href="{% querystring_multi table.prefixed_page_field=p %}" {% endif %}>
                 {{ p }}
@@ -115,7 +114,9 @@
         {% block pagination.next %}
         <li class="next page-item">
             <a href="{% querystring_multi table.prefixed_page_field=table.page.next_page_number %}" class="page-link">
-                {% trans 'templates.bootstrap4TableBase.next' %}
+                <div class="bootstrap-table-button-hint">
+                  {% trans 'templates.bootstrap4TableBase.next' %}
+                </div>
                 <span aria-hidden="true">&raquo;</span>
             </a>
         </li>
@@ -125,17 +126,13 @@
     <ul class="pagination per-page settings col-3">
         <form id="per-page" method="get" action="">
             <div class="form-group row">
-                <label for="per-page-num" class="col-sm-3 col-form-label">{% trans "templates.bootstrap4TableBase.perPage.label" %}</label>
-                <div class="col-sm-6 input">
-                    
-                    <div class="input-group lg-3 ">
+                <div class="input-group">
+                    <input type="submit" class=" btn btn-primary mt-0" value="{% trans "templates.bootstrap4TableBase.perPage.label" %}"/>
+                    <div class="input-group-append">
                         <input type="number" class="textinput textInput form-control" value="{{table.paginator.per_page}}" max="500" min="10" id="per-page-num"/>
-                        <div class="input-group-append">
-                            <input type="submit" class="btn btn-primary mt-0" value="{% trans 'templates.bootstrap4TableBase.perPage.button' %}"/>
-                        </div>
-                      </div>
+                    </div>
                 </div>
-              </div>
+            </div>
         </form>
     </ul> 
 </nav>

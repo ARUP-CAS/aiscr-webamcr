@@ -1,12 +1,11 @@
 import logging
 
-from abc import ABC
-
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.db.models import CheckConstraint, Q
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import get_language
 from django_prometheus.models import ExportModelOperationsMixin
 
 from core.mixins import ManyToManyRestrictedClassMixin
@@ -63,10 +62,18 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
         verbose_name_plural = "Heslář"
 
     def __str__(self):
-        if self.heslo:
-            return self.heslo
+        if get_language() == "en":
+            if self.heslo_en:
+                return self.heslo_en
+            elif self.heslo:
+                return self.heslo
+            else:
+                return ""
         else:
-            return ""
+            if self.heslo:
+                return self.heslo
+            else:
+                return ""
 
 
 class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
@@ -91,6 +98,10 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
     class Meta:
         db_table = "heslar_datace"
         verbose_name_plural = "Heslář datace"
+
+    def __init__(self, *args, **kwargs):
+        super(HeslarDatace, self).__init__(*args, **kwargs)
+        self.initial_obdobi = self.obdobi
 
 
 class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_typ_material_rada"), models.Model):
@@ -216,6 +227,10 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
     class Meta:
         db_table = "heslar_odkaz"
         verbose_name_plural = "Heslář odkaz"
+
+    def __init__(self, *args, **kwargs):
+        super(HeslarOdkaz, self).__init__(*args, **kwargs)
+        self.initial_heslo = self.heslo
 
 
 class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadata):

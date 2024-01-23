@@ -43,25 +43,29 @@ logger = logging.getLogger(__name__)
 
 @login_required
 @require_http_methods(["POST"])
-def detail(request, ident_cely):
+def detail(request, typ_vazby, ident_cely):
     """
     Funkce pohledu pro editaci dokumentační jednotky a ADB.
     """
     logger.debug("dj.views.detail.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
-    pian_db = dj.pian
+    pian_db: Pian = dj.pian
     old_typ = dj.typ.id
     form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
         logger.debug("dj.views.detail.form_is_valid")
-        dj = form.save()
+        dj = form.save(commit=False)
         if dj.pian is None:
+            logger.debug("dj.views.detail.empty_pian")
             if pian_db is not None and not(old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR):
-                logger.debug("dj.views.detail.empty_pian")
+                logger.debug("dj.views.detail.added_pian_from_db", extra={"pian_db": pian_db})
                 dj.pian = pian_db
                 dj.save()
-        elif dj.typ.id == TYP_DJ_KATASTR and form.typ.id != TYP_DJ_KATASTR:
+        elif old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR:
+            logger.debug("dj.views.detail.disconnected_pian")
             dj.pian = None
+            dj.save()
+        else:
             dj.save()
         if form.changed_data:
             logger.debug("dj.views.detail.changed")
@@ -110,6 +114,9 @@ def detail(request, ident_cely):
             if len(new_ku) > 3:
                 update_main_katastr_within_ku(dj.ident_cely, new_ku)
         if dj.pian is not None and (pian_db is None or pian_db.pk != dj.pian.pk):
+            logger.debug("dj.views.detail.update_pian_metadata",
+                         extra={"pian_db": pian_db.ident_cely if pian_db else "None",
+                                "instance_pian": dj.pian.ident_cely})
             dj.pian.save_metadata()
         if pian_db is not None and (dj.pian is None or dj.pian.pk != pian_db.pk):
             pian_db.save_metadata()
@@ -125,7 +132,7 @@ def detail(request, ident_cely):
         form = CreateADBForm(
             request.POST,
             instance=adb,
-            prefix=ident_cely,
+            #prefix=ident_cely,
         )
         if form.is_valid():
             logger.debug("dj.views.detail.adb_detail.form_is_valid")
@@ -179,7 +186,7 @@ def detail(request, ident_cely):
             messages.add_message(
                 request,
                 messages.ERROR,
-                ZAZNAM_SE_NEPOVEDLO_EDITOVAT + "detail.vyskovy_bod.povinna_pole",
+                ZAZNAM_SE_NEPOVEDLO_EDITOVAT + _("detail.vyskovy_bod.povinna_pole"),
             )
 
     response = dj.archeologicky_zaznam.get_redirect(dj.ident_cely)
@@ -229,6 +236,7 @@ def smazat(request, ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if request.method == "POST":
         try:
+            dj.deleted_by_user = request.user
             resp = dj.delete()
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
             if resp:
@@ -263,9 +271,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
     Třída pohledu pro editaci katastru dokumentační jednotky.
     """
     template_name = "core/transakce_modal.html"
-    title = _("dj.views.ChangeKatastrView.title.text")
     id_tag = "zmenit-katastr-form"
-    button = _("dj.views.ChangeKatastrView.submitButton.text")
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
@@ -280,9 +286,9 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         context = {
             "object": zaznam,
             "form": form,
-            "title": self.title,
+            "title": _("dj.views.ChangeKatastrView.title.text"),
             "id_tag": self.id_tag,
-            "button": self.button,
+            "button": _("dj.views.ChangeKatastrView.submitButton.text"),
         }
         return context
 

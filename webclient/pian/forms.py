@@ -1,7 +1,7 @@
 from crispy_forms.helper import FormHelper
 from django import forms
 from django.contrib.gis.forms import HiddenInput
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from pian.models import Pian
 
 
@@ -27,4 +27,4 @@ class PianCreateForm(forms.ModelForm):
         super(PianCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
-        self.fields["geom_system"].initial = "wgs84"
+        self.fields["geom_system"].initial = "4326"

@@ -716,7 +716,7 @@ class AMCRBaseTestRunner(BaseRunner):
             ident_cely="x",
             historie=vazba_pian,
             stav=PIAN_POTVRZEN,
-            geom_system="wgs84"
+            geom_system="4326"
         )
         pian.save()
 

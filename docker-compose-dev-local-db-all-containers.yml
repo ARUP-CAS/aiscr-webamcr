@@ -131,7 +131,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-DEV
-    command: celery -A webclient worker -l INFO
+    command: celery -A webclient worker -l INFO -n worker1@amcr
     secrets:
       - db_conf
       - redis_pass

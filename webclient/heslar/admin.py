@@ -3,7 +3,7 @@ from django.http import StreamingHttpResponse
 
 from heslar.models import Heslar, HeslarNazev, HeslarDatace, HeslarDokumentTypMaterialRada, HeslarOdkaz, RuianKraj, \
     RuianOkres, RuianKatastr, HeslarHierarchie
-from uzivatel.models import Osoba, Organizace
+from uzivatel.models import Osoba, Organizace, UserNotificationType
 from django_object_actions import DjangoObjectActions, action
 
 
@@ -87,8 +87,9 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     Admin část pro správu modelu heslař datace.
     """
     list_display = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
-    fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
-    search_fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
+    fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max", "poznamka")
+    search_fields = ("obdobi__ident_cely", "obdobi__heslo", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max",
+                     "poznamka")
     list_filter = ("obdobi", )
 
     def get_readonly_fields(self, request, obj=None):
@@ -127,7 +128,7 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     """
     list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
     fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
-    search_fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
+    search_fields = ("heslo__ident_cely", "heslo__heslo", "zdroj", "nazev_kodu", "kod", "uri")
 
 
 @admin.register(HeslarHierarchie)
@@ -137,7 +138,8 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
     """
     list_display = ("heslo_podrazene", "heslo_nadrazene", "typ")
     fields = ("heslo_podrazene", "heslo_nadrazene", "typ")
-    search_fields = ("heslo_podrazene", "heslo_nadrazene", "typ")
+    search_fields = ("heslo_podrazene__ident_cely", "heslo_podrazene__heslo", "heslo_nadrazene__ident_cely",
+                     "heslo_nadrazene__heslo", "typ")
     list_filter = ("typ", )
 
 
@@ -146,7 +148,7 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
     """
     Admin část pro správu modelu osob.
     """
-    list_display = ("jmeno", "prijmeni", "ident_cely", "vypis", "rok_narozeni", "rok_umrti", "vypis_cely",
+    list_display = ("ident_cely", "jmeno", "prijmeni", "vypis", "rok_narozeni", "rok_umrti", "vypis_cely",
                     "rodne_prijmeni")
     fields = ("jmeno", "prijmeni", "ident_cely", "vypis", "vypis_cely", "rok_narozeni", "rok_umrti",
               "rodne_prijmeni")
@@ -165,7 +167,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
     """
     Admin část pro správu modelu organizace.
     """
-    list_display = ("nazev_zkraceny", "typ_organizace", "ident_cely", "oao", "zanikla", "nazev", "nazev_zkraceny_en",
+    list_display = ("ident_cely", "nazev_zkraceny", "typ_organizace", "oao", "zanikla", "nazev", "nazev_zkraceny_en",
                     "nazev_en", "soucast", "ico", "adresa", "email", "telefon", "zverejneni_pristupnost",
                     "mesicu_do_zverejneni")
     list_filter = ("oao", "zanikla")
@@ -199,7 +201,7 @@ class HeslarRuianKrajAdmin(HeslarRuianAdmin):
     """
     list_display = ("nazev", "kod", "rada_id", "nazev_en")
     fields = ("nazev", "kod", "rada_id", "definicni_bod", "nazev_en")
-    search_fields = ("nazev", "kod", "rada_id", "nazev_en")
+    search_fields = ("kod", "rada_id", "nazev_en")
 
 
 @admin.register(RuianOkres)
@@ -209,7 +211,7 @@ class HeslarRuianOkresAdmin(HeslarRuianAdmin):
     """
     list_display = ("nazev", "kraj", "spz", "kod", "nazev_en")
     fields = ("nazev", "kraj", "spz", "kod", "nazev_en")
-    search_fields = ("nazev", "kraj", "spz", "kod", "nazev_en")
+    search_fields = ("nazev", "kraj__nazev", "spz", "kod", "nazev_en")
     list_filter = ("kraj",)
 
 
@@ -220,5 +222,20 @@ class HeslarRuianKatastrAdmin(HeslarRuianAdmin):
     """
     list_display = ("nazev", "okres", "pian_ident_cely", "kod", "nazev_stary")
     fields = ("aktualni", "nazev", "kod", "nazev_stary", "okres")
-    search_fields = ("okres", "aktualni", "nazev", "kod", "nazev_stary")
+    search_fields = ("okres__nazev", "aktualni", "nazev", "kod", "nazev_stary")
     list_filter = ("okres", "okres__kraj", "aktualni")
+
+@admin.register(UserNotificationType)
+class UserNotificationTypeAdmin(admin.ModelAdmin):
+    """
+    Admin část pro správu modelu user notifikací.
+    """
+    list_display = ("ident_cely", "text_cs", "text_en")
+    fields = ("ident_cely", "text_cs", "text_en")
+    search_fields = ("ident_cely", "text_cs", "text_en")
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
+    def has_add_permission(self, request, obj=None):
+        return False

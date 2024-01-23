@@ -3,7 +3,6 @@ import logging
 import simplejson as json
 from django.utils.translation import gettext as _
 from core.constants import (
-    PRIDANI_OZNAMOVATELE_PROJ,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_VYTVORENY,
     OBLAST_CECHY,
@@ -54,13 +53,14 @@ def index(request, test_run=False):
     # First step of the form
     if request.method == "POST" and "oznamovatel" in request.POST:
         logger.debug(f"oznameni.views.index.first_part_start")
-        if request.POST.get("ident_cely"):
-            projekt = get_object_or_404(
-                Projekt, ident_cely=request.POST.get("ident_cely")
-            )
+        ident_cely = request.POST.get("ident_cely", None)
+        if ident_cely:
+            logger.debug(f"oznameni.views.index.first_part_start.ident_set", extra={"ident_cely": ident_cely})
+            projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
             form_ozn = OznamovatelForm(request.POST, instance=projekt.oznamovatel)
             form_projekt = ProjektOznameniForm(request.POST, instance=projekt)
         else:
+            logger.debug(f"oznameni.views.index.first_part_start.ident_not_set")
             form_ozn = OznamovatelForm(request.POST)
             form_projekt = ProjektOznameniForm(request.POST)
         form_captcha = FormWithCaptcha(request.POST)
@@ -79,13 +79,13 @@ def index(request, test_run=False):
             p.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
             dalsi_katastry = form_projekt.cleaned_data["katastry"]
             p.geom = Point(
-                float(request.POST.get("longitude")),
-                float(request.POST.get("latitude")),
+                float(request.POST.get("coordinate_x1")),
+                float(request.POST.get("coordinate_x2")),
             )
             p.hlavni_katastr = get_cadastre_from_point(p.geom)
             logger.debug("oznameni.views.index.hlavni_katastr", extra={"hlavni_katastr": p.hlavni_katastr})
             # p.save()
-            if p.hlavni_katastr is not None:
+            if p.hlavni_katastr is not None and not ident_cely:
                 p.ident_cely = get_temporary_project_ident(
                     p.hlavni_katastr.okres.kraj.rada_id
                 )
@@ -132,7 +132,6 @@ def index(request, test_run=False):
     elif request.method == "POST" and "ident_cely" in request.POST:
         logger.debug(f"oznameni.views.index.second_part_start")
         p = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
-        p.suppress_signal = False
         p.set_oznameny()
         context = {"ident_cely": request.POST["ident_cely"]}
         return render(request, "oznameni/success.html", context)
@@ -210,7 +209,7 @@ def post_poi2kat(request):
     """
     body = json.loads(request.body.decode("utf-8"))
     # logger.debug(body)
-    geom = Point(float(body["corY"]), float(body["corX"]))
+    geom = Point(float(body["x1"]), float(body["x2"]))
     katastr = get_cadastre_from_point(geom)
     # logger.debug(katastr)
     if len(str(katastr)) > 0:
@@ -262,11 +261,6 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
             ozn = form.save(commit=False)
             ozn.projekt = projekt
             ozn.save()
-            Historie(
-                typ_zmeny=PRIDANI_OZNAMOVATELE_PROJ,
-                uzivatel=request.user,
-                vazba=projekt.historie,
-            ).save()
 
             logger.debug("Pridan oznamovatel do projektu: " + str(projekt.ident_cely))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)

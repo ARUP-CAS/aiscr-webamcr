@@ -13,6 +13,7 @@ from core.message_constants import (
     HLIDACI_PES_NEUSPESNE_VYTVOREN,
     HLIDACI_PES_NEUSPESNE_SMAZAN,
 )
+from heslar.models import RuianKatastr, RuianOkres, RuianKraj
 from uzivatel.models import User
 from django.views import View
 from django.views.generic import TemplateView
@@ -134,12 +135,21 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
     id_tag = "smazat-pes-form"
     button = _("notifikaceProjekty.views.pesSmazatView.submitButton")
 
-    def get_zaznam(self):
+    def get_zaznam(self) -> Pes:
         id = self.kwargs.get("pk")
         return get_object_or_404(
             Pes,
             pk=id,
         )
+
+    def get_object_identification(self) -> str:
+        pes: Pes = self.get_zaznam()
+        object = pes.content_object
+        if isinstance(object, RuianKatastr) or isinstance(object, RuianOkres) or isinstance(object, RuianKraj):
+            return object.nazev
+        if hasattr(object, "ident_cely"):
+            return object.ident_cely
+        return ""
 
     def get_context_data(self, **kwargs):
         zaznam = self.get_zaznam()
@@ -148,6 +158,7 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
             "title": self.title,
             "id_tag": self.id_tag,
             "button": self.button,
+            "object_identification": self.get_object_identification()
         }
         return context
 

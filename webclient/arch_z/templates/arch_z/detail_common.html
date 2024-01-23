@@ -3,9 +3,15 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% load template_filters %}
+{% load template_tags %}
 
 {% block title %}{% trans "arch_z.templates.arch_z.detail_common.detailArchZ.title" %}{% endblock %}
 {% block head %}
+  <script>
+    {% autoescape off %}
+      var settings_heatmap_options = {% get_settings "heatmap_options" "arch_z_heatmap_options" %};
+    {% endautoescape %}
+  </script>
   <!--  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">-->
 
   <!-- Leaflet imports -->
@@ -47,11 +53,12 @@
 
 
   <script src="{% static 'convertToJTSK.js' %}"></script>
-  <script src="{% static 'simpleheat.js' %}"></script>
-  <script src="{% static 'HeatLayer.js' %}"></script>
+  <script src="{% static 'heatmap/heatmap.js' %}"></script>
+  <script src="{% static 'heatmap/leaflet-heatmap.js' %}"></script>
   <script src="{% static 'leaflet.markercluster-src.js' %}"></script>
   <link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
   <link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
+  <script src="{% static 'leaflet_subgroup.js' %}"></script>
 
 
   <script>
@@ -76,7 +83,7 @@
 
     <!-- dokumentacni jednotka / mapa -->
     <div class="row mb-3">
-      <div class="col-sm-4">
+      <div class="col-sm-4 col-12">
         <div class="card app-card-form app-card-dokumentacni-jednotka">
           <div class="card-header" id="dj_list_card_header">
             <div class="app-fx app-left">
@@ -85,7 +92,7 @@
             {% if show.editovat and show.add_dj %}
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
-                <a id="button-add-dj" class="btn" href="{% if app == 'akce' %}{% url 'arch_z:create-dj' zaznam.ident_cely %}{% else %}{% url 'lokalita:create-dj' zaznam.ident_cely %}{% endif %}"
+                <a id="button-add-dj" class="btn" href="{% if app == 'akce' or app == 'pr' %}{% url 'arch_z:create-dj' zaznam.ident_cely %}{% else %}{% url 'lokalita:create-dj' zaznam.ident_cely %}{% endif %}"
                         rel="tooltip" data-placement="top"
                         title="{% trans 'arch_z.templates.arch_z.detail_common.cardDJ.pridatDJ.label' %}">
                   <span class="material-icons">add</span>
@@ -100,12 +107,12 @@
                 <li class="list-group-item">
                   <div class="d-flex align-items-center" id="el_div_dokumentacni_jednotka_{{ j.ident_cely_safe }}" {% if j.ident_cely == active_dj_ident and not active_komp_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
                     {% if j.pian.stav == 2 %} <!-- POTVRZENY JE 2 -->
-                      <a href="{% if app == 'akce' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip"
+                      <a href="{% if app == 'akce' or app == 'pr' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip"
                          data-placement="top" title="{% trans 'arch_z.templates.arch_z.detail_common.cardDJ.potvrzeniPian.tooltip' %}">
                         <span class="material-icons">my_location</span>
                       </a>
                     {% elif j.pian.stav == 1 %} <!-- NEPOTVRZENY JE 1 -->
-                      <a href="{% if app == 'akce' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="d-flex mr-2 text-decoration-none app-pian app-notconfirmed" rel="tooltip"
+                      <a href="{% if app == 'akce' or app == 'pr' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="d-flex mr-2 text-decoration-none app-pian app-notconfirmed" rel="tooltip"
                          data-placement="top" title="{% trans 'arch_z.templates.arch_z.detail_common.cardDJ.nepotvrzeniPian.tooltip' %}">
                         <span class="material-icons">my_location</span>
                       </a>
@@ -113,7 +120,7 @@
                       <span class="material-icons mr-2 text-decoration-none app-pian app-disabled" rel="tooltip"
                             data-placement="top" title="{% trans 'arch_z.templates.arch_z.detail_common.cardDJ.nemaPian.tooltip' %}">location_disabled</span>
                     {% endif %}
-                    <a href="{% if app == 'akce' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="flex-fill app-entity-color" id="el_dokumentacni_jednotka_{{ j.ident_cely_safe }}">
+                    <a href="{% if app == 'akce' or app == 'pr' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="flex-fill app-entity-color" id="el_dokumentacni_jednotka_{{ j.ident_cely_safe }}">
                       <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
                       {% if j.adb %}- {{ j.adb.ident_cely }}{% endif %}
                     </a>
@@ -123,7 +130,7 @@
                       {% for k in j.komponenty.komponenty.all %}
                         <li id="el_li_komponenta_{{ k.ident_cely_safe }}">
                           <div class="d-flex align-items-baseline" {% if k.ident_cely == active_komp_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
-                            <a href="{% if app == 'akce' %}{% url 'arch_z:update-komponenta' zaznam.ident_cely j.ident_cely k.ident_cely %}{% else %}{% url 'lokalita:update-komponenta' zaznam.ident_cely j.ident_cely k.ident_cely %}{% endif %}" class="flex-fill mr-2 app-entity-color"
+                            <a href="{% if app == 'akce' or app == 'pr' %}{% url 'arch_z:update-komponenta' zaznam.ident_cely j.ident_cely k.ident_cely %}{% else %}{% url 'lokalita:update-komponenta' zaznam.ident_cely j.ident_cely k.ident_cely %}{% endif %}" class="flex-fill mr-2 app-entity-color"
                                id="el_komponenta_{{ k.ident_cely_safe }}">
                               {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
                             </a>
@@ -144,7 +151,7 @@
           </div>
         </div>
       </div>
-      <div class="col-sm-8 pl-0">
+      <div class="col-sm-8 col-12 dj-map-div">
         <style>
             #djMap {
                 width: 100%;
@@ -193,6 +200,73 @@
   <script >
     var static_url = "{% get_static_prefix %}";
   </script>
+  <script>
+    var map_translations = {
+      ActionsCancelText: '{% trans "mapa.ActionsCancelText" %}',
+      ActionsCancelTitle: '{% trans "mapa.ActionsCancelTitle" %}',
+      ActionsClearText: '{% trans "mapa.ActionsClearText" %}',
+      ActionsClearTitle: '{% trans "mapa.ActionsClearTitle" %}',
+      ActionsSaveText: '{% trans "mapa.ActionsSaveText" %}',
+      ActionsSaveTitle: '{% trans "mapa.ActionsSaveTitle" %}',
+      CurrentLocationError: '{% trans "mapa.CurrentLocationError" %}',
+      cuzkKatastralniMapa: '{% trans "mapa.cuzkKatastralniMapa" %}',
+      cuzkKatastralniUzemi: '{% trans "mapa.cuzkKatastralniUzemi" %}',
+      cuzkOrtofotomapa: '{% trans "mapa.cuzkOrtofotomapa" %}',
+      cuzkStinovanyeelief5G: '{% trans "mapa.cuzkStinovanyeelief5G" %}',
+      cuzkzakladniMapyCr: '{% trans "mapa.cuzkzakladniMapyCr" %}',
+      DefaultTitle: '{% trans "mapa.DefaultTitle" %}',
+      DrawError: '{% trans "mapa.DrawError" %}',
+      EditAddCircle: '{% trans "mapa.EditAddCircle" %}',
+      EditAddCirclemarker: '{% trans "mapa.EditAddCirclemarker" %}',
+      EditAddMarker: '{% trans "mapa.EditAddMarker" %}',
+      EditAddPolygon: '{% trans "mapa.EditAddPolygon" %}',
+      EditAddPolyline: '{% trans "mapa.EditAddPolyline" %}',
+      EditAddRectangle: '{% trans "mapa.EditAddRectangle" %}',
+      EditBackText: '{% trans "mapa.EditBackText" %}',
+      EditBackTitle: '{% trans "mapa.EditBackTitle" %}',
+      EditCancelText: '{% trans "mapa.EditCancelText" %}',
+      EditCancelTitle: '{% trans "mapa.EditCancelTitle" %}',
+      EditCirclemarkerTooltip: '{% trans "mapa.EditCirclemarkerTooltip" %}',
+      EditCircleTooltip: '{% trans "mapa.EditCircleTooltip" %}',
+      EditDisabled: '{% trans "mapa.EditDisabled" %}',
+      EditFinishText: '{% trans "mapa.EditFinishText" %}',
+      EditFinishTitle: '{% trans "mapa.EditFinishTitle" %}',
+      EditMarkerTooltip: '{% trans "mapa.EditMarkerTooltip" %}',
+      EditPolygonStart: '{% trans "mapa.EditPolygonStart" %}',
+      EditPolygonTooltipCont: '{% trans "mapa.EditPolygonTooltipCont" %}',
+      EditPolygonTooltipEnd: '{% trans "mapa.EditPolygonTooltipEnd" %}',
+      EditPolylineCont: '{% trans "mapa.EditPolylineCont" %}',
+      EditPolylineEnd: '{% trans "mapa.EditPolylineEnd" %}',
+      EditPolylineError: '{% trans "mapa.EditPolylineError" %}',
+      EditPolylineStart: '{% trans "mapa.EditPolylineStart" %}',
+      EditRadius: '{% trans "mapa.EditRadius" %}',
+      EditRectangleStart: '{% trans "mapa.EditRectangleStart" %}',
+      EditSimpleshapeTooltip: '{% trans "mapa.EditSimpleshapeTooltip" %}',
+      EditTitle: '{% trans "mapa.EditTitle" %}',
+      EditTooltipSubtext: '{% trans "mapa.EditTooltipSubtext" %}',
+      EditTooltipText: '{% trans "mapa.EditTooltipText" %}',
+      FullscreenTitle: '{% trans "mapa.FullscreenTitle" %}',
+      FullscreenTitleClose: '{% trans "mapa.FullscreenTitleClose" %}',
+      currentlyEditedPian: '{% trans "mapa.currentlyEditedPian" %}',
+      lokalizaceProjektu: '{% trans "mapa.lokalizaceProjektu" %}',
+      MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
+      MoveFront: '{% trans "mapa.MoveFront" %}',
+      openStreetMap: '{% trans "mapa.openStreetMap" %}',
+      openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
+      pian: '{% trans "mapa.pian" %}',
+      pianZazamu: '{% trans "mapa.pianZazamu" %}',
+      RemoveDisabled: '{% trans "mapa.RemoveDisabled" %}',
+      RemoveTitle: '{% trans "mapa.RemoveTitle" %}',
+      RemoveTooltipText: '{% trans "mapa.RemoveTooltipText" %}',
+      samostatneNalezy: '{% trans "mapa.samostatneNalezy" %}',
+      SearchText: '{% trans "mapa.SearchText" %}',
+      SearchTextCancel: '{% trans "mapa.SearchTextCancel" %}',
+      SearchTextError: '{% trans "mapa.SearchTextError" %}',
+      TempPIAN: '{% trans "mapa.TempPIAN" %}',
+      zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
+      zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
+    };
+  </script>
   <script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
@@ -202,7 +276,7 @@
   <script src="{% static 'leaflet.measure.js' %}"></script>
   <script>
       function get_create_pain_form_action(selected_dj_ident) {
-          const url = "/pian/create/1";
+          const url = "/pian/zapsat/1";
           url.replace("1", selected_dj_ident);
           document.getElementById("create_pian_form_id").action = url;
       }
@@ -249,7 +323,7 @@
           if (form_id.includes("detail_dj_form_")) {
               pian_id = form_id.replace("detail_dj_form_", "")
               let xhr = new XMLHttpRequest();
-              xhr.open('POST', '/arch-z/akce-zjisti-katastr');
+              xhr.open('POST', '/arch-z/mapa-zoom');
               xhr.setRequestHeader('Content-type', 'application/json');
               if (typeof global_csrftoken !== 'undefined') {
                   xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -258,18 +332,22 @@
               }
               xhr.onload = function () {
                   rs = JSON.parse(this.responseText)
-                  if(rs.lat>0){
-                    map.setView([rs.lat, rs.lng], rs.zoom)
-                  }
-                  if (rs.zoom == 17) {
-                      drawnItems.clearLayers();
-                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom,rs.presnost==4)
+                  if(rs.lat>0 || rs.zoom == 17){
+                    if(rs.lat>0){
+                      map.setView([rs.lat, rs.lng], rs.zoom)
+                    }
+                    if (rs.zoom == 17) {
+                        drawnItems.clearLayers();
+                        addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,rs.pian_ident_cely,rs.geom,rs.presnost)
+                    }
+                  } else{
+                        switchMap(false);
                   }
               };
               xhr.send(JSON.stringify(
                   {
                       'cadastre': document.getElementById("main_cadastre_id").value,
-                      'pian': pian_id,
+                      'akce_ident_cely': '{{ zaznam.ident_cely }}',
                   }))
 //          }else if (form_id.includes("detail_pian_form_")){
 //            map_show_edit(true, false)
@@ -436,22 +514,47 @@
           new Modal(options, elements.item(i).id);
         }
       }
+      var successFunctionAutorPopisu = function(settings, response) {
+        var newOption = new Option(response.text, response.value, true, true);
+        console.log("test")
+        $('#id_autor_popisu').append(newOption).trigger('change');
+        $('#id_autor_popisu').trigger({
+          type: 'select2:select',
+          params: {
+              data: [response.text, response.value, true, true]
+          }
+        });
+        $(settings.modalIDD).modal("hide");
+      };
       var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'heslar:create_osoba' %}",
       formID: "create-osoba-form",
       modalFormID: "#create-osoba-form",
       modalIDD : "#modal-form",
+      successFunc:successFunctionAutorPopisu,
     })
     try {
      create_autor_popisu_modal = new Modal(options, "create-autor-popisu");
     } catch (e) {
       console.log(e);
     }
+    var successFunctionAutorRevize = function(settings, response) {
+      var newOption = new Option(response.text, response.value, true, true);
+      $('#id_autor_revize').append(newOption).trigger('change');
+      $('#id_autor_revize').trigger({
+        type: 'select2:select',
+        params: {
+            data: [response.text, response.value, true, true]
+        }
+      });
+      $(settings.modalIDD).modal("hide");
+    };
     var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'heslar:create_osoba' %}",
       formID: "create-osoba-form",
       modalFormID: "#create-osoba-form",
       modalIDD : "#modal-form",
+      successFunc:successFunctionAutorRevize,
     })
     try {
      create_autor_revize_modal = new Modal(options, "create-autor-revize");

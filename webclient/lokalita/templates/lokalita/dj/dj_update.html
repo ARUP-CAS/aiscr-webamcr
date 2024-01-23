@@ -30,11 +30,16 @@
                       {% trans 'lokalita.templates.dj.djUpdate.moreActions.nastavKatastralniUzemiZMapy.label' %}
                     </a>
           {% endif %}
-          {% if j.show_add_pian %}
+          {% if j.show_pripojit_pian_mapa %}
           <a id="show_menu_pian_from_map_id" class="dropdown-item" href="#"
-             onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
+             onclick="change_dj_action('lokalita_pripojit_pian_mapa', 'mapa','{{ j.ident_cely}}')">
             {% trans 'lokalita.templates.dj.djUpdate.moreActions.pripojPianZMapy.label' %}
           </a>
+          {% endif %}
+          {% if j.show_import_pian_new %}
+            <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian">
+              {% trans "lokalita.templates.lokalita.dj.partials.dj_update.editButtons.importovatPianNew.label" %}
+            </button>
           {% endif %}
           {% if j.show_approve_pian %}
           <button id="pian-potvrdit-{{j.pian_ident_cely}}" class="dropdown-item pian-potvrdit-btn" type="button"
@@ -42,13 +47,18 @@
             {% trans 'lokalita.templates.dj.djUpdate.moreActions.potvrditPian.label' %}
           </button>
           {% endif %}
-          {% if j.pian_ident_cely %}
+          {% if j.pian_ident_cely and show.stahnout_metadata %}
             <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'pian' j.pian_ident_cely %}">{% trans "lokalita.templates.dj.djUpdate.moreActions.downloadPianMetadata.label" %}</a>
           {% endif %}
           {% if j.show_uprav_pian and j.pian_ident_cely %}
           <a id="pian-upravit-{{j.pian_ident_cely}}" class="dropdown-item" href="{% url 'lokalita:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
             {% trans 'lokalita.templates.dj.djUpdate.moreActions.upravitPian.label' %}
           </a>
+          {% endif %}
+          {% if j.show_import_pian_change %}
+            <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian" data-action-id="change">
+              {% trans "lokalita.templates.lokalita.dj.partials.dj_update.editButtons.importovatPianChange.label" %}
+            </button>
           {% endif %}
           {% if j.show_remove_pian %}
           <button id="pian-odpojit-{{j.pian_ident_cely}}" class="dropdown-item pian-odpojit-btn" type="button"
@@ -67,16 +77,16 @@
             {% trans 'lokalita.templates.dj.djUpdate.moreActions.smazatAdb.label' %}
           </button>
           {% endif %}
-          {% if j.adb_pk %}
-            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'adb' j.adb_pk %}">{% trans "lokalita.templates.dj.djUpdate.moreActions.downloadAdbMetadata.label" %}</a>
+          {% if j.adb_pk and show.stahnout_metadata %}
+            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'adb' j.adb_ident_cely %}">{% trans "lokalita.templates.dj.djUpdate.moreActions.downloadAdbMetadata.label" %}</a>
           {% endif %}
           <button id="dj-smazat-{{j.ident_cely}}" class="dropdown-item dj-smazat-btn" type="button" name="button"
                   href="{% url 'dj:smazat' j.ident_cely %}">
             {% trans 'lokalita.templates.dj.djUpdate.moreActions.smazatDj.label' %}
           </button>
-          {% if j.show_pripojit_pian %}
+          {% if j.show_pripojit_pian_id %}
           <button id="pian-pripojit-{{j.pian_ident_cely}}" class="dropdown-item pian-pripojit-btn" type="button"
-                  name="button" onclick="set_pian_by_id('{{j.ident_cely}}')")>
+                  name="button" onclick="change_dj_action('lokalita_pripojit_pian_id', 'id','{{ j.ident_cely}}')">
             {% trans 'lokalita.templates.dj.djUpdate.moreActions.pripojitPianPodleId.label' %}
           </button>
           {% endif %}
@@ -92,7 +102,7 @@
   </div>
   <div class="card-body">
     {% if not j.adb_form %}
-    <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}"
+    <form class="mb-3" method="POST" action="{% url 'dj:detail' 'lokalita_dj_zakladni' j.ident_cely %}" id="djEditForm"
           onsubmit="editDjSubmitButton.disabled = true; return true;">
       {% crispy j.form %}
       {% if show.editovat %}
@@ -104,7 +114,7 @@
     {% endif %}
 
     {% if j.adb_form %}
-    <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}"
+    <form class="mb-3" method="POST" action="{% url 'dj:detail' 'lokalita_dj_zakladni' j.ident_cely %}"
           onsubmit="editDjSubmitButton.disabled = true; return true;">
       {% crispy j.form %}
       <div class="card app-card-form app-card-inner">
@@ -130,11 +140,25 @@
     </form>
   </div>
 
-
+  {% include "pian/importovat_pian_modal.html" %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         show_form(`detail_dj_form_{{j.ident_cely}}`);
     });
+</script>
+<script>
+  function change_dj_action(new_action, type, ident){
+    if (type === "mapa") {
+      show_grap_geom_from_map(ident);
+      set_pian_by_id(ident, true)
+    }
+    else {
+      set_pian_by_id(ident, false)
+    };
+    string=document.getElementById("djEditForm").action
+    replaced_action= string.replace(/lokalita_dj_zakladni|lokalita_pripojit_pian_mapa|lokalita_pripojit_pian_id/g, new_action)
+    document.getElementById("djEditForm").action = replaced_action
+  }
 </script>
 <script>
   function show_grap_geom_from_map(dj){
@@ -173,11 +197,18 @@
     }
 </script>
 <script>
-  var set_pian_by_id = function (dj_ident) {
+  var set_pian_by_id = function (dj_ident, disabled=true) {
     id = "#id_" + dj_ident + "-pian"
-    $(id).prop('disabled', false);
-    document.getElementById("pian_text").style.display = "none"
-    document.getElementById("pian_select").style.display = "block"
+    $(id).prop('disabled', disabled);
+    document.getElementById("pian_text").style.display = "none";
+    document.getElementById("pian_select").style.display = "block";
   };
+</script>
+<script>
+  jQuery(function ($) {        
+    $('#djEditForm').bind('submit', function () {
+      $(this).find('#pian_select').find(':input').prop('disabled', false);
+    });
+  });
 </script>
 {% endblock %}

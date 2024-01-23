@@ -1,9 +1,11 @@
 import json
+import html
 import logging
 import mimetypes
 import os
 import re
 from io import StringIO, BytesIO
+from PIL import Image
 
 import unicodedata
 from django.core.files.uploadedfile import TemporaryUploadedFile
@@ -11,13 +13,16 @@ from django_tables2 import SingleTableMixin
 from django_filters.views import FilterView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
+from django.views.generic import TemplateView
+
 
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.gis.db.models.functions import AsWKT
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q
+from django.db.models import Q, FilteredRelation, Value, F, OuterRef, Subquery
 from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -33,21 +38,26 @@ from core.constants import (
     DOKUMENT_RELATION_TYPE,
     PROJEKT_RELATION_TYPE,
     PROJEKT_STAV_ARCHIVOVANY,
+    ROLE_ADMIN_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     SN_ARCHIVOVANY,
+    ROLE_BADATEL_ID, 
+    ROLE_ARCHEOLOG_ID, 
+    ROLE_ARCHIVAR_ID
 )
 from core.forms import CheckStavNotChangedForm
 from core.message_constants import (
     DOKUMENT_NEKDO_ZMENIL_STAV,
     PROJEKT_NEKDO_ZMENIL_STAV,
     SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+    SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_SMAZAN,
+    SPATNY_ZAZNAM_SOUBOR_VAZBA,
 )
 from core.models import Soubor
 from core.repository_connector import RepositoryBinaryFile, FedoraRepositoryConnector
 from core.utils import (
-    calculate_crc_32,
     get_mime_type,
     get_multi_transform_towgs84,
     get_transform_towgs84,
@@ -61,6 +71,28 @@ from projekt.models import Projekt
 from uzivatel.models import User
 from django_tables2.export import ExportMixin
 from datetime import datetime
+from heslar.hesla import HESLAR_PRISTUPNOST
+
+from heslar.models import Heslar
+from dj.models import DokumentacniJednotka
+from .exceptions import ZaznamSouborNotmatching
+from .models import Permissions, PermissionsSkip
+from historie.models import Historie
+
+from core.ident_cely import get_record_from_ident
+from core.models import Permissions
+from historie.models import Historie
+from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
+
+from core.utils import (
+    get_num_pass_from_envelope,
+    get_num_pian_from_envelope,
+    get_pas_from_envelope,
+    get_pian_from_envelope,
+    get_heatmap_pas,
+    get_heatmap_pas_density,
+    get_heatmap_pian,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -74,14 +106,26 @@ def index(request):
 
 @login_required
 @require_http_methods(["POST", "GET"])
-def delete_file(request, pk):
+def delete_file(request, typ_vazby, ident_cely, pk):
     """
     Funkce pohledu pro smazání souboru. Funkce maže jak záznam v DB tak i soubor na disku.
     """
     s = get_object_or_404(Soubor, pk=pk)
+    try:
+        check_soubor_vazba(typ_vazby, ident_cely, pk)
+    except ZaznamSouborNotmatching as e:
+        logger.debug(e)
+        messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
+                    )
+        if request.method == "POST":
+            return redirect(request.POST.get("next","core:home"))
+        return redirect(request.GET.get("next","core:home"))
     if request.method == "POST":
-        items_deleted: Soubor = s.delete()
-        if not items_deleted:
+        s.deleted_by_user = request.user
+        soubor_pk = s.pk
+        s.delete()
+        if Soubor.objects.filter(pk=soubor_pk).exists():
             # Not sure if 404 is the only correct option
             logger.debug("core.views.delete_file.not_deleted", extra={"file": s})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
@@ -96,7 +140,7 @@ def delete_file(request, pk):
                 )
             return JsonResponse({"messages": django_messages}, status=400)
         else:
-            logger.debug("core.views.delete_file.deleted", extra={"items_deleted": items_deleted})
+            logger.debug("core.views.delete_file.deleted", extra={"soubor_pk": soubor_pk})
             connector = FedoraRepositoryConnector(s.vazba.navazany_objekt)
             if not request.POST.get("dropzone", False):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
@@ -123,37 +167,56 @@ def delete_file(request, pk):
         return render(request, "core/transakce_modal.html", context)
 
 
-@login_required
-@require_http_methods(["GET"])
-def download_file(request, pk):
-    """
-    Funkce pohledu pro stažení souboru.
-    """
-    soubor: Soubor = get_object_or_404(Soubor, id=pk)
-    rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content()
-    if soubor.repository_uuid is not None:
-        # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
-        response = FileResponse(rep_bin_file.content, filename=soubor.nazev)
-        response["Content-Length"] = rep_bin_file.size
-        response["Content-Disposition"] = (
-                "attachment; filename=" + soubor.nazev
-        )
-        return response
+class DownloadFile(LoginRequiredMixin, View):
+    thumb = False
+    @staticmethod
+    def _preprocess_image(file_content: BytesIO) -> BytesIO:
+        return file_content
 
-    path = os.path.join(settings.MEDIA_ROOT, soubor.path)
-    if os.path.exists(path):
-        content_type = mimetypes.guess_type(soubor.nazev)[
-            0
-        ]  # Use mimetypes to get file type
-        response = HttpResponse(soubor.path, content_type=content_type)
-        response["Content-Length"] = str(len(soubor.path))
-        response["Content-Disposition"] = (
-            "attachment; filename=" + soubor.nazev
-        )
-        return response
-    else:
-        logger.debug("core.views.download_file.not_exists", extra={"soubor_name": soubor.nazev, "path": path})
-    return HttpResponse("")
+    def get(self, request, typ_vazby, ident_cely, pk, *args, **kwargs):
+        try:
+            check_soubor_vazba(typ_vazby, ident_cely, pk)
+        except ZaznamSouborNotmatching as e:
+            logger.debug(e)
+            messages.add_message(
+                            request, messages.ERROR, SPATNY_ZAZNAM_SOUBOR_VAZBA
+                        )
+            return redirect(request.GET.get("next","core:home"))
+        soubor: Soubor = get_object_or_404(Soubor, id=pk)
+        rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content(thumb=self.thumb)
+        if soubor.repository_uuid is not None:
+            # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
+            content = self._preprocess_image(rep_bin_file.content)
+            response = FileResponse(content, filename=soubor.nazev)
+            content.seek(0)
+            response["Content-Length"] = content.getbuffer().nbytes
+            content.seek(0)
+            response["Content-Disposition"] = (
+                    f"attachment; filename={soubor.nazev}"
+            )
+            return response
+
+        if soubor.path is not None:
+            path = os.path.join(settings.MEDIA_ROOT, soubor.path)
+            if os.path.exists(path):
+                content_type = mimetypes.guess_type(soubor.nazev)[
+                    0
+                ]  # Use mimetypes to get file type
+                response = HttpResponse(soubor.path, content_type=content_type)
+                response["Content-Length"] = str(len(soubor.path))
+                response["Content-Disposition"] = (
+                        "attachment; filename=" + soubor.nazev
+                )
+                return response
+            else:
+                logger.debug("core.views.download_file.not_exists", extra={"soubor_name": soubor.nazev, "path": path})
+        else:
+            logger.debug("core.views.download_file.path_is_none", extra={"soubor_name": soubor.nazev, "pk": pk})
+        return HttpResponse("")
+
+
+class DownloadThumbnail(DownloadFile):
+    thumb = True
 
 
 @login_required
@@ -190,16 +253,25 @@ def upload_file_dokument(request, ident_cely):
 
 @login_required
 @require_http_methods(["GET"])
-def update_file(request, typ_vazby, file_id):
+def update_file(request, typ_vazby, ident_cely, file_id):
     """
     Funkce pohledu pro zobrazení stránky pro upload souboru.
     """
+    try:
+        check_soubor_vazba(typ_vazby, ident_cely, file_id)
+    except ZaznamSouborNotmatching as e:
+        logger.debug(e)
+        messages.add_message(
+                        request, messages.ERROR, SPATNY_ZAZNAM_SOUBOR_VAZBA
+                    )
+        return redirect(request.GET.get("next","core:home"))
+        
     ident_cely = ""
-    back_url = request.GET.get("next")
+    back_url = request.GET.get("next","core:home")
     return render(
         request,
         "core/upload_file.html",
-        {"ident_cely": ident_cely, "back_url": back_url, "file_id": file_id},
+        {"ident_cely": ident_cely, "back_url": back_url, "file_id": file_id, "typ_vazby":typ_vazby},
     )
 
 
@@ -217,6 +289,34 @@ def upload_file_samostatny_nalez(request, ident_cely):
         "core/upload_file.html",
         {"ident_cely": ident_cely, "back_url": sn.get_absolute_url()},
     )
+
+class uploadFileView(LoginRequiredMixin, TemplateView):
+    """
+    Třída pohledu pro zobrazení stránky s uploadem souboru.
+    """
+    template_name = "core/upload_file.html"
+    http_method_names = ["get"]
+
+    def get_zaznam(self):
+        self.typ_vazby = self.kwargs.get("typ_vazby")
+        self.ident = self.kwargs.get("ident_cely")
+        if self.typ_vazby == "pas":
+            return get_object_or_404(SamostatnyNalez, ident_cely=self.ident)
+        elif self.typ_vazby == "dokument":
+            return get_object_or_404(Dokument, ident_cely=self.ident)
+        elif self.typ_vazby == "model3d":
+            return get_object_or_404(Dokument, ident_cely=self.ident)
+        else:
+            return get_object_or_404(Projekt, ident_cely=self.ident)
+
+    def get_context_data(self, **kwargs):
+        zaznam = self.get_zaznam()
+        context = {
+            "ident_cely": self.ident,
+            "back_url": zaznam.get_absolute_url(),
+            "typ_vazby": self.typ_vazby,
+        }
+        return context
 
 
 @require_http_methods(["POST"])
@@ -257,7 +357,7 @@ def post_upload(request):
             )
     else:
         logger.debug("core.views.post_upload.updating", extra={"fileID": request.POST["fileID"]})
-        s = get_object_or_404(Soubor, id=request.POST["fileID"])
+        s: Soubor = get_object_or_404(Soubor, id=request.POST["fileID"])
         logger.debug("core.views.post_upload.update", extra={"s": s.pk})
         objekt = s.vazba.navazany_objekt
         new_name = s.nazev
@@ -266,16 +366,14 @@ def post_upload(request):
     soubor_data = BytesIO(soubor.read())
     rep_bin_file = None
     if soubor:
-        checksum = calculate_crc_32(soubor)
         if not update:
             conn = FedoraRepositoryConnector(objekt)
             mimetype = get_mime_type(soubor.name)
             rep_bin_file = conn.save_binary_file(new_name, get_mime_type(soubor.name), soubor_data)
             sha_512 = rep_bin_file.sha_512
-            s = Soubor(
+            s: Soubor = Soubor(
                 vazba=objekt.soubory,
                 nazev=new_name,
-                # Short name is new name without checksum
                 mimetype=mimetype,
                 size_mb=rep_bin_file.size_mb,
                 path=rep_bin_file.url_without_domain,
@@ -333,8 +431,8 @@ def post_upload(request):
             mimetype = get_mime_type(soubor.name)
             if s.repository_uuid is not None:
                 extension = soubor.name.split(".")[-1]
-                old_name = s.nazev.split(".")[-1]
-                new_name = f'{".".join(old_name[:-1])}.{extension[-1]}'
+                old_name = ".".join(s.nazev.split(".")[:-1])
+                new_name = f'{old_name}.{extension}'
                 rep_bin_file = conn.update_binary_file(new_name, get_mime_type(soubor.name),
                                                        soubor_data, s.repository_uuid)
                 logger.debug("core.views.post_upload.update", extra={"pk": s.pk, "new_name": new_name})
@@ -343,7 +441,7 @@ def post_upload(request):
                 s.mimetype = mimetype
                 s.sha_512 = rep_bin_file.sha_512
                 s.save()
-                s.zaznamenej_nahrani_nove_verze(request.user, new_name)
+                s.zaznamenej_nahrani_nove_verze(request.user, old_name)
             if rep_bin_file is not None:
                 duplikat = (
                     Soubor.objects.filter(sha_512=rep_bin_file.sha_512)
@@ -360,7 +458,7 @@ def post_upload(request):
                             )
                             + parent_ident
                             + ". "
-                            + _("core.views.post_upload.duplikat2.text2"),
+                            + str(_("core.views.post_upload.duplikat2.text2")),
                             "filename": s.nazev,
                             "id": s.pk,
                         },
@@ -508,110 +606,14 @@ def redirect_ident_view(request, ident_cely):
     """
     Funkce pro získaní správneho redirectu na záznam podle ident%cely záznamu.
     """
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.project", extra={"ident_cely": ident_cely})
-        return redirect("projekt:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}\D{1}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.archeologicka_akce", extra={"ident_cely": ident_cely})
-        return redirect("arch_z:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-9\d{6,9}\D{1}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.samostatna_akce", extra={"ident_cely": ident_cely})
-        return redirect("arch_z:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-(N|L|K)\d{7,9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.lokalita", extra={"ident_cely": ident_cely})
-        return redirect("lokalita:detail", slug=ident_cely)
-    if bool(re.fullmatch("(BIB|X-BIB)-\d{7,9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.zdroj", extra={"ident_cely": ident_cely})
-        return redirect("ez:detail", slug=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-D\d{2}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.dokumentacni_jednotka", extra={"ident_cely": ident_cely})
-        response = redirect("arch_z:detail", ident_cely=ident_cely[:-4])
-        response.set_cookie("show-form", f"detail_dj_form_{ident_cely}", max_age=1000)
-        response.set_cookie(
-            "set-active",
-            f"el_div_dokumentacni_jednotka_{ident_cely.replace('-', '_')}",
-            max_age=1000,
+    object = get_record_from_ident(ident_cely)
+    if object:
+        return redirect(object.get_absolute_url())
+    else:
+        messages.error(
+            request, _("core.views.redirectView.identnotmatchingregex.message.text")
         )
-        return response
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-K\d{3}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.komponenta_on_dokumentacni_jednotka",
-                     extra={"ident_cely": ident_cely})
-        response = redirect("arch_z:detail", ident_cely=ident_cely[:-5])
-        response.set_cookie(
-            "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
-        )
-        response.set_cookie(
-            "set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000
-        )
-        return response
-    if bool(re.fullmatch("ADB-\D{4}\d{2}-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.adb", extra={"ident_cely": ident_cely})
-        adb = get_object_or_404(Adb, ident_cely=ident_cely)
-        dj_ident = adb.dokumentacni_jednotka.ident_cely
-        response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
-        response.set_cookie("show-form", f"detail_dj_form_{dj_ident}", max_age=1000)
-        response.set_cookie(
-            "set-active",
-            f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}",
-            max_age=1000,
-        )
-        return response
-    if bool(re.fullmatch("(X-ADB|ADB)-\D{4}\d{2}-\d{4,6}-V\d{4}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.vyskovy_bod", extra={"ident_cely": ident_cely})
-        vb = get_object_or_404(VyskovyBod, ident_cely=ident_cely)
-        dj_ident = vb.adb.dokumentacni_jednotka.ident_cely
-        response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
-        response.set_cookie("show-form", f"detail_dj_form_{dj_ident}", max_age=1000)
-        response.set_cookie(
-            "set-active",
-            f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}",
-            max_age=1000,
-        )
-        return response
-    if bool(re.fullmatch("(P|N)-\d{4}-\d{6,9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.pian", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.dokument_3D", extra={"ident_cely": ident_cely})
-        return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}-(D|K)\d{3}", ident_cely)) or bool(
-        re.fullmatch("3D-(C|M|X-C|X-M)-\w{8,10}-\d{1,9}-(D|K)\d{3}", ident_cely)
-    ):
-        logger.debug("core.views.redirect_ident_view.obsah_cast_dokumentu_3D", extra={"ident_cely": ident_cely})
-        return redirect("dokument:detail-model-3D", ident_cely=ident_cely[:-5])
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}", ident_cely)) or bool(
-        re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}", ident_cely)
-    ):
-        logger.debug("core.views.redirect_ident_view.dokument", extra={"ident_cely": ident_cely})
-        return redirect("dokument:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}-(D|K)\d{3}", ident_cely)) or bool(
-        re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}-(D|K)\d{3}", ident_cely)
-    ):
-        logger.debug("core.views.redirect_ident_view.obsah_cast_dokumentu", extra={"ident_cely": ident_cely})
-        return redirect("dokument:detail", ident_cely=ident_cely[:-5])
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}-N\d{5}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.samostatny_nalez", extra={"ident_cely": ident_cely})
-        logger.debug("regex match for Samostatny nalez with ident %s", ident_cely)
-        return redirect("pas:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(X-BIB|BIB)-\d{7}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(LET)-\d{7}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(HES)-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(ORG)-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(OS)-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-
-    messages.error(request, _("core.views.redirectView.identnotmatchingregex.message.text"))
-    return redirect("core:home")
-
+        return redirect("core:home")
 
 # for prolonging session ajax call
 @login_required
@@ -638,15 +640,17 @@ def tr_wgs84(request):
     Funkce pohledu pro transformaci souradnic na wsg84.
     """
     body = json.loads(request.body.decode("utf-8"))
-    [cx, cy] = get_transform_towgs84(body["cy"], body["cx"])
-    if cx is not None:
+    [c_x2, c_x1] = get_transform_towgs84(body["c_x1"], body["c_x2"])
+    if c_x1 is not None:
         return JsonResponse(
-            {"cx": cx, "cy": cy},
+            {"x1": c_x1, "x2": c_x2},
             status=200,
         )
     else:
-        return JsonResponse({"cx": "", "cy": ""}, status=200)
+        return JsonResponse({"x1": "", "x2": ""}, status=200)
 
+ 
+ 
 
 @login_required
 @require_http_methods(["POST"])
@@ -673,8 +677,121 @@ class ExportMixinDate(ExportMixin):
         now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         return "{}{}.{}".format(self.export_name, now, export_format)
 
+class PermissionFilterMixin():
+    permission_model_lookup = ""
+    typ_zmeny_lookup = ""
+    group_to_accessibility={
+            ROLE_BADATEL_ID: [PRISTUPNOST_BADATEL_ID,PRISTUPNOST_ANONYM_ID],
+            ROLE_ARCHEOLOG_ID: [PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_BADATEL_ID,PRISTUPNOST_ANONYM_ID],
+            ROLE_ARCHIVAR_ID:[PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_BADATEL_ID,PRISTUPNOST_ANONYM_ID],
+            ROLE_ADMIN_ID:[PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_BADATEL_ID,PRISTUPNOST_ANONYM_ID],
+        }
+    
+    def check_filter_permission(self, qs, action=None):
+        if action:
+            permissions = Permissions.objects.filter(
+                main_role=self.request.user.hlavni_role,
+                address_in_app=self.request.resolver_match.route,
+                action=action
+            )
+        else:    
+            permissions = Permissions.objects.filter(
+                    main_role=self.request.user.hlavni_role,
+                    address_in_app=self.request.resolver_match.route,
+                )
+        if permissions.count()>0:
+            for idx, perm in enumerate(permissions):
+                if idx == 0:
+                    new_qs = self.filter_by_permission(qs, perm)
+                else:
+                    new_qs = self.filter_by_permission(qs, perm) | new_qs
 
-class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView):
+            perm_skips = list(PermissionsSkip.objects.filter(user=self.request.user).values_list("ident_list",flat=True))
+            if len(perm_skips) > 0:
+                if "spoluprace/vyber" in perm.address_in_app:
+                    ident_key = self.permission_model_lookup + "id__in"
+                    perm_skips_list = [id for id in perm_skips[0].split(",") if id.isdigit()]
+                else:
+                    ident_key = self.permission_model_lookup + "ident_cely__in"
+                    perm_skips_list = perm_skips[0].split(",")
+                filterdoc = {ident_key:perm_skips_list}
+                if perm.status:
+                    filterdoc.update(self.add_status_lookup(perm))
+                qs = new_qs | qs.filter(**filterdoc)
+            else:
+                qs = new_qs
+        return qs
+    
+    def filter_by_permission(self, qs, permission):
+        qs = qs.annotate(
+            historie_zapsat=FilteredRelation(
+            self.permission_model_lookup + "historie__historie",
+            condition=Q(**{self.permission_model_lookup+"historie__historie__typ_zmeny":self.typ_zmeny_lookup}),
+            ),
+        )
+        if not permission.base:
+            logger.debug("no base")
+            return qs.none()
+        if permission.status:
+            qs = qs.filter(**self.add_status_lookup(permission))
+        if permission.ownership:
+            qs = qs.filter(self.add_ownership_lookup(permission.ownership,qs))
+        if permission.accessibility:
+            qs = self.add_accessibility_lookup(permission,qs)
+
+        return qs
+
+    def add_status_lookup(self, permission):
+        filterdoc = {}
+        subed_status = re.sub("[a-zA-Z]", "", permission.status)
+        if ">" in subed_status:
+            operator_str = "__gt"
+            status = subed_status[1]
+        elif "<" in subed_status:
+            operator_str = "__lt"
+            status = subed_status[1]
+        elif "-" in subed_status:
+            operator_str = ["__gte","__lte"]
+        else:
+            operator_str = ""
+            status = subed_status[0]
+        if isinstance(operator_str, list):
+            i = 0
+            for operator in operator_str:
+                str_oper = self.permission_model_lookup + "stav" + operator    
+                filterdoc.update(
+                    {
+                        str_oper:subed_status[i]
+                    }
+                )
+                i-=1
+        else:
+            str_oper = self.permission_model_lookup + "stav" + operator_str    
+            filterdoc.update(
+                {
+                    str_oper:status
+                }
+            )
+        return filterdoc
+    
+    def add_ownership_lookup(self, ownership, qs=None):
+        filter_historie = {"uzivatel":self.request.user}
+        filtered_my = Historie.objects.filter(**filter_historie)
+        if ownership == Permissions.ownershipChoices.our:
+            filter_historie = {"uzivatel__organizace":self.request.user.organizace}
+            filtered_our = Historie.objects.filter(**filter_historie)
+            return Q(**{"historie_zapsat__in":filtered_my}) | Q(**{"historie_zapsat__in":filtered_our})
+        else:
+            return Q(**{"historie_zapsat__in":filtered_my})
+
+    
+    def add_accessibility_lookup(self,permission, qs):
+        accessibility_key = self.permission_model_lookup+"pristupnost__in"
+        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id))
+        filter = {accessibility_key:accessibilities}
+        return qs.filter(Q(**filter)  | self.add_ownership_lookup(permission.accessibility,qs))
+
+class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView, PermissionFilterMixin):
     """
     Třída pohledu pro tabulky záznamů, která je použita jako základ pro jednotlivé pohledy.
     """
@@ -682,23 +799,31 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     paginate_by = 100
     allow_empty = True
     export_formats = ["csv", "json", "xlsx"]
-    page_title = _("core.views.AkceListView.page_title.text")
     app = "core"
     toolbar = "toolbar_akce.html"
-    search_sum = _("core.views.AkceListView.search_sum.text")
-    pick_text = _("core.views.AkceListView.pick_text.text")
-    hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
-    hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
-    hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
-    hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
-    default_header = _("core.views.AkceListView.default_header.text")
-    toolbar_name = _("core.views.AkceListView.toolbar_name.text")
+    
+    def init_translations(self):
+        self.page_title = _("core.views.AkceListView.page_title.text")
+        self.search_sum = _("core.views.AkceListView.search_sum.text")
+        self.pick_text = _("core.views.AkceListView.pick_text.text")
+        self.hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
+        self.hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
+        self.hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
+        self.hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
+        self.default_header = _("core.views.AkceListView.default_header.text")
+        self.toolbar_name = _("core.views.AkceListView.toolbar_name.text")
+        self.toolbar_label = _("core.views.AkceListView.toolbar_label.text")
 
     def get_paginate_by(self, queryset):
         return self.request.GET.get("per_page", self.paginate_by)
+    
+    def _get_sort_params(self):
+        sort_params = self.request.GET.getlist('sort')
+        return sort_params
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        self.init_translations()
         context["export_formats"] = self.export_formats
         context["page_title"] = self.page_title
         context["app"] = self.app
@@ -711,8 +836,11 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["hasOnlyPotvrdit_header"] = self.hasOnlyPotvrdit_header
         context["default_header"] = self.default_header
         context["toolbar_name"] = self.toolbar_name
+        context["toolbar_label"] = self.toolbar_label
+        context["sort_params"] = self._get_sort_params()
+        logger.debug(context["object_list"])
         return context
-
+    
 
 class SearchListChangeColumnsView(LoginRequiredMixin, View):
     """
@@ -722,7 +850,7 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
         if "vychozi_skryte_sloupce" not in request.session:
             request.session["vychozi_skryte_sloupce"] = {}
         app = json.loads(request.body.decode("utf8"))["app"]
-        sloupec = json.loads(request.body.decode("utf8"))["sloupec"]
+        sloupec = html.escape(json.loads(request.body.decode("utf8"))["sloupec"])
         zmena = json.loads(request.body.decode("utf8"))["zmena"]
         if app not in request.session["vychozi_skryte_sloupce"]:
             request.session["vychozi_skryte_sloupce"][app] = []
@@ -739,39 +867,26 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
         else:
             skryte_sloupce.append(sloupec)
             request.session.modified = True
-        return HttpResponse("Pridano do skrytych %s" % sloupec)
+        return HttpResponse(f"{_('core.views.SearchListChangeColumnsView.response')} {sloupec}")
 
-
-class StahnoutMetadataView(LoginRequiredMixin, View):
-    def get(self, request, model_name, pk):
-        if model_name == "projekt":
-            record: Projekt = Projekt.objects.get(pk=pk)
-        elif model_name == "archeologicky_zaznam":
-            record: ArcheologickyZaznam = ArcheologickyZaznam.objects.get(pk=pk)
-        elif model_name == "adb":
-            record: Adb = Adb.objects.get(pk=pk)
-        elif model_name == "dokument":
-            record: Dokument = Dokument.objects.get(pk=pk)
-        elif model_name == "samostatny_nalez":
-            record: SamostatnyNalez = SamostatnyNalez.objects.get(pk=pk)
-        elif model_name == "externi_zdroj":
-            record: ExterniZdroj = ExterniZdroj.objects.get(pk=pk)
-        else:
-            raise Http404
-        metadata = record.metadata
-
-        def context_processor(content):
-            yield content
-
-        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
-        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
-        return response
 
 
 class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
     def get(self, request, model_name, ident_cely):
         if model_name == "pian":
             record: Pian = Pian.objects.get(ident_cely=ident_cely)
+        elif model_name == "projekt":
+            record: Projekt = Projekt.objects.get(ident_cely=ident_cely)
+        elif model_name == "archeologicky_zaznam":
+            record: ArcheologickyZaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
+        elif model_name == "adb":
+            record: Adb = Adb.objects.get(ident_cely=ident_cely)
+        elif model_name == "dokument":
+            record: Dokument = Dokument.objects.get(ident_cely=ident_cely)
+        elif model_name == "samostatny_nalez":
+            record: SamostatnyNalez = SamostatnyNalez.objects.get(ident_cely=ident_cely)
+        elif model_name == "externi_zdroj":
+            record: ExterniZdroj = ExterniZdroj.objects.get(ident_cely=ident_cely)
         else:
             raise Http404
         metadata = record.metadata
@@ -784,3 +899,120 @@ class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
         return response
 
 
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_pas_and_pian_limit(request):
+    """
+    Funkce pohledu pro získaní heatmapy.
+    """
+    body = json.loads(request.body.decode("utf-8"))
+    params= [
+            body["southEast"]["lng"],
+            body["northWest"]["lat"],
+            body["northWest"]["lng"],
+            body["southEast"]["lat"],
+            body["zoom"]
+            ]
+    num=0
+    req_pian=body["pian"]
+    req_pas=body["pas"]
+    if req_pas:
+        pases =  get_pas_from_envelope(*params[0:4],request).distinct()
+        num = num+pases.count()
+
+    if req_pian:
+        pians = get_pian_from_envelope(*params[0:4],request).distinct()
+        num = num + pians.count()
+
+    logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"num": num})
+    if num< 5000:
+        back = []
+        remove_duplicity = []
+
+        if req_pas:
+            #pases = get_pas_from_envelope(*params[0:4],request)
+            back=list(pases.values("id","ident_cely",type=Value("pas")).annotate(geom=AsWKT("geom")))
+            # for pas in pases:
+            #     if pas.id not in remove_duplicity:
+            #         remove_duplicity.append(pas.id)
+            #         back.append(
+            #             {
+            #                 "id": pas.id,
+            #                 "ident_cely": pas.ident_cely,
+            #                 "geom": pas.geom.wkt.replace(", ", ","),
+            #                 "type": "pas"
+            #             }
+            #         )
+
+        if req_pian:  
+            logger.debug("Start getting pians")  
+            dok_jed = DokumentacniJednotka.objects.filter(
+                pian=OuterRef('pk')
+            ).order_by('-pk').values('ident_cely')
+            if num < 500:
+                back=list(pians.values("id","ident_cely",type=Value("pian")).annotate(geom=AsWKT("geom"),presnost=F("presnost__zkratka"),dj=Subquery(dok_jed[:1])))
+            else:
+                back=list(pians.values("id","ident_cely",type=Value("pian")).annotate(geom=AsWKT("centroid"),presnost=F("presnost__zkratka"),dj=Subquery(dok_jed[:1])))
+            # pians = get_pian_from_envelope(*params[0:4],request)    
+            # logger.debug("End getting pians")  
+            # logger.debug("Start building pians")  
+            # for pian in pians:
+            #     if pian["pian__id"] not in remove_duplicity:
+            #         remove_duplicity.append(pian["pian__id"])
+            #         back.append(
+                        
+            #             {
+            #                 "id": pian["pian__id"],
+            #                 "ident_cely": pian["pian__ident_cely"],
+            #                 "geom": pian["pian__geom"].wkt.replace(", ", ",")
+            #                 if num<500
+            #                 else pian["pian__centroid"].wkt.replace(", ", ","),
+            #                 "dj": pian["ident_cely"],
+            #                 "presnost": pian["pian__presnost__zkratka"],
+            #                 "type": "pian"
+                        
+            #             }
+            #         )
+            logger.debug("End building pians")  
+        if num > 0:
+            return JsonResponse({"points": back, "algorithm": "detail","count":num}, status=200)
+        else:
+            return JsonResponse({"points": [], "algorithm": "detail","count":0}, status=200)
+    else:
+        density = get_heatmap_pas_density(*params)
+        logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.density", extra={"density": density})
+
+        heats = []
+        if req_pas:
+            heats=heats+get_heatmap_pas(*params)
+        if req_pian:
+            heats=heats+get_heatmap_pian(*params)
+        back = []
+        cid = 0
+        for heat in heats:
+            cid += 1
+            back.append(
+                {
+                    "id": str(cid),
+                    "pocet": heat["count"],
+                    "density": 0,
+                    "geom": heat["geometry"].replace(", ", ","),
+                }
+            )
+        if len(heats) > 0:
+            return JsonResponse({"heat": back, "algorithm": "heat","count":len(heats)}, status=200)
+        else:
+            return JsonResponse({"heat": [], "algorithm": "heat","count":len(heats)}, status=200)
+
+
+def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
+    if typ_vazby == 'model3d' or typ_vazby == 'dokument':
+        soubor = get_object_or_404(Dokument, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
+    elif typ_vazby == 'pas':
+        soubor = get_object_or_404(SamostatnyNalez, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
+    elif typ_vazby == 'projekt':
+        soubor = get_object_or_404(Projekt, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
+    if soubor.count() > 0:
+        return True
+    else:
+        raise ZaznamSouborNotmatching

@@ -9,7 +9,6 @@ import os
 from django.contrib.staticfiles.storage import staticfiles_storage
 
 from core.repository_connector import FedoraRepositoryConnector, RepositoryBinaryFile
-from core.utils import calculate_crc_32
 from webclient.settings.base import MEDIA_ROOT, STATIC_ROOT
 
 from reportlab.lib import utils
@@ -35,7 +34,6 @@ HEADER_IMAGES = ("logo-arup-cs.png", "logo-arub-cs.png", "logo-am-colored-cs.png
 #Try except because of failing sphinx-build
 
 path = None
-path_bold = None
 try:
     path = os.path.join(STATIC_ROOT, "fonts", "OpenSans-Regular.ttf")
     pdfmetrics.registerFont(TTFont('OpenSans', path))
@@ -49,7 +47,7 @@ try:
                        boldItalic="OpenSansBoldItalic")
 except Exception as err:
     # This will be triggered during collectstatic
-    logger_s.error("doc_utils.font.error", extra={"path": path, "path_bold": path_bold})
+    logger_s.error("doc_utils.font.error", extra={"path": path})
 
 Title = "Hello world"
 pageinfo = "platypus example"

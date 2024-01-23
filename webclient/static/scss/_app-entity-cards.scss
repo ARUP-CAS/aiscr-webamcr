@@ -1,5 +1,9 @@
 // --- ENTITY CARDS ---
 
+.no-background {
+    background-image: none !important;
+}
+
 .app-entity-cards {
   .col {
     @extend .pr-0;
@@ -8,7 +12,19 @@
     .app-card-entity {
       @include setEntityColor("card");
       @extend .h-100, .border-0, .app-card-shadow;
-      min-height: 400px;
+      @media (min-width: 768px) {
+        min-height: 400px;
+      }
+      @media (max-width: 768px) {
+        max-height: 200px;
+      }
+      @media (max-width: 440px) {
+        min-width: calc(100vw - 32px);
+      }
+      @media (min-width: 440px) {
+        max-width: 205px;
+      }
+      margin-bottom: 1rem;
       text-align: center;
       cursor: pointer;
 
@@ -22,11 +38,6 @@
           position: absolute;
           bottom: 0;
           right: 0;
-          background-image: url('/static/static/img/bg-vrstevnice.png');
-          background-repeat: no-repeat;
-          background-size: 180px;
-          background-position: right bottom;
-          opacity: .3;
         }
       }
 
@@ -34,6 +45,14 @@
         font-size: 18px;
         font-weight: 500;
         font-family: museo;
+      }
+
+      .card-body-background {
+        background-image: url('/static/static/img/bg-vrstevnice.png');
+        background-repeat: no-repeat;
+        background-size: 180px;
+        background-position: right bottom;
+        opacity: .3;
       }
 
       img {

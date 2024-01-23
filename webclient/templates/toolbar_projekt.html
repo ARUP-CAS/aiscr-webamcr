@@ -3,7 +3,7 @@
 <div class="app-toolbar {% if showcontrols %}mb-0{% else %}mb-2{% endif %}">
   <div class="app-left">
     <div class="app-entity-title">
-      <a href="{% url 'projekt:index' %}"><span class="material-icons">dynamic_feed</span> Projekt</a>
+      <a href="{% url 'projekt:index' %}"><span class="material-icons">dynamic_feed</span><span class="app-controls-button-text"> {% trans "templates.toolbarProjekt.projekt.title" %}</span></a>
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
       {{ projekt.ident_cely }}
@@ -15,74 +15,78 @@
         {% if show.vratit_link %}
           <button id="projekt-vratit" class="btn m-0" type="button" name="button">
             <span class="material-icons">arrow_back</span>
-            {% trans "templates.toolbarProjekt.vratit.label" %}
+            <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.vratit.label" %}</span>
           </button>
         {% endif %}
         {% if show.znovu_zapsat_link %}
-          <button id="projekt-vratit-navrh-zruseni" class="btn m-0" type="button" name="button">
+          <button id="projekt-vratit-navrh-zruseni" class="btn" type="button" name="button">
             <span class="material-icons">wrap_text</span>
-            {% trans "templates.toolbarProjekt.vratitDoZapsat.label" %}
+            <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.vratitDoZapsat.label" %}</span>
           </button>
         {% endif %}
         {% if show.navrhnout_zruseni_link %}
           <button id="projekt-navrh-zruseni" class="btn m-0" type="button" name="button">
-          <span class="material-icons">shuffle</span>
-          {% trans "templates.toolbarProjekt.navrhnoutZruseni.label" %}
+            <span class="material-icons">shuffle</span>
+            <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.navrhnoutZruseni.label" %}</span>
         </button>
         {% endif %}
         {% if show.zrusit_link %}
           <button id="projekt-zrusit" class="btn m-0" type="button" name="button">
             <span class="material-icons">block</span>
-            {% trans "templates.toolbarProjekt.zrusit.label" %}
+            <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.zrusit.label" %}</span>
           </button>
         {% endif %}
         {% if show.schvalit_link %}
           <button id="projekt-schvalit" class="btn mt-0" type="button" name="button">
             <span class="material-icons">done</span>
-            {% trans "templates.toolbarProjekt.schvalit.label" %}
+            <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.schvalit.label" %}</span>
           </button>
         {% endif %}
         {% if show.prihlasit_link %}
           <button id="projekt-prihlasit" class="btn m-0" type="button" name="button">
             <span class="material-icons">login</span>
-            {% trans "templates.toolbarProjekt.vratprihlasitit.label" %}
+            <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.prihlasit.label" %}</span>
           </button>
         {% endif %}
         {% if show.zahajit_teren_link %}
           <button id="projekt-zahajit-v-terenu" class="btn m-0" type="button" name="button">
             <span class="material-icons">outlined_flag</span>
-            {% trans "templates.toolbarProjekt.zahajitVyzkum.label" %}
+            <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.zahajitVyzkum.label" %}</span>
           </button>
         {% endif %}
         {% if show.ukoncit_teren_link %}
           <button id="projekt-ukoncit-v-terenu" class="btn m-0" type="button" name="button">
             <span class="material-icons">highlight_off</span>
-            {% trans "templates.toolbarProjekt.ukoncitVyzkum.label" %}
+            <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.ukoncitVyzkum.label" %}</span>
           </button>
         {% endif %}
         {% if show.uzavrit_link %}
           <button id="projekt-uzavrit" class="btn m-0" type="button" name="button">
             <span class="material-icons">arrow_forward</span>
-            {% trans "templates.toolbarProjekt.uzavrit.label" %}
+            <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.uzavrit.label" %}</span>
           </button>
         {% endif %}
         {% if show.archivovat_link %}
           <button id="projekt-archivovat" class="btn m-0" type="button" name="button">
             <span class="material-icons">archive</span>
-            {% trans "templates.toolbarProjekt.archivovat.label" %}
+            <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.archivovat.label" %}</span>
           </button>
         {% endif %}
-        <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          {% trans "templates.toolbarProjekt.dalsiVolby.label" %}
+        <button id="otherOptions" type="button" class="btn dropdown-toggle m-0" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <span class="app-controls-other-menu-icon"><span class="material-icons">more_vert</span></span>
+          <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.dalsiVolby.label" %}</span>
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
+          {% if show.smazat_link %}
           <button id="projekt-smazat" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.smazatProjekt.label" %}</button>
-          <a class="dropdown-item" href="#">{% trans "templates.toolbarProjekt.tiskovaSestava.label" %}</a>
-          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'projekt' projekt.id %}">{% trans "templates.toolbarProjekt.metadataDownload.label" %}</a>
-          {% if projekt.expert_list_can_be_created and user.is_archiver_or_more %}
+          {% endif %}
+          {% if show.stahnout_metadata%}
+          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'projekt' projekt.ident_cely %}">{% trans "templates.toolbarProjekt.metadataDownload.label" %}</a>
+          {% endif %}
+          {% if projekt.expert_list_can_be_created and show.generovat_exp_list %}
             <a class="dropdown-item" data-toggle="modal" data-target="#expertni_list">{% trans "templates.toolbarProjekt.expertniList.label" %}</a>
           {% endif %}
-          {% if projekt.has_oznamovatel %}
+          {% if projekt.has_oznamovatel and show.generovat_potvrzeni %}
             <a class="dropdown-item" data-toggle="modal" data-target="#nove_potvrzeni">{% trans "templates.toolbarProjekt.generovatNovePotvrzeni.label" %}</a>
           {% endif %}
           {% if show.pridat_oznamovatele %}

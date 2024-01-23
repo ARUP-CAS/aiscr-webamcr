@@ -23,7 +23,7 @@
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_pas' sn.ident_cely %}"
+            <a class="btn app-entity-dokument" href="{% url 'core:upload_file' 'pas' sn.ident_cely %}"
                rel="tooltip"
                data-placement="top" title="{% trans 'pas.templates.detail.nahratSoubor' %}">
               <span class="material-icons">publish</span>
@@ -32,9 +32,9 @@
         </div>
         {% endif %}
       </div>
-      <div class="card-body">
+      <div class="card-body content-with-table-responsive">
         {% if soubory %}
-          {% include "core/filetable.html" with soubory=soubory next_url='/pas/detail/' ident=sn.ident_cely allow_replace=True vazba_trida="pas" %}
+          {% include "core/filetable.html" with next_url='/pas/detail/' ident=sn.ident_cely allow_replace=True vazba_trida="pas" %}
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
@@ -79,7 +79,7 @@
         <div class="app-fx app-left">
           {% trans "pas.templates.detail.cardHeader.ulozeni" %}
         </div>
-        {% if show.editovat %}
+        {% if show.ulozeni_edit %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <button id="pas-edit-ulozeni" class="btn" type="button" name="button" rel="tooltip"data-placement="top">
@@ -155,9 +155,9 @@
 
   $(document).ready(function () {
     global_map_can_edit=false;
-    document.getElementById('detector_coordinates_x').setAttribute("readonly", "readonly");
-    document.getElementById('detector_coordinates_y').setAttribute("readonly", "readonly");
-    document.getElementById('detector_system_coordinates').disabled = true;
+    document.getElementById('visible_x1').setAttribute("readonly", "readonly");
+    document.getElementById('visible_x2').setAttribute("readonly", "readonly");
+    document.getElementById('visible_ss_combo').disabled = true;
   });
 
 </script>

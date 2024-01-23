@@ -2,35 +2,30 @@ from django.urls import path
 
 from . import views
 
+from core.views import (
+    post_ajax_get_pas_and_pian_limit,
+)
+
 app_name = "core"
 
 urlpatterns = [
     path("", views.index, name="home"),
-    path("nahrat-soubor/odeslat", views.post_upload, name="post_upload"),
+    path("soubor/nahrat/odeslat", views.post_upload, name="post_upload"),
     path(
-        "nahrat-soubor/projekt/<str:ident_cely>",
-        views.upload_file_projekt,
-        name="upload_file_projekt",
-    ),
-    path(
-        "nahrat-soubor/dokument/<str:ident_cely>",
-        views.upload_file_dokument,
-        name="upload_file_dokument",
-    ),
-    path(
-        "nahrat-soubor/<str:typ_vazby>/nahradit/<int:file_id>",
+        "soubor/nahrat/<str:typ_vazby>/nahradit/<str:ident_cely>/<int:file_id>",
         views.update_file,
         name="update_file",
     ),
     path(
-        "nahrat-soubor/pas/<str:ident_cely>",
-        views.upload_file_samostatny_nalez,
-        name="upload_file_pas",
+        "soubor/nahrat/<str:typ_vazby>/<str:ident_cely>",
+        views.uploadFileView.as_view(),
+        name="upload_file",
     ),
-    path("stahnout-soubor/<int:pk>", views.download_file, name="download_file"),
-    path("smazat-soubor/<int:pk>", views.delete_file, name="delete_file"),
+    path("soubor/stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>", views.DownloadFile.as_view(), name="download_file"),
+    path("soubor/stahnout-nahled/<str:typ_vazby>/<str:ident_cely>/<int:pk>", views.DownloadThumbnail.as_view(), name="download_thumbnail"),
+    path("soubor/smazat/<str:typ_vazby>/<str:ident_cely>/<int:pk>", views.delete_file, name="delete_file"),
     path("id/<str:ident_cely>", views.redirect_ident_view, name="redirect_ident"),
-    path("prodlouzit-session/", views.prolong_session, name="prolong_session"),
+    path("session/prodlouzit/", views.prolong_session, name="prolong_session"),
     path(
         "transformace-single-wgs84",
         views.tr_wgs84,
@@ -42,10 +37,18 @@ urlpatterns = [
         name="tr_mwgs84",
     ),
     path(
-        "zmena-sloupcu-listu",
+        "tabulka/zmenit-sloupce",
         views.SearchListChangeColumnsView.as_view(),
         name="zmena_sloupcu_listu",
     ),
-    path("stahnout-metadata/<str:model_name>/<int:pk>", views.StahnoutMetadataView.as_view(), name="stahnout_metadata"),
-    path("stahnout-metadata/<str:model_name>/<str:ident_cely>", views.StahnoutMetadataIdentCelyView.as_view(), name="stahnout_metadata"),
+    path(
+        "metadata/stahnout/<str:model_name>/<str:ident_cely>",
+        views.StahnoutMetadataIdentCelyView.as_view(),
+        name="stahnout_metadata",
+    ),
+    path(
+        "mapa-pian-pas",
+        post_ajax_get_pas_and_pian_limit,
+        name="post_ajax_get_pas_pian_limit",
+    ),
 ]

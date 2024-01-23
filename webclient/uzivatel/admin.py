@@ -4,12 +4,13 @@ from typing import Union
 
 from django import forms
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.admin.utils import unquote
+from django.contrib.auth.admin import UserAdmin, sensitive_post_parameters_m
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import StreamingHttpResponse
 from django_object_actions import DjangoObjectActions, action
 
-from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN
+from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN, ZMENA_HESLA_ADMIN
 from historie.models import Historie
 from services.mailer import Mailer, NOTIFICATION_GROUPS
 from notifikace_projekty.models import Pes
@@ -62,7 +63,7 @@ class PesNotificationTypeInline(admin.TabularInline):
     model_type = None
     model = Pes
     form = create_pes_form(model_typ=model_type)
-    
+
     def get_queryset(self, request):
         queryset = super(PesNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(
@@ -107,10 +108,10 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     """
     add_form = AuthUserCreationForm
     model = User
-    list_display = ("email", "is_active", "organizace", "ident_cely", "hlavni_role", "first_name", "last_name",
+    list_display = ("ident_cely", "email", "is_active", "organizace", "hlavni_role", "first_name", "last_name",
                     "telefon", "is_active", "date_joined", "last_login", "osoba")
     list_filter = ("is_active", "organizace", "groups")
-    readonly_fields = ("ident_cely", "is_superuser")
+    readonly_fields = ("ident_cely",)
     inlines = [UserNotificationTypeInline, PesKrajNotificationTypeInline, PesOkresNotificationTypeInline, PesKatastrNotificationTypeInline]
     fieldsets = (
         (
@@ -187,16 +188,15 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         user_db: Union[User, None]
         form_groups = form.cleaned_data["groups"]
         if obj.is_active:
-            if form_groups.filter(id=ROLE_ADMIN_ID).count() == 1:
-                if not request.user.is_superuser:
-                    obj.groups.remove(Group.objects.get(pk=ROLE_ADMIN_ID))
-                else:
+            if "is_superuser" in form.cleaned_data.keys():
+                if form.cleaned_data["is_superuser"]:
                     obj.is_superuser = True
-                    obj.is_staff = True
-            else:
-                if request.user.is_superuser:
+                else:
                     obj.is_superuser = False
-                    obj.is_staff = False
+            if form_groups.filter(id=ROLE_ADMIN_ID).count() == 1:
+                obj.is_staff = True
+            else:
+                obj.is_staff = False
         else:
             obj.is_superuser = False
             obj.is_staff = False
@@ -212,22 +212,27 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             max_id = ROLE_BADATEL_ID
         main_group = Group.objects.get(pk=max_id)
 
-        if set(user.groups.values_list('id', flat=True)) != set(form_groups.values_list('id', flat=True)):
+        if (user_db is None
+                or (set(user.groups.values_list('id', flat=True)) != set(form_groups.values_list('id', flat=True)))):
             logger.debug("uzivatel.admin.save_model.role_changed",
-                         extra={"old": obj.hlavni_role, "new": user.groups.values_list('name', flat=True)})
+                         extra={"old": obj.hlavni_role, "new": form_groups.values_list('name', flat=True)})
             Historie(
                 typ_zmeny=ZMENA_HLAVNI_ROLE,
                 uzivatel=user,
-                poznamka="role: " + ", ".join(list(user.groups.values_list('name', flat=True))),
+                poznamka="role: " + ", ".join(list(form_groups.values_list('name', flat=True))),
                 vazba=obj.history_vazba,
             ).save()
-        Historie(
-            typ_zmeny=ZMENA_UDAJU_ADMIN,
-            uzivatel=user,
-            poznamka=", ".join([f"{fieldname}: {form.cleaned_data[fieldname]}" for fieldname in form.changed_data
-                                if fieldname != "groups"]),
-            vazba=obj.history_vazba,
-        ).save()
+        changed_data_without_groups = [fieldname for fieldname in form.changed_data if fieldname != "groups"]
+        if form.changed_data is not None and len([form.changed_data]) > 0:
+            poznamka = ", ".join([f"{fieldname}: {form.cleaned_data[fieldname]}" for fieldname in
+                                  changed_data_without_groups if "password" not in fieldname])
+            if len(poznamka) > 0:
+                Historie(
+                    typ_zmeny=ZMENA_UDAJU_ADMIN,
+                    uzivatel=user,
+                    poznamka=poznamka,
+                    vazba=obj.history_vazba,
+                ).save()
 
         if user_db is not None:
             logger.debug("uzivatel.admin.save_model.manage_user_groups",
@@ -267,6 +272,30 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                 user.notification_types.add(group_obj)
             else:
                 user.notification_types.remove(group_obj)
+
+    def user_change_password(self, request, id, form_url=""):
+        if request.method == "POST":
+            user = self.get_object(request, unquote(id))
+            form = self.change_password_form(user, request.POST)
+            if form.is_valid():
+                Historie(
+                    typ_zmeny=ZMENA_HESLA_ADMIN,
+                    uzivatel=user,
+                    vazba=user.history_vazba,
+                ).save()
+        return super(CustomUserAdmin, self).user_change_password(request, id, form_url=form_url)
+
+    def log_deletion(self, request, object, object_repr):
+        object.deleted_by_user = request.user
+        super().log_deletion(request, object, object_repr)
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request,obj)
+        if obj:
+            if request.user.ident_cely == obj.ident_cely:
+                return fields+("is_superuser",)
+        return fields
+
 
 class CustomGroupAdmin(admin.ModelAdmin):
     """

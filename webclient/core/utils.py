@@ -5,7 +5,8 @@ import zlib
 
 import core.message_constants as mc
 import requests
-from arch_z.models import ArcheologickyZaznam
+from arch_z.models import ArcheologickyZaznam, ArcheologickyZaznamKatastr
+from django.contrib.gis.db.models.functions import Centroid
 from core.message_constants import (
     VALIDATION_EMPTY,
     VALIDATION_LINE_LENGTH,
@@ -15,13 +16,94 @@ from core.message_constants import (
 )
 from dj.models import DokumentacniJednotka
 from django.db import connection
+from django.urls import reverse
+from django.utils.html import format_html
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from heslar.models import RuianKatastr
 from pian.models import Pian
+from core.constants import ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
 
 logger = logging.getLogger(__name__)
 
 
+def file_validate_epsg(epsg):
+    if epsg == '4326' or epsg == 4326:
+        return True
+    else:
+        return False
+
+def balanced_parentheses(expression):    
+    stack = 0   
+    for char in expression:
+        if char == '(' :
+            stack+=1       
+        elif char == ')':
+            if stack == 0:
+                return False
+            stack-=1
+    if stack != 0:
+        return False              
+    return True
+
+def file_validate_geometry(lower_geom):
+    """
+    Funkce pro validaci řetězce s WKT geometrií.
+    """
+    geom=" ".join(lower_geom.upper().split())
+    geom=geom.replace(" (", "(") 
+
+    if geom=='':
+        return [False,'Empty string']
+    elif not geom.startswith(('POINT(', 'LINESTRING(', 'POLYGON(')):
+        return [False,geom.split('(')[0]+' is not supported']
+    elif not balanced_parentheses(geom):
+        return [False,'Unclosed parentheses']
+    else:
+        if "POINT(" in geom:
+            try:
+                p=geom.split("POINT(")[1].split(")")[0].split(" ")
+                if (len(p)==2 or len(p)==3) and float(p[0]) and float(p[1]):
+                    return [True, "Point geometry is valid"]
+                else:
+                    return [False,"Point is not valid"]
+            except:
+                return [False,"Point is not valid"]
+        elif "LINESTRING(" in geom:
+            larray=geom.split("LINESTRING(")[1].split(")")[0].split(",")
+            if len(larray)>1:
+                for l in larray:
+                    p=l.strip().split(" ")
+                    try:
+                        if len(p)==2 and float(p[0]) and float(p[1]):
+                            continue
+                        else:
+                            return [False,"Linestring is not valid"]
+                    except:
+                        return [False,"Linestring is not valid"]
+                return [True,"Linestring is valid"]
+            else:
+                return [False,"Linestring is not valid"]
+        elif "POLYGON(" in geom:
+            if " (" in geom or ",(" in geom:
+                return [False,"Polygon with innerbound is not supported"]
+            else:
+                larray=geom.split("POLYGON((")[1].split("))")[0].split(",")
+                if len(larray)>2:
+                    for l in larray:
+                        p=l.strip().split(" ")
+                        try:
+                            if len(p)==2 and float(p[0]) and float(p[1]):
+                                continue
+                            else:
+                                return [False,"Polygon is not valid"]
+                        except:
+                            return [False,"Polygon is not valid"]
+                    return [True,"Polygon is valid"]
+                else:
+                    return [False,"Polygon is not valid"]
+        else:
+            return [False,"Polygon is not valid"]
+            
 def get_mime_type(file_name):
     """
     Funkce pro získaní mime typu pro soubor.
@@ -31,18 +113,6 @@ def get_mime_type(file_name):
     if file_name.endswith(".csv"):
         mime_type = "text/csv"
     return mime_type
-
-
-def calculate_crc_32(file):
-    """
-    Počítá crc32 ze souboru (int32), transformuje ho na string a doplňuje ho na 13 znaků.
-    """
-    prev = 0
-    for eachLine in file:
-        prev = zlib.crc32(eachLine, prev)
-    checksum = "%d" % (prev & 0xFFFFFFFF)
-    return checksum.zfill(13)
-
 
 def get_cadastre_from_point(point):
     """
@@ -54,8 +124,10 @@ def get_cadastre_from_point(point):
     )
     try:
         katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])[0]
-        logger.debug("core.utils.get_cadastre_from_point.start",
-                     extra={"point_0": point[0], "point_1": point[1], "katastr": katastr})
+        logger.debug(
+            "core.utils.get_cadastre_from_point.start",
+            extra={"point_0": point[0], "point_1": point[1], "katastr": katastr},
+        )
         return katastr
     except IndexError:
         logger.error("core.utils.get_cadastre_from_point.error", extra={"point": point})
@@ -71,52 +143,20 @@ def get_cadastre_from_point_with_geometry(point):
         "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) and aktualni='t' limit 1"
     )
     try:
-        logger.debug("core.utils.get_cadastre_from_point.start", extra={"point_0": point[0], "point_1": point[1]})
+        logger.debug(
+            "core.utils.get_cadastre_from_point.start",
+            extra={"point_0": point[0], "point_1": point[1]},
+        )
         cursor = connection.cursor()
         cursor.execute(query, [point[0], point[1]])
         line = cursor.fetchone()
         return [line[1], line[2], line[3]]
     except IndexError:
-        logger.error("core.utils.get_cadastre_from_point_with_geometry.error", extra={"point": point})
+        logger.error(
+            "core.utils.get_cadastre_from_point_with_geometry.error",
+            extra={"point": point},
+        )
         return None
-
-
-def get_centre_point(bod, geom):
-    """
-    Funkce pro získani stredového bodu z bodu a geomu.
-    """
-    try:
-        [x0, x1, xlength] = [0.0, 0.0, 1]
-        bod.zoom = 17
-        if isinstance(geom[0], float):
-            [x0, x1, xlength] = [geom[0], geom[1], 1]
-        elif isinstance(geom[0][0], float):
-            for i in range(0, len(geom)):
-                [x0, x1, xlength] = [
-                    x0 + geom[i][0],
-                    x1 + geom[i][1],
-                    len(geom),
-                ]
-        elif isinstance(geom[0][0][0], tuple):
-            for i in range(0, len(geom)-1):
-                [x0, x1, xlength] = [
-                    x0 + geom[0][0][i][0],
-                    x1 + geom[0][0][i][1],
-                    len(geom)-1,
-                ]
-        else:
-            for i in range(0, len(geom[0])-1):
-                [x0, x1, xlength] = [
-                    x0 + geom[0][i][0],
-                    x1 + geom[0][i][1],
-                    len(geom[0])-1,
-                ]
-        bod.lat = x1 / xlength
-        bod.lng = x0 / xlength
-        return [bod, geom]
-    except Exception as e:
-        logger.error("core.utils.get_cadastre_from_point_with_geometry.error", extra={"e": e})
-
 
 def get_all_pians_with_akce(ident_cely):
     """
@@ -199,7 +239,7 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
     ostatni_name = []
     ostatni_id = []
     for line in get_all_pians_with_akce(akce_ident_cely):
-        if hlavni_id == None:
+        if hlavni_id is None:
             hlavni_id = line["dj_katastr_id"]
             hlavni_name = line["dj_katastr"]
         elif (
@@ -210,88 +250,81 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
     ostatni_name = sorted(ostatni_name)
     # ostatni_id = sorted(ostatni_id)
 
-    query_select_archz = (
-        "select  id from PUBLIC.archeologicky_zaznam "
-        " where typ_zaznamu IN('A','L') and ident_cely = %s limit 1"
-    )
-    query_update_archz = (
-        "update PUBLIC.archeologicky_zaznam set hlavni_katastr=%s where id = %s"
-    )
-    query_select_other = (
-        "select katastr_id from PUBLIC.archeologicky_zaznam_katastr "
-        " where archeologicky_zaznam_id=%s and katastr_id in %s"
-    )
-    query_insert_other = "insert into PUBLIC.archeologicky_zaznam_katastr(archeologicky_zaznam_id,katastr_id)  values(%s,%s)"
-    query_delete_other = "delete from PUBLIC.archeologicky_zaznam_katastr where archeologicky_zaznam_id=%s and katastr_id not in %s"
-    try:
-        cursor = connection.cursor()
-        cursor.execute(query_select_archz, [akce_ident_cely])
-        zaznam_id = cursor.fetchone()[0]
-        if len(str(zaznam_id)) > 0:
-            if hlavni_id != None:
-                cursor.execute(query_update_archz, [hlavni_id, zaznam_id])
-            if len(ostatni_id):
-                cursor.execute(query_select_other, [zaznam_id, tuple(ostatni_id)])
-                ostatni_already_inserted = []
-                for ostatni_inserted in cursor.fetchall():
-                    ostatni_already_inserted.append(ostatni_inserted[0])
-                for ostatni_one in ostatni_id:
-                    if int(ostatni_one) not in ostatni_already_inserted:
-                        cursor.execute(query_insert_other, [zaznam_id, ostatni_one])
-            if len(ostatni_id) == 0:  # HotFix for delete DML
-                ostatni_id.append(0)
-            cursor.execute(query_delete_other, [zaznam_id, tuple(ostatni_id)])
-    except IndexError:
-        return None
+    zaznam = ArcheologickyZaznam.objects.filter(
+        typ_zaznamu__in=['A', 'L'],
+        ident_cely=akce_ident_cely
+    ).first()
+    if zaznam:
+        if hlavni_id is not None:
+            zaznam.hlavni_katastr_id = hlavni_id
+
+        if ostatni_id:
+            archeologicky_zaznam_katastr_query = ArcheologickyZaznamKatastr.objects.filter(
+                archeologicky_zaznam_id=zaznam.id,
+                katastr_id__in=ostatni_id
+            )
+            existing_ids = [x.katastr_id for x in archeologicky_zaznam_katastr_query]
+            new_ids = set(ostatni_id) - set(existing_ids)
+            for new_id in new_ids:
+                ArcheologickyZaznamKatastr.objects.create(
+                    archeologicky_zaznam_id=zaznam.id,
+                    katastr_id=new_id
+                )
+            ArcheologickyZaznamKatastr.objects.filter(
+                archeologicky_zaznam_id=zaznam.id
+            ).exclude(katastr_id__in=ostatni_id).delete()
+        zaznam.save()
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
 
 
-def get_centre_from_akce(katastr, pian):
+def get_centre_from_akce(katastr, akce_ident_cely):
     """
     Funkce pro bodu, geomu a presnosti z akce.
     """
+    from dj.models import DokumentacniJednotka
+    from django.db.models import Q
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
         " from public.ruian_katastr where "
         " upper(nazev_stary)=upper(%s) and aktualni='t' limit 1"
     )
-    try:
-        bod = RuianKatastr.objects.raw(query, [katastr])[0]
-        geom = ""
-        presnost = 4
-        bod.zoom = 14
-        if len(pian) > 1:
-            dj = DokumentacniJednotka.objects.get(ident_cely=pian)
-            if dj.pian and dj.pian.geom:
-                [bod, geom] = get_centre_point(bod, dj.pian.geom)
-                presnost = dj.pian.presnost.zkratka
-        return [bod, geom, presnost]
-    except IndexError:
-        logger.error("core.utils.get_centre_from_akce.error", extra={"katastr": katastr, "pian": pian})
-        return None
-
-
-def get_points_from_envelope(left, bottom, right, top):
-    """
-    Funkce pro získaní projektů a jeho geomu podle čtverce.
-    """
-    from projekt.models import Projekt
-
-    query = (
-        "select id,ident_cely,ST_Y(geom) AS lat, ST_X(geom) as lng "
-        " from public.projekt where "
-        "geom && ST_MakeEnvelope(%s, %s, %s, %s,4326)  limit 100"
+    query_old = (
+        "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
+        " from public.ruian_katastr where "
+        " upper(nazev_stary)=upper(%s) and aktualni<>'t' limit 1"
     )
     try:
-        projekty = Projekt.objects.raw(query, [left, bottom, right, top])
-        return projekty
+        bod_ku = None
+        try:
+            bod_ku = RuianKatastr.objects.raw(query, [katastr])[0]
+        except:
+            bod_ku = RuianKatastr.objects.raw(query_old, [katastr])[0]
+        bod=[bod_ku.lat,bod_ku.lng]
+        geom = ""
+        presnost = 4
+        zoom = 14
+        pian_ident_cely = ''
+        if len(akce_ident_cely) > 1:
+            DJs = DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom")).filter(ident_cely__istartswith=akce_ident_cely).order_by('ident_cely')
+            for dj in DJs:
+                logger.debug(dj.ident_cely)
+                if dj.pian and dj.pian.geom:
+                    bod = dj.pian__centroid
+                    bod =[bod[1],bod[0]]
+                    zoom = 17
+                    geom = dj.pian.geom
+                    presnost = dj.pian.presnost.zkratka
+                    pian_ident_cely = dj.pian.ident_cely
+        return [bod, geom, presnost, zoom, pian_ident_cely]
     except IndexError:
-        logger.debug("core.utils.get_centre_from_akce.no_points",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.error(
+            "core.utils.get_centre_from_akce.error",
+            extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely},
+        )
         return None
 
 
-def get_all_pians_with_dj(ident_cely, lat, lng):
+def get_dj_pians_centroid(ident_cely, lat, lng):
     """
     Funkce pro získaní pianů s DJ podle ident_cely DJ a souradnic.
     """
@@ -308,7 +341,7 @@ def get_all_pians_with_dj(ident_cely, lat, lng):
         )
         return pians
     except Exception:
-        logger.debug("core.utils.get_all_pians_with_dj.no_pians")
+        logger.debug("core.utils.get_dj_pians_centroid.no_pians")
         return None
 
 
@@ -326,12 +359,14 @@ def get_num_pians_from_envelope(left, bottom, right, top):
         cursor.execute(query, [left, bottom, right, top])
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("core.utils.get_num_pians_from_envelope.no_points",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_num_pians_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
-def get_pians_from_envelope(left, bottom, right, top, ident_cely):
+def get_dj_pians_from_envelope(left, bottom, right, top, ident_cely):
     """
     Funkce pro získaní pianů ze čtverce.
     """
@@ -354,48 +389,369 @@ def get_pians_from_envelope(left, bottom, right, top, ident_cely):
         pians = Pian.objects.raw(query, [ident_cely, left, bottom, right, top])
         return pians
     except IndexError:
-        logger.debug("core.utils.get_pians_from_envelope.no_points",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_dj_pians_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
-def get_num_projects_from_envelope(left, bottom, right, top):
-    """
-    Funkce pro získaní počtu projektů ze čtverce.
-    """
-    query = (
-        "select count(*) from public.projekt p where "
-        "p.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 1"
+def get_projekt_stav_label(stav):
+    from core.constants import (
+        PROJEKT_STAV_ARCHIVOVANY,
+        PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+        PROJEKT_STAV_OZNAMENY,
+        PROJEKT_STAV_PRIHLASENY,
+        PROJEKT_STAV_UKONCENY_V_TERENU,
+        PROJEKT_STAV_UZAVRENY,
+        PROJEKT_STAV_ZAHAJENY_V_TERENU,
+        PROJEKT_STAV_ZAPSANY,
+        PROJEKT_STAV_ZRUSENY,
     )
-    try:
-        # num = Pian.objects.raw(query, [left, bottom, right, top])
-        cursor = connection.cursor()
-        cursor.execute(query, [left, bottom, right, top])
-        return cursor.fetchone()[0]
-    except IndexError:
-        logger.debug("core.utils.get_num_projects_from_envelope.no_points",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
-        return None
+
+    if stav == PROJEKT_STAV_ZAPSANY:
+        return "P1"
+    elif stav == PROJEKT_STAV_PRIHLASENY:
+        return "P2"
+    elif stav == PROJEKT_STAV_ZAHAJENY_V_TERENU:
+        return "P3"
+    elif PROJEKT_STAV_UKONCENY_V_TERENU <= stav <= PROJEKT_STAV_ARCHIVOVANY:
+        return "P4-P6"
+    elif PROJEKT_STAV_NAVRZEN_KE_ZRUSENI <= stav <= PROJEKT_STAV_ZRUSENY:
+        return "P7-P8"
+    else:
+        return "P0"
 
 
-def get_projects_from_envelope(left, bottom, right, top):
+def get_project_geom(ident_cely):
     """
-    Funkce pro získaní projektů ze čtverce.
+    Funkce pro získaní geometrie projekt.
+    Bez pristupnosti
     """
+    from django.db.models import Q
     from projekt.models import Projekt
 
-    query = (
-        "select p.id,p.ident_cely,ST_AsText(p.geom) as geometry "
-        "from public.projekt p "
-        "where p.geom is not null and "
-        "p.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 8000"
-    )
+    c1 = Q(geom__isnull=False)
+    c3 = Q(ident_cely=ident_cely)
+    queryset = Projekt.objects.filter(c1).filter(c3)
     try:
-        pians = Projekt.objects.raw(query, [left, bottom, right, top])
-        return pians
+        return queryset.only("id", "ident_cely", "geom", "stav")
     except IndexError:
-        logger.debug("core.utils.get_projects_from_envelope.no_points",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_projects_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78, request):
+    """
+    Funkce pro získaní počtu projektů ze čtverce.
+    Bez pristupnosti
+    """
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from projekt.models import Projekt
+    from projekt.views import ProjektPermissionFilterMixin
+
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    stavy=[]
+    if p1: stavy.append(1)
+    if p2: stavy.append(2)
+    if p3: stavy.append(3)
+    if p46: 
+        stavy.append(4)
+        stavy.append(5)
+        stavy.append(6)
+    if p78: 
+        stavy.append(7)
+        stavy.append(8)
+    queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy))
+
+    perm_object = ProjektPermissionFilterMixin()
+    perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_PROJ
+
+    try:
+        return perm_object.check_filter_permission(queryset).count()
+    except IndexError:
+        logger.debug(
+            "core.utils.get_num_projects_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78, request):
+    """
+    Funkce pro získaní projektů ze čtverce.
+    Bez pristupnosti
+    """
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from projekt.models import Projekt
+    from projekt.views import ProjektPermissionFilterMixin
+
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    stavy=[]
+    if p1: stavy.append(1)
+    if p2: stavy.append(2)
+    if p3: stavy.append(3)
+    if p46: 
+        stavy.append(4)
+        stavy.append(5)
+        stavy.append(6)
+    if p78: 
+        stavy.append(7)
+        stavy.append(8)
+    queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy))
+
+    perm_object = ProjektPermissionFilterMixin()
+    perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_PROJ
+
+    try:
+        return perm_object.check_filter_permission(queryset).only("id", "ident_cely", "geom", "stav")
+    except IndexError:
+        logger.debug(
+            "core.utils.get_projects_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_project_pas_from_envelope(left, bottom, right, top, ident_cely):
+    """
+    Funkce pro získaní pas projekt ze čtverce.
+    @janhnat zohlednit pristupnost - zohledneno v ProjectPasFromEnvelopeView
+    """
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from pas.models import SamostatnyNalez
+
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    c3 = Q(projekt__ident_cely=ident_cely)
+    queryset = SamostatnyNalez.objects.filter(c3).filter(c1)
+    # FIltering bbox is disabled-because of caching add .filter(c2)
+    try:
+        return queryset.only("id", "ident_cely", "geom")
+    except IndexError:
+        logger.debug(
+            "core.utils.get_project_pas_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
+    """
+    Funkce pro získaní pianů projektu ze čtverce.
+    @janhnat zohlednit pristupnost - zohledneno v ProjectPianFromEnvelopeView
+    """
+    from arch_z.models import Akce
+    from dj.models import DokumentacniJednotka
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+
+    q1 = Akce.objects.filter(projekt__ident_cely=ident_cely).only(
+        "archeologicky_zaznam__ident_cely"
+    )
+
+    pians = []
+    d = None
+    for i in q1:
+        d = list(
+                (
+                DokumentacniJednotka.objects.filter(
+                    Q(ident_cely__istartswith=i.archeologicky_zaznam.ident_cely)
+                )
+                .distinct()
+                .values_list("pian", flat=True)
+            ))
+            # FIltering bbox is disabled-because of caching add .filter(Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom])))
+        if pians:
+            pians.append(d)
+        else:
+            pians = d
+    try:  
+        return Pian.objects.filter(pk__in=pians)
+    except IndexError:
+        logger.debug(
+            "core.utils.get_project_pian_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_3d_from_envelope(left, bottom, right, top,request):
+    """
+    Funkce pro získaní 3d ze čtverce.
+    Bez pristupnosti
+    """
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from dokument.models import DokumentExtraData
+    from core.views import PermissionFilterMixin
+
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    queryset = DokumentExtraData.objects.filter(c1).filter(c2)
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_DOK
+
+    try:
+        return perm_object.check_filter_permission(queryset).values("dokument__id", "dokument__ident_cely", "geom")
+    except IndexError:
+        logger.debug(
+            "core.utils.get_3d_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_num_pass_from_envelope(left, bottom, right, top, request):
+    """
+    Funkce pro získaní počtu pas ze čtverce.
+    @janhnat zohlednit pristupnost - done
+    musi zohlednit pristupnost [mapa_pas]
+    """
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from pas.models import SamostatnyNalez
+    from core.views import PermissionFilterMixin
+    from core.models import Permissions as p
+
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    queryset = SamostatnyNalez.objects.filter(c1).filter(c2)
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_SN
+
+    try:
+        return perm_object.check_filter_permission(queryset, p.actionChoices.mapa_pas).count()
+    except IndexError:
+        logger.debug(
+            "core.utils.get_num_pas_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_pas_from_envelope(left, bottom, right, top, request):
+    """
+    Funkce pro získaní pas ze čtverce.
+    @janhnat zohlednit pristupnost - done
+    musi zohlednit pristupnost [mapa_pas]
+    """
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from pas.models import SamostatnyNalez
+    from core.views import PermissionFilterMixin
+    from core.models import Permissions as p
+
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    queryset = SamostatnyNalez.objects.filter(c2).filter(c1)
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_SN
+
+    try:
+        return perm_object.check_filter_permission(queryset, p.actionChoices.mapa_pas).only("id", "ident_cely", "geom")
+    except IndexError:
+        logger.debug(
+            "core.utils.get__pas_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_num_pian_from_envelope(left, bottom, right, top, request):
+    """
+    Funkce pro získaní počtu pianu ze čtverce.
+    @janhnat zohlednit pristupnost - done
+    musi zohlednit pristupnost [mapa_pian]
+    """
+    from dj.models import DokumentacniJednotka
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from pian.views import PianPermissionFilterMixin
+    from core.models import Permissions as p
+
+    pian_queryset = Pian.objects.filter(
+        Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+        | Q(geom__intersects=Polygon.from_bbox([right, top, left, bottom]))
+    )
+    perm_object = PianPermissionFilterMixin()
+    perm_object.request = request
+
+    pian_filtered = perm_object.check_filter_permission(pian_queryset, p.actionChoices.mapa_pian)
+
+    try:
+        return pian_filtered.annotate(centroid=Centroid("geom"))
+        #return DokumentacniJednotka.objects.filter(pian__in=pian_filtered).count()
+    except IndexError:
+        logger.debug(
+            "core.utils.get_num_pian_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_pian_from_envelope(left, bottom, right, top, request):
+    """
+    Funkce pro získaní pianů ze čtverce.
+    @janhnat zohlednit pristupnost - done
+    musi zohlednit pristupnost [mapa_pian]
+    """
+    from dj.models import DokumentacniJednotka
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from pian.views import PianPermissionFilterMixin
+    from core.models import Permissions as p
+
+    pian_queryset = Pian.objects.filter(
+        Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+        | Q(geom__intersects=Polygon.from_bbox([right, top, left, bottom]))
+    )
+    perm_object = PianPermissionFilterMixin()
+    perm_object.request = request
+
+    pian_filtered = perm_object.check_filter_permission(pian_queryset, p.actionChoices.mapa_pian)
+    #logger.debug(pian_filtered)
+    try:
+        return pian_filtered.annotate(centroid=Centroid("geom"))
+    except IndexError:
+        logger.debug(
+            "core.utils.get_pian_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+def get_dj_akce_for_pian(pian_ident_cely,request):
+    """
+    Funkce pro pro ziskani dj/akce pro pian_ident_cely
+    """
+    from django.db.models import Q
+    from core.views import PermissionFilterMixin
+    queryset = DokumentacniJednotka.objects.filter(Q(pian__geom__isnull=False)).filter(Q(pian__ident_cely=pian_ident_cely))
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
+    perm_object.typ_zmeny_lookup = ZAPSANI_AZ
+    arch_zaznamy = ArcheologickyZaznam.objects.filter(dokumentacni_jednotky_akce__in=queryset)
+
+    try:
+        return queryset.filter(archeologicky_zaznam__in=perm_object.check_filter_permission(arch_zaznamy)).values("ident_cely", "archeologicky_zaznam__ident_cely")
+    except IndexError:
+        logger.debug(
+            "core.utils.get_dj_akce_for_pian.no_records",
+            extra={"pian_ident_cely": pian_ident_cely},
+        )
         return None
 
 
@@ -423,8 +779,10 @@ def get_heatmap_pian(left, bottom, right, top, zoom):
             cursor.execute(query)
         return dictfetchall(cursor)
     except IndexError:
-        logger.debug("core.utils.get_heatmap_pian.no_heatmap",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_heatmap_pian.no_heatmap",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
@@ -443,8 +801,57 @@ def get_heatmap_pian_density(left, bottom, right, top, zoom):
             cursor.execute(query)
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("core.utils.get_heatmap_pian_density.no_heatmap",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_heatmap_pian_density.no_heatmap",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_heatmap_pas(left, bottom, right, top, zoom):
+    """
+    Funkce pro získaní heat mapy pass ze čtverce.
+    """
+    query = "select count, ST_AsText(st_centroid) as geometry from amcr_heat_pas_l2"
+    query_zoom = (
+        "select count*3 as count, ST_AsText(st_centroid) as geometry "
+        "from amcr_heat_pas_lx2 where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+    )
+    try:
+        # num = Pian.objects.raw(query, [left, bottom, right, top])
+        cursor = connection.cursor()
+        if zoom > 12:
+            cursor.execute(query_zoom, [left, bottom, right, top])
+        else:
+            cursor.execute(query)
+        return dictfetchall(cursor)
+    except IndexError:
+        logger.debug(
+            "core.utils.get_heatmap_pas.no_heatmap",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_heatmap_pas_density(left, bottom, right, top, zoom):
+    """
+    Funkce pro získaní heat mapy hustoty pass ze čtverce.
+    """
+    query = "select max(count) from amcr_heat_pas_l2"
+    query_zoom = "select max(count) from amcr_heat_pas_lx2 where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+    try:
+        # num = Pian.objects.raw(query, [left, bottom, right, top])
+        cursor = connection.cursor()
+        if zoom > 12:
+            cursor.execute(query_zoom, [left, bottom, right, top])
+        else:
+            cursor.execute(query)
+        return cursor.fetchone()[0]
+    except IndexError:
+        logger.debug(
+            "core.utils.get_heatmap_pas_density.no_heatmap",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
@@ -466,8 +873,10 @@ def get_heatmap_project(left, bottom, right, top, zoom):
             cursor.execute(query)
         return dictfetchall(cursor)
     except IndexError:
-        logger.debug("core.utils.get_heatmap_project.no_heatmap",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_heatmap_project.no_heatmap",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
@@ -489,8 +898,10 @@ def get_heatmap_project_density(left, bottom, right, top, zoom):
             cursor.execute(query)
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("core.utils.get_heatmap_project_density.no_heatmap",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_heatmap_project_density.no_heatmap",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
@@ -514,7 +925,7 @@ def get_validation_messages(text):
         return text
 
 
-def get_transform_towgs84(cy, cx):
+def get_transform_towgs84(x1, x2):
     """
     Funkce pro transformaci na wgs84.
     """
@@ -528,7 +939,7 @@ def get_transform_towgs84(cy, cx):
         "targetXYorder=xy&"
         "sourceSixtiethView=false&"
         "targetSixtiethView=false&"
-        "coordinates=" + str(cy) + "+" + str(cx) + "+300"
+        "coordinates=" + str(x1) + "+" + str(x2) + "+300"
         "&time=2022-05-20"
     )
 
@@ -622,7 +1033,9 @@ def get_multi_transform_towgs84(jtsk_points):
         for line in r.text.split("\n"):
             if len(line) > 5:
                 p = line.split("\t")[1].split(" ")
-                logger.debug("core.utils.get_multi_transform_towgs84.finished", extra={"p": p})
+                logger.debug(
+                    "core.utils.get_multi_transform_towgs84.finished", extra={"p": p}
+                )
                 points.append([p[0], p[1]])
 
         return points
@@ -649,7 +1062,7 @@ def get_message(az, message):
 
 class SearchTable(ColumnShiftTableBootstrap4):
     """
-    Základní setup pro tabulky používané v aplikaci. 
+    Základní setup pro tabulky používané v aplikaci.
     Obsahuje metódu na získaní sloupců které mají byt zobrazeny.
     """
 
@@ -671,3 +1084,29 @@ class SearchTable(ColumnShiftTableBootstrap4):
             if column is not None and column in self.column_default_show:
                 self.column_default_show.remove(column)
         return super(SearchTable, self).get_column_default_show()
+
+    def render_nahled(self, value, record):
+        """
+        Metóda pro správne zobrazení náhledu souboru.
+        """
+        from pas.models import SamostatnyNalez
+
+        record: SamostatnyNalez
+        if record.soubory.soubory.count() > 0:
+            soubor = record.soubory.soubory.first()
+        else:
+            soubor = None
+        if soubor is not None:
+            soubor_url = reverse(
+                "core:download_thumbnail",
+                args=(
+                    "pas",
+                    record.ident_cely,
+                    soubor.id,
+                ),
+            )
+            return format_html(
+                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
+                soubor_url,
+            )
+        return ""

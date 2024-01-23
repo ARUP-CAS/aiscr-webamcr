@@ -8,7 +8,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
 from psycopg2._range import DateRange
@@ -59,12 +59,14 @@ class OznamovatelForm(forms.ModelForm):
     telefon = forms.CharField(
         validators=[validate_phone_number],
         help_text=_("oznameni.forms.oznamovatelForm.telefon.tooltip"),
+        label=_("oznameni.forms.oznamovatelForm.telefon.label"),
         widget=forms.TextInput(
             attrs={"pattern": "^[+](420)\d{9}", "title": "+420XXXXXXXXX"}
         ),
     )
     email = forms.EmailField(
         help_text=_("oznameni.forms.oznamovatelForm.email.tooltip"),
+        label=_("oznameni.forms.oznamovatelForm.email.label"),
     )
 
     class Meta:
@@ -159,14 +161,14 @@ class ProjektOznameniForm(forms.ModelForm):
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
         help_text=_("oznameni.forms.projektOznameniForm.planovaneZahajeni.tooltip"),
     )
-    latitude = forms.CharField(widget=forms.HiddenInput())
-    longitude = forms.CharField(widget=forms.HiddenInput())
+    coordinate_x2 = forms.CharField(widget=forms.HiddenInput())
+    coordinate_x1 = forms.CharField(widget=forms.HiddenInput())
     katastralni_uzemi = forms.CharField(
         widget=forms.TextInput(attrs={"readonly": "readonly"}),
         label=_("oznameni.forms.projektOznameniForm.katastralniUzemi.label"),
         help_text=_("oznameni.forms.projektOznameniForm.katastralniUzemi.tooltip"),
     )
-    ident_cely = forms.CharField(required=False,widget=forms.HiddenInput())
+    ident_cely = forms.CharField(required=False, widget=forms.HiddenInput())
 
     class Meta:
         model = Projekt
@@ -222,8 +224,9 @@ class ProjektOznameniForm(forms.ModelForm):
             self.fields["katastralni_uzemi"].initial = get_cadastre_from_point(
                 self.instance.geom
             ).__str__()
-            self.fields["longitude"].initial = self.instance.geom[0]
-            self.fields["latitude"].initial = self.instance.geom[1]
+            self.fields["coordinate_x1"].initial = self.instance.geom[0]
+            self.fields["coordinate_x2"].initial = self.instance.geom[1]
+            self.fields["ident_cely"].initial = self.instance.ident_cely
 
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -248,8 +251,8 @@ class ProjektOznameniForm(forms.ModelForm):
                     "lokalizace",
                     "parcelni_cislo",
                     "oznaceni_stavby",
-                    "latitude",
-                    "longitude",
+                    "coordinate_x1",
+                    "coordinate_x2",
                     "ident_cely",
                     css_class="card-body",
                 ),

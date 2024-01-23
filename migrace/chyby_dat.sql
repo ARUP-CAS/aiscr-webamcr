@@ -193,6 +193,7 @@ WITH za_zl AS
 )
 DELETE FROM dokument USING za_zl WHERE za_zl.id = dokument.id;
 
+
 -- Oprava špatného použití hesla anonym
 UPDATE dokument SET autor = replace(autor, 'anonym, anonym', 'anonym') WHERE autor LIKE ('%anonym, anonym%');
 UPDATE dokument SET autor = replace(autor, 'Anonym, Anonym', 'anonym') WHERE autor LIKE ('%Anonym, Anonym%');
@@ -205,3 +206,10 @@ UPDATE externi_zdroj SET sbornik_editor = replace(sbornik_editor, 'Anonym, Anony
 
 -- Oprava chybné null hodnoty pro evidenční číslo nálezu
 UPDATE samostatny_nalez SET inv_cislo = '' WHERE inv_cislo = '-1';
+
+-- Úprava nesmyslných přístupností u akcí
+UPDATE akce SET pristupnost = 1 WHERE pristupnost = 2;
+
+-- Oprava falešně negativních DJ
+UPDATE dokumentacni_jednotka SET negativni_jednotka = false FROM komponenta WHERE komponenta.parent = dokumentacni_jednotka.id AND dokumentacni_jednotka.negativni_jednotka = true;
+

@@ -25,6 +25,7 @@
         </div>  
       </div>
       <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary mt-3">{% trans "pas.templates.create.submitButton" %}</button>
+      <a type="button" class="btn btn-secondary mt-3" href="{% url 'pas:index' %}">{% trans "pas.templates.create.zpetButton" %}</a>
     </form>
   </div>
 {% endblock %}
@@ -32,7 +33,7 @@
 {% block script %}
   <script>
       $(document).ready(function () {
-          document.getElementById("id-app-entity-item").innerHTML = "Zapsat nový samostatný nález"
+          document.getElementById("id-app-entity-item").innerHTML = {% trans "pas.templates.create.toolbar.title" %}
       })
   </script>
   <script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
