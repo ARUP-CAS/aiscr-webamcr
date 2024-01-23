@@ -267,7 +267,7 @@ class FedoraRepositoryConnector:
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
             else:
-                extra = {"text": response.text, "status_code": response.status_code, "request_type": request_type}
+                extra = {"status_code": response.status_code, "request_type": request_type}
 
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
                 raise FedoraError(url, response.text, response.status_code)
