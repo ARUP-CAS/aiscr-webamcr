@@ -78,11 +78,11 @@ migration_scripts=("chyby_dat.sql"
 "52_lokalita_typ_druh.sql"
 "54_rename_and_update_notifications.sql"
 "54_soubor_size.sql"
-"55_vymena_sablony_notifikace.sql"
 "57_migrace_oprava_pes.sql"
 "98_heat_mapa.sql"
 "99_migrace_notifikace_nove.sql"
 "99_set_DB_privileges.sql"
+"999_prevod_null_hodnot_texty"
 "100_heatmap_pas.sql"
 "migrace_mazani.sql"
 )
@@ -100,9 +100,3 @@ do
 done
 
 echo "*** MIGRATIONS DONE [${n}] ***"
-
-# hashovani hesel
-python3 encrypt_passwords.py
-
-#echo "This is only for development, comment out for production"
-#psql -d prod_zaloha -f import_testovacich_uctu.sql

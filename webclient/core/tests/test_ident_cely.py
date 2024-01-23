@@ -30,12 +30,8 @@ class IdentTests(TestCase):
     def setUp(self):
         kl = Kladyzm(
             gid=1,
-            objectid=1,
             kategorie=1,
             cislo="03",
-            natoceni=Decimal(8.78330000000),
-            shape_leng=Decimal(341204.736390),
-            shape_area=Decimal(7189599966.71),
             the_geom=GEOSGeometry(
                 "01030000208A150000010000000500000040A0C822AEE122C100008294A0F02CC1A03A26F06B0720C100F28414463E2DC180C07FD6894120C1E03D48F6308D2FC1E03A07951E2523C12067B4B38D3E2FC140A0C822AEE122C100008294A0F02CC1"
             ),

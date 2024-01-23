@@ -47,12 +47,9 @@ class Migration(migrations.Migration):
             name='Kladysm5',
             fields=[
                 ('gid', models.IntegerField(primary_key=True, serialize=False)),
-                ('id', models.IntegerField()),
                 ('mapname', models.TextField()),
                 ('mapno', models.TextField()),
-                ('podil', models.DecimalField(decimal_places=9, max_digits=10)),
                 ('geom', django.contrib.gis.db.models.fields.PolygonField(srid=5514)),
-                ('cislo', models.TextField()),
             ],
             options={
                 'db_table': 'kladysm5',
