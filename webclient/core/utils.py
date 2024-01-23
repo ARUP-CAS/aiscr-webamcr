@@ -32,14 +32,32 @@ def file_validate_epsg(epsg):
     else:
         return False
 
-def file_validate_geometry(lower_geom):
-    geom=lower_geom.upper().strip()
-    geom=geom.replace("POINT (", "POINT(") 
-    geom=geom.replace("LINESTRING (", "LINESTRING(") 
-    geom=geom.replace("POLYGON (", "POLYGON(") 
+def balanced_parentheses(expression):    
+    stack = 0   
+    for char in expression:
+        if char == '(' :
+            stack+=1       
+        elif char == ')':
+            if stack == 0:
+                return False
+            stack-=1
+    if stack != 0:
+        return False              
+    return True
 
-    if "MULTI" in geom:
-        return [False,'Multigeometries are not supported']
+def file_validate_geometry(lower_geom):
+    """
+    Funkce pro validaci řetězce s WKT geometrií.
+    """
+    geom=" ".join(lower_geom.upper().split())
+    geom=geom.replace(" (", "(") 
+
+    if geom=='':
+        return [False,'Empty string']
+    elif not geom.startswith(('POINT(', 'LINESTRING(', 'POLYGON(')):
+        return [False,geom.split('(')[0]+' is not supported']
+    elif not balanced_parentheses(geom):
+        return [False,'Unclosed parentheses']
     else:
         if "POINT(" in geom:
             try:
@@ -52,12 +70,14 @@ def file_validate_geometry(lower_geom):
                 return [False,"Point is not valid"]
         elif "LINESTRING(" in geom:
             larray=geom.split("LINESTRING(")[1].split(")")[0].split(",")
-            if len(larray[0])>0:
+            if len(larray)>1:
                 for l in larray:
                     p=l.strip().split(" ")
                     try:
                         if len(p)==2 and float(p[0]) and float(p[1]):
                             continue
+                        else:
+                            return [False,"Linestring is not valid"]
                     except:
                         return [False,"Linestring is not valid"]
                 return [True,"Linestring is valid"]
@@ -68,14 +88,19 @@ def file_validate_geometry(lower_geom):
                 return [False,"Polygon with innerbound is not supported"]
             else:
                 larray=geom.split("POLYGON((")[1].split("))")[0].split(",")
-                for l in larray:
-                    p=l.strip().split(" ")
-                    try:
-                        if len(p)==2 and float(p[0]) and float(p[1]):
-                            continue
-                    except:
-                        return [False,"Polygon is not valid"]
-                return [True,"Polygon is valid"]
+                if len(larray)>2:
+                    for l in larray:
+                        p=l.strip().split(" ")
+                        try:
+                            if len(p)==2 and float(p[0]) and float(p[1]):
+                                continue
+                            else:
+                                return [False,"Polygon is not valid"]
+                        except:
+                            return [False,"Polygon is not valid"]
+                    return [True,"Polygon is valid"]
+                else:
+                    return [False,"Polygon is not valid"]
         else:
             return [False,"Polygon is not valid"]
             
