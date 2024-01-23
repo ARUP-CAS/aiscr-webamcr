@@ -19,7 +19,7 @@ CREATE INDEX IF NOT EXISTS historie_typ_zmeny_idx
     TABLESPACE pg_default;
 
 -- Adding path to the soubor table
-ALTER TABLE "soubor" ADD COLUMN "path" text DEFAULT 'not specified yet' NOT NULL;
+ALTER TABLE "soubor" ADD COLUMN "path" text;
 
 -- Opravit defaultni prisutpnost u organizace aby ukazovala v heslari na archivare (z 4 na 859)
 -- TODO nezapomenout kdyz se bude precislovavat

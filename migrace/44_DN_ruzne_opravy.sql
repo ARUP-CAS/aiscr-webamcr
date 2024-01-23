@@ -1,10 +1,10 @@
 ALTER TABLE dokument_jazyk DROP CONSTRAINT dokument_jazyk_dokument_fk;
 
 -- Řešení pro chybějící či duplkicitní EN hesla.
-UPDATE heslar SET heslo_en = 'translate: ' || ident_cely WHERE (heslo_en Is Null);
+UPDATE heslar SET heslo_en = 'translate: ' || ident_cely WHERE (coalesce(heslo_en, '') = '');
 UPDATE heslar SET heslo_en = 'chain necklace' WHERE ident_cely = 'HES-000756';
 UPDATE heslar SET heslo_en = 'chopper' WHERE ident_cely = 'HES-000801';
-UPDATE organizace SET nazev_zkraceny_en = 'translate: ' || id WHERE (nazev_zkraceny_en Is Null);
+UPDATE organizace SET nazev_zkraceny_en = 'translate: ' || id WHERE (coalesce(nazev_zkraceny_en, '') = '');
 
 -- Přejmenování souborů a doplnění správných nových cest (příprava před migrací do Fedory)
 WITH soubor_prejm AS
@@ -46,15 +46,6 @@ WITH soubor_prejm AS
 	LEFT OUTER JOIN heslar as heslar_typ_dokumetu on heslar_typ_dokumetu.id = dokument.rada
 )
 UPDATE soubor SET nazev = soubor_prejm.nazev_novy FROM soubor_prejm WHERE soubor.id = soubor_prejm.soubor_id;
-WITH soubor_parent_id AS
-(
-	SELECT dokument.ident_cely as ident_cely, soubor.id as id FROM dokument INNER JOIN soubor ON dokument.soubory = soubor.vazba
-	UNION
-	SELECT samostatny_nalez.ident_cely as ident_cely, soubor.id as id FROM samostatny_nalez INNER JOIN soubor ON samostatny_nalez.soubory = soubor.vazba
-	UNION
-	SELECT projekt.ident_cely as ident_cely, soubor.id as id FROM projekt INNER JOIN soubor ON projekt.soubory = soubor.vazba
-)
-UPDATE soubor SET path = soubor_parent_id.ident_cely || '/soubor' FROM soubor_parent_id WHERE soubor.id = soubor_parent_id.id;
 
 
 -- Migrace soubor.vlastnik a soubor.vytvoreno do historie
@@ -193,7 +184,7 @@ UPDATE akce_vedouci SET organizace = (SELECT id FROM organizace WHERE organizace
 WHERE akce IN (SELECT archeologicky_zaznam FROM akce WHERE akce.organizace_ostatni IN (SELECT nazev_zkraceny FROM organizace))
 AND akce IN (SELECT akce FROM (SELECT akce, count(id) as cnt FROM akce_vedouci GROUP BY akce) pom WHERE pom.cnt = 1);
 UPDATE akce_vedouci SET organizace = (SELECT organizace FROM akce WHERE akce.archeologicky_zaznam = akce_vedouci.akce)
-WHERE akce IN (SELECT archeologicky_zaznam FROM akce WHERE (akce.organizace_ostatni IS NULL OR akce.organizace_ostatni = ''));
+WHERE akce IN (SELECT archeologicky_zaznam FROM akce WHERE (coalesce(akce.organizace_ostatni, '') = ''));
 
 -- Oprava typů polí v návaznosti na #385 a #384 (aby nebyla moc velká v administraci)
 ALTER TABLE heslar ALTER COLUMN heslo TYPE varchar(255);

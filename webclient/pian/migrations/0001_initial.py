@@ -19,12 +19,8 @@ class Migration(migrations.Migration):
             name='Kladyzm',
             fields=[
                 ('gid', models.AutoField(primary_key=True, serialize=False)),
-                ('objectid', models.IntegerField(unique=True)),
                 ('kategorie', models.IntegerField(choices=[(1, '1:10 000'), (2, '1:25 000'), (3, '1:50 000'), (4, '1:100 000'), (5, '1:200 000')])),
                 ('cislo', models.CharField(max_length=8, unique=True)),
-                ('natoceni', models.DecimalField(decimal_places=11, max_digits=12)),
-                ('shape_leng', models.DecimalField(decimal_places=6, max_digits=12)),
-                ('shape_area', models.DecimalField(decimal_places=2, max_digits=12)),
                 ('the_geom', django.contrib.gis.db.models.fields.PolygonField(srid=5514)),
             ],
             options={

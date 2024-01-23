@@ -90,9 +90,7 @@ def copy_data(source_host, destination_host, source_db, destination_db, source_u
             ("*", "soubor_vazby"),
             ("*", "soubor"),
             ("*", "dokument_sekvence"),
-            (
-            "id, rok_vzniku, popis, poznamka, oznaceni_originalu, stav, ident_cely, datum_zverejneni, licence, historie, let, material_originalu, organizace, pristupnost, rada, soubory, typ_dokumentu, ulozeni_originalu",
-            "dokument"),
+            ("*", "dokument"),
             ("*", "dokument_autor"),
             ("*", "dokument_extra_data"),
             ("*", "dokument_jazyk"),

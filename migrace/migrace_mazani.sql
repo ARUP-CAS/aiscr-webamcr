@@ -421,3 +421,74 @@ DROP SEQUENCE vyskovy_bod_reorder;
 DROP TABLE uzivatel;
 DROP SEQUENCE uzivatel_id_seq;
 alter sequence user_storage_user_id rename to auth_user_ident_cely_seq;
+
+-- Ladění tabulek kladysm5 a kladyzm
+ALTER TABLE kladysm5 drop column id;
+ALTER TABLE kladysm5 drop column podil;
+ALTER TABLE kladysm5 drop column cislo;
+
+ALTER TABLE kladyzm drop column objectid;
+ALTER TABLE kladyzm drop column natoceni;
+ALTER TABLE kladyzm drop column shape_leng;
+ALTER TABLE kladyzm drop column shape_area;
+
+-- Zkontrolovat a odstranit nepoužitá jména z hesláře.
+with pom AS
+(
+    SELECT os.id FROM osoba os
+    LEFT JOIN adb adb1 ON adb1.autor_popisu = os.id
+    LEFT JOIN adb adb2 ON adb2.autor_revize = os.id
+    LEFT JOIN akce ak ON ak.hlavni_vedouci = os.id
+    LEFT JOIN akce_vedouci av ON av.vedouci = os.id
+    LEFT JOIN auth_user au ON au.osoba = os.id
+    LEFT JOIN dokument_autor da ON da.autor = os.id
+    LEFT JOIN dokument_osoba dos ON dos.osoba = os.id
+    LEFT JOIN externi_zdroj_autor ea ON ea.autor = os.id
+    LEFT JOIN externi_zdroj_editor ee ON ee.editor = os.id
+    LEFT JOIN let l ON l.pozorovatel = os.id
+    LEFT JOIN neident_akce_vedouci nv ON nv.vedouci = os.id
+    LEFT JOIN projekt pr ON pr.vedouci_projektu = os.id
+    LEFT JOIN samostatny_nalez sn ON sn.nalezce = os.id
+    WHERE
+    adb1.dokumentacni_jednotka is null AND
+    adb2.dokumentacni_jednotka is null AND
+    ak.archeologicky_zaznam is null AND
+    av.id is null AND
+    au.id is null AND
+    da.id is null AND
+    dos.id is null AND
+    ea.id is null AND
+    ee.id is null AND
+    l.id is null AND
+    nv.id is null AND
+    pr.id is null AND
+    sn.id is null
+)
+DELETE FROM osoba USING pom WHERE osoba.id = pom.id;
+
+-- Zkontrolovat a odstranit sirotky z historie
+with pom AS
+(
+    SELECT h.* FROM historie h
+    LEFT JOIN archeologicky_zaznam az ON az.historie = h.vazba
+    LEFT JOIN auth_user au ON au.historie = h.vazba
+    LEFT JOIN dokument d ON d.historie = h.vazba
+    LEFT JOIN externi_zdroj ez ON ez.historie = h.vazba
+    LEFT JOIN pian pi ON pi.historie = h.vazba
+    LEFT JOIN projekt pr ON pr.historie = h.vazba
+    LEFT JOIN samostatny_nalez sn ON sn.historie = h.vazba
+    LEFT JOIN soubor so ON so.historie = h.vazba
+    LEFT JOIN uzivatel_spoluprace us ON us.historie = h.vazba
+    WHERE
+    az.id is null AND
+    au.id is null AND
+    d.id is null AND
+    ez.id is null AND
+    pi.id is null AND
+    pr.id is null AND
+    sn.id is null AND
+    so.id is null AND
+    us.id is null
+)
+DELETE FROM historie USING pom WHERE historie.id = pom.id
+DELETE FROM historie_vazby USING pom WHERE historie_vazby.id = pom.id;

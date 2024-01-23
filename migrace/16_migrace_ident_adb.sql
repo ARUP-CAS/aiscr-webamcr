@@ -1,5 +1,6 @@
 -- Add zeroes to components
-update komponenta set ident_cely = concat(split_part(ident_cely, '-K', 1), '-K0' ,split_part(ident_cely, '-K', 2));
+update komponenta set ident_cely = concat(split_part(ident_cely, '-K', 1), '-K0' ,split_part(ident_cely, '-K', 2)) WHERE NOT(ident_cely LIKE 'C-K%' OR ident_cely LIKE 'M-K%' OR ident_cely LIKE 'X-C-K%' OR ident_cely LIKE 'X-M-K%');
+update komponenta set ident_cely = concat(split_part(ident_cely, '-K', 1), '-K' ,split_part(ident_cely, '-K', 2), '-K0' ,split_part(ident_cely, '-K', 3)) WHERE ident_cely LIKE 'C-K%' OR ident_cely LIKE 'M-K%' OR ident_cely LIKE 'X-C-K%' OR ident_cely LIKE 'X-M-K%';
 update dokument_cast set ident_cely = concat(left(ident_cely, length(ident_cely)-2), '0' , right(ident_cely, 2));
 update adb set ident_cely = concat(left(ident_cely, length(ident_cely)-4), '00' , right(ident_cely, 4));
 

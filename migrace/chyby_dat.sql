@@ -96,11 +96,11 @@ WHERE (((akce.id) Is Null) AND ((jednotka_dokument.vazba_druha) Is Not Null) AND
 UPDATE jednotka_dokument SET vazba_druha = null FROM del WHERE jednotka_dokument.id = del.id;
 
 -- DN: Doplnění hodnot do prázdných ale potřebných polí u záchranných projektů (nemělo by ale být potřeba, data se zdají být v pořádku).
-UPDATE projekt SET email = '-' WHERE (typ_projektu = 2) and email is null;
-UPDATE projekt SET adresa = '-' WHERE (typ_projektu = 2) and adresa is null;
-UPDATE projekt SET telefon = '-' WHERE (typ_projektu = 2) and telefon is null;
-UPDATE projekt SET odpovedna_osoba = '-' WHERE (typ_projektu = 2) and odpovedna_osoba is null;
-UPDATE projekt SET objednatel = '-' WHERE (typ_projektu = 2) and objednatel is null;
+UPDATE projekt SET email = '-' WHERE (typ_projektu = 2) and coalesce(email, '') = '';
+UPDATE projekt SET adresa = '-' WHERE (typ_projektu = 2) and coalesce(adresa, '') = '';
+UPDATE projekt SET telefon = '-' WHERE (typ_projektu = 2) and coalesce(telefon, '') = '';
+UPDATE projekt SET odpovedna_osoba = '-' WHERE (typ_projektu = 2) and coalesce(odpovedna_osoba, '') = '';
+UPDATE projekt SET objednatel = '-' WHERE (typ_projektu = 2) and coalesce(objednatel, '') = '';
 
 -- Příprava pole autori v ext. zdrojích
 UPDATE externi_zdroj SET autori = REPLACE(autori, ' (ed.)', '') WHERE autori LIKE '% (ed.)%';
@@ -193,8 +193,23 @@ WITH za_zl AS
 )
 DELETE FROM dokument USING za_zl WHERE za_zl.id = dokument.id;
 
+
+-- Oprava špatného použití hesla anonym
+UPDATE dokument SET autor = replace(autor, 'anonym, anonym', 'anonym') WHERE autor LIKE ('%anonym, anonym%');
+UPDATE dokument SET autor = replace(autor, 'Anonym, Anonym', 'anonym') WHERE autor LIKE ('%Anonym, Anonym%');
+UPDATE akce SET vedouci_akce_ostatni = replace(vedouci_akce_ostatni, 'anonym, anonym', 'anonym') WHERE vedouci_akce_ostatni LIKE ('%anonym, anonym%');
+UPDATE akce SET vedouci_akce_ostatni = replace(vedouci_akce_ostatni, 'Anonym, Anonym', 'anonym') WHERE vedouci_akce_ostatni LIKE ('%Anonym, Anonym%');
+UPDATE externi_zdroj SET autori = replace(autori, 'anonym, anonym', 'anonym') WHERE autori LIKE ('%anonym, anonym%');
+UPDATE externi_zdroj SET autori = replace(autori, 'Anonym, Anonym', 'anonym') WHERE autori LIKE ('%Anonym, Anonym%');
+UPDATE externi_zdroj SET sbornik_editor = replace(sbornik_editor, 'anonym, anonym', 'anonym') WHERE sbornik_editor LIKE ('%anonym, anonym%');
+UPDATE externi_zdroj SET sbornik_editor = replace(sbornik_editor, 'Anonym, Anonym', 'anonym') WHERE sbornik_editor LIKE ('%Anonym, Anonym%');
+
+-- Oprava chybné null hodnoty pro evidenční číslo nálezu
+UPDATE samostatny_nalez SET inv_cislo = '' WHERE inv_cislo = '-1';
+
 -- Úprava nesmyslných přístupností u akcí
 UPDATE akce SET pristupnost = 1 WHERE pristupnost = 2;
 
 -- Oprava falešně negativních DJ
 UPDATE dokumentacni_jednotka SET negativni_jednotka = false FROM komponenta WHERE komponenta.parent = dokumentacni_jednotka.id AND dokumentacni_jednotka.negativni_jednotka = true;
+

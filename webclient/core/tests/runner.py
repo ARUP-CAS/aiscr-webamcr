@@ -390,12 +390,8 @@ class AMCRBaseTestRunner(BaseRunner):
 
         kl10 = Kladyzm(
             gid=2,
-            objectid=2,
             kategorie=KLADYZM10,
             cislo="01",
-            natoceni=Decimal(8.78330000000),
-            shape_leng=Decimal(341204.736390),
-            shape_area=Decimal(7189599966.71),
             the_geom=GEOSGeometry(
                 "01030000208A150000010000000500000040822DB0C55929C1E0569730EF022FC100F6C19EDF4E29C1A03D6ED284B92EC1C0F5F1A8D9F228C100806CBDBCC72EC1C05CFAA89AFD28C160EA92D62C112FC140822DB0C55929C1E0569730EF022FC1",
                 srid=5514,
