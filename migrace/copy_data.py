@@ -60,8 +60,20 @@ def copy_data(source_host, destination_host, source_db, destination_db, source_u
         source_cursor = source_conn.cursor()
         destination_cursor = destination_conn.cursor()
 
+        def get_content_type(cursor):
+            destination_cursor.execute("""
+                SELECT id
+                FROM public.django_content_type
+                WHERE app_label = 'projekt' and model = 'projekt';
+            """)
+            result = cursor.fetchone()
+            projekt_id = result[0] if result else None
+            return projekt_id
+
         # execute SQL query to copy data from prod_zaloha.ruian_katastr to test_prod_zaloha.ruian_katastr
         tables = (
+            (f"id, object_id, created_at, {get_content_type(destination_cursor)} AS content_type_id, user_id",
+             "notifikace_projekty_pes"),
             ("*", "odstavky_systemu"),
             ("*", "heslar_nazev"),
             ("*", "heslar"),
@@ -74,8 +86,7 @@ def copy_data(source_host, destination_host, source_db, destination_db, source_u
             ("*", "historie_vazby"),
             ("*", "auth_user"),
             ("*", "auth_group"),
-            ("id, ident_cely, zasilat_neaktivnim, predmet, COALESCE(cesta_sablony, 'X') AS cesta_sablony",
-             "notifikace_typ"),
+            ("id, ident_cely, predmet AS text_cs, '' AS text_en", "notifikace_typ"),
             ("*", "auth_user_notifikace_typ"),
             ("*", "historie"),
             ("*", "kladysm5"),
@@ -236,7 +247,6 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
         ("id", "organizace"),
         ("id", "historie_vazby"),
         ("id", "auth_user"),
-        ("id", "notifikace_typ"),
         ("id", "auth_user_notifikace_typ"),
         ("id", "historie"),
         ("gid", "kladyzm"),
@@ -276,12 +286,10 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
         ("id", "externi_odkaz"),
         ("id", "samostatny_nalez"),
         ("id", "uzivatel_spoluprace"),
-        ("history_id", "uzivatel_spoluprace"),
-        ("id", "uzivatel_notifikace"),
-        ("id", "uzivatel_spoluprace"),
         ("id", "tvar"),
         ("id", "auth_user_groups"),
-        ("id", "auth_user_notifikace_typ"),
+        ("id", "auth_group"),
+        ("id", "notifikace_projekty_pes"),
     )
     for item in tables:
         destination_cursor.execute(f"SELECT SETVAL("
@@ -289,15 +297,16 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
                                    f"(SELECT (MAX(\"{item[0]}\") + 1) FROM \"{item[1]}\"),FALSE);")
     other_queries = [
         "SELECT SETVAL('amcr_geom_migrations_jobs_sjtsk_errors_id_seq', COALESCE((SELECT MAX(pian_id) FROM amcr_geom_migrations_jobs_sjtsk_errors), 0) + 1);",
-        "SELECT SETVAL('amcr_geom_migrations_jobs_wgs84_errors_pian_id_seq', COALESCE((SELECT MAX(pian_id) FROM amcr_geom_migrations_jobs_wgs84_errors), 0) + 1);",
-        "SELECT SETVAL('auth_user_ident_cely_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 3) AS INT)) FROM auth_user) + 1);",
-        "SELECT SETVAL('organizace_ident_cely_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 5) AS INT)) FROM organizace) + 1);",
-        "SELECT SETVAL('osoba_ident_cely_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 4) AS INT)) FROM osoba) + 1);",
+        "SELECT SETVAL('amcr_geom_migrations_jobs_wgs84_errors_id_seq', COALESCE((SELECT MAX(pian_id) FROM amcr_geom_migrations_jobs_wgs84_errors), 0) + 1);",
+        "SELECT SETVAL('auth_user_ident_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 3) AS INT)) FROM auth_user) + 1);",
+        "SELECT SETVAL('organizace_ident_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 5) AS INT)) FROM organizace) + 1);",
+        "SELECT SETVAL('osoba_ident_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 4) AS INT)) FROM osoba) + 1);",
         "SELECT SETVAL('heslar_ident_cely_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 5) AS INT)) FROM heslar WHERE LENGTH(ident_cely) > 0) + 1);",
     ]
     for item in other_queries:
         destination_cursor.execute(item)
     destination_conn.commit()
+
 
 if __name__ == "__main__":
     copy_data(source_host=sys.argv[1], destination_host=sys.argv[2],
