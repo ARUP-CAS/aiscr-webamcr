@@ -1196,7 +1196,7 @@ function loadSession(){
         global_blocked_by_query_geom=true;
         drawnItems.clearLayers();
         drawnItemsBuffer.clearLayers();
-        addPointQuery(null,  drawnItems,myParamL,myParamG,false, map_translations.importedPianFromFile);
+        addPointQuery(null,  drawnItems,myParamL,myParamG,false, map_translations.currentlyEditedPian);
         geomToText();
         save_edited_geometry_session()
         //myParam="POINT (13.2164736 49.9596986)"
@@ -1216,8 +1216,8 @@ function loadSession(){
                 //POLYGON ((13.2491214 50.0100783, 13.2482845 50.0096987, 13.249218 50.0096021, 13.2491214 50.0100783))
                 //POLYGON((13.2496364 50.0099953, 13.2502051 50.0099539, 13.2500978 50.0094364, 13.2496364 50.0099953))
                 //myParam="POLYGON((13.2496364 50.0099953,13.2502051 50.0099539,13.2500978 50.0094364,13.2496364 50.0099953))"
-                addPointQuery(null,  drawnItems,"Refresh geom",geom_session.geometry,false,
-                    map_translations.importedPianFromFile);
+                addPointQuery(null,  drawnItems,map_translations.currentlyEditedPian,geom_session.geometry,false,
+                    map_translations.currentlyEditedPian);
                 geomToText();
 
             }else{
