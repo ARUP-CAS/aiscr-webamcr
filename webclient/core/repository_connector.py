@@ -215,9 +215,6 @@ class FedoraRepositoryConnector:
     def _send_request(url: str, request_type: FedoraRequestType, *,
                       headers=None, data=None) -> Optional[requests.Response]:
         extra = {"url": url, "request_type": request_type}
-        if headers:
-            extra["headers"] = headers
-
         logger.debug("core_repository_connector._send_request.start", extra=extra)
         if request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
                             FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE):
@@ -620,7 +617,7 @@ class FedoraRepositoryConnector:
             }
             data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'deleted'}"
             url = self._get_request_url(FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS)
-            self._send_request(url, FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,headers=headers, data=data)
+            self._send_request(url, FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS, headers=headers, data=data)
             headers = {
                 "Slug": self.record.ident_cely,
                 "Content-Type": "text/turtle"
