@@ -255,8 +255,6 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.DELETE_BINARY_FILE,
                               FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2):
             response = requests.patch(url, auth=auth, headers=headers, data=data)
-
-        extra["response_text"] = response.text
         extra["status_code"] = response.status_code
         if request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
                                 FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
