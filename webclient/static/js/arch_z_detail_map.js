@@ -1210,6 +1210,7 @@ function loadSession(){
             if(geom_session.url==currentUrl && geom_session.geometry !=null){
                 global_blocked_by_query_geom=true;
                 global_map_can_edit=true;
+                map_show_edit(global_map_can_edit);
                 drawnItems.clearLayers();
                 drawnItemsBuffer.clearLayers();
                 //POLYGON ((13.2496364 50.0099953, 13.2502051 50.0099539, 13.2500978 50.0094364, 13.2496364 50.0099953))
