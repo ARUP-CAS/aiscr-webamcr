@@ -111,9 +111,25 @@ class HistorieFilter(filters.FilterSet):
     )
 
     def filter_queryset(self, queryset):
-        """
-        Metóda pro filtrování podle historie s logickým operátorem AND.
-        """
+        uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace")
+        zmena = self.form.cleaned_data.pop("historie_typ_zmeny")
+        uzivatel = self.form.cleaned_data.pop("historie_uzivatel")
+        datum = self.form.cleaned_data.pop("historie_datum_zmeny_od")
+
+        queryset = super(HistorieFilter, self).filter_queryset(queryset)
+        #filtered = Historie.objects.all()
+        if uzivatel_organizace:
+            historie = Historie.objects.filter(organizace_snapshot__in=uzivatel_organizace)
+        from arch_z.filters import AkceFilter
+        if isinstance(self, AkceFilter):
+            historie_subquery = (historie.values('vazba__archeologickyzaznam__id')
+                                 .filter(vazba__archeologickyzaznam__id=OuterRef("archeologicky_zaznam_id")))
+            queryset = queryset.filter(archeologicky_zaznam_id__in=Subquery(historie_subquery))
+        logger.debug("dokument.filters.HistorieFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+        return queryset
+
+    """
+    def filter_queryset(self, queryset):
         zmena = self.form.cleaned_data["historie_typ_zmeny"]
         uzivatel = self.form.cleaned_data["historie_uzivatel"]
         datum = self.form.cleaned_data["historie_datum_zmeny_od"]
@@ -154,6 +170,7 @@ class HistorieFilter(filters.FilterSet):
                 type(queryset).__name__,
             )
         return queryset
+    """
 
     def __init__(self, *args, **kwargs):
         super(HistorieFilter, self).__init__(*args, **kwargs)

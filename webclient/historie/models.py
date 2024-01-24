@@ -53,7 +53,7 @@ from core.constants import (
 )
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from uzivatel.models import User
+from uzivatel.models import User, Organizace
 from django_prometheus.models import ExportModelOperationsMixin
 
 logger = logging.getLogger(__name__)
@@ -123,6 +123,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     uzivatel = models.ForeignKey(
         User, on_delete=models.RESTRICT, db_column="uzivatel", verbose_name=_("historie.models.historie.uzivatel.label")
     )
+    organizace_snapshot = models.ForeignKey(Organizace, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
     poznamka = models.TextField(blank=True, null=True, verbose_name=_("historie.models.historie.poznamka.label"))
     vazba = models.ForeignKey(
         "HistorieVazby", on_delete=models.CASCADE, db_column="vazba", db_index=True
@@ -155,6 +156,12 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
             logger.debug("history.models.save_record_deletion_record.delete", extra={"iden_cely": record.ident_cely})
         logger.debug("history.models.save_record_deletion_record.end")
 
+    def set_snapshots(self):
+        if self.organizace_snapshot != self.uzivatel.organizace:
+            self.organizace_snapshot = self.uzivatel.organizace
+            self.suppress_signal = True
+            self.save()
+
     class Meta:
         db_table = "historie"
         verbose_name = "historie"
@@ -163,6 +170,8 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
             models.Index(fields=["typ_zmeny", "uzivatel", "vazba"]),
             models.Index(fields=["typ_zmeny", "uzivatel"]),
             models.Index(fields=["typ_zmeny", "vazba"]),
+            models.Index(fields=["typ_zmeny", "uzivatel", "vazba", "organizace_snapshot"]),
+            models.Index(fields=["vazba", "organizace_snapshot"]),
         ]
 
 
