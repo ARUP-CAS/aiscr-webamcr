@@ -118,13 +118,14 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     )
 
     datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("historie.models.historie.datumZmeny.label"))
-    typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("historie.models.historie.typZmeny.label"),db_index=True)
+    typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("historie.models.historie.typZmeny.label"),
+                                 db_index=True)
     uzivatel = models.ForeignKey(
         User, on_delete=models.RESTRICT, db_column="uzivatel", verbose_name=_("historie.models.historie.uzivatel.label")
     )
     poznamka = models.TextField(blank=True, null=True, verbose_name=_("historie.models.historie.poznamka.label"))
     vazba = models.ForeignKey(
-        "HistorieVazby", on_delete=models.CASCADE, db_column="vazba"
+        "HistorieVazby", on_delete=models.CASCADE, db_column="vazba", db_index=True
     )
 
     def uzivatel_protected(self, anonymized=True):
@@ -158,6 +159,11 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         db_table = "historie"
         verbose_name = "historie"
         ordering = ["datum_zmeny", ]
+        indexes = [
+            models.Index(fields=["typ_zmeny", "uzivatel", "vazba"]),
+            models.Index(fields=["typ_zmeny", "uzivatel"]),
+            models.Index(fields=["typ_zmeny", "vazba"]),
+        ]
 
 
 class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):

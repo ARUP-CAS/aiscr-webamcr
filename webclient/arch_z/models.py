@@ -69,10 +69,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     )
     ident_cely = models.TextField(unique=True)
     historie = models.OneToOneField(
-        HistorieVazby, on_delete=models.SET_NULL, db_column="historie", null=True
+        HistorieVazby, on_delete=models.SET_NULL, db_column="historie", null=True, db_index=True
     )
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
-    stav = models.SmallIntegerField(choices=STATES)
+    stav = models.SmallIntegerField(choices=STATES, db_index=True)
     katastry = models.ManyToManyField(
         RuianKatastr, through="ArcheologickyZaznamKatastr", blank=True
     )
@@ -81,6 +81,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         on_delete=models.RESTRICT,
         db_column="hlavni_katastr",
         related_name="zaznamy_hlavnich_katastru",
+        db_index=True
     )
 
     class Meta:
@@ -439,7 +440,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     CHOICES = ((TYP_AKCE_PROJEKTOVA, "Projektova"), (TYP_AKCE_SAMOSTATNA, "Samostatna"))
 
-    typ = models.CharField(max_length=1, choices=CHOICES,db_index=True)
+    typ = models.CharField(max_length=1, choices=CHOICES, db_index=True)
     lokalizace_okolnosti = models.TextField(blank=True, null=True)
     specifikace_data = models.ForeignKey(
         Heslar,
@@ -447,6 +448,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         db_column="specifikace_data",
         related_name="akce_specifikace_data",
         limit_choices_to={"nazev_heslare": HESLAR_DATUM_SPECIFIKACE},
+        db_index=True,
     )
     hlavni_typ = models.ForeignKey(
         Heslar,
@@ -456,6 +458,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         null=True,
         related_name="akce_hlavni_typy",
         limit_choices_to={"nazev_heslare": HESLAR_AKCE_TYP},
+        db_index=True,
     )
     vedlejsi_typ = models.ForeignKey(
         Heslar,
@@ -465,6 +468,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         null=True,
         related_name="akce_vedlejsi_typy",
         limit_choices_to={"nazev_heslare": HESLAR_AKCE_TYP},
+        db_index=True,
     )
     hlavni_vedouci = models.ForeignKey(
         Osoba,
@@ -472,14 +476,15 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         db_column="hlavni_vedouci",
         blank=True,
         null=True,
+        db_index=True,
     )
     souhrn_upresneni = models.TextField(blank=True, null=True)
     ulozeni_nalezu = models.TextField(blank=True, null=True)
-    datum_zahajeni = models.DateField(blank=True, null=True)
-    datum_ukonceni = models.DateField(blank=True, null=True)
+    datum_zahajeni = models.DateField(blank=True, null=True, db_index=True)
+    datum_ukonceni = models.DateField(blank=True, null=True, db_index=True)
     je_nz = models.BooleanField(default=False)
     projekt = models.ForeignKey(
-        "projekt.Projekt", models.RESTRICT, db_column="projekt", blank=True, null=True
+        "projekt.Projekt", models.RESTRICT, db_column="projekt", blank=True, null=True, db_index=True
     )
     ulozeni_dokumentace = models.TextField(blank=True, null=True)
     archeologicky_zaznam = models.OneToOneField(
@@ -491,7 +496,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
     )
     odlozena_nz = models.BooleanField(default=False)
     organizace = models.ForeignKey(
-        Organizace, on_delete=models.RESTRICT, db_column="organizace", blank=True, null=True
+        Organizace, on_delete=models.RESTRICT, db_column="organizace", blank=True, null=True, db_index=True
     )
     vedouci_snapshot = models.CharField(max_length=5000, null=True, blank=True)
 
