@@ -110,23 +110,28 @@ class HistorieFilter(filters.FilterSet):
         distinct=True,
     )
 
-    def filter_queryset(self, queryset):
+    def _get_history_subquery(self):
+        logger.debug("dokument.filters.HistorieFilter._get_history_subquery.start")
         uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace")
         zmena = self.form.cleaned_data.pop("historie_typ_zmeny")
         uzivatel = self.form.cleaned_data.pop("historie_uzivatel")
         datum = self.form.cleaned_data.pop("historie_datum_zmeny_od")
-
-        queryset = super(HistorieFilter, self).filter_queryset(queryset)
-        #filtered = Historie.objects.all()
-        if uzivatel_organizace:
-            historie = Historie.objects.filter(organizace_snapshot__in=uzivatel_organizace)
-        from arch_z.filters import AkceFilter
-        if isinstance(self, AkceFilter):
-            historie_subquery = (historie.values('vazba__archeologickyzaznam__id')
-                                 .filter(vazba__archeologickyzaznam__id=OuterRef("archeologicky_zaznam_id")))
-            queryset = queryset.filter(archeologicky_zaznam_id__in=Subquery(historie_subquery))
-        logger.debug("dokument.filters.HistorieFilter.filter_queryset.end", extra={"query": str(queryset.query)})
-        return queryset
+        if uzivatel_organizace or zmena or uzivatel or datum:
+            historie = Historie.objects.all()
+            if zmena:
+                historie = historie.filter(typ_zmeny__in=zmena)
+            if uzivatel:
+                historie = historie.filter(uzivatel__in=uzivatel)
+            if uzivatel_organizace:
+                historie = historie.filter(organizace_snapshot__in=uzivatel_organizace)
+            if datum and datum.start:
+                historie = historie.filter(datum_zmeny__gte=datum.start)
+            if datum and datum.stop:
+                historie = historie.filter(datum_zmeny__lte=datum.stop)
+            logger.debug("dokument.filters.HistorieFilter._get_history_subquery.end",
+                         extra={"query": str(historie.query)})
+            return historie
+        return None
 
     """
     def filter_queryset(self, queryset):
