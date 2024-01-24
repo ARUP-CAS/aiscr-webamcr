@@ -102,7 +102,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "sirka",
             "cislo_objektu",
             "zeme",
-            "region",
+            "region_extra",
             "udalost",
             "udalost_typ",
             "rok_od",
@@ -132,7 +132,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             ),
             "meritko": forms.TextInput(),
             "cislo_objektu": forms.TextInput(),
-            "region": forms.TextInput(),
+            "region_extra": forms.TextInput(),
             "udalost": forms.TextInput(),
             "odkaz": forms.TextInput(),
         }
@@ -148,7 +148,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "sirka": _("dokument.forms.editDokumentExtraDataForm.sirka.label"),
             "cislo_objektu": _("dokument.forms.editDokumentExtraDataForm.cisloObjektu.label"),
             "zeme": _("dokument.forms.editDokumentExtraDataForm.zeme.label"),
-            "region": _("dokument.forms.editDokumentExtraDataForm.region.label"),
+            "region_extra": _("dokument.forms.editDokumentExtraDataForm.region.label"),
             "udalost": _("dokument.forms.editDokumentExtraDataForm.udalost.label"),
             "udalost_typ": _("dokument.forms.editDokumentExtraDataForm.typUdalosti.label"),
             "rok_od": _("dokument.forms.editDokumentExtraDataForm.rokOd.label"),
@@ -169,7 +169,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "sirka": _("dokument.forms.editDokumentExtraDataForm.sirka.tooltip"),
             "cislo_objektu": _("dokument.forms.editDokumentExtraDataForm.cisloObjektu.tooltip"),
             "zeme": _("dokument.forms.editDokumentExtraDataForm.zeme.tooltip"),
-            "region": _("dokument.forms.editDokumentExtraDataForm.region.tooltip"),
+            "region_extra": _("dokument.forms.editDokumentExtraDataForm.region.tooltip"),
             "udalost": _("dokument.forms.editDokumentExtraDataForm.udalost.tooltip"),
             "udalost_typ": _("dokument.forms.editDokumentExtraDataForm.udalostTyp.tooltip"),
             "rok_od": _("dokument.forms.editDokumentExtraDataForm.rokOd.tooltip"),
@@ -234,7 +234,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             )
         self.fields["meritko"].widget.attrs["rows"] = 1
         self.fields["cislo_objektu"].widget.attrs["rows"] = 1
-        self.fields["region"].widget.attrs["rows"] = 1
+        self.fields["region_extra"].widget.attrs["rows"] = 1
         self.fields["udalost"].widget.attrs["rows"] = 1
         self.helper = FormHelper(self)
         self.fields["rada"].initial = rada
@@ -254,7 +254,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 Div("sirka", css_class="col-sm-2"),
                 Div("cislo_objektu", css_class="col-sm-4"),
                 Div("zeme", css_class="col-sm-2"),
-                Div("region", css_class="col-sm-2"),
+                Div("region_extra", css_class="col-sm-2"),
                 Div("udalost", css_class="col-sm-2"),
                 Div("udalost_typ", css_class="col-sm-2"),
                 Div("rok_od", css_class="col-sm-2"),
@@ -638,7 +638,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "duveryhodnost",
             "odkaz",
             "zeme",
-            "region",
+            "region_extra",
             "vyska",
             "sirka",
         )
@@ -646,7 +646,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "format": forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
-            "region": forms.TextInput(),
+            "region_extra": forms.TextInput(),
             "duveryhodnost": forms.NumberInput(attrs={"max": "100", "min": "0"}),
             "odkaz": forms.TextInput(),
             "zeme": forms.Select(
@@ -658,7 +658,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "duveryhodnost": _("dokument.forms.createModelExtraDataForm.duveryhodnost.label"),
             "odkaz": _("dokument.forms.createModelExtraDataForm.odkaz.label"),
             "zeme": _("dokument.forms.createModelExtraDataForm.zeme.label"),
-            "region": _("dokument.forms.createModelExtraDataForm.region.label"),
+            "region_extra": _("dokument.forms.createModelExtraDataForm.region.label"),
             "vyska": _("dokument.forms.createModelExtraDataForm.delka.label"),
             "sirka": _("dokument.forms.createModelExtraDataForm.sirka.label"),
         }
@@ -667,7 +667,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "duveryhodnost": _("dokument.forms.createModelExtraDataForm.duveryhodnost.tooltip"),
             "odkaz": _("dokument.forms.createModelExtraDataForm.odkaz.tooltip"),
             "zeme": _("dokument.forms.createModelExtraDataForm.zeme.tooltip"),
-            "region": _("dokument.forms.createModelExtraDataForm.region.tooltip"),
+            "region_extra": _("dokument.forms.createModelExtraDataForm.region.tooltip"),
             "vyska": _("dokument.forms.createModelExtraDataForm.vyska.tooltip"),
             "sirka": _("dokument.forms.createModelExtraDataForm.sirka.tooltip"),
         }
@@ -692,7 +692,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
                 Div("duveryhodnost", css_class="col-sm-6"),
                 Div("odkaz", css_class="col-sm-12"),
                 Div("zeme", css_class="col-sm-3"),
-                Div("region", css_class="col-sm-3"),
+                Div("region_extra", css_class="col-sm-3"),
                 Div("vyska", css_class="col-sm-3"),
                 Div("sirka", css_class="col-sm-3"),
                 css_class="row",
