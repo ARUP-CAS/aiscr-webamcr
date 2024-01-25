@@ -2,6 +2,7 @@ import datetime
 import logging
 import traceback
 
+import redis
 from celery import shared_task
 from django.db.models import Q, F, Min
 from django.db.models.functions import Upper
@@ -30,6 +31,7 @@ from pian.models import Pian
 from projekt.models import Projekt
 from services.mailer import Mailer
 from uzivatel.models import Organizace, Osoba, User
+from webclient.settings.base import get_plain_redis_pass
 
 logger = logging.getLogger(__name__)
 
@@ -668,3 +670,28 @@ def update_snapshot_fields():
         logger.debug("core.cron.update_snapshot_fields.do.end")
     except Exception as err:
         logger.error("core.cron.update_snapshot_fields.do.error", extra={"error": err})
+
+
+@shared_task
+def update_all_redis_snapshots():
+    r = redis.Redis(host="redis", port=6379, password=get_plain_redis_pass())
+    akce_query = Akce.objects.all()
+    akce_dict = {}
+    for akce in akce_query:
+        key, value = akce.generate_redis_snapshot()
+        akce_dict[key] = value
+    r.hset("akce", mapping=akce_dict)
+
+
+@shared_task
+def update_single_redis_snapshot(class_name: str, record_pk):
+    item = None
+    if class_name == "Akce":
+        item = Akce.objects.get(pk=record_pk)
+    if item:
+        r = redis.Redis(host="redis", port=6379, password=get_plain_redis_pass())
+        key, value = item.generate_redis_snapshot()
+        if isinstance(item, Akce):
+            akce_dict = r.hgetall("akce")
+            akce_dict[key] = value
+            r.hset("akce", mapping=akce_dict)

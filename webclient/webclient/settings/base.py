@@ -61,6 +61,14 @@ def get_mail_secret(setting, default_value=None):
 
 
 # REDIS SETTINGS
+def get_plain_redis_pass(default_value=""):
+    if os.path.exists("/run/secrets/redis_pass"):
+        with open("/run/secrets/redis_pass", "r") as file:
+            return file.readline().rstrip()
+    else:
+        return default_value
+
+
 def get_redis_pass(default_value=""):
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:

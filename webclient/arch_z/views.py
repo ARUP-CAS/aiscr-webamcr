@@ -1,4 +1,6 @@
 import logging
+
+import redis
 import simplejson as json
 from django.db.models import RestrictedError
 
@@ -120,6 +122,7 @@ from projekt.models import Projekt
 from services.mailer import Mailer
 from uzivatel.models import User
 from core.models import Permissions as p, check_permissions
+from webclient.settings.base import get_plain_redis_pass
 
 logger = logging.getLogger(__name__)
 
@@ -1418,6 +1421,21 @@ class AkceListView(SearchListView):
     toolbar = "toolbar_akce.html"
     permission_model_lookup = "archeologicky_zaznam__"
     typ_zmeny_lookup = ZAPSANI_AZ
+
+    def create_export(self, filename=None):
+        response = HttpResponse()
+        r = redis.Redis(host="redis", port=6379, password=get_plain_redis_pass())
+        if filename is not None:
+            response["Content-Disposition"] = f'attachment; filename="export.csv"'
+        akce = r.hgetall("akce")
+        dataset = self.get_table_data()
+        ident_cely_list = set(dataset.values_list("archeologicky_zaznam__ident_cely", flat=True))
+        for key, value in akce.items():
+            key = key.decode("utf-8").replace("akce_", "")
+            value = value.decode("utf-8")
+            if key in ident_cely_list:
+                response.write(f"{value}\n")
+        return response
 
     def init_translations(self):
         self.page_title = _("arch_z.views.AkceListView.page_title.text")

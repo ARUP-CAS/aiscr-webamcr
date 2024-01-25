@@ -784,12 +784,12 @@ class PermissionFilterMixin():
         else:
             return Q(**{"historie_zapsat__in":filtered_my})
 
-    
     def add_accessibility_lookup(self,permission, qs):
         accessibility_key = self.permission_model_lookup+"pristupnost__in"
         accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id))
         filter = {accessibility_key:accessibilities}
         return qs.filter(Q(**filter)  | self.add_ownership_lookup(permission.accessibility,qs))
+
 
 class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView, PermissionFilterMixin):
     """
