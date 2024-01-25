@@ -326,8 +326,8 @@ class Model3DFilter(HistorieFilter):
     def filter_queryset(self, queryset):
         logger.debug("dokument.filters.Model3DFilter.filter_queryset.start")
         historie = self._get_history_subquery()
+        queryset = super(Model3DFilter, self).filter_queryset(queryset)
         if historie:
-            queryset = super(Model3DFilter, self).filter_queryset(queryset)
             historie_subquery = (historie.values('vazba__dokument_historie__id')
                                  .filter(vazba__dokument_historie__id=OuterRef("id")))
             queryset = queryset.filter(id__in=Subquery(historie_subquery))
@@ -869,8 +869,8 @@ class DokumentFilter(Model3DFilter):
     def filter_queryset(self, queryset):
         logger.debug("dokument.filters.DokumentFilter.filter_queryset.start")
         historie = self._get_history_subquery()
+        queryset = super(DokumentFilter, self).filter_queryset(queryset)
         if historie:
-            queryset = super(DokumentFilter, self).filter_queryset(queryset)
             historie_subquery = (historie.values('vazba__dokument_historie__id')
                                  .filter(vazba__dokument_historie__id=OuterRef("id")))
             queryset = queryset.filter(id__in=Subquery(historie_subquery))

@@ -258,8 +258,8 @@ class SamostatnyNalezFilter(HistorieFilter):
     def filter_queryset(self, queryset):
         logger.debug("pas.filters.SamostatnyNalezFilter.filter_queryset.start")
         historie = self._get_history_subquery()
+        queryset = super(SamostatnyNalezFilter, self).filter_queryset(queryset)
         if historie:
-            queryset = super(SamostatnyNalezFilter, self).filter_queryset(queryset)
             historie_subquery = (historie.values('vazba__sn_historie__id')
                                  .filter(vazba__sn_historie__id=OuterRef("id")))
             queryset = queryset.filter(id__in=Subquery(historie_subquery))

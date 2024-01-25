@@ -142,8 +142,8 @@ class ExterniZdrojFilter(HistorieFilter):
     def filter_queryset(self, queryset):
         logger.debug("ez.filters.ExterniZdrojFilter.filter_queryset.start")
         historie = self._get_history_subquery()
+        queryset = super(ExterniZdrojFilter, self).filter_queryset(queryset)
         if historie:
-            queryset = super(ExterniZdrojFilter, self).filter_queryset(queryset)
             historie_subquery = (historie.values('vazba__externizdroj__id')
                                  .filter(vazba__externizdroj__id=OuterRef("id")))
             queryset = queryset.filter(id__in=Subquery(historie_subquery))

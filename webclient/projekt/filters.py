@@ -469,8 +469,8 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
     def filter_queryset(self, queryset):
         logger.debug("projekt.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
+        queryset = super(ProjektFilter, self).filter_queryset(queryset)
         if historie:
-            queryset = super(ProjektFilter, self).filter_queryset(queryset)
             historie_subquery = (historie.values('vazba__projekt__id')
                                  .filter(vazba__projekt__id=OuterRef("id")))
             queryset = queryset.filter(id__in=Subquery(historie_subquery))
