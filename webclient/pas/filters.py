@@ -255,6 +255,17 @@ class SamostatnyNalezFilter(HistorieFilter):
         )
         self.helper = SamostatnyNalezFilterFormHelper()
 
+    def filter_queryset(self, queryset):
+        logger.debug("pas.filters.SamostatnyNalezFilter.filter_queryset.start")
+        historie = self._get_history_subquery()
+        if historie:
+            queryset = super(SamostatnyNalezFilter, self).filter_queryset(queryset)
+            historie_subquery = (historie.values('vazba__sn_historie__id')
+                                 .filter(vazba__sn_historie__id=OuterRef("id")))
+            queryset = queryset.filter(id__in=Subquery(historie_subquery))
+        logger.debug("pas.filters.SamostatnyNalezFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+        return queryset
+
     def filter_obdobi(self, queryset, name, value):
         """
         Metóda pro filtrování podle období.

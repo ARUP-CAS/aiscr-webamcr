@@ -139,6 +139,17 @@ class ExterniZdrojFilter(HistorieFilter):
         widget=SelectMultipleSeparator(),
     )
 
+    def filter_queryset(self, queryset):
+        logger.debug("ez.filters.ExterniZdrojFilter.filter_queryset.start")
+        historie = self._get_history_subquery()
+        if historie:
+            queryset = super(ExterniZdrojFilter, self).filter_queryset(queryset)
+            historie_subquery = (historie.values('vazba__externizdroj__id')
+                                 .filter(vazba__externizdroj__id=OuterRef("id")))
+            queryset = queryset.filter(id__in=Subquery(historie_subquery))
+        logger.debug("ez.filters.ExterniZdrojFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+        return queryset
+
     def filter_popisne_udaje(self, queryset, name, value):
         """
         Metóda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.

@@ -404,6 +404,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
             distinct=True,
         )
 
+
 class AkceFilter(ArchZaznamFilter):
     """
     Class pro filtrování akce.
@@ -688,10 +689,11 @@ class AkceFilter(ArchZaznamFilter):
     def filter_queryset(self, queryset):
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
-        queryset = super(AkceFilter, self).filter_queryset(queryset)
-        historie_subquery = (historie.values('vazba__archeologickyzaznam__id')
-                             .filter(vazba__archeologickyzaznam__id=OuterRef("archeologicky_zaznam_id")))
-        queryset = queryset.filter(archeologicky_zaznam_id__in=Subquery(historie_subquery))
+        if historie:
+            queryset = super(AkceFilter, self).filter_queryset(queryset)
+            historie_subquery = (historie.values('vazba__archeologickyzaznam__id')
+                                 .filter(vazba__archeologickyzaznam__id=OuterRef("archeologicky_zaznam_id")))
+            queryset = queryset.filter(archeologicky_zaznam_id__in=Subquery(historie_subquery))
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.end", extra={"query": str(queryset.query)})
         return queryset
 

@@ -112,10 +112,10 @@ class HistorieFilter(filters.FilterSet):
 
     def _get_history_subquery(self):
         logger.debug("dokument.filters.HistorieFilter._get_history_subquery.start")
-        uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace")
-        zmena = self.form.cleaned_data.pop("historie_typ_zmeny")
-        uzivatel = self.form.cleaned_data.pop("historie_uzivatel")
-        datum = self.form.cleaned_data.pop("historie_datum_zmeny_od")
+        uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace", None)
+        zmena = self.form.cleaned_data.pop("historie_typ_zmeny", None)
+        uzivatel = self.form.cleaned_data.pop("historie_uzivatel", None)
+        datum = self.form.cleaned_data.pop("historie_datum_zmeny_od", None)
         if uzivatel_organizace or zmena or uzivatel or datum:
             historie = Historie.objects.all()
             if zmena:
@@ -322,6 +322,17 @@ class Model3DFilter(HistorieFilter):
         ),
         distinct=True,
     )
+
+    def filter_queryset(self, queryset):
+        logger.debug("dokument.filters.Model3DFilter.filter_queryset.start")
+        historie = self._get_history_subquery()
+        if historie:
+            queryset = super(Model3DFilter, self).filter_queryset(queryset)
+            historie_subquery = (historie.values('vazba__dokument_historie__id')
+                                 .filter(vazba__dokument_historie__id=OuterRef("id")))
+            queryset = queryset.filter(id__in=Subquery(historie_subquery))
+        logger.debug("dokument.filters.Model3DFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+        return queryset
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
@@ -854,6 +865,17 @@ class DokumentFilter(Model3DFilter):
         ),
         distinct=True,
     )
+
+    def filter_queryset(self, queryset):
+        logger.debug("dokument.filters.DokumentFilter.filter_queryset.start")
+        historie = self._get_history_subquery()
+        if historie:
+            queryset = super(DokumentFilter, self).filter_queryset(queryset)
+            historie_subquery = (historie.values('vazba__dokument_historie__id')
+                                 .filter(vazba__dokument_historie__id=OuterRef("id")))
+            queryset = queryset.filter(id__in=Subquery(historie_subquery))
+        logger.debug("dokument.filters.DokumentFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+        return queryset
 
     def filter_uzemni_prislusnost(self, queryset, name, value):
         """
