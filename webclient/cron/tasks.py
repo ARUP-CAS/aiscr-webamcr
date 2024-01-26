@@ -8,21 +8,23 @@ from django.db.models.functions import Upper
 from django.utils import timezone
 
 from adb.models import Adb
-from arch_z.models import ArcheologickyZaznam, Akce
+from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
     OZNAMENI_PROJ, ZAPSANI_PROJ
 from core.models import Soubor
 from cron.convertToSJTSK import get_multi_transform_to_sjtsk
 from cron.classes import MyList
 from cron.functions import collect_en01_en02
-from django.db import connection
+from django.db import connection, transaction
 from django.utils.translation import gettext as _
 
 from cron.convertToWGS84 import get_multi_transform_to_wgs84
+from dj.models import DokumentacniJednotka
 from dokument.models import Dokument, Let, DokumentCast
 from ez.models import ExterniZdroj
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.models import Heslar, RuianKatastr, RuianOkres, RuianKraj
+from historie.models import Historie
 from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez
 from pian.models import Pian
@@ -468,15 +470,57 @@ def record_ident_change(class_name, record_pk, old_ident):
         connector = FedoraRepositoryConnector(record)
         connector.record_ident_change(old_ident)
         logger.debug("cron.record_ident_change.do.end", extra={"class_name": class_name, "record_pk": record_pk,
-                                                                 "old_ident": old_ident})
+                                                               "old_ident": old_ident})
+
+        def process_arch_z(inner_item: ArcheologickyZaznam):
+            for inner_item in record.dokumentacni_jednotky_akce.all():
+                inner_item: DokumentacniJednotka
+                if inner_item.pian:
+                    inner_item.pian.save_metadata()
+                if inner_item.adb:
+                    inner_item.adb.save_metadata()
+            for inner_item in record.casti_dokumentu.all():
+                inner_item: DokumentCast
+                inner_item.dokument.save_metadata()
+            for inner_item in record.externi_odkazy.all():
+                inner_item: ExterniOdkaz
+                inner_item.externi_zdroj.save_metadata()
+            if inner_item.projekt:
+                inner_item.projekt.save_metadata()
+
         if isinstance(record, ArcheologickyZaznam):
-            for i in record.casti_dokumentu.all():
-                i: DokumentCast
-                i.dokument.save_metadata()
+            process_arch_z(record)
         elif isinstance(record, Dokument):
-            for i in record.casti.all():
-                i: DokumentCast
-                i.archeologicky_zaznam.save_metadata()
+            for item in record.casti.all():
+                item: DokumentCast
+                if item.archeologicky_zaznam:
+                    item.archeologicky_zaznam.save_metadata()
+                if item.projekt:
+                    item.projekt.save_metadata()
+            if item.let:
+                item.let.save_metadata()
+        elif isinstance(record, ExterniZdroj):
+            for item in record.externi_odkazy_zdroje.all():
+                item: ExterniOdkaz
+                item.archeologicky_zaznam.save_metadata()
+        elif isinstance(record, Projekt):
+            for item in record.casti_dokumentu.all():
+                item: DokumentCast
+                item.dokument.save_metadata()
+            for item in record.samostatne_nalezy.all():
+                item: SamostatnyNalez
+                item.save_metadata()
+        elif isinstance(record, Lokalita):
+            archeologicky_zaznam: ArcheologickyZaznam = record.archeologicky_zaznam
+            process_arch_z(archeologicky_zaznam)
+        elif isinstance(record, SamostatnyNalez):
+            if record.projekt:
+                record.projekt.save_metadata()
+        elif isinstance(record, Pian):
+            for item in record.dokumentacni_jednotky_pianu.all():
+                item: DokumentacniJednotka
+                item.archeologicky_zaznam.save_metadata()
+
     except Exception as err:
         logger.error("cron.record_ident_change.do.error", extra={"error": err})
 

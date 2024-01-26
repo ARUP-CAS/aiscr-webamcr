@@ -221,43 +221,15 @@ def detail(request, ident_cely):
         ),
         ident_cely=ident_cely,
     )
+    sn: SamostatnyNalez
     context.update(get_detail_context(sn=sn, request=request))
     if sn.geom:
-        geom = "0 0"
-        if sn.geom:
-            geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
-        geom_sjtsk = "0 0"
-        if sn.geom_sjtsk:
-            geom_sjtsk = (
-                str(sn.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
-            )
-        system = (
-            "WGS-84"
-            if sn.geom_system == "4326"
-            else ("S-JTSK*" if sn.geom_system == "5514*" else ("S-JTSK" if sn.geom_system == "5514" else "WGS-84"))
-        )
         logger.debug(
             "pas.views.create.detail",
-            extra={"sn_geom_system": sn.geom_system, "system": system},
+            extra={"sn_geom_system": sn.geom_system, "ident_cely": sn.ident_cely},
         )
-        x1_wgs = geom.split(" ")[0]
-        x2_wgs = geom.split(" ")[1]
-        x1_sjtsk = geom_sjtsk.split(" ")[0]
-        x2_sjtsk = geom_sjtsk.split(" ")[1]
-        x1 = x1_wgs if system == "4326" else x1_sjtsk
-        x2 = x2_wgs if system == "4326" else x2_sjtsk
-        #if float(gy_sjtsk) > float(gx_sjtsk):
-        #    gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
         context["formCoor"] = CoordinatesDokumentForm(
-            initial={
-                "visible_x1": x1,
-                "visible_x2": x2,
-                "coordinate_wgs84_x1": x1_wgs,
-                "coordinate_wgs84_x2": x2_wgs,
-                "coordinate_sjtsk_x1": x1_sjtsk,
-                "coordinate_sjtsk_x2": x2_sjtsk,
-                "coordinate_system": system,
-            }
+            initial=sn.generate_coord_forms_initial()
         )  # Zmen musis poslat data do formulare
         context["global_map_can_edit"] = False
     else:
@@ -335,38 +307,9 @@ def edit(request, ident_cely):
             **kwargs,
         )
         if sn.geom:
-            geom = "0 0"
-            if sn.geom:
-                geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
-            geom_sjtsk = "0 0"
-            if sn.geom_sjtsk:
-                geom_sjtsk = (
-                    str(sn.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
-                )
-            system = (
-                "WGS-84"
-                if sn.geom_system == "4326"
-                else ("S-JTSK*" if sn.geom_system == "5514*" else ("S-JTSK" if sn.geom_system == "5514" else "WGS-84"))
-            )
-            x1_wgs = geom.split(" ")[0]
-            x2_wgs = geom.split(" ")[1]
-            x1_sjtsk = geom_sjtsk.split(" ")[0]
-            x2_sjtsk = geom_sjtsk.split(" ")[1]
-            x1 = x1_wgs if system == "4326" else x1_sjtsk
-            x2 = x2_wgs if system == "4326" else x2_sjtsk
-            #if float(gy_sjtsk) > float(gx_sjtsk):
-            #    gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
             form_coor= CoordinatesDokumentForm(
-                initial={
-                    "visible_x1": x1,
-                    "visible_x2": x2,
-                    "coordinate_wgs84_x1": x1_wgs,
-                    "coordinate_wgs84_x2": x2_wgs,
-                    "coordinate_sjtsk_x1": x1_sjtsk,
-                    "coordinate_sjtsk_x2": x2_sjtsk,
-                    "coordinate_system": system,
-                }
-            )  # Zmen musis poslat data do formulare
+                initial=sn.generate_coord_forms_initial()
+            )
         else:
             form_coor = CoordinatesDokumentForm()
     return render(

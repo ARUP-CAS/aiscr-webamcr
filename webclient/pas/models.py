@@ -257,6 +257,39 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             return self.soubory.soubory.first()
         else:
             return None
+        
+    def generate_coord_forms_initial(self):
+        geom = "0 0"
+        if self.geom:
+            geom = str(self.geom).split("(")[1].replace(", ", ",").replace(")", "")
+        geom_sjtsk = "0 0"
+        if self.geom_sjtsk:
+            geom_sjtsk = (
+                str(self.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
+            )
+        if self.geom_system == "4326":
+            system = "4326"
+        elif self.geom_system == "5514*":
+            system = "5514*"
+        elif self.geom_system == "5514":
+            system = "5514"
+        else:
+            system = "4326"
+        x1_wgs = geom.split(" ")[0]
+        x2_wgs = geom.split(" ")[1]
+        x1_sjtsk = geom_sjtsk.split(" ")[0]
+        x2_sjtsk = geom_sjtsk.split(" ")[1]
+        x1 = x1_wgs if system == "4326" else x1_sjtsk
+        x2 = x2_wgs if system == "4326" else x2_sjtsk
+        return {
+            "visible_x1": x1,
+            "visible_x2": x2,
+            "coordinate_wgs84_x1": x1_wgs,
+            "coordinate_wgs84_x2": x2_wgs,
+            "coordinate_sjtsk_x1": x1_sjtsk,
+            "coordinate_sjtsk_x2": x2_sjtsk,
+            "coordinate_system": system,
+        }
 
     class Meta:
         db_table = "samostatny_nalez"

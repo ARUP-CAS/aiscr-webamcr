@@ -77,7 +77,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     )
 
     stav = models.SmallIntegerField(
-        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("projekt.models.projekt.stav.label"), db_index=True
+        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("projekt.models.projekt.stav.label"),
+        db_index=True
     )
     typ_projektu = models.ForeignKey(
         Heslar,
@@ -106,10 +107,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         db_index=True,
     )
     datum_zahajeni = models.DateField(
-        blank=True, null=True, verbose_name=_("projekt.models.projekt.datumZahajeni.label")
+        blank=True, null=True, verbose_name=_("projekt.models.projekt.datumZahajeni.label"), db_index=True,
     )
     datum_ukonceni = models.DateField(
-        blank=True, null=True, verbose_name=_("projekt.models.projekt.datumUkonceni.label")
+        blank=True, null=True, verbose_name=_("projekt.models.projekt.datumUkonceni.label"), db_index=True,
     )
     kulturni_pamatka = models.ForeignKey(
         Heslar,
@@ -133,6 +134,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         blank=True,
         null=True,
         related_name="projekt_souboru",
+        db_index=True,
     )
     historie = models.OneToOneField(
         HistorieVazby,
@@ -140,6 +142,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         db_column="historie",
         related_name="projekt_historie",
         null=True,
+        db_index=True,
     )
     organizace = models.ForeignKey(
         Organizace, models.RESTRICT, db_column="organizace", blank=True, null=True, db_index=True

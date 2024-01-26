@@ -13,7 +13,7 @@ from core.constants import (
     SCHVALENI_OZNAMENI_PROJ,
 )
 from crispy_forms.layout import HTML, Div, Layout
-from django.db.models import Q, QuerySet
+from django.db.models import Q, QuerySet, OuterRef, Subquery
 from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
@@ -465,6 +465,17 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
+
+    def filter_queryset(self, queryset):
+        logger.debug("projekt.filters.AkceFilter.filter_queryset.start")
+        historie = self._get_history_subquery()
+        queryset = super(ProjektFilter, self).filter_queryset(queryset)
+        if historie:
+            historie_subquery = (historie.values('vazba__projekt__id')
+                                 .filter(vazba__projekt__id=OuterRef("id")))
+            queryset = queryset.filter(id__in=Subquery(historie_subquery))
+        logger.debug("projekt.filters.AkceFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+        return queryset
 
     def filter_planovane_zahajeni(self, queryset, name, value):
         """

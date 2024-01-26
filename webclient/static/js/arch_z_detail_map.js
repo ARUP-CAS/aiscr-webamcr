@@ -743,7 +743,7 @@ const addGoldPointOnLoad = (geom, layer, pian_ident_cely, st_text, presnost) => 
 
 }
 
-const addPointQuery = (geom, layer, ident_cely, st_text, presnost, popup_text = "") => {
+const addPointQuery = (geom, layer, ident_cely, st_text, presnost, popup_text) => {
     addLogText("arch_z_detail_map.addPointQuery")
     let coor = []
     if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
@@ -1192,6 +1192,7 @@ function loadSession(){
     const urlParams = new URLSearchParams(window.location.search);
     let myParamG = urlParams.get('geometry');
     let myParamL = urlParams.get('label');
+    global_map_can_grab_geom_from_map = true;
     if(myParamG !==null){
         global_blocked_by_query_geom=true;
         drawnItems.clearLayers();

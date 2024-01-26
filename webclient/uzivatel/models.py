@@ -67,16 +67,16 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     is_staff = models.BooleanField(default=False, verbose_name="Přístup do admin. rozhraní")
     is_active = models.BooleanField(default=False, verbose_name="Aktivní")
     date_joined = models.DateTimeField(default=timezone.now)
-    osoba = models.ForeignKey('Osoba', models.RESTRICT, db_column='osoba', blank=True, null=True)
+    osoba = models.ForeignKey('Osoba', models.RESTRICT, db_column='osoba', blank=True, null=True, db_index=True)
     organizace = models.ForeignKey(
-        "Organizace", models.RESTRICT, db_column="organizace"
+        "Organizace", models.RESTRICT, db_column="organizace", db_index=True
     )
-    history_vazba = models.OneToOneField('historie.HistorieVazby', db_column='historie',
-                                      on_delete=models.SET_NULL, related_name="uzivatelhistorievazba", null=True)
+    history_vazba = models.OneToOneField('historie.HistorieVazby', db_column='historie', on_delete=models.SET_NULL,
+                                         related_name="uzivatelhistorievazba", null=True, db_index=True)
     jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
     sha_1 = models.TextField(blank=True, null=True)
     telefon = models.CharField(
-        max_length=100, blank=True, null=True, validators=[validate_phone_number]
+        max_length=100, blank=True, null=True, validators=[validate_phone_number], db_index=True
     )
     history = HistoricalRecords()
     notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user',
@@ -253,6 +253,12 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         db_table = "auth_user"
         verbose_name = "Uživatel"
         verbose_name_plural = "Uživatelé"
+        indexes = [
+            models.Index(fields=["osoba", "organizace"]),
+            models.Index(fields=["osoba", "organizace", "history_vazba"]),
+            models.Index(fields=["organizace", "history_vazba"]),
+            models.Index(fields=["osoba", "history_vazba"]),
+        ]
     
     def get_permission_object(self):
         return self

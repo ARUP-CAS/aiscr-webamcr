@@ -519,7 +519,7 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
         related_name="extra_data_zemi",
         limit_choices_to={"nazev_heslare": HESLAR_ZEME},
     )
-    region = models.TextField(blank=True, null=True)
+    region_extra = models.TextField(blank=True, null=True, db_column="region")
     udalost = models.TextField(blank=True, null=True)
     udalost_typ = models.ForeignKey(
         Heslar,

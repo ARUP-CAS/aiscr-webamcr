@@ -215,9 +215,6 @@ class FedoraRepositoryConnector:
     def _send_request(url: str, request_type: FedoraRequestType, *,
                       headers=None, data=None) -> Optional[requests.Response]:
         extra = {"url": url, "request_type": request_type}
-        if headers:
-            extra["headers"] = headers
-
         logger.debug("core_repository_connector._send_request.start", extra=extra)
         if request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
                             FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE):
@@ -258,8 +255,6 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.DELETE_BINARY_FILE,
                               FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2):
             response = requests.patch(url, auth=auth, headers=headers, data=data)
-
-        extra["response_text"] = response.text
         extra["status_code"] = response.status_code
         if request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
                                 FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
@@ -270,7 +265,7 @@ class FedoraRepositoryConnector:
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
             else:
-                extra = {"text": response.text, "status_code": response.status_code, "request_type": request_type}
+                extra = {"status_code": response.status_code, "request_type": request_type}
 
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
                 raise FedoraError(url, response.text, response.status_code)
@@ -620,7 +615,7 @@ class FedoraRepositoryConnector:
             }
             data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'deleted'}"
             url = self._get_request_url(FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS)
-            self._send_request(url, FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,headers=headers, data=data)
+            self._send_request(url, FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS, headers=headers, data=data)
             headers = {
                 "Slug": self.record.ident_cely,
                 "Content-Type": "text/turtle"

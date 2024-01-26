@@ -110,10 +110,31 @@ class HistorieFilter(filters.FilterSet):
         distinct=True,
     )
 
+    def _get_history_subquery(self):
+        logger.debug("dokument.filters.HistorieFilter._get_history_subquery.start")
+        uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace", None)
+        zmena = self.form.cleaned_data.pop("historie_typ_zmeny", None)
+        uzivatel = self.form.cleaned_data.pop("historie_uzivatel", None)
+        datum = self.form.cleaned_data.pop("historie_datum_zmeny_od", None)
+        if uzivatel_organizace or zmena or uzivatel or datum:
+            historie = Historie.objects.all()
+            if zmena:
+                historie = historie.filter(typ_zmeny__in=zmena)
+            if uzivatel:
+                historie = historie.filter(uzivatel__in=uzivatel)
+            if uzivatel_organizace:
+                historie = historie.filter(organizace_snapshot__in=uzivatel_organizace)
+            if datum and datum.start:
+                historie = historie.filter(datum_zmeny__gte=datum.start)
+            if datum and datum.stop:
+                historie = historie.filter(datum_zmeny__lte=datum.stop)
+            logger.debug("dokument.filters.HistorieFilter._get_history_subquery.end",
+                         extra={"query": str(historie.query)})
+            return historie
+        return None
+
+    """
     def filter_queryset(self, queryset):
-        """
-        Metóda pro filtrování podle historie s logickým operátorem AND.
-        """
         zmena = self.form.cleaned_data["historie_typ_zmeny"]
         uzivatel = self.form.cleaned_data["historie_uzivatel"]
         datum = self.form.cleaned_data["historie_datum_zmeny_od"]
@@ -154,6 +175,7 @@ class HistorieFilter(filters.FilterSet):
                 type(queryset).__name__,
             )
         return queryset
+    """
 
     def __init__(self, *args, **kwargs):
         super(HistorieFilter, self).__init__(*args, **kwargs)
@@ -300,6 +322,17 @@ class Model3DFilter(HistorieFilter):
         ),
         distinct=True,
     )
+
+    def filter_queryset(self, queryset):
+        logger.debug("dokument.filters.Model3DFilter.filter_queryset.start")
+        historie = self._get_history_subquery()
+        queryset = super(Model3DFilter, self).filter_queryset(queryset)
+        if historie:
+            historie_subquery = (historie.values('vazba__dokument_historie__id')
+                                 .filter(vazba__dokument_historie__id=OuterRef("id")))
+            queryset = queryset.filter(id__in=Subquery(historie_subquery))
+        logger.debug("dokument.filters.Model3DFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+        return queryset
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
@@ -832,6 +865,17 @@ class DokumentFilter(Model3DFilter):
         ),
         distinct=True,
     )
+
+    def filter_queryset(self, queryset):
+        logger.debug("dokument.filters.DokumentFilter.filter_queryset.start")
+        historie = self._get_history_subquery()
+        queryset = super(DokumentFilter, self).filter_queryset(queryset)
+        if historie:
+            historie_subquery = (historie.values('vazba__dokument_historie__id')
+                                 .filter(vazba__dokument_historie__id=OuterRef("id")))
+            queryset = queryset.filter(id__in=Subquery(historie_subquery))
+        logger.debug("dokument.filters.DokumentFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+        return queryset
 
     def filter_uzemni_prislusnost(self, queryset, name, value):
         """

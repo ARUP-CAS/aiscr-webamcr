@@ -664,7 +664,7 @@ a.dropdown-item {
                 padding: .5rem .5rem;
 
                 span {
-                  justify-content: center;
+                  justify-content: left;
                 }
 
                 &.asc {
@@ -992,10 +992,6 @@ span.badge-span .badge {
 
 #dj_list_card_body {
   max-height: 500px;
-}
-
-.app-table-list-container .app-table-list-wrapper .app-table-list-inner .table-container .table thead tr th span {
-  justify-content: left;
 }
 
 .table.table-striped.table-sm.table-fixed {
