@@ -114,14 +114,14 @@ alter table pian alter column stav set not null;
 -- 4. projekt.duvod_navrzeni_zruseni (ulozit k typu tranzakce 7 do poznamky)
 insert into historie_vazby(typ_vazby) select 'projekt' from projekt;
 update projekt p set historie = sub.rn from (select id, (select count(*) from akce) + (select count(*) from dokument) + (select count(*) from externi_zdroj) + (select count(*) from lokalita) + (select count(*) from pian) + row_number() OVER (order by id) as rn from projekt) sub where p.id = sub.id;
-insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapisu, 1, odpovedny_pracovnik_zapisu, historie from projekt where odpovedny_pracovnik_zapisu is not null;
-insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_prihlaseni, 2, odpovedny_pracovnik_prihlaseni, historie from projekt where odpovedny_pracovnik_prihlaseni is not null;
-insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_archivace, 6, odpovedny_pracovnik_archivace, historie from projekt where odpovedny_pracovnik_archivace is not null;
-insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba, poznamka) select datum_navrzeni_zruseni, 7, odpovedny_pracovnik_navrhu_zruseni, historie, duvod_navrzeni_zruseni from projekt where odpovedny_pracovnik_navrhu_zruseni is not null;
-insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zruseni, 8, odpovedny_pracovnik_zruseni, historie from projekt where odpovedny_pracovnik_zruseni is not null;
-insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_navrhu_archivace, 5, odpovedny_pracovnik_navrhu_archivace, historie from projekt where odpovedny_pracovnik_navrhu_archivace is not null;
+insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapisu, 1, odpovedny_pracovnik_zapisu, historie from projekt where odpovedny_pracovnik_zapisu is not null and datum_zapisu is not null;
+insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_prihlaseni, 2, odpovedny_pracovnik_prihlaseni, historie from projekt where odpovedny_pracovnik_prihlaseni is not null and datum_prihlaseni is not null;
+insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_archivace, 6, odpovedny_pracovnik_archivace, historie from projekt where odpovedny_pracovnik_archivace is not null and datum_archivace is not null;
+insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba, poznamka) select datum_navrzeni_zruseni, 7, odpovedny_pracovnik_navrhu_zruseni, historie, duvod_navrzeni_zruseni from projekt where odpovedny_pracovnik_navrhu_zruseni is not null and datum_navrzeni_zruseni is not null;
+insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zruseni, 8, odpovedny_pracovnik_zruseni, historie from projekt where odpovedny_pracovnik_zruseni is not null and datum_zruseni is not null;
+insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_navrhu_archivace, 5, odpovedny_pracovnik_navrhu_archivace, historie from projekt where odpovedny_pracovnik_navrhu_archivace is not null and datum_navrhu_archivace is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapisu_zahajeni, 3, odpovedny_pracovnik_zahajeni, historie from projekt where odpovedny_pracovnik_zahajeni is not null and datum_zapisu_zahajeni is not null;
-insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapisu_ukonceni, 4, odpovedny_pracovnik_ukonceni, historie from projekt where odpovedny_pracovnik_ukonceni is not null;
+insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapisu_ukonceni, 4, odpovedny_pracovnik_ukonceni, historie from projekt where odpovedny_pracovnik_ukonceni is not null and datum_zapisu_ukonceni is not null;
 -- COMMENT: vetsina projektu ma v datetime_born null
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datetime_born, 0, 598610, historie from projekt where datetime_born is not null;
 -- COMMENT: Protoze zaznamy typu 7 v historii chybi je potreba nejdriv vyresit chybu predtim COMMENT: docela dlouhy dotaz - DN: toto se zdá být úplně irelevantní řešení, když to jde ošetřit na řádku 120 velice snadno
