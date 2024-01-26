@@ -817,8 +817,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             pipe = r.pipeline()
             for key in ident_cely_list:
                 pipe.hgetall(key)
-            akce = pipe.execute()
-            data = pandas.DataFrame(akce)
+            data = pipe.execute()
+            data = pandas.DataFrame(data)
             for column in data.select_dtypes(include=['object']):
                 data[column] = data[column].str.decode('utf-8')
             if export_format == TableExport.CSV:

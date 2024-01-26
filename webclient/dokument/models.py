@@ -401,20 +401,27 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         self.autori_snapshot = "; ".join([x.autor.vypis_cely for x in self.dokumentautor_set.order_by("poradi").all()])
         self.osoby_snapshot = "; ".join([x.osoba.vypis_cely for x in self.dokumentosoba_set.order_by("osoba__vypis_cely").all()])
 
+    @property
+    def redis_snapshot_id(self):
+        if self.ident_cely.startswith("3D"):
+            from dokument.views import Model3DListView
+            return f"{Model3DListView.redis_snapshot_prefix}_{self.ident_cely}"
+        else:
+            from dokument.views import DokumentListView
+            return f"{DokumentListView.redis_snapshot_prefix}_{self.ident_cely}"
+
     def generate_redis_snapshot(self):
         from dokument.tables import DokumentTable, Model3DTable
         if self.ident_cely.startswith("3D"):
             data = Dokument.objects.filter(pk=self.pk)
             table = Model3DTable(data=data)
             data = RedisConnector.prepare_model_for_redis(table)
-            from dokument.views import Model3DListView
-            return f"{Model3DListView.redis_snapshot_prefix}_{self.ident_cely}", data
+            return self.redis_snapshot_id, data
         else:
             data = Dokument.objects.filter(pk=self.pk)
             table = DokumentTable(data=data)
             data = RedisConnector.prepare_model_for_redis(table)
-            from dokument.views import DokumentListView
-            return f"{DokumentListView.redis_snapshot_prefix}_{self.ident_cely}", data
+            return self.redis_snapshot_id, data
 
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):

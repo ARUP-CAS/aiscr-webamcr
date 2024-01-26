@@ -4,7 +4,7 @@ import traceback
 
 import redis
 from celery import shared_task
-from django.db.models import Q, F, Min
+from django.db.models import Q, F, Min, Prefetch, Subquery, OuterRef
 from django.db.models.functions import Upper
 from django.utils import timezone
 
@@ -674,17 +674,28 @@ def update_snapshot_fields():
 
 
 @shared_task
-def update_all_redis_snapshots():
+def update_all_redis_snapshots(rewrite_existing=False):
     logger.debug("cron.tasks.update_all_redis_snapshots.start")
     r = RedisConnector.get_connection()
-    classes_list = [Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez]
+    classes_list = (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez)
     for current_class in classes_list:
         logger.debug("cron.tasks.update_all_redis_snapshots.class_start",
                      extra={"current_class": current_class.__name__})
+        pipe = r.pipeline()
         query = current_class.objects.all()
+        if current_class == Dokument:
+            query = query.prefetch_related(
+                Prefetch(
+                    "autori",
+                    queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
+                    to_attr="ordered_autors",
+                )
+            )
         for item in query:
-            key, value = item.generate_redis_snapshot()
-            r.hset(key, mapping=value)
+            if rewrite_existing or not r.exists(item.redis_snapshot_id):
+                key, value = item.generate_redis_snapshot()
+                pipe.hset(key, mapping=value)
+        pipe.execute()
         logger.debug("cron.tasks.update_all_redis_snapshots.class_end",
                      extra={"current_class": current_class.__name__})
     logger.debug("cron.tasks.update_all_redis_snapshots.end")

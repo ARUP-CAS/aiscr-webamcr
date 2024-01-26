@@ -187,13 +187,17 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         self.editori_snapshot = "; ".join([x.editor.vypis_cely
                                           for x in self.externizdrojeditor_set.order_by("poradi").all()])
 
+    @property
+    def redis_snapshot_id(self):
+        from ez.views import ExterniZdrojListView
+        return f"{ExterniZdrojListView.redis_snapshot_prefix}_{self.ident_cely}"
+
     def generate_redis_snapshot(self):
         from ez.tables import ExterniZdrojTable
         data = ExterniZdroj.objects.filter(pk=self.pk)
         table = ExterniZdrojTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
-        from ez.views import ExterniZdrojListView
-        return f"{ExterniZdrojListView.redis_snapshot_prefix}_{self.ident_cely}", data
+        return self.redis_snapshot_id, data
 
 def get_perm_ez_ident():
     """

@@ -21,6 +21,11 @@ class RedisConnector:
     def prepare_model_for_redis(table):
         columns = table.columns.iterall()
         row = table.rows[0]
-        data = {column.name: force_str(row.get_cell_value(column.name) if row.get_cell_value(column.name) else "") for
-                column in columns}
+        data = {}
+        for column in columns:
+            value = row.get_cell_value(column.name)
+            if value and "nahled" not in column.name:
+                data[column.name] = force_str(value)
+            else:
+                data[column.name] = ""
         return data

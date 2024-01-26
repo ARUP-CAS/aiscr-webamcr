@@ -536,13 +536,17 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         self.suppress_signal = True
         self.save()
 
+    @property
+    def redis_snapshot_id(self):
+        from arch_z.views import AkceListView
+        return f"{AkceListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}"
+
     def generate_redis_snapshot(self):
         from arch_z.tables import AkceTable
         data = Akce.objects.filter(archeologicky_zaznam=self)
         table = AkceTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
-        from arch_z.views import AkceListView
-        return f"{AkceListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}", data
+        return self.redis_snapshot_id, data
 
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):

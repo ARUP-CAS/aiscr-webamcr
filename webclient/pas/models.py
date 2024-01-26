@@ -322,13 +322,17 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     def get_create_org(self):
         return (self.projekt.organizace,)
 
+    @property
+    def redis_snapshot_id(self):
+        from pas.views import SamostatnyNalezListView
+        return f"{SamostatnyNalezListView.redis_snapshot_prefix}_{self.ident_cely}"
+
     def generate_redis_snapshot(self):
         from pas.tables import SamostatnyNalezTable
         data = SamostatnyNalez.objects.filter(pk=self.pk)
         table = SamostatnyNalezTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
-        from pas.views import SamostatnyNalezListView
-        return f"{SamostatnyNalezListView.redis_snapshot_prefix}_{self.ident_cely}", data
+        return self.redis_snapshot_id, data
 
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):
@@ -423,11 +427,14 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
     def get_create_org(self):
         return (self.vedouci.organizace,)
 
+    @property
+    def redis_snapshot_id(self):
+        from pas.views import UzivatelSpolupraceListView
+        return f"{UzivatelSpolupraceListView.redis_snapshot_prefix}_{self.pk}"
+
     def generate_redis_snapshot(self):
         from pas.tables import UzivatelSpolupraceTable
         data = UzivatelSpoluprace.objects.filter(pk=self.pk)
         table = UzivatelSpolupraceTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
-        from pas.views import UzivatelSpolupraceListView
-        return f"{UzivatelSpolupraceListView.redis_snapshot_prefix}_{self.ident_cely}", data
-
+        return self.redis_snapshot_id, data
