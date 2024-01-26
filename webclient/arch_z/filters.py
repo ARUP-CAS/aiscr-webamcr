@@ -1,3 +1,5 @@
+import logging
+
 import crispy_forms
 from dal import autocomplete
 from crispy_forms.layout import Div, Layout, HTML
@@ -48,6 +50,9 @@ from arch_z.models import ArcheologickyZaznam
 from uzivatel.models import Organizace, Osoba, User
 from dokument.filters import HistorieFilter
 from heslar.views import heslar_12
+
+
+logger = logging.getLogger(__name__)
 
 
 class ArchZaznamFilter(HistorieFilter, KatastrFilter):
@@ -399,6 +404,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
             distinct=True,
         )
 
+
 class AkceFilter(ArchZaznamFilter):
     """
     Class pro filtrování akce.
@@ -679,6 +685,17 @@ class AkceFilter(ArchZaznamFilter):
             self.lookup_expr,
         )
         return queryset.filter(Q(**{lookup1: value}) | Q(**{lookup2: value})).distinct()
+
+    def filter_queryset(self, queryset):
+        logger.debug("arch_z.filters.AkceFilter.filter_queryset.start")
+        historie = self._get_history_subquery()
+        queryset = super(AkceFilter, self).filter_queryset(queryset)
+        if historie:
+            historie_subquery = (historie.values('vazba__archeologickyzaznam__id')
+                                 .filter(vazba__archeologickyzaznam__id=OuterRef("archeologicky_zaznam_id")))
+            queryset = queryset.filter(archeologicky_zaznam_id__in=Subquery(historie_subquery))
+        logger.debug("arch_z.filters.AkceFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+        return queryset
 
     class Meta:
         model = Akce
