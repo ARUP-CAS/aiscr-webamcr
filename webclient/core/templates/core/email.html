@@ -9,13 +9,23 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>{{ title }}</title>
 </head>
-<body>{% block content %}{% endblock %}
+<body>
+    {% block content %}{% endblock %}
 <p>
     ------------------------------
     <br>
-    {% trans "core.templates.email.paticka.text" %}.
+    Toto je automaticky generovaná zpráva systému AMČR. V případě potřeby kontaktujte administrátora ARÚ Praha (amcr@arup.cas.cz) nebo ARÚ Brno (amcr@arub.cz).
     <br>
-    {% trans "core.templates.email.paticka.odesláno_z" %}: {% get_server_domain %}
+    Odesláno z: {% get_server_domain %}
+</p>
+    ------------------------------------------------------------
+    {% block content_en %}{% endblock %}
+<p>
+    ------------------------------
+    <br>
+    This is automaticly generated message from AMČR system. In case of need please contact administrator ARÚ Praha (amcr@arup.cas.cz) or ARÚ Brno (amcr@arub.cz).
+    <br>
+    Sent from: {% get_server_domain %}
 </p>
 </body>
 </html>
