@@ -191,7 +191,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     def generate_redis_snapshot(self):
         from lokalita.tables import LokalitaTable
-        data = LokalitaTable.objects.filter(pk=self.pk)
+        data = Lokalita.objects.filter(pk=self.pk)
         table = LokalitaTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
         from lokalita.views import LokalitaListView

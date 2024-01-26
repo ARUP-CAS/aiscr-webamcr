@@ -618,7 +618,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def generate_redis_snapshot(self):
         from projekt.tables import ProjektTable
-        data = ProjektTable.objects.filter(pk=self.pk)
+        data = Projekt.objects.filter(pk=self.pk)
         table = ProjektTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
         from projekt.views import ProjektListView
