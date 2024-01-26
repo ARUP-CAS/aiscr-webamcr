@@ -7,7 +7,7 @@
     </p>
     <p>
         {% trans "arch_z.templates.emails.E-V-01.textPart1" %}
-        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "arch_z.templates.emails.E-V-01.textPart2" %} <b>{{ katastr }}</b> {% trans "E-V-01.byla_převedena_do_stavu" %} <b>{{ state }}</b>.
+        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "arch_z.templates.emails.E-V-01.textPart2" %} <b>{{ katastr }}</b> {% trans "arch_z.templates.emails.E-V-01.textPart3" %} <b>{{ state }}</b>.
     </p>
     <p>
         <b>{% trans 'arch_z.templates.emails.E-V-01.zduvodneni' %}:</b> {{ reason }}

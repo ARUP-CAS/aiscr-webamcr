@@ -257,6 +257,8 @@ class UserPasswordResetForm(PasswordResetForm):
         super(UserPasswordResetForm, self).__init__(*args, **kwargs)
         self.fields["email"].label= _("uzivatel.forms.passwordReset.email.label")
         self.fields["email"].help_text= _("uzivatel.forms.passwordReset.email.tooltip")
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
 
 
 

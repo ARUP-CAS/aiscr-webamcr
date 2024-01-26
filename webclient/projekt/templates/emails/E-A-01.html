@@ -12,3 +12,14 @@
         {% trans "projekt.templates.email.E-A-01.part4" %}
     </p>
 {% endblock %}
+{% block content_en %}
+    <p>{% trans "projekt.templates.email.E-A-01.title" %}</p>
+    <p>
+        {% trans "projekt.templates.email.E-A-01.part1" %}
+        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "projekt.templates.email.E-A-01.part2" %} <b>{{ katastr }}</b> {% trans "projekt.templates.email.E-A-01.part3" %}
+        <b>{{ state }}</b>.
+    </p>
+    <p>
+        {% trans "projekt.templates.email.E-A-01.part4" %}
+    </p>
+{% endblock %}

@@ -57,7 +57,7 @@ def get_mail_secret(setting, default_value=None):
             if not DEBUG:
                 raise ImproperlyConfigured(error_msg)
     else:
-        secrets_mail.get(setting, default_value)
+        return secrets_mail.get(setting, default_value)
 
 
 # REDIS SETTINGS
@@ -407,7 +407,7 @@ EMAIL_HOST = get_mail_secret("EMAIL_HOST")
 EMAIL_PORT = get_mail_secret("EMAIL_PORT")
 EMAIL_HOST_USER = get_mail_secret("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = get_mail_secret("EMAIL_HOST_PASSWORD")
-EMAIL_SERVER_DOMAIN_NAME = get_mail_secret("EMAIL_SERVER_DOMAIN_NAME", "mailtrap.io")
+EMAIL_SERVER_DOMAIN_NAME = get_mail_secret("EMAIL_SERVER_DOMAIN_NAME", "http://mailtrap.io")
 # DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
 
 ACCOUNT_ACTIVATION_DAYS = 10

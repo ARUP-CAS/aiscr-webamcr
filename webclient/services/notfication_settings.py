@@ -2,7 +2,7 @@ notification_settings = {
     "E-U-01": {
         "zasilat_neaktivnim": True,
         "predmet": "AMČR: potvrďte svůj email pro registraci",
-        "cesta_sablony": "X"
+        "cesta_sablony": "django_registration/activation_email_body.txt"
     },
     "S-E-A-XX": {
         "zasilat_neaktivnim": False,
@@ -74,12 +74,12 @@ notification_settings = {
     },
     "E-A-01": {
         "zasilat_neaktivnim": False,
-        "predmet": "AMČR: projekt {ident_cely} - archivován",
+        "predmet": "AMČR: projekt {ident_cely} - archivován/AMČR: projekt {ident_cely} - archivován",
         "cesta_sablony": "emails/E-A-01.html"
     },
     "E-A-02": {
         "zasilat_neaktivnim": False,
-        "predmet": "AMČR: akce {ident_cely} - archivována",
+        "predmet": "AMČR: akce {ident_cely} - archivována/AMČR: akce {ident_cely} - archivována",
         "cesta_sablony": "emails/E-A-02.html"
     },
     "E-O-01": {

@@ -1,8 +1,9 @@
 -- Migrace hlídacích psů
-INSERT INTO notifikace_projekty_pes (user_id, object_id, created_at)
+INSERT INTO notifikace_projekty_pes (user_id, object_id, created_at, content_type_id)
 SELECT uzivatel, 
 (SELECT id FROM ruian_kraj WHERE ruian_kraj.id = (SELECT kraj FROM ruian_okres WHERE ruian_okres.id = (SELECT okres FROM ruian_katastr WHERE ruian_katastr.id = notifikace_projekt.katastr))) AS kraj,
-NOW()
+NOW(),
+(select id from django_content_type where model = 'ruiankraj')
 FROM notifikace_projekt GROUP BY uzivatel, kraj;
 DROP TABLE notifikace_projekt;
 DROP SEQUENCE notifikace_projekt_id_seq;
