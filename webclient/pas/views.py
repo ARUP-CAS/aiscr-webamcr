@@ -575,6 +575,8 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
             return Q(**{"historie_zapsat__in":filtered_my}) | Q(**{"projekt__organizace":self.request.user.organizace})
         else:
             return Q(**{"historie_zapsat__in":filtered_my})
+
+
 class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     """
     Třída pohledu pro zobrazení přehledu samostatných nálezu s filtrem v podobe tabulky.
@@ -586,6 +588,8 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     filterset_class = SamostatnyNalezFilter
     export_name = "export_samostatny-nalez_"
     app = "samostatny_nalez"
+    redis_snapshot_prefix = "samostatny_nalez"
+    redis_value_list_field = "ident_cely"
     toolbar = "toolbar_pas.html"
     typ_zmeny_lookup = ZAPSANI_SN
 
@@ -766,6 +770,8 @@ class UzivatelSpolupraceListView(SearchListView):
     filterset_class = UzivatelSpolupraceFilter
     export_name = "export_spoluprace_"
     app = "spoluprace"
+    redis_snapshot_prefix = "uzivatel_spoluprace"
+    redis_value_list_field = "id"
     toolbar = "toolbar_spoluprace.html"
     typ_zmeny_lookup = SPOLUPRACE_ZADOST
 

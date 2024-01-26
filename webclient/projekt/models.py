@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 
+from core.connectors import RedisConnector
 from core.constants import (
     ARCHIVACE_PROJ,
     AZ_STAV_ARCHIVOVANY,
@@ -614,6 +615,14 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     
     def get_create_org(self):
         return (self.organizace,)
+
+    def generate_redis_snapshot(self):
+        from projekt.tables import ProjektTable
+        data = ProjektTable.objects.filter(pk=self.pk)
+        table = ProjektTable(data=data)
+        data = RedisConnector.prepare_model_for_redis(table)
+        from projekt.views import ProjektListView
+        return f"{ProjektListView.redis_snapshot_prefix}_{self.ident_cely}", data
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

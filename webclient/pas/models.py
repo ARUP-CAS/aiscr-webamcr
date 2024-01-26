@@ -1,5 +1,6 @@
 from django.db.models import CheckConstraint, Q
 
+from core.connectors import RedisConnector
 from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
@@ -321,6 +322,14 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     def get_create_org(self):
         return (self.projekt.organizace,)
 
+    def generate_redis_snapshot(self):
+        from pas.tables import SamostatnyNalezTable
+        data = SamostatnyNalez.objects.filter(pk=self.pk)
+        table = SamostatnyNalezTable(data=data)
+        data = RedisConnector.prepare_model_for_redis(table)
+        from pas.views import SamostatnyNalezListView
+        return f"{SamostatnyNalezListView.redis_snapshot_prefix}_{self.ident_cely}", data
+
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):
     """
@@ -413,3 +422,12 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
     
     def get_create_org(self):
         return (self.vedouci.organizace,)
+
+    def generate_redis_snapshot(self):
+        from pas.tables import UzivatelSpolupraceTable
+        data = UzivatelSpoluprace.objects.filter(pk=self.pk)
+        table = UzivatelSpolupraceTable(data=data)
+        data = RedisConnector.prepare_model_for_redis(table)
+        from pas.views import UzivatelSpolupraceListView
+        return f"{UzivatelSpolupraceListView.redis_snapshot_prefix}_{self.ident_cely}", data
+

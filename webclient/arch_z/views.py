@@ -1,8 +1,11 @@
 import logging
+from io import BytesIO
 
+import pandas
 import redis
 import simplejson as json
 from django.db.models import RestrictedError
+from django_tables2.export import TableExport
 
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
@@ -1421,21 +1424,8 @@ class AkceListView(SearchListView):
     toolbar = "toolbar_akce.html"
     permission_model_lookup = "archeologicky_zaznam__"
     typ_zmeny_lookup = ZAPSANI_AZ
-
-    def create_export(self, filename=None):
-        response = HttpResponse()
-        r = redis.Redis(host="redis", port=6379, password=get_plain_redis_pass())
-        if filename is not None:
-            response["Content-Disposition"] = f'attachment; filename="export.csv"'
-        akce = r.hgetall("akce")
-        dataset = self.get_table_data()
-        ident_cely_list = set(dataset.values_list("archeologicky_zaznam__ident_cely", flat=True))
-        for key, value in akce.items():
-            key = key.decode("utf-8").replace("akce_", "")
-            value = value.decode("utf-8")
-            if key in ident_cely_list:
-                response.write(f"{value}\n")
-        return response
+    redis_snapshot_prefix = "akce"
+    redis_value_list_field = "archeologicky_zaznam__ident_cely"
 
     def init_translations(self):
         self.page_title = _("arch_z.views.AkceListView.page_title.text")

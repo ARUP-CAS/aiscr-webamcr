@@ -579,6 +579,8 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
     app = "projekt"
     toolbar = "toolbar_projekt.html"
     typ_zmeny_lookup = ZAPSANI_PROJ
+    redis_snapshot_prefix = "projekt"
+    redis_value_list_field = "ident_cely"
 
     def init_translations(self):
         super().init_translations()

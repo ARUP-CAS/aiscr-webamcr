@@ -74,6 +74,8 @@ class LokalitaListView(SearchListView):
     app = "lokalita"
     toolbar = "toolbar_akce.html"
     permission_model_lookup = "archeologicky_zaznam__"
+    redis_snapshot_prefix = "lokalita"
+    redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_AZ
 
     def init_translations(self):

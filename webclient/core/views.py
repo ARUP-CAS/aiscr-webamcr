@@ -5,6 +5,8 @@ import mimetypes
 import os
 import re
 from io import StringIO, BytesIO
+
+import pandas
 from PIL import Image
 
 import unicodedata
@@ -69,12 +71,13 @@ from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
 from uzivatel.models import User
-from django_tables2.export import ExportMixin
+from django_tables2.export import ExportMixin, TableExport
 from datetime import datetime
 from heslar.hesla import HESLAR_PRISTUPNOST
 
 from heslar.models import Heslar
 from dj.models import DokumentacniJednotka
+from .connectors import RedisConnector
 from .exceptions import ZaznamSouborNotmatching
 from .models import Permissions, PermissionsSkip
 from historie.models import Historie
@@ -801,6 +804,39 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     export_formats = ["csv", "json", "xlsx"]
     app = "core"
     toolbar = "toolbar_akce.html"
+    redis_value_list_field = None
+    redis_snapshot_prefix = None
+
+    def create_export(self, export_format):
+        if self.redis_value_list_field and self.redis_snapshot_prefix:
+            r = RedisConnector.get_connection()
+            response = HttpResponse()
+            dataset = self.get_table_data()
+            ident_cely_list = set(dataset.values_list(self.redis_value_list_field, flat=True))
+            ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
+            pipe = r.pipeline()
+            for key in ident_cely_list:
+                pipe.hgetall(key)
+            akce = pipe.execute()
+            data = pandas.DataFrame(akce)
+            for column in data.select_dtypes(include=['object']):
+                data[column] = data[column].str.decode('utf-8')
+            if export_format == TableExport.CSV:
+                response["Content-Disposition"] = f'attachment; filename="export.csv"'
+                data.to_csv(path_or_buf=response)
+            elif export_format == TableExport.JSON:
+                response["Content-Disposition"] = f'attachment; filename="export.json"'
+                data.to_json(path_or_buf=response, orient="records", force_ascii=False)
+            elif export_format == TableExport.XLSX:
+                excel_file = BytesIO()
+                with pandas.ExcelWriter(excel_file, engine='openpyxl') as writer:
+                    data.to_excel(writer, index=False)
+                excel_file.seek(0)
+                response = HttpResponse(excel_file.read(),
+                                        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = 'attachment; filename=export.xlsx'
+            return response
+
     
     def init_translations(self):
         self.page_title = _("core.views.AkceListView.page_title.text")

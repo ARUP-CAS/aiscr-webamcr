@@ -4,6 +4,7 @@ from django.db.models import CheckConstraint, Q
 from django.shortcuts import redirect
 from django.utils.encoding import force_str
 
+from core.connectors import RedisConnector
 from core.constants import (
     ARCHIVACE_AZ,
     AZ_STAV_ARCHIVOVANY,
@@ -539,13 +540,9 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         from arch_z.tables import AkceTable
         data = Akce.objects.filter(archeologicky_zaznam=self)
         table = AkceTable(data=data)
-        columns = table.columns.iterall()
-        data = []
-        row = table.rows[0]
-        data = [force_str(row.get_cell_value(column.name), strings_only=True) for column in columns]
-        data = [str(x) if x else "" for x in data]
-        data = ",".join(data)
-        return f"akce_{self.archeologicky_zaznam.ident_cely}".encode("utf-8"), data
+        data = RedisConnector.prepare_model_for_redis(table)
+        from arch_z.views import AkceListView
+        return f"{AkceListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}", data
 
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):

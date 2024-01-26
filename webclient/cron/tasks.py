@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
+from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
     OZNAMENI_PROJ, ZAPSANI_PROJ
 from core.models import Soubor
@@ -26,7 +27,7 @@ from ez.models import ExterniZdroj
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.models import Heslar, RuianKatastr, RuianOkres, RuianKraj
 from lokalita.models import Lokalita
-from pas.models import SamostatnyNalez
+from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pian.models import Pian
 from projekt.models import Projekt
 from services.mailer import Mailer
@@ -674,24 +675,40 @@ def update_snapshot_fields():
 
 @shared_task
 def update_all_redis_snapshots():
-    r = redis.Redis(host="redis", port=6379, password=get_plain_redis_pass())
-    akce_query = Akce.objects.all()
-    akce_dict = {}
-    for akce in akce_query:
-        key, value = akce.generate_redis_snapshot()
-        akce_dict[key] = value
-    r.hset("akce", mapping=akce_dict)
+    logger.debug("cron.tasks.update_all_redis_snapshots.start")
+    r = RedisConnector.get_connection()
+    classes_list = [Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez]
+    for current_class in classes_list:
+        logger.debug("cron.tasks.update_all_redis_snapshots.class_start",
+                     extra={"current_class": current_class.__name__})
+        query = current_class.objects.all()
+        for item in query:
+            key, value = item.generate_redis_snapshot()
+            r.hset(key, mapping=value)
+        logger.debug("cron.tasks.update_all_redis_snapshots.class_end",
+                     extra={"current_class": current_class.__name__})
+    logger.debug("cron.tasks.update_all_redis_snapshots.end")
 
 
 @shared_task
 def update_single_redis_snapshot(class_name: str, record_pk):
-    item = None
+    r = RedisConnector.get_connection()
     if class_name == "Akce":
         item = Akce.objects.get(pk=record_pk)
-    if item:
-        r = redis.Redis(host="redis", port=6379, password=get_plain_redis_pass())
-        key, value = item.generate_redis_snapshot()
-        if isinstance(item, Akce):
-            akce_dict = r.hgetall("akce")
-            akce_dict[key] = value
-            r.hset("akce", mapping=akce_dict)
+    elif class_name == "Projekt":
+        item = Projekt.objects.get(pk=record_pk)
+    elif class_name == "Dokument":
+        item = Dokument.objects.get(pk=record_pk)
+    elif class_name == "Lokalita":
+        item = Lokalita.objects.get(pk=record_pk)
+    elif class_name == "ExterniZdroj":
+        item = ExterniZdroj.objects.get(pk=record_pk)
+    elif class_name == "UzivatelSpoluprace":
+        item = UzivatelSpoluprace.objects.get(pk=record_pk)
+    elif class_name == "SamostatnyNalez":
+        item = SamostatnyNalez.objects.get(pk=record_pk)
+    else:
+        logger.error("cron.tasks.update_single_redis_snapshot.unsupported_class_name", extra={"class_name": class_name})
+        return
+    key, value = item.generate_redis_snapshot()
+    r.hset(key, mapping=value)
