@@ -64,7 +64,6 @@ UPDATE neident_akce SET lokalizace = '' WHERE lokalizace is NULL;
 UPDATE neident_akce SET pian = '' WHERE pian is NULL;
 UPDATE neident_akce SET popis = '' WHERE popis is NULL;
 UPDATE neident_akce SET poznamka = '' WHERE poznamka is NULL;
-UPDATE organizace SET soucast = '' WHERE soucast is NULL;
 UPDATE organizace SET email = '' WHERE email is NULL;
 UPDATE organizace SET telefon = '' WHERE telefon is NULL;
 UPDATE organizace SET ico = '' WHERE ico is NULL;
