@@ -115,6 +115,25 @@ Pro nasazování na testovací prostředí byl vytvořen automatizační skript 
 Tento skript má několik možných parametrů, nápověda přístupná spuštěním příkazu ``./scripts/prod_deploy.sh -h.``. V základním módu se tento skript spouští
 bez jakéhokoliv volitelného parametru, tzn. ``./scripts/prod_deploy.sh``. Po úspěšném vykonání je aplikace WebAMČR dostupná na ip adrese dané stanice a portu **8080**.
 
+Skript pro nasazení z Docker Hubu do Docker Swarm podporuje několik parametrů, každý s určitým účelem a příkladem použití. Zde je seznam možných parametrů s popisem a příklady v češtině:
+
+Niže je přehled dostupných parametrů.
+
+* `-h`: Zobrazení nápovědy.
+   - **Použití**: `scripts/prod_deploy.sh -h`
+* `-x`: Odstranění celého Docker stacku, tedy všech službeb.
+   - **Použití**: `scripts/prod_deploy.sh -x`
+   - **Popis**: Použití tohoto parametru způsobí odstranění celého Docker stacku, což zahrnuje všechny běžící služby definované v Docker Compose souboru.
+* `-b`: Znovu nasadí všechny služby v režimu Docker Swarm.
+   - **Příklad**: `scripts/prod_deploy.sh -b`
+   - **Popis**: Tento parametr spustí proces nasazení (nebo znovunasazení) všech služeb definovaných v Docker Compose souboru v režimu Docker Swarm.
+* `-u`: Aktualizuje všechny služby novými verzeme images.
+   - **Příklad**: `scripts/prod_deploy.sh -u`
+   - **Popis**: Použitím tohoto parametru dojde k aktualizaci všech služeb pomocí nejnovějších verzí image z Docker Hubu.
+* `-t <tag_name>`: Umožňuje specifikovat konkrétní tag image, místo použití výchozího tagu "latest".
+   - **Příklad**: `scripts/prod_deploy.sh -t my-custom-tag`
+   - **Popis**: Tento parametr umožňuje použít specifický tag Docker obrazu při nasazování služeb, což je užitečné pro nasazení specifické verze nebo konfigurace obrazu.
+
 **Předpoklady**: existující definice docker secrets, tyto secrets musejí být vytvořené přes příkaz ``docker secrets create <název secretu> <cesta k souboru s obsahem ze kterého se secret má vytvořit>``
 
 * db_conf - přihlašovací údaje a nastavení pro připojení k databázi
