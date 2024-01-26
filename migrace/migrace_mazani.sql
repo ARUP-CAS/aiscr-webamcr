@@ -467,7 +467,7 @@ with pom AS
 DELETE FROM osoba USING pom WHERE osoba.id = pom.id;
 
 -- Zkontrolovat a odstranit sirotky z historie
-with pom AS
+CREATE TABLE pom AS
 (
     SELECT h.* FROM historie h
     LEFT JOIN archeologicky_zaznam az ON az.historie = h.vazba
@@ -489,6 +489,7 @@ with pom AS
     sn.id is null AND
     so.id is null AND
     us.id is null
-)
-DELETE FROM historie USING pom WHERE historie.id = pom.id
+);
+DELETE FROM historie USING pom WHERE historie.id = pom.id;
 DELETE FROM historie_vazby USING pom WHERE historie_vazby.id = pom.id;
+DROP TABLE pom;
