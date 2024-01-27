@@ -216,7 +216,8 @@ cmd_pull_images="docker pull ${proxy_image_name} && docker pull ${prod_image_nam
 cmd_deploy_base="docker stack deploy --compose-file"
 
 #Cleaning old images
-docker image prune
+echo "Pruning unused Docker images..."
+docker image prune -f
 
 while getopts "hxbut:" option; do
    option_passed="yes"
