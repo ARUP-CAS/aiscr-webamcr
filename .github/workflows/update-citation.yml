@@ -20,7 +20,7 @@ jobs:
             VERSION="$VERSION-pre-release"
           fi
           DATE=$(date -I)
-          sed -i "s/version:.*/version: \"$VERSION\"/" CITATION.cff
+          sed -i '/title:/!b;n;cversion: "'"$VERSION"'"' CITATION.cff
           sed -i "s/date-released:.*/date-released: $DATE/" CITATION.cff
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
