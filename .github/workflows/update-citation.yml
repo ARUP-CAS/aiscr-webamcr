@@ -1,0 +1,29 @@
+name: Update CITATION.cff
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-citation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Update CITATION.cff
+        run: |
+          VERSION=${{ github.event.release.tag_name }}
+          PRERELEASE=${{ github.event.release.prerelease }}
+          if [ "$PRERELEASE" == "true" ]; then
+            VERSION="$VERSION-pre-release"
+          fi
+          DATE=$(date -I)
+          sed -i "s/version:.*/version: \"$VERSION\"/" CITATION.cff
+          sed -i "s/date-released:.*/date-released: $DATE/" CITATION.cff
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add CITATION.cff
+          git commit -m "Update CITATION.cff for release $VERSION"
+          git push
+
