@@ -125,19 +125,25 @@ class SamostatnyNalezTable(SearchTable):
     def __init__(self, *args, **kwargs):
         super(SamostatnyNalezTable, self).__init__(*args, **kwargs)
 
+
 class AktivaceDeaktivaceColumn(tables.TemplateColumn):
     def render(self, record, table, value, bound_column, **kwargs):
+        if not hasattr(table, "request"):
+            return ""
         if record.aktivni:
-            perm_check = check_permissions(p.actionChoices.spoluprace_deaktivovat, table.request.user,record.id)
+            perm_check = check_permissions(p.actionChoices.spoluprace_deaktivovat, table.request.user, record.id)
         else:
-            perm_check = check_permissions(p.actionChoices.spoluprace_aktivovat, table.request.user,record.id)
+            perm_check = check_permissions(p.actionChoices.spoluprace_aktivovat, table.request.user, record.id)
         if perm_check:
             return super().render(record, table, value, bound_column, **kwargs)
         else:
             return format_html("")
-        
+
+
 class smazatColumn(tables.TemplateColumn):
     def render(self, record, table, value, bound_column, **kwargs):
+        if not hasattr(table, "request"):
+            return ""
         if check_permissions(p.actionChoices.spoluprace_smazat, table.request.user,record.id):
             return super().render(record, table, value, bound_column, **kwargs)
         else:

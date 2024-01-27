@@ -2,7 +2,9 @@ import logging
 
 from django.db.models import CheckConstraint, Q
 from django.shortcuts import redirect
+from django.utils.encoding import force_str
 
+from core.connectors import RedisConnector
 from core.constants import (
     ARCHIVACE_AZ,
     AZ_STAV_ARCHIVOVANY,
@@ -538,6 +540,18 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
                                           .order_by("vedouci__prijmeni", "vedouci__jmeno").all()])
         self.suppress_signal = True
         self.save()
+
+    @property
+    def redis_snapshot_id(self):
+        from arch_z.views import AkceListView
+        return f"{AkceListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}"
+
+    def generate_redis_snapshot(self):
+        from arch_z.tables import AkceTable
+        data = Akce.objects.filter(archeologicky_zaznam=self)
+        table = AkceTable(data=data)
+        data = RedisConnector.prepare_model_for_redis(table)
+        return self.redis_snapshot_id, data
 
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):

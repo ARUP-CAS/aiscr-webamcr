@@ -8,6 +8,24 @@ from celery import Celery
 logger = logging.getLogger(__name__)
 METADATA_UPDATE_TIMEOUT = 10
 IDENT_CHANGE_UPDATE_TIMEOUT = 15
+UPDATE_REDIS_SNAPSHOT = 20
+
+
+def check_if_task_queued(class_name, pk, task_name):
+    app = Celery("webclient")
+    app.config_from_object("django.conf:settings", namespace="CELERY")
+    app.autodiscover_tasks()
+    i = app.control.inspect(["worker1@amcr"])
+    queues = (i.scheduled(),)
+    for queue in queues:
+        for queue_name, queue_tasks in queue.items():
+            for task in queue_tasks:
+                if "request" in task and task_name in task.get("request").get("name").lower() \
+                        and tuple(task.get("request").get("args")) == (class_name, pk):
+                    logger.debug("xml_generator.models.ModelWithMetadata.check_if_task_queued.already_scheduled",
+                                 extra={"class_name": class_name, "pk": pk})
+                    return True
+    return False
 
 
 class ModelWithMetadata(models.Model):
@@ -31,20 +49,7 @@ class ModelWithMetadata(models.Model):
 
     @staticmethod
     def update_queued(class_name, pk):
-        app = Celery("webclient")
-        app.config_from_object("django.conf:settings", namespace="CELERY")
-        app.autodiscover_tasks()
-        i = app.control.inspect(["worker1@amcr"])
-        queues = (i.scheduled(),)
-        for queue in queues:
-            for queue_name, queue_tasks in queue.items():
-                for task in queue_tasks:
-                    if "request" in task and "save_record_metadata" in task.get("request").get("name").lower() \
-                            and tuple(task.get("request").get("args")) == (class_name, pk):
-                        logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.already_scheduled",
-                                     extra={"class_name": class_name, "pk": pk})
-                        return True
-        return False
+        return check_if_task_queued(class_name, pk, "save_record_metadata")
 
     def save_metadata(self, use_celery=True, include_files=False):
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.start",

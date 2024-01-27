@@ -184,7 +184,7 @@ class DokumentTable(SearchTable):
         """
         Metóda pro správne zobrazení náhledu souboru.
         """
-        if len(record.soubory.first_soubor)>0:
+        if hasattr(record.soubory, "first_soubor") and len(record.soubory.first_soubor) > 0:
             soubor = record.soubory.first_soubor[0]
         else: 
             soubor = None

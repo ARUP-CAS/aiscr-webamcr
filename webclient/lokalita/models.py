@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from arch_z.models import ArcheologickyZaznam
+from core.connectors import RedisConnector
 from heslar.models import Heslar
 from django.urls import reverse
 
@@ -187,3 +188,15 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     def set_snapshots(self):
         self.dalsi_katastry_snapshot = "; ".join([x.nazev for x in self.archeologicky_zaznam.katastry.order_by("nazev").all()])
+
+    @property
+    def redis_snapshot_id(self):
+        from lokalita.views import LokalitaListView
+        return f"{LokalitaListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}"
+
+    def generate_redis_snapshot(self):
+        from lokalita.tables import LokalitaTable
+        data = Lokalita.objects.filter(pk=self.pk)
+        table = LokalitaTable(data=data)
+        data = RedisConnector.prepare_model_for_redis(table)
+        return self.redis_snapshot_id, data

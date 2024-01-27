@@ -1,14 +1,15 @@
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import RestrictedError
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
-from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+from arch_z.models import ArcheologickyZaznam, ExterniOdkaz, Akce
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
+from cron.tasks import update_single_redis_snapshot
 from dokument.models import DokumentCast
 from historie.models import HistorieVazby
+from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,14 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                                         "initial_pripustnost": initial_pristupnost.pk, "pripustnost": pristupnost.pk})
                     dok_jednotka.pian.save_metadata()
     logger.debug("arch_z.signals.create_arch_z_metadata.end", extra={"record_pk": instance.pk})
+
+
+@receiver(post_save, sender=Akce)
+def update_akce_snapshot(sender, instance: Akce, **kwargs):
+    logger.debug("arch_z.signals.update_akce_snapshot.start", extra={"record_pk": instance.pk})
+    if not check_if_task_queued("Akce", instance.pk, "update_single_redis_snapshot"):
+        update_single_redis_snapshot.apply_async(["Akce", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
+    logger.debug("arch_z.signals.update_akce_snapshot.end", extra={"record_pk": instance.pk})
 
 
 @receiver(post_save, sender=ExterniOdkaz)
