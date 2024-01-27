@@ -808,6 +808,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     redis_snapshot_prefix = None
 
     def create_export(self, export_format):
+        logger.debug("core.views.SearchListView.create_export.start", extra={"export_format": export_format})
         if self.redis_value_list_field and self.redis_snapshot_prefix:
             r = RedisConnector.get_connection()
             response = HttpResponse()
@@ -819,14 +820,19 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 pipe.hgetall(key)
             data = pipe.execute()
             data = pandas.DataFrame(data)
+            data.columns = [x.decode("utf-8") for x in data.columns]
+            column_names = {}
+            for column in self.get_table().columns:
+                column_names[str(column.name)] = column.verbose_name
+            data = data.rename(columns=column_names)
             for column in data.select_dtypes(include=['object']):
                 data[column] = data[column].str.decode('utf-8')
             if export_format == TableExport.CSV:
                 response["Content-Disposition"] = f'attachment; filename="export.csv"'
-                data.to_csv(path_or_buf=response)
+                data.to_csv(path_or_buf=response, index=False)
             elif export_format == TableExport.JSON:
                 response["Content-Disposition"] = f'attachment; filename="export.json"'
-                data.to_json(path_or_buf=response, orient="records", force_ascii=False)
+                data.to_json(path_or_buf=response, orient="records", force_ascii=False, index=False)
             elif export_format == TableExport.XLSX:
                 excel_file = BytesIO()
                 with pandas.ExcelWriter(excel_file, engine='openpyxl') as writer:
@@ -835,9 +841,9 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 response = HttpResponse(excel_file.read(),
                                         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                 response['Content-Disposition'] = 'attachment; filename=export.xlsx'
+            logger.debug("core.views.SearchListView.create_export.end", extra={"export_format": export_format, "column_names": column_names})
             return response
 
-    
     def init_translations(self):
         self.page_title = _("core.views.AkceListView.page_title.text")
         self.search_sum = _("core.views.AkceListView.search_sum.text")
