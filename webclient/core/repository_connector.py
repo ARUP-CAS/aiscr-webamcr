@@ -160,7 +160,7 @@ class FedoraRepositoryConnector:
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
                               FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB):
-            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig"
+            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/thumb"
         elif request_type == FedoraRequestType.DELETE_TOMBSTONE:
             return f"{base_url}/record/{self.record.ident_cely}/fcr:tombstone"
         elif request_type == FedoraRequestType.DELETE_LINK_TOMBSTONE:

@@ -210,9 +210,11 @@
 });
 // show image modal
 $('#soubor-modal').on('show.bs.modal', function (event) {
-  var button = $(event.relatedTarget)
-  var modalImg = document.getElementById("nahled-image");
-  modalImg.src = button[0].src
+  const button = $(event.relatedTarget)
+  const modalImg = document.getElementById("nahled-image");
+  const element = document.getElementById(button[0].id);
+  const fullsrc = element.dataset.fullsrc;
+  modalImg.src = fullsrc;
 })
 </script>
 {% endblock %}

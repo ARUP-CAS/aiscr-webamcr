@@ -167,8 +167,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
         record = self.vazba.navazany_objekt
         if record is not None and self.repository_uuid is not None:
-            logger.debug(_("core.models.Soubor.get_repository_content"), extra={"record_ident_cely": record.ident_cely,
-                                                                             "repository_uuid": self.repository_uuid})
+            logger.debug(_("core.models.Soubor.get_repository_content"),
+                         extra={"record_ident_cely": record.ident_cely, "repository_uuid": self.repository_uuid})
             conector = FedoraRepositoryConnector(record)
             rep_bin_file = conector.get_binary_file(self.repository_uuid, ident_cely_old, thumb)
             return rep_bin_file
