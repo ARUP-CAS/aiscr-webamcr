@@ -215,6 +215,9 @@ cmd_stack_rm="docker stack rm ${stack_name}"
 cmd_pull_images="docker pull ${proxy_image_name} && docker pull ${prod_image_name}"
 cmd_deploy_base="docker stack deploy --compose-file"
 
+#Cleaning old images
+docker image prune
+
 while getopts "hxbut:" option; do
    option_passed="yes"
    case ${option} in
