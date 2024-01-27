@@ -133,6 +133,7 @@ services:
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
+      - ELASTIC_HOSTS=http://192.168.254.30:9200
     volumes:
       - logs_volume:/logs
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
