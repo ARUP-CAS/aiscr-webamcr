@@ -361,6 +361,7 @@
    	  <xs:element name="rozsah" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{rozsah}" -->
    	  <xs:element name="size_mb" minOccurs="1" maxOccurs="1" type="xs:decimal"/> <!-- "{size_mb}" -->
       <xs:element name="sha_512" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{sha_512}" -->
+      <xs:element name="url" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{url}" -->
    	  <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- historie.historie_set -->
    	</xs:sequence>     
   </xs:complexType>

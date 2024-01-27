@@ -240,3 +240,5 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
             return self.externizdroj
         elif hasattr(self, "archeologickyzaznam"):
             return self.archeologickyzaznam
+        elif hasattr(self, "soubor_historie"):
+            return self.soubor_historie

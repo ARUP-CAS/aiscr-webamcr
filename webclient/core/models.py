@@ -14,7 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian
 from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
-from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
+from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, PATH_PREFIX
 from nalez.models import NalezObjekt, NalezPredmet
 from notifikace_projekty.models import Pes
 from uzivatel.models import User
@@ -109,6 +109,12 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
     sha_512 = models.CharField(max_length=128, null=True, blank=True, db_index=True)
     suppress_signal = False
+
+    @property
+    def url(self):
+        if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
+            return f"{PATH_PREFIX}{self.path.lower().split('record/')[1]}"
+        return ""
 
     @property
     def repository_uuid(self):
