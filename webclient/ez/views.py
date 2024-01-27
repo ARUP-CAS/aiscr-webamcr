@@ -428,6 +428,7 @@ class ExterniOdkazOdpojitView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
+        self.init_translation()
         ez = self.get_zaznam()
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.delete()
