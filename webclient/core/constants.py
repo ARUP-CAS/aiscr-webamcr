@@ -175,4 +175,4 @@ PERMISSIONS_SHEET_APP_NAME = "app"
 PERMISSIONS_SHEET_URL_NAME = "URL"
 PERMISSIONS_SHEET_ACTION_NAME = "action"
 
-PATH_PREFIX = "https://digiarchiv.aiscr.cz/id/"
+FILE_URL_PREFIX = "https://digiarchiv.aiscr.cz/id/"
