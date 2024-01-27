@@ -20,8 +20,8 @@ services:
     restart: on-failure
     volumes:
       - ./webclient:/code
-      - ./vol/web:/vol/web
       - locale_data:/vol/web/locale
+      - ./vol/web:/vol/web
       - logs_volume:/run/logs
     ports:
       - "8000:8000"
@@ -137,6 +137,7 @@ services:
       - redis_pass
     volumes:
       - ./webclient:/code
+      - locale_data:/vol/web/locale
       - ./vol/web:/vol/web
     depends_on:
       redis:
@@ -156,6 +157,7 @@ services:
       - redis_pass
     volumes:
       - ./webclient:/code
+      - locale_data:/vol/web/locale
       - ./vol/web:/vol/web
     depends_on:
       redis:

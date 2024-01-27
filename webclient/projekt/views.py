@@ -1284,11 +1284,12 @@ def generovat_oznameni(request, ident_cely):
         messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
         return redirect(projekt.get_absolute_url())
     projekt.create_confirmation_document(additional=True, user=request.user)
-    if projekt.ident_cely[0] == OBLAST_CECHY:
-        Mailer.send_ep01a(project=projekt)
-    else:
-        Mailer.send_ep01b(project=projekt)
-    return redirect("projekt:detail", ident_cely=ident_cely)
+    if request.POST.get("odeslat_oznamovateli",False):
+        if projekt.ident_cely[0] == OBLAST_CECHY:
+            Mailer.send_ep01a(project=projekt)
+        else:
+            Mailer.send_ep01b(project=projekt)
+    return redirect(projekt.get_absolute_url())
 
 
 class GenerovatOznameniView(LoginRequiredMixin, RedirectView):

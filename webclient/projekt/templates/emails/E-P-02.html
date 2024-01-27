@@ -8,11 +8,10 @@
         </p>
         <ul style="list-style: none">
             <li><b>{% trans 'projekt.templates.email.E-P-02.typProjektu' %}</b> {{ project.typ_projektu.heslo }}</li>
-            <li><b>{% trans 'projekt.templates.email.E-P-02.hlavniKatastr' %}</b> {{ project.hlavni_katastr.nazev }}
-                {{ project.hlavni_katastr.okres.nazev }}</li>
+            <li><b>{% trans 'projekt.templates.email.E-P-02.hlavniKatastr' %}</b> {{ project.hlavni_katastr }}
             <li><b>{% trans 'projekt.templates.email.E-P-02.podnet' %}</b> {{ project.podnet }}</li>
             <li><b>{% trans 'projekt.templates.email.E-P-02.lokalizace' %}</b> {{ project.lokalizace }}</li>
-            <li><b>{% trans 'projekt.templates.email.E-P-02.planovaneZahajeni' %}</b> {{ project.planovane_zahajeni_text }}</li>
+            <li><b>{% trans 'projekt.templates.email.E-P-02.planovaneZahajeni' %}</b> {{ project.planovane_zahajeni_str }}</li>
         </ul>
     <p>
         {% trans 'projekt.templates.email.E-P-02.part2' %}

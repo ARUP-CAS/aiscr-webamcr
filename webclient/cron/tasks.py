@@ -15,7 +15,7 @@ from core.models import Soubor
 from cron.convertToSJTSK import get_multi_transform_to_sjtsk
 from cron.classes import MyList
 from cron.functions import collect_en01_en02
-from django.db import connection
+from django.db import connection, transaction
 from django.utils.translation import gettext as _
 
 from cron.convertToWGS84 import get_multi_transform_to_wgs84
@@ -24,6 +24,7 @@ from dokument.models import Dokument, Let, DokumentCast
 from ez.models import ExterniZdroj
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.models import Heslar, RuianKatastr, RuianOkres, RuianKraj
+from historie.models import Historie
 from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez
 from pian.models import Pian

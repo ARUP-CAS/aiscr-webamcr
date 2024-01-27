@@ -17,6 +17,8 @@ from heslar.models import RuianKatastr, RuianOkres, RuianKraj
 from uzivatel.models import User
 from django.views import View
 from django.views.generic import TemplateView
+from django.db.models import OuterRef, Subquery
+from django.contrib.contenttypes.models import ContentType
 from .models import Pes
 from .forms import (
     KATASTR_CONTENT_TYPE,
@@ -64,17 +66,21 @@ class PesListView(LoginRequiredMixin, TemplateView):
                 extra=1,
                 can_delete=False,
             )
+            filter_type = ContentType.objects.get(model=model_type).model_class()
+            nazev = filter_type.objects.filter(
+                id=OuterRef('object_id')
+            ).values('nazev')
             if old_pes_post and old_pes_type == model_type:
                 pes_formset = PesFormset[model_type](
                     data=old_pes_post,
                     instance=self.request.user,
-                    queryset=Pes.objects.filter(content_type__model=model_type),
+                    queryset=Pes.objects.filter(content_type__model=model_type).annotate(razeni=Subquery(nazev)).order_by("razeni"),
                 )
                 pes_formset.is_valid()
             else:
                 pes_formset = PesFormset[model_type](
                     instance=self.request.user,
-                    queryset=Pes.objects.filter(content_type__model=model_type),
+                    queryset=Pes.objects.filter(content_type__model=model_type).annotate(razeni=Subquery(nazev)).order_by("razeni"),
                 )
             context["formsets"].append(
                 {
@@ -158,6 +164,7 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
             "title": self.title,
             "id_tag": self.id_tag,
             "button": self.button,
+            "question": True,
             "object_identification": self.get_object_identification()
         }
         return context

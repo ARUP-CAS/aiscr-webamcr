@@ -120,7 +120,7 @@ BEGIN
             insert into lokalita_katastr(lokalita, katastr, hlavni)
             select distinct a.id, kat.id, false from lokalita a
             join kat on kat.naz = SUBSTRING(split_part(a.dalsi_katastry, ';', counter), 1, POSITION(')' in split_part(a.dalsi_katastry, ';', counter)))
-            where split_part(a.dalsi_katastry, ';', counter) != '' AND NOT EXISTS (SELECT 1 FROM lokalita_katastr AS ak WHERE ak.lokalita = a.id AND ak.katastr = r.id);
+            where split_part(a.dalsi_katastry, ';', counter) != '' AND NOT EXISTS (SELECT 1 FROM lokalita_katastr AS ak WHERE ak.lokalita = a.id AND ak.katastr = kat.id);
         END;
     END LOOP;
 END;

@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
-from core.constants import OZNAMENI_PROJ, ZAPSANI_DOK, NAVRZENI_KE_ZRUSENI_PROJ, ODESLANI_AZ, \
+from core.constants import OZNAMENI_PROJ, UZAVRENI_PROJ, ZAPSANI_DOK, NAVRZENI_KE_ZRUSENI_PROJ, ODESLANI_AZ, \
     SN_POTVRZENY, SN_ODESLANY, SN_ZAPSANY, AZ_STAV_ZAPSANY, AZ_STAV_ODESLANY, \
     PROJEKT_STAV_UZAVRENY
 from django.core.mail import EmailMultiAlternatives
@@ -124,7 +124,7 @@ class Mailer:
             email.attach_alternative(html_content, "text/html")
             logger.info("services.mailer.send.debug", extra={"from_email": from_email, "to": to, "subject": subject})
             if attachment:
-                email.attach(attachment.filename, attachment.content, mimetype=attachment.mime_type)
+                email.attach(attachment.filename, attachment.content.read(), mimetype=attachment.mime_type)
             try:
                 email.send()
             except Exception as e:
@@ -267,6 +267,9 @@ class Mailer:
         subject = notification_type.predmet.format(ident_cely=obj.ident_cely)
         if isinstance(obj, projekt.models.Projekt):
             state = obj.CHOICES[obj.stav][1]
+            history_log = Historie.objects.filter(
+                vazba__projekt_historie__ident_cely=obj.ident_cely, typ_zmeny=UZAVRENI_PROJ).order_by('-datum_zmeny')
+            user = history_log.first().uzivatel
         elif isinstance(obj, arch_z.models.ArcheologickyZaznam):
             history_log = Historie.objects.filter(
                 vazba__archeologickyzaznam__ident_cely=obj.ident_cely, typ_zmeny=ODESLANI_AZ).order_by('-datum_zmeny')
