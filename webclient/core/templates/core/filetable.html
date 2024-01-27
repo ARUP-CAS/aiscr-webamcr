@@ -26,7 +26,9 @@
     <tr>
       <td>
         {% if soubor.mimetype|slice:5 == "image" and show.soubor_nahled %}
-          <img id="soubor-nahled" src="{% url 'core:download_thumbnail' vazba_trida ident soubor.id %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" >
+          <img id="soubor-nahled-{{ soubor.id }}" src="{% url 'core:download_thumbnail' vazba_trida ident soubor.id %}"
+               class="image-nahled" data-toggle="modal" data-target="#soubor-modal"
+               data-fullsrc="{% url 'core:download_file' vazba_trida ident soubor.id %}">
         {% endif %}  
       </td>
       <td>{{ soubor.nazev }}</td>
@@ -91,8 +93,10 @@
   });
   //Show soubory modal
 $('#soubor-modal').on('show.bs.modal', function (event) {
-  var button = $(event.relatedTarget)
-  var modalImg = document.getElementById("nahled-image");
-  modalImg.src = button[0].src
+  const button = $(event.relatedTarget)
+  const modalImg = document.getElementById("nahled-image");
+  const element = document.getElementById(button[0].id);
+  const fullsrc = element.dataset.fullsrc;
+  modalImg.src = fullsrc;
 })
 </script>
