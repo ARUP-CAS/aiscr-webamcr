@@ -124,7 +124,7 @@
 
           function makeFieldDisabled(field, disabled){
               $(field).prop('readonly', disabled);
-              if (field !='#id_oznaceni_stavby'){
+              if (field !='#id_oznaceni_stavby' && field != '#id_poznamka'){
                 $(field).prop('required', !disabled);
                 console.log($(field))
                 if (disabled){
@@ -144,6 +144,7 @@
               makeFieldDisabled('#id_telefon', disabled)
               makeFieldDisabled('#id_email', disabled)
               makeFieldDisabled('#id_oznaceni_stavby', disabled)
+              makeFieldDisabled('#id_poznamka', disabled)
               const form_card = document.querySelectorAll(".oznamovatel-form-card")[0];
               const elements = form_card.querySelectorAll(".asteriskField");
               if (disabled) {
