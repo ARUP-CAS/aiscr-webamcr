@@ -171,7 +171,8 @@ def delete_file(request, typ_vazby, ident_cely, pk):
 
 
 class DownloadFile(LoginRequiredMixin, View):
-    thumb = False
+    thumb_small = False
+    thumb_large = False
     @staticmethod
     def _preprocess_image(file_content: BytesIO) -> BytesIO:
         return file_content
@@ -186,7 +187,8 @@ class DownloadFile(LoginRequiredMixin, View):
                         )
             return redirect(request.GET.get("next", "core:home"))
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
-        rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content(thumb=self.thumb)
+        rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content(thumb_small=self.thumb_small,
+                                                                           thumb_large=self.thumb_large)
         if soubor.repository_uuid is not None:
             # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
             content = self._preprocess_image(rep_bin_file.content)
@@ -218,8 +220,12 @@ class DownloadFile(LoginRequiredMixin, View):
         return HttpResponse("")
 
 
-class DownloadThumbnail(DownloadFile):
-    thumb = True
+class DownloadThumbnailSmall(DownloadFile):
+    thumb_small = True
+
+
+class DownloadThumbnailLarge(DownloadFile):
+    thumb_large = True
 
 
 @login_required

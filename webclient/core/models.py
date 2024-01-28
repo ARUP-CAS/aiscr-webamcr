@@ -164,7 +164,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             logger.warning(_("core.models.soubor.vytvoreno.error"), extra={"pk": self.pk})
             return None
 
-    def get_repository_content(self, ident_cely_old=None, thumb=False) -> Optional[RepositoryBinaryFile]:
+    def get_repository_content(self, ident_cely_old=None, thumb_small=False, thumb_large=False) \
+            -> Optional[RepositoryBinaryFile]:
         from .repository_connector import FedoraRepositoryConnector
 
         record = self.vazba.navazany_objekt
@@ -172,7 +173,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             logger.debug(_("core.models.Soubor.get_repository_content"),
                          extra={"record_ident_cely": record.ident_cely, "repository_uuid": self.repository_uuid})
             conector = FedoraRepositoryConnector(record)
-            rep_bin_file = conector.get_binary_file(self.repository_uuid, ident_cely_old, thumb)
+            rep_bin_file = conector.get_binary_file(self.repository_uuid, ident_cely_old, thumb_small, thumb_large)
             return rep_bin_file
         logger.debug(_("core.models.Soubor.get_repository_content.not_found"),
                      extra={"record_ident_cely": record, "repository_uuid": self.repository_uuid, "soubor_pk": self.pk})
