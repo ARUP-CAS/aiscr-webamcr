@@ -4,47 +4,47 @@
     });
 </script>
 <script>
-  function show_grap_geom_from_map(dj){
-        global_map_can_grab_geom_from_map=dj;
+    const show_grap_geom_from_map = (dj) => {
+        global_map_can_grab_geom_from_map = dj;
         map_show_edit(false)
-      }
-  var getFiltrType=()=>{
-    return document.forms[0].querySelector('[data-id="dj_typ_id"]').title
-  }
-
-  var getFiltrTypeIsKuSafe=()=>{
-    try{
-      return getFiltrType().includes("Katastrální území")
-    } catch(e){
-      return false;
     }
-  }
+    const getFiltrType = () => {
+        return document.forms[0].querySelector('[data-id="dj_typ_id"]').title
+    }
 
-  var filtrAkci =()=>{
-    var positive= getFiltrTypeIsKuSafe()? 'none' : '';
-    var negative= positive===''? 'none' : '';
+    const getFiltrTypeIsKuSafe = () => {
+        try {
+            return getFiltrType().includes("Katastrální území")
+        } catch (e) {
+            return false;
+        }
+    }
 
-    ["show_menu_pian_from_map_id","show_menu_pian_new_id","pian-pripojit-"+'{{j.pian_ident_cely }}',"pian-upravit-"+'{{j.pian_ident_cely }}',"pian-potvrdit-"+'{{j.pian_ident_cely }}']
-    .forEach(element => {
-      if(document.getElementById(element)!=null){
-        document.getElementById(element).style.display = positive;
-      }
-     });
+    const filtrAkci = () => {
+        const positive = getFiltrTypeIsKuSafe() ? 'none' : '';
+        const negative = positive === '' ? 'none' : '';
 
-     ["show_menu_ku_from_map_id","zmenit-katastr"+"{{j.ident_cely}}"]
-    .forEach(element => {
-      if(document.getElementById(element)!=null){
-          document.getElementById(element).style.display = negative;
-      }
-     });
+        ["show_menu_pian_from_map_id", "show_menu_pian_new_id", "pian-pripojit-" + '{{j.pian_ident_cely }}', "pian-upravit-" + '{{j.pian_ident_cely }}', "pian-potvrdit-" + '{{j.pian_ident_cely }}']
+            .forEach(element => {
+                if (document.getElementById(element) != null) {
+                    document.getElementById(element).style.display = positive;
+                }
+            });
+
+        ["show_menu_ku_from_map_id", "zmenit-katastr" + "{{j.ident_cely}}"]
+            .forEach(element => {
+                if (document.getElementById(element) != null) {
+                    document.getElementById(element).style.display = negative;
+                }
+            });
     }
 </script>
 <script>
-  var set_pian_by_id = function (dj_ident, disabled=true) {
-    id = "#id_" + dj_ident + "-pian"
-    $(id).prop('disabled', disabled);
-    document.getElementById("pian_text").style.display = "none";
-    document.getElementById("pian_select").style.display = "block";
-    //$(id).prop('disabled', true);
-  };
+    const set_pian_by_id = function (dj_ident, disabled = true) {
+        id = "#id_" + dj_ident + "-pian"
+        $(id).prop('disabled', disabled);
+        document.getElementById("pian_text").style.display = "none";
+        document.getElementById("pian_select").style.display = "block";
+        //$(id).prop('disabled', true);
+    };
 </script>
