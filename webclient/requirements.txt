@@ -35,6 +35,8 @@ python-logstash==0.4.8
 djangorestframework==3.14.0
 djangorestframework-xml==2.0.0
 lxml==5.1.0
+python-magic==0.4.27
+pdf2image==1.17.0
 # DEV requirements
 pre-commit==3.6.0
 isort==5.13.2
