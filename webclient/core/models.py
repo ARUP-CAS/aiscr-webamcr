@@ -737,6 +737,7 @@ def check_permissions(action, user, ident=None):
             return False
     return True
 
+
 class PermissionsSkip(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     ident_list = models.TextField()

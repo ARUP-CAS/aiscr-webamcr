@@ -90,10 +90,11 @@ class Model3DTable(SearchTable):
         else:
             soubor = None
         if soubor is not None:
-            soubor_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely ,soubor.id,))
+            thumbnail_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely ,soubor.id,))
+            soubor_url = reverse("core:download_file", args=('model3d', record.ident_cely, soubor.id,))
             return format_html(
-                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
-                soubor_url,
+                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" data-fullsrc="{}">',
+                thumbnail_url, soubor_url
             )
         return ""
 
@@ -183,15 +184,17 @@ class DokumentTable(SearchTable):
         """
         Metóda pro správne zobrazení náhledu souboru.
         """
-        if len(record.soubory.first_soubor)>0:
+        if hasattr(record.soubory, "first_soubor") and len(record.soubory.first_soubor) > 0:
             soubor = record.soubory.first_soubor[0]
         else: 
             soubor = None
         if soubor is not None:
-            soubor_url = reverse("core:download_thumbnail", args=('dokument', record.ident_cely ,soubor.id,))
+            thumbnail_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely, soubor.id,))
+            soubor_url = reverse("core:download_file", args=('model3d', record.ident_cely, soubor.id,))
             return format_html(
-                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
-                soubor_url,
+                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
+                'data-fullsrc="{}">',
+                thumbnail_url, soubor_url,
             )
         return ""
 

@@ -5,6 +5,8 @@ import mimetypes
 import os
 import re
 from io import StringIO, BytesIO
+
+import pandas
 from PIL import Image
 
 import unicodedata
@@ -69,12 +71,13 @@ from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
 from uzivatel.models import User
-from django_tables2.export import ExportMixin
+from django_tables2.export import ExportMixin, TableExport
 from datetime import datetime
 from heslar.hesla import HESLAR_PRISTUPNOST
 
 from heslar.models import Heslar
 from dj.models import DokumentacniJednotka
+from .connectors import RedisConnector
 from .exceptions import ZaznamSouborNotmatching
 from .models import Permissions, PermissionsSkip
 from historie.models import Historie
@@ -802,12 +805,12 @@ class PermissionFilterMixin():
         else:
             return Q(**{"historie_zapsat__in":filtered_my})
 
-    
     def add_accessibility_lookup(self,permission, qs):
         accessibility_key = self.permission_model_lookup+"pristupnost__in"
         accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id))
         filter = {accessibility_key:accessibilities}
         return qs.filter(Q(**filter)  | self.add_ownership_lookup(permission.accessibility,qs))
+
 
 class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView, PermissionFilterMixin):
     """
@@ -819,7 +822,46 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     export_formats = ["csv", "json", "xlsx"]
     app = "core"
     toolbar = "toolbar_akce.html"
-    
+    redis_value_list_field = None
+    redis_snapshot_prefix = None
+
+    def create_export(self, export_format):
+        logger.debug("core.views.SearchListView.create_export.start", extra={"export_format": export_format})
+        if self.redis_value_list_field and self.redis_snapshot_prefix:
+            r = RedisConnector.get_connection()
+            response = HttpResponse()
+            dataset = self.get_table_data()
+            ident_cely_list = set(dataset.values_list(self.redis_value_list_field, flat=True))
+            ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
+            pipe = r.pipeline()
+            for key in ident_cely_list:
+                pipe.hgetall(key)
+            data = pipe.execute()
+            data = pandas.DataFrame(data)
+            data.columns = [x.decode("utf-8") for x in data.columns]
+            column_names = {}
+            for column in self.get_table().columns:
+                column_names[str(column.name)] = column.verbose_name
+            data = data.rename(columns=column_names)
+            for column in data.select_dtypes(include=['object']):
+                data[column] = data[column].str.decode('utf-8')
+            if export_format == TableExport.CSV:
+                response["Content-Disposition"] = f'attachment; filename="export.csv"'
+                data.to_csv(path_or_buf=response, index=False)
+            elif export_format == TableExport.JSON:
+                response["Content-Disposition"] = f'attachment; filename="export.json"'
+                data.to_json(path_or_buf=response, orient="records", force_ascii=False, index=False)
+            elif export_format == TableExport.XLSX:
+                excel_file = BytesIO()
+                with pandas.ExcelWriter(excel_file, engine='openpyxl') as writer:
+                    data.to_excel(writer, index=False)
+                excel_file.seek(0)
+                response = HttpResponse(excel_file.read(),
+                                        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = 'attachment; filename=export.xlsx'
+            logger.debug("core.views.SearchListView.create_export.end", extra={"export_format": export_format, "column_names": column_names})
+            return response
+
     def init_translations(self):
         self.page_title = _("core.views.AkceListView.page_title.text")
         self.search_sum = _("core.views.AkceListView.search_sum.text")

@@ -316,7 +316,8 @@ class DokumentListView(SearchListView):
     export_name = "export_dokumenty_"
     app = "dokument"
     toolbar = "toolbar_dokument.html"
-    
+    redis_snapshot_prefix = "dokument"
+    redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
 
     def init_translations(self):

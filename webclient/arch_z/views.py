@@ -1,6 +1,11 @@
 import logging
+from io import BytesIO
+
+import pandas
+import redis
 import simplejson as json
 from django.db.models import RestrictedError
+from django_tables2.export import TableExport
 
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
@@ -120,6 +125,7 @@ from projekt.models import Projekt
 from services.mailer import Mailer
 from uzivatel.models import User
 from core.models import Permissions as p, check_permissions
+from webclient.settings.base import get_plain_redis_pass
 
 logger = logging.getLogger(__name__)
 
@@ -1418,6 +1424,8 @@ class AkceListView(SearchListView):
     toolbar = "toolbar_akce.html"
     permission_model_lookup = "archeologicky_zaznam__"
     typ_zmeny_lookup = ZAPSANI_AZ
+    redis_snapshot_prefix = "akce"
+    redis_value_list_field = "archeologicky_zaznam__ident_cely"
 
     def init_translations(self):
         self.page_title = _("arch_z.views.AkceListView.page_title.text")

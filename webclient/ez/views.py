@@ -89,6 +89,8 @@ class ExterniZdrojListView(SearchListView):
     export_name = "export_externi-zdroje_"
     app = "ext_zdroj"
     toolbar = "toolbar_externi_zdroj.html"
+    redis_snapshot_prefix = "externi_zdroj"
+    redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_EXT_ZD
 
     def init_translations(self):
@@ -428,6 +430,7 @@ class ExterniOdkazOdpojitView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
+        self.init_translation()
         ez = self.get_zaznam()
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.delete()

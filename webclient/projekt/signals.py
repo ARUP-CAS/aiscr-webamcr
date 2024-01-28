@@ -2,6 +2,7 @@ import logging
 
 from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY, PROJEKT_STAV_VYTVORENY
 from core.models import SouborVazby
+from cron.tasks import update_single_redis_snapshot
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
@@ -10,6 +11,7 @@ from dokument.models import Dokument, DokumentCast
 from historie.models import HistorieVazby
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
+from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +83,7 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
         Metóda pro odeslání emailu hlídacího psa pri založení projektu.
     """
     # When projekt is created using the "oznameni" page, the metadata are saved directly without celery
+    logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})
     if getattr(instance, "suppress_signal", False) is not True:
         instance.save_metadata()
 
@@ -89,3 +92,6 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
         logger.debug("projekt.signals.projekt_post_save.checked_hlidaci_pes",
                      extra={"instance": instance})
         check_hlidaci_pes.delay(instance.pk)
+    if not check_if_task_queued("Projekt", instance.pk, "update_single_redis_snapshot"):
+        update_single_redis_snapshot.apply_async(["Projekt", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
+    logger.debug("projekt.signals.projekt_post_save.end", extra={"ident_cely": instance.ident_cely})

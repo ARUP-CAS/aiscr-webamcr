@@ -2,13 +2,15 @@ import datetime
 import logging
 import traceback
 
+import redis
 from celery import shared_task
-from django.db.models import Q, F, Min
+from django.db.models import Q, F, Min, Prefetch, Subquery, OuterRef
 from django.db.models.functions import Upper
 from django.utils import timezone
 
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
+from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
     OZNAMENI_PROJ, ZAPSANI_PROJ
 from core.models import Soubor
@@ -26,11 +28,12 @@ from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.models import Heslar, RuianKatastr, RuianOkres, RuianKraj
 from historie.models import Historie
 from lokalita.models import Lokalita
-from pas.models import SamostatnyNalez
+from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pian.models import Pian
 from projekt.models import Projekt
 from services.mailer import Mailer
 from uzivatel.models import Organizace, Osoba, User
+from webclient.settings.base import get_plain_redis_pass
 
 logger = logging.getLogger(__name__)
 
@@ -669,3 +672,55 @@ def update_snapshot_fields():
         logger.debug("core.cron.update_snapshot_fields.do.end")
     except Exception as err:
         logger.error("core.cron.update_snapshot_fields.do.error", extra={"error": err})
+
+
+@shared_task
+def update_all_redis_snapshots(rewrite_existing=False):
+    logger.debug("cron.tasks.update_all_redis_snapshots.start")
+    r = RedisConnector.get_connection()
+    classes_list = (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez)
+    for current_class in classes_list:
+        logger.debug("cron.tasks.update_all_redis_snapshots.class_start",
+                     extra={"current_class": current_class.__name__})
+        pipe = r.pipeline()
+        query = current_class.objects.all()
+        if current_class == Dokument:
+            query = query.prefetch_related(
+                Prefetch(
+                    "autori",
+                    queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
+                    to_attr="ordered_autors",
+                )
+            )
+        for item in query:
+            if rewrite_existing or not r.exists(item.redis_snapshot_id):
+                key, value = item.generate_redis_snapshot()
+                pipe.hset(key, mapping=value)
+        pipe.execute()
+        logger.debug("cron.tasks.update_all_redis_snapshots.class_end",
+                     extra={"current_class": current_class.__name__})
+    logger.debug("cron.tasks.update_all_redis_snapshots.end")
+
+
+@shared_task
+def update_single_redis_snapshot(class_name: str, record_pk):
+    r = RedisConnector.get_connection()
+    if class_name == "Akce":
+        item = Akce.objects.get(pk=record_pk)
+    elif class_name == "Projekt":
+        item = Projekt.objects.get(pk=record_pk)
+    elif class_name == "Dokument":
+        item = Dokument.objects.get(pk=record_pk)
+    elif class_name == "Lokalita":
+        item = Lokalita.objects.get(pk=record_pk)
+    elif class_name == "ExterniZdroj":
+        item = ExterniZdroj.objects.get(pk=record_pk)
+    elif class_name == "UzivatelSpoluprace":
+        item = UzivatelSpoluprace.objects.get(pk=record_pk)
+    elif class_name == "SamostatnyNalez":
+        item = SamostatnyNalez.objects.get(pk=record_pk)
+    else:
+        logger.error("cron.tasks.update_single_redis_snapshot.unsupported_class_name", extra={"class_name": class_name})
+        return
+    key, value = item.generate_redis_snapshot()
+    r.hset(key, mapping=value)
