@@ -9,6 +9,7 @@ from typing import Union, Optional
 
 import requests
 from django.conf import settings
+from pdf2image import convert_from_bytes
 from requests.auth import HTTPBasicAuth
 
 from core.utils import get_mime_type
@@ -437,25 +438,43 @@ class FedoraRepositoryConnector:
                      extra={"url": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file
 
-    def __generate_thumb(self, file_content: BytesIO):
+    def __generate_thumb(self, file_name: str, file_content: BytesIO):
         logger.debug("core_repository_connector.__generate_thumb.start")
-        try:
+
+        def resize_image(image: BytesIO):
             image = Image.open(file_content)
             max_size = (100, 100)
             image.thumbnail(max_size)
             output_buffer = BytesIO()
             image.save(output_buffer, format="PNG")
             output_buffer.seek(0)
-            logger.debug("core_repository_connector.__generate_thumb.end")
             return output_buffer
-        except Exception as err:
-            logger.debug("core_repository_connector.__generate_thumb.error", extra={"err": err})
-            return None
+
+        if file_name.lower().endswith(".pdf"):
+            try:
+                images = convert_from_bytes(file_content.getvalue(), first_page=1, last_page=1)
+                image_bytes_io = io.BytesIO()
+                images[0].save(image_bytes_io, format='PNG')
+                image_bytes_io.seek(0)
+                thumbnail = resize_image(image_bytes_io)
+                logger.debug("core_repository_connector.__generate_thumb.end")
+                return thumbnail
+            except Exception as err:
+                logger.debug("core_repository_connector.__generate_thumb.error", extra={"err": err})
+                return None
+        else:
+            try:
+                thumbnail = resize_image(file_content)
+                logger.debug("core_repository_connector.__generate_thumb.end")
+                return thumbnail
+            except Exception as err:
+                logger.debug("core_repository_connector.__generate_thumb.error", extra={"err": err})
+                return None
 
     def _save_thumb(self, file_name, file, uuid):
         logger.debug("core_repository_connector._save_thumb.start",
                      extra={"file_name": file_name, "ident_cely": self.record.ident_cely})
-        data = self.__generate_thumb(file)
+        data = self.__generate_thumb(file_name, file)
         if data is not None:
             data = data.read()
             file_sha_512 = hashlib.sha512(data).hexdigest()

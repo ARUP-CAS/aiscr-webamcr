@@ -181,7 +181,7 @@ class DownloadFile(LoginRequiredMixin, View):
             messages.add_message(
                             request, messages.ERROR, SPATNY_ZAZNAM_SOUBOR_VAZBA
                         )
-            return redirect(request.GET.get("next","core:home"))
+            return redirect(request.GET.get("next", "core:home"))
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
         rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content(thumb=self.thumb)
         if soubor.repository_uuid is not None:
@@ -290,7 +290,8 @@ def upload_file_samostatny_nalez(request, ident_cely):
         {"ident_cely": ident_cely, "back_url": sn.get_absolute_url()},
     )
 
-class uploadFileView(LoginRequiredMixin, TemplateView):
+
+class Uploadfileview(LoginRequiredMixin, TemplateView):
     """
     Třída pohledu pro zobrazení stránky s uploadem souboru.
     """
@@ -300,6 +301,8 @@ class uploadFileView(LoginRequiredMixin, TemplateView):
     def get_zaznam(self):
         self.typ_vazby = self.kwargs.get("typ_vazby")
         self.ident = self.kwargs.get("ident_cely")
+        logger.debug("core.views.Uploadfileview.get_zaznam.start", extra={"typ_vazby": self.typ_vazby,
+                                                                          "ident": self.ident})
         if self.typ_vazby == "pas":
             return get_object_or_404(SamostatnyNalez, ident_cely=self.ident)
         elif self.typ_vazby == "dokument":
@@ -316,6 +319,8 @@ class uploadFileView(LoginRequiredMixin, TemplateView):
             "back_url": zaznam.get_absolute_url(),
             "typ_vazby": self.typ_vazby,
         }
+        logger.debug("core.views.Uploadfileview.get_context_data.start", extra={"typ_vazby": self.typ_vazby,
+                                                                                "ident": self.ident})
         return context
 
 
@@ -324,10 +329,12 @@ def post_upload(request):
     """
     Funkce pohledu pro upload souboru a k navázaní ke správnemu záznamu.
     """
+    source_url = request.POST.get("source-url", "")
     update = "fileID" in request.POST
     s = None
     if not update:
-        logger.debug("core.views.post_upload.start", extra={"objectID": request.POST.get("objectID", None)})
+        logger.debug("core.views.post_upload.start", extra={"objectID": request.POST.get("objectID", None),
+                                                            "source_url": source_url})
         projekt = Projekt.objects.filter(ident_cely=request.POST["objectID"])
         dokument = Dokument.objects.filter(ident_cely=request.POST["objectID"])
         samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
@@ -356,20 +363,37 @@ def post_upload(request):
                 status=500,
             )
     else:
-        logger.debug("core.views.post_upload.updating", extra={"fileID": request.POST["fileID"]})
+        logger.debug("core.views.post_upload.updating", extra={"fileID": request.POST["fileID"],
+                                                               "source_url": source_url})
         s: Soubor = get_object_or_404(Soubor, id=request.POST["fileID"])
         logger.debug("core.views.post_upload.update", extra={"s": s.pk})
         objekt = s.vazba.navazany_objekt
         new_name = s.nazev
     soubor: TemporaryUploadedFile = request.FILES.get("file")
     soubor.seek(0)
+    if not Soubor.check_mime_for_url(soubor, source_url):
+        logger.debug("core.views.post_upload.check_mime_for_url.rejected")
+        return JsonResponse({"error": f"{_('core.views.post_upload.mime_check_failed')}"}, status=400)
     soubor_data = BytesIO(soubor.read())
     rep_bin_file = None
     if soubor:
         if not update:
             conn = FedoraRepositoryConnector(objekt)
-            mimetype = get_mime_type(soubor.name)
-            rep_bin_file = conn.save_binary_file(new_name, get_mime_type(soubor.name), soubor_data)
+            mimetype = Soubor.get_mime_type(soubor)
+            mime_extensions = Soubor.get_file_extension_by_mime(soubor)
+            if len(mime_extensions) == 0:
+                logger.debug("core.views.post_upload.check_mime_for_url.rejected")
+                return JsonResponse({"error": f"{_('core.views.post_upload.mime_rename_failed')}"}, status=400)
+            file_name_extension = new_name.split(".")[-1].lower()
+            if file_name_extension not in mime_extensions:
+                old_name = new_name
+                new_name = new_name.replace(new_name.split(".")[-1], mime_extensions[0])
+                renamed = True
+                logger.debug("core.views.post_upload.check_mime_for_url.rename",
+                             extra={"mimetype": mimetype, "old_name": old_name, "new_name": new_name})
+            else:
+                renamed = False
+            rep_bin_file = conn.save_binary_file(new_name, mimetype, soubor_data)
             sha_512 = rep_bin_file.sha_512
             s: Soubor = Soubor(
                 vazba=objekt.soubory,
@@ -380,6 +404,7 @@ def post_upload(request):
                 sha_512=sha_512,
             )
             duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
+            response_data = {"filename": s.nazev, "id": s.pk}
             if not duplikat.exists():
                 logger.debug("core.views.post_upload.saving", extra={"s": s})
                 s.save()
@@ -388,11 +413,8 @@ def post_upload(request):
                     s.zaznamenej_nahrani(user_admin)
                 else:
                     s.zaznamenej_nahrani(request.user)
-                return JsonResponse(
-                    {"filename": s.nazev, "id": s.pk}, status=200
-                )
             else:
-                logger.warning("core.views.post_upload.already_exists", extra={"s": s})
+                logger.debug("core.views.post_upload.already_exists", extra={"s": s})
                 s.save()
                 if not request.user.is_authenticated:
                     user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
@@ -402,19 +424,13 @@ def post_upload(request):
                 # Find parent record and send it to the user
                 parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
                     if duplikat.first().vazba.navazany_objekt is not None else ""
-                return JsonResponse(
-                    {
-                        "duplicate": _(
-                            "core.views.post_upload.duplikat.text1"
-                        )
-                        + parent_ident
-                        + ". "
-                        + _("core.views.post_upload.duplikat.text2"),
-                        "filename": s.nazev,
-                        "id": s.pk,
-                    },
-                    status=200,
-                )
+                response_data["duplicate"] = (f"{_('core.views.post_upload.duplikat2.text1')} {parent_ident}. "
+                                              f"{_('core.views.post_upload.duplikat2.text2')}",)
+            if renamed:
+                response_data["file_renamed"] = (f"{_('core.views.post_upload.renamed.text1')} {new_name}. "
+                                                f"{_('core.views.post_upload.renamed.text2')}",)
+            logger.debug("core.views.post_upload.end", extra={"file_id": s.pk})
+            return JsonResponse(response_data, status=200)
         else:
             __, file_extension = os.path.splitext(soubor.name)
             if s is None:
@@ -428,13 +444,25 @@ def post_upload(request):
                     status=500,
                 )
             conn = FedoraRepositoryConnector(objekt)
-            mimetype = get_mime_type(soubor.name)
+            mimetype = Soubor.get_mime_type(soubor)
+            mime_extensions = Soubor.get_file_extension_by_mime(soubor)
+            if len(mime_extensions) == 0:
+                logger.debug("core.views.post_upload.check_mime_for_url.rejected")
+                return JsonResponse({"error": f"{_('core.views.post_upload.mime_rename_failed')}"}, status=400)
+            file_name_extension = new_name.split(".")[-1].lower()
+            if file_name_extension not in mime_extensions:
+                old_name = new_name
+                new_name = new_name.replace(new_name.split(".")[-1], mime_extensions[0])
+                renamed = True
+                logger.debug("core.views.post_upload.check_mime_for_url.rename",
+                             extra={"mimetype": mimetype, "old_name": old_name, "new_name": new_name})
+            else:
+                renamed = False
             if s.repository_uuid is not None:
                 extension = soubor.name.split(".")[-1]
                 old_name = ".".join(s.nazev.split(".")[:-1])
                 new_name = f'{old_name}.{extension}'
-                rep_bin_file = conn.update_binary_file(new_name, get_mime_type(soubor.name),
-                                                       soubor_data, s.repository_uuid)
+                rep_bin_file = conn.update_binary_file(new_name, mimetype, soubor_data, s.repository_uuid)
                 logger.debug("core.views.post_upload.update", extra={"pk": s.pk, "new_name": new_name})
                 s.nazev = new_name
                 s.size_mb = rep_bin_file.size_mb
@@ -448,26 +476,16 @@ def post_upload(request):
                     .filter(~Q(id=s.id))
                     .order_by("pk")
                 )
+                response_data = {"filename": s.nazev, "id": s.pk}
                 if duplikat.count() > 0:
                     parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
                         if duplikat.first().vazba.navazany_objekt is not None else ""
-                    return JsonResponse(
-                        {
-                            "duplicate": _(
-                                "core.views.post_upload.duplikat2.text1"
-                            )
-                            + parent_ident
-                            + ". "
-                            + str(_("core.views.post_upload.duplikat2.text2")),
-                            "filename": s.nazev,
-                            "id": s.pk,
-                        },
-                        status=200,
-                    )
-                else:
-                    return JsonResponse(
-                        {"filename": s.nazev, "id": s.pk}, status=200
-                    )
+                    response_data["duplicate"] = (f"{_('core.views.post_upload.duplikat2.text1')} {parent_ident}. "
+                                                  f"{_('core.views.post_upload.duplikat2.text2')}",)
+                if renamed:
+                    response_data["file_renamed"] = (f"{_('core.views.post_upload.renamed.text1')} {new_name}. "
+                                                     f"{_('core.views.post_upload.renamed.text2')}",)
+                return JsonResponse(response_data, status=200)
             else:
                 logger.warning("core.views.post_upload.rep_bin_file_is_none")
                 return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
