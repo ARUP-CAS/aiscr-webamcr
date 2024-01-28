@@ -552,6 +552,12 @@
                 <input class="form-control" type="text" value="{{ oznamovatel.email|check_if_none }}" readonly>
               </div>
             </div>
+            <div class="col-md-12">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "projekt.templates.detail.oznamovatelPart.poznamka.label" %}</label>
+                <input class="form-control" type="text" value="{{ oznamovatel.poznamka|check_if_none }}" readonly>
+              </div>
+            </div>
           </div>
         </div>
       </div>

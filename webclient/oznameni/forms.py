@@ -71,7 +71,7 @@ class OznamovatelForm(forms.ModelForm):
 
     class Meta:
         model = Oznamovatel
-        fields = ("oznamovatel", "odpovedna_osoba", "telefon", "email", "adresa")
+        fields = ("oznamovatel", "odpovedna_osoba", "telefon", "email", "adresa", "poznamka")
         widgets = {
             "oznamovatel": forms.TextInput(),
             "odpovedna_osoba": forms.TextInput(),
@@ -83,6 +83,7 @@ class OznamovatelForm(forms.ModelForm):
             "telefon": _("oznameni.forms.oznamovatelForm.telefon.label"),
             "email": _("oznameni.forms.oznamovatelForm.email.label"),
             "adresa": _("oznameni.forms.oznamovatelForm.adresa.label"),
+            "poznamka": _("oznameni.forms.oznamovatelForm.adresa.poznamka"),
         }
         help_texts = {
             "oznamovatel": _("oznameni.forms.oznamovatelForm.oznamovatel.tooltip"),
@@ -92,6 +93,7 @@ class OznamovatelForm(forms.ModelForm):
             "telefon": _("oznameni.forms.oznamovatelForm.telefon.tooltip"),
             "email": _("oznameni.forms.oznamovatelForm.email.tooltip"),
             "adresa": _("oznameni.forms.oznamovatelForm.adresa.tooltip"),
+            "poznamka": _("oznameni.forms.oznamovatelForm.adresa.poznamka")
         }
 
     def __init__(self, *args, **kwargs):
@@ -106,8 +108,8 @@ class OznamovatelForm(forms.ModelForm):
             self.fields["adresa"].widget.attrs["readonly"] = True
             self.fields["telefon"].widget.attrs["readonly"] = True
             self.fields["email"].widget.attrs["readonly"] = True
-        if required == False:
-            logger.debug(required)
+            self.fields["poznamka"].widget.attrs["readonly"] = True
+        if required is False:
             for field in self.fields:
                 self.fields[field].required = False
         if add_oznamovatel:
@@ -133,6 +135,7 @@ class OznamovatelForm(forms.ModelForm):
                         Div("adresa", css_class="col-sm-6"),
                         Div("telefon", css_class="col-sm-3"),
                         Div("email", css_class="col-sm-3"),
+                        Div("poznamka", css_class="col-sm-12"),
                         css_class="row",
                     ),
                     css_class="card-body oznamovatel-form-card",
@@ -146,7 +149,7 @@ class OznamovatelForm(forms.ModelForm):
                 if "class" in self.fields[key].widget.attrs.keys():
                     self.fields[key].widget.attrs["class"] = str(
                         self.fields[key].widget.attrs["class"]
-                    ) + (" required-next")
+                    ) + " required-next"
                 else:
                     self.fields[key].widget.attrs["class"] = "required-next"
 
