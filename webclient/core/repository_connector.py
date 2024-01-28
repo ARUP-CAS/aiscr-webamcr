@@ -164,10 +164,11 @@ class FedoraRepositoryConnector:
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT):
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
-                              FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
-                              FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE,
-                              FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE):
+                              FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB):
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/thumb"
+        elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE,
+                              FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE):
+            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/thumb-large"
         elif request_type == FedoraRequestType.DELETE_TOMBSTONE:
             return f"{base_url}/record/{self.record.ident_cely}/fcr:tombstone"
         elif request_type == FedoraRequestType.DELETE_LINK_TOMBSTONE:
@@ -442,18 +443,19 @@ class FedoraRepositoryConnector:
         }
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
-        self._save_thumb(file_name, file, uuid, False)
-        self._save_thumb(file_name, file, uuid, True)
+        self._save_thumbs(file_name, file, uuid)
         logger.debug("core_repository_connector.save_binary_file.end",
                      extra={"url": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file
 
+    @staticmethod
     def __generate_thumb(file_name: str, file_content: BytesIO, large=False):
-        logger.debug("core_repository_connector.__generate_thumb.start")
+        logger.debug("core_repository_connector.__generate_thumb.start", extra={"file_name": file_name,
+                                                                                "large": large})
 
-        def resize_image(image: BytesIO):
+        def resize_image(image: BytesIO, large_inner=False):
             image = Image.open(image)
-            max_size = (100, 100)
+            max_size = ((1 + large_inner * 7) * 100, (1 + large_inner * 7) * 100)
             image.thumbnail(max_size)
             output_buffer = BytesIO()
             image.save(output_buffer, format="PNG")
@@ -466,34 +468,43 @@ class FedoraRepositoryConnector:
                 image_bytes_io = io.BytesIO()
                 images[0].save(image_bytes_io, format='PNG')
                 image_bytes_io.seek(0)
-                thumbnail = resize_image(image_bytes_io)
-                logger.debug("core_repository_connector.__generate_thumb.end")
+                thumbnail = resize_image(image_bytes_io, large)
+                logger.debug("core_repository_connector.__generate_thumb.end", extra={"file_name": file_name,
+                                                                                      "large": large})
                 return thumbnail
             except Exception as err:
-                logger.debug("core_repository_connector.__generate_thumb.error", extra={"err": err})
+                logger.debug("core_repository_connector.__generate_thumb.error",
+                             extra={"err": err, "file_name": file_name, "large": large})
                 return None
         else:
             try:
-                thumbnail = resize_image(file_content)
-                logger.debug("core_repository_connector.__generate_thumb.end")
+                thumbnail = resize_image(file_content, large)
+                logger.debug("core_repository_connector.__generate_thumb.end", extra={"file_name": file_name,
+                                                                                      "large": large})
                 return thumbnail
             except Exception as err:
-                logger.debug("core_repository_connector.__generate_thumb.error", extra={"err": err})
+                logger.debug("core_repository_connector.__generate_thumb.error",
+                             extra={"err": err, "file_name": file_name, "large": large})
                 return None
 
-    def _save_thumb(self, file_name, file, uuid, large=False):
+    def _save_thumbs(self, file_name, file, uuid):
         logger.debug("core_repository_connector._save_thumb.start",
                      extra={"file_name": file_name, "ident_cely": self.record.ident_cely})
-        data = self.__generate_thumb(file_name, file)
-        if data is not None:
+        for large in (True, False):
+            file.seek(0)
+            data = self.__generate_thumb(file_name, file, large)
+            if not data:
+                logger.error("core_repository_connector._save_thumb.error",
+                             extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large})
+                continue
             data = data.read()
             file_sha_512 = hashlib.sha512(data).hexdigest()
-            file_name = file_name[:file_name.rfind(".")]
+            thumb_file_name = file_name[:file_name.rfind(".")]
             headers = {
                 "Content-Type": "image/png",
-                "Content-Disposition": f'attachment; filename="{file_name}.png"'.encode("utf-8"),
+                "Content-Disposition": f'attachment; filename="{thumb_file_name}.png"'.encode("utf-8"),
                 "Digest": f"sha-512={file_sha_512}",
-                "Slug": "thumb"
+                "Slug": f"thumb{'-large' * large}"
             }
             if large:
                 url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE, uuid=uuid)
@@ -504,10 +515,10 @@ class FedoraRepositoryConnector:
             else:
                 self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_THUMB, headers=headers, data=data)
             logger.debug("core_repository_connector._save_thumb.end",
-                         extra={"file_name": file_name, "ident_cely": self.record.ident_cely})
+                         extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large})
         else:
-            logger.debug("core_repository_connector._save_thumb.no_thumb",
-                         extra={"file_name": file_name, "ident_cely": self.record.ident_cely})
+            logger.warning("core_repository_connector._save_thumb.no_thumb",
+                           extra={"file_name": file_name, "ident_cely": self.record.ident_cely})
 
     def migrate_binary_file(self, soubor, include_content=True, check_if_exists=True,
                             ident_cely_old=None) -> Optional[RepositoryBinaryFile]:
@@ -553,8 +564,9 @@ class FedoraRepositoryConnector:
             return rep_bin_file
 
     def get_binary_file(self, uuid, ident_cely_old=None, thumb_small=False, thumb_large=False) -> RepositoryBinaryFile:
-        logger.debug("core_repository_connector.get_binary_file.start", extra={"url": uuid,
-                                                                               "ident_cely_old": ident_cely_old})
+        logger.debug("core_repository_connector.get_binary_file.start",
+                     extra={"url": uuid, "ident_cely_old": ident_cely_old, "thumb_small": thumb_small,
+                            "thumb_large": thumb_large})
         if thumb_small:
             url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB, uuid=uuid)
         elif thumb_large:
@@ -574,7 +586,8 @@ class FedoraRepositoryConnector:
         file.seek(0)
         rep_bin_file = RepositoryBinaryFile(uuid, file)
         logger.debug("core_repository_connector.get_binary_file.end",
-                     extra={"url": uuid, "sha_512": rep_bin_file.sha_512, "ident_cely_old": ident_cely_old})
+                     extra={"url": uuid, "sha_512": rep_bin_file.sha_512, "ident_cely_old": ident_cely_old,
+                            "thumb_small": thumb_small, "thumb_large": thumb_large})
         return rep_bin_file
 
     def update_binary_file(self, file_name, content_type, file: io.BytesIO, uuid: str) -> RepositoryBinaryFile:
