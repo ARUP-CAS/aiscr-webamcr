@@ -23,6 +23,8 @@ const UploadResultsEnum = {
     duplicate: 1,
     reject: 2,
     error: 3,
+    renamed: 4,
+    duplicate_renamed: 4,
 }
 
 const check_sidebar_state = () => {
@@ -45,22 +47,26 @@ const show_upload_successful_message = (file, result = UploadResultsEnum.success
         const alert_element = document.createElement("div");
         const sidebar_element_query = document.getElementsByClassName("app-sidebar-wrapper");
         const floating_class = sidebar_element_query.length > 0 ? "app-alert-floating-file-upload" : "app-alert-floating-file-upload-oznameni";
+        const alert_common_classes = "alert alert-success alert-dismissible fade show app-alert-floating-file-upload";
         if (result === UploadResultsEnum.success) {
-            alert_element.setAttribute("class", `alert alert-success alert-dismissible fade show app-alert-floating-file-upload ${floating_class} ${sidebar_affected_class}`);
-        } else if (result === UploadResultsEnum.duplicate) {
-            alert_element.setAttribute("class", `alert alert-warning alert-dismissible fade show app-alert-floating-file-upload ${floating_class} ${sidebar_affected_class}`);
+            const alert_status_class = "alert-success";
+            alert_element.setAttribute("class", `${alert_status_class} ${alert_common_classes} ${floating_class} ${sidebar_affected_class}`);
+        } else if (result === UploadResultsEnum.duplicate || result === UploadResultsEnum.renamed || result === UploadResultsEnum.duplicate_renamed) {
+            const alert_status_class = "alert-warning";
+            alert_element.setAttribute("class", `${alert_status_class} ${alert_common_classes} ${floating_class} ${sidebar_affected_class}`);
         } else if (result === UploadResultsEnum.reject || result === UploadResultsEnum.error) {
-            alert_element.setAttribute("class", `alert alert-danger alert-dismissible fade show app-alert-floating-file-upload ${floating_class} ${sidebar_affected_class}`);
+            const alert_status_class = "alert-danger";
+            alert_element.setAttribute("class", `${alert_status_class} ${alert_common_classes} ${floating_class} ${sidebar_affected_class}`);
         }
         alert_element.setAttribute("role", "alert");
         if (result === UploadResultsEnum.success) {
-            alert_element.textContent = [dz_trans["alertsUploadSuccesfullPart1"]] + file.name + [dz_trans["alertsUploadSuccesfullPart2"]];
-        } else if (result === UploadResultsEnum.duplicate) {
+            alert_element.textContent = `${dz_trans["alertsUploadSuccesfullPart1"]} ${file.name} ${dz_trans["alertsUploadSuccesfullPart2"]}`;
+        } else if (result === UploadResultsEnum.duplicate || result === UploadResultsEnum.renamed || result === UploadResultsEnum.duplicate_renamed) {
             alert_element.textContent = message;
         } else if (result === UploadResultsEnum.reject) {
-            alert_element.textContent = [dz_trans["alertsUploadRejectPart1"]] + file.name + [dz_trans["alertsUploadRejectPart2"]] + message;
+            alert_element.textContent = `${dz_trans["alertsUploadRejectPart1"]} ${file.name} ${dz_trans["alertsUploadRejectPart2"]}${message}`;
         } else if (result === UploadResultsEnum.error) {
-            alert_element.textContent = [dz_trans["alertsUploadErrorPart1"]] + file.name + [dz_trans["alertsUploadErrorPart2"]] + message;
+            alert_element.textContent = `${dz_trans["alertsUploadErrorPart1"]} ${file.name} ${dz_trans["alertsUploadErrorPart2"]}${message}`;
         }
         const button_element = document.createElement("button");
         button_element.setAttribute('type', 'button');
@@ -78,13 +84,13 @@ const show_upload_successful_message = (file, result = UploadResultsEnum.success
 
 window.onload = function () {
     const xhttp = new XMLHttpRequest();
-    var csrfcookie = function () {
-        var cookieValue = null,
+    const csrfcookie = function () {
+        let cookieValue = null,
             name = 'csrftoken';
         if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i].trim();
+            let cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
                 if (cookie.substring(0, name.length + 1) == (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
@@ -93,7 +99,9 @@ window.onload = function () {
         }
         return cookieValue;
     };
-    var currentLocation = window.location.pathname;
+    const currentLocation = window.location.pathname;
+    let acceptFile = null;
+    let RejectedFileMessage = null;
     if (currentLocation.includes("soubor/nahrat/pas/")) {
         acceptFile = "image/*"
         RejectedFileMessage = reject_dict["rejected_pas"] //pridat do message constants po merge AMCR-1 a otestovat
@@ -134,7 +142,7 @@ window.onload = function () {
             "application/vnd.oasis.opendocument.spreadsheet "
         RejectedFileMessage = reject_dict["rejected_all"]
     }
-    var dropzoneOptions = {
+    const dropzoneOptions= {
         dictDefaultMessage: get_description(),
         acceptedFiles: acceptFile,
         dictInvalidFileType: RejectedFileMessage,
@@ -149,14 +157,27 @@ window.onload = function () {
         timeout: 10000000,
         init: function () {
             this.on("success", function (file, response) {
-                file.id = response.id
-                file.previewElement.lastChild.style.display = null
-                if (response.duplicate) {
-                    show_upload_successful_message(file, UploadResultsEnum.duplicate, response.duplicate);
-                    console.log("success > " + file.name);
-
+                file.id = response.id;
+                file.previewElement.lastChild.style.display = null;
+                let result = null;
+                let message = "";
+                if (response.duplicate && response.file_renamed) {
+                    result = UploadResultsEnum.duplicate_renamed;
+                    message = `${response.duplicate} ${response.file_renamed}`;
+                } else if (response.renamed) {
+                    result = UploadResultsEnum.renamed;
+                    message = response.file_renamed;
+                } else if (response.duplicate) {
+                    result = UploadResultsEnum.duplicate;
+                    message = response.duplicate;
                 } else {
-                    show_upload_successful_message(file, UploadResultsEnum.success);
+                    result = UploadResultsEnum.success;
+                }
+                if (result !== UploadResultsEnum.success) {
+                    show_upload_successful_message(file, result, message);
+                    console.log("success > " + file.name);
+                } else {
+                    show_upload_successful_message(file, result, message);
                 }
             });
             this.on("removedfile", function (file) {
@@ -188,7 +209,7 @@ window.onload = function () {
         },
         params: get_params(),
     };
-    var uploader = document.querySelector('#my-awesome-dropzone');
-    var newDropzone = new Dropzone(uploader, dropzoneOptions);
+    const uploader = document.querySelector('#my-awesome-dropzone');
+    const newDropzone = new Dropzone(uploader, dropzoneOptions);
     console.log("Loaded");
 };

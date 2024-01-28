@@ -18,7 +18,7 @@ urlpatterns = [
     ),
     path(
         "soubor/nahrat/<str:typ_vazby>/<str:ident_cely>",
-        views.uploadFileView.as_view(),
+        views.Uploadfileview.as_view(),
         name="upload_file",
     ),
     path("soubor/stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>", views.DownloadFile.as_view(), name="download_file"),

@@ -14,6 +14,7 @@
     <form action="{% url 'core:post_upload' %}" class="dropzone mb-0" id="my-awesome-dropzone"
           enctype="multipart/form-data">
       {% csrf_token %}
+      <input type="hidden" name="source-url" value={{request.path}}>
       {% if file_id %}
         <input type="hidden" name="fileID" value={{file_id}}>
       {% endif %}
@@ -72,5 +73,5 @@
       alertsUploadErrorPart2: '{% trans "core.templates.core.upload_file.dz.alertsUploadErrorPart2" %}'
     }
   </script>
-    <script src="{% static 'dz.js' %}"></script>
+  <script src="{% static 'dz.js' %}"></script>
 {% endblock %}

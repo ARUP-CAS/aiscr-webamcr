@@ -3,6 +3,8 @@ import logging
 import os
 import re
 from typing import Optional
+
+import magic
 from django_prometheus.models import ExportModelOperationsMixin
 
 from django.conf import settings
@@ -230,6 +232,67 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         else:
             self.rozsah = 1
         super().save(*args, **kwargs)
+
+    @classmethod
+    def get_file_extension_by_mime(cls, file):
+        mime_type = cls.get_mime_type(file)
+        return {
+            "image/jpeg": ("jpeg", "jpg"),
+            "image/png": ("png",),
+            "image/tiff": ("tiff", "tif"),
+            "text/plain": ("txt",),
+            "application/pdf": ("pdf",),
+            "text/csv": ("csv",),
+            "application/zip": ("zip",),
+            "application/x-rar-compressed": ("rar",),
+            "application/x-7z-compressed": ("7z",),
+            "application/vnd.ms-excel": ("xls",),
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ("docx",),
+            "application/msword": ("doc",),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ("xlsx",),
+            "application/vnd.oasis.opendocument.text": ("odt",),
+            "application/vnd.oasis.opendocument.spreadsheet": ("ods",),
+        }.get(mime_type, [])
+
+    @classmethod
+    def get_mime_type(cls, file):
+        file.seek(0)
+        mime_type = magic.from_buffer(file.read(), mime=True)
+        file.seek(0)
+        return mime_type
+
+    @classmethod
+    def check_mime_for_url(cls, file, source_url=""):
+        mime = cls.get_mime_type(file)
+        if "soubor/nahrat/pas/" in source_url:
+            return mime.startswith("image/")
+        elif "soubor/nahrat/dokument/" in "dokument":
+            accepted_mime_types = [
+                "image/jpeg",  # For .jpeg, .jpg
+                "image/png",  # For .png
+                "image/tiff",  # For .tiff, .tif
+                "text/plain",  # For .txt
+                "application/pdf",  # For .pdf
+                "text/csv"  # For .csv
+            ]
+            return mime in accepted_mime_types
+        else:
+            accepted_mime_types = [
+                "application/zip",  # For .zip files
+                "application/x-rar-compressed",  # For .rar files
+                "application/x-7z-compressed",  # For .7z files
+                "application/vnd.ms-excel",  # For .xls files
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # For .docx files
+                "application/pdf",  # For .pdf files
+                "text/plain",  # For .txt files
+                "application/msword",  # For .doc files
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # For .xlsx files
+                "application/vnd.oasis.opendocument.text",  # For .odt files
+                "application/vnd.oasis.opendocument.spreadsheet",  # For .ods files
+            ]
+            if mime.startswith("image/") or mime in accepted_mime_types:
+                return True
+        return False
 
 
 class ProjektSekvence(models.Model):
