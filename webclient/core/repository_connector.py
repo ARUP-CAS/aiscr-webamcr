@@ -442,7 +442,7 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector.__generate_thumb.start")
 
         def resize_image(image: BytesIO):
-            image = Image.open(file_content)
+            image = Image.open(image)
             max_size = (100, 100)
             image.thumbnail(max_size)
             output_buffer = BytesIO()
