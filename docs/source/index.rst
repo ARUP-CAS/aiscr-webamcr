@@ -23,6 +23,7 @@ Dokumentace je delená na část popisující nasazování, adresarovou struktur
    code_documentation
    identy
    databaze_konzistence
+   knihovny
 
 
 
