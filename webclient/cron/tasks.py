@@ -699,7 +699,8 @@ def update_all_redis_snapshots(rewrite_existing=False):
         for item in query:
             if rewrite_existing or not r.exists(item.redis_snapshot_id):
                 key, value = item.generate_redis_snapshot()
-                pipe.hset(key, mapping=value)
+                if key and value:
+                    pipe.hset(key, mapping=value)
         pipe.execute()
         logger.debug("cron.tasks.update_all_redis_snapshots.class_end",
                      extra={"current_class": current_class.__name__})
@@ -727,4 +728,5 @@ def update_single_redis_snapshot(class_name: str, record_pk):
         logger.error("cron.tasks.update_single_redis_snapshot.unsupported_class_name", extra={"class_name": class_name})
         return
     key, value = item.generate_redis_snapshot()
-    r.hset(key, mapping=value)
+    if key and value:
+        r.hset(key, mapping=value)
