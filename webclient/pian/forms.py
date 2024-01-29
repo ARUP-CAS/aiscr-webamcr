@@ -23,8 +23,10 @@ class PianCreateForm(forms.ModelForm):
             "presnost": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"})
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, presnost=None, *args, **kwargs):
         super(PianCreateForm, self).__init__(*args, **kwargs)
+        if presnost:
+            self.fields["presnost"].initial=presnost
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.fields["geom_system"].initial = "4326"

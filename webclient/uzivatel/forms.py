@@ -175,14 +175,14 @@ class NotificationsForm(forms.ModelForm):
     notification_types = forms.ModelMultipleChoiceField(
         queryset=UserNotificationType.objects.filter(ident_cely__icontains='S-E-'),
         widget=forms.CheckboxSelectMultiple,
-        required=False, label=_("uzivatel.forms.notifications_form.notification_types.notification_types_label"))
+        required=False, 
+        label=_("uzivatel.forms.notifications_form.notification_types.notification_types_label"),
+        help_text=_("uzivatel.forms.notifications_form.notification_types.notification_types.tooltip")
+        )
 
     class Meta:
         model = User
         fields = ('notification_types',)
-        help_texts = {
-            "notification_types": _("uzivatel.forms.notifications_form.notification_types.tooltip"),
-        }
 
 class UpdatePasswordSettings(forms.ModelForm):
     """

@@ -11,7 +11,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.utils import formats
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
-from heslar.hesla_dynamicka import SPECIFIKACE_DATA_PRESNE
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, SPECIFIKACE_DATA_PRESNE
 from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
@@ -127,7 +127,6 @@ class CreateArchZForm(forms.ModelForm):
             "pristupnost": forms.Select(
                 attrs={
                     "class": "selectpicker",
-                    "data-multiple-separator": "; ",
                     "data-live-search": "true",
                 },
             ),
@@ -153,6 +152,8 @@ class CreateArchZForm(forms.ModelForm):
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
         super(CreateArchZForm, self).__init__(*args, **kwargs)
+        self.fields["pristupnost"].initial = [PRISTUPNOST_ANONYM_ID]
+        self.fields['pristupnost'].empty_label = None
         if projekt:
             self.fields["hlavni_katastr"].initial = projekt.hlavni_katastr
             self.fields["uzivatelske_oznaceni"].initial = projekt.uzivatelske_oznaceni
@@ -184,7 +185,7 @@ class CreateArchZForm(forms.ModelForm):
             self.fields["katastry_show"].widget.attrs["id"] = "other_cadastre_id"
             if self.fields["katastry"].initial is not None:
                 value = [str(i) for i in self.fields["katastry"].initial.all()]
-                display = ", ".join(value)
+                display = "; ".join(value)
                 self.fields["katastry_show"].initial = display
                 self.fields["katastry_show"].disabled = True
                 self.fields["hlavni_katastr_show"].disabled = True

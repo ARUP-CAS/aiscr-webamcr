@@ -776,6 +776,7 @@ class PripojitProjektForm(forms.Form):
             widget=autocomplete.ListSelect2(
                 url=reverse("projekt:projekt-autocomplete-bez-zrusenych", kwargs={"typ": typ})
             ),
+            help_text=_("projekt.forms.projektPripojit.projekt.tooltip"),
         )
         self.helper = FormHelper(self)
         self.helper.form_tag = False

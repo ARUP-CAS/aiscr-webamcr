@@ -300,9 +300,8 @@ class EditDokumentForm(forms.ModelForm):
             ),
             help_text= _("dokument.forms.editDokumentForm.autori.tooltip"),
             label = _("dokument.forms.editDokumentForm.autori.label"),)
-    region = forms.ChoiceField(choices=[("C-",_("dokument.forms.editDokumentForm.region.C.option")),("M-",_("dokument.forms.editDokumentForm.region.M.option"))],
+    region = forms.ChoiceField(choices=[(None,""),("C-",_("dokument.forms.editDokumentForm.region.C.option")),("M-",_("dokument.forms.editDokumentForm.region.M.option"))],
                 label=_("dokument.forms.editDokumentForm.region.label"),
-                required=False,
                 widget=forms.Select(
                     attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                 ),
@@ -491,6 +490,7 @@ class EditDokumentForm(forms.ModelForm):
         self.fields["autori"].widget.choices = list(Osoba.objects.filter(
             dokumentautor__dokument=self.instance
         ).order_by("dokumentautor__poradi").values_list("id","vypis_cely"))
+        self.fields["region"].required = True
 
 
 class CreateModelDokumentForm(forms.ModelForm):

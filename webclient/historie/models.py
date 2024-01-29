@@ -128,6 +128,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     vazba = models.ForeignKey(
         "HistorieVazby", on_delete=models.CASCADE, db_column="vazba", db_index=True
     )
+    suppress_signal = False
 
     def uzivatel_protected(self, anonymized=True):
         if anonymized:

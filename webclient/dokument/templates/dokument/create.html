@@ -58,7 +58,7 @@
         <div class="modal-header">
           <h5 class="modal-title">{% trans "dokument.templates.create.region.modalHeader" %}</h5>
         </div>
-        <form >
+        <form id="region-form">
           <div class="modal-body">
             <div class="form-group col-sm-4" id="id-modal-region-div">
               {{ formDokument.region|as_crispy_field }}
@@ -121,8 +121,14 @@
           });
           $('#modal-form-region').on('hidden.bs.modal', function () {
             $('#id_region').selectpicker('val', $('#id-modal-region-div #id_region').val());
-            $('#id_region').selectpicker('refresh');
-          })
+            $('#id_region').selectpicker('refresh');            
+          });
+          $('#modal-form-region').on('hide.bs.modal', function (e) {
+            const inpObj = document.getElementById("region-form");
+            if(!inpObj.reportValidity()){
+              e.preventDefault();
+              }
+            })
           {% endif %}
           var successFunction = function(settings, response) {
             var newOption = new Option(response.text, response.value, true, true);

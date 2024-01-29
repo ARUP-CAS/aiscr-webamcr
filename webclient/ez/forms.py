@@ -238,6 +238,9 @@ class ExterniOdkazForm(forms.ModelForm):
         widgets = {
             "paginace": forms.TextInput(),
         }
+        help_texts = {
+            "paginace": _("ez.forms.ExterniOdkazForm.paginace.tooltip"),
+        }
 
     def __init__(self, type_arch=None, *args, **kwargs):
         super(ExterniOdkazForm, self).__init__(*args, **kwargs)
@@ -254,9 +257,11 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
         self.fields["paginace"].required = False
         if dok:
             ez_label = _("ez.forms.pripojitArchZaznamForm.dokument.vyberArchz.label")
+            ez_tooltip = _("ez.forms.pripojitArchZaznamForm.dokument.vyberArchz.tooltip")
             pagin = Div()
         else:
             ez_label = _("ez.forms.pripojitArchZaznamForm.ez.vyberArchz.label")
+            ez_tooltip = _("ez.forms.pripojitArchZaznamForm.ez.vyberArchz.tooltip")
             pagin = Div("paginace", css_class="col-sm-4")
         if type_arch == "akce":
             new_choices = list(
@@ -276,6 +281,7 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
             widget=autocomplete.ListSelect2(
                 url=reverse("arch_z:arch-z-autocomplete", kwargs={"type": type_arch})
             ),
+            help_text=ez_tooltip,
         )
         self.helper = FormHelper(self)
         self.helper.layout = Layout(

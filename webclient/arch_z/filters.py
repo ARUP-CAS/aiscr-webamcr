@@ -4,7 +4,7 @@ import crispy_forms
 from dal import autocomplete
 from crispy_forms.layout import Div, Layout, HTML
 from django.db.models import Q, OuterRef, Subquery, F, Count
-from django.forms import SelectMultiple, Select
+from django.forms import SelectMultiple, Select, NumberInput
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
     CharFilter,
@@ -14,7 +14,8 @@ from django_filters import (
     RangeFilter,
     ChoiceFilter, NumberFilter, ModelChoiceFilter,
 )
-from django_filters.widgets import DateRangeWidget
+from django_filters.widgets import DateRangeWidget, SuffixedMultiWidget
+from django_filters.fields import RangeField
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_AZ
 from dj.models import DokumentacniJednotka
@@ -54,7 +55,24 @@ from heslar.views import heslar_12
 
 logger = logging.getLogger(__name__)
 
+class NumberRangeWidget(SuffixedMultiWidget):
+    template_name = "django_filters/widgets/multiwidget.html"
+    suffixes = ["min", "max"]
 
+    def __init__(self, attrs=None):
+        widgets = (NumberInput, NumberInput)
+        super().__init__(widgets, attrs)
+
+    def decompress(self, value):
+        if value:
+            return [value.start, value.stop]
+        return [None, None]
+
+
+class NumberRangeField(RangeField):
+    widget = NumberRangeWidget
+class NumberRangeFilter(RangeFilter):
+    field_class = NumberRangeField
 class ArchZaznamFilter(HistorieFilter, KatastrFilter):
     """
     Třída pro zakladní filtrování archeologických záznamů a jejich potomků.
@@ -368,14 +386,14 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         self.filters["komponenta_obdobi"] = MultipleChoiceFilter(
             method="filter_obdobi",
             label=_("arch_z.filters.ArchZaznamFilter.komponenta_obdobi.label"),
-            choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
+            choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
             widget=SelectMultipleSeparator(),
         )
 
         self.filters["komponenta_areal"] = MultipleChoiceFilter(
             method="filter_areal",
             label=_("arch_z.filters.ArchZaznamFilter.komponenta_areal.label"),
-            choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT),
+            choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)[1:],
             widget=SelectMultipleSeparator(),
             distinct=True,
         )
@@ -383,7 +401,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         self.filters["objekt_druh"] = MultipleChoiceFilter(
             method="filter_objekty_druh",
             label=_("arch_z.filters.ArchZaznamFilter.objekt_druh.label"),
-            choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
+            choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)[1:],
             widget=SelectMultipleSeparator(),
             distinct=True,
         )
@@ -391,7 +409,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         self.filters["objekt_specifikace"] = MultipleChoiceFilter(
             method="filter_objekty_specifikace",
             label=_("arch_z.filters.ArchZaznamFilter.objekt_specifikace.label"),
-            choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
+            choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT)[1:],
             widget=SelectMultipleSeparator(),
             distinct=True,
         )
@@ -399,7 +417,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         self.filters["predmet_druh"] = MultipleChoiceFilter(
             method="filter_predmety_druh",
             label=_("arch_z.filters.ArchZaznamFilter.predmet_druh.label"),
-            choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
+            choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
             widget=SelectMultipleSeparator(),
             distinct=True,
         )
@@ -568,7 +586,7 @@ class AkceFilter(ArchZaznamFilter):
         distinct=True,
     )
 
-    vb_niveleta = RangeFilter(
+    vb_niveleta = NumberRangeFilter(
         label=_("arch_z.filters.AkceFilter.vb_niveleta.label"),
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__adb__vyskove_body__niveleta",
         distinct=True,
@@ -706,7 +724,7 @@ class AkceFilter(ArchZaznamFilter):
         self.filters["typ"] = MultipleChoiceFilter(
             method="filter_akce_typ",
             label=_("arch_z.filters.AkceFilter.typ.label"),
-            choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT),
+            choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
             widget=SelectMultiple(
                 attrs={
                     "class": "selectpicker",
