@@ -14,15 +14,19 @@ def soubor_update_metadata(sender, instance: Historie, **kwargs):
     """
     Funkce pro uložení metadat k objektům navázaným na soubor
     """
+    logger.debug("historie.signals.soubor_update_metadata.start", extra={"pk": instance.pk})
     if (not hasattr(instance, "suppress_signal") or instance.suppress_signal is False) and (
             hasattr(instance.vazba.navazany_objekt, "suppress_signall")
             or instance.vazba.navazany_objekt.suppress_signal is False):
         navazany_objekt = instance.vazba.navazany_objekt
         if isinstance(navazany_objekt, ModelWithMetadata):
             navazany_objekt.save_metadata()
+    logger.debug("historie.signals.soubor_update_metadata.end", extra={"pk": instance.pk})
 
 
 @receiver(pre_save, sender=Historie)
 def soubor_update_metadata(sender, instance: Historie, **kwargs):
+    logger.debug("historie.signals.soubor_update_metadata.start")
     if instance.uzivatel:
         instance.organizace_snapshot = instance.uzivatel.organizace
+    logger.debug("historie.signals.soubor_update_metadata.end")

@@ -669,7 +669,7 @@ def update_snapshot_fields():
             item: Akce
             item.suppress_signal = True
             item.set_snapshots()
-        for item in Historie.objects.filter(organizace_snaphost__isnull=True):
+        for item in Historie.objects.filter(organizace_snapshot__isnull=True):
             item: Historie
             item.suppress_signal = True
             item.save()
