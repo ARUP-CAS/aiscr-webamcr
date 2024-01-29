@@ -550,9 +550,14 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
     def generate_redis_snapshot(self):
         from arch_z.tables import AkceTable
         data = Akce.objects.filter(archeologicky_zaznam=self)
-        table = AkceTable(data=data)
-        data = RedisConnector.prepare_model_for_redis(table)
-        return self.redis_snapshot_id, data
+        if data.count() > 0:
+            table = AkceTable(data=data)
+            data = RedisConnector.prepare_model_for_redis(table)
+            return self.redis_snapshot_id, data
+        else:
+            logger.warning("arch_z.models.Akce.generate_redis_snapshot.not_found",
+                           extra={"ident_cely": self.archeologicky_zaznam.ident_cely})
+            return None, None
 
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
