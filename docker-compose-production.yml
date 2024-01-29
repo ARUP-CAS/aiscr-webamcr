@@ -199,6 +199,7 @@ volumes:
   logs_volume:
   elasticsearch_volume:
   grafana_data:
+  redis_data:
 
 networks:
   prod-net:
