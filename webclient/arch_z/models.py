@@ -67,7 +67,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         models.RESTRICT,
         db_column="pristupnost",
         related_name="zaznamy_pristupnosti",
-        limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST}
+        limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
+        blank=False
     )
     ident_cely = models.TextField(unique=True)
     historie = models.OneToOneField(
