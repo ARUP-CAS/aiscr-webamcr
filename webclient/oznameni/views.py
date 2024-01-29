@@ -136,25 +136,33 @@ def index(request, test_run=False):
         context = {"ident_cely": request.POST["ident_cely"]}
         return render(request, "oznameni/success.html", context)
     elif request.method == "GET" and "ident_cely" in request.GET:
-        logger.debug(f"oznameni.views.index.get")
         cookie_project = request.COOKIES.get("project", None)
         ident = request.GET.get("ident_cely")
-        logger.debug(ident)
+        logger.debug(f"oznameni.views.index.get.start", extra={"ident_cely": ident})
         hash_from_ident = hash(ident)
-        logger.debug(hash_from_ident)
-        logger.debug(cookie_project)
+        logger.debug(f"oznameni.views.index.get.cookie",
+                     extra={"ident_cely": ident, "cookie_project": cookie_project, "hash_from_ident": hash_from_ident})
         if cookie_project is not None and str(hash_from_ident) == str(cookie_project):
             projekty = Projekt.objects.filter(
                 ident_cely=request.GET.get("ident_cely"), stav=PROJEKT_STAV_VYTVORENY
             )
             if not projekty:
+                logger.debug(f"oznameni.views.index.get.permission_denied",
+                             extra={"ident_cely": ident, "cookie_project": cookie_project,
+                                    "hash_from_ident": hash_from_ident})
                 raise PermissionDenied
             else:
                 projekt = projekty[0]
                 form_ozn = OznamovatelForm(instance=projekt.oznamovatel)
                 form_projekt = ProjektOznameniForm(instance=projekt, change=True)
                 form_captcha = FormWithCaptcha()
+                logger.debug(f"oznameni.views.index.get.projekt",
+                             extra={"ident_cely": ident, "cookie_project": cookie_project,
+                                    "hash_from_ident": hash_from_ident, "projekt": projekt.ident_cely})
         else:
+            logger.debug(f"oznameni.views.index.get.permission_denied",
+                         extra={"ident_cely": ident, "cookie_project": cookie_project,
+                                "hash_from_ident": hash_from_ident})
             raise PermissionDenied
     else:
         form_ozn = OznamovatelForm()

@@ -37,13 +37,13 @@ const show_upload_successful_message = (file, result = UploadResultsEnum.success
 
 window.onload = function () {
     const xhttp = new XMLHttpRequest();
-    var csrfcookie = function () {
-        var cookieValue = null,
+    const csrfcookie = () => {
+        let cookieValue = null,
             name = 'csrftoken';
         if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i].trim();
+            let cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
                 if (cookie.substring(0, name.length + 1) == (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
@@ -52,7 +52,7 @@ window.onload = function () {
         }
         return cookieValue;
     };
-    var dropzoneOptions = {
+    let dropzoneOptions = {
         dictDefaultMessage: [dz_trans["description"]],
         acceptedFiles: ".csv, .CSV",
         dictInvalidFileType: [dz_trans["rejectedFileMessage"]],
@@ -87,7 +87,7 @@ window.onload = function () {
 
         },
     };
-    var uploader = document.querySelector('#my-awesome-dropzone');
-    var newDropzone = new Dropzone(uploader, dropzoneOptions);
+    const uploader = document.querySelector('#my-awesome-dropzone');
+    const newDropzone = new Dropzone(uploader, dropzoneOptions);
     console.log("Loaded");
 };
