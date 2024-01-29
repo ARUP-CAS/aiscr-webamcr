@@ -293,12 +293,12 @@
         });
       }
       function setCookie(name, value, path) {
-          var cookieString = name + '=' + value + ';path=' + path
+          const cookieString = name + '=' + value + ';path=' + path
           document.cookie = cookieString
       }
 
       function getCookie(name) {
-          var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+          const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
           return v ? v[2] : null;
       }
 
@@ -321,7 +321,6 @@
             }
           }
           if (form_id.includes("detail_dj_form_")) {
-              pian_id = form_id.replace("detail_dj_form_", "")
               let xhr = new XMLHttpRequest();
               xhr.open('POST', '/arch-z/mapa-zoom');
               xhr.setRequestHeader('Content-type', 'application/json');
@@ -331,14 +330,14 @@
                   console.log("neni X-CSRFToken token")
               }
               xhr.onload = function () {
-                  rs = JSON.parse(this.responseText)
-                  if(rs.lat>0 || rs.zoom == 17){
-                    if(rs.lat>0){
+                  const rs = JSON.parse(this.responseText)
+                  if(rs.lat > 0 || rs.zoom == 17){
+                    if(rs.lat > 0){
                       map.setView([rs.lat, rs.lng], rs.zoom)
                     }
                     if (rs.zoom == 17) {
                         drawnItems.clearLayers();
-                        addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,rs.pian_ident_cely,rs.geom,rs.presnost)
+                        addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems, rs.pian_ident_cely, rs.geom, rs.presnost)
                     }
                   } else{
                         switchMap(false);
@@ -349,9 +348,6 @@
                       'cadastre': document.getElementById("main_cadastre_id").value,
                       'akce_ident_cely': '{{ zaznam.ident_cely }}',
                   }))
-//          }else if (form_id.includes("detail_pian_form_")){
-//            map_show_edit(true, false)
-//            loadGeomToEdit(form_id.replace("detail_pian_form_",""))
           }
           try {document.getElementById("dj_list_card_header").scrollIntoView();}
             catch (e) {

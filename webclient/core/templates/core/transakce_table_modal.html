@@ -143,15 +143,15 @@ window.addEventListener("modalLoaded", function () {
              * Would return an empty string for an input with name 'owner' but would return
              * 'inline_model-0-' for an input named 'inline_model-0-owner'.
              */
-            var parts = $(this).attr('name').split('-');
-            var prefix = '';
+            const parts = $(this).attr('name').split('-');
+            let prefix = '';
 
-            for (var i in parts) {
-                var testPrefix = parts.slice(0, -i).join('-');
+            for (let i in parts) {
+                let testPrefix = parts.slice(0, -i).join('-');
                 if (!testPrefix.length) continue;
                 testPrefix += '-';
 
-                var result = $(':input[name^=' + testPrefix + ']')
+                const result = $(':input[name^=' + testPrefix + ']')
 
                 if (result.length) {
                     return testPrefix;
@@ -175,17 +175,17 @@ window.addEventListener("modalLoaded", function () {
              * - ['sections-0-items-0-', 'sections-0-', ''] for an input named 'sections-0-items-0-product'
              *   (i.e. nested multiple time with django-nested-admin).
              */
-            var parts = $(this).attr('name').split('-').slice(0, -1);
-            var prefixes = [];
+            const parts = $(this).attr('name').split('-').slice(0, -1);
+            let prefixes = [];
 
-            for (i = 0; i < parts.length; i += 2) {
-                var testPrefix = parts.slice(0, -i || parts.length).join('-');
+            for (let i = 0; i < parts.length; i += 2) {
+                let testPrefix = parts.slice(0, -i || parts.length).join('-');
                 if (!testPrefix.length)
                     continue;
 
                 testPrefix += '-';
 
-                var result = $(':input[name^=' + testPrefix + ']')
+                const result = $(':input[name^=' + testPrefix + ']')
 
                 if (result.length)
                     prefixes.push(testPrefix);
@@ -209,10 +209,10 @@ window.addEventListener("modalLoaded", function () {
         }
 
         // Fire init event for yl.registerFunction() execution.
-        var event = new CustomEvent('dal-init-function');
+        const event = new CustomEvent('dal-init-function');
         document.dispatchEvent(event);
 
-        var initialized = [];
+        let initialized = [];
 
         $.fn.excludeTemplateForms = function() {
             // exclude elements that contain '__prefix__' in their id
@@ -232,7 +232,7 @@ window.addEventListener("modalLoaded", function () {
          *
          * @param element The field to be initialized
          */
-        function initialize(element) {
+        const initialize = (element) => {
             if (typeof element === 'undefined' || typeof element === 'number') {
                 element = this;
             }
@@ -243,7 +243,7 @@ window.addEventListener("modalLoaded", function () {
             }
 
             // The DAL function to execute.
-            var dalFunction = $(element).attr('data-autocomplete-light-function');
+            const dalFunction = $(element).attr('data-autocomplete-light-function');
 
             if (yl.functions.hasOwnProperty(dalFunction) && typeof yl.functions[dalFunction] == 'function') {
                 // If the function has been registered call it.
@@ -300,11 +300,11 @@ window.addEventListener("modalLoaded", function () {
 
         // using jQuery
         function getCookie(name) {
-            var cookieValue = null;
+            let cookieValue = null;
             if (document.cookie && document.cookie != '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = $.trim(cookies[i]);
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = $.trim(cookies[i]);
                     // Does this cookie string begin with the name we want?
                     if (cookie.substring(0, name.length + 1) == (name + '=')) {
                         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
@@ -318,7 +318,7 @@ window.addEventListener("modalLoaded", function () {
         document.csrftoken = getCookie('csrftoken');
         if (document.csrftoken === null) {
             // Try to get CSRF token from DOM when cookie is missing
-            var $csrf = $('form :input[name="csrfmiddlewaretoken"]');
+            let $csrf = $('form :input[name="csrfmiddlewaretoken"]');
             if ($csrf.length > 0) {
                 document.csrftoken = $csrf[0].value;
             }
@@ -328,8 +328,8 @@ window.addEventListener("modalLoaded", function () {
     // Does the same thing as django's admin/js/autocomplete.js, but uses yl.jQuery.
     (function ($) {
         'use strict';
-        var init = function ($element, options) {
-            var settings = $.extend({
+        const init = ($element, options) => {
+            let settings = $.extend({
                 ajax: {
                     data: function (params) {
                         return {
@@ -342,10 +342,10 @@ window.addEventListener("modalLoaded", function () {
             $element.select2(settings);
         };
 
-        $.fn.djangoAdminSelect2 = function (options) {
-            var settings = $.extend({}, options);
+        $.fn.djangoAdminSelect2 = (options) => {
+            const settings = $.extend({}, options);
             $.each(this, function (i, element) {
-                var $element = $(element);
+                const $element = $(element);
                 init($element, settings);
             });
             return this;
@@ -357,7 +357,7 @@ window.addEventListener("modalLoaded", function () {
             $('.admin-autocomplete').not('[name*=__prefix__]').djangoAdminSelect2();
         });
 
-        $(document).on('formset:added', (function () {
+        $(document).on('formset:added', ( () => {
             return function (event, $newFormset) {
                 return $newFormset.find('.admin-autocomplete').djangoAdminSelect2();
             };
@@ -376,8 +376,8 @@ window.addEventListener("modalLoaded", function () {
         };
 
         function getForwardStrategy(element) {
-            var checkForCheckboxes = function () {
-                var all = true;
+            const checkForCheckboxes = () => {
+                let all = true;
                 $.each(element, function (ix, e) {
                     if ($(e).attr("type") !== "checkbox") {
                         all = false;
@@ -415,12 +415,12 @@ window.addEventListener("modalLoaded", function () {
          * @returns jQuery object with found fields or empty jQuery object if no
          * field was found
          */
-        yl.getFieldRelativeTo = function (element, name) {
-            var prefixes = $(element).getFormPrefixes();
+        yl.getFieldRelativeTo = (element, name) => {
+            let prefixes = $(element).getFormPrefixes();
 
-            for (var i = 0; i < prefixes.length; i++) {
-                var fieldSelector = "[name=" + prefixes[i] + name + "]";
-                var field = $(fieldSelector);
+            for (let i = 0; i < prefixes.length; i++) {
+                const fieldSelector = "[name=" + prefixes[i] + name + "]";
+                const field = $(fieldSelector);
 
                 if (field.length) {
                     return field;
@@ -445,7 +445,7 @@ window.addEventListener("modalLoaded", function () {
                 $(field).prop('disabled', true);
             }
 
-            var getSerializedFieldElementAt = function (index) {
+            const getSerializedFieldElementAt = (index) => {
                 // Return serializedField[index]
                 // or null if something went wrong
                 if (serializedField.length > index) {
@@ -455,7 +455,7 @@ window.addEventListener("modalLoaded", function () {
                 }
             };
 
-            var getValueOf = function (elem) {
+            const getValueOf = (elem) => {
                 // Return elem.value
                 // or null if something went wrong
                 if (elem.hasOwnProperty("value") &&
@@ -467,10 +467,10 @@ window.addEventListener("modalLoaded", function () {
                 }
             };
 
-            var getSerializedFieldValueAt = function (index) {
+            const getSerializedFieldValueAt = (index) => {
                 // Return serializedField[index].value
                 // or null if something went wrong
-                var elem = getSerializedFieldElementAt(index);
+                const elem = getSerializedFieldElementAt(index);
                 if (elem !== null) {
                     return getValueOf(elem);
                 } else {
@@ -491,8 +491,8 @@ window.addEventListener("modalLoaded", function () {
             }
         };
 
-        yl.getForwards = function (element) {
-            var forwardElem,
+        yl.getForwards = (element) => {
+            let forwardElem,
                 forwardList,
                 forwardedData,
                 divSelector,
@@ -521,7 +521,7 @@ window.addEventListener("modalLoaded", function () {
             forwardedData = {};
 
             $.each(forwardList, function (ix, field) {
-                var srcName, dstName;
+                let srcName, dstName;
                 if (field.type === "const") {
                     forwardedData[field.dst] = field.val;
                 } else if (field.type === "self") {
@@ -538,7 +538,7 @@ window.addEventListener("modalLoaded", function () {
                     } else {
                         dstName = srcName;
                     }
-                    var forwardedField = yl.getFieldRelativeTo(element, srcName);
+                    const forwardedField = yl.getFieldRelativeTo(element, srcName);
 
                     if (!forwardedField.length) {
                         return;
@@ -546,7 +546,7 @@ window.addEventListener("modalLoaded", function () {
 
                     forwardedData[dstName] = yl.getValueFromField(forwardedField);
                 } else if (field.type === "javascript") {
-                    var handler = yl.getForwardHandler(field.handler);
+                    const handler = yl.getForwardHandler(field.handler);
                     forwardedData[field.dst || field.handler] = handler(element);
                 }
 
