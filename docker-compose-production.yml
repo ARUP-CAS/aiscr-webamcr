@@ -46,6 +46,8 @@ services:
     command: sh -c 'redis-server /home/redis/redis.conf'
     networks:
       - prod-net
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD-SHELL", 'bash /scripts/run-healthcheck_redis.sh']
       interval: 1m30s
@@ -216,5 +218,7 @@ secrets:
   logstash_elastic_pass:
     external: true
   prometheus_config:
+    external: true
+  redis_data:
     external: true
 
