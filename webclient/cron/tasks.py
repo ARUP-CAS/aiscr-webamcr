@@ -669,6 +669,10 @@ def update_snapshot_fields():
             item: Akce
             item.suppress_signal = True
             item.set_snapshots()
+        for item in Historie.objects.filter(organizace_snaphost__isnull=True):
+            item: Historie
+            item.suppress_signal = True
+            item.save()
         logger.debug("core.cron.update_snapshot_fields.do.end")
     except Exception as err:
         logger.error("core.cron.update_snapshot_fields.do.error", extra={"error": err})
