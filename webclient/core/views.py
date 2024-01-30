@@ -936,7 +936,6 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
         return HttpResponse(f"{_('core.views.SearchListChangeColumnsView.response')} {sloupec}")
 
 
-
 class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
     def get(self, request, model_name, ident_cely):
         if model_name == "pian":
@@ -963,6 +962,11 @@ class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
         response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
         response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
         return response
+
+
+class CheckUserAuthentication(View):
+    def get(self, request, *args, **kwargs):
+        return JsonResponse({'is_authenticated': request.user.is_authenticated})
 
 
 @login_required

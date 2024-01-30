@@ -1,6 +1,6 @@
 Django==4.2.8
 psycopg2-binary==2.9.9
-pytz==2023.3.post1
+pytz==2023.4
 simplejson==3.19.2
 django-crispy-forms==2.1
 crispy-bootstrap4
@@ -20,13 +20,13 @@ django-rosetta==0.10.0
 django-auto-logout==0.5.1
 reportlab==4.0.9
 PyRTF3==0.47.5
-pypdf==4.0.0
+pypdf==4.0.1
 Pillow==10.2.0
 beautifulsoup4==4.12.3
 django-extensions==3.2.3
 celery==5.3.6
 django-add-default-value==0.10.0
-selenium==4.16.0
+selenium==4.17.2
 redis==5.0.1
 django-celery-beat==2.5.0
 django-celery-results==2.5.1
@@ -40,9 +40,9 @@ pdf2image==1.17.0
 # DEV requirements
 pre-commit==3.6.0
 isort==5.13.2
-coverage==7.4.0
+coverage==7.4.1
 django-debug-toolbar==4.2.0
-black==23.12.0
+black==24.1.1
 django-livereload-server==0.5.1
 django-debug-toolbar-template-profiler==2.1.0
 psycopg2==2.9.9
@@ -50,9 +50,9 @@ django-object-actions==4.2.0
 
 pre-commit==3.6.0
 isort==5.13.2
-coverage==7.4.0
+coverage==7.4.1
 django-debug-toolbar==4.2.0
-black==23.12.0
+black==24.1.1
 django-livereload-server==0.5.1
 django-debug-toolbar-template-profiler==2.1.0
 
