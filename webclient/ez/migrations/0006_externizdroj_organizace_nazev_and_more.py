@@ -3,17 +3,22 @@
 from django.db import migrations, models
 
 
+def populate_organizace_nazev(apps, schema_editor):
+    ExterniZdroj = apps.get_model('ez', 'ExterniZdroj')
+    for instance in ExterniZdroj.objects.all():
+        if instance.organizace:
+            instance.organizace_nazev = instance.organizace.nazev
+            instance.suppress_signal = True
+            instance.save()
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ("ez", "0005_change_organizace_field_type"),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name="externizdroj",
-            name="organizace_nazev",
-            field=models.CharField(blank=True, max_length=255, null=True),
-        ),
+        migrations.RunPython(populate_organizace_nazev),
         migrations.AlterField(
             model_name="externizdroj",
             name="stav",

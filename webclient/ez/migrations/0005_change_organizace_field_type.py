@@ -1,13 +1,4 @@
-from django.db import migrations
-
-
-def populate_organizace_nazev(apps, schema_editor):
-    ExterniZdroj = apps.get_model('ez', 'ExterniZdroj')
-    for instance in ExterniZdroj.objects.all():
-        if instance.organizace:
-            instance.organizace_nazev = instance.organizace.nazev
-            instance.suppress_signal = True
-            instance.save()
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
@@ -17,5 +8,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(populate_organizace_nazev),
+        migrations.AddField(
+            model_name="externizdroj",
+            name="organizace_nazev",
+            field=models.CharField(blank=True, max_length=255, null=True),
+        ),
     ]
