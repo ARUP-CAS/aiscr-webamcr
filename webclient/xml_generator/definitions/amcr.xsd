@@ -341,7 +341,7 @@
       <xs:element name="adresa" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{adresa}" -->
       <xs:element name="telefon" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{telefon}" -->
       <xs:element name="email" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{email}" -->
-      <xs:element name="poznamka" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
+      <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
       </xs:sequence>          
   </xs:complexType>
   <xs:complexType name="historieType">

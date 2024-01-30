@@ -161,7 +161,7 @@ def tvar_save(sender, instance: Tvar, created, **kwargs):
 
 
 @receiver(pre_delete, sender=Tvar)
-def tvar_delete(sender, instance: Tvar, created, **kwargs):
+def tvar_delete(sender, instance: Tvar, **kwargs):
     logger.debug("dokument.signals.tvar_delete.start", extra={"pk": instance.pk})
     if instance.dokument:
         instance.dokument.save_metadata()
