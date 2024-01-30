@@ -21,6 +21,7 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
         hv = HistorieVazby(typ_vazby=EXTERNI_ZDROJ_RELATION_TYPE)
         hv.save()
         instance.historie = hv
+    instance.set_snapshots()
     logger.debug("ez.signals.create_ez_vazby.end", extra={"ident_cely": instance.ident_cely})
 
 
@@ -29,8 +30,6 @@ def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
     logger.debug("ez.signals.externi_zdroj_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
         instance.save_metadata()
-    instance.set_snapshots()
-
     logger.debug("ez.signals.externi_zdroj_save_metadata.end", extra={"ident_cely": instance.ident_cely})
 
 

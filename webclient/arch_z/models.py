@@ -524,7 +524,6 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     def save_metadata(self):
         from core.repository_connector import FedoraRepositoryConnector
-        self.projekt.save_metadata()
         connector = FedoraRepositoryConnector(self)
         return connector.save_metadata(True)
 
