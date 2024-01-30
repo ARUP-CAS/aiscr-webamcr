@@ -103,10 +103,7 @@ class ExterniZdrojForm(forms.ModelForm):
             "vydavatel": forms.TextInput(),
             "isbn": forms.TextInput(),
             "issn": forms.TextInput(),
-            "organizace": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true",
-                       "data-container": ".content-with-table-responsive-container"}
-            ),
+            "organizace": forms.TextInput(),
             "link": forms.TextInput(),
             "poznamka": forms.TextInput(),
             "sysno": forms.TextInput(),
