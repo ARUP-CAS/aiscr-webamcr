@@ -14,5 +14,4 @@ class Migration(migrations.Migration):
             old_name="organizace_nazev",
             new_name="organizace",
         ),
-        migrations.RunPython(populate_organizace_nazev),
     ]
