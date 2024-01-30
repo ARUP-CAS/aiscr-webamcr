@@ -21,8 +21,13 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
         hv = HistorieVazby(typ_vazby=EXTERNI_ZDROJ_RELATION_TYPE)
         hv.save()
         instance.historie = hv
-    instance.set_snapshots()
-    logger.debug("ez.signals.create_ez_vazby.end", extra={"ident_cely": instance.ident_cely})
+    try:
+        instance.set_snapshots()
+    except ValueError as err:
+        logger.debug("ez.signals.create_ez_vazby.type_error", extra={"ident_cely": instance.ident_cely,
+                                                                     "err": err})
+    else:
+        logger.debug("ez.signals.create_ez_vazby.end", extra={"ident_cely": instance.ident_cely})
 
 
 @receiver(post_save, sender=ExterniZdroj)

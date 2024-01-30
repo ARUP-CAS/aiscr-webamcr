@@ -1,7 +1,7 @@
 import logging
 
 from cron.tasks import update_single_redis_snapshot
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from lokalita.models import Lokalita
@@ -10,13 +10,18 @@ from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender=Lokalita)
+@receiver(pre_save, sender=Lokalita)
 def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
     logger.debug("lokalita.signals.save_lokalita_snapshot.start",
                  extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})
-    instance.set_snapshots()
-    logger.debug("lokalita.signals.save_lokalita_snapshot.end",
-                 extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})
+    try:
+        instance.set_snapshots()
+    except ValueError as err:
+        logger.debug("lokalita.signals.save_lokalita_snapshot.type_error",
+                     extra={"ident_cely": instance.archeologicky_zaznam.ident_cely, "err": err})
+    else:
+        logger.debug("lokalita.signals.save_lokalita_snapshot.end",
+                     extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})
 
 
 @receiver(post_save, sender=Lokalita)
