@@ -232,7 +232,7 @@ window.addEventListener("modalLoaded", function () {
          *
          * @param element The field to be initialized
          */
-        const initialize = (element) => {
+        function initialize(element) {
             if (typeof element === 'undefined' || typeof element === 'number') {
                 element = this;
             }
@@ -318,7 +318,7 @@ window.addEventListener("modalLoaded", function () {
         document.csrftoken = getCookie('csrftoken');
         if (document.csrftoken === null) {
             // Try to get CSRF token from DOM when cookie is missing
-            let $csrf = $('form :input[name="csrfmiddlewaretoken"]');
+            const $csrf = $('form :input[name="csrfmiddlewaretoken"]');
             if ($csrf.length > 0) {
                 document.csrftoken = $csrf[0].value;
             }
@@ -328,7 +328,7 @@ window.addEventListener("modalLoaded", function () {
     // Does the same thing as django's admin/js/autocomplete.js, but uses yl.jQuery.
     (function ($) {
         'use strict';
-        const init = ($element, options) => {
+        var init = ($element, options) => {
             let settings = $.extend({
                 ajax: {
                     data: function (params) {
@@ -342,8 +342,8 @@ window.addEventListener("modalLoaded", function () {
             $element.select2(settings);
         };
 
-        $.fn.djangoAdminSelect2 = (options) => {
-            const settings = $.extend({}, options);
+        $.fn.djangoAdminSelect2 = function (options) {
+            let settings = $.extend({}, options);
             $.each(this, function (i, element) {
                 const $element = $(element);
                 init($element, settings);
@@ -357,7 +357,7 @@ window.addEventListener("modalLoaded", function () {
             $('.admin-autocomplete').not('[name*=__prefix__]').djangoAdminSelect2();
         });
 
-        $(document).on('formset:added', ( () => {
+        $(document).on('formset:added', (function () {
             return function (event, $newFormset) {
                 return $newFormset.find('.admin-autocomplete').djangoAdminSelect2();
             };
@@ -375,7 +375,7 @@ window.addEventListener("modalLoaded", function () {
             return yl.forwardHandlerRegistry[name];
         };
 
-        function getForwardStrategy(element) {
+        getForwardStrategy = (element) => {
             const checkForCheckboxes = () => {
                 let all = true;
                 $.each(element, function (ix, e) {
@@ -436,16 +436,16 @@ window.addEventListener("modalLoaded", function () {
          * @returns forwarded value
          */
         yl.getValueFromField = function (field) {
-            var strategy = getForwardStrategy(field);
-            var serializedField = $(field).serializeArray();
+            let strategy = getForwardStrategy(field);
+            let serializedField = $(field).serializeArray();
 
-            if ((serializedField == false) && ($(field).prop('disabled'))) {
+            if ((serializedField === false) && ($(field).prop('disabled'))) {
                 $(field).prop('disabled', false);
                 serializedField = $(field).serializeArray();
                 $(field).prop('disabled', true);
             }
 
-            const getSerializedFieldElementAt = (index) => {
+            var getSerializedFieldElementAt = (index) => {
                 // Return serializedField[index]
                 // or null if something went wrong
                 if (serializedField.length > index) {
@@ -455,7 +455,7 @@ window.addEventListener("modalLoaded", function () {
                 }
             };
 
-            const getValueOf = (elem) => {
+            var getValueOf = (elem) => {
                 // Return elem.value
                 // or null if something went wrong
                 if (elem.hasOwnProperty("value") &&
@@ -467,7 +467,7 @@ window.addEventListener("modalLoaded", function () {
                 }
             };
 
-            const getSerializedFieldValueAt = (index) => {
+            var getSerializedFieldValueAt = (index) => {
                 // Return serializedField[index].value
                 // or null if something went wrong
                 const elem = getSerializedFieldElementAt(index);
@@ -559,4 +559,3 @@ window.addEventListener("modalLoaded", function () {
 }
 </script>
 {% endblock %}
-
