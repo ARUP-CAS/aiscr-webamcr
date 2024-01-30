@@ -53,25 +53,27 @@ def detail(request, typ_vazby, ident_cely):
     old_typ = dj.typ.id
     form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
-        logger.debug("dj.views.detail.form_is_valid")
+        logger.debug("dj.views.detail.form_is_valid", extra={"ident_cely": dj.ident_cely})
         dj = form.save(commit=False)
         if dj.pian is None:
-            logger.debug("dj.views.detail.empty_pian")
+            logger.debug("dj.views.detail.empty_pian", {"ident_cely": dj.ident_cely})
             if pian_db is not None and not(old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR):
-                logger.debug("dj.views.detail.added_pian_from_db", extra={"pian_db": pian_db})
+                logger.debug("dj.views.detail.added_pian_from_db", extra={"pian_db": pian_db,
+                                                                          "ident_cely": dj.ident_cely})
                 dj.pian = pian_db
-                dj.save()
+            dj.save()
         elif old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR:
-            logger.debug("dj.views.detail.disconnected_pian")
+            logger.debug("dj.views.detail.disconnected_pian", extra={"ident_cely": dj.ident_cely})
             dj.pian = None
             dj.save()
         else:
+            logger.debug("dj.views.detail.else_branch", extra={"ident_cely": dj.ident_cely})
             dj.save()
         if form.changed_data:
-            logger.debug("dj.views.detail.changed")
+            logger.debug("dj.views.detail.changed", extra={"ident_cely": dj.ident_cely})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         if dj.typ.heslo == "Celek akce":
-            logger.debug("dj.views.detail.celek_akce")
+            logger.debug("dj.views.detail.celek_akce", extra={"ident_cely": dj.ident_cely})
             typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(id=TYP_DJ_CAST)).first()
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
                 Q(archeologicky_zaznam=dj.archeologicky_zaznam)
@@ -82,7 +84,7 @@ def detail(request, typ_vazby, ident_cely):
                 dokumentacni_jednotka.save()
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ.heslo == "Sonda":
-            logger.debug("dj.views.detail.sonda")
+            logger.debug("dj.views.detail.sonda", extra={"ident_cely": dj.ident_cely})
             typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(id=TYP_DJ_SONDA_ID)).first()
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
                 Q(archeologicky_zaznam=dj.archeologicky_zaznam)
@@ -93,7 +95,7 @@ def detail(request, typ_vazby, ident_cely):
                 dokumentacni_jednotka.save()
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ.heslo == "Lokalita":
-            logger.debug("dj.views.detail.lokalita")
+            logger.debug("dj.views.detail.lokalita", extra={"ident_cely": dj.ident_cely})
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
                 Q(archeologicky_zaznam=dj.archeologicky_zaznam)
                 & Q(ident_cely=dj.ident_cely)
@@ -105,6 +107,7 @@ def detail(request, typ_vazby, ident_cely):
                 dokumentacni_jednotka.save()
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ == Heslar.objects.get(id=TYP_DJ_KATASTR):
+            logger.debug("dj.views.detail.katastr", extra={"ident_cely": dj.ident_cely})
             new_ku = form.cleaned_data["ku_change"]
             if dj.archeologicky_zaznam.hlavni_katastr.pian:
                 dj.pian = dj.archeologicky_zaznam.hlavni_katastr.pian
@@ -116,18 +119,21 @@ def detail(request, typ_vazby, ident_cely):
         if dj.pian is not None and (pian_db is None or pian_db.pk != dj.pian.pk):
             logger.debug("dj.views.detail.update_pian_metadata",
                          extra={"pian_db": pian_db.ident_cely if pian_db else "None",
-                                "instance_pian": dj.pian.ident_cely})
+                                "instance_pian": dj.pian.ident_cely, "ident_cely": dj.ident_cely})
             dj.pian.save_metadata()
         if pian_db is not None and (dj.pian is None or dj.pian.pk != pian_db.pk):
+            logger.debug("dj.views.detail.changed_or_removed_pian", extra={"ident_cely": dj.ident_cely})
             pian_db.save_metadata()
 
     else:
-        logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors})
+        logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors,
+                                                                   "ident_cely": dj.ident_cely})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     if "adb_detail" in request.POST:
-        logger.debug("dj.views.detail.adb_detail")
         ident_cely = request.POST.get("adb_detail")
+        logger.debug("dj.views.detail.adb_detail", extra={"ident_cely": dj.ident_cely,
+                                                          "adb_ident_cely": ident_cely})
         adb = get_object_or_404(Adb, ident_cely=ident_cely)
         form = CreateADBForm(
             request.POST,
@@ -135,20 +141,22 @@ def detail(request, typ_vazby, ident_cely):
             #prefix=ident_cely,
         )
         if form.is_valid():
-            logger.debug("dj.views.detail.adb_detail.form_is_valid")
+            logger.debug("dj.views.detail.adb_detail.form_is_valid", extra={"ident_cely": dj.ident_cely,
+                                                                            "adb_ident_cely": ident_cely})
             form.save()
             if form.changed_data:
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
             logger.debug("dj.views.detail.adb_detail.form_is_not_valid",
-                         extra={"errors": form.errors, "ident_cely": ident_cely})
+                         extra={"errors": form.errors, "ident_cely": ident_cely, "adb_ident_cely": ident_cely})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
             request.session["_old_adb_post"] = request.POST
             request.session["adb_ident_cely"] = ident_cely
 
     if "adb_zapsat_vyskove_body" in request.POST:
-        logger.debug("dj.views.detail.adb_zapsat_vyskove_body")
         adb_ident_cely = request.POST.get("adb_zapsat_vyskove_body")
+        logger.debug("dj.views.detail.adb_zapsat_vyskove_body", extra={"ident_cely": dj.ident_cely,
+                                                                       "adb_ident_cely": adb_ident_cely})
         adb = get_object_or_404(Adb, ident_cely=adb_ident_cely)
         vyskovy_bod_formset = inlineformset_factory(
             Adb,
@@ -160,7 +168,8 @@ def detail(request, typ_vazby, ident_cely):
             request.POST, instance=adb, prefix=adb.ident_cely + "_vb"
         )
         if formset.is_valid():
-            logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid")
+            logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid",
+                         extra={"ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely})
             instances = formset.save(commit=False)
             for i in range(0, len(instances)):
                 vyskovy_bod = instances[i]
@@ -175,14 +184,16 @@ def detail(request, typ_vazby, ident_cely):
                                          vyskovy_bod_form.cleaned_data.get("niveleta", 0))
                 vyskovy_bod.save()
         if formset.is_valid():
-            logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid")
+            logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid",
+                         extra={"ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely})
             if (
                 formset.has_changed()
             ):  # TODO tady to hazi porad ze se zmenila kvuli specifikaci a druhu
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
             logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_not_valid",
-                         extra={"errors": formset.errors})
+                         extra={"errors": formset.errors, "ident_cely": dj.ident_cely,
+                                "adb_ident_cely": adb_ident_cely})
             messages.add_message(
                 request,
                 messages.ERROR,

@@ -57,6 +57,10 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
         k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
         k.save()
         instance.komponenty = k
+    try:
+        instance.set_snapshots()
+    except ValueError as err:
+        logger.debug("dokument.signals.create_dokument_cast_vazby.type_error", extra={"pk": instance.pk, "err": err})
     logger.debug("dokument.signals.create_dokument_cast_vazby.end", extra={"pk": instance.pk})
 
 
@@ -65,7 +69,6 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
     logger.debug("dokument.signals.dokument_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
         instance.save_metadata()
-    instance.set_snapshots()
     if not check_if_task_queued("Dokument", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["Dokument", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
     logger.debug("dokument.signals.dokument_save_metadata.end", extra={"ident_cely": instance.ident_cely})

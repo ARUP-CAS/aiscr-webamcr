@@ -39,6 +39,8 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"record_pk": instance.pk})
     if not instance.suppress_signal:
         instance.save_metadata()
+        if instance.akce.projekt:
+            instance.akce.projekt.save_metadata()
     if instance.initial_pristupnost is not None and instance.pristupnost.id != instance.initial_pristupnost.id:
         for dok_jednotka in instance.dokumentacni_jednotky_akce.all():
             if dok_jednotka.pian:

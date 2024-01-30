@@ -22,7 +22,7 @@
     }
 
     h1 {
-      color: white;
+      @extend .text-dark;
       text-align: center;
     }
 

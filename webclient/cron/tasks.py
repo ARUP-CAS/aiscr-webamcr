@@ -4,7 +4,7 @@ import traceback
 
 import redis
 from celery import shared_task
-from django.db.models import Q, F, Min, Prefetch, Subquery, OuterRef
+from django.db.models import Q, F, Min, Prefetch
 from django.db.models.functions import Upper
 from django.utils import timezone
 
@@ -656,16 +656,22 @@ def cancel_old_projects():
 def update_snapshot_fields():
     try:
         logger.debug("core.cron.update_snapshot_fields.do.start")
-        for item in ExterniZdroj.objects.filter(Q(autori_snapshot__isnull=True) | Q(editori_snapshot__isnull=True)):
+        for item in ExterniZdroj.objects.filter((Q(autori_snapshot__isnull=True) | Q(editori_snapshot__isnull=True))
+                                                & (Q(externizdrojautor__isnull=False)
+                                                   | Q(externizdrojeditor__isnull=False))):
             item.suppress_signal = True
             item.save()
-        for item in Dokument.objects.filter(Q(autori_snapshot__isnull=True) | Q(osoby_snapshot__isnull=True)):
+        for item in Dokument.objects.filter((Q(autori_snapshot__isnull=True) | Q(osoby_snapshot__isnull=True))
+                                            & (Q(dokumentautor__isnull=False) | Q(dokumentosoba__isnull=False))):
+            item: Dokument
             item.suppress_signal = True
             item.save()
-        for item in Lokalita.objects.filter(dalsi_katastry_snapshot__isnull=True):
+        for item in Lokalita.objects.filter(Q(dalsi_katastry_snapshot__isnull=True)
+                                            & Q(archeologicky_zaznam__katastry__isnull=False)):
+            item: Lokalita
             item.suppress_signal = True
             item.save()
-        for item in Akce.objects.filter(vedouci_snapshot__isnull=True):
+        for item in Akce.objects.filter(Q(vedouci_snapshot__isnull=True) & Q(akcevedouci__isnull=False)):
             item: Akce
             item.suppress_signal = True
             item.set_snapshots()
