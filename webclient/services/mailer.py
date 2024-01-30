@@ -108,8 +108,12 @@ class Mailer:
     @classmethod
     def _log_notification(cls, notification_type: 'uzivatel.models.UserNotificationType', receiver_object,
                           receiver_address):
-        uzivatel.models.NotificationsLog(notification_type=notification_type, user=receiver_object,
+        try:
+            uzivatel.models.User.objects.get(pk = receiver_object.pk)
+            uzivatel.models.NotificationsLog(notification_type=notification_type, user=receiver_object,
                                          receiver_address=receiver_address).save()
+        except Exception as e:
+            logger.debug("services.mailer._log_notification", extra = {"error":e})
         logger.debug("services.mailer._log_notification",
                      extra={"notification_type": notification_type, "user": receiver_object,
                             "receiver_address": receiver_address})
