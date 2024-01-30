@@ -158,6 +158,14 @@
   })
   create_osoba_modal = new Modal(options, "create-osoba");
 
+  elements = document.getElementsByClassName("objekt-smazat-btn")
+  for (let i = 0; i < elements.length; i++){
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+    formID: "smazat-objekt-form",
+    modalFormID: "#smazat-objekt-form",
+    })
+    new Modal(options, elements.item(i).id);
+  }
 
   if (document.getElementsByClassName("create-vedouci")){
     elements = document.getElementsByClassName("create-vedouci")

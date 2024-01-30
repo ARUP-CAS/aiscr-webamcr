@@ -1342,30 +1342,38 @@ def get_required_fields(zaznam=None, next=0):
 
 
 @login_required
-@require_http_methods(["GET"])
+@require_http_methods(["GET", "POST"])
 def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
     """
     Funkce pohledu pro smazání dalšího vedoucího akce.
     """
+    logger.debug("arch_z.views.smazat_akce_vedoucí.start", extra={"ident_cely": ident_cely,
+                                                                  "akce_vedouci_id": akce_vedouci_id})
     zaznam = AkceVedouci.objects.get(id=akce_vedouci_id)
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
-    if zaznam.akce.archeologicky_zaznam.ident_cely != ident_cely:
-        logger.error("Archeologiky zaznam - Dokument wrong relation")
-        messages.add_message(
-                    request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                )
-        return JsonResponse({"redirect": az.get_absolute_url()},status=403)
-    zaznam.delete()
-    next_url = request.GET.get("next")
-    if next_url:
-        if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
-            response = next_url
-        else:
-            logger.debug("arch_z.views.smazat_akce_vedoucí.redirect", extra={"next_url": next_url})
-            response = reverse("core:home")
-    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-    response = redirect(next_url)
-    return response
+    if request.method == "POST":
+        if zaznam.akce.archeologicky_zaznam.ident_cely != ident_cely:
+            logger.debug("arch_z.views.smazat_akce_vedoucí.error",
+                         extra={"ident_cely": ident_cely, "akce_vedouci_id": akce_vedouci_id})
+            messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+            return JsonResponse({"redirect": az.get_absolute_url()}, status=403)
+        zaznam.delete()
+        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+        logger.debug("arch_z.views.smazat_akce_vedoucí.success", extra={"ident_cely": ident_cely,
+                                                                      "akce_vedouci_id": akce_vedouci_id})
+        return JsonResponse(
+            {"redirect": reverse("arch_z:edit", kwargs={"ident_cely": ident_cely})}
+        )
+    else:
+        logger.debug("arch_z.views.smazat_akce_vedoucí.get", extra={"ident_cely": ident_cely,
+                                                                      "akce_vedouci_id": akce_vedouci_id})
+        context = {
+            "object": zaznam,
+            "title": _("arch_z.views.smazat_akce_vedoucí.title.text"),
+            "id_tag": "smazat-objekt-form",
+            "button": _("core.views.smazat.submitButton.text"),
+        }
+        return render(request, "core/transakce_modal.html", context)
 
     
 class GetAkceOtherKatastrView(LoginRequiredMixin, View, PermissionFilterMixin):

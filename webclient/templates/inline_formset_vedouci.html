@@ -4,73 +4,73 @@
 {% load i18n %}
 
 {% specialspaceless %}
-{% if formset_tag %}
-<form {{ flat_attrs|safe }} method="{{ form_method }}" {% if formset.is_multipart %} enctype="multipart/form-data"{% endif %}>
+  {% if formset_tag %}
+    <form {{ flat_attrs|safe }} method="{{ form_method }}" {% if formset.is_multipart %}
+                                enctype="multipart/form-data"{% endif %}>
+  {% endif %}
+{% if formset_method|lower == 'post' and not disable_csrf %}
+  {% csrf_token %}
 {% endif %}
-    {% if formset_method|lower == 'post' and not disable_csrf %}
-        {% csrf_token %}
+
+<div>
+  {{ formset.management_form|crispy }}
+
+</div>
+
+<table{% if form_id %} id="{{ form_id }}_table"{% endif %} class="table table-striped table-sm">
+  <thead>
+  {% if formset.readonly and not formset.queryset.exists %}
+  {% else %}
+    <tr>
+      {% for field in formset.forms.0 %}
+        {% if field.label and not field.is_hidden %}
+          <th for="{{ field.auto_id }}" class="col-form-label {% if field.field.required %}requiredField{% endif %}">
+            {{ field.label|safe }}{% if field.field.required and not field|is_checkbox %}
+              <span class="asteriskField">*</span>{% endif %}
+          </th>
+
+        {% endif %}
+      {% endfor %}
+      {% if not ostatni_vedouci_objekt_formset_readonly %}
+        <th class="col-form-label">
+          {% trans "core.templates.inlineForm.odstranit.title" %}
+        </th>
+      {% endif %}
+    </tr>
+  {% endif %}
+  </thead>
+
+  <tbody>
+  <tr class="d-none empty-form">
+    {% for field in formset.empty_form %}
+      {% include 'bootstrap4/field.html' with tag="td" form_show_labels=False %}
+    {% endfor %}
+  </tr>
+  {% for form in formset %}
+    {% if form_show_errors and not form.is_extra %}
+      {% include "bootstrap4/errors.html" %}
     {% endif %}
 
-    <div>
-        {{ formset.management_form|crispy }}
-        
-    </div>
+    <tr>
+      {% for field in form %}
+        {% include 'bootstrap4/field.html' with tag="td" form_show_labels=False vedouci="col-6" %}
+      {% endfor %}
+      {% if not form.readonly and not ostatni_vedouci_objekt_formset_readonly %}
+        <td>
+          {% if form.id.value %}
+            <button id="objekt-smazat-{{ form.id.value }}" class="objekt-smazat-btn" type="button" name="button"
+                    href="{% url 'arch_z:smazat_akce_vedouci' arch_z_ident_cely form.id.value %}">
+              <span class="material-icons app-color-danger">delete_forever</span>
+            </button>
+          {% endif %}
+        </td>
+      {% endif %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
 
-    <table{% if form_id %} id="{{ form_id }}_table"{% endif%} class="table table-striped table-sm">
-        <thead>
-            {% if formset.readonly and not formset.queryset.exists %}
-            {% else %}
-                <tr>
-                    {% for field in formset.forms.0 %}
-                        {% if field.label and not field.is_hidden %}
-                            <th for="{{ field.auto_id }}" class="col-form-label {% if field.field.required %}requiredField{% endif %}">
-                                {{ field.label|safe }}{% if field.field.required and not field|is_checkbox %}<span class="asteriskField">*</span>{% endif %}
-                            </th>
-
-                        {% endif %}
-                    {% endfor %}
-                    {% if not ostatni_vedouci_objekt_formset_readonly %}
-                        <th class="col-form-label">
-                            {% trans "core.templates.inlineForm.odstranit.title" %}
-                        </th>
-                    {% endif %}
-                </tr>
-            {% endif %}
-        </thead>
-
-        <tbody>
-            <tr class="d-none empty-form">
-                {% for field in formset.empty_form %}
-                    {% include 'bootstrap4/field.html' with tag="td" form_show_labels=False %}
-                {% endfor %}
-            </tr>
-            {% for form in formset %}
-                {% if form_show_errors and not form.is_extra %}
-                    {% include "bootstrap4/errors.html" %}
-                {% endif %}
-
-                <tr>
-                    {% for field in form %}
-                        {% include 'bootstrap4/field.html' with tag="td" form_show_labels=False vedouci="col-6" %}
-                    {% endfor %}
-                    {% if not form.readonly and not ostatni_vedouci_objekt_formset_readonly %}
-                        <td>
-                          {% if form.id.value %}
-                            <a href="{% url 'arch_z:smazat_akce_vedouci' arch_z_ident_cely form.id.value %}?next={{ request.get_full_path }}">
-                              <button id="objekt-smazat-{{ form.id.value }}" class="objekt-smazat-btn" type="button"
-                                      name="button">
-                                <span class="material-icons app-color-danger">delete_forever</span>
-                              </button>
-                            </a>
-                          {% endif %}
-                        </td>
-                    {% endif %}
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    {% include "bootstrap4/inputs.html" %}
+{% include "bootstrap4/inputs.html" %}
 
 {% if formset_tag %}</form>{% endif %}
 {% endspecialspaceless %}
