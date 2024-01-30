@@ -83,7 +83,7 @@ class OznamovatelForm(forms.ModelForm):
             "telefon": _("oznameni.forms.oznamovatelForm.telefon.label"),
             "email": _("oznameni.forms.oznamovatelForm.email.label"),
             "adresa": _("oznameni.forms.oznamovatelForm.adresa.label"),
-            "poznamka": _("oznameni.forms.oznamovatelForm.adresa.poznamka"),
+            "poznamka": _("oznameni.forms.oznamovatelForm.poznamka.label"),
         }
         help_texts = {
             "oznamovatel": _("oznameni.forms.oznamovatelForm.oznamovatel.tooltip"),
@@ -93,7 +93,7 @@ class OznamovatelForm(forms.ModelForm):
             "telefon": _("oznameni.forms.oznamovatelForm.telefon.tooltip"),
             "email": _("oznameni.forms.oznamovatelForm.email.tooltip"),
             "adresa": _("oznameni.forms.oznamovatelForm.adresa.tooltip"),
-            "poznamka": _("oznameni.forms.oznamovatelForm.adresa.poznamka")
+            "poznamka": _("oznameni.forms.oznamovatelForm.poznamka.tooltip")
         }
 
     def __init__(self, *args, **kwargs):
