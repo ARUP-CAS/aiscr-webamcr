@@ -39,7 +39,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
-    ZAZNAM_USPESNE_SMAZAN, ZAZNAM_NELZE_SMAZAT_FEDORA,
+    ZAZNAM_USPESNE_SMAZAN, ZAZNAM_NELZE_SMAZAT_FEDORA, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY,
 )
 from core.models import Permissions as p, check_permissions
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
@@ -56,7 +56,7 @@ from .forms import (
     PripojitArchZaznamForm,
     PripojitExterniOdkazForm,
 )
-from django.db.models import Prefetch
+from django.db.models import Prefetch, RestrictedError
 
 from uzivatel.models import Osoba, User
 
@@ -355,7 +355,16 @@ class ExterniZdrojSmazatView(TransakceView):
         if hasattr(zaznam, "container_creation_queued") and zaznam.container_creation_queued():
             messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
             return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=403)
-        zaznam.delete()
+        try:
+            zaznam.delete()
+        except RestrictedError as err:
+            logger.debug("ez.views.ExterniZdrojSmazatView.error", extra={"ident_cely": zaznam.ident_cely,
+                                                                         "err": err})
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
+            return JsonResponse(
+                {"redirect": zaznam.get_absolute_url()},
+                status=403,
+            )
         messages.add_message(request, messages.SUCCESS, self.success_message)
         return JsonResponse({"redirect": reverse("ez:index")})
 
