@@ -61,9 +61,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
         related_name="externi_zroje_typu_dokumentu",
     )
-    organizace = models.ForeignKey(
-        Organizace, models.RESTRICT, db_column="organizace", blank=True, null=True
-    )
+    organizace = models.CharField(max_length=255, blank=True, null=True)
     rok_vydani_vzniku = models.TextField(blank=True, null=True)
     paginace_titulu = models.TextField(blank=True, null=True)
     isbn = models.TextField(blank=True, null=True)

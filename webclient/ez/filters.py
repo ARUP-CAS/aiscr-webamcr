@@ -88,17 +88,8 @@ class ExterniZdrojFilter(HistorieFilter):
         distinct=True,
     )
 
-    organizace = ModelMultipleChoiceFilter(
-        queryset=Organizace.objects.all(),
+    organizace = CharFilter(
         label=_("ez.filters.organizace.label"),
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-        distinct=True,
     )
 
     popisne_udaje = CharFilter(

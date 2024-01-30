@@ -161,7 +161,7 @@
       <xs:element name="paginace_titulu" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{paginace_titulu}" -->
       <xs:element name="link" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{link}" -->
       <xs:element name="typ_dokumentu" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> <!-- "{typ_dokumentu.ident_cely}" | "{typ_dokumentu.heslo}" -->
-      <xs:element name="organizace" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> <!-- "{organizace.ident_cely}" | "{organizace.nazev}" -->
+      <xs:element name="organizace" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{organizace}" -->
       <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
       <xs:element name="ext_odkaz" minOccurs="0" maxOccurs="unbounded" type="amcr:ez-ext_odkazType"/> <!-- "{externi_odkazy_zdroje}" -->
