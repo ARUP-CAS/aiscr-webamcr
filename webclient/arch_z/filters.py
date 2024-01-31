@@ -55,6 +55,7 @@ from heslar.views import heslar_12
 
 logger = logging.getLogger(__name__)
 
+
 class NumberRangeWidget(SuffixedMultiWidget):
     template_name = "django_filters/widgets/multiwidget.html"
     suffixes = ["min", "max"]
@@ -71,8 +72,12 @@ class NumberRangeWidget(SuffixedMultiWidget):
 
 class NumberRangeField(RangeField):
     widget = NumberRangeWidget
+
+
 class NumberRangeFilter(RangeFilter):
     field_class = NumberRangeField
+
+
 class ArchZaznamFilter(HistorieFilter, KatastrFilter):
     """
     Třída pro zakladní filtrování archeologických záznamů a jejich potomků.
@@ -324,46 +329,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
             )
         ).distinct()
 
-    def filter_obdobi(self, queryset, name, value):
-        """
-        Metóda pro filtrování podle období komponenty.
-        """
-        return queryset.filter(
-            archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__obdobi__in=value
-        ).distinct()
-
-    def filter_areal(self, queryset, name, value):
-        """
-        Metóda pro filtrování podle areálu komponenty.
-        """
-        return queryset.filter(
-            archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__areal__in=value
-        ).distinct()
-
-    def filter_predmety_druh(self, queryset, name, value):
-        """
-        Metóda pro filtrování podle druhu předmětu komponenty.
-        """
-        return queryset.filter(
-            archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__predmety__druh__in=value
-        ).distinct()
-
-    def filter_objekty_druh(self, queryset, name, value):
-        """
-        Metóda pro filtrování podle druhu objektu komponenty.
-        """
-        return queryset.filter(
-            archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__objekty__druh__in=value
-        ).distinct()
-
-    def filter_objekty_specifikace(self, queryset, name, value):
-        """
-        Metóda pro filtrování podle specifikace objektu komponenty.
-        """
-        return queryset.filter(
-            archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__objekty__specifikace__in=value
-        ).distinct()
-
     def __init__(self, *args, **kwargs):
         super(ArchZaznamFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
@@ -384,14 +349,14 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
                 distinct=True,
             )
         self.filters["komponenta_obdobi"] = MultipleChoiceFilter(
-            method="filter_obdobi",
+            field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__obdobi",
             label=_("arch_z.filters.ArchZaznamFilter.komponenta_obdobi.label"),
             choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
             widget=SelectMultipleSeparator(),
         )
 
         self.filters["komponenta_areal"] = MultipleChoiceFilter(
-            method="filter_areal",
+            field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__areal",
             label=_("arch_z.filters.ArchZaznamFilter.komponenta_areal.label"),
             choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)[1:],
             widget=SelectMultipleSeparator(),
@@ -399,7 +364,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         )
 
         self.filters["objekt_druh"] = MultipleChoiceFilter(
-            method="filter_objekty_druh",
+            field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__objekty__druh",
             label=_("arch_z.filters.ArchZaznamFilter.objekt_druh.label"),
             choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)[1:],
             widget=SelectMultipleSeparator(),
@@ -407,7 +372,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         )
 
         self.filters["objekt_specifikace"] = MultipleChoiceFilter(
-            method="filter_objekty_specifikace",
+            field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__objekty__specifikace",
             label=_("arch_z.filters.ArchZaznamFilter.objekt_specifikace.label"),
             choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT)[1:],
             widget=SelectMultipleSeparator(),
@@ -415,7 +380,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         )
 
         self.filters["predmet_druh"] = MultipleChoiceFilter(
-            method="filter_predmety_druh",
+            field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__predmety__druh",
             label=_("arch_z.filters.ArchZaznamFilter.predmet_druh.label"),
             choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
             widget=SelectMultipleSeparator(),
