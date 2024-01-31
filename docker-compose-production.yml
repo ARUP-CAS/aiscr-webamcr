@@ -192,6 +192,19 @@ services:
     networks:
       - prod-net
 
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker"
+      - "/dev/disk/:/dev/disk"
+    privileged: true
+    ports:
+      - "8080:8080"
+    restart: always
+
 volumes:
   static_data:
   locale_data:
