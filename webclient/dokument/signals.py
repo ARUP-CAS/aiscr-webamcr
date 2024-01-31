@@ -42,6 +42,10 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
             elif old_instance.let is not None and instance.let is not None and old_instance.let != instance.let:
                 old_instance.let.save_metadata()
                 instance.let.save_metadata()
+    try:
+        instance.set_snapshots()
+    except ValueError as err:
+        logger.debug("dokument.signals.create_dokument_vazby.type_error", extra={"pk": instance.pk, "err": err})
     logger.debug("dokument.signals.create_dokument_vazby.end", extra={"ident_cely": instance.ident_cely})
 
 
@@ -57,10 +61,6 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
         k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
         k.save()
         instance.komponenty = k
-    try:
-        instance.set_snapshots()
-    except ValueError as err:
-        logger.debug("dokument.signals.create_dokument_cast_vazby.type_error", extra={"pk": instance.pk, "err": err})
     logger.debug("dokument.signals.create_dokument_cast_vazby.end", extra={"pk": instance.pk})
 
 
@@ -95,11 +95,10 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
             item.projekt.save_metadata()
     if instance.let:
         instance.let.save_metadata()
-    if "3D" in instance.ident_cely:
-        for k in Komponenta.objects.filter(ident_cely__startswith=instance.ident_cely):
-            logger.debug("dokument.signals.dokument_delete_repository_container.deleting",
-                         extra={"ident_cely": k.ident_cely})
-            k.delete()
+    for k in Komponenta.objects.filter(ident_cely__startswith=instance.ident_cely):
+        logger.debug("dokument.signals.dokument_delete_repository_container.deleting",
+                     extra={"ident_cely": k.ident_cely})
+        k.delete()
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
     if instance.soubory and instance.soubory.pk:
