@@ -202,7 +202,7 @@ services:
       - "/dev/disk/:/dev/disk"
     privileged: true
     ports:
-      - "8080:8080"
+      - "8088:8080"
     restart: always
 
 volumes:
