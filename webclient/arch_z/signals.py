@@ -39,7 +39,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"record_pk": instance.pk})
     if not instance.suppress_signal:
         instance.save_metadata()
-        if instance.akce.projekt:
+        if instance.akce and instance.akce.projekt:
             instance.akce.projekt.save_metadata()
     if instance.initial_pristupnost is not None and instance.pristupnost.id != instance.initial_pristupnost.id:
         for dok_jednotka in instance.dokumentacni_jednotky_akce.all():
@@ -85,7 +85,7 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
                  extra={"record_ident_cely": instance.ident_cely})
     instance.record_deletion()
     try:
-        if instance.akce.projekt is not None:
+        if instance.akce and instance.akce.projekt is not None:
             instance.akce.projekt.save_metadata()
     except ObjectDoesNotExist as err:
         logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.no_akce",
