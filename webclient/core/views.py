@@ -507,27 +507,17 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
     """
     Funkce pro získaní jména souboru pro samostatný nález.
     """
-    my_regex = (
-        r"^\d+_" + re.escape(find.ident_cely.replace("-", "")) + r"(F\d{2}\.\w+)$"
-    )
-    files = find.soubory.soubory.all().filter(nazev__iregex=my_regex)
+    ident_cely_sanitized = find.ident_cely.replace("-", "")
+    files = find.soubory.soubory.filter(nazev__contains=ident_cely_sanitized)
     if not files.exists():
-        return (find.ident_cely.replace("-", "") + "F01") + os.path.splitext(filename)[
-            1
-        ]
+        return (f"{ident_cely_sanitized}F01") + os.path.splitext(filename)[1]
     else:
-        list_last_char = []
-        for file in files:
-            split_file = os.path.splitext(file.nazev)
-            list_last_char.append(split_file[0][-2:])
+        list_last_char = [int(os.path.splitext(file.nazev)[0][-2:]) for file in files]
         last_char = max(list_last_char)
-        if last_char != "99" or add_to_index == 0:
-            return (
-                find.ident_cely.replace("-", "")
-                + "F"
-                + str(int(last_char) + add_to_index).zfill(2)
-                + os.path.splitext(filename)[1]
-            )
+        if last_char != 99 or add_to_index == 0:
+            new_last_char = str(last_char + add_to_index).zfill(2)
+            extension = os.path.splitext(filename)[1]
+            return f"{find.ident_cely.replace('-', '')}F{new_last_char}{extension}"
         else:
             logger.warning("core.views.get_finds_soubor_name.cannot_upload",
                            extra={"file": filename, "list_last_char": list_last_char})
