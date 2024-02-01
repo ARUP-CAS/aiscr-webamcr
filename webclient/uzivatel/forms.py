@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
 from core.widgets import ForeignKeyReadOnlyTextInput
+from core.validators import validate_phone_number
 from .models import Osoba, User, UserNotificationType
 
 
@@ -57,6 +58,8 @@ class AuthUserCreationForm(RegistrationForm):
     def __init__(self, *args, **kwargs):
         super(AuthUserCreationForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
+        self.fields["telefon"].validators=[validate_phone_number]
+        self.fields["telefon"].widget.input_type="tel"
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Field("first_name"),

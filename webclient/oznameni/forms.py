@@ -60,9 +60,7 @@ class OznamovatelForm(forms.ModelForm):
         validators=[validate_phone_number],
         help_text=_("oznameni.forms.oznamovatelForm.telefon.tooltip"),
         label=_("oznameni.forms.oznamovatelForm.telefon.label"),
-        widget=forms.TextInput(
-            attrs={"pattern": "^[+](420)\d{9}", "title": "+420XXXXXXXXX"}
-        ),
+        widget=forms.TextInput(),
     )
     email = forms.EmailField(
         help_text=_("oznameni.forms.oznamovatelForm.email.tooltip"),
@@ -102,6 +100,7 @@ class OznamovatelForm(forms.ModelForm):
         required_next = kwargs.pop("required_next", False)
         add_oznamovatel = kwargs.pop("add_oznamovatel", False)
         super(OznamovatelForm, self).__init__(*args, **kwargs)
+        self.fields["telefon"].widget.input_type="tel"
         if uzamknout_formular:
             self.fields["oznamovatel"].widget.attrs["readonly"] = True
             self.fields["odpovedna_osoba"].widget.attrs["readonly"] = True
