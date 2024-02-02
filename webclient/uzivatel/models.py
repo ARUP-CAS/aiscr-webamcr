@@ -24,6 +24,7 @@ from core.constants import (
     ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT, ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX,
 )
 from core.mixins import ManyToManyRestrictedClassMixin
+from core.repository_connector import FedoraTransaction
 from core.validators import validate_phone_number
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, PermissionsMixin
@@ -215,16 +216,20 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
 
-    def save_metadata(self, use_celery=True, **kwargs):
+    def save_metadata(self, transaction=None, use_celery=True, **kwargs):
+        if not transaction:
+            transaction = FedoraTransaction()
         if use_celery is True:
             if ModelWithMetadata.update_queued(self.__class__.__name__, self.pk):
                 return
             from cron.tasks import save_record_metadata
-            save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
+            save_record_metadata.apply_async([self.__class__.__name__, self.pk, transaction.uid],
+                                             countdown=METADATA_UPDATE_TIMEOUT)
         else:
             from core.repository_connector import FedoraRepositoryConnector
-            connector = FedoraRepositoryConnector(self)
+            connector = FedoraRepositoryConnector(self, transaction.uid)
             connector.save_metadata(True)
+        return transaction
 
     def record_deletion(self):
         logger.debug("uzivatel.models.User.delete_repository_container.start")

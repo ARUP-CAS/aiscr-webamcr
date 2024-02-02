@@ -18,7 +18,8 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
         Metóda pro vytvoření pianu z katastru arch záznamu.
         Metóda se volá po uložením DJ.
     """
-    logger.debug("dj.signals.create_dokumentacni_jednotka.start")
+    logger.debug("dj.signals.create_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
+    transaction = None
     if created and instance.typ.id == TYP_DJ_KATASTR and instance.pian is None:
         logger.debug("dj.signals.create_dokumentacni_jednotka.not_localized")
         ruian_katastr: RuianKatastr = instance.archeologicky_zaznam.hlavni_katastr
@@ -40,17 +41,27 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
             "pian_db": instance.initial_pian.ident_cely if instance.initial_pian else "None",
             "pian": instance.pian.ident_cely if instance.pian else "None",
         })
+        transaction = None
         if instance.pian is not None:
-            instance.pian.save_metadata()
+            transaction = instance.pian.save_metadata()
         if instance.initial_pian is not None:
-            instance.initial_pian.save_metadata()
-    instance.archeologicky_zaznam.save_metadata()
+            if transaction:
+                instance.initial_pian.save_metadata(transaction)
+            else:
+                transaction = instance.initial_pian.save_metadata()
+    if transaction:
+        instance.archeologicky_zaznam.save_metadata(transaction)
+    else:
+        transaction = instance.archeologicky_zaznam.save_metadata()
+    transaction.mark_transaction_as_closed()
+    logger.debug("dj.signals.create_dokumentacni_jednotka.end", extra={"transaction": transaction})
 
 
 @receiver(pre_delete, sender=DokumentacniJednotka)
 def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
     logger.debug("dj.signals.delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     pian: Pian = instance.pian
+    transaction = None
     if not pian:
         logger.debug("dj.signals.delete_dokumentacni_jednotka.no_pian", extra={"ident_cely": instance.ident_cely})
     else:
@@ -68,8 +79,13 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
         else:
             logger.debug("dj.signals.delete_dokumentacni_jednotka.update_pian_metadata",
                          extra={"ident_cely": instance.ident_cely, "pian_ident_cely": pian.ident_cely})
-            pian.save_metadata()
+            transaction = pian.save_metadata()
     if instance.komponenty:
         instance.komponenty.delete()
-    instance.archeologicky_zaznam.save_metadata()
-    logger.debug("dj.signals.delete_dokumentacni_jednotka.end", extra={"ident_cely": instance.ident_cely})
+    if transaction:
+        instance.archeologicky_zaznam.save_metadata(transaction)
+    else:
+        transaction = instance.archeologicky_zaznam.save_metadata()
+    transaction.mark_transaction_as_closed()
+    logger.debug("dj.signals.delete_dokumentacni_jednotka.end", extra={"ident_cely": instance.ident_cely,
+                                                                       "transaction": transaction})

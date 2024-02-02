@@ -7,11 +7,13 @@ from notifikace_projekty.models import Pes
 @receiver(post_save, sender=Pes)
 def pes_save(sender, instance: Pes, **kwargs):
     if instance.user:
-        instance.user.save_metadata()
+        transaction = instance.user.save_metadata()
+        transaction.mark_transaction_as_closed()
 
 
 @receiver(pre_delete, sender=Pes)
 def pes_delete(sender, instance: Pes, **kwargs):
     if instance.user:
-        instance.user.save_metadata()
+        transaction = instance.user.save_metadata()
+        transaction.mark_transaction_as_closed()
 

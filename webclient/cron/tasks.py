@@ -1,5 +1,6 @@
 import datetime
 import logging
+import time
 import traceback
 
 import redis
@@ -14,6 +15,7 @@ from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
     OZNAMENI_PROJ, ZAPSANI_PROJ
 from core.models import Soubor
+from core.repository_connector import FedoraTransaction
 from cron.convertToSJTSK import get_multi_transform_to_sjtsk
 from cron.classes import MyList
 from cron.functions import collect_en01_en02
@@ -438,29 +440,32 @@ def get_record(class_name, record_pk):
 
 
 @shared_task
-def save_record_metadata(class_name, record_pk):
+def save_record_metadata(class_name, record_pk, transaction_id):
     try:
-        logger.debug("cron.save_record_metadata.do.start", extra={"class_name": class_name,
-                                                                  "record_pk": record_pk})
+        logger.debug("cron.save_record_metadata.do.start",
+                     extra={"class_name": class_name, "record_pk": record_pk, "transaction_id": transaction_id})
         from xml_generator.models import ModelWithMetadata
         record = get_record(class_name, record_pk)
         if record is not None:
             record: ModelWithMetadata
             from core.repository_connector import FedoraRepositoryConnector
-            connector = FedoraRepositoryConnector(record)
+            connector = FedoraRepositoryConnector(record, transaction_id)
             connector.save_metadata(True)
         else:
             ident_cely = record.ident_cely if hasattr(record, "ident_cely") else "no_ident"
             logger.warning("cron.save_record_metadata.do.is_null",
-                           extra={"class_name": class_name, "record_pk": record_pk, "ident_cely": ident_cely})
-        logger.debug("cron.save_record_metadata.do.end", extra={"class_name": class_name, "record_pk": record_pk})
+                           extra={"class_name": class_name, "record_pk": record_pk, "ident_cely": ident_cely,
+                                  "transaction_id": transaction_id})
+        logger.debug("cron.save_record_metadata.do.end", extra={"class_name": class_name, "record_pk": record_pk,
+                                                                "transaction_id": transaction_id})
     except Exception as err:
-        logger.error("cron.save_record_metadata.do.error", extra={"class_name": class_name,
-                                                                  "record_pk": record_pk, "error": err})
+        logger.error("cron.save_record_metadata.do.error",
+                     extra={"class_name": class_name, "record_pk": record_pk, "error": err,
+                            "transaction_id": transaction_id})
 
 
 @shared_task
-def record_ident_change(class_name, record_pk, old_ident):
+def record_ident_change(class_name, record_pk, old_ident, transaction_uid=None):
     try:
         logger.debug("cron.record_ident_change.do.start", extra={"class_name": class_name, "record_pk": record_pk,
                                                                  "old_ident": old_ident})
@@ -470,7 +475,11 @@ def record_ident_change(class_name, record_pk, old_ident):
             logger.debug("cron.record_ident_change.do.no_change", extra={"class_name": class_name,
                                                                          "record_pk": record_pk, "old_ident": old_ident})
             return
-        connector = FedoraRepositoryConnector(record)
+        if transaction_uid:
+            transaction = FedoraTransaction(transaction_uid)
+        else:
+            transaction = FedoraTransaction()
+        connector = FedoraRepositoryConnector(record, transaction)
         connector.record_ident_change(old_ident)
         logger.debug("cron.record_ident_change.do.end", extra={"class_name": class_name, "record_pk": record_pk,
                                                                "old_ident": old_ident})
@@ -479,17 +488,17 @@ def record_ident_change(class_name, record_pk, old_ident):
             for inner_item in record.dokumentacni_jednotky_akce.all():
                 inner_item: DokumentacniJednotka
                 if inner_item.pian:
-                    inner_item.pian.save_metadata()
+                    inner_item.pian.save_metadata(transaction)
                 if inner_item.adb:
-                    inner_item.adb.save_metadata()
+                    inner_item.adb.save_metadata(transaction)
             for inner_item in record.casti_dokumentu.all():
                 inner_item: DokumentCast
-                inner_item.dokument.save_metadata()
+                inner_item.dokument.save_metadata(transaction)
             for inner_item in record.externi_odkazy.all():
                 inner_item: ExterniOdkaz
-                inner_item.externi_zdroj.save_metadata()
+                inner_item.externi_zdroj.save_metadata(transaction)
             if inner_item.projekt:
-                inner_item.projekt.save_metadata()
+                inner_item.projekt.save_metadata(transaction)
 
         if isinstance(record, ArcheologickyZaznam):
             process_arch_z(record)
@@ -497,32 +506,33 @@ def record_ident_change(class_name, record_pk, old_ident):
             for item in record.casti.all():
                 item: DokumentCast
                 if item.archeologicky_zaznam:
-                    item.archeologicky_zaznam.save_metadata()
+                    item.archeologicky_zaznam.save_metadata(transaction)
                 if item.projekt:
-                    item.projekt.save_metadata()
+                    item.projekt.save_metadata(transaction)
             if item.let:
-                item.let.save_metadata()
+                item.let.save_metadata(transaction)
         elif isinstance(record, ExterniZdroj):
             for item in record.externi_odkazy_zdroje.all():
                 item: ExterniOdkaz
-                item.archeologicky_zaznam.save_metadata()
+                item.archeologicky_zaznam.save_metadata(transaction)
         elif isinstance(record, Projekt):
             for item in record.casti_dokumentu.all():
                 item: DokumentCast
-                item.dokument.save_metadata()
+                item.dokument.save_metadata(transaction)
             for item in record.samostatne_nalezy.all():
                 item: SamostatnyNalez
-                item.save_metadata()
+                item.save_metadata(transaction)
         elif isinstance(record, Lokalita):
             archeologicky_zaznam: ArcheologickyZaznam = record.archeologicky_zaznam
             process_arch_z(archeologicky_zaznam)
         elif isinstance(record, SamostatnyNalez):
             if record.projekt:
-                record.projekt.save_metadata()
+                record.projekt.save_metadata(transaction)
         elif isinstance(record, Pian):
             for item in record.dokumentacni_jednotky_pianu.all():
                 item: DokumentacniJednotka
-                item.archeologicky_zaznam.save_metadata()
+                item.archeologicky_zaznam.save_metadata(transaction)
+        transaction.mark_transaction_as_closed()
 
     except Exception as err:
         logger.error("cron.record_ident_change.do.error", extra={"error": err})
@@ -736,3 +746,14 @@ def update_single_redis_snapshot(class_name: str, record_pk):
     key, value = item.generate_redis_snapshot()
     if key and value:
         r.hset(key, mapping=value)
+
+
+@shared_task
+def commit_transaction_after_all_tasks_finished(transaction_uid: FedoraTransaction):
+    fedora_transaction = FedoraTransaction(transaction_uid)
+    while True:
+        remaining_tasks = fedora_transaction.check_remaining_tasks()
+        if remaining_tasks is False:
+            fedora_transaction.mark_transaction_as_closed()
+            break
+        time.sleep(10)

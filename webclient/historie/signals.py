@@ -20,7 +20,10 @@ def soubor_update_metadata(sender, instance: Historie, **kwargs):
             or instance.vazba.navazany_objekt.suppress_signal is False):
         navazany_objekt = instance.vazba.navazany_objekt
         if isinstance(navazany_objekt, ModelWithMetadata):
-            navazany_objekt.save_metadata()
+            transaction = navazany_objekt.save_metadata()
+            transaction.mark_transaction_as_closed()
+            logger.debug("historie.signals.soubor_update_metadata.save_metadata",
+                         extra={"pk": instance.pk, "transaction": transaction})
     logger.debug("historie.signals.soubor_update_metadata.end", extra={"pk": instance.pk})
 
 
