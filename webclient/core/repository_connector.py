@@ -207,20 +207,18 @@ class FedoraRepositoryConnector:
             return f"{base_url}/model/deleted/member/{self.record.ident_cely}/fcr:tombstone"
         logger.error("core_repository_connector._get_request_url.not_implemented", extra={"request_type": request_type})
 
-    @classmethod
-    def check_container_deleted(cls, ident_cely):
-        result = cls._send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
+    def check_container_deleted(self, ident_cely):
+        result = self._send_request(f"{self.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
         regex = re.compile(r"dcterms:type *\"deleted\" *;")
         return hasattr(result, "text") and regex.search(result.text)
 
-    @classmethod
-    def check_container_deleted_or_not_exists(cls, ident_cely):
+    def check_container_deleted_or_not_exists(self, ident_cely):
         logger.debug("core_repository_connector.check_container_is_deleted.start",
                      extra={"ident_cely": ident_cely})
-        result = cls._send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
+        result = self._send_request(f"{self.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
         regex = re.compile(r"dcterms:type *\"deleted\" *;")
         if ((result.status_code == 404 or (hasattr(result, "text") and "not found" in result.text)) or
-                cls.check_container_deleted(ident_cely)):
+                self.check_container_deleted(ident_cely)):
             logger.debug("core_repository_connector.check_container_is_deleted.true",
                          extra={"ident_cely": ident_cely})
             return True
@@ -766,7 +764,7 @@ class FedoraTransaction:
     def __str__(self):
         return self.uid
 
-    def check_remaining_tasks(self):
+    def check_remaining_tasks(self, include_commit_task=False):
         app = Celery("webclient")
         app.config_from_object("django.conf:settings", namespace="CELERY")
         app.autodiscover_tasks()
@@ -790,7 +788,8 @@ class FedoraTransaction:
                         continue
                     if transaction_uid == self.uid:
                         task_name = task.get("name")
-                        if task.get("name") != "cron.tasks.commit_transaction_after_all_tasks_finished":
+                        if (task.get("name") != "cron.tasks.commit_transaction_after_all_tasks_finished" or
+                                include_commit_task):
                             logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.found",
                                          extra={"transaction_uid": transaction_uid, "uid": self.uid,
                                                 "task_id": task.get("id"), "task_data": task, "task_name": task_name,
@@ -812,8 +811,10 @@ class FedoraTransaction:
                      extra={"transaction_uid": self.uid})
 
     def mark_transaction_as_closed(self):
-        from cron.tasks import commit_transaction_after_all_tasks_finished
-        commit_transaction_after_all_tasks_finished.apply_async([self.uid, ], countdown=METADATA_UPDATE_TIMEOUT)
+        already_running = self.check_remaining_tasks(True)
+        if not already_running:
+            from cron.tasks import commit_transaction_after_all_tasks_finished
+            commit_transaction_after_all_tasks_finished.apply_async([self.uid, ], countdown=METADATA_UPDATE_TIMEOUT)
 
     def __create_transaction(self):
         logger.debug("core_repository_connector.FedoraTransaction.__create_transaction.start")

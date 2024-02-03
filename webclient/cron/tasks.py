@@ -14,8 +14,6 @@ from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
 from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
     OZNAMENI_PROJ, ZAPSANI_PROJ
-from core.models import Soubor
-from core.repository_connector import FedoraTransaction
 from cron.convertToSJTSK import get_multi_transform_to_sjtsk
 from cron.classes import MyList
 from cron.functions import collect_en01_en02
@@ -466,6 +464,7 @@ def save_record_metadata(class_name, record_pk, transaction_id):
 
 @shared_task
 def record_ident_change(class_name, record_pk, old_ident, transaction_uid=None):
+    from core.repository_connector import FedoraTransaction
     try:
         logger.debug("cron.record_ident_change.do.start", extra={"class_name": class_name, "record_pk": record_pk,
                                                                  "old_ident": old_ident})
@@ -749,11 +748,12 @@ def update_single_redis_snapshot(class_name: str, record_pk):
 
 
 @shared_task
-def commit_transaction_after_all_tasks_finished(transaction_uid: FedoraTransaction):
-    fedora_transaction = FedoraTransaction(transaction_uid)
+def commit_transaction_after_all_tasks_finished(transaction_uid):
+    from core.repository_connector import FedoraTransaction
     while True:
+        fedora_transaction = FedoraTransaction(transaction_uid)
         remaining_tasks = fedora_transaction.check_remaining_tasks()
         if remaining_tasks is False:
-            fedora_transaction.mark_transaction_as_closed()
+            fedora_transaction.commit_transaction()
             break
         time.sleep(10)

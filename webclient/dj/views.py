@@ -121,16 +121,12 @@ def detail(request, typ_vazby, ident_cely):
             logger.debug("dj.views.detail.update_pian_metadata",
                          extra={"pian_db": pian_db.ident_cely if pian_db else "None",
                                 "instance_pian": dj.pian.ident_cely, "ident_cely": dj.ident_cely})
-            transaction = dj.pian.save_metadata()
+            transaction = dj.pian.save_metadata(transaction)
         if pian_db is not None and (dj.pian is None or dj.pian.pk != pian_db.pk):
             logger.debug("dj.views.detail.changed_or_removed_pian", extra={"ident_cely": dj.ident_cely})
-            if transaction:
-                pian_db.save_metadata(transaction)
-            else:
-                transaction = pian_db.save_metadata()
+            transaction = pian_db.save_metadata(transaction)
         if transaction:
             transaction.mark_transaction_as_closed()
-
     else:
         logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors,
                                                                    "ident_cely": dj.ident_cely})

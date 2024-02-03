@@ -24,7 +24,6 @@ from core.constants import (
     ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT, ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX,
 )
 from core.mixins import ManyToManyRestrictedClassMixin
-from core.repository_connector import FedoraTransaction
 from core.validators import validate_phone_number
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, PermissionsMixin
@@ -217,6 +216,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         return connector.get_metadata()
 
     def save_metadata(self, transaction=None, use_celery=True, **kwargs):
+        from core.repository_connector import FedoraTransaction
         if not transaction:
             transaction = FedoraTransaction()
         if use_celery is True:

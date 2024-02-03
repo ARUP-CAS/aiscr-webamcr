@@ -88,10 +88,9 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
     # When projekt is created using the "oznameni" page, the metadata are saved directly without celery
     logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})
+    transaction = None
     if getattr(instance, "suppress_signal", False) is not True:
-        transaction = instance.save_metadata()
-    else:
-        transaction = None
+        transaction = instance.save_metadata(transaction)
     if instance.stav == PROJEKT_STAV_ZAPSANY and hasattr(instance, "__original_stav") \
             and instance.stav != instance.__original_stav:
         logger.debug("projekt.signals.projekt_post_save.checked_hlidaci_pes",

@@ -37,20 +37,11 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
         old_instance = Dokument.objects.get(pk=instance.pk)
         if not instance.suppress_signal:
             if old_instance.let is None and instance.let is not None:
-                if transaction:
-                    transaction = instance.let.save_metadata()
-                else:
-                    instance.let.save_metadata(transaction)
+                transaction = instance.let.save_metadata(transaction)
             elif old_instance.let is not None and instance.let is None:
-                if transaction:
-                    old_instance.let.save_metadata(transaction)
-                else:
-                    transaction = old_instance.let.save_metadata()
+                transaction = old_instance.let.save_metadata(transaction)
             elif old_instance.let is not None and instance.let is not None and old_instance.let != instance.let:
-                if transaction:
-                    transaction = old_instance.let.save_metadata(transaction)
-                else:
-                    transaction = old_instance.let.save_metadata()
+                transaction = old_instance.let.save_metadata(transaction)
                 instance.let.save_metadata(transaction)
     if transaction:
         transaction.mark_transaction_as_closed()
@@ -113,7 +104,7 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
         if item.projekt is not None:
             item.projekt.save_metadata(transaction)
     if instance.let:
-        instance.let.save_metadata(transaction)
+        transaction = instance.let.save_metadata(transaction)
     for k in Komponenta.objects.filter(ident_cely__startswith=instance.ident_cely):
         logger.debug("dokument.signals.dokument_delete_repository_container.deleting",
                      extra={"ident_cely": k.ident_cely})
@@ -171,10 +162,7 @@ def dokument_cast_save_metadata(sender, instance: DokumentCast, **kwargs):
     if instance.initial_archeologicky_zaznam is not None:
         transaction = instance.initial_archeologicky_zaznam.save_metadata()
     if instance.initial_projekt is not None:
-        if transaction:
-            instance.initial_projekt.save_metadata(transaction)
-        else:
-            transaction = instance.initial_projekt.save_metadata()
+        transaction = instance.initial_projekt.save_metadata(transaction)
     if transaction:
         transaction.mark_transaction_as_closed()
     logger.debug("dokument.signals.dokument_cast_save_metadata.end", extra={"pk": instance.pk,

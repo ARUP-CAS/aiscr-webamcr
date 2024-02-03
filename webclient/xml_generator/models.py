@@ -54,25 +54,32 @@ class ModelWithMetadata(models.Model):
 
     def save_metadata(self, transaction=None, use_celery=True, include_files=False):
         from core.repository_connector import FedoraTransaction
-        transaction: FedoraTransaction
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.start",
                      extra={"ident_cely": self.ident_cely, "use_celery": use_celery, "record_pk": self.pk,
                             "record_class": self.__class__.__name__, "transaction": transaction})
-        if not transaction and self.active_transaction:
-            transaction = self.active_transaction
-        else:
-            transaction = FedoraTransaction()
         if use_celery:
             if self.update_queued(self.__class__.__name__, self.pk):
                 logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.already_scheduled",
                              extra={"ident_cely": self.ident_cely, "use_celery": use_celery, "record_pk": self.pk,
                                     "record_class": self.__class__.__name__})
-                return
+                return transaction
+            if not transaction and self.active_transaction:
+                transaction = self.active_transaction
+            else:
+                transaction = FedoraTransaction()
+                self.active_transaction = transaction
+            transaction: FedoraTransaction
             from cron.tasks import save_record_metadata
             save_record_metadata.apply_async([self.__class__.__name__, self.pk, transaction.uid],
                                              countdown=METADATA_UPDATE_TIMEOUT)
         else:
             from core.repository_connector import FedoraRepositoryConnector
+            if not transaction and self.active_transaction:
+                transaction = self.active_transaction
+            else:
+                transaction = FedoraTransaction()
+                self.active_transaction = transaction
+            transaction: FedoraTransaction
             connector = FedoraRepositoryConnector(self, transaction.uid)
             if include_files:
                 from core.models import SouborVazby

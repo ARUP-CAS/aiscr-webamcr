@@ -27,15 +27,9 @@ def komponenta_save(sender, instance: Komponenta, **kwargs):
     if instance.komponenta_vazby.navazany_objekt:
         navazany_objekt = instance.komponenta_vazby.navazany_objekt
         if isinstance(navazany_objekt, DokumentCast):
-            if transaction:
-                navazany_objekt.dokument.save_metadata(transaction)
-            else:
-                transaction = navazany_objekt.dokument.save_metadata()
+            transaction = navazany_objekt.dokument.save_metadata(transaction)
         elif isinstance(navazany_objekt, DokumentacniJednotka):
-            if transaction:
-                navazany_objekt.archeologicky_zaznam.save_metadata(transaction)
-            else:
-                transaction = navazany_objekt.archeologicky_zaznam.save_metadata()
+            transaction = navazany_objekt.archeologicky_zaznam.save_metadata(transaction)
     if transaction:
         transaction.mark_transaction_as_closed()
     logger.debug("komponenta.signals.komponenta_save.end", extra={"transaction": transaction, "pk": instance.pk})
@@ -49,9 +43,6 @@ def komponenta_delete(sender, instance: Komponenta, **kwargs):
         if isinstance(navazany_objekt, DokumentCast):
             transaction = navazany_objekt.dokument.save_metadata()
         elif isinstance(navazany_objekt, DokumentacniJednotka):
-            if transaction:
-                navazany_objekt.archeologicky_zaznam.save_metadata(transaction)
-            else:
-                transaction = navazany_objekt.archeologicky_zaznam.save_metadata()
+            transaction = navazany_objekt.archeologicky_zaznam.save_metadata(transaction)
     if transaction:
         transaction.mark_transaction_as_closed()
