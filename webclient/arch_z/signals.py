@@ -114,7 +114,8 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
         for eo in instance.externi_odkazy.all():
             eo.suppress_signal_arch_z = True
             eo.delete()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.end",
                  extra={"record_ident_cely": instance.ident_cely, "transaction": transaction})
 
@@ -127,6 +128,7 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
     for item in instance.casti_dokumentu.all():
         item: DokumentCast
         transaction = item.dokument.save_metadata(transaction)
+    if transaction:
         transaction.mark_transaction_as_closed()
     logger.debug("arch_z.signals.delete_arch_z_repository_update_connected_records.end",
                  extra={"record_ident": instance.ident_cely, "transaction": transaction})

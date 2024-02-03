@@ -74,7 +74,8 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
     logger.debug("dokument.signals.dokument_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
         transaction = instance.save_metadata()
-        transaction.mark_transaction_as_closed()
+        if transaction:
+            transaction.mark_transaction_as_closed()
         logger.debug("dokument.signals.dokument_save_metadata.done", extra={"transaction": transaction})
     if not check_if_task_queued("Dokument", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["Dokument", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
@@ -86,7 +87,8 @@ def let_save_metadata(sender, instance: Let, **kwargs):
     logger.debug("dokument.signals.let_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
         transaction = instance.save_metadata()
-        transaction.mark_transaction_as_closed()
+        if transaction:
+            transaction.mark_transaction_as_closed()
         logger.debug("dokument.signals.let_save_metadata.save_metadata", extra={"ident_cely": instance.ident_cely,
                                                                                 "transaction": transaction})
     logger.debug("dokument.signals.let_save_metadata.no_action", extra={"ident_cely": instance.ident_cely})
@@ -113,7 +115,8 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
         instance.historie.delete()
     if instance.soubory and instance.soubory.pk:
         instance.soubory.delete()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("dokument.signals.dokument_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
 
@@ -123,7 +126,8 @@ def let_delete_repository_container(sender, instance: Let, **kwargs):
     logger.debug("dokument.signals.let_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
     transaction = instance.record_deletion()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("dokument.signals.let_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
 
@@ -137,18 +141,19 @@ def dokument_cast_save_metadata(sender, instance: DokumentCast, created, **kwarg
         transaction = instance.dokument.save_metadata()
         extra["transaction"] = str(transaction)
         if instance.archeologicky_zaznam is not None:
-            instance.archeologicky_zaznam.save_metadata(transaction)
+            transaction = instance.archeologicky_zaznam.save_metadata(transaction)
             extra.update({"archeologicky_zaznam": instance.archeologicky_zaznam.ident_cely})
         if instance.initial_archeologicky_zaznam is not None:
-            instance.initial_archeologicky_zaznam.save_metadata(transaction)
+            transaction = instance.initial_archeologicky_zaznam.save_metadata(transaction)
             extra.update({"initial_archeologicky_zaznam": instance.initial_archeologicky_zaznam.ident_cely})
         if instance.projekt is not None:
-            instance.projekt.save_metadata(transaction)
+            transaction = instance.projekt.save_metadata(transaction)
             extra.update({"projekt": instance.projekt.ident_cely})
         if instance.initial_projekt is not None:
-            instance.initial_projekt.save_metadata(transaction)
+            transaction = instance.initial_projekt.save_metadata(transaction)
             extra.update({"initial_projekt": instance.initial_projekt.ident_cely})
-        transaction.mark_transaction_as_closed()
+        if transaction:
+            transaction.mark_transaction_as_closed()
         logger.debug("dokument.signals.dokument_cast_save_metadata.changed", extra=extra)
     else:
         logger.debug("dokument.signals.dokument_cast_save_metadata.no_change", extra=extra)
@@ -174,7 +179,8 @@ def tvar_save(sender, instance: Tvar, created, **kwargs):
     logger.debug("dokument.signals.tvar_save.start", extra={"pk": instance.pk})
     if instance.dokument:
         transaction = instance.dokument.save_metadata()
-        transaction.mark_transaction_as_closed()
+        if transaction:
+            transaction.mark_transaction_as_closed()
     logger.debug("dokument.signals.tvar_save.end", extra={"pk": instance.pk, "transaction": transaction})
 
 

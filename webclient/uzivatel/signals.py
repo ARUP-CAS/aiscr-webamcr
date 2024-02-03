@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
     logger.debug("uzivatel.signals.orgnaizace_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     transaction = instance.save_metadata()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("uzivatel.signals.orgnaizace_save_metadata.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
 
@@ -24,7 +25,8 @@ def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
 def osoba_save_metadata(sender, instance: Osoba, **kwargs):
     logger.debug("uzivatel.signals.osoba_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     transaction = instance.save_metadata()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("uzivatel.signals.osoba_save_metadata.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
 
@@ -140,7 +142,8 @@ def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
     logger.debug("uzivatel.signals.osoba_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
     transaction = instance.record_deletion()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("uzivatel.signals.osoba_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
 
@@ -150,6 +153,7 @@ def organizace_delete_repository_container(sender, instance: Organizace, **kwarg
     logger.debug("uzivatel.signals.organizace_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
     transaction = instance.record_deletion()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("uzivatel.signals.organizace_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})

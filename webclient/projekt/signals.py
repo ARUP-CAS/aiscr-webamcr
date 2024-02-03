@@ -76,8 +76,9 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     if instance.casti_dokumentu:
         for item in instance.casti_dokumentu.all():
             item: DokumentCast
-            item.dokument.save_metadata(transaction)
-    transaction.mark_transaction_as_closed()
+            transaction = item.dokument.save_metadata(transaction)
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("projekt.signals.projekt_pre_delete.end", extra={"ident_cely": instance.ident_cely})
 
 

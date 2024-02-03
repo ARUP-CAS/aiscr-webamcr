@@ -490,7 +490,8 @@ class EditDokumentForm(forms.ModelForm):
         self.fields["autori"].widget.choices = list(Osoba.objects.filter(
             dokumentautor__dokument=self.instance
         ).order_by("dokumentautor__poradi").values_list("id","vypis_cely"))
-        self.fields["region"].required = True
+        if create:
+            self.fields["region"].required = True
 
 
 class CreateModelDokumentForm(forms.ModelForm):
@@ -658,7 +659,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "duveryhodnost": _("dokument.forms.createModelExtraDataForm.duveryhodnost.label"),
             "odkaz": _("dokument.forms.createModelExtraDataForm.odkaz.label"),
             "zeme": _("dokument.forms.createModelExtraDataForm.zeme.label"),
-            "region_extra": _("dokument.forms.createModelExtraDataForm.region.label"),
+            "region_extra": _("dokument.forms.createModelExtraDataForm.region_extra.label"),
             "vyska": _("dokument.forms.createModelExtraDataForm.delka.label"),
             "sirka": _("dokument.forms.createModelExtraDataForm.sirka.label"),
         }
@@ -667,7 +668,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "duveryhodnost": _("dokument.forms.createModelExtraDataForm.duveryhodnost.tooltip"),
             "odkaz": _("dokument.forms.createModelExtraDataForm.odkaz.tooltip"),
             "zeme": _("dokument.forms.createModelExtraDataForm.zeme.tooltip"),
-            "region_extra": _("dokument.forms.createModelExtraDataForm.region.tooltip"),
+            "region_extra": _("dokument.forms.createModelExtraDataForm.region_extra.tooltip"),
             "vyska": _("dokument.forms.createModelExtraDataForm.vyska.tooltip"),
             "sirka": _("dokument.forms.createModelExtraDataForm.sirka.tooltip"),
         }

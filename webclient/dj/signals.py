@@ -46,7 +46,8 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
         if instance.initial_pian is not None:
             transaction = instance.initial_pian.save_metadata(transaction)
     transaction = instance.archeologicky_zaznam.save_metadata(transaction)
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("dj.signals.create_dokumentacni_jednotka.end", extra={"transaction": transaction})
 
 
@@ -76,6 +77,7 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
     if instance.komponenty:
         instance.komponenty.delete()
     transaction = instance.archeologicky_zaznam.save_metadata(transaction)
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("dj.signals.delete_dokumentacni_jednotka.end", extra={"ident_cely": instance.ident_cely,
                                                                        "transaction": transaction})

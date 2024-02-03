@@ -14,7 +14,8 @@ def adb_save_metadata(sender, instance: Adb, **kwargs):
     if not instance.suppress_signal:
         transaction = instance.save_metadata()
         instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(transaction)
-        transaction.mark_transaction_as_closed()
+        if transaction:
+            transaction.mark_transaction_as_closed()
         logger.debug("adb.signals.adb_save_metadata.save_metadata", extra={"ident_cely": instance.ident_cely,
                                                                            "transaction": transaction})
     logger.debug("adb.signals.adb_save_metadata.end", extra={"ident_cely": instance.ident_cely})
@@ -24,8 +25,9 @@ def adb_save_metadata(sender, instance: Adb, **kwargs):
 def adb_delete_repository_container(sender, instance: Adb, **kwargs):
     logger.debug("adb.signals.adb_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     transaction = instance.record_deletion()
-    instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(transaction)
-    transaction.mark_transaction_as_closed()
+    transaction = instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(transaction)
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("adb.signals.adb_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
 
@@ -35,7 +37,8 @@ def vyskovy_bod_delete_repository_container(sender, instance: VyskovyBod, **kwar
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
     transaction = instance.adb.save_metadata()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
 

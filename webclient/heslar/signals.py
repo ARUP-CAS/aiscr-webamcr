@@ -28,8 +28,9 @@ def save_metadata_heslar(sender, instance: Heslar, **kwargs):
     Funkce pro uložení metadat hesláře.
     """
     logger.debug("heslo.signals.save_metadata_heslar.start")
-    transaction = instance.save_metadata()
-    transaction.mark_transaction_as_closed()
+    transaction = instance.save_metadata(
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.save_metadata_heslar.end", extra={"transaction": transaction})
 
 
@@ -40,7 +41,8 @@ def save_metadata_katastr(sender, instance: RuianKatastr, **kwargs):
     """
     logger.debug("heslo.signals.save_metadata_katastr.start")
     transaction = instance.save_metadata()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.save_metadata_katastr.end", extra={"transaction": transaction})
 
 
@@ -51,7 +53,8 @@ def save_metadata_kraj(sender, instance: RuianKraj, **kwargs):
     """
     logger.debug("heslo.signals.save_metadata_kraj.start")
     transaction = instance.save_metadata()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.save_metadata_kraj.end", extra={"transaction": transaction})
 
 
@@ -59,7 +62,8 @@ def save_metadata_kraj(sender, instance: RuianKraj, **kwargs):
 def save_metadata_okres(sender, instance: RuianOkres, **kwargs):
     logger.debug("heslo.signals.save_metadata_okres.start")
     transaction = instance.save_metadata()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.save_metadata_okres.end", extra={"transaction": transaction})
 
 
@@ -91,10 +95,11 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarDatace, created, **k
     logger.debug("heslo.signals.save_metadata_heslar_hierarchie.start")
     transaction = instance.obdobi.save_metadata()
     if instance.initial_obdobi and instance.initial_obdobi != instance.obdobi:
-        instance.initial_obdobi.save_metadata(transaction)
+        transaction = instance.initial_obdobi.save_metadata(transaction)
         logger.debug("heslo.signals.save_metadata_heslar_hierarchie.save_metadata",
                      extra={"transaction": transaction})
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.save_metadata_heslar_hierarchie.end")
 
 
@@ -106,9 +111,10 @@ def save_metadata_heslar_dokument_typ_material_rada(sender, instance: HeslarDoku
     logger.debug("heslo.signals.save_metadata_heslar_dokument_typ_material_rada.start")
     if created:
         transaction = instance.dokument_rada.save_metadata()
-        instance.dokument_typ.save_metadata(transaction)
-        instance.dokument_material.save_metadata(transaction)
-        transaction.mark_transaction_as_closed()
+        transaction = instance.dokument_typ.save_metadata(transaction)
+        transaction = instance.dokument_material.save_metadata(transaction)
+        if transaction:
+            transaction.mark_transaction_as_closed()
         logger.debug("heslo.signals.save_metadata_heslar_dokument_typ_material_rada.save_metadata",
                      extra={"transaction": transaction})
     logger.debug("heslo.signals.save_metadata_heslar_dokument_typ_material_rada.end")
@@ -123,8 +129,9 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
     transaction = instance.heslo.save_metadata()
     if instance.initial_heslo != instance.heslo:
         heslo = Heslar.objects.get(pk=instance.initial_heslo.pk)
-        heslo.save_metadata(transaction)
-        transaction.mark_transaction_as_closed()
+        transaction = heslo.save_metadata(transaction)
+        if transaction:
+            transaction.mark_transaction_as_closed()
         logger.debug("heslo.signals.save_metadata_heslar_odkaz.save_medata", extra={"transaction": transaction})
     logger.debug("heslo.signals.save_metadata_heslar_odkaz.end")
 
@@ -133,7 +140,8 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
 def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
     logger.debug("heslo.signals.heslar_delete_repository_container.start")
     transaction = instance.record_deletion()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.heslar_delete_repository_container.end", extra={"transaction": transaction})
 
 
@@ -141,7 +149,8 @@ def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
 def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **kwargs):
     logger.debug("heslo.signals.ruian_katastr_delete_repository_container.start")
     transaction = instance.record_deletion()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.ruian_katastr_delete_repository_container.end", extra={"transaction": transaction})
 
 
@@ -149,7 +158,8 @@ def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **
 def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs):
     logger.debug("heslo.signals.ruian_kraj_delete_repository_container.start")
     transaction = instance.record_deletion()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.ruian_kraj_delete_repository_container.end", extra={"transaction": transaction})
 
 
@@ -157,7 +167,8 @@ def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs
 def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwargs):
     logger.debug("heslo.signals.ruian_okres_delete_repository_container.start")
     transaction = instance.record_deletion()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.ruian_okres_delete_repository_container.end", extra={"transaction": transaction})
 
 
@@ -169,7 +180,8 @@ def delete_uppdate_related_heslar_hierarchie(sender, instance: HeslarHierarchie,
     logger.debug("heslo.signals.delete_uppdate_related_heslar_hierarchie.start")
     transaction = instance.heslo_podrazene.save_metadata()
     instance.heslo_nadrazene.save_metadata(transaction)
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.delete_uppdate_related_heslar_hierarchie.end", extra={"transaction": transaction})
 
 
@@ -182,7 +194,8 @@ def delete_uppdate_related_heslar_dokument_typ_material_rada(sender, instance: H
     transaction = instance.dokument_rada.save_metadata()
     instance.dokument_typ.save_metadata(transaction)
     instance.dokument_material.save_metadata(transaction)
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.delete_uppdate_related_heslar_dokument_typ_material_rada.end",
                  extra={"transaction": transaction})
 
@@ -194,7 +207,8 @@ def delete_uppdate_related_heslar_odkaz(sender, instance: HeslarOdkaz, **kwargs)
     """
     logger.debug("heslo.signals.delete_uppdate_related_heslar_odkaz.start")
     transaction = instance.heslo.save_metadata()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.delete_uppdate_related_heslar_odkaz.end", extra={"transaction": transaction})
 
 

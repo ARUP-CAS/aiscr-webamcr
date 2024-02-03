@@ -35,7 +35,8 @@ def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
     logger.debug("ez.signals.externi_zdroj_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
         transaction = instance.save_metadata()
-        transaction.mark_transaction_as_closed()
+        if transaction:
+            transaction.mark_transaction_as_closed()
         logger.debug("ez.signals.externi_zdroj_save_metadata.save_medata",
                      extra={"ident_cely": instance.ident_cely, "transaction": transaction})
     logger.debug("ez.signals.externi_zdroj_save_metadata.end", extra={"ident_cely": instance.ident_cely})
@@ -53,6 +54,7 @@ def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **
         instance.historie.delete()
     if instance.soubory and instance.soubory.pk:
         instance.soubory.delete()
-    transaction.mark_transaction_as_closed()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("ez.signals.delete_externi_zdroj_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})

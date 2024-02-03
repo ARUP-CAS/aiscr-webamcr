@@ -8,12 +8,14 @@ from notifikace_projekty.models import Pes
 def pes_save(sender, instance: Pes, **kwargs):
     if instance.user:
         transaction = instance.user.save_metadata()
-        transaction.mark_transaction_as_closed()
+        if transaction:
+            transaction.mark_transaction_as_closed()
 
 
 @receiver(pre_delete, sender=Pes)
 def pes_delete(sender, instance: Pes, **kwargs):
     if instance.user:
         transaction = instance.user.save_metadata()
-        transaction.mark_transaction_as_closed()
+        if transaction:
+            transaction.mark_transaction_as_closed()
 

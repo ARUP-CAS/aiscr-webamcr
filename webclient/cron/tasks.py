@@ -531,7 +531,8 @@ def record_ident_change(class_name, record_pk, old_ident, transaction_uid=None):
             for item in record.dokumentacni_jednotky_pianu.all():
                 item: DokumentacniJednotka
                 item.archeologicky_zaznam.save_metadata(transaction)
-        transaction.mark_transaction_as_closed()
+        if transaction:
+            transaction.mark_transaction_as_closed()
 
     except Exception as err:
         logger.error("cron.record_ident_change.do.error", extra={"error": err})
