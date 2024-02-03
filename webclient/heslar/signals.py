@@ -28,7 +28,7 @@ def save_metadata_heslar(sender, instance: Heslar, **kwargs):
     Funkce pro uložení metadat hesláře.
     """
     logger.debug("heslo.signals.save_metadata_heslar.start")
-    transaction = instance.save_metadata(
+    transaction = instance.save_metadata()
     if transaction:
         transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.save_metadata_heslar.end", extra={"transaction": transaction})
