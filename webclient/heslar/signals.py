@@ -71,22 +71,13 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, created,
     logger.debug("heslo.signals.save_metadata_heslar_hierarchie.start")
     transaction = None
     if instance.heslo_podrazene:
-        transaction = instance.heslo_podrazene.save_metadata()
+        transaction = instance.heslo_podrazene.save_metadata(transaction)
     if instance.heslo_nadrazene:
-        if not transaction:
-            transaction = instance.heslo_nadrazene.save_metadata()
-        else:
-            instance.heslo_nadrazene.save_metadata(transaction)
+        transaction = instance.heslo_nadrazene.save_metadata(transaction)
     if instance.initial_heslo_nadrazene and instance.heslo_nadrazene.pk != instance.initial_heslo_nadrazene.pk:
-        if not transaction:
-            transaction = instance.initial_heslo_nadrazene.save_metadata()
-        else:
-            instance.initial_heslo_nadrazene.save_metadata(transaction)
+        transaction = instance.initial_heslo_nadrazene.save_metadata(transaction)
     if instance.initial_heslo_podrazene and instance.heslo_podrazene.pk != instance.initial_heslo_podrazene.pk:
-        if not transaction:
-            transaction = instance.initial_heslo_podrazene.save_metadata()
-        else:
-            instance.initial_heslo_podrazene.save_metadata(transaction)
+        transaction = instance.initial_heslo_podrazene.save_metadata(transaction)
     if transaction:
         transaction.mark_transaction_as_closed()
     logger.debug("heslo.signals.save_metadata_heslar_hierarchie.end", extra={"transaction": transaction})
