@@ -1,6 +1,6 @@
 Django==4.2.8
 psycopg2-binary==2.9.9
-pytz==2023.4
+pytz==2024.1
 simplejson==3.19.2
 django-crispy-forms==2.1
 crispy-bootstrap4
@@ -42,7 +42,7 @@ phonenumbers==8.13.29
 pre-commit==3.6.0
 isort==5.13.2
 coverage==7.4.1
-django-debug-toolbar==4.2.0
+django-debug-toolbar==4.3.0
 black==24.1.1
 django-livereload-server==0.5.1
 django-debug-toolbar-template-profiler==2.1.0
@@ -52,7 +52,7 @@ django-object-actions==4.2.0
 pre-commit==3.6.0
 isort==5.13.2
 coverage==7.4.1
-django-debug-toolbar==4.2.0
+django-debug-toolbar==4.3.0
 black==24.1.1
 django-livereload-server==0.5.1
 django-debug-toolbar-template-profiler==2.1.0
