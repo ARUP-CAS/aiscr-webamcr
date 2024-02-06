@@ -1715,6 +1715,7 @@ def zapsat(request, zaznam=None):
             create=True,
             required=required_fields,
             required_next=required_fields_next,
+            region_not_required=True if zaznam else None,
         )
     back_ident = None
     back_model = None
