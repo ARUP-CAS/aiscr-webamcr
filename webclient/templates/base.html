@@ -143,7 +143,7 @@
                   if (data.is_authenticated) {;
                       const currentUrl = new URL(window.location.href);
                       const nextPath = currentUrl.searchParams.get("next");
-                      if (nextPath) {
+                      if (nextPath && currentUrl.toLowerCase().includes("accounts/login")) {
                           window.location.href = `${window.location.protocol}//${window.location.host}${nextPath}`;
                       }
                   }
