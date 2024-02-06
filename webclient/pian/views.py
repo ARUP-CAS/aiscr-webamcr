@@ -65,7 +65,7 @@ def detail(request, ident_cely):
     if pian == PIAN_POTVRZEN:
             raise PermissionDenied
     form = PianCreateForm(
-        request.POST,
+        data=request.POST,
         instance=pian,
     )
     c = connection.cursor()
@@ -230,7 +230,8 @@ def create(request, dj_ident_cely):
     """
     logger.debug("pian.views.create.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
-    form = PianCreateForm(request.POST)
+    form = PianCreateForm(data=request.POST)
+    logger.debug("pian.views.create.form_data", extra={"form_data": form.data, "post_data": request.POST})
     c = connection.cursor()
     validation_results = ""
     try:

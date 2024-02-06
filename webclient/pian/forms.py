@@ -26,7 +26,7 @@ class PianCreateForm(forms.ModelForm):
     def __init__(self, presnost=None, *args, **kwargs):
         super(PianCreateForm, self).__init__(*args, **kwargs)
         if presnost:
-            self.fields["presnost"].initial=presnost
+            self.fields["presnost"].initial = presnost
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.fields["geom_system"].initial = "4326"
