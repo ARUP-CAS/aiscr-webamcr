@@ -490,7 +490,8 @@ class EditDokumentForm(forms.ModelForm):
         self.fields["autori"].widget.choices = list(Osoba.objects.filter(
             dokumentautor__dokument=self.instance
         ).order_by("dokumentautor__poradi").values_list("id","vypis_cely"))
-        self.fields["region"].required = True
+        if create:
+            self.fields["region"].required = True
 
 
 class CreateModelDokumentForm(forms.ModelForm):
