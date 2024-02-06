@@ -1,5 +1,6 @@
 import logging
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import post_save, post_delete, pre_save, pre_delete
 from django.dispatch import receiver
 
@@ -53,13 +54,15 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, created,
     """
     Funkce pro uložení metadat heslář - hierarchie.
     """
-    if instance.heslo_podrazene:
+    if hasattr(instance, "heslo_podrazene") and instance.heslo_podrazene:
         instance.heslo_podrazene.save_metadata()
-    if instance.heslo_nadrazene:
+    if hasattr(instance, "heslo_nadrazene") and instance.heslo_nadrazene:
         instance.heslo_nadrazene.save_metadata()
-    if instance.initial_heslo_nadrazene and instance.heslo_nadrazene.pk != instance.initial_heslo_nadrazene.pk:
+    if (hasattr(instance, "initial_heslo_nadrazene") and instance.initial_heslo_nadrazene
+            and instance.heslo_nadrazene.pk != instance.initial_heslo_nadrazene.pk):
         instance.initial_heslo_nadrazene.save_metadata()
-    if instance.initial_heslo_podrazene and instance.heslo_podrazene.pk != instance.initial_heslo_podrazene.pk:
+    if (hasattr(instance, "initial_heslo_podrazene") and instance.initial_heslo_podrazene
+            and instance.heslo_podrazene.pk != instance.initial_heslo_podrazene.pk):
         instance.initial_heslo_podrazene.save_metadata()
 
 
@@ -69,9 +72,9 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarDatace, created, **k
     Funkce pro uložení metadat heslář - hierarchie.
     """
     instance.obdobi.save_metadata()
-    if instance.initial_obdobi and instance.initial_obdobi != instance.obdobi:
+    if (hasattr(instance, "initial_obdobi") and
+            instance.initial_obdobi and instance.initial_obdobi != instance.obdobi):
         instance.initial_obdobi.save_metadata()
-
 
 @receiver(post_save, sender=HeslarDokumentTypMaterialRada)
 def save_metadata_heslar_dokument_typ_material_rada(sender, instance: HeslarDokumentTypMaterialRada, created, **kwargs):
@@ -90,7 +93,7 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
     Funkce pro uložení metadat heslář - odkaz.
     """
     instance.heslo.save_metadata()
-    if instance.initial_heslo != instance.heslo:
+    if hasattr(instance, "initial_heslo") and instance.initial_heslo != instance.heslo:
         heslo = Heslar.objects.get(pk=instance.initial_heslo.pk)
         heslo.save_metadata()
 

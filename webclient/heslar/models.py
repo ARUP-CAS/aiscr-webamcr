@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.db import models as pgmodels
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.utils.translation import gettext_lazy as _
@@ -16,7 +17,7 @@ from heslar.hesla import (
 )
 from xml_generator.models import ModelWithMetadata
 
-logger_s = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
@@ -101,7 +102,11 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
 
     def __init__(self, *args, **kwargs):
         super(HeslarDatace, self).__init__(*args, **kwargs)
-        self.initial_obdobi = self.obdobi
+        try:
+            self.initial_obdobi = self.obdobi
+        except ObjectDoesNotExist as err:
+            logger.debug("heslar.obdobi.HeslarDatace.__init__.no_obdobi", extra={"err": err})
+            self.initial_obdobi = None
 
 
 class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_typ_material_rada"), models.Model):
@@ -231,7 +236,7 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
     def __init__(self, *args, **kwargs):
         super(HeslarOdkaz, self).__init__(*args, **kwargs)
         if self.pk:
-            logger_s.debug(self.heslo)
+            logger.debug(self.heslo)
             self.initial_heslo = self.heslo
 
 
