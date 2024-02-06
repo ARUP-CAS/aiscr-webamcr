@@ -6,6 +6,8 @@ from heslar.models import Heslar, HeslarNazev, HeslarDatace, HeslarDokumentTypMa
 from uzivatel.models import Osoba, Organizace, UserNotificationType
 from django_object_actions import DjangoObjectActions, action
 
+from heslar.forms import HeslarHierarchieForm, HeslarOdkazForm
+
 
 class ObjectWithMetadataAdmin(DjangoObjectActions, admin.ModelAdmin):
     @action(label="Metadata", description="Download of metadata")
@@ -127,9 +129,9 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     Admin část pro správu modelu heslař odkaz.
     """
     list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
-    fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
+    fields = ("heslar_nazev","heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
     search_fields = ("heslo__ident_cely", "heslo__heslo", "zdroj", "nazev_kodu", "kod", "uri")
-
+    form = HeslarOdkazForm
 
 @admin.register(HeslarHierarchie)
 class HeslarHierarchieAdmin(admin.ModelAdmin):
@@ -137,10 +139,12 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
     Admin část pro správu modelu heslař hierarchie.
     """
     list_display = ("heslo_podrazene", "heslo_nadrazene", "typ")
-    fields = ("heslo_podrazene", "heslo_nadrazene", "typ")
+    fields = ("heslar_nazev_podrazene","heslo_podrazene", "heslar_nazev_nadrazene","heslo_nadrazene", "typ")
     search_fields = ("heslo_podrazene__ident_cely", "heslo_podrazene__heslo", "heslo_nadrazene__ident_cely",
                      "heslo_nadrazene__heslo", "typ")
     list_filter = ("typ", )
+    form = HeslarHierarchieForm
+
 
 
 @admin.register(Osoba)

@@ -9,7 +9,7 @@ from django.utils.translation import get_language
 
 from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_DOKUMENT_FORMAT, HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
-from heslar.models import Heslar, RuianKatastr, HeslarHierarchie
+from heslar.models import Heslar, HeslarNazev, RuianKatastr, HeslarHierarchie
 import logging
 
 
@@ -143,6 +143,8 @@ class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(
             id__in=MODEL_3D_DOKUMENT_TYPES
         )
+        if self.q:
+            qs = qs.filter(nazev__icontains=self.q)
         return qs
 
 
@@ -154,6 +156,8 @@ class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySe
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(
             heslo__startswith="3D"
         )
+        if self.q:
+            qs = qs.filter(nazev__icontains=self.q)
         return qs
 
 
@@ -163,4 +167,29 @@ class PristupnostAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
     """
     def get_queryset(self):
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST)
+        if self.q:
+            qs = qs.filter(nazev__icontains=self.q)
+        return qs
+
+class HeslarAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro autocomplete pristupnosti.
+    """
+    def get_queryset(self):
+        qs = Heslar.objects.all()
+        heslar_nazev = self.forwarded.get('heslar_nazev', None)
+        if self.q:
+            qs = qs.filter(heslo__icontains=self.q)
+        if heslar_nazev:
+            qs = qs.filter(nazev_heslare=heslar_nazev)
+        return qs
+    
+class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro autocomplete pristupnosti.
+    """
+    def get_queryset(self):
+        qs = HeslarNazev.objects.all()
+        if self.q:
+            qs = qs.filter(nazev__icontains=self.q)
         return qs

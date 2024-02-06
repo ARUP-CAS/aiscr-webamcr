@@ -6,7 +6,10 @@ from .views import (
     PristupnostAutocomplete,
     zjisti_katastr_souradnic,
     zjisti_nadrazenou_hodnotu,
-    zjisti_vychozi_hodnotu, DokumentFormatAutocomplete,
+    zjisti_vychozi_hodnotu, 
+    DokumentFormatAutocomplete,
+    HeslarAutocompleteView,
+    HeslarNazevAutocompleteView,
 )
 from uzivatel.views import create_osoba, OsobaAutocomplete, OsobaAutocompleteChoices
 
@@ -31,4 +34,6 @@ urlpatterns = [
         OsobaAutocompleteChoices.as_view(),
         name="osoba-autocomplete-choices",
     ),
+    path("heslar/autocomplete/", HeslarAutocompleteView.as_view(), name="heslar-autocomplete"),
+    path("heslar-nazev/autocomplete/", HeslarNazevAutocompleteView.as_view(), name="heslar_nazev-autocomplete"),
 ]

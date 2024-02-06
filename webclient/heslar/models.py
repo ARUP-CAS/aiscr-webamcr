@@ -230,7 +230,9 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
 
     def __init__(self, *args, **kwargs):
         super(HeslarOdkaz, self).__init__(*args, **kwargs)
-        self.initial_heslo = self.heslo
+        if self.pk:
+            logger_s.debug(self.heslo)
+            self.initial_heslo = self.heslo
 
 
 class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadata):
