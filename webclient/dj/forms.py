@@ -52,42 +52,34 @@ class CreateDJForm(forms.ModelForm):
         ):
             queryset = queryset.filter(id=TYP_DJ_CAST)
         elif jednotky is not None:
-            if jednotky.filter(typ__id=TYP_DJ_SONDA_ID).count() > 0:
-                if not instance.ident_cely:
+            has_sonda = jednotky.filter(typ__id=TYP_DJ_SONDA_ID).exists()
+            has_celek = jednotky.filter(typ__id=TYP_DJ_CELEK).exists()
+            has_cast = jednotky.filter(typ__id=TYP_DJ_CAST).exists()
+            has_katastr = jednotky.filter(typ__id=TYP_DJ_KATASTR).exists()
+            has_adb = jednotky.exclude(adb__isnull=True).exists()
+            is_samostatna = typ_akce == Akce.TYP_AKCE_SAMOSTATNA
+
+            default_filter = [TYP_DJ_CELEK, TYP_DJ_SONDA_ID]
+
+            if has_sonda:
+                if not instance.ident_cely or has_adb or jednotky.filter(
+                        Q(typ__id=TYP_DJ_SONDA_ID) & Q(ident_cely__lt=instance.ident_cely)).exists():
                     queryset = queryset.filter(id=TYP_DJ_SONDA_ID)
-                elif (
-                    jednotky.filter(
-                        Q(typ__id=TYP_DJ_SONDA_ID)
-                        & Q(ident_cely__lt=instance.ident_cely)
-                    ).count()
-                    > 0
-                ) or jednotky.exclude(adb__isnull=True).count() > 0:
-                    queryset = queryset.filter(id=TYP_DJ_SONDA_ID)
-                elif jednotky.filter(typ__id=TYP_DJ_SONDA_ID).count() > 1:
-                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
-                elif typ_akce == Akce.TYP_AKCE_SAMOSTATNA:
-                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
+                elif jednotky.filter(typ__id=TYP_DJ_SONDA_ID).count() > 1 or is_samostatna:
+                    queryset = queryset.filter(id__in=default_filter + ([TYP_DJ_KATASTR] if is_samostatna else []))
                 else:
-                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
-            elif hasattr(instance, "typ") and instance.typ.id == TYP_DJ_CELEK:
-                if typ_akce == Akce.TYP_AKCE_SAMOSTATNA and jednotky.filter(typ__id=TYP_DJ_CAST).count() == 0:
-                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
-                else:
-                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
-            elif hasattr(instance, "typ") and instance.typ == Heslar.objects.get(
-                id=TYP_DJ_KATASTR
-            ):
-                queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
-            elif jednotky.filter(typ__id=TYP_DJ_CELEK).count() > 0:
+                    queryset = queryset.filter(id__in=default_filter)
+            elif hasattr(instance, "typ") and instance.typ.id in [TYP_DJ_CELEK, TYP_DJ_KATASTR]:
+                additional_types = [TYP_DJ_KATASTR] if is_samostatna and not has_cast else []
+                queryset = queryset.filter(id__in=default_filter + additional_types)
+            elif has_celek:
                 queryset = queryset.filter(id=TYP_DJ_CAST)
-            elif typ_akce == Akce.TYP_AKCE_SAMOSTATNA:
-                queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
             else:
-                queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
-            if jednotky.filter(typ__id=TYP_DJ_KATASTR).exists() and (hasattr(instance, "typ")
-                    and instance.typ != Heslar.objects.get(id=TYP_DJ_KATASTR)) or not hasattr(instance, "typ") or \
-                (hasattr(instance, "typ") and instance.typ is None):
-                queryset = queryset.filter(~Q(id=TYP_DJ_KATASTR))
+                queryset = queryset.filter(id__in=default_filter)
+
+            if has_katastr and (not hasattr(instance, "typ") or instance.typ.id != TYP_DJ_KATASTR):
+                queryset = queryset.exclude(id=TYP_DJ_KATASTR)
+
         return queryset
 
     class Meta:
