@@ -388,7 +388,7 @@ def post_upload(request):
     if soubor:
         if not update:
             conn = FedoraRepositoryConnector(objekt)
-            mimetype = Soubor.get_mime_type(soubor)
+            mimetype = Soubor.get_mime_types(soubor)
             mime_extensions = Soubor.get_file_extension_by_mime(soubor)
             if len(mime_extensions) == 0:
                 logger.debug("core.views.post_upload.check_mime_for_url.rejected")
@@ -453,7 +453,7 @@ def post_upload(request):
                     status=500,
                 )
             conn = FedoraRepositoryConnector(objekt)
-            mimetype = Soubor.get_mime_type(soubor)
+            mimetype = Soubor.get_mime_types(soubor)
             mime_extensions = Soubor.get_file_extension_by_mime(soubor)
             if len(mime_extensions) == 0:
                 logger.debug("core.views.post_upload.check_mime_for_url.rejected")

@@ -20,7 +20,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
 
 # Install dependencies
 RUN  apt-get -qq -y install cron && apt-get -y -qq install sudo
-RUN apt-get install -y python3-pip libgdal-dev locales gettext poppler-utils
+RUN apt-get install -y python3-pip libgdal-dev locales gettext poppler-utils rarfile
 
 # Ensure locales configured correctly
 RUN locale-gen cs_CZ.utf8
