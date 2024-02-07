@@ -183,7 +183,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                      extra={"record_ident_cely": record, "repository_uuid": self.repository_uuid, "soubor_pk": self.pk})
         return None
 
-    def zaznamenej_nahrani(self, user):
+    def zaznamenej_nahrani(self, user, file_name=None):
         """
         Metóda pro zapsáni vytvoření souboru do historie.
         """
@@ -191,7 +191,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         hist = Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
-            poznamka=self.nazev,
+            poznamka=file_name if file_name else self.nazev,
             vazba=self.historie,
         ).save()
         logger.debug(_("core.models.soubor.zaznamenej_nahrani.finished"), extra={"historie": hist})
@@ -313,14 +313,14 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                     return False
                 finally:
                     file_input.close()
-            else:
-                logger.info("core.models.Soubor.get_mime_type.unknown_archive", extra={"mime_type": mime_type})
-                return False
             if "application/octet-stream" in mime_types:
                 mime_types.remove("application/octet-stream")
             logger.debug("core.models.Soubor.get_mime_type.end", extra={"mime_types": mime_types,
                                                                         "check_archive": check_archive})
-            return mime_types
+            if len(mime_types) == 1:
+                return list(mime_types)[0]
+            else:
+                return mime_types
         else:
             logger.debug("core.models.Soubor.get_mime_type.end", extra={"mime_type": mime_type,
                                                                         "check_archive": check_archive})
@@ -333,6 +333,10 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                      extra={"mime": mime})
         if mime is False:
             return False
+        if isinstance(mime, str):
+            mime_str = mime
+            mime = set()
+            mime.add(mime_str)
         mime: set
         if "soubor/nahrat/pas/" in source_url:
             for item in mime:
