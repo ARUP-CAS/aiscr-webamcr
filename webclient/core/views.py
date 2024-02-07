@@ -341,6 +341,7 @@ def post_upload(request):
     source_url = request.POST.get("source-url", "")
     update = "fileID" in request.POST
     s = None
+    original_filename = request.FILES.get("file").name
     if not update:
         logger.debug("core.views.post_upload.start", extra={"objectID": request.POST.get("objectID", None),
                                                             "source_url": source_url})
@@ -419,17 +420,17 @@ def post_upload(request):
                 s.save()
                 if not request.user.is_authenticated:
                     user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
-                    s.zaznamenej_nahrani(user_admin)
+                    s.zaznamenej_nahrani(user_admin, original_filename)
                 else:
-                    s.zaznamenej_nahrani(request.user)
+                    s.zaznamenej_nahrani(request.user, original_filename)
             else:
                 logger.debug("core.views.post_upload.already_exists", extra={"s": s})
                 s.save()
                 if not request.user.is_authenticated:
                     user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
-                    s.zaznamenej_nahrani(user_admin)
+                    s.zaznamenej_nahrani(user_admin, original_filename)
                 else:
-                    s.zaznamenej_nahrani(request.user)
+                    s.zaznamenej_nahrani(request.user, original_filename)
                 # Find parent record and send it to the user
                 parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
                     if duplikat.first().vazba.navazany_objekt is not None else ""
