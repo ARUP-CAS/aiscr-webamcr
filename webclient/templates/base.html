@@ -21,10 +21,12 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
   {% compress css %}
   <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="screen">
-  {% if user.is_authenticated and request.path != '/oznameni/' and request.path != '/accounts/login/' %}
-  <link type="text/x-scss" href="{% static '_app-sidebar.scss' %}" rel="stylesheet" media="screen">
-  {% endif %}
   {% endcompress %}
+  {% if user.is_authenticated and request.path != '/oznameni/' and request.path != '/accounts/login/' %}
+  {% compress css %}
+  <link type="text/x-scss" href="{% static '_app-sidebar.scss' %}" rel="stylesheet" media="screen">
+  {% endcompress %}
+  {% endif %}
   <!-- Material icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
   <!-- Optional JavaScript; choose one of the two! -->

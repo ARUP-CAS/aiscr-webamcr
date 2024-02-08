@@ -312,7 +312,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         form = ChangeKatastrForm(data=request.POST)
         if form.is_valid():
             az = zaznam.archeologicky_zaznam
-            old_katastr = az.hlavni_katastr
+            az: ArcheologickyZaznam
             az.hlavni_katastr = form.cleaned_data["katastr"]
             az.save()
             if form.cleaned_data["katastr"].pian is not None:
@@ -321,13 +321,6 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
             else: 
                 zaznam.pian = vytvor_pian(form.cleaned_data["katastr"])
                 zaznam.save()
-            if old_katastr.okres.kraj.rada_id != form.cleaned_data["katastr"].okres.kraj.rada_id:
-                if az.stav == AZ_STAV_ARCHIVOVANY:
-                    az.set_akce_ident(get_akce_ident(form.cleaned_data["katastr"].okres.kraj.rada_id))
-                else:
-                    az.set_akce_ident(
-                        get_temp_akce_ident(form.cleaned_data["katastr"].okres.kraj.rada_id)
-                    )
             zaznam.refresh_from_db()
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
