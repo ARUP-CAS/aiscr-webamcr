@@ -382,7 +382,8 @@ def post_upload(request):
     soubor.seek(0)
     if not Soubor.check_mime_for_url(soubor, source_url):
         logger.debug("core.views.post_upload.check_mime_for_url.rejected")
-        return JsonResponse({"error": f"{_('core.views.post_upload.mime_check_failed')}"}, status=400)
+        help_translation = _('core.views.post_upload.mime_check_failed')
+        return JsonResponse({"error": f"{help_translation}"}, status=400)
     soubor_data = BytesIO(soubor.read())
     rep_bin_file = None
     if soubor:
@@ -392,7 +393,8 @@ def post_upload(request):
             mime_extensions = Soubor.get_file_extension_by_mime(soubor)
             if len(mime_extensions) == 0:
                 logger.debug("core.views.post_upload.check_mime_for_url.rejected")
-                return JsonResponse({"error": f"{_('core.views.post_upload.mime_rename_failed')}"}, status=400)
+                help_translation = _('core.views.post_upload.mime_rename_failed')
+                return JsonResponse({"error": f"{help_translation}"}, status=400)
             file_name_extension = new_name.split(".")[-1].lower()
             if file_name_extension not in mime_extensions:
                 old_name = new_name
@@ -433,11 +435,13 @@ def post_upload(request):
                 # Find parent record and send it to the user
                 parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
                     if duplikat.first().vazba.navazany_objekt is not None else ""
-                response_data["duplicate"] = (f"{_('core.views.post_upload.duplikat2.text1')} {parent_ident}. "
-                                              f"{_('core.views.post_upload.duplikat2.text2')}",)
+                help_translation = _('core.views.post_upload.duplikat2.text1')
+                help_translation2 = _('core.views.post_upload.duplikat2.text2')
+                response_data["duplicate"] = (f"{help_translation} {parent_ident}. {help_translation2}",)
             if renamed:
-                response_data["file_renamed"] = (f"{_('core.views.post_upload.renamed.text1')} {new_name}. "
-                                                f"{_('core.views.post_upload.renamed.text2')}",)
+                help_translation = _('core.views.post_upload.renamed.text1')
+                help_translation2 = _('core.views.post_upload.renamed.text2')
+                response_data["file_renamed"] = (f"{help_translation} {new_name}. {help_translation2}",)
             logger.debug("core.views.post_upload.end", extra={"file_id": s.pk})
             return JsonResponse(response_data, status=200)
         else:
@@ -457,7 +461,8 @@ def post_upload(request):
             mime_extensions = Soubor.get_file_extension_by_mime(soubor)
             if len(mime_extensions) == 0:
                 logger.debug("core.views.post_upload.check_mime_for_url.rejected")
-                return JsonResponse({"error": f"{_('core.views.post_upload.mime_rename_failed')}"}, status=400)
+                help_translation = _('core.views.post_upload.mime_rename_failed')
+                return JsonResponse({"error": f"{help_translation}"}, status=400)
             file_name_extension = new_name.split(".")[-1].lower()
             if file_name_extension not in mime_extensions:
                 old_name = new_name
@@ -489,11 +494,13 @@ def post_upload(request):
                 if duplikat.count() > 0:
                     parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
                         if duplikat.first().vazba.navazany_objekt is not None else ""
-                    response_data["duplicate"] = (f"{_('core.views.post_upload.duplikat2.text1')} {parent_ident}. "
-                                                  f"{_('core.views.post_upload.duplikat2.text2')}",)
+                    help_translation = _('core.views.post_upload.duplikat2.text1')
+                    help_translation2 = _('core.views.post_upload.duplikat2.text2')
+                    response_data["duplicate"] = (f"{help_translation} {parent_ident}. {help_translation}",)
                 if renamed:
-                    response_data["file_renamed"] = (f"{_('core.views.post_upload.renamed.text1')} {new_name}. "
-                                                     f"{_('core.views.post_upload.renamed.text2')}",)
+                    help_translation = _('core.views.post_upload.renamed.text1')
+                    help_translation2 = _('core.views.post_upload.renamed.text2')
+                    response_data["file_renamed"] = (f"{help_translation} {new_name}. {help_translation2}",)
                 return JsonResponse(response_data, status=200)
             else:
                 logger.warning("core.views.post_upload.rep_bin_file_is_none")
@@ -923,7 +930,8 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
         else:
             skryte_sloupce.append(sloupec)
             request.session.modified = True
-        return HttpResponse(f"{_('core.views.SearchListChangeColumnsView.response')} {sloupec}")
+        help_translation = _('core.views.SearchListChangeColumnsView.response')
+        return HttpResponse(f"{help_translation} {sloupec}")
 
 
 class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
