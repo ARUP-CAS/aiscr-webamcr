@@ -104,6 +104,10 @@ var addPointOnLoad = (lat, long, text, ident_cely,stav) => {
     map.setView([lat, long], 18)
 }
 
+var addProjektWithoutPointOnLoad = (ident_cely) => {
+    PROJEKT_IDENT_CELY=ident_cely;
+}
+
 map.on('moveend', function () {
     switchMap(false);
 });

@@ -425,6 +425,7 @@
                 if(coordinates && coordinates.length>1) {
                     addPointOnLoad(coordinates[1], coordinates[0], '{% trans "mapa.lokalizaceProjektu" %}', "{{projekt.ident_cely}}", "{{projekt.stav}}");
                 } else{
+                    addProjektWithoutPointOnLoad("{{projekt.ident_cely}}");
                     switchMap(false);
                 }
             </script>
