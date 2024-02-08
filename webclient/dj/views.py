@@ -313,7 +313,6 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         if form.is_valid():
             az = zaznam.archeologicky_zaznam
             az: ArcheologickyZaznam
-            old_katastr = az.hlavni_katastr
             az.hlavni_katastr = form.cleaned_data["katastr"]
             az.save()
             if form.cleaned_data["katastr"].pian is not None:
