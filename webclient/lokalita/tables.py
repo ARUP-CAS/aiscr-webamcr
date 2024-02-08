@@ -62,7 +62,7 @@ class LokalitaTable(SearchTable):
     dalsi_katastry = tables.columns.Column(
         verbose_name=_("lokalita.tables.lokalitaTable.dalsi_katastry.label"),
         default="",
-        accessor="dalsi_katastray_snapshot"
+        accessor="dalsi_katastry_snapshot"
     )
     pristupnost = tables.Column(
         verbose_name=_("lokalita.tables.lokalitaTable.pristupnost.label"),
