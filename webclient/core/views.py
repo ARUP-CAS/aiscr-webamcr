@@ -446,7 +446,7 @@ def post_upload(request):
             logger.debug("core.views.post_upload.end", extra={"file_id": s.pk})
             return JsonResponse(response_data, status=200)
         else:
-            __, file_extension = os.path.splitext(soubor.name)
+            original_name = soubor.name
             if s is None:
                 return JsonResponse(
                     {"error": f"Chyba při zpracování souboru"},
@@ -461,30 +461,30 @@ def post_upload(request):
             mimetype = Soubor.get_mime_types(soubor)
             mime_extensions = Soubor.get_file_extension_by_mime(soubor)
             if len(mime_extensions) == 0:
-                logger.debug("core.views.post_upload.check_mime_for_url.rejected")
+                logger.debug("core.views.post_upload.check_mime_for_url.rejected",
+                             extra={"original_name": original_name})
                 help_translation = _('core.views.post_upload.mime_rename_failed')
                 return JsonResponse({"error": f"{help_translation}"}, status=400)
             file_name_extension = new_name.split(".")[-1].lower()
             if file_name_extension not in mime_extensions:
-                old_name = new_name
                 new_name = new_name.replace(new_name.split(".")[-1], mime_extensions[0])
                 renamed = True
                 logger.debug("core.views.post_upload.check_mime_for_url.rename",
-                             extra={"mimetype": mimetype, "old_name": old_name, "new_name": new_name})
+                             extra={"mimetype": mimetype, "original_name": original_name, "new_name": new_name})
             else:
                 renamed = False
             if s.repository_uuid is not None:
                 extension = soubor.name.split(".")[-1]
-                old_name = ".".join(s.nazev.split(".")[:-1])
-                new_name = f'{old_name}.{extension}'
+                new_name = f'{".".join(s.nazev.split(".")[:-1])}.{extension}'
                 rep_bin_file = conn.update_binary_file(new_name, mimetype, soubor_data, s.repository_uuid)
-                logger.debug("core.views.post_upload.update", extra={"pk": s.pk, "new_name": new_name})
+                logger.debug("core.views.post_upload.update", extra={"pk": s.pk, "new_name": new_name,
+                                                                     "original_name": original_name})
                 s.nazev = new_name
                 s.size_mb = rep_bin_file.size_mb
                 s.mimetype = mimetype
                 s.sha_512 = rep_bin_file.sha_512
                 s.save()
-                s.zaznamenej_nahrani_nove_verze(request.user, old_name)
+                s.zaznamenej_nahrani_nove_verze(request.user, original_name)
             if rep_bin_file is not None:
                 duplikat = (
                     Soubor.objects.filter(sha_512=rep_bin_file.sha_512)
@@ -497,7 +497,7 @@ def post_upload(request):
                         if duplikat.first().vazba.navazany_objekt is not None else ""
                     help_translation = _('core.views.post_upload.duplikat2.text1')
                     help_translation2 = _('core.views.post_upload.duplikat2.text2')
-                    response_data["duplicate"] = (f"{help_translation} {parent_ident}. {help_translation}",)
+                    response_data["duplicate"] = (f"{help_translation} {parent_ident}. {help_translation2}",)
                 if renamed:
                     help_translation = _('core.views.post_upload.renamed.text1')
                     help_translation2 = _('core.views.post_upload.renamed.text2')
