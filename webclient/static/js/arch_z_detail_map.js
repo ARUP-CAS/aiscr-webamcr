@@ -6,6 +6,8 @@ var global_map_element_sjtsk = "id_geom_sjtsk";
 var global_map_can_load_pians = true;
 var global_map_katastry_all = null;
 var global_unwanted_popup=null;
+var gold_pian_ident_cely=null;
+
 addLogText("zmena def.geom :" + global_map_element)
 
 L.TileLayer.Grayscale = L.TileLayer.extend({
@@ -709,6 +711,7 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
 
 const addGoldPointOnLoad = (geom, layer, pian_ident_cely, st_text, presnost) => {
     addLogText("arch_z_detail_map.addGoldPointOnLoad")
+    gold_pian_ident_cely=pian_ident_cely;
     let coor = []
     //akce_ident_cely = document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0]
     //let link='<a href="/arch-z/akce/detail/'+akce_ident_cely+'/dj/'+text+'" target="_blank">'+text+'</a></br>'
@@ -1055,10 +1058,12 @@ switchMap = function (overview = false) {
                                 .bindPopup('<a href="/pas/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
                                 .addTo(poi_sn)
                             } else if(i.type=="pian"){
-
-                                if (i.dj == global_map_projekt_ident) {
+                                let idj=i.dj.substring(0,global_map_projekt_ident.length);
+                                if (idj== global_map_projekt_ident) {
                                     if (!global_map_can_edit) {
-                                        addPointToPoiLayer(i.geom, poi_dj, i.ident_cely, true,i.presnost)
+                                        if(gold_pian_ident_cely!=i.ident_cely){
+                                         addPointToPoiLayer(i.geom, poi_dj, i.ident_cely, true,i.presnost)
+                                        }
                                     }
                                 }
                                 else{

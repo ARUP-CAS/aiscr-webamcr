@@ -104,6 +104,7 @@ class FedoraRequestType(Enum):
     CREATE_BINARY_FILE_THUMB_LARGE = 34
     GET_BINARY_FILE_CONTENT_THUMB_LARGE = 35
     UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE = 36
+    GET_TOMBSTONE = 37
 
 
 class FedoraRepositoryConnector:
@@ -193,8 +194,6 @@ class FedoraRepositoryConnector:
                 return f"{base_url}/model/deleted/member/{ident_cely}/fcr:tombstone"
             else:
                 return f"{base_url}/model/deleted/member/{self.record.ident_cely}/fcr:tombstone"
-        elif request_type == FedoraRequestType.DELETE_DELETED_TOMBSTONE:
-            return f"{base_url}/model/deleted/member/{self.record.ident_cely}/fcr:tombstone"
         logger.error("core_repository_connector._get_request_url.not_implemented", extra={"request_type": request_type})
 
     @classmethod
@@ -208,8 +207,11 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector.check_container_is_deleted.start",
                      extra={"ident_cely": ident_cely})
         result = cls._send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
-        regex = re.compile(r"dcterms:type *\"deleted\" *;")
-        if ((result.status_code == 404 or (hasattr(result, "text") and "not found" in result.text)) or
+        if hasattr(result, "text") and "discovered tombstone" in result.text.lower():
+            logger.debug("core_repository_connector.check_container_is_deleted.false",
+                         extra={"ident_cely": ident_cely, "result_text": result.text})
+            return False
+        elif ((result.status_code == 404 or (hasattr(result, "text") and "not found" in result.text)) or
                 cls.check_container_deleted(ident_cely)):
             logger.debug("core_repository_connector.check_container_is_deleted.true",
                          extra={"ident_cely": ident_cely})
@@ -236,7 +238,7 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
                               FedoraRequestType.GET_LINK, FedoraRequestType.GET_DELETED_LINK,
                               FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
-                              FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE):
+                              FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE, FedoraRequestType.GET_TOMBSTONE):
             try:
                 response = requests.get(url, headers=headers, auth=auth, verify=False)
             except requests.exceptions.RequestException:
