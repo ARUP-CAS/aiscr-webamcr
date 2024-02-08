@@ -357,13 +357,16 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
                 == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
             ):
                 typ_akce = self.get_archeologicky_zaznam().akce.typ
-        except Exception as e:
-            pass
+        except Exception as err:
+            logger.debug("arch_z.views.DokumentacniJednotkaCreateView.get_context_data.cannot_get_typ_akce",
+                         extra={"err": err})
         context["dj_form_create"] = CreateDJForm(
             jednotky=self.get_jednotky(),
             typ_arch_z=self.get_archeologicky_zaznam().typ_zaznamu,
             typ_akce=typ_akce,
         )
+        logger.debug("arch_z.views.DokumentacniJednotkaCreateView.get_context_data.end",
+                     extra={"typ_arch_z": self.get_archeologicky_zaznam().typ_zaznamu, "typ_akce": typ_akce})
         return context
 
 
