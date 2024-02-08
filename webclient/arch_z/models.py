@@ -331,18 +331,11 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         self.ident_cely = (
             sequence.region + "-" + str(sequence.typ.zkratka) + f"{sequence.sekvence:07}"
         )
+        self._set_connected_records_ident(self.ident_cely)
         self.save()
         self.record_ident_change(old_ident)
 
-    def set_akce_ident(self, ident=None):
-        """
-        Metóda pro nastavení ident celý pro akci a její relace.
-        Nastaví ident z předaného argumentu ident nebo z metódy get_akce_ident.
-        """
-        if ident:
-            new_ident = ident
-        else:
-            new_ident = get_akce_ident(self.hlavni_katastr.okres.kraj.rada_id)
+    def _set_connected_records_ident(self, new_ident):
         for dj in self.dokumentacni_jednotky_akce.all():
             dj.ident_cely = new_ident + dj.ident_cely[-4:]
             if dj.komponenty is None:
@@ -354,6 +347,17 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 komponenta.ident_cely = new_ident + komponenta.ident_cely[-5:]
                 komponenta.save()
             dj.save()
+
+    def set_akce_ident(self, ident=None):
+        """
+        Metóda pro nastavení ident celý pro akci a její relace.
+        Nastaví ident z předaného argumentu ident nebo z metódy get_akce_ident.
+        """
+        if ident:
+            new_ident = ident
+        else:
+            new_ident = get_akce_ident(self.hlavni_katastr.okres.kraj.rada_id)
+        self._set_connected_records_ident(new_ident)
         self.ident_cely = new_ident
         self.save()
 
