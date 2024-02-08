@@ -114,6 +114,11 @@ class LokalitaListView(SearchListView):
         )
         return self.check_filter_permission(qs)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["toolbar_icon"] = "tour"
+        return context
+
 
 class LokalitaDetailView(
     LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecordUpdateView
