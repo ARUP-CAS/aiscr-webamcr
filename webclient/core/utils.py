@@ -315,6 +315,7 @@ def get_centre_from_akce(katastr, akce_ident_cely):
                     geom = dj.pian.geom
                     presnost = dj.pian.presnost.zkratka
                     pian_ident_cely = dj.pian.ident_cely
+                    break
         return [bod, geom, presnost, zoom, pian_ident_cely]
     except IndexError:
         logger.error(
