@@ -20,7 +20,7 @@ import py7zr
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian
 from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
-from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, FILE_URL_PREFIX
+from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from nalez.models import NalezObjekt, NalezPredmet
 from notifikace_projekty.models import Pes
 from uzivatel.models import User
@@ -119,7 +119,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @property
     def url(self):
         if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
-            return f"{FILE_URL_PREFIX}{self.path.lower().split('record/')[1]}"
+            return f"{settings.DIGIARCHIV_SERVER_URL}id/{self.path.split('record/')[1]}"
         return ""
 
     @property
