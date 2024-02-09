@@ -117,14 +117,17 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         (NAHRANI_SBR, _("historie.models.historieStav.soubor.SBR0")),
     )
 
-    datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("historie.models.historie.datumZmeny.label"))
+    datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("historie.models.historie.datumZmeny.label"),
+                                       db_index=True)
     typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("historie.models.historie.typZmeny.label"),
                                  db_index=True)
     uzivatel = models.ForeignKey(
-        User, on_delete=models.RESTRICT, db_column="uzivatel", verbose_name=_("historie.models.historie.uzivatel.label")
+        User, on_delete=models.RESTRICT, db_column="uzivatel", verbose_name=_("historie.models.historie.uzivatel.label"),
+        db_index=True
     )
     organizace_snapshot = models.ForeignKey(Organizace, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
-    poznamka = models.TextField(blank=True, null=True, verbose_name=_("historie.models.historie.poznamka.label"))
+    poznamka = models.TextField(blank=True, null=True, verbose_name=_("historie.models.historie.poznamka.label"),
+                                db_index=True)
     vazba = models.ForeignKey(
         "HistorieVazby", on_delete=models.CASCADE, db_column="vazba", db_index=True
     )

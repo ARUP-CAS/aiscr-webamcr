@@ -133,50 +133,6 @@ class HistorieFilter(filters.FilterSet):
             return historie
         return None
 
-    """
-    def filter_queryset(self, queryset):
-        zmena = self.form.cleaned_data["historie_typ_zmeny"]
-        uzivatel = self.form.cleaned_data["historie_uzivatel"]
-        datum = self.form.cleaned_data["historie_datum_zmeny_od"]
-        uzivatel_organizace = self.form.cleaned_data["historie_uzivatel_organizace"]
-        filtered = Historie.objects.all()
-        needs_filtering = False
-        if zmena:
-            filtered = filtered.filter(typ_zmeny__in=zmena)
-            needs_filtering = True
-        if uzivatel:
-            filtered = filtered.filter(uzivatel__in=uzivatel)
-            needs_filtering = True
-        if uzivatel_organizace:
-            filtered = filtered.filter(uzivatel__organizace__in=uzivatel_organizace)
-            needs_filtering = True
-        if datum and datum.start:
-            filtered = filtered.filter(datum_zmeny__gte=datum.start)
-            needs_filtering = True
-        if datum and datum.stop:
-            filtered = filtered.filter(datum_zmeny__lte=datum.stop)
-            needs_filtering = True
-        if needs_filtering:
-            if self.filter_typ and self.filter_typ == "arch_z":
-                queryset = queryset.filter(
-                    archeologicky_zaznam__historie__historie__in=filtered
-                ).distinct()
-            else:
-                queryset = queryset.filter(historie__historie__in=filtered).distinct()
-        for name, value in self.form.cleaned_data.items():
-            if name not in ["historie_typ_zmeny", "historie_uzivatel", "historie_datum_zmeny_od"]:
-                if value:
-                    queryset = self.filters[name].filter(queryset, value)
-            assert isinstance(
-                queryset, models.QuerySet
-            ), "Expected '%s.%s' to return a QuerySet, but got a %s instead." % (
-                type(self).__name__,
-                name,
-                type(queryset).__name__,
-            )
-        return queryset
-    """
-
     def __init__(self, *args, **kwargs):
         super(HistorieFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
