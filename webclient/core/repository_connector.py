@@ -207,19 +207,22 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector.check_container_is_deleted.start",
                      extra={"ident_cely": ident_cely})
         result = cls._send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
-        if hasattr(result, "text") and "discovered tombstone" in result.text.lower():
-            logger.debug("core_repository_connector.check_container_is_deleted.false",
-                         extra={"ident_cely": ident_cely, "result_text": result.text})
-            return False
-        elif ((result.status_code == 404 or (hasattr(result, "text") and "not found" in result.text)) or
-                cls.check_container_deleted(ident_cely)):
+        result_2 = cls._send_request(f"{cls.get_base_url()}/model/deleted/member/{ident_cely}",
+                                     FedoraRequestType.GET_DELETED_LINK)
+
+        if result.status_code == 200:
+            if cls.check_container_deleted(ident_cely):
+                if result_2.status_code == 200:
+                    logger.debug("core_repository_connector.check_container_is_deleted.true",
+                                 extra={"ident_cely": ident_cely, "result_text": result.text})
+                    return True
+        elif result.status_code == 404 and result_2.status_code == 404:
             logger.debug("core_repository_connector.check_container_is_deleted.true",
-                         extra={"ident_cely": ident_cely})
+                         extra={"ident_cely": ident_cely, "result_text": result.text})
             return True
-        else:
-            logger.debug("core_repository_connector.check_container_is_deleted.false",
-                         extra={"ident_cely": ident_cely})
-            return False
+        logger.debug("core_repository_connector.check_container_is_deleted.false",
+                     extra={"ident_cely": ident_cely, "result_text": result.text})
+        return False
 
     @staticmethod
     def _send_request(url: str, request_type: FedoraRequestType, *,
