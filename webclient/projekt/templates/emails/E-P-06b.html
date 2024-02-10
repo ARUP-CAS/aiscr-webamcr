@@ -1,20 +1,18 @@
 {% extends 'core/email.html' %}
 {% load i18n %}
 {% block content %}
-    <p>{% trans "projekt.templates.email.E-P-06b.title" %}</p>
+    <p>Vážená paní/Vážený pane,</p>
     <p>
-        {% trans "projekt.templates.email.E-P-06b.part1" %} <b>{{ ident_cely }}</b>
-        (<b>{{ podnet }}</b>) {% trans "projekt.templates.email.E-P-06b.part2" %}
-        <b>{{ katastr }}</b>
-        {% trans "projekt.templates.email.E-P-06b.part3" %} <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>)
-        {% if datum_oznameni %}{% trans "projekt.templates.email.E-P-06b.part4" %} <b>{{ datum_oznameni }}</b>{% endif %}
-        {% trans "projekt.templates.email.E-P-06b.part5" %}
+        projekt <b>{{ ident_cely }}</b> (<b>{{ podnet }}</b>) který byl evidován v souvislosti s Vaším oznámením o stavební nebo jiné činností na území s archeologickými nálezy dle § 22, odst. 2 zák. č. 20/1987 na k.ú. <b>{{ katastr }}</b> parcela <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>) {% if datum_oznameni %}ze dne <b>{{ datum_oznameni }}</b>{% endif %} byl zrušen.
     </p>
-    <p><b>{% trans "projekt.templates.email.E-P-06b.part6" %}</b> {{ reason }}</p>
+    <p><b>Zdůvodnění:</b> {{ reason }}</p>
     <p>
-        {% trans "projekt.templates.email.E-P-06b.part7" %}
+        Vaše případné dotazy pište na adresu oznameni@arub.cz nebo volejte na tel. +420 515 911 133 (Jihomoravský a Zlínský kraj), +420 515 911 121 (Vysočina a Olomoucký kraj), +420 553 821 603 (Moravskoslezský kraj).
     </p>
-    <p>{% trans "projekt.templates.email.E-P-06b.part8" %}</p>
-    <p>{% trans "projekt.templates.email.E-P-06b.part9" %}</p>
-    <p>{% trans "projekt.templates.email.E-P-06b.part10" %}</p>
+    <p>S pozdravem</p>
+    <p>Archeologický ústav AV ČR, Brno, v. v. i.</p>
+    <p>Na tuto zprávu prosím neodpovídejte, je automaticky generována.</p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}
