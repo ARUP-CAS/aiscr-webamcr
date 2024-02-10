@@ -2,12 +2,13 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-    <p>{% trans "projekt.templates.email.E-P-07.title" %}</p>
+    <p>Dobrý den,</p>
     <p>
-        {% trans "projekt.templates.email.E-P-07.part1" %}
-        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "projekt.templates.email.E-P-07.part2" %} <b>{{ katastr }}</b> {% trans "projekt.templates.email.E-P-07.part3" %}
-        <b>{{ organization }}</b>.
+        projekt <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b>{{ katastr }}</b> byl navržen k odhlášení oprávněnou organizací <b>{{ organization }}</b>.
     </p>
-    <p><b>{% trans "projekt.templates.email.E-P-07.part4" %}</b> {{ reason }}</p>
-    <p>{% trans "projekt.templates.email.E-P-07.part5" %}</p>
+    <p><b>Důvod:</b> {{ reason }}</p>
+    <p>Detaily o projektu zjistíte po přihlášení do AMČR.</p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}
