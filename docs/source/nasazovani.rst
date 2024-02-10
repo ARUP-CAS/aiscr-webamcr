@@ -26,9 +26,9 @@ Alternativně lze docker obrazy vytvořit manuálně, s pomocí předpřipraven�
 * proxy/Dockerfile - definice docker obrazu pro proxy server NGINX
 
 
-===============================
+===================================
 Varianty nasazení aplikace WebAMČR
-===============================
+===================================
 *Existuje pět různých módů nasazení aplikace WebAMČR*:
 
 #. Automatické nasazení v rámci Github Actions (použito pro nasazení do vývojového prostředí)
@@ -108,9 +108,9 @@ Github Action worfklow `.github\workflows\deployment.yml` potřebuje ke správn�
 * SSH_KNOWN_HOST_DEV - fingerprint cílové stanice SSH připojení
 * SSH_PRIVATE_KEY_SERVER_DEV - privátní klíč pro SSH připojení na cílovou stanici
 
-========================
+===================================
 Skriptované nasazení z docker-hubu
-========================
+===================================
 Pro nasazování na testovací prostředí byl vytvořen automatizační skript `scripts/prod_deploy.sh`, který zjednodušuje nasazení, provádí logování celého průběhu do adresáře `logs/prod_deploy/`, aktualizaci docker obrazů, ověřování prostředí, a nasazení aplikace WebAMČR.
 Tento skript má několik možných parametrů, nápověda přístupná spuštěním příkazu ``./scripts/prod_deploy.sh -h.``. V základním módu se tento skript spouští
 bez jakéhokoliv volitelného parametru, tzn. ``./scripts/prod_deploy.sh``. Po úspěšném vykonání je aplikace WebAMČR dostupná na ip adrese dané stanice a portu **8080**.
@@ -145,9 +145,9 @@ Niže je přehled dostupných parametrů.
 
 **Souhrn:** ``./scripts/prod_deploy.sh``, docker swarm-mode, <ip_adresa_stanice:8080>, existující definice docker secrets.
 
-========================
+=============================================
 Skriptované nasazení z lokálního repozitáře
-========================
+=============================================
 V případech, kdy na docker-hubu nejsou k dispozici docker obrazy v požadované verzi (např. při hotfixech), je možno aktualizovat zdrojový kód přímo v lokální repozitáři a následně spustit automatizační skript `./logs/git_prod_deploy`, který se postará o vytvoření docker obrazů lokálně na základě zdrojových souborů lokálního repozitáře.
 Tento skript loguje průběh do souboru `logs/git_prod_deploy`, vytváří lokálně docker obrazy, jež jsou následně nasazeny pomocí docker-compose, tj. **NEPOUŽÍVÁ SE swarm-mode**. Aplikace WebAMČR je v tomto případě přístupná na portu **8081**.
 Základní spuštění probíhá bez jakéhokoliv volitelného parametru, tzn. ``./scripts/git_prod_deploy.sh``. Nápověda k dalším volbám je přístupná přes ``logs/git_prod_deploy.sh -h``.
@@ -163,9 +163,9 @@ Základní spuštění probíhá bez jakéhokoliv volitelného parametru, tzn. `
 
 **Souhrh:** ``./scripts/git_prod_deploy.sh``, docker compose mode, <ip_adresa_stanice:8081>, existující soubory s definicí secrets.
 
-========================
+========================================
 Skriptované nasazení pro vývojové účely
-========================
+========================================
 V případě lokálního nasazení na vývojové stanici, lze využít speciální konfigurace spustitelné buď přes:
 
 * Automatizační skript `scripts/dev_deploy.sh`
@@ -181,9 +181,9 @@ Ve vývojovém nasazení také běží navíc tři další služby:
 
 **Souhrh:** ``./scripts\dev_deploy.sh``, docker compose mode, <ip_adresa_stanice:8000>, existující soubory s definicí secrets, volitelně: soubor (.tar) s daty pro naplnění lokální databáze.
 
-========================
+================================================
 Manuální nasazení pomocí docker-compose souborů
-========================
+================================================
 Při specifických způsobech nasazení, kdy výše uvedené automatizační skripty neodpovídají požadovanému scénáři, je možné využít existujících docker-compose souborů a celou akci provést manuálně.
 
 * `./docker-compose-production.yml` - obsahuje služby potřebné pro běh aplikace WebAMČR, (**nutnost existence systémové proměnné IMAGE_TAG, která definuje požadovanou verzi aplikace WebAMČR, která má být stažena z docker-hub repozitáře, tj. latest, nebo v0.3.0 apod.**)
@@ -210,9 +210,9 @@ Při specifických způsobech nasazení, kdy výše uvedené automatizační skr
 * `./git_docker-compose-production.override.yml` - obsahuje alternativní secrets, samostatně nespustitelné, využívá se pouze nepřímo skrze rozhodovací strukturu v rámci skriptu `./scripts/git_prod_deploy.sh`
   
 
-========================
+======================================
 Kontrola stavu aplikačních kontejnerů
-========================
+======================================
 
 Existuje sada tzv. healtcheck skriptů, které reportují stav služby běžící uvnitř příslušného kontejneru.
 Každý kontejner používá jinou sadu charakteristik k odvození příslušné metriky "health status". Výsledky kontroly health status se dají pro každý kontejner nalézt po spuštění příkazu
@@ -222,3 +222,12 @@ Každý kontejner používá jinou sadu charakteristik k odvození příslušné
 * Kontejner `proxy`, kontrola návratu HTTP status code 200 na http socketu 8080, implementováno ve skriptu `run-healthcheck_proxy.sh`.
 * Kontejner `celery`, metrika je odezva na příkaz celery ping, který musí mít nulový návratový kód, implemetováno ve skriptu `run-healthcheck_celery.sh`.
 * Kontejner `redis` metrika je odevzva na příkaz redis ping, očekáván nulový návratový kód, implementováno ve skriptu `run-healthcheck_redis.sh`.
+
+==================================
+Nasazení aplikace s příznakem TEST
+==================================
+
+Pokud chceme nasadit aplikaci s příznakem testovací-neprodukční prostředí se dělá pomoci nastavení env proměnné. 
+Ta se musí nastavit na serveru před nasazením a to buď jen pro dané nasazení scriptem `export TEST_ENV_SETTING=true` 
+anebo pro každé nasazení úpravou global variables, přidáním souboru `test_env.sh` do složky `/etc/profile.d/` s řádkem `export TEST_ENV_SETTING=true`. 
+Pokud bude daný soubor přítomen, tak každé nasazení aplikace bude označeno jako testovací a zobrazí se uživateli hláška jednou denne. 

@@ -144,3 +144,6 @@ HLIDACI_PES_USPESNE_VYTVOREN: Final = _("core.message_constants.notifikaceProjek
 HLIDACI_PES_USPESNE_SMAZAN: Final = _("core.message_constants.notifikaceProjektyUspesneSmazan.text")
 HLIDACI_PES_NEUSPESNE_VYTVOREN: Final = _("core.message_constants.notifikaceProjektyNeUspesneVytvoren.text")
 HLIDACI_PES_NEUSPESNE_SMAZAN: Final = _("core.message_constants.notifikaceProjektyNeUspesneSmazan.text")
+
+#testovaci prostredi
+NEPRODUKCNI_PROSTREDI_INFO: Final = _("core.message_constants.neprodukcniTestovaciProstredi.text")

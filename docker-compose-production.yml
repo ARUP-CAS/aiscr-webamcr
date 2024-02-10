@@ -11,6 +11,8 @@ services:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
+    environment:
+      - TEST_ENV_SETTING
     networks:
       - prod-net
     ports:
