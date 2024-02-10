@@ -1,10 +1,12 @@
 {% extends 'core/email.html' %}
 {% load i18n %}
 {% block content %}
-    <p>{% trans "pas.templates.emails.E-N-06.title" %},</p>
+    <p>Dobrý den,</p>
     <p>
-        {% trans "pas.templates.emails.E-N-06.text1" %} <b>{{ name }}</b> <b>{{ surname }}</b>
-        (<b>{{ organization }}</b>) {% trans "pas.templates.emails.E-N-06.text2" %}.
+        vaše spolupráce s uživatelem <b>{{ name }}</b> <b>{{ surname }}</b> (<b>{{ organization }}</b>) byla úspěšně potvrzena.
     </p>
-    <p>{% trans "pas.templates.emails.E-N-06.text3" %}.</p>
+    <p>Detaily o spolupráci získáte po přihlášení do AMČR-PAS.</p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}
