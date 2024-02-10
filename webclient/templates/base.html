@@ -158,7 +158,7 @@
               checkUserAuthentication();
           });
       {% else %}
-          checkUserAuthentication();
+          setTimeout(checkUserAuthentication,10);
       {% endif %}
   </script>
 

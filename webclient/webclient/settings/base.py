@@ -156,6 +156,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "core.middleware.TestEnvPopupMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
@@ -483,3 +484,5 @@ REST_FRAMEWORK = {
 TOKEN_EXPIRATION_HOURS = 24
 
 SKIP_RECAPTCHA = False
+
+TEST_ENV = os.getenv("TEST_ENV_SETTING", False)
