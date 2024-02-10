@@ -2,18 +2,21 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-    <p>{% trans 'projekt.templates.email.E-P-02.title' %},</p>
+    <p>Dobrý den,</p>
         <p>
-            {% trans 'projekt.templates.email.E-P-02.part1' %}<b><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{ project.ident_cely }}</a></b>.
+           v AMČR byl právě zapsán nový projekt <b><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{ project.ident_cely }}</a></b>.
         </p>
         <ul style="list-style: none">
-            <li><b>{% trans 'projekt.templates.email.E-P-02.typProjektu' %}</b> {{ project.typ_projektu.heslo }}</li>
-            <li><b>{% trans 'projekt.templates.email.E-P-02.hlavniKatastr' %}</b> {{ project.hlavni_katastr }}
-            <li><b>{% trans 'projekt.templates.email.E-P-02.podnet' %}</b> {{ project.podnet }}</li>
-            <li><b>{% trans 'projekt.templates.email.E-P-02.lokalizace' %}</b> {{ project.lokalizace }}</li>
-            <li><b>{% trans 'projekt.templates.email.E-P-02.planovaneZahajeni' %}</b> {{ project.planovane_zahajeni_str }}</li>
+            <li><b>Typ projektu:</b> {{ project.typ_projektu.heslo }}</li>
+            <li><b>Katastr:</b> {{ project.hlavni_katastr }}
+            <li><b>Podnět:</b> {{ project.podnet }}</li>
+            <li><b>Lokalizace:</b> {{ project.lokalizace }}</li>
+            <li><b>Plánované zahájení:</b> {{ project.planovane_zahajeni_str }}</li>
         </ul>
     <p>
-        {% trans 'projekt.templates.email.E-P-02.part2' %}
+        Detaily o projektu zjistíte po přihlášení do AMČR.
     </p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}
