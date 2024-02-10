@@ -3,7 +3,7 @@ import logging
 import crispy_forms
 from dal import autocomplete
 from crispy_forms.layout import Div, Layout, HTML
-from django.db.models import Q, OuterRef, Subquery, F, Count
+from django.db.models import Q, OuterRef, Subquery
 from django.forms import SelectMultiple, Select, NumberInput
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
@@ -12,12 +12,12 @@ from django_filters import (
     MultipleChoiceFilter,
     DateFromToRangeFilter,
     RangeFilter,
-    ChoiceFilter, NumberFilter, ModelChoiceFilter,
+    ChoiceFilter,
 )
 from django_filters.widgets import DateRangeWidget, SuffixedMultiWidget
 from django_filters.fields import RangeField
 
-from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_AZ
+from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 from dj.models import DokumentacniJednotka
 from heslar.hesla import (
     HESLAR_ADB_PODNET,
@@ -393,6 +393,8 @@ class AkceFilter(ArchZaznamFilter):
     Class pro filtrování akce.
     """
 
+    typ_vazby = ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
+
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
         label=_("arch_z.filters.AkceFilter.organizace.label"),
@@ -674,9 +676,12 @@ class AkceFilter(ArchZaznamFilter):
         historie = self._get_history_subquery()
         queryset = super(AkceFilter, self).filter_queryset(queryset)
         if historie:
-            historie_subquery = (historie.values('vazba__archeologickyzaznam__id')
-                                 .filter(vazba__archeologickyzaznam__id=OuterRef("archeologicky_zaznam_id")))
-            queryset = queryset.filter(archeologicky_zaznam_id__in=Subquery(historie_subquery))
+            if isinstance(historie, list):
+                queryset = queryset.filter(archeologicky_zaznam__historie__in=historie)
+            else:
+                historie_subquery = (historie.values('vazba__id')
+                                     .filter(vazba__id=OuterRef("archeologicky_zaznam__historie")))
+                queryset = queryset.filter(archeologicky_zaznam__historie__in=Subquery(historie_subquery))
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.end", extra={"query": str(queryset.query)})
         return queryset
 

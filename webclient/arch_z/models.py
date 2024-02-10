@@ -2,7 +2,7 @@ import logging
 
 from django.db.models import CheckConstraint, Q
 from django.shortcuts import redirect
-from django.utils.encoding import force_str
+from django.utils.functional import cached_property
 
 from core.connectors import RedisConnector
 from core.constants import (
@@ -61,7 +61,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         (AZ_STAV_ARCHIVOVANY, _("arch_z.models.ArcheologickyZaznam.states.AZ3")),
     )
 
-    typ_zaznamu = models.CharField(max_length=1, choices=CHOICES)
+    typ_zaznamu = models.CharField(max_length=1, choices=CHOICES, db_index=True)
     pristupnost = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -95,6 +95,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 name='archeologicky_zaznam_typ_zaznamu_check',
             ),
         ]
+        unique_together = (("typ_zaznamu", "historie"), )
 
     def set_zapsany(self, user):
         """
@@ -531,11 +532,11 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         connector = FedoraRepositoryConnector(self)
         return connector.save_metadata(True)
 
-    @property
+    @cached_property
     def vedouci_organizace(self):
         return ', '.join([str(x.organizace) for x in self.akcevedouci_set.all()])
 
-    @property
+    @cached_property
     def vedouci(self):
         return ', '.join([str(x.vedouci) for x in self.akcevedouci_set.all()])
 
