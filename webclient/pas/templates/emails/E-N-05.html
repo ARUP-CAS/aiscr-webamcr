@@ -2,18 +2,21 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-    <p>{% trans "pas.templates.emails.E-N-05.title" %},</p>
-    <p>{% trans "pas.templates.emails.E-N-05.text1" %}:</p>
+    <p>Dobrý den,</p>
+    <p>nový uživatel žádá o zařazení mezi spolupracovníky:</p>
     <ul style="list-style: none">
-        <li><b>{% trans "pas.templates.emails.E-N-05.id" %}:</b> {{ ident_cely }}</li>
-        <li><b>{% trans "pas.templates.emails.E-N-05.jmeno" %}:</b> {{ name }}</li>
-        <li><b>{% trans "pas.templates.emails.E-N-05.prijmeni" %}:</b> {{ surname }}</li>
-        <li><b>{% trans "pas.templates.emails.E-N-05.organizace" %}:</b> {{ organization }}</li>
-        <li><b>{% trans "pas.templates.emails.E-N-05.email" %}</b>: {{ email }}</li>
-        <li><b>{% trans "pas.templates.emails.E-N-05.telefon" %}:</b> {{ phone }}</li>
-        <li><b>{% trans "pas.templates.emails.E-N-05.zduvodneni" %}:</b> {{ message }}</li>
+        <li><b>ID:</b> {{ ident_cely }}</li>
+        <li><b>Jméno:</b> {{ name }}</li>
+        <li><b>Příjmení:</b> {{ surname }}</li>
+        <li><b>Organizace:</b> {{ organization }}</li>
+        <li><b>Email: {{ email }}</li>
+        <li><b>Telefon:</b> {{ phone }}</li>
+        <li><b>Zdůvodnění:</b> {{ message }}</li>
     </ul>
     <p>
-        {% trans "pas.templates.emails.E-N-05.text2" %}: <a href="{% get_site_url %}{% url 'pas:spoluprace_aktivace_email' spoluprace_id %}">{% url 'pas:spoluprace_aktivace_email' spoluprace_id %}</a>
+        Spolupráci potvrdíte po přihlášení do AMČR-PAS, nebo kliknutím na tento odkaz: <a href="{% get_site_url %}{% url 'pas:spoluprace_aktivace_email' spoluprace_id %}">{% url 'pas:spoluprace_aktivace_email' spoluprace_id %}</a>
     </p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}
