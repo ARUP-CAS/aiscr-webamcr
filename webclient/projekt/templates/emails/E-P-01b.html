@@ -1,17 +1,16 @@
 {% extends 'core/email.html' %}
 {% load i18n %}
 {% block content %}
-    <p>{% trans "projekt.templates.email.E-P-01b.title" %}</p>
+    <p>Vážená paní/Vážený pane,</p>
     <p>
-        {% trans "projekt.templates.email.E-P-01b.part1" %}
-        (<b>{{ podnet }}</b>) {% trans "projekt.templates.email.E-P-01b.part2" %}
-        <b>{{ katastr }}</b>
-        (<b>{{ okres }}</b>), {% trans "projekt.templates.email.E-P-01b.part3" %} <b>{{ parcela }}</b>
-        (<b>{{ lokalita }}</b>) {% trans "projekt.templates.email.E-P-01b.part4" %}
-        {% trans "projekt.templates.email.E-P-01b.part5" %}
+        oznámení stavební nebo jiné činnosti (<b>{{ podnet }}</b>) na území s archeologickými nálezy na k.ú. <b>{{ katastr }}</b> (<b>{{ okres }}</b>), parcela <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>) podle § 22 odst. 2 zákona č. 20/1987 Sb. o státní památkové péči bylo schváleno a zaevidováno. V případě nutnosti provedení archeologického výzkumu Vás budeme kontaktovat Archeologický ústav AV ČR nebo některá z organizací oprávněných provádět archeologické výzkumy, s nimiž je na základě §22 odst. 1 výše uvedeného zákona nutno uzavřít dohodu o podmínkách provedení archeologického výzkumu.
     </p>
-    <p>{% trans "projekt.templates.email.E-P-01b.part6" %}</p>
-    <p>{% trans "projekt.templates.email.E-P-01b.part7" %}</p>
-    <p>{% trans "projekt.templates.email.E-P-01b.part8" %}
+    <p>S pozdravem</p>
+    <p>Archeologický ústav AV ČR, Brno, v. v. i.</p>
+    <p>
+        Na tuto zprávu prosím neodpovídejte, je automaticky generována. Vaše případné dotazy pište na adresu oznameni@arub.cz nebo volejte na tel. +420 515 911 133 (Jihomoravský a Zlínský kraj), +420 515 911 121 (Vysočina a Olomoucký kraj), +420 553 821 603 (Moravskoslezský kraj).
     </p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}
