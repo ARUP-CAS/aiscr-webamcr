@@ -3,6 +3,7 @@ import logging
 from historie.models import Historie
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from cron.tasks import update_cached_queryset
 
 from xml_generator.models import ModelWithMetadata
 
@@ -21,6 +22,7 @@ def soubor_update_metadata(sender, instance: Historie, **kwargs):
         navazany_objekt = instance.vazba.navazany_objekt
         if isinstance(navazany_objekt, ModelWithMetadata):
             navazany_objekt.save_metadata()
+    update_cached_queryset.apply_async([instance.pk])
     logger.debug("historie.signals.soubor_update_metadata.end", extra={"pk": instance.pk})
 
 
