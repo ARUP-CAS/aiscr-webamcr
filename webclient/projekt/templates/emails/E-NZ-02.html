@@ -3,13 +3,12 @@
 {% load template_tags %}
 {% block content %}
 <p>
-    {% trans 'projekt.templates.email.E-NZ-02.title' %}
+    Dobrý den,
 </p>
 <p>
-    {% trans "projekt.templates.email.E-NZ-02.part1" %}
-    <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "projekt.templates.email.E-NZ-02.part2" %} <b>{{ katastr }}</b>
+    v aplikaci AMČR vypršela lhůta pro odevzdání NZ u projektu <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b>{{ katastr }}</b>
 </p>
 <p>
-    {% trans "projekt.templates.email.E-NZ-02.part3" %}
+    Detaily projektu zjistíte po přihlášení do AMČR.
 </p>
 {% endblock %}
