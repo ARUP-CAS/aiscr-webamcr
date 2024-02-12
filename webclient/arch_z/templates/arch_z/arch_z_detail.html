@@ -273,7 +273,7 @@
       if (document.getElementById("main_cadastre_id")!==null) {
               const currentUrl = window.location.href;
               const urlParams = new URLSearchParams(window.location.search);
-              if(urlParams.get('geometry') ==null){
+              if(urlParams.get('geometry') ==null && !currentUrl.includes("/dj/")){
                   let xhr = new XMLHttpRequest();
                   xhr.open('POST', '/arch-z/mapa-zoom');
                   xhr.setRequestHeader('Content-type', 'application/json');

@@ -322,6 +322,7 @@
           }
           if (form_id.includes("detail_dj_form_")) {
               let xhr = new XMLHttpRequest();
+              const currentUrl = window.location.href;
               xhr.open('POST', '/arch-z/mapa-zoom');
               xhr.setRequestHeader('Content-type', 'application/json');
               if (typeof global_csrftoken !== 'undefined') {
@@ -345,10 +346,14 @@
                         switchMap(false);
                   }
               };
+              let d_sufix="";
+              if(currentUrl.lastIndexOf("-D")>-1){
+                    d_sufix=  currentUrl.substr(currentUrl.lastIndexOf("-D"))
+                  }
               xhr.send(JSON.stringify(
                   {
                       'cadastre': document.getElementById("main_cadastre_id").value,
-                      'akce_ident_cely': '{{ zaznam.ident_cely }}',
+                      'akce_ident_cely': '{{ zaznam.ident_cely }}'+d_sufix,
                   }))
           }
           try {document.getElementById("dj_list_card_header").scrollIntoView();}

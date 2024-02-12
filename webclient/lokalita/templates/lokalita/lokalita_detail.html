@@ -64,6 +64,7 @@
       smazat_akci_modal = new Modal(options, "{{app}}-smazat"); 
 
       if (document.getElementById("main_cadastre_id")!==null) {
+              const currentUrl = window.location.href;
               const urlParams = new URLSearchParams(window.location.search);
               if(urlParams.get('geometry') ==null){
                   let xhr = new XMLHttpRequest();
@@ -88,10 +89,14 @@
                         switchMap(false);
                       }
                   };
+                  let d_sufix="";
+                  if(currentUrl.lastIndexOf("-D")>-1){
+                    d_sufix=  currentUrl.substr(currentUrl.lastIndexOf("-D"))
+                  }
                   xhr.send(JSON.stringify(
                       {
                           'cadastre': document.getElementById("main_cadastre_id").value,
-                          'akce_ident_cely': '{{ zaznam.ident_cely }}',
+                          'akce_ident_cely': '{{ zaznam.ident_cely }}'+d_sufix,
                       }))
               }
         }
