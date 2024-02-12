@@ -50,7 +50,7 @@ L.control.layers(baseLayers, overlays).addTo(map);
 
 L.easyButton('bi bi-skip-backward-fill', function () {
     poi_correct.clearLayers();
-    if (poi_sugest.getLayers().length) {
+    if (poi_sugest.getLayers().length>0) {
         let ll = poi_sugest.getLayers()[0]._latlng;
         map.setView(ll, 18);
         try {
@@ -65,6 +65,11 @@ L.easyButton('bi bi-skip-backward-fill', function () {
             select.val(ORIGIN_KATASTR);
 
         }
+    } else {
+        document.getElementById('id_coordinate_x2').value = "";
+        document.getElementById('id_coordinate_x1').value = "";
+        map.setView([50,15],7);
+
     }
 }, [map_translations['DefaultTitle']]).addTo(map)
 
