@@ -1,4 +1,5 @@
 var global_map_can_edit = false;
+var global_blocked_by_query_geom= false;
 
 var global_map_can_grab_geom_from_map = false;
 var global_map_element = "id_geom";
@@ -95,7 +96,6 @@ var poi_dj = L.featureGroup.subGroup(poi_all)
 var poi_pian_dp = L.featureGroup.subGroup(poi_all)
 var poi_pian =  L.featureGroup.subGroup(poi_all)
 
-//console.log(global_map_projekt_ident)
 
 var poi_model = L.layerGroup();
 var heatPoints = [];
@@ -549,6 +549,7 @@ function geomToText() {//Desc: This fce moves edited geometry into HTML element
 }
 
 function onMarkerClick(ident_cely,e) {
+    addLogText("arch_z_detail_map.onMarkerClick")
     const popup = e.target.getPopup();
     popup.setContent("");
     let xhr = new XMLHttpRequest();
@@ -562,14 +563,19 @@ function onMarkerClick(ident_cely,e) {
         rs = JSON.parse(this.responseText).points
         text=""
         rs.forEach((i) => {
+            try{
             let link='<a href="/arch-z/akce/detail/'+i.akce+'/dj/'+i.dj+'" target="_blank">'+i.dj+'</a></br>'
             text=text+link
+            } catch(e){
+                console.log("err:"+e)
+            }
         })
         popup.setContent(text);
     }
  }
 
 var clickOnMap=(e)=>{
+    addLogText("arch_z_detail_map.clickOnMap")
     if(global_map_can_grab_geom_from_map.length
         && global_map_can_grab_geom_from_map.includes('ku:')){
         if(getFiltrTypeIsKuSafe()){
@@ -616,26 +622,17 @@ map.on('click', function (e) {
 });
 
 map.on('overlayadd', function(eventlayer){
-    console.log("pridat mapu")
     if(eventlayer.layer===poi_sn || eventlayer.layer===poi_all){
         switchMap(false)
     }
 });
 
 map.on('overlayremove', function(eventlayer){
-    console.log("ubrat mapu")
     if(eventlayer.layer===poi_sn || eventlayer.layer===poi_all){
         switchMap(false)
     }
 });
 
-/*map.on('overlayadd overlayremove', function (e) {
-    if (control._handlingClick) {
-        if (e.name == [map_translations['pian']]) {
-           global_map_can_load_pians = !global_map_can_load_pians;
-        }
-    }
-});*/
 
 var mouseOverGeometry =(geom, allowClick=true)=>{
     function getContent(e){
@@ -788,21 +785,14 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost) => {
         myIco = { icon: pinIconPurpleHW};
     }
 
-
-
     if (layer === poi_dj) {
-        //console.log(text+" orange "+st_text)
         myIco = { icon: pinIconGreenPoint, zIndexOffset: 1000 };
         myIco2 = { icon: pinIconGreenHW, zIndexOffset: 1000, changeIcon: true };
         myColor = { color: 'green', zIndexOffset: 1000, };
         if(presnost==4){
             myIco = { icon: pinIconGreenHW};
         }
-    } /*else if(layer==gm_correct){
-        myIco={icon: pinIconRedPoint};
-        myIco2={icon: pinIconRed};
-        myColor='red';
-    }*/
+    }
 
     if (st_text.includes("POLYGON") && presnost!=4) {
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
@@ -1015,6 +1005,7 @@ switchMap = function (overview = false) {
     let zoom = map.getZoom();
     var northWest = bounds.getNorthWest(),
         southEast = bounds.getSouthEast();
+    const currentUrl = window.location.href;
     if (global_map_can_load_pians && (map.hasLayer(poi_all) || map.hasLayer(poi_sn))) {
         if (overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest) {
             console.log("Change: " + northWest + "  " + southEast + " " + zoom);
@@ -1058,20 +1049,28 @@ switchMap = function (overview = false) {
                                 .bindPopup('<a href="/pas/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
                                 .addTo(poi_sn)
                             } else if(i.type=="pian"){
-                                let idj=i.dj.substring(0,global_map_projekt_ident.length);
-                                if (idj== global_map_projekt_ident) {
-                                    if (!global_map_can_edit) {
-                                        if(gold_pian_ident_cely!=i.ident_cely){
-                                         addPointToPoiLayer(i.geom, poi_dj, i.ident_cely, true,i.presnost)
+                                try{
+                                    let idj=i.dj.substring(0,global_map_projekt_ident.length);
+                                    if (idj== global_map_projekt_ident) {
+                                        if (
+                                            (!global_map_can_edit && !global_blocked_by_query_geom)
+                                            ||
+                                             (currentUrl.includes("pian/zapsat"))
+                                            ) {
+                                            if(gold_pian_ident_cely!=i.ident_cely){
+                                            addPointToPoiLayer(i.geom, poi_dj, i.ident_cely, true,i.presnost)
+                                            }
                                         }
                                     }
-                                }
-                                else{
-                                    if (count<500) {
-                                        addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost)
-                                    } else {
-                                        addPointToPoiLayer(i.geom, poi_pian_dp, i.ident_cely, true,i.presnost)
+                                    else{
+                                        if (count<500) {
+                                            addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost)
+                                        } else {
+                                            addPointToPoiLayer(i.geom, poi_pian_dp, i.ident_cely, true,i.presnost)
+                                        }
                                     }
+                                }catch(e){
+                                    console.log("err2: "+e)
                                 }
                             }
                         })
@@ -1111,6 +1110,7 @@ switchMap = function (overview = false) {
 }
 
 function loadKatastry() {
+    addLogText("arch_z_detail_map.loadKatastry")
     akce_ident_cely = document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0]
     let xhr = new XMLHttpRequest();
     xhr.open('POST', '/arch-z/mapa-dalsi-katastry');
@@ -1148,6 +1148,7 @@ function loadKatastry() {
 //loadKatastry();
 
 function searchByAjax(text, callResponse) {
+    addLogText("arch_z_detail_map.searchByAjax")
     let items1 = [];
     let items2 = [];
 
@@ -1174,11 +1175,13 @@ function searchByAjax(text, callResponse) {
 }
 
 function save_edited_geometry_session(){
+    addLogText("arch_z_detail_map.save_edited_geometry_session")
     const currentUrl = window.location.href;
      sessionStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:document.getElementById(global_map_element).value}))
 }
 
 function checkBlockedByQWuery(){
+    addLogText("arch_z_detail_map.checkBlockedByQWuery")
     const currentUrl = window.location.href;
     const urlParams = new URLSearchParams(window.location.search);
     let myParamG = urlParams.get('geometry');
@@ -1193,18 +1196,21 @@ window.addEventListener("load", function(){
 });
 
 function loadSession(){
+    addLogText("arch_z_detail_map.loadSession")
     const currentUrl = window.location.href;
     const urlParams = new URLSearchParams(window.location.search);
     let myParamG = urlParams.get('geometry');
     let myParamL = urlParams.get('label');
-    global_map_can_grab_geom_from_map = true;
+    //global_map_can_grab_geom_from_map = true;
     if(myParamG !==null){
+        global_map_can_grab_geom_from_map = true;
         global_blocked_by_query_geom=true;
         drawnItems.clearLayers();
         drawnItemsBuffer.clearLayers();
         addPointQuery(null,  drawnItems,myParamL,myParamG,false, map_translations.currentlyEditedPian);
         geomToText();
         save_edited_geometry_session()
+        map.fitBounds(drawnItems.getBounds());
         //myParam="POINT (13.2164736 49.9596986)"
         //http://localhost:8000/arch-z/akce/detail/C-202211987A/dj/C-202211987A-D02?geometry=
         //myParam="POLYGON ((13.2164736 49.9596986,13.2154006 49.9589111,13.2178685 49.9583378,13.2183513 49.9593602,13.2164736 49.9596986))"
@@ -1226,6 +1232,8 @@ function loadSession(){
                 addPointQuery(null,  drawnItems,map_translations.currentlyEditedPian,geom_session.geometry,false,
                     map_translations.currentlyEditedPian);
                 geomToText();
+                map.fitBounds(drawnItems.getBounds());
+                //map.setView(drawnItems,17)
 
             }else{
                 sessionStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:null}));
@@ -1237,6 +1245,7 @@ function loadSession(){
 
 
 window.addEventListener("load", (event) => {
+    addLogText("arch_z_detail_map.load")
     if(!global_map_projekt_ident || global_map_projekt_ident==="" || global_map_projekt_ident.charAt(0)!="C"){
         control.removeLayer(poi_model);
     } else{

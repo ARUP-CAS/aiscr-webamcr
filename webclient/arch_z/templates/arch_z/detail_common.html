@@ -333,9 +333,11 @@
                   const rs = JSON.parse(this.responseText)
                   if(rs.lat > 0 || rs.zoom == 17){
                     if(rs.lat > 0){
-                      map.setView([rs.lat, rs.lng], rs.zoom)
+                      if(!global_blocked_by_query_geom){
+                        map.setView([rs.lat, rs.lng], rs.zoom)
+                      }
                     }
-                    if (rs.zoom == 17) {
+                    if (rs.zoom == 17 && !global_blocked_by_query_geom) {
                         drawnItems.clearLayers();
                         addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems, rs.pian_ident_cely, rs.geom, rs.presnost)
                     }
