@@ -2,13 +2,14 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-<p>{% trans "arch_z.templates.emails.E-A-02.title" %},</p>
+<p>Dobrý den,</p>
 <p>
-    {% trans "arch_z.templates.emails.E-A-02.textPart1" %}
-    <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "arch_z.templates.emails.E-A-02.textPart2" %}<b> {{ katastr }} </b> {% trans "arch_z.templates.emails.E-A-02.textPart3" %}
-    <b>{{ state }}</b>.
+    vámi odeslaná akce <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b> {{ katastr }} </b> byla převedena do stavu: <b>{{ state }}</b>.
 </p>
-<p>{% trans "arch_z.templates.emails.E-A-02.patickaPart1" %}.
-    {% trans "arch_z.templates.emails.E-A-02.patickaPart2" %}.
+<p>
+    Detaily o akci zjistíte po přihlášení do AMČR. Záznam bude během několika dní zveřejněn v Digitálním archivu AMČR.
 </p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}

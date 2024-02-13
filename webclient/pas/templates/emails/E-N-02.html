@@ -2,12 +2,15 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-    <p>{% trans 'pas.templates.emails.E-N-02.title' %},</p>
-    {% trans "pas.templates.emails.E-N-02.text1" %}:
+    <p>Dobrý den,</p>
+    v AMČR-PAS byly dnes archivovány Vámi vložené nálezy:
     <ul style="list-style: none">
         {% for id in ids %}
             <li><a href="{% get_site_url %}{% url 'core:redirect_ident' id %}">{{ id }}</a></li>
         {% endfor %}
     </ul>
-    <p>{% trans "pas.templates.emails.E-N-02.text2" %}. {% trans "pas.templates.emails.E-N-02.text3" %}.</p>
+    <p>Detaily zjistíte po přihlášení do AMČR-PAS. Záznamy budou během několika dní zveřejněny v Digitálním archivu AMČR.</p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}

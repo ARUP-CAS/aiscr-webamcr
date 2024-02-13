@@ -1,15 +1,15 @@
 {% extends 'core/email.html' %}
 {% load i18n %}
 {% block content %}
-    <p>{% trans "projekt.templates.email.E-O-01.title" %}</p>
-    <p>{% trans "projekt.templates.email.E-O-01.part1" %}
-        (<b>{{ podnet }}</b>) {% trans "projekt.templates.email.E-O-01.part2" %} <b>{{ katastr }}</b>
-        (<b>{{ okres }}</b>), {% trans "projekt.templates.email.E-O-01.part3" %} <b>{{ parcela }}</b>
-        (<b>{{ lokalita }}</b>) {% trans "projekt.templates.email.E-O-01.part4" %}
+    <p>Vážená paní/Vážený pane,</p>
+    <p>děkujeme za oznámení stavební nebo jiné činnosti (<b>{{ podnet }}</b>) na území s archeologickými nálezy na k.ú. <b>{{ katastr }}</b> (<b>{{ okres }}</b>), parcela <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>) podle § 22 odst. 2 zákona č. 20/1987 Sb., o státní památkové péči. Po zpracování oznámení Vás budeme dále informovat. Potvrzení o oznámení obdržíte po kontrole vložených údajů.
     </p>
-    <p>{% trans "projekt.templates.email.E-O-01.part5" %}</p>
-    <p>{% trans "projekt.templates.email.E-O-01.part6" %}</p>
+    <p>S pozdravem</p>
+    <p>Archeologický ústav AV ČR, Praha, v. v. i.</p>
     <p>
-        {% trans "projekt.templates.email.E-O-01.part7" %}
+        Na tuto zprávu prosím neodpovídejte, je automaticky generována. Vaše případné dotazy pište na adresu oznameni@arup.cas.cz nebo volejte na tel. 257 014 310.
     </p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}

@@ -2,11 +2,13 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-    <p>{% trans "dokument.templates.emails.E-K-02.title" %},</p>
+    <p>Dobrý den,</p>
     <p>
-        {% trans "dokument.templates.emails.E-K-02.textPart1" %}
-        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "dokument.templates.emails.E-K-02.textPart2" %} <b>{{ state }}</b>.
+        vámi odeslaný dokument <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> byl vrácen do stavu <b>{{ state }}</b>.
     </p>
-    <p><b>{% trans "dokument.templates.emails.E-K-02.reason.text" %}</b> {{ reason }}</p>
-    <p>{% trans "dokument.templates.emails.E-K-02.textPart3" %}</p>
+    <p><b>Zdůvodnění:</b> {{ reason }}</p>
+    <p>Detaily zjistíte po přihlášení do Knihovny 3D v AMČR.</p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}

@@ -2,29 +2,31 @@
 {% load i18n %}
 {% block content %}
     <p>
-        {% trans "uzivatel.templates.E-U-02.title" %}
+        Dobrý den,
     </p>
     <p>
-        {% trans "uzivatel.templates.E-U-02.part1" %}
+        pro tuto emailovou adresu byl registrován nový uživatelský účet do AMČR s následujícími údaji:
     </p>
     <ul style="list-style: none">
-        <li><b>{% trans "uzivatel.templates.E-U-02.id" %}</b> {{ id }}</li>
-        <li><b>{% trans "uzivatel.templates.E-U-02.jmeno" %}</b> {{ name }}</li>
-        <li><b>{% trans "uzivatel.templates.E-U-02.prijmeni" %}</b> {{ surname }}</li>
-        <li><b>{% trans "uzivatel.templates.E-U-02.organizace" %}</b> {{ organization }}</li>
-        <li><b>{% trans "uzivatel.templates.E-U-02.email" %}</b> {{ email }}</li>
-        <li><b>{% trans "uzivatel.templates.E-U-02.telefon" %}</b> {{ phone }}</li>
-        <li><b>{% trans "uzivatel.templates.E-U-02.heslo" %}</b> <i>{% trans "uzivatel.templates.E-U-02.heslo.zvolene" %}</i>
-        </li>
-        <li><b>{% trans "uzivatel.templates.E-U-02.user_role" %}</b> {{ role }}</li>
+        <li><b>ID:</b> {{ id }}</li>
+        <li><b>Jméno:</b> {{ name }}</li>
+        <li><b>Příjmení:</b> {{ surname }}</li>
+        <li><b>Organizace:</b> {{ organization }}</li>
+        <li><b>Email (přihlašovací jméno):</b> {{ email }}</li>
+        <li><b>Telefon:</b> {{ phone }}</li>
+        <li><b>Heslo:</b> <i>vámi zvolené heslo</i></li>
+        <li><b>Uživatelská role:</b> {{ role }}</li>
     </ul>
     <p>
-        {% trans "uzivatel.templates.E-U-02.part2" %}
+        Vyčkejte na aktivaci účtu administrátorem, která vám bude potvrzena na tento email (obvykle nejbližší pracovní den v běžné pracovní době).
     </p>
     <p>
-        {% trans "uzivatel.templates.E-U-02.part3" %}
+        UPOZORNĚNÍ: Registrace v AMČR uživatele neopravňuje k provádění archeologických výzkumů na území České republiky, a to vč. vyhledávání archeologických nálezů. Tuto činnost mohu vykonávat pouze oprávněné archeologické organizace a jejich oficiální spolupracovníci.
     </p>
     <p>
-        {% trans "uzivatel.templates.E-U-02.part4" %} <a href="{% trans "uzivatel.templates.E-U-02.link" %}">{% trans "uzivatel.templates.E-U-02.link.text" %}</a>
+        K možnostem spolupráce více viz: <a href="https://amcr-info.aiscr.cz/pas">https://amcr-info.aiscr.cz/pas</a>
     </p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}

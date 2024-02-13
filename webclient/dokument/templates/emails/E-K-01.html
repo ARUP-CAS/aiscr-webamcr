@@ -2,10 +2,14 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-    <p>{% trans 'dokument.templates.emails.E-K-01.title' %},</p>
-    <p>{% trans "dokument.templates.emails.E-K-01.textPart1" %} <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b>.</p>
+    <p>Dobrý den,</p>
     <p>
-        {% trans "dokument.templates.emails.E-K-01.textPart2" %}
-        {% trans "dokument.templates.emails.E-K-01.textPart3" %}
+        v AMČR byl archivován Vámi vložený 3D dokument <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b>.
     </p>
+    <p>
+        Detaily zjistíte po přihlášení do do Knihovny 3D v AMČR. Záznam bude během několika dní zveřejněn v Digitálním archivu AMČR.
+    </p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}
