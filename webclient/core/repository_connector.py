@@ -203,19 +203,23 @@ class FedoraRepositoryConnector:
         return hasattr(result, "text") and regex.search(result.text)
 
     @classmethod
-    def check_container_deleted_or_not_exists(cls, ident_cely):
+    def check_container_deleted_or_not_exists(cls, ident_cely, model_name):
         logger.debug("core_repository_connector.check_container_is_deleted.start",
                      extra={"ident_cely": ident_cely})
         result = cls._send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
         result_2 = cls._send_request(f"{cls.get_base_url()}/model/deleted/member/{ident_cely}",
                                      FedoraRequestType.GET_DELETED_LINK)
-
+        result_3 = cls._send_request(f"{cls.get_base_url()}/model/{model_name}/member/{ident_cely}",
+                                     FedoraRequestType.GET_LINK)
         if result.status_code == 200:
             if cls.check_container_deleted(ident_cely):
                 if result_2.status_code == 200:
                     logger.debug("core_repository_connector.check_container_is_deleted.true",
                                  extra={"ident_cely": ident_cely, "result_text": result.text})
-                    return True
+                    if result_3.status_code == 200:
+                        logger.debug("core_repository_connector.check_container_is_deleted.true",
+                                     extra={"ident_cely": ident_cely, "result_text": result.text})
+                        return True
         elif result.status_code == 404 and result_2.status_code == 404:
             logger.debug("core_repository_connector.check_container_is_deleted.true",
                          extra={"ident_cely": ident_cely, "result_text": result.text})
