@@ -96,7 +96,9 @@ def index(request, test_run=False):
             o.save()
             p.set_vytvoreny()
             p.katastry.add(*[i for i in dalsi_katastry])
-            p.save_metadata(False)
+            transaction = p.save_metadata(False)
+            if transaction:
+                transaction.mark_transaction_as_closed()
 
             confirmation = {
                 "oznamovatel": o.oznamovatel,

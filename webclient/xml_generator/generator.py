@@ -31,6 +31,8 @@ class AsText(GeoFunc):
 class ParsedComment:
     value_field_name: str
     attribute_field_names: list = None
+
+
 class DocumentGenerator:
     _nsmap = {
         "xsi": "http://www.w3.org/2001/XMLSchema-instance",

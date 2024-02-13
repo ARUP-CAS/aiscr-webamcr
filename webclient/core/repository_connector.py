@@ -2,18 +2,22 @@ import hashlib
 import io
 import logging
 import re
+import time
+from datetime import datetime
 from enum import Enum
 from io import BytesIO
 from PIL import Image
 from typing import Union, Optional
 
 import requests
+from celery import Celery
 from django.conf import settings
 from pdf2image import convert_from_bytes
 from requests.auth import HTTPBasicAuth
 
 from core.utils import get_mime_type
 from xml_generator.generator import DocumentGenerator
+from xml_generator.models import check_if_task_queued, METADATA_UPDATE_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
@@ -108,11 +112,17 @@ class FedoraRequestType(Enum):
 
 
 class FedoraRepositoryConnector:
-    def __init__(self, record):
+    def __init__(self, record, transaction=None):
         from core.models import ModelWithMetadata
 
         record: ModelWithMetadata
         self.record = record
+        if isinstance(transaction, FedoraTransaction):
+            self.transaction_uid = transaction.uid
+        elif isinstance(transaction, str):
+            self.transaction_uid = transaction
+        else:
+            self.transaction_uid = None
         self.restored_container = False
 
     def _get_model_name(self):
@@ -196,14 +206,12 @@ class FedoraRepositoryConnector:
                 return f"{base_url}/model/deleted/member/{self.record.ident_cely}/fcr:tombstone"
         logger.error("core_repository_connector._get_request_url.not_implemented", extra={"request_type": request_type})
 
-    @classmethod
-    def check_container_deleted(cls, ident_cely):
-        result = cls._send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
+    def check_container_deleted(self, ident_cely):
+        result = self._send_request(f"{self.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
         regex = re.compile(r"dcterms:type *\"deleted\" *;")
         return hasattr(result, "text") and regex.search(result.text)
 
-    @classmethod
-    def check_container_deleted_or_not_exists(cls, ident_cely):
+    def check_container_deleted_or_not_exists(self, ident_cely):
         logger.debug("core_repository_connector.check_container_is_deleted.start",
                      extra={"ident_cely": ident_cely})
         result = cls._send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
@@ -224,8 +232,7 @@ class FedoraRepositoryConnector:
                      extra={"ident_cely": ident_cely, "result_text": result.text})
         return False
 
-    @staticmethod
-    def _send_request(url: str, request_type: FedoraRequestType, *,
+    def _send_request(self, url: str, request_type: FedoraRequestType, *,
                       headers=None, data=None) -> Optional[requests.Response]:
         extra = {"url": url, "request_type": request_type}
         logger.debug("core_repository_connector._send_request.start", extra=extra)
@@ -235,6 +242,11 @@ class FedoraRepositoryConnector:
         else:
             auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
         response = None
+        if self.transaction_uid:
+            if headers is None:
+                headers = {}
+            headers["Atomic-ID"] = (f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
+                                    f"fcr:tx/{self.transaction_uid}")
         if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
             response = requests.post(url, headers=headers, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
@@ -258,12 +270,12 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE):
             response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
         elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
-            response = requests.post(url, auth=auth, verify=False)
+            response = requests.post(url, headers=headers, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
                               FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE,
                               FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY,
                               FedoraRequestType.CONNECT_DELETED_RECORD_3, FedoraRequestType.CONNECT_DELETED_RECORD_4):
-            response = requests.delete(url, auth=auth)
+            response = requests.delete(url, headers=headers, auth=auth)
         elif request_type in (FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
@@ -281,7 +293,7 @@ class FedoraRepositoryConnector:
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
             else:
-                extra = {"status_code": response.status_code, "request_type": request_type}
+                extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text}
 
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
                 raise FedoraError(url, response.text, response.status_code)
@@ -748,3 +760,99 @@ class FedoraRepositoryConnector:
                 item.save()
                 self.migrate_binary_file(item, include_content=True, check_if_exists=False,
                                          ident_cely_old=ident_cely_old)
+
+
+class FedoraTransactionQueueClosedError(Exception):
+    pass
+
+
+class FedoraTransactionNoIDError(Exception):
+    pass
+
+
+class FedoraTransactionCommitFailedError(Exception):
+    pass
+
+
+class FedoraTransaction:
+    def __init__(self, uid=None):
+        if uid is None:
+            self.__create_transaction()
+        else:
+            self.uid = uid
+            logger.debug("core_repository_connector.FedoraTransaction.__init__", extra={"uid": self.uid})
+
+    def __str__(self):
+        return self.uid
+
+    def check_remaining_tasks(self, include_commit_task=False):
+        app = Celery("webclient")
+        app.config_from_object("django.conf:settings", namespace="CELERY")
+        app.autodiscover_tasks()
+        i = app.control.inspect(["worker1@amcr"])
+        queues = (i.scheduled(), i.active(), i.reserved())
+        for queue in queues:
+            for queue_name, queue_tasks in queue.items():
+                for task in queue_tasks:
+                    if not task.get("args"):
+                        logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.no_data",
+                                     extra={"task_id": task.get("id"), "task_data": task})
+                        continue
+                    args = task.get("args")
+                    if isinstance(args, list):
+                        transaction_uid = task.get("args")[-1]
+                    elif isinstance(args, str):
+                        transaction_uid = task.get("args")
+                    else:
+                        logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.no_data",
+                                     extra={"task_data": task})
+                        continue
+                    if transaction_uid == self.uid:
+                        task_name = task.get("name")
+                        if (task.get("name") != "cron.tasks.commit_transaction_after_all_tasks_finished" or
+                                include_commit_task):
+                            logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.found",
+                                         extra={"transaction_uid": transaction_uid, "uid": self.uid,
+                                                "task_id": task.get("id"), "task_data": task, "task_name": task_name,
+                                                "task_name_type": type(task_name)})
+                            return True
+        return False
+
+    def commit_transaction(self):
+        logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.start",
+                     extra={"transaction_uid": self.uid})
+        url = f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx/{self.uid}"
+        auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
+        response = requests.put(url, auth=auth, verify=False)
+        if not str(response.status_code).startswith("2"):
+            logger.error("core_repository_connector.FedoraTransaction.commit_transaction.failed",
+                         extra={"transaction_uid": self.uid, "response": response.text})
+            raise FedoraTransactionCommitFailedError(response.text)
+        logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.end",
+                     extra={"transaction_uid": self.uid})
+
+    def mark_transaction_as_closed(self):
+        already_running = self.check_remaining_tasks(True)
+        if not already_running:
+            from cron.tasks import commit_transaction_after_all_tasks_finished
+            commit_transaction_after_all_tasks_finished.apply_async([self.uid, ], countdown=METADATA_UPDATE_TIMEOUT)
+
+    def __create_transaction(self):
+        logger.debug("core_repository_connector.FedoraTransaction.__create_transaction.start")
+        url = f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx"
+        auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
+        response = requests.post(url, auth=auth, verify=False)
+        if not str(response.status_code).startswith("2"):
+            logger.error("core_repository_connector.FedoraTransaction.__create_transaction.failed",
+                         extra={"response": response.text})
+            raise FedoraTransactionNoIDError(response.text)
+        uuid_pattern = r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+        match = re.search(uuid_pattern, response.headers.get("Location"))
+        if match:
+            self.uid = match.group()
+            logger.debug("core_repository_connector.FedoraTransaction.__create_transaction",
+                         extra={"uid": self.uid})
+        else:
+            logger.error("core_repository_connector.FedoraTransaction.__create_transaction.no_uid",
+                         extra={"response": response.text})
+            raise FedoraTransactionNoIDError(response.text)

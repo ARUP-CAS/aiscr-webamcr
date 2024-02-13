@@ -37,11 +37,12 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
     logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"record_pk": instance.pk})
+    transaction = None
     if not instance.suppress_signal:
-        instance.save_metadata()
+        transaction = instance.save_metadata()
         try:
             if instance.akce and instance.akce.projekt:
-                instance.akce.projekt.save_metadata()
+                transaction = instance.akce.projekt.save_metadata(transaction)
         except ObjectDoesNotExist as err:
             logger.debug("arch_z.signals.create_arch_z_metadata.no_akce",
                          extra={"record_ident_cely": instance.ident_cely, "err": err})
@@ -55,8 +56,11 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                     logger.debug("arch_z.signals.create_arch_z_metadata.update_pian_metadata",
                                  extra={"pian": dok_jednotka.pian.ident_cely,
                                         "initial_pripustnost": initial_pristupnost.pk, "pripustnost": pristupnost.pk})
-                    dok_jednotka.pian.save_metadata()
-    logger.debug("arch_z.signals.create_arch_z_metadata.end", extra={"record_pk": instance.pk})
+                    transaction = dok_jednotka.pian.save_metadata(transaction)
+    if transaction:
+        transaction.mark_transaction_as_closed()
+    logger.debug("arch_z.signals.create_arch_z_metadata.end", extra={"record_pk": instance.pk,
+                                                                     "transaction": transaction})
 
 
 @receiver(post_save, sender=Akce)
@@ -73,11 +77,15 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
         Funkce pro aktualizaci metadat externího odkazu.
     """
     logger.debug("arch_z.signals.create_externi_odkaz_metadata.start", extra={"record_pk": instance.pk})
+    transaction = None
     if instance.archeologicky_zaznam is not None:
-        instance.archeologicky_zaznam.save_metadata()
+        transaction = instance.archeologicky_zaznam.save_metadata()
     if instance.externi_zdroj is not None:
-        instance.externi_zdroj.save_metadata()
-    logger.debug("arch_z.signals.create_externi_odkaz_metadata.end", extra={"record_pk": instance.pk})
+        transaction = instance.externi_zdroj.save_metadata(transaction)
+    if transaction:
+        transaction.mark_transaction_as_closed()
+    logger.debug("arch_z.signals.create_externi_odkaz_metadata.end", extra={"record_pk": instance.pk,
+                                                                            "transaction": transaction})
 
 
 @receiver(pre_delete, sender=ArcheologickyZaznam)
@@ -87,10 +95,10 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
     """
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.start",
                  extra={"record_ident_cely": instance.ident_cely})
-    instance.record_deletion()
+    transaction = instance.record_deletion()
     try:
         if instance.akce and instance.akce.projekt is not None:
-            instance.akce.projekt.save_metadata()
+            instance.akce.projekt.save_metadata(transaction)
     except ObjectDoesNotExist as err:
         logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.no_akce",
                      extra={"record_ident_cely": instance.ident_cely, "err": err})
@@ -106,19 +114,24 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
         for eo in instance.externi_odkazy.all():
             eo.suppress_signal_arch_z = True
             eo.delete()
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.end",
-                 extra={"record_ident_cely": instance.ident_cely})
+                 extra={"record_ident_cely": instance.ident_cely, "transaction": transaction})
 
 
 @receiver(pre_delete, sender=ArcheologickyZaznam)
 def delete_arch_z_repository_update_connected_records(sender, instance: ArcheologickyZaznam, **kwargs):
     logger.debug("arch_z.signals.delete_arch_z_repository_update_connected_records.start",
                  extra={"record_ident": instance.ident_cely})
+    transaction = None
     for item in instance.casti_dokumentu.all():
         item: DokumentCast
-        item.dokument.save_metadata()
+        transaction = item.dokument.save_metadata(transaction)
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("arch_z.signals.delete_arch_z_repository_update_connected_records.end",
-                 extra={"record_ident": instance.ident_cely})
+                 extra={"record_ident": instance.ident_cely, "transaction": transaction})
 
 
 @receiver(post_delete, sender=ExterniOdkaz)
@@ -128,9 +141,13 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     """
     logger.debug("arch_z.signals.delete_externi_odkaz_repository_container.start",
                  extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z})
+    transaction = None
     if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
-        instance.archeologicky_zaznam.save_metadata()
+        transaction = instance.archeologicky_zaznam.save_metadata(transaction)
     if instance.externi_zdroj is not None:
-        instance.externi_zdroj.save_metadata()
+        transaction = instance.externi_zdroj.save_metadata(transaction)
+    if transaction:
+        transaction.mark_transaction_as_closed()
     logger.debug("arch_z.signals.delete_externi_odkaz_repository_container.end",
-                 extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z})
+                 extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z,
+                        "transaction": transaction})

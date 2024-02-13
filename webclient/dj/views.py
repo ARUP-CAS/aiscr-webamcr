@@ -116,15 +116,17 @@ def detail(request, typ_vazby, ident_cely):
             dj.save()
             if len(new_ku) > 3:
                 update_main_katastr_within_ku(dj.ident_cely, new_ku)
+        transaction = None
         if dj.pian is not None and (pian_db is None or pian_db.pk != dj.pian.pk):
             logger.debug("dj.views.detail.update_pian_metadata",
                          extra={"pian_db": pian_db.ident_cely if pian_db else "None",
                                 "instance_pian": dj.pian.ident_cely, "ident_cely": dj.ident_cely})
-            dj.pian.save_metadata()
+            transaction = dj.pian.save_metadata(transaction)
         if pian_db is not None and (dj.pian is None or dj.pian.pk != pian_db.pk):
             logger.debug("dj.views.detail.changed_or_removed_pian", extra={"ident_cely": dj.ident_cely})
-            pian_db.save_metadata()
-
+            transaction = pian_db.save_metadata(transaction)
+        if transaction:
+            transaction.mark_transaction_as_closed()
     else:
         logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors,
                                                                    "ident_cely": dj.ident_cely})
