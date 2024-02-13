@@ -150,7 +150,7 @@ def create(request, ident_cely=None):
                 messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
             else:
                 repository_connector = FedoraRepositoryConnector(sn)
-                if repository_connector.check_container_deleted_or_not_exists(sn.ident_cely):
+                if repository_connector.check_container_deleted_or_not_exists(sn.ident_cely, "samostatny_nalez"):
                     sn.stav = SN_ZAPSANY
                     sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
                     sn.predano_organizace = sn.projekt.organizace
