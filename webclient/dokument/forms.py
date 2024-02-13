@@ -398,6 +398,7 @@ class EditDokumentForm(forms.ModelForm):
         self, *args, readonly=False, required=None, required_next=None, **kwargs
     ):
         create = kwargs.pop("create", None)
+        region_not_required = kwargs.pop("region_not_required", None)
         super(EditDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
@@ -490,7 +491,9 @@ class EditDokumentForm(forms.ModelForm):
         self.fields["autori"].widget.choices = list(Osoba.objects.filter(
             dokumentautor__dokument=self.instance
         ).order_by("dokumentautor__poradi").values_list("id","vypis_cely"))
-        if create:
+        if region_not_required is True:
+            self.fields["region"].required = False
+        elif create:
             self.fields["region"].required = True
 
 

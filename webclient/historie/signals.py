@@ -3,6 +3,7 @@ import logging
 from historie.models import Historie
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from cron.tasks import update_cached_queryset
 
 from xml_generator.models import ModelWithMetadata
 

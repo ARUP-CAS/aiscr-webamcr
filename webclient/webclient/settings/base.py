@@ -156,6 +156,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "core.middleware.TestEnvPopupMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
@@ -472,6 +473,7 @@ FEDORA_PORT_NUMBER = get_secret("FEDORA_PORT_NUMBER", "")
 FEDORA_ADMIN_USER = get_secret("FEDORA_ADMIN_USER", "")
 FEDORA_ADMIN_USER_PASSWORD = get_secret("FEDORA_ADMIN_USER_PASSWORD", "")
 
+DIGIARCHIV_SERVER_URL = get_secret("DIGIARCHIV_SERVER_URL", "https://digiarchiv.aiscr.cz/")
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -482,3 +484,5 @@ REST_FRAMEWORK = {
 TOKEN_EXPIRATION_HOURS = 24
 
 SKIP_RECAPTCHA = False
+
+TEST_ENV = os.getenv("TEST_ENV_SETTING", False)

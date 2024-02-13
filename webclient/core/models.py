@@ -1,10 +1,13 @@
 import datetime
+import io
 import logging
 import os
 import re
-from typing import Optional
+import zipfile
+from typing import Optional, Union
 
 import magic
+import rarfile
 from django_prometheus.models import ExportModelOperationsMixin
 
 from django.conf import settings
@@ -12,11 +15,12 @@ from django.db import models
 from django.forms import ValidationError
 from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
+import py7zr
 
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian
 from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
-from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, FILE_URL_PREFIX
+from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from nalez.models import NalezObjekt, NalezPredmet
 from notifikace_projekty.models import Pes
 from uzivatel.models import User
@@ -115,7 +119,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @property
     def url(self):
         if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
-            return f"{FILE_URL_PREFIX}{self.path.lower().split('record/')[1]}"
+            return f"{settings.DIGIARCHIV_SERVER_URL}id/{self.path.split('record/')[1]}"
         return ""
 
     @property
@@ -179,7 +183,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                      extra={"record_ident_cely": record, "repository_uuid": self.repository_uuid, "soubor_pk": self.pk})
         return None
 
-    def zaznamenej_nahrani(self, user):
+    def zaznamenej_nahrani(self, user, file_name=None):
         """
         Metóda pro zapsáni vytvoření souboru do historie.
         """
@@ -187,7 +191,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         hist = Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
-            poznamka=self.nazev,
+            poznamka=file_name if file_name else self.nazev,
             vazba=self.historie,
         ).save()
         logger.debug(_("core.models.soubor.zaznamenej_nahrani.finished"), extra={"historie": hist})
@@ -236,7 +240,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def get_file_extension_by_mime(cls, file):
-        mime_type = cls.get_mime_type(file)
+        mime_type = cls.get_mime_types(file)
         return {
             "image/jpeg": ("jpeg", "jpg"),
             "image/png": ("png",),
@@ -246,6 +250,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             "text/csv": ("csv",),
             "application/zip": ("zip",),
             "application/x-rar-compressed": ("rar",),
+            "application/x-rar": ("rar",),
             "application/x-7z-compressed": ("7z",),
             "application/vnd.ms-excel": ("xls",),
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ("docx",),
@@ -256,17 +261,91 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         }.get(mime_type, [])
 
     @classmethod
-    def get_mime_type(cls, file):
+    def get_mime_types(cls, file, check_archive=False) -> Union[set, bool, str]:
         file.seek(0)
         mime_type = magic.from_buffer(file.read(), mime=True)
+        logger.debug("core.models.Soubor.get_mime_type.mime_type", extra={"mime_type": mime_type,
+                                                                          "check_archive": check_archive})
         file.seek(0)
-        return mime_type
+        if check_archive:
+            mime_types = set()
+            mime_types.add(mime_type)
+            if mime_type == "application/zip":
+                try:
+                    with zipfile.ZipFile(file, 'r') as zip_ref:
+                        for zip_info in zip_ref.infolist():
+                            if not zip_info.is_dir():
+                                with zip_ref.open(zip_info) as inner_file:
+                                    inner_file_bytes = inner_file.read()
+                                    inner_mime_type = magic.from_buffer(inner_file_bytes, mime=True)
+                                    mime_types.add(inner_mime_type)
+                except Exception as err:
+                    logger.info("core.models.Soubor.get_mime_type.cannot_unpack_zipfile", extra={"err": err})
+                    return False
+            elif mime_type == "application/x-7z-compressed":
+                file_input = io.BytesIO(file.read())
+                try:
+                    with py7zr.SevenZipFile(file_input, mode='r') as archive:
+                        all_files = archive.getnames()
+                        for file_name in all_files:
+                            inner_file_bytes = archive.read([file_name])[file_name].read()
+                            inner_mime_type = magic.from_buffer(inner_file_bytes, mime=True)
+                            mime_types.add(inner_mime_type)
+                except Exception as err:
+                    logger.info("core.models.Soubor.get_mime_type.cannot_unpack_7zfile", extra={"err": err})
+                    return False
+                finally:
+                    file_input.close()
+            elif mime_type in ("application/x-rar-compressed", "application/x-rar"):
+                file_input = io.BytesIO(file.read())
+                try:
+                    with rarfile.RarFile(file_input) as archive:
+                        all_files = archive.namelist()
+                        for file_name in all_files:
+                            # Extract the file as bytes
+                            with archive.open(file_name) as inner_file:
+                                inner_file_bytes = inner_file.read()
+                                inner_mime_type = magic.from_buffer(inner_file_bytes, mime=True)
+                                mime_types.add(inner_mime_type)
+                except Exception as err:
+                    logger.info("core.models.Soubor.get_mime_type.cannot_unpack_rarfile",
+                                extra={"mime_type": mime_type, "err": err})
+                    return False
+                finally:
+                    file_input.close()
+            if "application/octet-stream" in mime_types:
+                mime_types.remove("application/octet-stream")
+            logger.debug("core.models.Soubor.get_mime_type.end", extra={"mime_types": mime_types,
+                                                                        "check_archive": check_archive})
+            if len(mime_types) == 1:
+                return list(mime_types)[0]
+            else:
+                return mime_types
+        else:
+            logger.debug("core.models.Soubor.get_mime_type.end", extra={"mime_type": mime_type,
+                                                                        "check_archive": check_archive})
+            return mime_type
 
     @classmethod
     def check_mime_for_url(cls, file, source_url=""):
-        mime = cls.get_mime_type(file)
+        mime = cls.get_mime_types(file, check_archive=True)
+        logger.debug("core.models.Soubor.check_mime_for_url.mime_types",
+                     extra={"mime": mime})
+        if mime is False:
+            return False
+        if isinstance(mime, str):
+            mime_str = mime
+            mime = set()
+            mime.add(mime_str)
+        mime: set
         if "soubor/nahrat/pas/" in source_url:
-            return mime.startswith("image/")
+            for item in mime:
+                item: str
+                if not item.startswith("image/"):
+                    logger.debug("core.models.Soubor.check_mime_for_url.unaccepted_types",
+                                 extra={"accepted_mime_type": mime})
+                    return False
+            return True
         elif "soubor/nahrat/dokument/" in "dokument":
             accepted_mime_types = [
                 "image/jpeg",  # For .jpeg, .jpg
@@ -276,11 +355,18 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 "application/pdf",  # For .pdf
                 "text/csv"  # For .csv
             ]
-            return mime in accepted_mime_types
+            unaccepted_mime_types = mime.difference(accepted_mime_types)
+            for item in unaccepted_mime_types:
+                if not item.startswith("image/"):
+                    logger.debug("core.models.Soubor.check_mime_for_url.unaccepted_types",
+                                 extra={"accepted_mime_types": item})
+                    return False
+            return True
         else:
             accepted_mime_types = [
                 "application/zip",  # For .zip files
                 "application/x-rar-compressed",  # For .rar files
+                "application/x-rar",
                 "application/x-7z-compressed",  # For .7z files
                 "application/vnd.ms-excel",  # For .xls files
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # For .docx files
@@ -291,9 +377,13 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 "application/vnd.oasis.opendocument.text",  # For .odt files
                 "application/vnd.oasis.opendocument.spreadsheet",  # For .ods files
             ]
-            if mime.startswith("image/") or mime in accepted_mime_types:
-                return True
-        return False
+            unaccepted_mime_types = mime.difference(accepted_mime_types)
+            for item in unaccepted_mime_types:
+                if not item.startswith("image/"):
+                    logger.debug("core.models.Soubor.check_mime_for_url.unaccepted_types",
+                                 extra={"accepted_mime_types": item})
+                    return False
+            return True
 
 
 class ProjektSekvence(models.Model):

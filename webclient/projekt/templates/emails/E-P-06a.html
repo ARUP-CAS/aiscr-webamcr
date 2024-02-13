@@ -1,20 +1,18 @@
 {% extends 'core/email.html' %}
 {% load i18n %}
 {% block content %}
-    <p>{% trans "projekt.templates.email.E-P-06a.title" %}</p>
+    <p>Vážená paní/Vážený pane,</p>
     <p>
-        {% trans "projekt.templates.email.E-P-06a.part1" %} <b>{{ ident_cely }}</b>
-        (<b>{{ podnet }}</b>) {% trans "projekt.templates.email.E-P-06a.part2" %}
-        <b>{{ katastr }}</b>
-        {% trans "projekt.templates.email.E-P-06a.part3" %} <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>)
-        {% if datum_oznameni %}{% trans "projekt.templates.email.E-P-06a.part4" %} <b>{{ datum_oznameni }}</b>{% endif %}
-        {% trans "projekt.templates.email.E-P-06a.part5" %}
+        projekt <b>{{ ident_cely }}</b> (<b>{{ podnet }}</b>), který byl evidován v souvislosti s Vaším oznámením o stavební nebo jiné činností na území s archeologickými nálezy dle § 22, odst. 2 zák. č. 20/1987 na k.ú. <b>{{ katastr }}</b>, parcela <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>) {% if datum_oznameni %}ze dne <b>{{ datum_oznameni }}</b>{% endif %} byl zrušen.
     </p>
-    <p><b>{% trans "projekt.templates.email.E-P-06a.part6" %}</b> {{ reason }}</p>
+    <p><b>Zdůvodnění:</b> {{ reason }}</p>
     <p>
-        {% trans "projekt.templates.email.E-P-06a.part7" %}
+        Vaše případné dotazy pište na adresu oznameni@arup.cas.cz nebo volejte na tel. 257 014 310.
     </p>
-    <p>{% trans "projekt.templates.email.E-P-06a.part8" %}</p>
-    <p>{% trans "projekt.templates.email.E-P-06a.part9" %}</p>
-    <p>{% trans "projekt.templates.email.E-P-06a.part10" %}</p>
+    <p>S pozdravem</p>
+    <p>Archeologický ústav AV ČR, Praha, v. v. i.</p>
+    <p>Na tuto zprávu prosím neodpovídejte, je automaticky generována.</p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}

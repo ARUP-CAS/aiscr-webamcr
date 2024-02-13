@@ -2,12 +2,15 @@
 {% load i18n %}
 {% block content %}
     <p>
-        {% trans "uzivatel.templates.E-U-06.title" %}
+        Dobrý den,
     </p>
     <p>
-        {% trans "uzivatel.templates.E-U-06.part1" %} {% trans "uzivatel.templates.E-U-06.platneUdaje" %} {{ roles }}
+        vašemu účtu byla v AMČR změněna uživatelská role či upraveno oprávnění. Platné údaje: {{ roles }}
     </p>
     <p>
-        {% trans "uzivatel.templates.E-U-06.part2" %}
+        Změny se projeví po přihlášení do systému.
     </p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}

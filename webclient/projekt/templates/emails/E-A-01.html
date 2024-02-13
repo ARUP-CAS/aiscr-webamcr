@@ -2,24 +2,14 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-    <p>{% trans "projekt.templates.email.E-A-01.title" %}</p>
+    <p>Dobrý den,</p>
     <p>
-        {% trans "projekt.templates.email.E-A-01.part1" %}
-        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "projekt.templates.email.E-A-01.part2" %} <b>{{ katastr }}</b> {% trans "projekt.templates.email.E-A-01.part3" %}
-        <b>{{ state }}</b>.
+        vámi odeslaný projekt <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b>{{ katastr }}</b> byl převeden do stavu: <b>{{ state }}</b>.
     </p>
     <p>
-        {% trans "projekt.templates.email.E-A-01.part4" %}
+        Detaily o projektu zjistíte po přihlášení do AMČR.Záznam bude během několika dní zveřejněn v Digitálním archivu AMČR.
     </p>
 {% endblock %}
 {% block content_en %}
-    <p>{% trans "projekt.templates.email.E-A-01.title" %}</p>
-    <p>
-        {% trans "projekt.templates.email.E-A-01.part1" %}
-        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "projekt.templates.email.E-A-01.part2" %} <b>{{ katastr }}</b> {% trans "projekt.templates.email.E-A-01.part3" %}
-        <b>{{ state }}</b>.
-    </p>
-    <p>
-        {% trans "projekt.templates.email.E-A-01.part4" %}
-    </p>
+  <!-- add English version -->
 {% endblock %}

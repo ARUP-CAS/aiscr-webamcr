@@ -322,6 +322,7 @@
           }
           if (form_id.includes("detail_dj_form_")) {
               let xhr = new XMLHttpRequest();
+              const currentUrl = window.location.href;
               xhr.open('POST', '/arch-z/mapa-zoom');
               xhr.setRequestHeader('Content-type', 'application/json');
               if (typeof global_csrftoken !== 'undefined') {
@@ -333,9 +334,11 @@
                   const rs = JSON.parse(this.responseText)
                   if(rs.lat > 0 || rs.zoom == 17){
                     if(rs.lat > 0){
-                      map.setView([rs.lat, rs.lng], rs.zoom)
+                      if(!global_blocked_by_query_geom){
+                        map.setView([rs.lat, rs.lng], rs.zoom)
+                      }
                     }
-                    if (rs.zoom == 17) {
+                    if (rs.zoom == 17 && !global_blocked_by_query_geom) {
                         drawnItems.clearLayers();
                         addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems, rs.pian_ident_cely, rs.geom, rs.presnost)
                     }
@@ -343,10 +346,14 @@
                         switchMap(false);
                   }
               };
+              let d_sufix="";
+              if(currentUrl.lastIndexOf("-D")>-1){
+                    d_sufix=  currentUrl.substr(currentUrl.lastIndexOf("-D"))
+                  }
               xhr.send(JSON.stringify(
                   {
                       'cadastre': document.getElementById("main_cadastre_id").value,
-                      'akce_ident_cely': '{{ zaznam.ident_cely }}',
+                      'akce_ident_cely': '{{ zaznam.ident_cely }}'+d_sufix,
                   }))
           }
           try {document.getElementById("dj_list_card_header").scrollIntoView();}
@@ -578,9 +585,9 @@
       }
     }
     if (document.getElementsByClassName("zmenit-katastr-btn")){
-      elements = document.getElementsByClassName("zmenit-katastr-btn")
+      const elements = document.getElementsByClassName("zmenit-katastr-btn")
       for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "zmenit-katastr-form",
         modalFormID: "#zmenit-katastr-form",
         })

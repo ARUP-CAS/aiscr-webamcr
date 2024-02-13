@@ -1,3 +1,4 @@
+import pickle
 from functools import reduce
 import logging
 import operator
@@ -17,10 +18,11 @@ from django_filters import (
     DateFromToRangeFilter,
 )
 
-from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_DOK
+from core.connectors import RedisConnector
+from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_DOK, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 from dokument.models import Dokument, DokumentCast, Tvar
 from historie.models import Historie
-from django.db.models import Q, OuterRef, Subquery, F
+from django.db.models import Q, OuterRef, Subquery, F, QuerySet
 from heslar.hesla import (
     HESLAR_AREAL_KAT,
     HESLAR_DOHLEDNOST,
@@ -80,6 +82,7 @@ class HistorieFilter(filters.FilterSet):
     Třída pro zakladní filtrování historie. Třída je dedená v jednotlivých filtracích záznamů.
     """
     filter_typ = None
+    typ_vazby = None
     # Filters by historie
     historie_typ_zmeny = MultipleChoiceFilter(
         choices=filter(lambda x: x[0].startswith("D"), Historie.CHOICES),
@@ -110,72 +113,95 @@ class HistorieFilter(filters.FilterSet):
         distinct=True,
     )
 
+    @staticmethod
+    def get_cache_queryset_name(typ_vazby, uzivatel_organizace=None, uzivatel=None):
+        query_params_string = f"history_queryset_{typ_vazby}"
+        if uzivatel_organizace:
+            if isinstance(uzivatel_organizace, Organizace):
+                query_params_string += f"_organizace_{uzivatel_organizace.pk}"
+            else:
+                query_params_string += f"_organizace_{','.join([str(x.pk) for x in uzivatel_organizace])}"
+        if uzivatel:
+            if isinstance(uzivatel, User):
+                query_params_string += f"_uzivatel_{uzivatel.pk}"
+            else:
+                query_params_string += f"_uzivatel_{','.join([str(x.pk) for x in uzivatel])}"
+        return query_params_string
+
+    @classmethod
+    def get_cached_queryset(cls, typ_vazby, uzivatel_organizace=None, uzivatel=None):
+        query_params_string = cls.get_cache_queryset_name(typ_vazby, uzivatel_organizace, uzivatel)
+        r = RedisConnector.get_connection()
+        value_list = r.get(query_params_string)
+        if value_list:
+            logger.debug("dokument.filters.HistorieFilter.save_cached_queryset.found",
+                         extra={"query_params_string": query_params_string})
+            return pickle.loads(value_list)
+        logger.debug("dokument.filters.HistorieFilter.save_cached_queryset.not_found",
+                     extra={"query_params_string": query_params_string})
+
+    @classmethod
+    def save_cached_queryset(cls, typ_vazby, uzivatel_organizace=None, uzivatel=None, historie=None):
+        if not historie:
+            historie = cls.get_filtered_history_dataset(typ_vazby, uzivatel_organizace, uzivatel)
+        query_params_string = cls.get_cache_queryset_name(typ_vazby, uzivatel_organizace, uzivatel)
+        values = pickle.dumps(list(set(historie.values_list("vazba__id", flat=True))))
+        r = RedisConnector.get_connection()
+        r.set(query_params_string, values)
+        logger.debug("dokument.filters.HistorieFilter.save_cached_queryset.saved",
+                     extra={"query_params_string": query_params_string, "query_count": historie.count()})
+
+    @staticmethod
+    def get_filtered_history_dataset(typ_vazby=None, uzivatel_organizace=None, uzivatel=None) -> QuerySet:
+        if typ_vazby:
+            historie = Historie.objects.filter(vazba__typ_vazby=typ_vazby)
+        else:
+            historie = Historie.objects.all()
+        if uzivatel_organizace:
+            if isinstance(uzivatel_organizace, Organizace):
+                historie = historie.filter(organizace_snapshot=uzivatel_organizace)
+            else:
+                historie = historie.filter(organizace_snapshot__in=uzivatel_organizace)
+        if uzivatel:
+            if isinstance(uzivatel, User):
+                historie = historie.filter(uzivatel=uzivatel)
+            else:
+                historie = historie.filter(uzivatel__in=uzivatel)
+        return historie
+
     def _get_history_subquery(self):
         logger.debug("dokument.filters.HistorieFilter._get_history_subquery.start")
         uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace", None)
         zmena = self.form.cleaned_data.pop("historie_typ_zmeny", None)
         uzivatel = self.form.cleaned_data.pop("historie_uzivatel", None)
         datum = self.form.cleaned_data.pop("historie_datum_zmeny_od", None)
+
+        if self.typ_vazby and not datum and not zmena:
+            cached_queryset = self.get_cached_queryset(self.typ_vazby, uzivatel_organizace, uzivatel)
+            if cached_queryset:
+                return cached_queryset
+
         if uzivatel_organizace or zmena or uzivatel or datum:
-            historie = Historie.objects.all()
+            if self.typ_vazby:
+                cached_queryset = self.get_cached_queryset(self.typ_vazby, uzivatel_organizace, uzivatel)
+                if cached_queryset:
+                    historie = Historie.objects.filter(id__in=cached_queryset)
+                else:
+                    historie = self.get_filtered_history_dataset(self.typ_vazby, uzivatel_organizace, uzivatel)
+            else:
+                historie = self.get_filtered_history_dataset(uzivatel_organizace=uzivatel_organizace, uzivatel=uzivatel)
             if zmena:
                 historie = historie.filter(typ_zmeny__in=zmena)
-            if uzivatel:
-                historie = historie.filter(uzivatel__in=uzivatel)
-            if uzivatel_organizace:
-                historie = historie.filter(organizace_snapshot__in=uzivatel_organizace)
             if datum and datum.start:
                 historie = historie.filter(datum_zmeny__gte=datum.start)
             if datum and datum.stop:
                 historie = historie.filter(datum_zmeny__lte=datum.stop)
+            if not zmena and not datum:
+                self.save_cached_queryset(self.typ_vazby, uzivatel_organizace, uzivatel, historie)
             logger.debug("dokument.filters.HistorieFilter._get_history_subquery.end",
                          extra={"query": str(historie.query)})
             return historie
         return None
-
-    """
-    def filter_queryset(self, queryset):
-        zmena = self.form.cleaned_data["historie_typ_zmeny"]
-        uzivatel = self.form.cleaned_data["historie_uzivatel"]
-        datum = self.form.cleaned_data["historie_datum_zmeny_od"]
-        uzivatel_organizace = self.form.cleaned_data["historie_uzivatel_organizace"]
-        filtered = Historie.objects.all()
-        needs_filtering = False
-        if zmena:
-            filtered = filtered.filter(typ_zmeny__in=zmena)
-            needs_filtering = True
-        if uzivatel:
-            filtered = filtered.filter(uzivatel__in=uzivatel)
-            needs_filtering = True
-        if uzivatel_organizace:
-            filtered = filtered.filter(uzivatel__organizace__in=uzivatel_organizace)
-            needs_filtering = True
-        if datum and datum.start:
-            filtered = filtered.filter(datum_zmeny__gte=datum.start)
-            needs_filtering = True
-        if datum and datum.stop:
-            filtered = filtered.filter(datum_zmeny__lte=datum.stop)
-            needs_filtering = True
-        if needs_filtering:
-            if self.filter_typ and self.filter_typ == "arch_z":
-                queryset = queryset.filter(
-                    archeologicky_zaznam__historie__historie__in=filtered
-                ).distinct()
-            else:
-                queryset = queryset.filter(historie__historie__in=filtered).distinct()
-        for name, value in self.form.cleaned_data.items():
-            if name not in ["historie_typ_zmeny", "historie_uzivatel", "historie_datum_zmeny_od"]:
-                if value:
-                    queryset = self.filters[name].filter(queryset, value)
-            assert isinstance(
-                queryset, models.QuerySet
-            ), "Expected '%s.%s' to return a QuerySet, but got a %s instead." % (
-                type(self).__name__,
-                name,
-                type(queryset).__name__,
-            )
-        return queryset
-    """
 
     def __init__(self, *args, **kwargs):
         super(HistorieFilter, self).__init__(*args, **kwargs)

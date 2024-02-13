@@ -13,7 +13,6 @@ from core.constants import (
 from django.conf import settings
 
 
-from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django_auto_logout.utils import (

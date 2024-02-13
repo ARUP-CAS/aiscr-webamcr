@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.db import models as pgmodels
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.utils.translation import gettext_lazy as _
@@ -16,7 +17,7 @@ from heslar.hesla import (
 )
 from xml_generator.models import ModelWithMetadata
 
-logger_s = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
@@ -101,7 +102,11 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
 
     def __init__(self, *args, **kwargs):
         super(HeslarDatace, self).__init__(*args, **kwargs)
-        self.initial_obdobi = self.obdobi
+        try:
+            self.initial_obdobi = self.obdobi
+        except ObjectDoesNotExist as err:
+            logger.debug("heslar.obdobi.HeslarDatace.__init__.no_obdobi", extra={"err": err})
+            self.initial_obdobi = None
 
 
 class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_typ_material_rada"), models.Model):
@@ -231,7 +236,7 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
     def __init__(self, *args, **kwargs):
         super(HeslarOdkaz, self).__init__(*args, **kwargs)
         if self.pk:
-            logger_s.debug(self.heslo)
+            logger.debug(self.heslo)
             self.initial_heslo = self.heslo
 
 
@@ -244,10 +249,6 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
     aktualni = models.BooleanField(verbose_name=_("heslar.models.RuianKatastr.aktualni"))
     nazev = models.TextField(verbose_name=_("heslar.models.RuianKatastr.nazev"), db_index=True)
     kod = models.IntegerField(verbose_name=_("heslar.models.RuianKatastr.kod"), db_index=True)
-    # TODO: BUG FIX #474 when ready #372
-    # nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianKatastr.nazev"))
-    # kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKatastr.kod"))
-    # END of TODO
     definicni_bod = pgmodels.PointField(verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326)
     hranice = pgmodels.MultiPolygonField(verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
     nazev_stary = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.nazev_stary"))

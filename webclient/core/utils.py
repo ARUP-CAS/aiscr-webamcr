@@ -315,6 +315,7 @@ def get_centre_from_akce(katastr, akce_ident_cely):
                     geom = dj.pian.geom
                     presnost = dj.pian.presnost.zkratka
                     pian_ident_cely = dj.pian.ident_cely
+                    break
         return [bod, geom, presnost, zoom, pian_ident_cely]
     except IndexError:
         logger.error(
@@ -569,14 +570,13 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
                     Q(ident_cely__istartswith=i.archeologicky_zaznam.ident_cely)
                 )
                 .distinct()
-                .values_list("pian", flat=True)
+                .values_list("pian__id", flat=True)
             ))
             # FIltering bbox is disabled-because of caching add .filter(Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom])))
-        if pians:
-            pians.append(d)
-        else:
-            pians = d
+        if d:
+            pians.extend(d)
     try:  
+        logger.debug(pians)
         return Pian.objects.filter(pk__in=pians)
     except IndexError:
         logger.debug(

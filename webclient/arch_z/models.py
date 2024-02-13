@@ -2,7 +2,7 @@ import logging
 
 from django.db.models import CheckConstraint, Q
 from django.shortcuts import redirect
-from django.utils.encoding import force_str
+from django.utils.functional import cached_property
 
 from core.connectors import RedisConnector
 from core.constants import (
@@ -61,7 +61,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         (AZ_STAV_ARCHIVOVANY, _("arch_z.models.ArcheologickyZaznam.states.AZ3")),
     )
 
-    typ_zaznamu = models.CharField(max_length=1, choices=CHOICES)
+    typ_zaznamu = models.CharField(max_length=1, choices=CHOICES, db_index=True)
     pristupnost = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -95,6 +95,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 name='archeologicky_zaznam_typ_zaznamu_check',
             ),
         ]
+        unique_together = (("typ_zaznamu", "historie"), )
 
     def set_zapsany(self, user):
         """
@@ -331,18 +332,11 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         self.ident_cely = (
             sequence.region + "-" + str(sequence.typ.zkratka) + f"{sequence.sekvence:07}"
         )
+        self._set_connected_records_ident(self.ident_cely)
         self.save()
         self.record_ident_change(old_ident)
 
-    def set_akce_ident(self, ident=None):
-        """
-        Metóda pro nastavení ident celý pro akci a její relace.
-        Nastaví ident z předaného argumentu ident nebo z metódy get_akce_ident.
-        """
-        if ident:
-            new_ident = ident
-        else:
-            new_ident = get_akce_ident(self.hlavni_katastr.okres.kraj.rada_id)
+    def _set_connected_records_ident(self, new_ident):
         for dj in self.dokumentacni_jednotky_akce.all():
             dj.ident_cely = new_ident + dj.ident_cely[-4:]
             if dj.komponenty is None:
@@ -354,6 +348,17 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 komponenta.ident_cely = new_ident + komponenta.ident_cely[-5:]
                 komponenta.save()
             dj.save()
+
+    def set_akce_ident(self, ident=None):
+        """
+        Metóda pro nastavení ident celý pro akci a její relace.
+        Nastaví ident z předaného argumentu ident nebo z metódy get_akce_ident.
+        """
+        if ident:
+            new_ident = ident
+        else:
+            new_ident = get_akce_ident(self.hlavni_katastr.okres.kraj.rada_id)
+        self._set_connected_records_ident(new_ident)
         self.ident_cely = new_ident
         self.save()
 
@@ -522,11 +527,15 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
             "arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely}
         )
 
-    @property
+    def save_metadata(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        return connector.save_metadata(True)
+
     def vedouci_organizace(self):
         return ', '.join([str(x.organizace) for x in self.akcevedouci_set.all()])
 
-    @property
+    @cached_property
     def vedouci(self):
         return ', '.join([str(x.vedouci) for x in self.akcevedouci_set.all()])
 

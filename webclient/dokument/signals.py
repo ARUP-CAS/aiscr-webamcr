@@ -110,7 +110,9 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
     for k in Komponenta.objects.filter(ident_cely__startswith=instance.ident_cely):
         logger.debug("dokument.signals.dokument_delete_repository_container.deleting",
                      extra={"ident_cely": k.ident_cely})
+        k: Komponenta
         k.delete()
+        k.komponenta_vazby.delete()
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
     if instance.soubory and instance.soubory.pk:

@@ -22,7 +22,7 @@ Dokumentace je delená na část popisující nasazování, adresarovou struktur
    automaticke_testy
    code_documentation
    identy
-   databaze_konzistence
+   databaze_konzistence_testy
    knihovny
 
 

@@ -2,10 +2,11 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-    <p>{% trans "projekt.templates.email.E-P-05.title" %}</p>
+    <p>Dobrý den,</p>
     <p>
-        {% trans "projekt.templates.email.E-P-05.part1" %} <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "projekt.templates.email.E-P-05.part2" %}
-        <b>{{ katastr }}</b> {% trans "projekt.templates.email.E-P-05.part3" %}
-        <b>{{ state }}</b></p>
-    <p>{% trans "projekt.templates.email.E-P-05.part4" %}</p>
+        projekt <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b>{{ katastr }}</b> vámi navržený ke zrušení byl převeden do stavu <b>{{ state }}</b></p>
+    <p>Detaily o projektu zjistíte po přihlášení do AMČR.</p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}

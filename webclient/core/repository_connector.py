@@ -108,6 +108,7 @@ class FedoraRequestType(Enum):
     CREATE_BINARY_FILE_THUMB_LARGE = 34
     GET_BINARY_FILE_CONTENT_THUMB_LARGE = 35
     UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE = 36
+    GET_TOMBSTONE = 37
 
 
 class FedoraRepositoryConnector:
@@ -203,8 +204,6 @@ class FedoraRepositoryConnector:
                 return f"{base_url}/model/deleted/member/{ident_cely}/fcr:tombstone"
             else:
                 return f"{base_url}/model/deleted/member/{self.record.ident_cely}/fcr:tombstone"
-        elif request_type == FedoraRequestType.DELETE_DELETED_TOMBSTONE:
-            return f"{base_url}/model/deleted/member/{self.record.ident_cely}/fcr:tombstone"
         logger.error("core_repository_connector._get_request_url.not_implemented", extra={"request_type": request_type})
 
     def check_container_deleted(self, ident_cely):
@@ -215,17 +214,23 @@ class FedoraRepositoryConnector:
     def check_container_deleted_or_not_exists(self, ident_cely):
         logger.debug("core_repository_connector.check_container_is_deleted.start",
                      extra={"ident_cely": ident_cely})
-        result = self._send_request(f"{self.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
-        regex = re.compile(r"dcterms:type *\"deleted\" *;")
-        if ((result.status_code == 404 or (hasattr(result, "text") and "not found" in result.text)) or
-                self.check_container_deleted(ident_cely)):
+        result = cls._send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
+        result_2 = cls._send_request(f"{cls.get_base_url()}/model/deleted/member/{ident_cely}",
+                                     FedoraRequestType.GET_DELETED_LINK)
+
+        if result.status_code == 200:
+            if cls.check_container_deleted(ident_cely):
+                if result_2.status_code == 200:
+                    logger.debug("core_repository_connector.check_container_is_deleted.true",
+                                 extra={"ident_cely": ident_cely, "result_text": result.text})
+                    return True
+        elif result.status_code == 404 and result_2.status_code == 404:
             logger.debug("core_repository_connector.check_container_is_deleted.true",
-                         extra={"ident_cely": ident_cely})
+                         extra={"ident_cely": ident_cely, "result_text": result.text})
             return True
-        else:
-            logger.debug("core_repository_connector.check_container_is_deleted.false",
-                         extra={"ident_cely": ident_cely})
-            return False
+        logger.debug("core_repository_connector.check_container_is_deleted.false",
+                     extra={"ident_cely": ident_cely, "result_text": result.text})
+        return False
 
     def _send_request(self, url: str, request_type: FedoraRequestType, *,
                       headers=None, data=None) -> Optional[requests.Response]:
@@ -248,7 +253,7 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
                               FedoraRequestType.GET_LINK, FedoraRequestType.GET_DELETED_LINK,
                               FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
-                              FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE):
+                              FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE, FedoraRequestType.GET_TOMBSTONE):
             try:
                 response = requests.get(url, headers=headers, auth=auth, verify=False)
             except requests.exceptions.RequestException:
@@ -499,7 +504,7 @@ class FedoraRepositoryConnector:
                              extra={"err": err, "file_name": file_name, "large": large})
                 return None
 
-    def _save_thumbs(self, file_name, file, uuid):
+    def _save_thumbs(self, file_name, file, uuid, update=False):
         logger.debug("core_repository_connector._save_thumb.start",
                      extra={"file_name": file_name, "ident_cely": self.record.ident_cely})
         for large in (True, False):
@@ -519,13 +524,28 @@ class FedoraRepositoryConnector:
                 "Slug": f"thumb{'-large' * large}"
             }
             if large:
-                url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE, uuid=uuid)
+                if update:
+                    url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE, uuid=uuid)
+                else:
+                    url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE, uuid=uuid)
             else:
-                url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_THUMB, uuid=uuid)
+                if update:
+                    url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB, uuid=uuid)
+                else:
+                    url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_THUMB, uuid=uuid)
             if large:
-                self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE, headers=headers, data=data)
+                if update:
+                    self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE, headers=headers,
+                                       data=data)
+                else:
+                    self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE, headers=headers,
+                                       data=data)
             else:
-                self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_THUMB, headers=headers, data=data)
+                if update:
+                    self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB, headers=headers,
+                                       data=data)
+                else:
+                    self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_THUMB, headers=headers, data=data)
             logger.debug("core_repository_connector._save_thumb.end",
                          extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large})
         else:
@@ -615,6 +635,7 @@ class FedoraRepositoryConnector:
         }
         url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, headers=headers, data=data)
+        self._save_thumbs(file_name, file, uuid, True)
         logger.debug("core_repository_connector.update_binary_file.end",
                      extra={"url": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file

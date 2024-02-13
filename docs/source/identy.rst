@@ -204,7 +204,7 @@ Výškové body
 Uživatel
 ========
 Permanentní ident
------------
+-----------------
 
 * Přiděluje se v databázi
 

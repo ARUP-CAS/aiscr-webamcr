@@ -1,3 +1,5 @@
+import logging
+
 from arch_z.models import Akce, ArcheologickyZaznam
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
@@ -9,6 +11,9 @@ from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_DJ_TYP
 from heslar.hesla_dynamicka import TYP_DJ_KATASTR, TYP_DJ_SONDA_ID, TYP_DJ_CAST, TYP_DJ_CELEK, TYP_DJ_LOKALITA
 from heslar.models import Heslar, RuianKatastr
+
+
+logger = logging.getLogger(__name__)
 
 
 class MyAutocompleteWidget(autocomplete.ModelSelect2):
@@ -40,9 +45,11 @@ class CreateDJForm(forms.ModelForm):
         """
         Metóda formuláře pro získaní querysetu pro typ DJ podle typu akce.
         """
+        logger.debug("dj.forms.CreateDJForm.__init__.cannot_get_typ_akce",
+                     extra={"jednotky": jednotky, "instance": instance, "typ_arch_z": typ_arch_z, "typ_akce": typ_akce})
         queryset = Heslar.objects.filter(nazev_heslare=HESLAR_DJ_TYP)
         if typ_arch_z == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
-            return queryset.filter(id__in=[TYP_DJ_LOKALITA,TYP_DJ_KATASTR])
+            return queryset.filter(id__in=[TYP_DJ_LOKALITA, TYP_DJ_KATASTR])
         if (
             instance is not None
             and jednotky is not None
@@ -66,27 +73,26 @@ class CreateDJForm(forms.ModelForm):
                 elif jednotky.filter(typ__id=TYP_DJ_SONDA_ID).count() > 1:
                     queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
                 elif typ_akce == Akce.TYP_AKCE_SAMOSTATNA:
-                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
+                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID, TYP_DJ_KATASTR])
                 else:
                     queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
             elif hasattr(instance, "typ") and instance.typ.id == TYP_DJ_CELEK:
                 if typ_akce == Akce.TYP_AKCE_SAMOSTATNA and jednotky.filter(typ__id=TYP_DJ_CAST).count() == 0:
-                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
+                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID, TYP_DJ_KATASTR])
                 else:
                     queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
             elif hasattr(instance, "typ") and instance.typ == Heslar.objects.get(
                 id=TYP_DJ_KATASTR
             ):
-                queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
+                queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID, TYP_DJ_KATASTR])
             elif jednotky.filter(typ__id=TYP_DJ_CELEK).count() > 0:
                 queryset = queryset.filter(id=TYP_DJ_CAST)
             elif typ_akce == Akce.TYP_AKCE_SAMOSTATNA:
-                queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
+                queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID, TYP_DJ_KATASTR])
             else:
                 queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
-            if jednotky.filter(typ__id=TYP_DJ_KATASTR).exists() and (hasattr(instance, "typ")
-                    and instance.typ != Heslar.objects.get(id=TYP_DJ_KATASTR)) or not hasattr(instance, "typ") or \
-                (hasattr(instance, "typ") and instance.typ is None):
+            if (jednotky.filter(typ__id=TYP_DJ_KATASTR).exists()
+                    and (hasattr(instance, "typ") and instance.typ != Heslar.objects.get(id=TYP_DJ_KATASTR))):
                 queryset = queryset.filter(~Q(id=TYP_DJ_KATASTR))
         return queryset
 
@@ -145,8 +151,8 @@ class CreateDJForm(forms.ModelForm):
         if self.instance.ident_cely and typ_akce is None:
             try:
                 typ_akce = self.instance.archeologicky_zaznam.akce.typ
-            except Exception as e:
-                pass
+            except Exception as err:
+                logger.debug("dj.forms.CreateDJForm.__init__.cannot_get_typ_akce", extra={"err": err})
         self.fields["typ"] = forms.ModelChoiceField(
             label=_("dj.forms.createDjForm.typ.label"),
             queryset=self.get_typ_queryset(

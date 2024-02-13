@@ -13,7 +13,8 @@ from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
 from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
-    OZNAMENI_PROJ, ZAPSANI_PROJ
+    OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
+from core.models import Soubor
 from cron.convertToSJTSK import get_multi_transform_to_sjtsk
 from cron.classes import MyList
 from cron.functions import collect_en01_en02
@@ -22,6 +23,7 @@ from django.utils.translation import gettext as _
 
 from cron.convertToWGS84 import get_multi_transform_to_wgs84
 from dj.models import DokumentacniJednotka
+from dokument.filters import HistorieFilter
 from dokument.models import Dokument, Let, DokumentCast
 from ez.models import ExterniZdroj
 from heslar.hesla import HESLAR_PRISTUPNOST
@@ -758,3 +760,16 @@ def commit_transaction_after_all_tasks_finished(transaction_uid):
             fedora_transaction.commit_transaction()
             break
         time.sleep(10)
+
+@shared_task
+def update_cached_queryset(pk):
+    logger.debug("cron.tasks.update_cached_queryset.start", extra={"instance": pk})
+    instance = Historie.objects.get(pk=pk)
+    navazany_objekt = instance.vazba.navazany_objekt
+    if isinstance(navazany_objekt, ArcheologickyZaznam):
+        HistorieFilter.save_cached_queryset(ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, instance.uzivatel.organizace)
+        HistorieFilter.save_cached_queryset(ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, uzivatel=instance.uzivatel)
+        HistorieFilter.save_cached_queryset(ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, instance.uzivatel.organizace,
+                                            instance.uzivatel)
+    logger.debug("cron.tasks.update_cached_queryset.end", extra={"instance": instance.pk})
+

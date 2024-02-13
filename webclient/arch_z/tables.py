@@ -1,16 +1,9 @@
 import django_tables2 as tables
 from django.contrib.postgres.aggregates import StringAgg
-from django.db import models
-from django.db.models import F, Subquery, CharField, OuterRef
-from django.db.models.functions import Concat
-from django.utils.encoding import force_str
-from django.utils.html import conditional_escape
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from core.utils import SearchTable
-
-from .models import Akce, AkceVedouci
+from .models import Akce
 
 
 class AkceTable(SearchTable):
@@ -111,7 +104,7 @@ class AkceTable(SearchTable):
             .annotate(vedouci_organizace__nazev_zkraceny=
                       StringAgg("akcevedouci__organizace__nazev_zkraceny", delimiter=", ", )) \
             .order_by(f"{'-' * (-1 * is_descending)}vedouci_organizace__nazev_zkraceny")
-        return (queryset, True)
+        return queryset, True
 
     app = "akce"
     columns_to_hide = \

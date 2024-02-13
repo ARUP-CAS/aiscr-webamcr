@@ -2,12 +2,13 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-    <p>{% trans "pas.templates.emails.E-N-03.title" %},</p>
+    <p>Dobrý den,</p>
     <p>
-        {% trans "pas.templates.emails.E-N-03.text1" %}
-        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "pas.templates.emails.E-N-03.text2" %}
-        <b>{{ katastr }}</b> {% trans "pas.templates.emails.E-N-03.text3" %}
-        <b>{{ state }}</b>.</p>
-    <p><b>{% trans "pas.templates.emails.E-N-03.text4" %}:</b> {{ reason }}</p>
-    <p>{% trans "pas.templates.emails.E-N-03.text5" %}.</p>
+        vámi odeslaný samostatný nález <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b>{{ katastr }}</b> byl vrácen do stavu <b>{{ state }}</b>.
+    </p>
+    <p><b>Zdůvodnění:</b> {{ reason }}</p>
+    <p>Detaily zjistíte po přihlášení do AMČR-PAS.</p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
 {% endblock %}

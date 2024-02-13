@@ -187,7 +187,9 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         return result
 
     def set_snapshots(self):
-        self.dalsi_katastry_snapshot = "; ".join([x.nazev for x in self.archeologicky_zaznam.katastry.order_by("nazev").all()])
+        self.dalsi_katastry_snapshot = "; ".join([x.nazev for x in
+                                                  self.archeologicky_zaznam.katastry.order_by("nazev").all()]) \
+            if self.archeologicky_zaznam.katastry.count() > 0 else None
 
     @property
     def redis_snapshot_id(self):
