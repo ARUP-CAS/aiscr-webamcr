@@ -2,6 +2,7 @@ import logging
 
 from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY, PROJEKT_STAV_VYTVORENY
 from core.models import SouborVazby
+from core.repository_connector import FedoraTransaction
 from cron.tasks import update_single_redis_snapshot
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
@@ -11,7 +12,7 @@ from dokument.models import Dokument, DokumentCast
 from historie.models import HistorieVazby
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
-from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
+from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued, METADATA_UPDATE_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
@@ -64,9 +65,10 @@ def create_projekt_vazby(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=Projekt)
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
+    logger.debug("projekt.signals.projekt_pre_delete.start", extra={"ident_cely": instance.ident_cely})
     if instance.soubory and instance.soubory.soubory.exists():
         raise Exception(_("projekt.signals.projekt_pre_delete.cannot_delete"))
-    instance.record_deletion()
+    transaction = instance.record_deletion()
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
     if instance.soubory and instance.soubory.pk:
@@ -74,7 +76,10 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     if instance.casti_dokumentu:
         for item in instance.casti_dokumentu.all():
             item: DokumentCast
-            item.dokument.save_metadata()
+            transaction = item.dokument.save_metadata(transaction)
+    if transaction:
+        transaction.mark_transaction_as_closed()
+    logger.debug("projekt.signals.projekt_pre_delete.end", extra={"ident_cely": instance.ident_cely})
 
 
 @receiver(post_save, sender=Projekt)
@@ -84,9 +89,9 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
     # When projekt is created using the "oznameni" page, the metadata are saved directly without celery
     logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})
+    transaction = None
     if getattr(instance, "suppress_signal", False) is not True:
-        instance.save_metadata()
-
+        transaction = instance.save_metadata(transaction)
     if instance.stav == PROJEKT_STAV_ZAPSANY and hasattr(instance, "__original_stav") \
             and instance.stav != instance.__original_stav:
         logger.debug("projekt.signals.projekt_post_save.checked_hlidaci_pes",
@@ -94,4 +99,7 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
         check_hlidaci_pes.delay(instance.pk)
     if not check_if_task_queued("Projekt", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["Projekt", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
+    if transaction:
+        transaction: FedoraTransaction
+        transaction.mark_transaction_as_closed()
     logger.debug("projekt.signals.projekt_post_save.end", extra={"ident_cely": instance.ident_cely})

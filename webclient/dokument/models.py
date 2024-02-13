@@ -345,9 +345,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         self.ident_cely = perm_ident_cely
         self.suppress_signal = True
         self.save()
-        self.save_metadata(use_celery=False)
-
-        self.record_ident_change(old_ident_cely)
+        transaction = self.save_metadata(use_celery=False)
+        self.record_ident_change(old_ident_cely, transaction)
+        if transaction:
+            transaction.mark_transaction_as_closed()
 
         for dc in self.casti.all():
             for komponenta in dc.komponenty.komponenty.all():
