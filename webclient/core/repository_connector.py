@@ -333,7 +333,7 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector._container_exists.start", extra={"ident_cely": self.record.ident_cely})
         url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_CONTAINER)
-        if result is None or result.status_code == 404 or "not found" in result.text:
+        if result is None or result.status_code == 404:
             logger.debug("core_repository_connector._container_exists.false",
                          extra={"ident_cely": self.record.ident_cely})
             return False
@@ -373,13 +373,13 @@ class FedoraRepositoryConnector:
                          extra={"ident_cely": self.record.ident_cely})
             self._connect_deleted_container()
             self.restored_container = True
-        elif result.status_code == 404 or (hasattr(result, "text") and "not found" in result.text):
+        elif result.status_code == 404:
             logger.debug("core_repository_connector._check_container.create",
                          extra={"ident_cely": self.record.ident_cely})
             self._create_container()
         url = self._get_request_url(FedoraRequestType.GET_LINK)
         result = self._send_request(url, FedoraRequestType.GET_LINK)
-        if result.status_code == 404 or "not found" in result.text:
+        if result.status_code == 404:
             self._create_link()
         logger.debug("core_repository_connector._check_container.end", extra={"ident_cely": self.record.ident_cely})
 
@@ -400,7 +400,7 @@ class FedoraRepositoryConnector:
         self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTAINER)
-        if result.status_code == 404 or "not found" in result.text:
+        if result.status_code == 404:
             self._create_binary_file_container()
         logger.debug("core_repository_connector._check_binary_file_container.end",
                      extra={"ident_cely": self.record.ident_cely})
@@ -436,7 +436,7 @@ class FedoraRepositoryConnector:
                 "Digest": f"sha-512={hash512}"
             }
             return document_func, headers_func
-        if result.status_code == 404 or "not found" in result.text:
+        if result.status_code == 404:
             document, headers = generate_metadata()
             headers["slug"] = "metadata"
             url = self._get_request_url(FedoraRequestType.CREATE_METADATA)
@@ -694,7 +694,7 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector.record_deletion.start", extra={"ident_cely": self.record.ident_cely})
         url = self._get_request_url(FedoraRequestType.GET_DELETED_LINK, ident_cely=self.record.ident_cely)
         result = self._send_request(url, FedoraRequestType.GET_DELETED_LINK)
-        if result is not None and result.status_code != 404 and "not found" not in result.text:
+        if result is not None and result.status_code != 404:
             logger.debug("core_repository_connector.record_deletion.already_exists",
                          extra={"ident_cely": self.record.ident_cely})
         else:
