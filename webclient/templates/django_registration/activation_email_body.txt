@@ -9,10 +9,11 @@ Svoji emailovou adresu ověříte kliknutím na níže uvedený odkaz:
 
 Tento odkaz expiruje za {{ expiration_days }} dní.
 
+------------------------------
 Toto je automaticky generovaná zpráva systému AMČR. V případě potřeby kontaktujte administrátora ARÚ Praha (amcr@arup.cas.cz) nebo ARÚ Brno (amcr@arub.cz).
 Odesláno z: {% get_server_domain %}
 
-------------------------------
+------------------------------------------------------------
 
 Hello,
 
@@ -23,5 +24,6 @@ You can verify your email address by clicking on the link below:
 
 This link expires in {{ expiration_days }} days.
 
+------------------------------
 This is automaticly generated message from the AMCR system. In case of need, please contact administrator at IA Prague (amcr@arup.cas.cz) or IA Brno (amcr@arub.cz).
 Sent from: {% get_server_domain %}
