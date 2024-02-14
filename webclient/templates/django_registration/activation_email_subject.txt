@@ -1,1 +1,1 @@
-{% load i18n %}{% trans "templates.djangoRegistration.activationEmailSubject" %}
+{% load i18n %}AMČR: potvrďte svůj email | AMCR: confirm your email
