@@ -1,14 +1,27 @@
 {% load i18n %}
 {% load template_tags %}
-{% trans "templates.djangoRegistration.activationEmailBody.title" %}
+Dobrý den,
 
-{% trans "templates.djangoRegistration.activationEmailBody.part1" %}
+tato zpráva slouží k ověření vaší emailové adresy, což je nezbytný krok pro získání přístupu do AMČR.
 
-{% trans "templates.djangoRegistration.activationEmailBody.part2" %}
+Svoji emailovou adresu ověříte kliknutím na níže uvedený odkaz:
 {{ site }}{% url 'django_registration_activate' activation_key %}
 
-{% trans "templates.djangoRegistration.activationEmailBody.part3" %} {{ expiration_days }} {% trans "templates.djangoRegistration.activationEmailBody.part4" %}
+Tento odkaz expiruje za {{ expiration_days }} dní.
+
+Toto je automaticky generovaná zpráva systému AMČR. V případě potřeby kontaktujte administrátora ARÚ Praha (amcr@arup.cas.cz) nebo ARÚ Brno (amcr@arub.cz).
+Odesláno z: {% get_server_domain %}
 
 ------------------------------
-{% trans "templates.djangoRegistration.activationEmailBody.part5" %}
-{% trans "templates.djangoRegistration.activationEmailBody.part6" %} {% get_server_domain %}
+
+Hello,
+
+This message is to verify your email address, which is a necessary step to gain access to the AMCR.
+
+You can verify your email address by clicking on the link below:
+{{ site }}{% url 'django_registration_activate' activation_key %}
+
+This link expires in {{ expiration_days }} days.
+
+This is automaticly generated message from the AMCR system. In case of need, please contact administrator at IA Prague (amcr@arup.cas.cz) or IA Brno (amcr@arub.cz).
+Sent from: {% get_server_domain %}
