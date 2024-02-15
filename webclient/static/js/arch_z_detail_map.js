@@ -1032,9 +1032,6 @@ switchMap = function (overview = false) {
                     poi_sn.clearLayers();
                     poi_pian.clearLayers();
                     poi_pian_dp.clearLayers();
-                    if (!global_map_can_edit) {
-                        poi_dj.clearLayers();
-                    }
                     heatPoints = []
                     map.removeLayer(heatLayer);
                     if (JSON.parse(this.responseText).algorithm == "detail") {
@@ -1058,7 +1055,8 @@ switchMap = function (overview = false) {
                                              (currentUrl.includes("pian/zapsat"))
                                             ) {
                                             if(gold_pian_ident_cely!=i.ident_cely){
-                                            addPointToPoiLayer(i.geom, poi_dj, i.ident_cely, true,i.presnost)
+                                                poi_dj.clearLayers();
+                                                addPointToPoiLayer(i.geom, poi_dj, i.ident_cely, true,i.presnost)
                                             }
                                         }
                                     }
@@ -1240,6 +1238,51 @@ function loadSession(){
             }
         }
     }
+}
+
+function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,selected_dj){
+    console.log("show Choose: "+currentUrl+" "+selected_ku+ " "+selected_ident_cely+" <"+selected_dj+">")
+    if(!selected_dj.includes("-D")){
+
+    }
+
+        let xhr = new XMLHttpRequest();
+        xhr.open('POST', '/arch-z/mapa-zoom');
+        xhr.setRequestHeader('Content-type', 'application/json');
+        if (typeof global_csrftoken !== 'undefined') {
+            xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+        } else {
+            console.log("neni X-CSRFToken token")
+        }
+        xhr.onload = function () {
+            const rs = JSON.parse(this.responseText)
+            if(rs.lat > 0 || rs.zoom == 17){
+              if(rs.lat > 0 && !global_blocked_by_query_geom){
+                    map.setView([rs.lat, rs.lng], rs.zoom)
+
+
+                    if (rs.zoom == 17) {
+                        drawnItems.clearLayers();
+                        console.log("show -"+rs.pian_ident_cely+" "+selected_ident_cely+selected_dj)
+                        if(selected_dj.length>0 && rs.color=='gold'){
+                            console.log("show-add-gold-point")
+                            addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,rs.pian_ident_cely,rs.geom,rs.presnost)
+                        }
+                }
+              
+            }
+
+            } else{
+                  switchMap(false);
+            }
+        };
+
+        xhr.send(JSON.stringify(
+            {
+                'cadastre': selected_ku,
+                'akce_ident_cely':selected_ident_cely+selected_dj,
+            }))
+
 }
 
 

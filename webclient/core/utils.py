@@ -305,18 +305,23 @@ def get_centre_from_akce(katastr, akce_ident_cely):
         zoom = 14
         pian_ident_cely = ''
         if len(akce_ident_cely) > 1:
-            DJs = DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom")).filter(ident_cely__istartswith=akce_ident_cely).order_by('ident_cely')
-            for dj in DJs:
-                logger.debug(dj.ident_cely)
-                if dj.pian and dj.pian.geom:
-                    bod = dj.pian__centroid
-                    bod =[bod[1],bod[0]]
-                    zoom = 17
-                    geom = dj.pian.geom
-                    presnost = dj.pian.presnost.zkratka
-                    pian_ident_cely = dj.pian.ident_cely
+            for akce in [akce_ident_cely, akce_ident_cely.split("-D")[0]]:
+                DJs = DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom")).filter(ident_cely__istartswith=akce).order_by('ident_cely')
+                for dj in DJs:
+                    logger.debug(dj.ident_cely)
+                    if dj.pian and dj.pian.geom:
+                        bod = dj.pian__centroid
+                        bod =[bod[1],bod[0]]
+                        zoom = 17
+                        geom = dj.pian.geom
+                        presnost = dj.pian.presnost.zkratka
+                        pian_ident_cely = dj.pian.ident_cely
+                        color = 'green'
+                        break
+                if pian_ident_cely!='' and akce_ident_cely==akce:
+                    color = 'gold'
                     break
-        return [bod, geom, presnost, zoom, pian_ident_cely]
+            return [bod, geom, presnost, zoom, pian_ident_cely,color]
     except IndexError:
         logger.error(
             "core.utils.get_centre_from_akce.error",
