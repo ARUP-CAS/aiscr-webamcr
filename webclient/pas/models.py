@@ -366,6 +366,8 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         related_name="spoluprace_historie",
     )
 
+    suppress_signal = False
+
     @property
     def aktivni(self):
         return self.stav == SPOLUPRACE_AKTIVNI
