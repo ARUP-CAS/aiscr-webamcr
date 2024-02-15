@@ -1,7 +1,3 @@
-var poi_other = L.layerGroup();
-var poi = L.layerGroup();
-map.addLayer(poi);
-
 map.on('click', function (e) {
     if (!global_measuring_toolbox._measuring) {
         var addPointToPoiLayer = (point_leaf, text) => {
