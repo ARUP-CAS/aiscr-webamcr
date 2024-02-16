@@ -14,7 +14,7 @@
         <li><b>Zdůvodnění:</b> {{ message }}</li>
     </ul>
     <p>
-        Spolupráci potvrdíte po přihlášení do AMČR-PAS, nebo kliknutím na tento odkaz: <a href="{% get_site_url %}{% url 'pas:spoluprace_aktivace_email' spoluprace_id %}">{% url 'pas:spoluprace_aktivace_email' spoluprace_id %}</a>
+        Spolupráci potvrdíte po přihlášení do AMČR-PAS, nebo kliknutím na tento odkaz: <a href="{% get_site_url %}{% url 'pas:spoluprace_aktivace_email' spoluprace_id %}">{% get_site_url %}{% url 'pas:spoluprace_aktivace_email' spoluprace_id %}</a>
     </p>
 {% endblock %}
 {% block content_en %}
