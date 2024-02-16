@@ -384,8 +384,13 @@ def post_upload(request):
     if not Soubor.check_mime_for_url(soubor, source_url):
         logger.debug("core.views.post_upload.check_mime_for_url.rejected")
         help_translation = _('core.views.post_upload.mime_check_failed')
-        return JsonResponse({"error": f"{help_translation}"}, status=400)
+        return JsonResponse({"error": help_translation}, status=400)
     soubor_data = BytesIO(soubor.read())
+    check_antivirus_result = Soubor.check_antivirus(soubor_data)
+    if check_antivirus_result is False:
+        logger.warning("core.views.post_upload.check_antivirus_result")
+        help_translation = _('core.views.post_upload.antivirus_check_failed')
+        return JsonResponse({"error": help_translation}, status=400)
     rep_bin_file = None
     if soubor:
         if not update:

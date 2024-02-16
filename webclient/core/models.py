@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import re
+import socket
 import zipfile
 from typing import Optional, Union
 
@@ -384,6 +385,27 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                                  extra={"accepted_mime_types": item})
                     return False
             return True
+
+    @classmethod
+    def check_antivirus(cls, bytes_io: io.BytesIO):
+        buffer_size = 4096
+        if settings.CLAMD_HOST and settings.CLAMD_PORT:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((settings.CLAMD_HOST, settings.CLAMD_PORT))
+            s.send(b'zINSTREAM\0')
+            bytes_io.seek(0)
+            while True:
+                chunk = bytes_io.read(buffer_size)
+                if not chunk:
+                    break
+                s.send(len(chunk).to_bytes(4, byteorder='big') + chunk)
+            s.send(b'\0\0\0\0')
+            response = s.recv(buffer_size).decode('utf-8')
+            print(f'Response from clamd: {response}')
+            s.close()
+            logger.debug("core.models.Soubor.check_antivirus.response", extra={"response": response})
+            return response == "OK"
+        return None
 
 
 class ProjektSekvence(models.Model):
