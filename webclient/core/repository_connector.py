@@ -215,11 +215,17 @@ class FedoraRepositoryConnector:
     def check_container_deleted_or_not_exists(cls, ident_cely, model_name):
         logger.debug("core_repository_connector.check_container_is_deleted.start",
                      extra={"ident_cely": ident_cely})
-        result = cls._send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
-        result_2 = cls._send_request(f"{cls.get_base_url()}/model/deleted/member/{ident_cely}",
-                                     FedoraRequestType.GET_DELETED_LINK)
-        result_3 = cls._send_request(f"{cls.get_base_url()}/model/{model_name}/member/{ident_cely}",
-                                     FedoraRequestType.GET_LINK)
+
+        def send_request(url, request_type):
+            auth = cls._get_auth(request_type)
+            response = requests.get(url, auth=auth, verify=False)
+            return response
+
+        result = send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
+        result_2 = send_request(f"{cls.get_base_url()}/model/deleted/member/{ident_cely}",
+                                FedoraRequestType.GET_DELETED_LINK)
+        result_3 = send_request(f"{cls.get_base_url()}/model/{model_name}/member/{ident_cely}",
+                                FedoraRequestType.GET_LINK)
         if result.status_code == 200:
             if cls.check_container_deleted(ident_cely):
                 if result_2.status_code == 200:
@@ -237,15 +243,20 @@ class FedoraRepositoryConnector:
                      extra={"ident_cely": ident_cely, "result_text": result.text})
         return False
 
-    def _send_request(self, url: str, request_type: FedoraRequestType, *,
-                      headers=None, data=None) -> Optional[requests.Response]:
-        extra = {"url": url, "request_type": request_type}
-        logger.debug("core_repository_connector._send_request.start", extra=extra)
+    @classmethod
+    def _get_auth(cls, request_type: FedoraRequestType):
         if request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
                             FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE):
             auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         else:
             auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
+        return auth
+
+    def _send_request(self, url: str, request_type: FedoraRequestType, *,
+                      headers=None, data=None) -> Optional[requests.Response]:
+        extra = {"url": url, "request_type": request_type}
+        logger.debug("core_repository_connector._send_request.start", extra=extra)
+        auth = self._get_auth(request_type)
         response = None
         if self.transaction_uid:
             if headers is None:
