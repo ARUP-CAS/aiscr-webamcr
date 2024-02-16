@@ -18,7 +18,7 @@ def soubor_save_update_record_metadata(sender, instance: Soubor, **kwargs):
         if transaction:
             transaction.mark_transaction_as_closed()
         logger.debug("cron.signals.soubor_save_update_record_metadata.save_metadata",
-                     extra={"transaction": transaction, "navazany_objekt": instance.ident_cely})
+                     extra={"transaction": transaction, "navazany_objekt": getattr(instance, "ident_cely", "")})
     logger.debug("cron.signals.soubor_save_update_record_metadata.no_action")
 
 
@@ -39,5 +39,5 @@ def soubor_delete_update_metadata(sender, instance: Soubor, **kwargs):
         if transaction:
             transaction.mark_transaction_as_closed()
         logger.debug("cron.signals.soubor_delete_update_metadata.save_metadata",
-                     extra={"transaction": transaction,  "navazany_objekt": instance.ident_cely})
+                     extra={"transaction": transaction, "navazany_objekt": getattr(instance, "ident_cely", "")})
     logger.debug("cron.signals.soubor_delete_update_metadata.no_action", extra={"instance": instance.pk})

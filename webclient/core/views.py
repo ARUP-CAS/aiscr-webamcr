@@ -416,7 +416,7 @@ def post_upload(request):
                 sha_512=sha_512,
             )
             duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
-            response_data = {"filename": s.nazev, "id": s.pk}
+            response_data = {"filename": s.nazev}
             if not duplikat.exists():
                 logger.debug("core.views.post_upload.saving", extra={"s": s})
                 s.save()
@@ -444,6 +444,7 @@ def post_upload(request):
                 help_translation2 = _('core.views.post_upload.renamed.text2')
                 response_data["file_renamed"] = (f"{help_translation} {new_name}. {help_translation2}",)
             logger.debug("core.views.post_upload.end", extra={"file_id": s.pk})
+            response_data["id"] = s.pk
             return JsonResponse(response_data, status=200)
         else:
             original_name = soubor.name
@@ -491,7 +492,7 @@ def post_upload(request):
                     .filter(~Q(id=s.id))
                     .order_by("pk")
                 )
-                response_data = {"filename": s.nazev, "id": s.pk}
+                response_data = {"filename": s.nazev}
                 if duplikat.count() > 0:
                     parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
                         if duplikat.first().vazba.navazany_objekt is not None else ""
@@ -502,6 +503,7 @@ def post_upload(request):
                     help_translation = _('core.views.post_upload.renamed.text1')
                     help_translation2 = _('core.views.post_upload.renamed.text2')
                     response_data["file_renamed"] = (f"{help_translation} {new_name}. {help_translation2}",)
+                response_data["id"] = s.pk
                 return JsonResponse(response_data, status=200)
             else:
                 logger.warning("core.views.post_upload.rep_bin_file_is_none")

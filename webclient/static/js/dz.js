@@ -146,7 +146,6 @@ window.onload = function () {
         dictDefaultMessage: get_description(),
         acceptedFiles: acceptFile,
         dictInvalidFileType: RejectedFileMessage,
-        addRemoveLinks: true,
         dictCancelUpload: [dz_trans["cancelUpload"]],
         dictCancelUploadConfirmation: [dz_trans["cancelUploadConfirm"]],
         dictRemoveFile: [dz_trans["removeFile"]],
