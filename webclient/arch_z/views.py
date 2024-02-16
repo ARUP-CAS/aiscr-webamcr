@@ -1205,7 +1205,7 @@ def post_akce2kat(request):
     akce_ident_cely = body["akce_ident_cely"]
 
     if len(katastr_name) > 0:
-        [bod, geom, presnost,zoom,pian_ident_cely] = get_centre_from_akce(katastr_name, akce_ident_cely) 
+        [bod, geom, presnost,zoom,pian_ident_cely,color] = get_centre_from_akce(katastr_name, akce_ident_cely) 
         if len(str(bod)) > 0:
             return JsonResponse(
                 {
@@ -1216,7 +1216,8 @@ def post_akce2kat(request):
                     if geom
                     else None,
                     "presnost": str(presnost) if geom else 4,
-                    "pian_ident_cely": str(pian_ident_cely)
+                    "pian_ident_cely": str(pian_ident_cely),
+                    "color":str(color),
                 },
                 status=200,
             )
