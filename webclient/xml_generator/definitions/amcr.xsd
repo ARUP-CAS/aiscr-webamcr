@@ -479,7 +479,7 @@
       <xs:element name="udalost_typ" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> <!-- "{udalost_typ.ident_cely}" | "{udalost_typ.heslo}" -->
       <xs:element name="udalost" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{udalost}" -->
       <xs:element name="zeme" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> <!-- "{zeme.ident_cely}" | "{zeme.heslo}" -->
-      <xs:element name="region" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{region}" -->
+      <xs:element name="region" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{region_extra}" -->
       <xs:element name="rok_od" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{rok_od}" -->
       <xs:element name="rok_do" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{rok_do}" -->
       <xs:element name="duveryhodnost" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{duveryhodnost}" -->
