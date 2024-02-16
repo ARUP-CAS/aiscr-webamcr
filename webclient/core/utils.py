@@ -304,6 +304,7 @@ def get_centre_from_akce(katastr, akce_ident_cely):
         presnost = 4
         zoom = 14
         pian_ident_cely = ''
+        color = 'green'
         if len(akce_ident_cely) > 1:
             for akce in [akce_ident_cely, akce_ident_cely.split("-D")[0]]:
                 DJs = DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom")).filter(ident_cely__istartswith=akce).order_by('ident_cely')
