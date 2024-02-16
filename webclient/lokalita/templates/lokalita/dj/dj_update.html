@@ -90,6 +90,12 @@
             {% trans 'lokalita.templates.dj.djUpdate.moreActions.pripojitPianPodleId.label' %}
           </button>
           {% endif %}
+          {% if j.show_change_katastr %}
+            <button id="zmenit-katastr-{{ j.ident_cely }}" class="dropdown-item zmenit-katastr-btn" type="button"
+                    name="button" href="{% url 'dj:zmenit-katastr' j.ident_cely %}" )>
+              {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.zmenitKatastr.label' %}
+            </button>
+          {% endif %}
         </div>
         <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
                 aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'lokalita.templates.dj.djUpdate.moreActions.label' %}"
