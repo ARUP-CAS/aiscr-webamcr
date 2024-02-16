@@ -302,7 +302,7 @@ def get_centre_from_akce(katastr, akce_ident_cely):
         bod=[bod_ku.lat,bod_ku.lng]
         geom = ""
         presnost = 4
-        zoom = 14
+        zoom = 12
         pian_ident_cely = ''
         color = 'green'
         if len(akce_ident_cely) > 1:
