@@ -11,7 +11,7 @@ from .views import (
     HeslarAutocompleteView,
     HeslarNazevAutocompleteView,
 )
-from uzivatel.views import create_osoba, OsobaAutocomplete, OsobaAutocompleteChoices
+from uzivatel.views import create_osoba, OsobaAutocomplete
 
 app_name = "heslar"
 
@@ -29,11 +29,6 @@ urlpatterns = [
     path("dokument-typ/", DokumentTypAutocomplete.as_view(), name="dokument-typ-autocomplete"),
     path("dokument-format/", DokumentFormatAutocomplete.as_view(), name="dokument-format-autocomplete"),
     path("pristupnost/", PristupnostAutocomplete.as_view(), name="pristupnost-autocomplete"),
-    path(
-        "osoba/autocomplete-vyber/",
-        OsobaAutocompleteChoices.as_view(),
-        name="osoba-autocomplete-choices",
-    ),
     path("heslar/autocomplete/", HeslarAutocompleteView.as_view(), name="heslar-autocomplete"),
     path("heslar-nazev/autocomplete/", HeslarNazevAutocompleteView.as_view(), name="heslar_nazev-autocomplete"),
 ]

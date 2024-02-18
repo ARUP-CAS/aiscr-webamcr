@@ -351,13 +351,11 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
-    akce_vedouci = MultipleChoiceFilter(
+    akce_vedouci = ModelMultipleChoiceFilter(
         method="filtr_akce_vedouci",
         label=_("projekt.filters.projektFilter.akceVedouci.label"),
-        choices=Osoba.objects.all().values_list("id", "vypis_cely"),
-        widget=autocomplete.Select2Multiple(
-            url="heslar:osoba-autocomplete-choices",
-        ),
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        queryset=Osoba.objects.all(),
         distinct=True,
     )
 
@@ -609,9 +607,11 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         """
         Metóda pro filtrování podle vedoucího akce.
         """
+        if not value:
+            return queryset
         return queryset.filter(
-            Q(akce__hlavni_vedouci__id__in=value)
-            | Q(akce__akcevedouci__vedouci__id__in=value)
+            Q(akce__hlavni_vedouci__in=value)
+            | Q(akce__akcevedouci__vedouci__in=value)
         ).distinct()
 
     def filtr_akce_organizace(self, queryset, name, value):

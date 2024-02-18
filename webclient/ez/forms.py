@@ -26,13 +26,13 @@ class ExterniZdrojForm(forms.ModelForm):
     Hlavní formulář pro vytvoření, editaci a zobrazení externího zdroju.
     """
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
-                url="heslar:osoba-autocomplete-choices",
+                url="heslar:osoba-autocomplete",
             ),
             label=_("ez.forms.externiZdrojForm.autori.label"),
             help_text=_("ez.forms.externiZdrojForm.autori.tooltip"),
             )
     editori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
-                url="heslar:osoba-autocomplete-choices",
+                url="heslar:osoba-autocomplete",
             ),
             label=_("ez.forms.externiZdrojForm.editori.label"),
             help_text=_("ez.forms.externiZdrojForm.editori.tooltip"),)

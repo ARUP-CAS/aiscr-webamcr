@@ -628,7 +628,7 @@ class KomponentaDokumentDetailView(RelatedContext):
             komponenta, context["show"], old_nalez_post, komp_ident_cely
         )
         context["active_komp_ident"] = komponenta.ident_cely
-        context["show"]["komponenta_smazat"] = check_permissions(p.actionChoices.komponenta_dok_smazat, self.request.user, context["dokument"].ident_cely)
+        context["show"]["komponenta_smazat"] = check_permissions(p.actionChoices.komponenta_smazat_dok, self.request.user, context["dokument"].ident_cely)
         return context
 
 

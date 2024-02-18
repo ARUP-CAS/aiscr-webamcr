@@ -119,17 +119,6 @@ class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySe
                            | Q(organizace__nazev_zkraceny__icontains=self.q))
         return qs
 
-class OsobaAutocompleteChoices(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro získaní osob choices pro autocomplete.
-    """
-    def get_queryset(self):
-        qs = Osoba.objects.all()
-        if self.q:
-            qs = qs.filter(vypis_cely__icontains=self.q)
-        qs.values_list("id", "vypis_cely"),
-        return qs
-
 
 @login_required
 @require_http_methods(["POST", "GET"])

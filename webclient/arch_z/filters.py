@@ -407,13 +407,11 @@ class AkceFilter(ArchZaznamFilter):
         ),
     )
 
-    vedouci = MultipleChoiceFilter(
-        choices=Osoba.objects.all().values_list("id", "vypis_cely"),
+    vedouci = ModelMultipleChoiceFilter(
         method="filtr_vedouci",
         label=_("arch_z.filters.AkceFilter.vedouci.label"),
-        widget=autocomplete.Select2Multiple(
-            url="heslar:osoba-autocomplete-choices",
-        ),
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        queryset=Osoba.objects.all(),
         distinct=True,
     )
 
@@ -516,13 +514,11 @@ class AkceFilter(ArchZaznamFilter):
         distinct=True,
     )
 
-    adb_autori = MultipleChoiceFilter(
-        choices=Osoba.objects.all().values_list("id", "vypis_cely"),
+    adb_autori = ModelMultipleChoiceFilter(
         method="filtr_adb_autori",
         label=_("arch_z.filters.AkceFilter.adb_autori.label"),
-        widget=autocomplete.Select2Multiple(
-            url="heslar:osoba-autocomplete-choices",
-        ),
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        queryset=Osoba.objects.all(),
         distinct=True,
     )
 
@@ -571,6 +567,8 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metóda pro filtrování podle hlavního a vedlejšiho vedoucího akce.
         """
+        if not value:
+            return queryset
         return queryset.filter(
             Q(hlavni_vedouci__in=value) | Q(akcevedouci__vedouci__in=value)
         ).distinct()
@@ -638,6 +636,8 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metóda pro filtrování podle autorů revize a popisu ADB.
         """
+        if not value:
+            return queryset
         return queryset.filter(
             Q(
                 archeologicky_zaznam__dokumentacni_jednotky_akce__adb__autor_popisu__in=value
