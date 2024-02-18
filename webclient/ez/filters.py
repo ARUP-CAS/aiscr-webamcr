@@ -61,23 +61,19 @@ class ExterniZdrojFilter(HistorieFilter):
         distinct=True,
     )
 
-    autori = MultipleChoiceFilter(
-        field_name="externizdrojautor__autor__id",
+    autori = ModelMultipleChoiceFilter(
+        field_name="externizdrojautor__autor",
         label=_("ez.filters.autori.label"),
-        choices=Osoba.objects.all().values_list("id", "vypis_cely"),
-        widget=autocomplete.Select2Multiple(
-            url="heslar:osoba-autocomplete-choices",
-        ),
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        queryset=Osoba.objects.all(),
         distinct=True,
     )
 
-    editori = MultipleChoiceFilter(
-        field_name="externizdrojeditor__editor__id",
+    editori = ModelMultipleChoiceFilter(
+        field_name="externizdrojeditor__editor",
         label=_("ez.filters.editori.label"),
-        choices=Osoba.objects.all().values_list("id", "vypis_cely"),
-        widget=autocomplete.Select2Multiple(
-            url="heslar:osoba-autocomplete-choices",
-        ),
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        queryset=Osoba.objects.all(),
         distinct=True,
     )
 

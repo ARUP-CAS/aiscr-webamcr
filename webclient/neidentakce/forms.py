@@ -31,8 +31,8 @@ class NeidentAkceForm(forms.ModelForm):
             "katastr": autocomplete.ModelSelect2(
                 url="heslar:katastr-autocomplete",
             ),
-            "vedouci": autocomplete.Select2Multiple(
-                url="heslar:osoba-autocomplete-choices",
+            "vedouci": autocomplete.ModelSelect2Multiple(
+                url="heslar:osoba-autocomplete",
             ),
             "pian": forms.TextInput(),
             "lokalizace": forms.TextInput(),

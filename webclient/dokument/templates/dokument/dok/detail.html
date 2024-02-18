@@ -7,6 +7,16 @@
 {% block title %}{% trans "dokument.templates.dok.detail.title" %}{% endblock %}
 {% block head %}
   <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
+  {% if show_neident_akce_edit %}
+   <!-- Autocomplete media files -->
+ <link href="/static/static/admin/css/vendor/select2/select2.css" media="screen" rel="stylesheet" type="text/css">
+ <link href="/static/static/admin/css/autocomplete.css" media="screen" rel="stylesheet" type="text/css">
+ <link href="/static/static/autocomplete_light/select2.css" media="screen" rel="stylesheet" type="text/css">
+ <script src="/static/static/admin/js/vendor/select2/select2.full.js"></script>
+ <script src="/static/static/autocomplete_light/autocomplete_light.js"></script>
+ <script src="/static/static/autocomplete_light/select2.js"></script>
+ <script src="/static/static/autocomplete_light/i18n/cs.js"></script>
+ {% endif %}
 {% endblock %}
 
 {% block content %}

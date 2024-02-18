@@ -186,11 +186,11 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         edit_prohibited = kwargs.pop("edit", True)
         super(EditDokumentExtraDataForm, self).__init__(*args, **kwargs)
         try:
-            self.fields["dokument_osoba"] = forms.MultipleChoiceField(
-                choices=Osoba.objects.all().values_list("id", "vypis_cely"),
+            self.fields["dokument_osoba"] = forms.ModelMultipleChoiceField(
+                queryset=Osoba.objects.all(),
                 label=_("dokument.forms.editDokumentExtraDataForm.dokumentovaneOsoby.label"),
                 required=False,
-                widget=autocomplete.Select2Multiple(url="heslar:osoba-autocomplete-choices"),
+                widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
                 help_text=_("dokument.forms.editDokumentExtraDataForm.dokumentOsoba.tooltip"),
             )
             self.fields["let"] = forms.ChoiceField(
@@ -205,11 +205,11 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 help_text=_("dokument.forms.editDokumentExtraDataForm.let.tooltip"),
             )
         except utils.ProgrammingError:
-            self.fields["dokument_osoba"] = forms.MultipleChoiceField(
-                choices=tuple(("", "")),
+            self.fields["dokument_osoba"] = forms.ModelMultipleChoiceField(
+                queryset=Osoba.objects.none(),
                 label=_("dokument.forms.editDokumentExtraDataForm.osoby.label"),
                 required=False,
-                widget=autocomplete.Select2Multiple(url="heslar:osoba-autocomplete-choices"),
+                widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
             )
             self.fields["let"] = forms.ChoiceField(
                 choices=tuple(("", "")),
@@ -296,7 +296,7 @@ class EditDokumentForm(forms.ModelForm):
     Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu.
     """
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
-                url="heslar:osoba-autocomplete-choices",
+                url="heslar:osoba-autocomplete",
             ),
             help_text= _("dokument.forms.editDokumentForm.autori.tooltip"),
             label = _("dokument.forms.editDokumentForm.autori.label"),)
@@ -502,7 +502,7 @@ class CreateModelDokumentForm(forms.ModelForm):
     Hlavní formulář pro vytvoření, editaci a zobrazení modelu 3D.
     """
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
-                url="heslar:osoba-autocomplete-choices",
+                url="heslar:osoba-autocomplete",
             ),
             help_text= _("dokument.forms.createModelDokumentForm.autori.tooltip"),
             label = _("dokument.forms.createModelDokumentForm.autori.label"),)
@@ -523,9 +523,6 @@ class CreateModelDokumentForm(forms.ModelForm):
             ),
             "organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
-            ),
-            "autori": autocomplete.Select2Multiple(
-                url="heslar:osoba-autocomplete-choices",
             ),
             "oznaceni_originalu": forms.TextInput(),
             "popis": forms.TextInput(),

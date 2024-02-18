@@ -36,6 +36,7 @@ from core.constants import (
     PROJEKT_STAV_UZAVRENY,
     PROJEKT_STAV_ZAPSANY,
     ROLE_ADMIN_ID,
+    ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
     ZAPSANI_AZ,
@@ -1303,7 +1304,7 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
         "zmenit_sam_akci": zmenit_sam_akci,
         "smazat": check_permissions(p.actionChoices.archz_smazat, user, archeologicky_zaznam.ident_cely),
         "dokument_odpojit": check_permissions(p.actionChoices.archz_odpojit_dokument, user, archeologicky_zaznam.ident_cely),
-        "komponenta_smazat": check_permissions(p.actionChoices.komponenta_archz_smazat, user, archeologicky_zaznam.ident_cely),
+        "komponenta_smazat": check_permissions(p.actionChoices.komponenta_smazat_akce, user, archeologicky_zaznam.ident_cely),
         "pripojit_eo": check_permissions(p.actionChoices.eo_pripojit_ez, user, archeologicky_zaznam.ident_cely),
         "odpojit_eo": check_permissions(p.actionChoices.eo_odpojit_ez, user, archeologicky_zaznam.ident_cely),
         "paginace_edit": check_permissions(p.actionChoices.eo_edit_akce, user, archeologicky_zaznam.ident_cely),
@@ -1721,6 +1722,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         show_add_komponenta = not jednotka.negativni_jednotka and check_permissions(p.actionChoices.lokalita_komponenta_zapsat, user, jednotka.ident_cely)
         show_pripojit_pian_mapa = show_add_pian and check_permissions(p.actionChoices.lokalita_pripojit_pian_mapa, user, jednotka.ident_cely)
         show_pripojit_pian_id = show_add_pian and check_permissions(p.actionChoices.lokalita_pripojit_pian_id, user, jednotka.ident_cely)
+    show_import_pian_change_user = jednotka.pian.stav == PIAN_NEPOTVRZEN if user.hlavni_role.pk in (ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID) else True
     dj_form_detail = {
         "ident_cely": jednotka.ident_cely,
         "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
@@ -1735,7 +1737,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_approve_pian": show_approve_pian,
         "show_pripojit_pian": True if jednotka.pian is None else False,
         "show_import_pian_new": show_add_pian and check_permissions(p.actionChoices.pian_import_new, user, jednotka.ident_cely),
-        "show_import_pian_change": not show_add_pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and check_permissions(p.actionChoices.pian_import_change, user, jednotka.pian.ident_cely) and jednotka.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY,
+        "show_import_pian_change": not show_add_pian and show_import_pian_change_user and check_permissions(p.actionChoices.pian_import_change, user, jednotka.pian.ident_cely) and jednotka.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY,
         "show_change_katastr": True if jednotka.typ.id == TYP_DJ_KATASTR and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely) else False,
         "show_dj_smazat": check_permissions(p.actionChoices.dj_smazat, user, jednotka.ident_cely),
         "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat,user,jednotka.ident_cely),
