@@ -1,5 +1,9 @@
+import json
 import logging
 import pandas as pd
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 
 from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN, PIAN_POTVRZEN, ROLE_ADMIN_ID, ZAPSANI_AZ, ZAPSANI_PIAN, ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from core.exceptions import MaximalIdentNumberError, NeznamaGeometrieError
@@ -422,6 +426,8 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
             logger.debug("pian.views.ImportovatPianView.post.label_check.unreadable_or_empty",
                          extra={"err": err})
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
+        if self.sheet.shape[0] == 0 or self.sheet.shape[1] == 0:
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
         if self.sheet.shape[1] != 3:
             logger.debug("pian.views.ImportovatPianView.post.label_check.incorrect_column_count",
                          extra={"columns": self.sheet.columns})
@@ -429,12 +435,12 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
                                           f'{self.sheet.columns}')
         if self.sheet.shape[0] == 0:
             logger.debug("pian.views.ImportovatPianView.post.label_check.no_data")
-            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.no_data")} '
-                                          f'{self.sheet.columns}')
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.no_data") +
+                                          f' {self.sheet.columns}')
         if not isinstance(self.sheet.columns[0], str) or self.sheet.columns[0].lower() != "label":
             logger.debug("pian.views.ImportovatPianView.post.label_check.column0",
                          extra={"columns": self.sheet.columns})
-            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column0")} '
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongColumnName.Column0") +
                                           f'{self.sheet.columns[0]}')
         if not isinstance(self.sheet.columns[1], str) or self.sheet.columns[1].lower() != "epsg":
             logger.debug("pian.views.ImportovatPianView.post.label_check.column1",
@@ -446,7 +452,12 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
                          extra={"columns": self.sheet.columns})
             return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column2")} '
                                           f'{self.sheet.columns[2]}')
-        self.sheet["result"] = self.sheet.apply(self.check_save_row, axis=1)
+        try:
+            self.sheet["result"] = self.sheet.apply(self.check_save_row, axis=1)
+        except KeyError as err:
+            logger.debug("pian.views.ImportovatPianView.post.sheet_apply.key_error",
+                         extra={"columns": self.sheet.columns, "err": err})
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
         context = self.get_context_data()
         context["table"] = self.sheet
         if ArcheologickyZaznam.objects.get(ident_cely=request.POST.get("arch_ident")).typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -479,3 +490,17 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
     def check_epsg(self, epsg):
         # @jiribartos kontrola geometrie
         return file_validate_epsg(epsg)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ValidateGeometryView(View):
+    def post(self, request):
+        data = json.loads(request.body)
+        geometry = data.get("geometry", None)
+        validation_result, validation_result_description = file_validate_geometry(geometry)
+        if file_validate_geometry(geometry)[0] is True:
+            return JsonResponse({"validation_result": validation_result, "geometry": geometry,
+                                 "validation_result_description": validation_result_description}, status=200)
+        else:
+            return JsonResponse({"validation_result": validation_result, "geometry": geometry,
+                                 "validation_result_description": validation_result_description}, status=200)

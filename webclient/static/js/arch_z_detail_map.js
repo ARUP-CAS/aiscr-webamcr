@@ -1193,6 +1193,22 @@ window.addEventListener("load", function(){
     loadSession();
 });
 
+const validate_geometry = (geometry) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${window.location.origin}/pian/validovat-geometrii/`, false);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    const data = JSON.stringify({
+        geometry: geometry
+    });
+    xhr.send(data);
+    if (xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText);
+        return response.validation_response;
+    } else {
+        return false
+    }
+}
+
 function loadSession(){
     addLogText("arch_z_detail_map.loadSession")
     const currentUrl = window.location.href;
@@ -1201,6 +1217,10 @@ function loadSession(){
     let myParamL = urlParams.get('label');
     //global_map_can_grab_geom_from_map = true;
     if(myParamG !==null){
+        const validate_geometry_result = validate_geometry(myParamG);
+        if (!validate_geometry_result) {
+            return;
+        }
         global_map_can_grab_geom_from_map = true;
         global_blocked_by_query_geom=true;
         drawnItems.clearLayers();
@@ -1215,6 +1235,10 @@ function loadSession(){
         //myParam="POLYGON ((13.2164736 49.9596986,13.2154006 49.9589111,13.2178685 49.9583378,13.2165204 49.9590543,13.2164736 49.9596986))"
     } else{
         let geom_session=sessionStorage.getItem("Geom-session")
+        const validate_geometry_result = validate_geometry(geom_session);
+        if (!validate_geometry_result) {
+            return;
+        }
         if(geom_session != null){
             geom_session=JSON.parse(geom_session)
             if(geom_session.url==currentUrl && geom_session.geometry !=null){
