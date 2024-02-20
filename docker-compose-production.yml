@@ -123,6 +123,7 @@ services:
     restart: always
     volumes:
       - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
     networks:
       - prod-net
     ports:
@@ -215,6 +216,7 @@ volumes:
   elasticsearch_volume:
   grafana_data:
   redis_data:
+  prometheus_data:
 
 networks:
   prod-net:
