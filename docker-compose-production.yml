@@ -132,6 +132,7 @@ services:
       - prometheus_config
     command:
       - "--config.file=/run/secrets/prometheus_config"
+      - "--storage.tsdb.retention.time=30d"
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.7.0
