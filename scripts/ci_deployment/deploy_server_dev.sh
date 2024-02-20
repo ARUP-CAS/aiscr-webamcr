@@ -22,6 +22,8 @@ logfilepath="${logpath}/${logfile}"
 path_last_tag="${logpath}/last_deployment_tag.txt"
 last_deployment_tag=$(cat ${path_last_tag})
 
+find "$logpath" -name "$logfile" -type f -mtime +5 -exec rm -f {} \;
+
 mkdir -p ${logpath}
 
 #Repo update
