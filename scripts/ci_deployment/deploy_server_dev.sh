@@ -35,11 +35,6 @@ git pull
 #Prints
 print_d1 "START DEPLOYMENT SCRIPT @${d_stamp}"
 
-#DB backup
-print_d1 "DB BACKUP"
-chmod +x ${scriptpath}/db/db_backup.sh
-${scriptpath}/db/db_backup.sh ${last_deployment_tag}
-
 #Docker deployement
 print_d1 "DOCKER ROLLING OUT"
 chmod +x ${scriptpath}/prod_deploy.sh
