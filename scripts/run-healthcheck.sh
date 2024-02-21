@@ -41,7 +41,6 @@ fedora_user_password=$(jq -r '.FEDORA_ADMIN_USER_PASSWORD' "$file_path")
 
 url="http://${fedora_server_hostname}:${fedora_port_number}/rest/${fedora_server_name}"
 fedora_status_code=$(curl -o /dev/null -s -w "%{http_code}" -u "${fedora_user}":"${fedora_user_password}" "$url")
-
 echo "HTTP status code from FEDORA is ${fedora_status_code}"
 
 test "${status_code}" -eq "200" && test "${fedora_status_code}" -eq "200" && python /scripts/db/db_connection_from_docker-web.py && test ${disk_status} -eq 0 && test ${ram_status} -eq 0 && true || false
