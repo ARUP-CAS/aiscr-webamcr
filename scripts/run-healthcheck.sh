@@ -28,8 +28,8 @@ status_code="$(curl -s -L -o /dev/null -w '%{http_code}'  127.0.0.1:8001/healthc
 
 echo "HTTP status code from /healthcheck endpoint is ${status_code}"
 
-if [ -f "secrets.alternative.json" ]; then
-    file_path="secrets.alternative.json"
+if [ -f "/run/secrets/db_conf" ]; then
+    file_path="/run/secrets/db_conf"
 else
     file_path="/code/webclient/settings/sample_secrets_db.json"
 fi
