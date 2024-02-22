@@ -12,7 +12,7 @@ from dokument.models import Dokument, DokumentCast
 from historie.models import HistorieVazby
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
-from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued, METADATA_UPDATE_TIMEOUT
+from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
 logger = logging.getLogger(__name__)
 

@@ -6,8 +6,6 @@ from celery import Celery
 
 
 logger = logging.getLogger(__name__)
-METADATA_UPDATE_TIMEOUT = 10
-IDENT_CHANGE_UPDATE_TIMEOUT = 15
 UPDATE_REDIS_SNAPSHOT = 20
 
 
@@ -70,8 +68,7 @@ class ModelWithMetadata(models.Model):
                 self.active_transaction = transaction
             transaction: FedoraTransaction
             from cron.tasks import save_record_metadata
-            save_record_metadata.apply_async([self.__class__.__name__, self.pk, transaction.uid],
-                                             countdown=METADATA_UPDATE_TIMEOUT)
+            save_record_metadata.apply_async([self.__class__.__name__, self.pk, transaction.uid])
         else:
             from core.repository_connector import FedoraRepositoryConnector
             if not transaction and self.active_transaction:
@@ -140,11 +137,9 @@ class ModelWithMetadata(models.Model):
                 and self.ident_cely != old_ident_cely):
             from cron.tasks import record_ident_change
             if not transaction:
-                record_ident_change.apply_async([self.__class__.__name__, self.pk, old_ident_cely],
-                                                countdown=IDENT_CHANGE_UPDATE_TIMEOUT)
+                record_ident_change.apply_async([self.__class__.__name__, self.pk, old_ident_cely])
             else:
-                record_ident_change.apply_async([self.__class__.__name__, self.pk, old_ident_cely, transaction.uid],
-                                                countdown=IDENT_CHANGE_UPDATE_TIMEOUT)
+                record_ident_change.apply_async([self.__class__.__name__, self.pk, old_ident_cely, transaction.uid])
         logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end",
                      extra={"transaction": transaction})
 
