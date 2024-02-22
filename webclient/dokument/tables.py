@@ -189,8 +189,9 @@ class DokumentTable(SearchTable):
         else: 
             soubor = None
         if soubor is not None:
-            thumbnail_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely, soubor.id,))
-            thumbnail_large_url = reverse("core:download_thumbnail_large", args=('model3d', record.ident_cely, soubor.id,))
+            thumbnail_url = reverse("core:download_thumbnail", args=('dokument', record.ident_cely, soubor.id,))
+            thumbnail_large_url = reverse("core:download_thumbnail_large",
+                                          args=('dokument', record.ident_cely, soubor.id,))
             return format_html(
                 '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
                 'data-fullsrc="{}">',
