@@ -340,9 +340,7 @@ class DokumentListView(SearchListView):
     def get_queryset(self):
         # Only allow to view 3D models
         subqry = Subquery(
-            Soubor.objects.filter(
-                mimetype__startswith="image", vazba=OuterRef("vazba")
-            ).values_list("id", flat=True)[:1]
+            Soubor.objects.filter(vazba=OuterRef("vazba")).values_list("id", flat=True)[:1]
         )
         qs = super().get_queryset().exclude(ident_cely__contains="3D")
         qs = qs.select_related(
