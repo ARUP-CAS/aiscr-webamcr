@@ -17,9 +17,11 @@ from requests.auth import HTTPBasicAuth
 
 from core.utils import get_mime_type
 from xml_generator.generator import DocumentGenerator
-from xml_generator.models import check_if_task_queued, METADATA_UPDATE_TIMEOUT
 
 logger = logging.getLogger(__name__)
+
+
+TRANSACTION_CLOSE_TIMEOUT = 10
 
 
 class FedoraValidationError(Exception):
@@ -522,13 +524,15 @@ class FedoraRepositoryConnector:
 
     def _save_thumbs(self, file_name, file, uuid, update=False):
         logger.debug("core_repository_connector._save_thumb.start",
-                     extra={"file_name": file_name, "ident_cely": self.record.ident_cely})
+                     extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "update": update,
+                            "uuid": uuid})
         for large in (True, False):
             file.seek(0)
             data = self.__generate_thumb(file_name, file, large)
             if not data:
                 logger.error("core_repository_connector._save_thumb.error",
-                             extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large})
+                             extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large,
+                                    "update": update, "uuid": uuid})
                 continue
             data = data.read()
             file_sha_512 = hashlib.sha512(data).hexdigest()
@@ -563,10 +567,8 @@ class FedoraRepositoryConnector:
                 else:
                     self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_THUMB, headers=headers, data=data)
             logger.debug("core_repository_connector._save_thumb.end",
-                         extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large})
-        else:
-            logger.warning("core_repository_connector._save_thumb.no_thumb",
-                           extra={"file_name": file_name, "ident_cely": self.record.ident_cely})
+                         extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large,
+                                "update": update, "uuid": uuid})
 
     def migrate_binary_file(self, soubor, include_content=True, check_if_exists=True,
                             ident_cely_old=None) -> Optional[RepositoryBinaryFile]:
@@ -607,6 +609,7 @@ class FedoraRepositoryConnector:
             }
             url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
             self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
+            self._save_thumbs(soubor.nazev, data, soubor.repository_uuid)
             logger.debug("core_repository_connector.migrate_binary_file.end",
                          extra={"uuid": uuid, "ident_cely": self.record.ident_cely})
             return rep_bin_file
@@ -851,7 +854,7 @@ class FedoraTransaction:
         already_running = self.check_remaining_tasks(True)
         if not already_running:
             from cron.tasks import commit_transaction_after_all_tasks_finished
-            commit_transaction_after_all_tasks_finished.apply_async([self.uid, ], countdown=METADATA_UPDATE_TIMEOUT)
+            commit_transaction_after_all_tasks_finished.apply_async([self.uid, ], countdown=TRANSACTION_CLOSE_TIMEOUT)
 
     def __create_transaction(self):
         logger.debug("core_repository_connector.FedoraTransaction.__create_transaction.start")
