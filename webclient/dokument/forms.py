@@ -534,7 +534,6 @@ class CreateModelDokumentForm(forms.ModelForm):
             "oznaceni_originalu": _("dokument.forms.createModelDokumentForm.oznaceniOriginalu.label"),
             "popis": _("dokument.forms.createModelDokumentForm.popis.label"),
             "poznamka": _("dokument.forms.createModelDokumentForm.poznamka.label"),
-            "autori": _("dokument.forms.createModelDokumentForm.autori.label"),
             "rok_vzniku": _("dokument.forms.createModelDokumentForm.rokVzniku.label"),
         }
         help_texts = {
@@ -545,7 +544,6 @@ class CreateModelDokumentForm(forms.ModelForm):
             ),
             "popis": _("dokument.forms.createModelDokumentForm.popis.tooltip"),
             "poznamka": _("dokument.forms.createModelDokumentForm.poznamka.tooltip"),
-            "autori": _("dokument.forms.createModelDokumentForm.autori.tooltip"),
             "rok_vzniku": _("dokument.forms.createModelDokumentForm.rokVzniku.tooltip"),
         }
 
@@ -612,6 +610,9 @@ class CreateModelDokumentForm(forms.ModelForm):
                     self.fields[key].widget.attrs["class"] = (
                         "required-next" if key in required_next else ""
                     )
+        self.fields["autori"].widget.choices = list(Osoba.objects.filter(
+            dokumentautor__dokument=self.instance
+        ).order_by("dokumentautor__poradi").values_list("id","vypis_cely"))
 
 
 class CreateModelExtraDataForm(forms.ModelForm):
