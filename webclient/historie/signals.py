@@ -20,18 +20,19 @@ def soubor_update_metadata(sender, instance: Historie, **kwargs):
             hasattr(instance.vazba.navazany_objekt, "suppress_signall")
             or instance.vazba.navazany_objekt.suppress_signal is False):
         navazany_objekt = instance.vazba.navazany_objekt
+        fedora_transaction = navazany_objekt.active_transaction
         if isinstance(navazany_objekt, ModelWithMetadata):
-            transaction = navazany_objekt.save_metadata()
-            if transaction:
-                transaction.mark_transaction_as_closed()
+            fedora_transaction = navazany_objekt.save_metadata(fedora_transaction)
+            if fedora_transaction and navazany_objekt.close_active_transaction_when_finished:
+                fedora_transaction.mark_transaction_as_closed()
             logger.debug("historie.signals.soubor_update_metadata.save_metadata",
-                         extra={"pk": instance.pk, "transaction": transaction})
+                         extra={"pk": instance.pk, "transaction": getattr(fedora_transaction, "uid")})
     logger.debug("historie.signals.soubor_update_metadata.end", extra={"pk": instance.pk})
 
 
 @receiver(pre_save, sender=Historie)
-def soubor_update_metadata(sender, instance: Historie, **kwargs):
-    logger.debug("historie.signals.soubor_update_metadata.start")
+def soubor_update_snapshot(sender, instance: Historie, **kwargs):
+    logger.debug("historie.signals.soubor_update_snapshot.start")
     if instance.uzivatel:
         instance.organizace_snapshot = instance.uzivatel.organizace
-    logger.debug("historie.signals.soubor_update_metadata.end")
+    logger.debug("historie.signals.soubor_update_snapshot.end")

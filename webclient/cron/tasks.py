@@ -533,8 +533,6 @@ def record_ident_change(class_name, record_pk, old_ident, transaction_uid=None):
             for item in record.dokumentacni_jednotky_pianu.all():
                 item: DokumentacniJednotka
                 item.archeologicky_zaznam.save_metadata(transaction)
-        if transaction:
-            transaction.mark_transaction_as_closed()
 
     except Exception as err:
         logger.error("cron.record_ident_change.do.error", extra={"error": err})
@@ -749,17 +747,6 @@ def update_single_redis_snapshot(class_name: str, record_pk):
     if key and value:
         r.hset(key, mapping=value)
 
-
-@shared_task
-def commit_transaction_after_all_tasks_finished(transaction_uid):
-    from core.repository_connector import FedoraTransaction
-    while True:
-        fedora_transaction = FedoraTransaction(transaction_uid)
-        remaining_tasks = fedora_transaction.check_remaining_tasks()
-        if remaining_tasks is False:
-            fedora_transaction.commit_transaction()
-            break
-        time.sleep(10)
 
 @shared_task
 def update_cached_queryset(pk):

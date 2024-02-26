@@ -54,6 +54,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
+from core.repository_connector import FedoraTransaction
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from core.models import Permissions as p, check_permissions
 from dal import autocomplete
@@ -1654,7 +1655,10 @@ def zapsat(request, zaznam=None):
         )
         if form_d.is_valid():
             logger.debug("dokument.views.zapsat.valid")
+            transaction = FedoraTransaction()
             dokument = form_d.save(commit=False)
+            dokument: Dokument
+            dokument.active_transaction = transaction
             dokument.rada = get_dokument_rada(
                 dokument.typ_dokumentu, dokument.material_originalu
             )
@@ -1688,19 +1692,25 @@ def zapsat(request, zaznam=None):
                 # Vytvorit defaultni cast dokumentu
                 if zaznam:
                     if isinstance(zaznam, ArcheologickyZaznam):
-                        DokumentCast(
+                        dc = DokumentCast(
                             dokument=dokument,
                             ident_cely=get_cast_dokumentu_ident(dokument),
                             archeologicky_zaznam=zaznam,
-                        ).save()
+                        )
+                        dc.active_transaction = transaction
+                        dc.save()
                     else:
-                        DokumentCast(
+                        dc = DokumentCast(
                             dokument=dokument,
                             ident_cely=get_cast_dokumentu_ident(dokument),
                             projekt=zaznam,
                         ).save()
+                        dc.active_transaction = transaction
+                        dc.save()
 
                 form_d.save_m2m()
+                dokument.close_active_transaction_when_finished = True
+                dokument.save()
 
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                 return redirect("dokument:detail", ident_cely=dokument.ident_cely)

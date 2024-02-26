@@ -32,6 +32,7 @@ class ModelWithMetadata(models.Model):
     soubory = None
     deleted_by_user = None
     active_transaction = None
+    close_active_transaction_when_finished = False
 
     @property
     def metadata(self):
@@ -54,29 +55,26 @@ class ModelWithMetadata(models.Model):
         from core.repository_connector import FedoraTransaction
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.start",
                      extra={"ident_cely": self.ident_cely, "use_celery": use_celery, "record_pk": self.pk,
-                            "record_class": self.__class__.__name__, "transaction": transaction})
+                            "record_class": self.__class__.__name__, "transaction": getattr(transaction, "uid")})
+        if not transaction and self.active_transaction:
+            transaction = self.active_transaction
+        elif not transaction:
+            transaction = FedoraTransaction()
+            self.active_transaction = transaction
+            logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.created_transaction",
+                         extra={"transaction": getattr(transaction, "uid")})
+        transaction: FedoraTransaction
         if use_celery:
             if self.update_queued(self.__class__.__name__, self.pk):
                 logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.already_scheduled",
                              extra={"ident_cely": self.ident_cely, "use_celery": use_celery, "record_pk": self.pk,
-                                    "record_class": self.__class__.__name__})
+                                    "record_class": self.__class__.__name__,
+                                    "transaction": getattr(transaction, "uid")})
                 return transaction
-            if not transaction and self.active_transaction:
-                transaction = self.active_transaction
-            else:
-                transaction = FedoraTransaction()
-                self.active_transaction = transaction
-            transaction: FedoraTransaction
             from cron.tasks import save_record_metadata
             save_record_metadata.apply_async([self.__class__.__name__, self.pk, transaction.uid])
         else:
             from core.repository_connector import FedoraRepositoryConnector
-            if not transaction and self.active_transaction:
-                transaction = self.active_transaction
-            else:
-                transaction = FedoraTransaction()
-                self.active_transaction = transaction
-            transaction: FedoraTransaction
             connector = FedoraRepositoryConnector(self, transaction.uid)
             if include_files:
                 from core.models import SouborVazby
@@ -86,7 +84,8 @@ class ModelWithMetadata(models.Model):
                         soubor: Soubor
                         connector.migrate_binary_file(soubor, include_content=False)
             connector.save_metadata(True)
-        logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.end", extra={"transaction": transaction})
+        logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.end",
+                     extra={"transaction": getattr(transaction, "uid")})
         return transaction
 
     def record_deletion(self, transaction=None):

@@ -347,8 +347,6 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         self.save()
         transaction = self.save_metadata(use_celery=False)
         self.record_ident_change(old_ident_cely, transaction)
-        if transaction:
-            transaction.mark_transaction_as_closed()
 
         for dc in self.casti.all():
             for komponenta in dc.komponenty.komponenty.all():
@@ -458,6 +456,8 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         null=True,
         related_name="casti_dokumentu",
     )
+    close_active_transaction_when_finished = False
+    active_transaction = None
 
     class Meta:
         db_table = "dokument_cast"
