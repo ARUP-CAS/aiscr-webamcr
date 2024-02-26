@@ -213,3 +213,5 @@ UPDATE akce SET pristupnost = 1 WHERE pristupnost = 2;
 -- Oprava falešně negativních DJ
 UPDATE dokumentacni_jednotka SET negativni_jednotka = false FROM komponenta WHERE komponenta.parent = dokumentacni_jednotka.id AND dokumentacni_jednotka.negativni_jednotka = true;
 
+-- Oprava emailových adres na lower-case
+UPDATE user_storage SET email = LOWER(email);
