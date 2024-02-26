@@ -289,6 +289,7 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
         ("id", "tvar"),
         ("id", "auth_user_groups"),
         ("id", "auth_group"),
+        ("id", "notifikace_projekty_pes"),
     )
     for item in tables:
         destination_cursor.execute(f"SELECT SETVAL("
