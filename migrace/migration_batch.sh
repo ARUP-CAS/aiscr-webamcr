@@ -86,6 +86,7 @@ migration_scripts=(
 "99_set_DB_privileges.sql"
 "999_prevod_null_hodnot_texty.sql"
 "migrace_mazani.sql"
+"projekty_zahajeni.sql"
 )
 
 
