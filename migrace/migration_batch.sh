@@ -12,7 +12,9 @@ else
   echo "Username has to be set as a second parameter."
 fi
 
-migration_scripts=("chyby_dat.sql"
+migration_scripts=(
+"vlastnictvi_zmeny.sql"
+"chyby_dat.sql"
 "migrace_1.sql"
 "migrace_2.sql"
 "migrace_3.sql"
