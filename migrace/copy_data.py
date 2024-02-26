@@ -64,7 +64,7 @@ def copy_data(source_host, destination_host, source_db, destination_db, source_u
             destination_cursor.execute("""
                 SELECT id
                 FROM public.django_content_type
-                WHERE app_label = 'projekt' and model = 'projekt';
+                WHERE app_label = 'heslar' and model = 'ruiankraj';
             """)
             result = cursor.fetchone()
             projekt_id = result[0] if result else None
