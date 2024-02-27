@@ -22,8 +22,7 @@ WITH prevod AS
 INSERT INTO historie (datum_zmeny, uzivatel, poznamka, vazba, typ_zmeny) SELECT now(), (SELECT id FROM auth_user WHERE email = 'amcr@arup.cas.cz'), stary || ' -> ' || novy, vazba, 'KAT' FROM prevod;
 WITH prevod AS
 (
-    SELECT DISTINCT archeologicky_zaznam.id as az, ruian_katastr.soucasny as kat FROM archeologicky_zaznam_katastr
-    JOIN archeologicky_zaznam ON archeologicky_zaznam.id = archeologicky_zaznam_katastr.archeologicky_zaznam_id
+    SELECT DISTINCT archeologicky_zaznam_katastr.archeologicky_zaznam_id as az, ruian_katastr.soucasny as kat FROM archeologicky_zaznam_katastr
     JOIN ruian_katastr ON ruian_katastr.id = archeologicky_zaznam_katastr.katastr_id
     WHERE ruian_katastr.aktualni is false
 )
@@ -57,12 +56,11 @@ WITH prevod AS
 INSERT INTO historie (datum_zmeny, uzivatel, poznamka, vazba, typ_zmeny) SELECT now(), (SELECT id FROM auth_user WHERE email = 'amcr@arup.cas.cz'), stary || ' -> ' || novy, vazba, 'KAT' FROM prevod;
 WITH prevod AS
 (
-    SELECT DISTINCT projekt.id as az, ruian_katastr.soucasny as kat FROM projekt_katastr
-    JOIN projekt ON projekt.id = projekt_katastr.projekt_id
+    SELECT DISTINCT projekt_katastr.projekt_id as proj, ruian_katastr.soucasny as kat FROM projekt_katastr
     JOIN ruian_katastr ON ruian_katastr.id = projekt_katastr.katastr_id
     WHERE ruian_katastr.aktualni is false
 )
-INSERT INTO projekt_katastr (projekt_id, katastr_id) SELECT az, kat FROM prevod WHERE NOT EXISTS (SELECT * FROM projekt_katastr WHERE projekt_id = az AND katastr_id = kat);
+INSERT INTO projekt_katastr (projekt_id, katastr_id) SELECT proj, kat FROM prevod WHERE NOT EXISTS (SELECT * FROM projekt_katastr WHERE projekt_id = proj AND katastr_id = kat);
 DELETE FROM projekt_katastr WHERE (SELECT aktualni FROM ruian_katastr WHERE ruian_katastr.id = projekt_katastr.katastr_id) is false;
 DELETE FROM projekt_katastr WHERE (SELECT hlavni_katastr FROM projekt WHERE projekt.id = projekt_katastr.projekt_id) = katastr_id;
 
