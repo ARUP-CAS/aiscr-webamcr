@@ -20,7 +20,7 @@ from heslar.hesla import (
     HESLAR_DOKUMENT_ULOZENI,
     HESLAR_JAZYK,
     HESLAR_LETFOTO_TVAR,
-    HESLAR_POSUDEK_TYP,
+    HESLAR_POSUDEK_TYP, HESLAR_LICENCE,
 )
 from heslar.hesla_dynamicka import (
     ALLOWED_DOKUMENT_TYPES,
@@ -351,7 +351,9 @@ class EditDokumentForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "oznaceni_originalu": forms.TextInput(),
-            "licence": forms.TextInput(),
+            "licence":  forms.Select(
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            ),
             "popis": forms.TextInput(),
             "poznamka": forms.TextInput(),
         }
@@ -438,7 +440,8 @@ class EditDokumentForm(forms.ModelForm):
                     heslo="primárně digitální dokument",
                 ).pk
             ]
-            self.fields["licence"].initial = "CC-BY-NC 4.0"
+            self.fields["licence"].initial = (Heslar.objects.filter(nazev_heslare=HESLAR_LICENCE)
+                                              .order_by("razeni").first())
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
