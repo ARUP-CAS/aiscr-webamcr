@@ -1,10 +1,6 @@
 -- Odstranění řad ZA a ZL
 DELETE FROM heslar WHERE ident_cely in ('HES-000884', 'HES-000885');
 
--- Úprava lokalit
-UPDATE lokalita SET druh = (SELECT id FROM heslar WHERE ident_cely = 'HES-000117') WHERE druh = (SELECT id FROM heslar WHERE ident_cely = 'HES-000127');
-UPDATE lokalita SET druh = (SELECT id FROM heslar WHERE ident_cely = 'HES-000117') WHERE druh = (SELECT id FROM heslar WHERE ident_cely = 'HES-000131');
-
 -- Úprava posudků
 WITH posudky AS
 (
@@ -444,7 +440,7 @@ UPDATE heslar SET razeni = 411, heslo = 'kultura s lineární keramikou', heslo_
 UPDATE heslar SET razeni = 412, heslo = 'šárecký typ', heslo_en = 'Šárka Type', zkratka = 'ne.sar', popis = '' WHERE ident_cely = 'HES-000394';
 UPDATE heslar SET razeni = 413, heslo = 'želiezovská skupina', heslo_en = 'Želizovce Group', zkratka = 'ne.zel', popis = '' WHERE ident_cely = 'HES-000340';
 UPDATE heslar SET razeni = 414, heslo = 'oberlauterbašská kultura', heslo_en = 'Oberlauterbach Culture', zkratka = 'ne.obe', popis = '' WHERE ident_cely = 'HES-000305';
-UPDATE heslar SET razeni = 420, heslo = 'střední / mladší neolit', heslo_en = 'Middle / Late Neolithic', zkratka = 'ne.ml', popis = '' WHERE ident_cely = 'HES-000360';
+UPDATE heslar SET razeni = 420, heslo = 'střední/mladší neolit', heslo_en = 'Middle/Late Neolithic', zkratka = 'ne.ml', popis = '' WHERE ident_cely = 'HES-000360';
 UPDATE heslar SET razeni = 421, heslo = 'kultura s vypíchanou keramikou', heslo_en = 'Stroke Pottery Culture', zkratka = 'ne.vyp', popis = '' WHERE ident_cely = 'HES-000361';
 UPDATE heslar SET razeni = 422, heslo = 'moravská malovaná keramika (neolit)', heslo_en = 'Moravian Painted Ware Culture 1', zkratka = 'ne.mm1', popis = '' WHERE ident_cely = 'HES-000362';
 UPDATE heslar SET razeni = 423, heslo = 'lengyelská kultura', heslo_en = 'Lengyel Culture', zkratka = 'ne.len', popis = '' WHERE ident_cely = 'HES-000306';
@@ -467,7 +463,7 @@ UPDATE heslar SET razeni = 534, heslo = 'kultura kulovitých amfor', heslo_en = 
 UPDATE heslar SET razeni = 540, heslo = 'mladší eneolit', heslo_en = 'Late Eneolithic', zkratka = 'en.ml', popis = '' WHERE ident_cely = 'HES-000280';
 UPDATE heslar SET razeni = 541, heslo = 'jevišovická kultura', heslo_en = 'Jevišovice Culture', zkratka = 'en.jev', popis = '' WHERE ident_cely = 'HES-000373';
 UPDATE heslar SET razeni = 542, heslo = 'bošácká skupina', heslo_en = 'Bošáca Group', zkratka = 'en.bos', popis = '' WHERE ident_cely = 'HES-000357';
-UPDATE heslar SET razeni = 550, heslo = 'mladší / pozdní eneolit', heslo_en = 'Late / Final Eneolithic', zkratka = 'en.mlp', popis = '' WHERE ident_cely = 'HES-000374';
+UPDATE heslar SET razeni = 550, heslo = 'mladší/pozdní eneolit', heslo_en = 'Late/Final Eneolithic', zkratka = 'en.mlp', popis = '' WHERE ident_cely = 'HES-000374';
 UPDATE heslar SET razeni = 551, heslo = 'kultura se šňůrové keramikou', heslo_en = 'Corded Ware Culture', zkratka = 'en.snu', popis = '' WHERE ident_cely = 'HES-000375';
 UPDATE heslar SET razeni = 552, heslo = 'kultura Kosihy-Čaka', heslo_en = 'Kosihy-Čaka Culture', zkratka = 'en.kča', popis = '' WHERE ident_cely = 'HES-000351';
 UPDATE heslar SET razeni = 553, heslo = 'kultura zvoncovitých pohárů', heslo_en = 'Bell Beaker Culture', zkratka = 'en.zvo', popis = '' WHERE ident_cely = 'HES-000318';
@@ -878,7 +874,7 @@ UPDATE heslar SET razeni = 23, heslo = 'geomorfologie', heslo_en = 'geomorpholog
 UPDATE heslar SET razeni = 24, heslo = 'mikrostratigrafie', heslo_en = 'microstratigraphy', zkratka = '', popis = 'Metoda mikroskopické analýzy uloženin antropogenního i neantropogenního původu.' WHERE ident_cely = 'HES-001444';
 UPDATE heslar SET razeni = 25, heslo = 'paleoklimatologie', heslo_en = 'paleoclimatology', zkratka = '', popis = 'Vědecká disciplína, která studuje klima v minulosti za použití širokého spektra přírodovědných metod.' WHERE ident_cely = 'HES-001445';
 UPDATE heslar SET razeni = 26, heslo = 'pedologie', heslo_en = 'pedology', zkratka = '', popis = 'Celostní studium půd v archeologických kontextech i mimo ně.' WHERE ident_cely = 'HES-000627';
-UPDATE heslar SET razeni = 27, heslo = 'petrografie / mineralogie', heslo_en = 'petrography', zkratka = '', popis = 'Aplikované vědecké disciplíny, které se uplatňují při studiu nerostů (mineralogie) a hornin (petrografie), vč. studia artefaktů (kamenná industrie, keramická hmota), ekofaktů (těžební/výrobní odpad).' WHERE ident_cely = 'HES-000628';
+UPDATE heslar SET razeni = 27, heslo = 'petrografie/mineralogie', heslo_en = 'petrography', zkratka = '', popis = 'Aplikované vědecké disciplíny, které se uplatňují při studiu nerostů (mineralogie) a hornin (petrografie), vč. studia artefaktů (kamenná industrie, keramická hmota), ekofaktů (těžební/výrobní odpad).' WHERE ident_cely = 'HES-000628';
 UPDATE heslar SET razeni = 28, heslo = 'materiálová analýza', heslo_en = 'material analysis', zkratka = '', popis = 'Méně obvyklé, samostatně nezmiňované materiálové analýzy.' WHERE ident_cely = 'HES-000633';
 UPDATE heslar SET razeni = 29, heslo = 'chemická analýza', heslo_en = 'chemical analysis', zkratka = '', popis = 'Dále nečleněné chemické metody užívané při analýze archeologických nálezů.' WHERE ident_cely = 'HES-000617';
 UPDATE heslar SET razeni = 30, heslo = 'prvková analýza', heslo_en = 'elemental analysis', zkratka = '', popis = 'Analýza prvkového složení zkoumané látky pomocí fyzikální a chemických metod (XRF, SEM-EDS, IRMS, ICP-MS atd.)' WHERE ident_cely = 'HES-000631';
@@ -1188,7 +1184,7 @@ UPDATE heslar SET razeni = 1, heslo = 'zaniklá lokalita', heslo_en = 'buried si
 UPDATE heslar SET razeni = 2, heslo = 'lokalita pod zástavbou', heslo_en = 'site in built environment', zkratka = '', popis = '' WHERE ident_cely = 'HES-001434';
 UPDATE heslar SET razeni = 3, heslo = 'nadzemní relikty', heslo_en = 'aboveground remains', zkratka = '', popis = '' WHERE ident_cely = 'HES-001435';
 UPDATE heslar SET razeni = 4, heslo = 'ruina', heslo_en = 'ruin', zkratka = '', popis = '' WHERE ident_cely = 'HES-001436';
-UPDATE heslar SET razeni = 5, heslo = 'historická budova / komplex', heslo_en = 'historical building / complex', zkratka = '', popis = '' WHERE ident_cely = 'HES-001437';
+UPDATE heslar SET razeni = 5, heslo = 'historická budova/komplex', heslo_en = 'historical building/complex', zkratka = '', popis = '' WHERE ident_cely = 'HES-001437';
 UPDATE heslar SET razeni = 1, heslo = 'konference', heslo_en = 'conference', zkratka = '', popis = '' WHERE ident_cely = 'HES-001152';
 UPDATE heslar SET razeni = 2, heslo = 'zahraniční cesta', heslo_en = 'travel abroad', zkratka = '', popis = '' WHERE ident_cely = 'HES-001153';
 UPDATE heslar SET razeni = 3, heslo = 'zahraniční výzkum', heslo_en = 'fieldwork abroad', zkratka = '', popis = '' WHERE ident_cely = 'HES-001154';
