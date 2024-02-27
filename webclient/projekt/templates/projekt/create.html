@@ -122,7 +122,7 @@
           const selectElement = document.getElementById('id_typ_projektu');
           const ZACHRANNY_OPTION = 1
 
-          function makeFieldDisabled(field, disabled){
+          function makeFieldDisabled(field, disabled, start){
               $(field).prop('readonly', disabled);
               if (field !='#id_oznaceni_stavby' && field != '#id_poznamka'){
                 $(field).prop('required', !disabled);
@@ -134,17 +134,19 @@
                   $(field)[0].classList.add("required-next")
                 }
               }
-              $(field).val("");
+              if (!start){
+                $(field).val("");
+              };
           }
 
-          function makeOznamovatelDisabled(disabled){
-              makeFieldDisabled('#id_odpovedna_osoba', disabled)
-              makeFieldDisabled('#id_oznamovatel', disabled)
-              makeFieldDisabled('#id_adresa', disabled)
-              makeFieldDisabled('#id_telefon', disabled)
-              makeFieldDisabled('#id_email', disabled)
-              makeFieldDisabled('#id_oznaceni_stavby', disabled)
-              makeFieldDisabled('#id_poznamka', disabled)
+          function makeOznamovatelDisabled(disabled, start){
+              makeFieldDisabled('#id_odpovedna_osoba', disabled, start)
+              makeFieldDisabled('#id_oznamovatel', disabled, start)
+              makeFieldDisabled('#id_adresa', disabled, start)
+              makeFieldDisabled('#id_telefon', disabled, start)
+              makeFieldDisabled('#id_email', disabled, start)
+              makeFieldDisabled('#id_oznaceni_stavby', disabled, start)
+              makeFieldDisabled('#id_poznamka', disabled, start)
               const form_card = document.querySelectorAll(".oznamovatel-form-card")[0];
               const elements = form_card.querySelectorAll(".asteriskField");
               if (disabled) {
@@ -159,17 +161,17 @@
           }
 
           if (selectElement.selectedIndex != ZACHRANNY_OPTION) {
-            makeOznamovatelDisabled(true)
+            makeOznamovatelDisabled(true, false)
           } else {
-            makeOznamovatelDisabled(false)
+            makeOznamovatelDisabled(false, true)
           }
 
           // On change pak podle toho co je vybrano
           $(selectElement).on('changed.bs.select', function (e, clickedIndex) {
               if (clickedIndex != ZACHRANNY_OPTION) {
-                  makeOznamovatelDisabled(true)
+                  makeOznamovatelDisabled(true, false)
               } else {
-                  makeOznamovatelDisabled(false)
+                  makeOznamovatelDisabled(false ,false)
               }
               $('.selectpicker').selectpicker('refresh');
           });

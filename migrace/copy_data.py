@@ -64,7 +64,7 @@ def copy_data(source_host, destination_host, source_db, destination_db, source_u
             destination_cursor.execute("""
                 SELECT id
                 FROM public.django_content_type
-                WHERE app_label = 'projekt' and model = 'projekt';
+                WHERE app_label = 'heslar' and model = 'ruiankraj';
             """)
             result = cursor.fetchone()
             projekt_id = result[0] if result else None
@@ -289,6 +289,7 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
         ("id", "tvar"),
         ("id", "auth_user_groups"),
         ("id", "auth_group"),
+        ("id", "notifikace_projekty_pes"),
     )
     for item in tables:
         destination_cursor.execute(f"SELECT SETVAL("

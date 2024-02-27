@@ -303,6 +303,7 @@ class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
         )
         self.fields["ez"] = forms.ChoiceField(
             label=_("ez.forms.pripojitExterniOdkazForm.vyberEZ.label"),
+            help_text=_("ez.forms.pripojitExterniOdkazForm.vyberEZ.tooltip"),
             choices=new_choices,
             widget=autocomplete.ListSelect2(url=reverse("ez:ez-autocomplete")),
         )
