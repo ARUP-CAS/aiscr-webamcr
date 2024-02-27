@@ -43,7 +43,7 @@ from heslar.hesla import (
     HESLAR_ZEME,
     HESLAR_DOHLEDNOST,
     HESLAR_LETISTE,
-    HESLAR_POCASI,
+    HESLAR_POCASI, HESLAR_LICENCE,
 )
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
@@ -135,7 +135,12 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         null=True,
         related_name="dokument_historie",
     )
-    licence = models.TextField(blank=True, null=True)
+    licence = models.ForeignKey(
+        Heslar,
+        models.RESTRICT,
+        related_name="dokumenty_licence_temp",
+        limit_choices_to={"nazev_heslare": HESLAR_LICENCE},
+    )
     jazyky = models.ManyToManyField(
         Heslar,
         through="DokumentJazyk",
