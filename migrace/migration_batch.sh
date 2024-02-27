@@ -83,6 +83,7 @@ migration_scripts=(
 "54_soubor_size.sql"
 "57_migrace_oprava_pes.sql"
 "58_oprava_razeni_pristupnost.sql"
+"59_heslare_upravy.sql"
 "99_migrace_notifikace_nove.sql"
 "99_set_DB_privileges.sql"
 "99_ruian_nastaveni_issue_372.sql"
