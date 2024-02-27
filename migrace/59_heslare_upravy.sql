@@ -1,3 +1,35 @@
+-- Odstranění řad ZA a ZL
+DELETE FROM heslar WHERE ident_cely in ('HES-000884', 'HES-000885');
+
+-- Úprava lokalit
+UPDATE lokalita SET druh = (SELECT id FROM heslar WHERE ident_cely = 'HES-000117') WHERE druh = (SELECT id FROM heslar WHERE ident_cely = 'HES-000127');
+UPDATE lokalita SET druh = (SELECT id FROM heslar WHERE ident_cely = 'HES-000117') WHERE druh = (SELECT id FROM heslar WHERE ident_cely = 'HES-000131');
+
+-- Úprava posudků
+WITH posudky AS
+(
+    SELECT DISTINCT dokument as dok, (SELECT id FROM heslar WHERE ident_cely = 'HES-000615') as pos FROM dokument_posudek
+    WHERE posudek = (SELECT id FROM heslar WHERE ident_cely = 'HES-000611')
+)
+INSERT INTO dokument_posudek (dokument, posudek) SELECT dok, pos FROM posudky WHERE NOT EXISTS (SELECT * FROM dokument_posudek WHERE dokument = dok AND posudek = pos);
+DELETE FROM dokument_posudek WHERE posudek = (SELECT id FROM heslar WHERE ident_cely = 'HES-000611');
+
+WITH posudky AS
+(
+    SELECT DISTINCT dokument as dok, (SELECT id FROM heslar WHERE ident_cely = 'HES-000613') as pos FROM dokument_posudek
+    WHERE posudek = (SELECT id FROM heslar WHERE ident_cely = 'HES-000616')
+)
+INSERT INTO dokument_posudek (dokument, posudek) SELECT dok, pos FROM posudky WHERE NOT EXISTS (SELECT * FROM dokument_posudek WHERE dokument = dok AND posudek = pos);
+DELETE FROM dokument_posudek WHERE posudek = (SELECT id FROM heslar WHERE ident_cely = 'HES-000616');
+
+WITH posudky AS
+(
+    SELECT DISTINCT dokument as dok, (SELECT id FROM heslar WHERE ident_cely = 'HES-000628') as pos FROM dokument_posudek
+    WHERE posudek = (SELECT id FROM heslar WHERE ident_cely = 'HES-000622')
+)
+INSERT INTO dokument_posudek (dokument, posudek) SELECT dok, pos FROM posudky WHERE NOT EXISTS (SELECT * FROM dokument_posudek WHERE dokument = dok AND posudek = pos);
+DELETE FROM dokument_posudek WHERE posudek = (SELECT id FROM heslar WHERE ident_cely = 'HES-000622');
+
 -- Úprava hesel
 UPDATE heslar SET razeni = 1, heslo = 'odborný záměr', heslo_en = 'expert project', zkratka = '', popis = '' WHERE ident_cely = 'HES-000594';
 UPDATE heslar SET razeni = 2, heslo = 'badatelský záměr', heslo_en = 'research project', zkratka = '', popis = '' WHERE ident_cely = 'HES-000595';
