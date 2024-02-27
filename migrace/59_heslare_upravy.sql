@@ -308,7 +308,7 @@ UPDATE heslar SET razeni = 1, heslo = 'primárně digitální dokument', heslo_e
 UPDATE heslar SET razeni = 2, heslo = 'archiv ARÚB', heslo_en = 'IAB archive', popis = '' WHERE ident_cely = 'HES-001167';
 UPDATE heslar SET razeni = 3, heslo = 'archiv ARÚ', heslo_en = 'IAP archive', popis = '' WHERE ident_cely = 'HES-001168';
 UPDATE heslar SET razeni = 4, heslo = 'archiv jiné organizace', heslo_en = 'other institutional archive', popis = '' WHERE ident_cely = 'HES-001169';
-UPDATE heslar SET razeni = 5, heslo = 'archiv autora', heslo_en = 'author's archive', popis = 'fyzická osoba' WHERE ident_cely = 'HES-001170';
+UPDATE heslar SET razeni = 5, heslo = 'archiv autora', heslo_en = 'author''s archive', popis = 'fyzická osoba' WHERE ident_cely = 'HES-001170';
 UPDATE heslar SET razeni = 6, heslo = 'originál ztracen/zničen', heslo_en = 'original lost/destroyed', popis = '' WHERE ident_cely = 'HES-001171';
 UPDATE heslar SET razeni = 7, heslo = 'neznámé uložení', heslo_en = 'unknown deposition', popis = '' WHERE ident_cely = 'HES-001172';
 UPDATE heslar SET razeni = 1, heslo = '80–100%', heslo_en = '80–100%', zkratka = '1', popis = 'zachovalost 80–100%, skenován' WHERE ident_cely = 'HES-001173';
