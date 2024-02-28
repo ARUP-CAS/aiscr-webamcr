@@ -99,5 +99,5 @@ class TestEnvPopupMiddleware:
                 midnight = (now + timedelta(days=1)).replace(hour=0, minute = 0, second=0)
                 cache.set(cache_name,True,(midnight - now).seconds)
                 messages.add_message(
-                                request, messages.WARNING, NEPRODUKCNI_PROSTREDI_INFO
+                                request, messages.WARNING, NEPRODUKCNI_PROSTREDI_INFO, 'notclosing'
                             )
