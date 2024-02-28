@@ -1,5 +1,4 @@
 import logging
-from io import StringIO
 
 from dal import autocomplete
 from django.contrib import messages
@@ -46,6 +45,7 @@ from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, A
 from uzivatel.models import Osoba, User, UserNotificationType
 from core.views import PermissionFilterMixin
 from core.models import Permissions as p, check_permissions
+from services.mailer import Mailer
 
 logger = logging.getLogger(__name__)
 
@@ -329,6 +329,8 @@ class UserActivationView(ActivationView):
         username = self.validate_key(kwargs.get("activation_key"))
         user = self.get_user(username)
         user.save()
+        Mailer.send_eu02(user=user)
+        Mailer.send_eu04(user=user)
         return user
 
 

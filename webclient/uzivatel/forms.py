@@ -1,3 +1,4 @@
+import logging
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout, Field
 from crispy_forms.bootstrap import AppendedText
@@ -14,6 +15,7 @@ from core.widgets import ForeignKeyReadOnlyTextInput
 from core.validators import validate_phone_number
 from .models import Osoba, User, UserNotificationType
 
+logger = logging.getLogger(__name__)
 
 class AuthUserCreationForm(RegistrationForm):
     """

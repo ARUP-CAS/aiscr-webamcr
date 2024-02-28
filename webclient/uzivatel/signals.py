@@ -67,7 +67,6 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
     if not instance.suppress_signal:
         instance.save_metadata()
     send_deactivation_email(sender, instance, **kwargs)
-    send_new_user_email_to_admin(sender, instance, created)
     send_account_confirmed_email(sender, instance, created)
     # Create or change token when user changed.
     try:
@@ -95,21 +94,11 @@ def send_deactivation_email(sender, instance: User, **kwargs):
     logger.debug("uzivatel.signals.send_deactivation_email.end", extra={"user": instance.ident_cely})
 
 
-def send_new_user_email_to_admin(sender, instance: User, created):
-    """
-    Signál pro zaslání info o nově registrovaném uživately adminovy.
-    """
-    logger.debug("uzivatel.signals.send_new_user_email_to_admin.start", extra={"user": instance.ident_cely})
-    if created is True and instance.created_from_admin_panel is False:
-        Mailer.send_eu04(user=instance)
-    logger.debug("uzivatel.signals.send_new_user_email_to_admin.end", extra={"user": instance.ident_cely})
-
-
 def send_account_confirmed_email(sender, instance: User, created):
     """
     signál pro zaslání emailu uživately o jeho konfirmaci.
     """
-    logger.debug("uzivatel.signals.send_account_confirmed_email.start", extra={"user": instance.ident_cely})
+    logger.debug("uzivatel.signals.send_account_confirmed_email.start", extra={"user": instance.ident_cely,"user_created": created,"created_from_admin_panel": instance.created_from_admin_panel})
     if created is True and instance.created_from_admin_panel is True:
         Mailer.send_eu02(user=instance)
     logger.debug("uzivatel.signals.send_account_confirmed_email.end", extra={"user": instance.ident_cely})

@@ -410,8 +410,7 @@ def create(request):
                     projekt.create_confirmation_document(user=request.user)
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                 if projekt.ident_cely[0] == OBLAST_CECHY:
-                    pass
-                    # Mailer.send_ep01a(project=projekt)
+                    Mailer.send_ep01a(project=projekt)
                 else:
                     Mailer.send_ep01b(project=projekt)
                 return redirect("projekt:detail", ident_cely=projekt.ident_cely)

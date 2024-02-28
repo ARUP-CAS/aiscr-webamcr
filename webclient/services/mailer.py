@@ -179,7 +179,7 @@ class Mailer:
             "phone": user.telefon,
             "admin_link": f"/admin/uzivatel/user/{user.pk}/change/"
         })
-        superusers = uzivatel.models.User.objects.filter(is_superuser=True)
+        superusers = uzivatel.models.User.objects.filter(notification_types__ident_cely='E-U-04')
         for superuser in superusers:
             if Mailer._notification_should_be_sent(notification_type=notification_type, user=superuser):
                 cls.__send(notification_type.predmet, superuser.email, html, notification_type=notification_type,
@@ -507,6 +507,7 @@ class Mailer:
                 "lokalita": project.lokalizace,
                 "reason": reason,
                 "datum_oznameni": datum_oznameni,
+                "ident_cely": project.ident_cely,
             }
             html = render_to_string(notification_type.cesta_sablony, context)
             cls.__send(subject=subject, to=project.oznamovatel.email, html_content=html,

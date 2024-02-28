@@ -5,7 +5,7 @@ Dobrý den,
 tato zpráva slouží k ověření vaší emailové adresy, což je nezbytný krok pro získání přístupu do AMČR.
 
 Svoji emailovou adresu ověříte kliknutím na níže uvedený odkaz:
-{{ site }}{% url 'django_registration_activate' activation_key %}
+{% get_site_url %}{% url 'django_registration_activate' activation_key %}
 
 Tento odkaz expiruje za {{ expiration_days }} dní.
 
@@ -20,7 +20,7 @@ Hello,
 This message is to verify your email address, which is a necessary step to gain access to the AMCR.
 
 You can verify your email address by clicking on the link below:
-{{ site }}{% url 'django_registration_activate' activation_key %}
+{% get_site_url %}{% url 'django_registration_activate' activation_key %}
 
 This link expires in {{ expiration_days }} days.
 

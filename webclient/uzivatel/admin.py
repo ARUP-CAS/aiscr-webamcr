@@ -12,7 +12,7 @@ from django_object_actions import DjangoObjectActions, action
 
 from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN, ZMENA_HESLA_ADMIN
 from historie.models import Historie
-from services.mailer import Mailer, NOTIFICATION_GROUPS
+from services.mailer import Mailer
 from notifikace_projekty.models import Pes
 from notifikace_projekty.forms import KATASTR_CONTENT_TYPE, KRAJ_CONTENT_TYPE, OKRES_CONTENT_TYPE, create_pes_form
 from .forms import AuthUserCreationForm
@@ -34,7 +34,8 @@ class UserNotificationTypeInlineForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(UserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
         self.fields['usernotificationtype'].queryset = UserNotificationType.objects.filter(
-            ident_cely__in=["E-A-01", "E-A-02", "E-N-01", "E-N-02", "E-N-05", "E-K-01", "E-U-04"]
+            Q(ident_cely__icontains='S-E-')
+            |Q(ident_cely='E-U-04')
         )
 
 
@@ -46,9 +47,11 @@ class UserNotificationTypeInline(admin.TabularInline):
     form = UserNotificationTypeInlineForm
 
     def get_queryset(self, request):
+        logger.debug(self.model._default_manager)
         queryset = super(UserNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(
-            usernotificationtype__ident_cely__in=["E-A-01", "E-A-02", "E-N-01", "E-N-02", "E-N-05", "E-K-01", "E-U-04"]
+            Q(usernotificationtype__ident_cely__icontains='S-E-')
+            |Q(usernotificationtype__ident_cely='E-U-04')
         )
         return queryset
 
@@ -176,6 +179,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     def save_model(self, request, obj: User, form, change):
         user = request.user
         user.created_from_admin_panel = True
+        obj.created_from_admin_panel = True
         logger.debug("uzivatel.admin.save_model.start",
                      extra={"user": user.pk, "obj_pk": obj.pk, "change": change, "form": form})
         basic_groups_ids_list = [ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]
@@ -205,7 +209,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         groups = form_groups.filter(id__in=basic_groups_ids_list)
         other_groups = form_groups.filter(~Q(id__in=basic_groups_ids_list))
         group_ids = groups.values_list('id', flat=True)
-        all_grouos_ids = form_groups.values_list('id', flat=True)
+        all_groups_ids = form_groups.values_list('id', flat=True)
         if group_ids.count() > 0:
             max_id = max(group_ids)
         else:
@@ -245,33 +249,21 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                      extra={"user": obj.pk, "group_count": groups.count()})
         if groups.count() == 0:
             logger.debug("uzivatel.admin.save_model.manage_user_groups.badatel_added", extra={"user": obj.pk})
-            group = Group.objects.get(pk=ROLE_BADATEL_ID)
-            transaction.on_commit(lambda: obj.groups.set([group] + list(other_groups.values_list('id', flat=True)),
+            group = Group.objects.filter(pk=ROLE_BADATEL_ID)
+            transaction.on_commit(lambda: obj.groups.set([group.first()] + list(other_groups.values_list('id', flat=True)),
                                   clear=True))
+            all_groups_ids = all_groups_ids.union(group.values_list('id', flat=True))
         elif groups.count() > 1:
             transaction.on_commit(lambda: obj.groups.set([max_id] + list(other_groups.values_list('id', flat=True)),
                                   clear=True))
-        if change is False:
-            Mailer.send_eu02(user=obj)
-        else:
-            if user_db_group_ids != set(all_grouos_ids):
-                Mailer.send_eu06(user=obj, groups=[main_group] + list(other_groups))
+        if user_db_group_ids != set(all_groups_ids):
+            logger.debug("send activate email or change email")
+            Mailer.send_eu06(user=obj, groups=[main_group] + list(other_groups))
         logger.debug("uzivatel.admin.save_model.manage_user_groups.highest_groups",
                      extra={"user": obj.pk, "user_groups": obj.groups.values_list('id', flat=True)})
         logger.debug("uzivatel.admin.save_model.manage_user_groups",
                      extra={"max_id": max_id, "hlavni_role_pk": obj.hlavni_role.pk})
 
-    def save_formset(self, request, form, formset, change):
-        super().save_formset(request, form, formset, change)
-        user = User.objects.get(email=form.cleaned_data.get("email"))
-        notification_idents = set([x.ident_cely for x in UserNotificationType.objects.filter(user=user)])
-        for group_ident, current_group_notification_idents in NOTIFICATION_GROUPS.items():
-            current_group_notification_idents = set(current_group_notification_idents)
-            group_obj = UserNotificationType.objects.get(ident_cely=group_ident)
-            if current_group_notification_idents.issubset(notification_idents):
-                user.notification_types.add(group_obj)
-            else:
-                user.notification_types.remove(group_obj)
 
     def user_change_password(self, request, id, form_url=""):
         if request.method == "POST":
