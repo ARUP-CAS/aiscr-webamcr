@@ -214,7 +214,7 @@ services:
     restart: always
     environment:
       - DATA_SOURCE_URI="192.168.254.30:5432/postgres?sslmode=disable"
-      - DATA_SOURCE_USER=postgres1
+      - DATA_SOURCE_USER=postgres
       - DATA_SOURCE_PASS=/run/secrets/postgresql_exporter_password
     networks:
       - prod-net
