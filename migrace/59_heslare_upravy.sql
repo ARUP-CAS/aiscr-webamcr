@@ -112,7 +112,7 @@ UPDATE heslar SET razeni = 40, heslo = 'kultovní areál', heslo_en = 'ritual si
 UPDATE heslar SET razeni = 41, heslo = 'kaple', heslo_en = 'chapel', popis = '' WHERE ident_cely = 'HES-000020';
 UPDATE heslar SET razeni = 42, heslo = 'kostel', heslo_en = 'church', popis = '' WHERE ident_cely = 'HES-000021';
 UPDATE heslar SET razeni = 43, heslo = 'kříž/boží muka', heslo_en = 'cross/calvary', popis = '' WHERE ident_cely = 'HES-000022';
-UPDATE heslar SET razeni = 44, heslo = 'kultovní místo', heslo_en = 'ritual site', popis = '' WHERE ident_cely = 'HES-000023';
+UPDATE heslar SET razeni = 44, heslo = 'kultovní místo', heslo_en = 'ritual place', popis = '' WHERE ident_cely = 'HES-000023';
 UPDATE heslar SET razeni = 45, heslo = 'synagoga', heslo_en = 'synagogue', popis = '' WHERE ident_cely = 'HES-000024';
 UPDATE heslar SET razeni = 50, heslo = 'pohřební areál', heslo_en = 'burial site', popis = 'prostor výhradně či převážně užívaný k pohřbívání' WHERE ident_cely = 'HES-000025';
 UPDATE heslar SET razeni = 51, heslo = 'izolovaný pohřeb', heslo_en = 'isolated grave', popis = '' WHERE ident_cely = 'HES-000026';
