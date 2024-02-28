@@ -209,6 +209,19 @@ services:
       - "8088:8080"
     restart: always
 
+  postgresql_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter
+    restart: always
+    environment:
+      - DATA_SOURCE_URI="192.168.254.30:5432/postgres?sslmode=disable"
+      - DATA_SOURCE_USER=postgres
+      - DATA_SOURCE_PASS=/run/secrets/postgresql_exporter_password
+    networks:
+      - prod-net
+    secrets:
+      - postgresql_exporter
+
+
 volumes:
   static_data:
   locale_data:
@@ -240,4 +253,5 @@ secrets:
     external: true
   redis_data:
     external: true
-
+  postgresql_exporter:
+    external: true
