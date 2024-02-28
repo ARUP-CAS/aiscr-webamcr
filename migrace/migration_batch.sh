@@ -90,6 +90,7 @@ migration_scripts=(
 "migrace_mazani.sql"
 "99_ruian_nastaveni_issue_372.sql"
 "projekty_zahajeni.sql"
+"projekty_P18.sql"
 )
 
 
