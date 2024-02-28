@@ -130,7 +130,7 @@
       <xs:element name="oznaceni_originalu" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{oznaceni_originalu}" -->
       <xs:element name="popis" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{popis}" -->
       <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
-      <xs:element name="licence" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> <!-- "{licence.ident_cely}" | "{licence.heslo}" -->
+      <xs:element name="licence" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{licence.ident_cely}" | "{licence.heslo}" -->
       <xs:element name="osoba" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{osoby.ident_cely}" | "{osoby.vypis_cely}" -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
       <xs:element name="soubor" minOccurs="0" maxOccurs="unbounded" type="amcr:souborType"/>  <!-- "{soubory.soubory}" -->
