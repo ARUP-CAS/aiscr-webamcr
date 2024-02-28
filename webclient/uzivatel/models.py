@@ -392,8 +392,6 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     Class pro db model typ user notifikace.
     """
     ident_cely = models.TextField(unique=True)
-    text_cs = models.TextField()
-    text_en = models.TextField()
 
     def _get_settings_dict(self) -> Optional[dict]:
         if self.ident_cely in notification_settings:
