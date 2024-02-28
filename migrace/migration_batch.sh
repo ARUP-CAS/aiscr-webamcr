@@ -89,7 +89,8 @@ migration_scripts=(
 "999_prevod_null_hodnot_texty.sql"
 "migrace_mazani.sql"
 "99_ruian_nastaveni_issue_372.sql"
-"projekty_zahajeni.sql"
+"projekty_zahajeni_1.sql"
+"projekty_zahajeni_2.sql"
 "projekty_P18.sql"
 )
 
