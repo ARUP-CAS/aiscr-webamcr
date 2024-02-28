@@ -36,7 +36,7 @@ insert into nalez(komponenta, typ_nalezu, kategorie, druh_nalezu, specifikace, p
 
 -- 2. externi_zdroj.podnazev (migrace do nazev), oznaceni (migrace do nazev)
 UPDATE externi_zdroj SET nazev = externi_zdroj.nazev || ': ' || externi_zdroj.podnazev WHERE not(coalesce(externi_zdroj.podnazev, '') = '');
-UPDATE externi_zdroj SET nazev = externi_zdroj.oznaceni WHERE not(coalesce(externi_zdroj.oznaceni, '') = '') AND externi_zdroj.typ=5;
+UPDATE externi_zdroj SET nazev = externi_zdroj.oznaceni WHERE not(coalesce(externi_zdroj.oznaceni, '') = '') AND externi_zdroj.typ = (SELECT id FROM heslar WHERE ident_cely = 'HES-001121');
 
 -- 3. TODO vyskovy_bod.geom co kam?
 
