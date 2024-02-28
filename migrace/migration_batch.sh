@@ -86,9 +86,9 @@ migration_scripts=(
 "59_heslare_upravy.sql"
 "99_migrace_notifikace_nove.sql"
 "99_set_DB_privileges.sql"
-"99_ruian_nastaveni_issue_372.sql"
 "999_prevod_null_hodnot_texty.sql"
 "migrace_mazani.sql"
+"99_ruian_nastaveni_issue_372.sql"
 "projekty_zahajeni.sql"
 )
 
