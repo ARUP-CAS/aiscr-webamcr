@@ -1,18 +1,18 @@
 import logging
 
-from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY, PROJEKT_STAV_VYTVORENY
+from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
 from core.models import SouborVazby
 from core.repository_connector import FedoraTransaction
 from cron.tasks import update_single_redis_snapshot
-from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
+from django.db.models.signals import pre_save, post_save, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
-from dokument.models import Dokument, DokumentCast
+from dokument.models import DokumentCast
 from historie.models import HistorieVazby
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
-from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued, METADATA_UPDATE_TIMEOUT
+from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +24,12 @@ def projekt_pre_save(sender, instance, **kwargs):
     """
     create_projekt_vazby(sender, instance)
     change_termin_odevzdani_NZ(sender, instance)
-    if instance.pk is not None:
-        if instance.stav == PROJEKT_STAV_ZAPSANY:
+    
+    if instance.stav == PROJEKT_STAV_ZAPSANY:
+        if instance.pk is not None:
             instance.__original_stav = Projekt.objects.get(pk=instance.id).stav
+        else:
+            instance.__original_stav = None
 
 
 def change_termin_odevzdani_NZ(sender, instance, **kwargs):
