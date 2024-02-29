@@ -249,6 +249,7 @@ volumes:
   grafana_data:
   redis_data:
   prometheus_data:
+  db_dev_data:
 
 networks:
   prod-net:
