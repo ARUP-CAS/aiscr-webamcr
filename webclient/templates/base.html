@@ -104,7 +104,7 @@
 
     <div class="message-container">
       {% for message in messages %}
-        <div class="alert alert-{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show app-alert-floating" role="alert">
+        <div class="alert alert-{% if message.tags == "notclosing warning" %}warning notclosing{% elif message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show app-alert-floating" role="alert">
           {{ message }}
           <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
@@ -129,7 +129,7 @@
           endDate: new Date(2100,12,31)
       }));
 
-      $(".app-alert-floating").delay(5000).slideUp(200, function () {
+      $(".app-alert-floating").not(".notclosing").delay(5000).slideUp(200, function () {
         $(this).alert('close');
       });
       const checkUserAuthentication = () => {
