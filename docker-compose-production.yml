@@ -28,6 +28,24 @@ services:
       - celery_worker
       - celery_beat
 
+  db:
+    image: postgis/postgis:14-3.3
+    ports:
+      - "5432:5432"
+    secrets:
+      - local_db_pass
+    environment:
+      - POSTGRES_DB=db_copy_test
+      - POSTGRES_PASSWORD_FILE=/run/secrets/local_db_pass
+    volumes:
+      - db_dev_data:/var/lib/postgresql/data
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "2G"
+
   sidecar:
     image: eeacms/rsync:latest
     environment:
@@ -231,6 +249,7 @@ volumes:
   grafana_data:
   redis_data:
   prometheus_data:
+  local_db_pass:
 
 networks:
   prod-net:
