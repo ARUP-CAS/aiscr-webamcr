@@ -157,7 +157,7 @@ services:
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
-      - ELASTIC_HOSTS=http://192.168.254.30:9200
+      - ELASTIC_HOSTS=logstash_elastic_host
     volumes:
       - logs_volume:/logs
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
@@ -165,6 +165,7 @@ services:
       - prod-net
     secrets:
       - logstash_elastic_pass
+      - logstash_elastic_host
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
@@ -231,14 +232,14 @@ services:
     image: quay.io/prometheuscommunity/postgres-exporter
     restart: always
     environment:
-      - DATA_SOURCE_URI="192.168.254.30:5432/postgres?sslmode=disable"
+      - DATA_SOURCE_URI=/run/secrets/postgresql_exporter_uri
       - DATA_SOURCE_USER=postgres
-      - DATA_SOURCE_PASS=/run/secrets/postgresql_exporter_password
+      - DATA_SOURCE_PASS=/run/secrets/postgresql_exporter
     networks:
       - prod-net
     secrets:
       - postgresql_exporter
-
+      - postgresql_exporter_uri
 
 volumes:
   static_data:
@@ -275,4 +276,8 @@ secrets:
   postgresql_exporter:
     external: true
   local_db_pass:
+    external: true
+  postgresql_exporter_uri:
+    external: true
+  logstash_elastic_host:
     external: true
