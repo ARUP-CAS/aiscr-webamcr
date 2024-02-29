@@ -159,12 +159,10 @@ class Migration(migrations.Migration):
             name='RuianKatastr',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('aktualni', models.BooleanField(verbose_name='heslar.models.RuianKatastr.aktualni')),
                 ('nazev', models.TextField(verbose_name='heslar.models.RuianKatastr.nazev')),
                 ('kod', models.IntegerField(verbose_name='heslar.models.RuianKatastr.kod')),
                 ('definicni_bod', django.contrib.gis.db.models.fields.PointField(srid=4326, verbose_name='heslar.models.RuianKatastr.definicni_bod')),
                 ('hranice', django.contrib.gis.db.models.fields.MultiPolygonField(srid=4326, verbose_name='heslar.models.RuianKatastr.hranice')),
-                ('nazev_stary', models.TextField(blank=True, null=True, verbose_name='heslar.models.RuianKatastr.nazev_stary')),
                 ('okres', models.ForeignKey(db_column='okres', on_delete=django.db.models.deletion.RESTRICT, to='heslar.ruianokres', verbose_name='heslar.models.RuianKatastr.okres')),
             ],
             options={

@@ -20,11 +20,6 @@ class Migration(migrations.Migration):
             field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='pian.pian', verbose_name='heslar.models.RuianKatastr.pian'),
         ),
         migrations.AddField(
-            model_name='ruiankatastr',
-            name='soucasny',
-            field=models.ForeignKey(blank=True, db_column='soucasny', null=True, on_delete=django.db.models.deletion.RESTRICT, to='heslar.ruiankatastr', verbose_name='heslar.models.RuianKatastr.soucasny'),
-        ),
-        migrations.AddField(
             model_name='heslarodkaz',
             name='heslo',
             field=models.ForeignKey(db_column='heslo', on_delete=django.db.models.deletion.CASCADE, to='heslar.heslar', verbose_name='heslar.models.HeslarOdkaz.heslo'),

@@ -224,7 +224,7 @@ class HeslarRuianKatastrAdmin(HeslarRuianAdmin):
     """
     Admin část pro správu modelu ruian katastr.
     """
-    list_display = ("nazev", "okres", "pian_ident_cely", "kod", "nazev_stary")
-    fields = ("aktualni", "nazev", "kod", "nazev_stary", "okres")
-    search_fields = ("okres__nazev", "aktualni", "nazev", "kod", "nazev_stary")
-    list_filter = ("okres", "okres__kraj", "aktualni")
+    list_display = ("nazev", "okres", "pian_ident_cely", "kod")
+    fields = ("nazev", "kod", "okres")
+    search_fields = ("okres__nazev", "nazev", "kod")
+    list_filter = ("okres", "okres__kraj")
