@@ -246,18 +246,12 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
     """
     okres = models.ForeignKey("RuianOkres", models.RESTRICT, db_column="okres", db_index=True,
                               verbose_name=_("heslar.models.RuianKatastr.okres"))
-    aktualni = models.BooleanField(verbose_name=_("heslar.models.RuianKatastr.aktualni"))
     nazev = models.TextField(verbose_name=_("heslar.models.RuianKatastr.nazev"), db_index=True)
     kod = models.IntegerField(verbose_name=_("heslar.models.RuianKatastr.kod"), db_index=True)
     definicni_bod = pgmodels.PointField(verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326)
     hranice = pgmodels.MultiPolygonField(verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
-    nazev_stary = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.nazev_stary"))
     pian = models.OneToOneField("pian.Pian", models.SET_NULL, verbose_name=_("heslar.models.RuianKatastr.pian"),
                                 null=True, blank=True)
-    soucasny = models.ForeignKey(
-        "self", models.RESTRICT, db_column="soucasny", blank=True, null=True,
-        verbose_name=_("heslar.models.RuianKatastr.soucasny")
-    )
 
     @property
     def pian_ident_cely(self):
@@ -290,10 +284,6 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
     definicni_bod = pgmodels.PointField(null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"),
                                         srid=4326)
     hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
-    # TODO: BUG FIX #474 when ready #372
-    # definicni_bod = pgmodels.PointField(blank=True, null=False, verbose_name=_("heslar.models.RuianKraj.definicni_bod"))
-    # END of TODO
-    # aktualni = models.BooleanField(blank=True, null=True, verbose_name=_("heslar.models.RuianKraj.aktualni")) #Removed by #474
 
     class Meta:
         db_table = "ruian_kraj"

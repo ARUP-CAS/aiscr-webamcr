@@ -119,8 +119,8 @@ def get_cadastre_from_point(point):
     Funkce pro získaní katastru z bodu geomu.
     """
     query = (
-        "select id, nazev_stary from public.ruian_katastr where "
-        "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) and aktualni='t' limit 1"
+        "select id, nazev from public.ruian_katastr where "
+        "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) limit 1"
     )
     try:
         katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])[0]
@@ -139,8 +139,8 @@ def get_cadastre_from_point_with_geometry(point):
     Funkce pro získaní katastru s geometrií z bodu geomu.
     """
     query = (
-        "select id, nazev_stary,ST_AsText(definicni_bod) AS db, ST_AsText(hranice) AS hranice from public.ruian_katastr where "
-        "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) and aktualni='t' limit 1"
+        "select id, nazev,ST_AsText(definicni_bod) AS db, ST_AsText(hranice) AS hranice from public.ruian_katastr where "
+        "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) limit 1"
     )
     try:
         logger.debug(
@@ -163,7 +163,7 @@ def get_all_pians_with_akce(ident_cely):
     Funkce pro získaní všech pianů s akci.
     """
     query = (
-        " (SELECT A.id,A.ident_cely,ST_AsText(A.geom) as geometry, A.dj,katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
+        " (SELECT A.id,A.ident_cely,ST_AsText(A.geom) as geometry, A.dj,katastr.nazev AS katastr_nazev, katastr.id as ku_id"
         " FROM public.ruian_katastr katastr "
         " JOIN ( SELECT pian.id,pian.ident_cely, "
         "  CASE "
@@ -177,12 +177,11 @@ def get_all_pians_with_akce(ident_cely):
         " ORDER BY A.ident_cely "
         " LIMIT 1 )"
         " union all "
-        "(select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj, katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
+        "(select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj, katastr.nazev AS katastr_nazev, katastr.id as ku_id"
         " from public.pian pian"
         " left join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely LIKE %s"
         " left join public.ruian_katastr katastr ON ST_Intersects(katastr.hranice,pian.geom)"
         " where dj.ident_cely IS NOT NULL"
-        " and katastr.aktualni=true"
         " order by dj.ident_cely, katastr_nazev"
         " limit 990)"
     )
@@ -208,7 +207,7 @@ def get_all_pians_with_akce(ident_cely):
         return None
 
 
-def update_main_katastr_within_ku(ident_cely, ku_nazev_stary):
+def update_main_katastr_within_ku(ident_cely, ku_nazev):
     """
     Funkce pro update katastru u akce podle katastrálního území.
     """
@@ -216,14 +215,14 @@ def update_main_katastr_within_ku(ident_cely, ku_nazev_stary):
 
     query_update_archz = (
         "update PUBLIC.archeologicky_zaznam set hlavni_katastr="
-        " (select id from public.ruian_katastr where nazev_stary=%s and aktualni='t' limit 1)"
+        " (select id from public.ruian_katastr where nazev=%s limit 1)"
         " where ident_cely = %s and typ_zaznamu IN('L')"
     )
 
     try:
-        if len(ku_nazev_stary) > 2:
+        if len(ku_nazev) > 2:
             cursor = connection.cursor()
-            cursor.execute(query_update_archz, [ku_nazev_stary, akce_ident_cely])
+            cursor.execute(query_update_archz, [ku_nazev, akce_ident_cely])
     except IndexError:
         return None
 
@@ -286,12 +285,12 @@ def get_centre_from_akce(katastr, akce_ident_cely):
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
         " from public.ruian_katastr where "
-        " upper(nazev_stary)=upper(%s) and aktualni='t' limit 1"
+        " upper(nazev)=upper(%s)"
     )
     query_old = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
         " from public.ruian_katastr where "
-        " upper(nazev_stary)=upper(%s) and aktualni<>'t' limit 1"
+        " upper(nazev)=upper(%s)"
     )
     try:
         bod_ku = None

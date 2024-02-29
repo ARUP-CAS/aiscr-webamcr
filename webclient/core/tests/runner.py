@@ -881,7 +881,6 @@ class AMCGithubTestRunner(AMCRBaseTestRunner):
             nazev="ODROVICE",
             okres=okres_brno_venkov,
             kod=3,
-            aktualni=True,
             definicni_bod=GEOSGeometry(
                 "0101000020E610000042D35729E77F3040234F91EAF9804840"
             ),
@@ -902,7 +901,6 @@ class AMCGithubTestRunner(AMCRBaseTestRunner):
             nazev="JOSEFOV",
             okres=okres_praha,
             kod=316655,
-            aktualni=True,
             definicni_bod=GEOSGeometry(
                 "0101000020E61000006690F8F089D62C40957C231E2F0B4940"
             ),
@@ -972,7 +970,7 @@ class AMCRSeleniumTestRunner(AMCRBaseTestRunner):
             tables = (
                 ("id, nazev, kod, rada_id, definicni_bod, hranice, nazev_en", "public.ruian_kraj", "id, nazev, kod, rada_id, definicni_bod, hranice, nazev_en"),
                 ("id, nazev, kraj, spz, kod, nazev_en, COALESCE(hranice, ST_GeomFromText('MULTIPOLYGON(((-74.013751 40.711976, -74.01344 40.712439,-74.012834 40.712191,-74.013145 40.711732,-74.013751 40.711976)),((-74.013622 40.710772,-74.013311 40.711236,-74.012699 40.710992,-74.013021 40.710532,-74.013622 40.710772)))', 4326)) AS hranice, COALESCE(definicni_bod, ST_GeomFromText('POINT(-71.060316 48.432044)', 4326)) AS definicni_bod", "ruian_okres", "id, nazev, kraj, spz, kod, nazev_en, hranice, definicni_bod"),
-                ("id, okres, aktualni, nazev, kod, definicni_bod, hranice, nazev_stary, soucasny", "ruian_katastr", "id, okres, aktualni, nazev, kod, definicni_bod, hranice, nazev_stary, soucasny"),
+                ("id, okres, nazev, kod, definicni_bod, hranice, nazev", "ruian_katastr", "id, okres, nazev, kod, definicni_bod, hranice, nazev"),
             )
             for table in tables:
                 prod_cursor.execute(f"SELECT {table[0]} FROM {table[1]}")

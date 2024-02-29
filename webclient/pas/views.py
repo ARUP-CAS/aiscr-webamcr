@@ -988,7 +988,7 @@ def post_point_position_2_katastre(request):
     if katastr_name is not None:
         return JsonResponse(
             {
-                "katastr_name": katastr_name.nazev_stary,
+                "katastr_name": katastr_name.nazev,
             },
             status=200,
         )
