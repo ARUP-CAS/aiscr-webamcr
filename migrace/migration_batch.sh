@@ -12,7 +12,9 @@ else
   echo "Username has to be set as a second parameter."
 fi
 
-migration_scripts=("chyby_dat.sql"
+migration_scripts=(
+"vlastnictvi_zmeny.sql"
+"chyby_dat.sql"
 "migrace_1.sql"
 "migrace_2.sql"
 "migrace_3.sql"
@@ -54,6 +56,7 @@ migration_scripts=("chyby_dat.sql"
 "30_geometry_migration_timestamp.sql"
 "33_komponenta_boolean.sql"
 "33_typ_souboru.sql"
+"34_presnost_bodu.sql"
 "35_vyskovy_bod_geom.sql"
 "36_migrace-sam_nalez.sql"
 "37_odstavka_systemu.sql"
@@ -79,10 +82,16 @@ migration_scripts=("chyby_dat.sql"
 "54_rename_and_update_notifications.sql"
 "54_soubor_size.sql"
 "57_migrace_oprava_pes.sql"
+"58_oprava_razeni_pristupnost.sql"
+"59_heslare_upravy.sql"
 "99_migrace_notifikace_nove.sql"
 "99_set_DB_privileges.sql"
 "999_prevod_null_hodnot_texty.sql"
 "migrace_mazani.sql"
+"99_ruian_nastaveni_issue_372.sql"
+"projekty_zahajeni_1.sql"
+"projekty_zahajeni_2.sql"
+"projekty_P18.sql"
 )
 
 
