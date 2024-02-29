@@ -142,8 +142,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('ident_cely', models.TextField(unique=True)),
-                ('text_cs', models.TextField()),
-                ('text_en', models.TextField()),
             ],
             options={
                 'db_table': 'notifikace_typ',

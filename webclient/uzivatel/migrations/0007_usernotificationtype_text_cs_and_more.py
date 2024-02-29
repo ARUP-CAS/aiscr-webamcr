@@ -11,17 +11,4 @@ class Migration(migrations.Migration):
         ),
     ]
 
-    operations = [
-        migrations.AddField(
-            model_name="usernotificationtype",
-            name="text_cs",
-            field=models.TextField(default=""),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name="usernotificationtype",
-            name="text_en",
-            field=models.TextField(default=""),
-            preserve_default=False,
-        ),
-    ]
+    operations = []
