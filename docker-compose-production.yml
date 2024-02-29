@@ -249,7 +249,6 @@ volumes:
   grafana_data:
   redis_data:
   prometheus_data:
-  local_db_pass:
 
 networks:
   prod-net:
@@ -273,4 +272,6 @@ secrets:
   redis_data:
     external: true
   postgresql_exporter:
+    external: true
+  local_db_pass:
     external: true
