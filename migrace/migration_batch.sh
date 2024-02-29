@@ -91,6 +91,7 @@ migration_scripts=(
 "99_ruian_nastaveni_issue_372.sql"
 "projekty_zahajeni_1.sql"
 "projekty_zahajeni_2.sql"
+"projekty_zahajeni_3.sql"
 "projekty_P18.sql"
 )
 
