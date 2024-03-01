@@ -43,15 +43,17 @@
       <amcr:adresa>Letenská 123/4</amcr:adresa>
       <amcr:telefon>+420123123123</amcr:telefon>
       <amcr:email>oznamovatel@arup.cas.cz</amcr:email>
+      <amcr:poznamka>Alternativní telefon: +420123123123</amcr:poznamka>
     </amcr:oznamovatel>
     <amcr:soubor>
       <amcr:id>soub-1</amcr:id>
-      <amcr:path>http://fedora.aiscr.cz/rest/AMCR-test/C-201700002/file/39dc3dc9-aa6b-4034-becc-4f8cb1b94580</amcr:path>
+      <amcr:path>rest/AMCR/C-201700002/file/39dc3dc9-aa6b-4034-becc-4f8cb1b94580</amcr:path>
       <amcr:nazev>00002.pdf</amcr:nazev>
       <amcr:mimetype>application/pdf</amcr:mimetype>
       <amcr:rozsah>8</amcr:rozsah>
       <amcr:size_mb>15.167</amcr:size_mb>
       <amcr:sha_512>31163f0295075bb2b4c87311e1086638af3554bbb3f859ed7321dc9308d41e652c772211670b634c6c231c4e59d9c5c4ccb770676cccccd035d5710815588c89</amcr:sha_512>
+      <amcr:url>http://digiarchiv-test.aiscr.cz/id/C-202300529/file/3a1a5793-535a-4352-884f-69756d51d9b2</amcr:url>
       <amcr:historie>
         <amcr:id>hist-1</amcr:id>
         <amcr:datum_zmeny>2023-02-01T16:58:50Z</amcr:datum_zmeny>
@@ -221,7 +223,7 @@
     <amcr:oznaceni_originalu>1234/2018</amcr:oznaceni_originalu>
     <amcr:popis>Nálezovka o ničem.</amcr:popis>
     <amcr:poznamka>Je to prázdné.</amcr:poznamka>
-    <amcr:licence>https://creativecommons.org/licenses/by-nc/4.0/</amcr:licence>
+    <amcr:licence id="HES-123456" xml:lang="cs">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
     <amcr:osoba id="OS-123456">Novotný, Alois</amcr:osoba>
     <amcr:historie>
       <amcr:id>hist-1</amcr:id>
@@ -338,7 +340,7 @@
     <amcr:paginace_titulu>151-153</amcr:paginace_titulu>
     <amcr:link>http://amapa.cz/</amcr:link>
     <amcr:typ_dokumentu id="HES-123456" xml:lang="cs">text jiný</amcr:typ_dokumentu>
-    <amcr:organizace id="HES-123456" xml:lang="cs">Muzeum Mělník</amcr:organizace>
+    <amcr:organizace>Muzeum Mělník</amcr:organizace>
     <amcr:poznamka>Už nevím co psát.</amcr:poznamka>
     <amcr:historie>
       <amcr:id>hist-1</amcr:id>
