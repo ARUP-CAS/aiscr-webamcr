@@ -15,13 +15,12 @@ from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
     OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 from core.models import Soubor
-from cron.convertToSJTSK import get_multi_transform_to_sjtsk
+from core.coordTransform import get_multi_transform_to_sjtsk , get_multi_transform_to_wgs84
 from cron.classes import MyList
 from cron.functions import collect_en01_en02
 from django.db import connection, transaction
 from django.utils.translation import gettext as _
 
-from cron.convertToWGS84 import get_multi_transform_to_wgs84
 from dj.models import DokumentacniJednotka
 from dokument.filters import HistorieFilter
 from dokument.models import Dokument, Let, DokumentCast
@@ -72,7 +71,7 @@ def send_notifications():
 
 
 @shared_task
-def pian_to_sjstk():
+def pian_to_sjtsk():
     try:
         count_selected_wgs84 = 0
         count_updated_sjtsk = 0
@@ -99,7 +98,7 @@ def pian_to_sjstk():
         try:
             l = MyList()
             xx = []
-            pians = Pian.objects.raw(query_select, [self.NUM_TO_SJTSK_CONVERT])
+            pians = Pian.objects.raw(query_select, [NUM_TO_SJTSK_CONVERT])
             for pian in pians:
                 count_selected_wgs84 += 1
                 l.add(pian.id, pian.geometry)
@@ -118,7 +117,7 @@ def pian_to_sjstk():
                         with connection.cursor() as cursor:
                             count_updated_sjtsk += 1
                             cursor.execute(
-                                query_update, [l4[i][0], l4[i][1], xx[i]]
+                                query_update, [l4[i][1], l4[i][0], xx[i]]
                             )
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -137,7 +136,7 @@ def pian_to_sjstk():
             logger.debug(traceback.format_exc())
             return None
     except Exception as err:
-        logger.error("cron.pian_to_sjstk.do.error", extra={"error": err})
+        logger.error("cron.pian_to_sjtsk.do.error", extra={"error": err})
 
 
 @shared_task
@@ -189,7 +188,7 @@ def pian_to_wsg_84():
                             with connection.cursor() as cursor:
                                 count_selected_wgs84 += 1
                                 cursor.execute(
-                                    query_update, [l4[i][0], l4[i][1], xx[i]]
+                                    query_update, [l4[i][1], l4[i][0], xx[i]]
                                 )
                     with connection.cursor() as cursor:
                         cursor.execute(
@@ -283,7 +282,7 @@ def nalez_to_sjtsk():
                         with connection.cursor() as cursor:
                             count_updated_sjtsk += 1
                             cursor.execute(
-                                query_update, [l4[i][0], l4[i][1], xx[i]]
+                                query_update, [l4[i][1], l4[i][0], xx[i]]
                             )
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -306,7 +305,7 @@ def nalez_to_sjtsk():
 
 
 @shared_task
-def nalez_to_wsg84(self):
+def nalez_to_wsg84():
     try:
         count_selected_sjtsk = 0
         count_selected_wgs84 = 0
@@ -335,7 +334,7 @@ def nalez_to_wsg84(self):
             l = MyList()
             xx = []
             SNs = SamostatnyNalez.objects.raw(
-                query_select, [self.NUM_TO_WGS84_CONVERT]
+                query_select, [NUM_TO_WGS84_CONVERT]
             )
             for SN in SNs:
                 count_selected_sjtsk += 1
@@ -356,7 +355,7 @@ def nalez_to_wsg84(self):
                             with connection.cursor() as cursor:
                                 count_selected_wgs84 += 1
                                 cursor.execute(
-                                    query_update, [l4[i][0], l4[i][1], xx[i]]
+                                    query_update, [l4[i][1], l4[i][0], xx[i]]
                                 )
                     with connection.cursor() as cursor:
                         cursor.execute(

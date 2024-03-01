@@ -7,12 +7,21 @@ function convertToJTSK(longitude, latitude, height=0){
     }
     else{
         var latitude, longitude, X05,Y05,X,Y;
-        [latitude, longitude] = wgs84_to_bessel(latitude, longitude);
+        [latitude, longitude] = wgs84_to_bessel(latitude, longitude, height);
         [X05,Y05]= bessel_to_jtsk(latitude, longitude);
         [X,Y] = jtsk05_to_jtsk(X05,Y05);
         return [-Y,-X];
     }
 }
+
+function convertToWGS84( minusY, minusX, height=0){
+        [X05,Y05] = jtsk_to_jtsk05(-minusX,-minusY);
+        [latitude, longitude]= jtsk_to_bessel(X05,Y05);
+        [latitude, longitude] = bessel_to_wgs84(latitude, longitude, height)    ;  
+        return [longitude, latitude];
+}   
+
+
 function radians(x){
     return x/180* Math.PI;
 }
@@ -28,10 +37,10 @@ function wgs84_to_bessel(latitude, longitude, altitude=0.0){
     l = radians(longitude);
     h = altitude;
 
-    [x1, y1, z1] = blht_to_geo_coords(b, l, h);
+    [x1, y1, z1] = blht_to_geo_coords_wgs(b, l, h);
     [x2, y2, z2] = WGS2ETRFtransform_coords(x1, y1, z1);
     [x3, y3, z3] = ETRF2JTSK05transform_coords(x2, y2, z2);
-    [b, l, h] = geo_coords_to_blh(x3, y3, z3);
+    [b, l, h] = geo_coords_to_blh_bessel(x3, y3, z3);
 
     latitude = degrees(b);
     longitude = degrees(l);   
@@ -39,6 +48,20 @@ function wgs84_to_bessel(latitude, longitude, altitude=0.0){
     return [latitude, longitude];
 }
 
+function bessel_to_wgs84(latitude, longitude ,altitude=0.0){  
+    var b,l,h,x1, y1, z1,x2, y2, z2,x3, y3, z3;
+    b=radians(latitude);
+    l=radians(longitude);
+    h = altitude;
+    [x1, y1, z1] = blht_to_geo_coords_bessel(b, l, h);
+    [x2, y2, z2] = JTSK052ETRFtransform_coords(x1, y1, z1);
+    [x3, y3, z3] = ETRF2WGStransform_coords(x2, y2, z2);
+    
+    [b, l, h] = geo_coords_to_blh_wgs(x3, y3, z3);
+    latitude = degrees(b);
+    longitude = degrees(l);
+    return [latitude, longitude]
+}
 
 function bessel_to_jtsk(B, L){
     var fi0, a, e2, e,alfa, Uq,U0, gfi0, k, k1, N0, S0, n,rho_0, gB,U,lam,dV, a_c, S,D,eps;
@@ -101,9 +124,74 @@ function bessel_to_jtsk(B, L){
 
 }
 
+function jtsk_to_bessel(X05,Y05){
+    var rho,Xc,Yc,A1,A2,A3,A4,A5, A6, A7,A8,A9,A10;
+    var fi0, a, e2, e,alfa, Uq,U0, gfi0, k, k1, N0, S0, n,rho_0, U,dV, a_c, S,D,eps;
+    Yc=Y05-5000000.0;
+    Xc=X05-5000000.0;
+
+    fi0=radians(49.5);
+    a=6377397.155;
+    e2=0.00667437223062;
+    e=Math.pow(e2,0.5);
+    alfa=Math.pow((1+(e2*Math.pow(Math.cos(fi0),4))/(1-e2)),0.5);
+    Uq=radians(59+42/60+42.69689/3600);
+    U0=Math.asin(Math.sin(fi0)/alfa);
+    gfi0=Math.pow(((1+e*Math.sin(fi0))/(1-e*Math.sin(fi0))),(alfa*e/2));
+    k=Math.tan(U0/2+radians(45))*(Math.pow(Math.tan(fi0/2+radians(45)),-alfa))*gfi0;
+    k1=0.9999;
+    N0=(a*Math.pow((1-e2),0.5))/(1-e2*Math.pow(Math.sin(fi0),2));
+    S0=radians(78.5);
+    n=Math.sin(S0);
+    rho_0=k1*N0*(1/Math.tan(S0));
+    a_c=radians(90)-Uq;
+
+    var Xred,Yred,dX,dY,Y05,X05,B,L;
+    Yred=Yc-654000.0;
+    Xred=Xc-1089000.0;
+    A1 = 0.2946529277e-01;
+    A2 = 0.2515965696e-01;
+    A3 = 0.1193845912e-06;
+    A4 = -0.4668270147e-06;
+    A5 = 0.9233980362e-11;
+    A6 = 0.1523735715e-11;
+    A7 = 0.1696780024e-17;
+    A8 = 0.4408314235e-17;
+    A9 = -0.8331083518e-23;
+    A10 = -0.3689471323e-23;
+
+    dY=A2+A3*Yred+A4*Xred+2*A5*Yred*Xred+A6*(Math.pow(Xred,2)-Math.pow(Yred,2))+A8*Xred*(Math.pow(Xred,2)-3*Math.pow(Yred,2))+
+         A7*Yred*(3*Math.pow(Xred,2)-Math.pow(Yred,2))-4*A10*Yred*Xred*(Math.pow(Xred,2)-Math.pow(Yred,2))+A9*(Math.pow(Xred,4)+Math.pow(Yred,4)-6*Math.pow(Xred,2)*Math.pow(Yred,2));
+    dX=A1+A3*Xred-A4*Yred-2*A6*Yred*Xred+A5*(Math.pow(Xred,2)-Math.pow(Yred,2))+A7*Xred*(Math.pow(Xred,2)-3*Math.pow(Yred,2))-
+        A8*Yred*(3*Math.pow(Xred,2)-Math.pow(Yred,2))+4*A9*Yred*Xred*(Math.pow(Xred,2)-Math.pow(Yred,2))+A10*(Math.pow(Xred,4)+Math.pow(Yred,4)-6*Math.pow(Xred,2)*Math.pow(Yred,2));
+
+    Yc=Y05+dY-5000000.0;
+    Xc=X05+dX-5000000.0;
+
+    rho=Math.pow((Math.pow(Xc,2)+Math.pow(Yc,2)),0.5);
+    eps=Math.atan(Yc/Xc);
+    D=eps/Math.sin(S0);
+    S=2*(Math.atan((Math.pow((rho_0/rho),(1/n)))*Math.tan(S0/2+radians(45)))-radians(45));
+    U=Math.asin(Math.cos(a_c)*Math.sin(S)-Math.sin(a_c)*Math.cos(S)*Math.cos(D));
+    dV=Math.asin((Math.cos(S)*Math.sin(D))/Math.cos(U));
+    L=radians(24+50/60)-dV/alfa;
+    Bi=U;
+    i=0;
+    while(true){
+        B=2*(Math.atan(Math.pow(k,(-1/alfa))*Math.pow(Math.tan(U/2+radians(45)),(1/alfa))*Math.pow(((1+e*Math.sin(Bi))/(1-e*Math.sin(Bi))),(e/2)))-radians(45));
+        if(Math.abs(Bi-B)<0.000000001 || i>50)
+            break;
+        Bi=B;
+        i+=1;
+    }
+    var lat=degrees(B);
+    var lon=degrees(L);
+    return [lat,lon];
+}
+
 
 // Conversion from geodetic coordinates to Cartesian coordinates
-function blht_to_geo_coords(b, l, h){
+function blht_to_geo_coords_wgs(b, l, h){
     // WGS-84 ellipsoid parameters
     var a, e2,N,x,y,z;
     a = 6378137.0;
@@ -116,8 +204,23 @@ function blht_to_geo_coords(b, l, h){
     return [x, y, z];
 }
 
+// Conversion from geodetic coordinates to Cartesian coordinates
+function blht_to_geo_coords_bessel(b, l, h){
+    //Bessel's ellipsoid parameters
+    var a, e2,N,x,y,z;
+    a = 6377397.155
+    e2 = 0.00667437223062
+    N = a / Math.sqrt(1 - e2 * Math.pow(Math.sin(b), 2));
+    x = (N + h) * Math.cos(b) * Math.cos(l);
+    y = (N + h) * Math.cos(b) * Math.sin(l);
+    z = (N * (1 - e2) + h) * Math.sin(b);
+
+    return [x, y, z];
+}
+
+
 // Conversion from Cartesian coordinates to geodetic coordinates
-function geo_coords_to_blh(X, Y, Z){
+function geo_coords_to_blh_bessel(X, Y, Z){
     // Bessel's ellipsoid parameters
     var a,e2,L,B0 ,i,N1,Hel,B;
     a = 6377397.155;
@@ -129,7 +232,29 @@ function geo_coords_to_blh(X, Y, Z){
         N1=a/(Math.pow((1-e2*(Math.pow(Math.sin(B0),2))),0.5))
         Hel=(Math.pow((Math.pow(X,2)+Math.pow(Y,2)),0.5))/Math.cos(B0)-N1
         B=Math.atan(Z/(Math.pow((Math.pow(X,2)+Math.pow(Y,2)),0.5))*Math.pow((1-(N1*e2)/(N1+Hel)),-1))
-        if(Math.abs( B0-B)<0.00001 || i>50){
+        if(Math.abs( B0-B)<0.000000001 || i>50){
+            break
+        }
+        B0=B;
+        i++;
+    }  
+    return [B,L,Hel];
+}
+
+// Conversion from Cartesian coordinates to geodetic coordinates
+function geo_coords_to_blh_wgs(X, Y, Z){
+    var a,e2,L,B0 ,i,N1,Hel,B;
+    // WGS-84 ellipsoid parameters
+    a = 6378137.0
+    e2 = 0.006694380022901
+    L = Math.atan(Y/X);
+    B0= Math.atan(Z/(Math.pow((Math.pow(X,2)+Math.pow(Y,2)),0.5))*(1+e2/(1-e2)));
+    i=0;
+    while(true){
+        N1=a/(Math.pow((1-e2*(Math.pow(Math.sin(B0),2))),0.5))
+        Hel=(Math.pow((Math.pow(X,2)+Math.pow(Y,2)),0.5))/Math.cos(B0)-N1
+        B=Math.atan(Z/(Math.pow((Math.pow(X,2)+Math.pow(Y,2)),0.5))*Math.pow((1-(N1*e2)/(N1+Hel)),-1))
+        if(Math.abs( B0-B)<0.000000001 || i>50){
             break
         }
         B0=B;
@@ -159,6 +284,27 @@ function ETRF2JTSK05transform_coords(xs, ys, zs){
     return [xn, yn, zn];
 }
 
+// Coordinates transformation
+function JTSK052ETRFtransform_coords(xs, ys, zs){
+    // coeficients of transformation from WGS-84 to JTSK
+    var p1,p2,p3,p4,p5,p6,p7,ro;
+    var xn,yn,zn;
+    p1 = 572.213;
+    p2 = 85.334;
+    p3 = 461.940  ;
+    ro=206264.806;
+    p5 = -5.24836073/ro;
+    p6 = -1.52899176/ro;
+    p7 = -4.97316164/ro;
+    p4 = 3.5378e-6  ;
+
+    xn = p1 + (1 + p4) * (+xs + p5 * ys - p6* zs);
+    yn = p2 + (1 + p4) * (-p5 * xs + ys + p7 * zs);
+    zn = p3 + (1 + p4) * (+p6 * xs - p7 * ys + zs);
+
+    return [xn, yn, zn];
+}
+
 function WGS2ETRFtransform_coords(xs, ys, zs){
     var p1,p2,p3,p4,p5,p6,p7,ro;
     var xn,yn,zn;
@@ -180,18 +326,45 @@ function WGS2ETRFtransform_coords(xs, ys, zs){
     return [xn, yn, zn];
 }
 
+function ETRF2WGStransform_coords(xs, ys, zs){
+    var p1,p2,p3,p4,p5,p6,p7,ro;
+    var xn,yn,zn;
+    var today=new Date();
+
+    var epoch=today.getFullYear()-2000+(today.getMonth())/12+(today.getDate()-1)/365.25;
+    ro=1/3600/180*Math.PI/1000;
+    p1=-(5.21E-02+1E-04*epoch);
+    p2=-(4.93E-02+1E-04*epoch);
+    p3=-(-5.85E-02-1.8E-03*epoch);
+    p4=-(1.34E-09+8E-11*epoch);
+    p5=-(0.891+0.081*epoch)*ro;
+    p6=-(5.390+0.490*epoch)*ro;
+    p7=-(-8.712-0.792*epoch)*ro;
+
+    xn = xs+p1+p4*xs-p7*ys+p6*zs;
+    yn = ys+p2+p4*ys+p7*xs-p5*zs;
+    zn = zs+p3+p4*zs-p6*xs+p5*ys;
+    return [xn, yn, zn];
+}
 function jtsk05_to_jtsk(x05,y05){
     var hy,hx,redyx0,redyx1,redyx2,redyx3;
     x05-=5000000;
     y05-=5000000;
     hy=parseInt(y05/2000)*2000;
     hx=parseInt(x05/2000)*2000;
-
+    
     redyx0=CORRTABLE[hy/1000+hx];
     redyx1=CORRTABLE[(hy+2000)/1000+hx];
     redyx2=CORRTABLE[hy/1000+hx+2000];
     redyx3=CORRTABLE[(hy+2000)/1000+hx+2000];
-
+  
+    if(redyx0==undefined ||redyx1==undefined || redyx2==undefined||redyx3==undefined ){
+        console.log('Varovani:pro zadane souradnice nenalezeny korekce');
+        redyx0=[0,0];
+        redyx1=[0,0];
+        redyx2=[0,0];
+        redyx3=[0,0];
+    }
     var coefY=(y05-hy)/2000;
     var coefX=(x05-hx)/2000;
     var redX1=redyx1[1]*coefY+redyx0[1]*(1-coefY);
@@ -205,3 +378,33 @@ function jtsk05_to_jtsk(x05,y05){
     return[x05-redX,y05-redY];
 }
 
+function jtsk_to_jtsk05(X,Y){
+    var hy,hx,redyx0,redyx1,redyx2,redyx3;
+    hy=parseInt(Y/2000)*2000;
+    hx=parseInt(X/2000)*2000;
+
+    redyx0=CORRTABLE[hy/1000+hx];
+    redyx1=CORRTABLE[(hy+2000)/1000+hx];
+    redyx2=CORRTABLE[hy/1000+hx+2000];
+    redyx3=CORRTABLE[(hy+2000)/1000+hx+2000];
+ 
+    if(redyx0==undefined ||redyx1==undefined || redyx2==undefined||redyx3==undefined ){
+        console.log('Varovani:pro zadane souradnice nenalezeny korekce');
+        redyx0=[0,0];
+        redyx1=[0,0];
+        redyx2=[0,0];
+        redyx3=[0,0];
+    }
+    
+    var coefY=(Y-hy)/2000;
+    var coefX=(X-hx)/2000;
+    var redX1=redyx1[1]*coefY+redyx0[1]*(1-coefY);
+    var redX2=redyx3[1]*coefY+redyx2[1]*(1-coefY);
+    var redX=redX1*(1-coefX)+redX2*coefX;
+    
+    var redY1=redyx1[0]*coefY+redyx0[0]*(1-coefY);
+    var redY2=redyx3[0]*coefY+redyx2[0]*(1-coefY);
+    var redY=redY1*(1-coefX)+redY2*coefX;
+    
+    return [X+redX+5000000,Y+redY+5000000];
+}
