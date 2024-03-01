@@ -38,8 +38,9 @@ fedora_server_name=$(jq -r '.FEDORA_SERVER_NAME' "$file_path")
 fedora_port_number=$(jq -r '.FEDORA_PORT_NUMBER' "$file_path")
 fedora_user=$(jq -r '.FEDORA_ADMIN_USER' "$file_path")
 fedora_user_password=$(jq -r '.FEDORA_ADMIN_USER_PASSWORD' "$file_path")
+fedora_protocol=$(jq -r '.FEDORA_PROTOCOL' "$file_path")
 
-url="http://${fedora_server_hostname}:${fedora_port_number}/rest/${fedora_server_name}"
+url="${fedora_protocol}://${fedora_server_hostname}:${fedora_port_number}/rest/${fedora_server_name}"
 fedora_status_code=$(curl -o /dev/null -s -w "%{http_code}" -u "${fedora_user}":"${fedora_user_password}" "$url")
 echo "HTTP status code from FEDORA is ${fedora_status_code}"
 
