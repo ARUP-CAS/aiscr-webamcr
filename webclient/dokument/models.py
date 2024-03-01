@@ -135,7 +135,6 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         null=True,
         related_name="dokument_historie",
     )
-    licence = models.TextField(blank=True, null=True)
     licence = models.ForeignKey(
         Heslar,
         models.RESTRICT,
