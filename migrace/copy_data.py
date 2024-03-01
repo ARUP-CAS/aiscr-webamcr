@@ -6,6 +6,7 @@ import traceback
 
 import psycopg2
 from django.contrib.auth.hashers import PBKDF2PasswordHasher
+from psycopg2.extras import DateRange
 
 from core.ident_cely import get_heslar_ident
 from dokument.models import Dokument
@@ -23,7 +24,7 @@ def item_to_str(item):
     if isinstance(item, str):
         item = item.replace("'", "''")
         return f"'{item}'"
-    if isinstance(item, datetime.datetime) or isinstance(item, datetime.date):
+    if isinstance(item, datetime.datetime) or isinstance(item, datetime.date) or isinstance(item, DateRange):
         return f"'{item}'"
     return str(item)
 
