@@ -8,11 +8,6 @@ import psycopg2
 from django.contrib.auth.hashers import PBKDF2PasswordHasher
 from psycopg2.extras import DateRange
 
-from core.ident_cely import get_heslar_ident
-from dokument.models import Dokument
-from heslar.hesla import HESLAR_LICENCE
-from heslar.models import HeslarNazev, Heslar
-
 SOURCE_DB_NAME = "django_migrated_db_source_db"
 DEFAULT_BATCH_SIZE = 10000
 TABLE_BATCH_SIZE = {"dokument_sekvence": 10 ** 4, "dokument_jazyk": 10 ** 4}
@@ -39,26 +34,6 @@ def write_batch(table_name, column_names, query_data, destination_cursor, destin
             print(err)
             print(query)
         destination_conn.commit()
-
-
-def set_licence_new_value():
-    heslar_nazev_licence = HeslarNazev(id=HESLAR_LICENCE, nazev="dokument_licence", povolit_zmeny=True)
-    heslar_nazev_licence.save()
-    licence_creative_commons = Heslar(heslo="Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní",
-                                      heslo_en="Creative Commons Attribution-NonCommercial 4.0 International",
-                                      zkratka="CC BY-NC 4.0", zkratka_en="CC BY-NC 4.0", razeni=1,
-                                      nazev_heslare=heslar_nazev_licence, ident_cely=get_heslar_ident())
-    licence_creative_commons.save()
-    licence_neznama = Heslar(heslo="neznámá", heslo_en="unknown", zkratka="neznámá", zkratka_en="unknown", razeni=2,
-                             nazev_heslare=heslar_nazev_licence, ident_cely=get_heslar_ident())
-    licence_neznama.save()
-    pristupnost_neznama = Heslar.objects.get(ident_cely="HES-000868")
-    for instance in Dokument.objects.all():
-        if instance.organizace.zverejneni_pristupnost == pristupnost_neznama:
-            instance.licence = licence_neznama
-        else:
-            instance.licence = licence_creative_commons
-        instance.save()
 
 
 def copy_data(source_host, destination_host, source_db, destination_db, source_user, destination_user, source_password,
@@ -98,8 +73,6 @@ def copy_data(source_host, destination_host, source_db, destination_db, source_u
 
         # execute SQL query to copy data from prod_zaloha.ruian_katastr to test_prod_zaloha.ruian_katastr
         tables = (
-            (f"id, object_id, created_at, {get_content_type(destination_cursor)} AS content_type_id, user_id",
-             "notifikace_projekty_pes"),
             ("*", "odstavky_systemu"),
             ("*", "heslar_nazev"),
             ("*", "heslar"),
@@ -112,7 +85,7 @@ def copy_data(source_host, destination_host, source_db, destination_db, source_u
             ("*", "historie_vazby"),
             ("*", "auth_user"),
             ("*", "auth_group"),
-            ("id, ident_cely, predmet AS text_cs, '' AS text_en", "notifikace_typ"),
+            ("*", "notifikace_typ"),
             ("*", "auth_user_notifikace_typ"),
             ("*", "historie"),
             ("*", "kladysm5"),
@@ -161,6 +134,8 @@ def copy_data(source_host, destination_host, source_db, destination_db, source_u
             ("*", "uzivatel_spoluprace"),
             ("*", "auth_user_groups"),
             ("*", "tvar"),
+            (f"id, object_id, created_at, {get_content_type(destination_cursor)} AS content_type_id, user_id",
+             "notifikace_projekty_pes"),
         )
         table_names = [i[1] for i in tables]
         table_names.reverse()
@@ -334,12 +309,15 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
 
 
 if __name__ == "__main__":
+    if len(sys.argv) >= 10 and sys.argv[9] == "true":
+        truncate_all = True
+    else:
+        truncate_all = False
     copy_data(source_host=sys.argv[1], destination_host=sys.argv[2],
               source_db=sys.argv[3], destination_db=sys.argv[4],
               source_user=sys.argv[5], destination_user=sys.argv[6],
-              source_password=sys.argv[7], destination_password=sys.argv[8], truncate_all=True)
+              source_password=sys.argv[7], destination_password=sys.argv[8], truncate_all=truncate_all)
     encrypt_passwords(destination_host=sys.argv[2], destination_db=sys.argv[4], destination_user=sys.argv[6],
                       destination_password=sys.argv[8])
     reset_sequences(destination_host=sys.argv[2], destination_db=sys.argv[4], destination_user=sys.argv[6],
-                      destination_password=sys.argv[8])
-    set_licence_new_value()
+                    destination_password=sys.argv[8])
