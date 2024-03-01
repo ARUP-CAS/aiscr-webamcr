@@ -2,7 +2,7 @@ from .base import *
 
 DEBUG = True
 
-ALLOWED_HOSTS = get_secret("ALLOWED_HOSTS")
+ALLOWED_HOSTS = get_secret("ALLOWED_HOSTS").split()
 
 RECAPTCHA_PUBLIC_KEY = "6LcgsmQaAAAAAPqzAQkryJGl34AWzU3DsN9Pyf__"
 RECAPTCHA_PRIVATE_KEY = get_secret("RECAPTCHA_PRIVATE_KEY")
