@@ -54,9 +54,9 @@ def set_licence_new_value():
     pristupnost_neznama = Heslar.objects.get(ident_cely="HES-000868")
     for instance in Dokument.objects.all():
         if instance.organizace.zverejneni_pristupnost == pristupnost_neznama:
-            instance.typ_licence = licence_neznama
+            instance.licence = licence_neznama
         else:
-            instance.typ_licence = licence_creative_commons
+            instance.licence = licence_creative_commons
         instance.save()
 
 

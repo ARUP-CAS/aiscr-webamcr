@@ -136,10 +136,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         related_name="dokument_historie",
     )
     licence = models.TextField(blank=True, null=True)
-    typ_licence = models.ForeignKey(
+    licence = models.ForeignKey(
         Heslar,
         models.RESTRICT,
-        related_name="dokumenty_typ_licence",
+        related_name="dokumenty_licence",
         limit_choices_to={"nazev_heslare": HESLAR_LICENCE},
         null=True, blank=False,
     )
