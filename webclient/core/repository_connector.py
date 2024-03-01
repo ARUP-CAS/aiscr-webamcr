@@ -147,7 +147,7 @@ class FedoraRepositoryConnector:
 
     @staticmethod
     def get_base_url():
-        return (f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
+        return (f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
                 f"{settings.FEDORA_SERVER_NAME}")
 
     def _get_request_url(self, request_type: FedoraRequestType, *, uuid=None, ident_cely=None) -> Optional[str]:
