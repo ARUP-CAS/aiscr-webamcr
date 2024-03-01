@@ -275,3 +275,18 @@ smazáním všech záznamů s úrovní DEBUG.
        }
      }
    }
+
+
+Kontrola stavu kontejneru
+-------------------------
+
+Stav kontejneru může být zkontrolován pomocí příkazu
+
+::
+
+   docker inspect --format='{{json .State.Health}}' <container_name_or_id>
+
+Stav služby ve swarm módu může být zkontrolován příkazem
+
+::
+   docker service ps <service_name> --no-trunc
