@@ -237,6 +237,8 @@ services:
       - DATA_SOURCE_PASS=/run/secrets/postgresql_exporter
     networks:
       - prod-net
+    ports:
+      - "9187:9187"
     secrets:
       - postgresql_exporter
       - postgresql_exporter_uri
