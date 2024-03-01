@@ -91,9 +91,6 @@ ALTER TABLE heslar_odkaz ADD CONSTRAINT heslar_odkaz_heslo_fkey foreign key (hes
 
 --1. akce.ulozeni_dokumentace
 alter table akce add column ulozeni_dokumentace text;
---2. dokument.licence
-alter table dokument add column licence text;
-ALTER TABLE dokument ADD typ_licence integer;
 --3. lokalita.zachovalost
 alter table lokalita add column zachovalost integer;
 --4. lokalita.jistota
