@@ -427,19 +427,7 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
         verbose_name_plural = _("uzivatel.models.UserNotificationType.namePlural")
 
     def __str__(self):
-        if get_language() == "en":
-            if self.text_en:
-                return self.text_en
-            elif self.text_cs:
-                return self.text_cs
-            else:
-                return self.ident_cely
-        else:
-            if self.text_cs:
-                return self.text_cs
-            else:
-                return self.ident_cely
-
+        return self.ident_cely
 
 class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Model):
     """
