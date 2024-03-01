@@ -119,7 +119,7 @@ class DokumentTable(SearchTable):
     ulozeni_originalu = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.ulozeni_originalu.label"))
     oznaceni_originalu = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.oznaceni_originalu.label"))
     datum_zverejneni = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.datum_zverejneni.label"))
-    licence = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.licence.label"))
+    typ_licence = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.licence.label"))
     nahled = tables.columns.Column(
         default="",
         accessor="soubory",
@@ -159,7 +159,7 @@ class DokumentTable(SearchTable):
         "material_originalu",
         "extra_data__format",
         "ulozeni_originalu",
-        "licence",
+        "typ_licence",
         "let",
         "extra_data__zachovalost",
         "extra_data__nahrada",
@@ -217,7 +217,7 @@ class DokumentTable(SearchTable):
             "ulozeni_originalu",
             "oznaceni_originalu",
             "datum_zverejneni",
-            "licence",
+            "typ_licence",
             "extra_data__format",
             "extra_data__datum_vzniku",
             "extra_data__cislo_objektu",
@@ -255,7 +255,7 @@ class DokumentTable(SearchTable):
             "material_originalu",
             "extra_data__format",
             "ulozeni_originalu",
-            "licence",
+            "typ_licence",
             "let",
             "extra_data__zachovalost",
             "extra_data__nahrada",

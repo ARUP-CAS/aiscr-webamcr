@@ -14,12 +14,13 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="dokument",
-            name="licence_new",
+            name="typ_licence",
             field=models.ForeignKey(
-                limit_choices_to={"nazev_heslare": 45},
+                blank=True,
+                limit_choices_to={"nazev_heslare": 50},
                 null=True,
                 on_delete=django.db.models.deletion.RESTRICT,
-                related_name="dokumenty_licence",
+                related_name="dokumenty_typ_licence",
                 to="heslar.heslar",
             ),
         ),

@@ -1976,7 +1976,7 @@ def get_required_fields_dokument(zaznam=None, next=0):
             "organizace",
             "typ_dokumentu",
             "material_originalu",
-            "licence",
+            "typ_licence",
         ]
     if stav > D_STAV_ZAPSANY - next:
         required_fields += [

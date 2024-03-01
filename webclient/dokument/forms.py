@@ -319,7 +319,7 @@ class EditDokumentForm(forms.ModelForm):
             "ulozeni_originalu",
             "oznaceni_originalu",
             "datum_zverejneni",
-            "licence",
+            "typ_licence",
             "jazyky",
             "posudky",
             "autori",
@@ -351,7 +351,7 @@ class EditDokumentForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "oznaceni_originalu": forms.TextInput(),
-            "licence":  forms.Select(
+            "typ_licence":  forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "popis": forms.TextInput(),
@@ -368,7 +368,7 @@ class EditDokumentForm(forms.ModelForm):
             "oznaceni_originalu": _("dokument.forms.editDokumentForm.oznaceniOriginalu.label"),
             "pristupnost": _("dokument.forms.editDokumentForm.pristupnost.label"),
             "datum_zverejneni": _("dokument.forms.editDokumentForm.datumZverejneni.label"),
-            "licence": _("dokument.forms.editDokumentForm.licence.label"),
+            "typ_licence": _("dokument.forms.editDokumentForm.licence.label"),
             "jazyky": _("dokument.forms.editDokumentForm.jazyky.label"),
             "posudky": _("dokument.forms.editDokumentForm.posudky.label"),
         }
@@ -391,7 +391,7 @@ class EditDokumentForm(forms.ModelForm):
             "datum_zverejneni": _(
                 "dokument.forms.editDokumentForm.datumZverejneni.tooltip"
             ),
-            "licence": _("dokument.forms.editDokumentForm.licence.tooltip"),
+            "typ_licence": _("dokument.forms.editDokumentForm.licence.tooltip"),
             "jazyky": _("dokument.forms.editDokumentForm.jazyky.tooltip"),
             "posudky": _("dokument.forms.editDokumentForm.posudky.tooltip"),
         }
@@ -440,8 +440,8 @@ class EditDokumentForm(forms.ModelForm):
                     heslo="primárně digitální dokument",
                 ).pk
             ]
-            self.fields["licence"].initial = (Heslar.objects.filter(nazev_heslare=HESLAR_LICENCE)
-                                              .order_by("razeni").first())
+            self.fields["typ_licence"].initial = (Heslar.objects.filter(nazev_heslare=HESLAR_LICENCE)
+                                                  .order_by("razeni").first())
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
@@ -457,7 +457,7 @@ class EditDokumentForm(forms.ModelForm):
                 Div("oznaceni_originalu", css_class="col-sm-2"),
                 Div("posudky", css_class="col-sm-2"),
                 Div("pristupnost", css_class="col-sm-2"),
-                Div("licence", css_class="col-sm-2"),
+                Div("typ_licence", css_class="col-sm-2"),
                 Div("datum_zverejneni", css_class="col-sm-2"),
                 Div("region", style="display: none"),
                 css_class="row",

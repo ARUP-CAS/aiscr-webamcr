@@ -135,11 +135,13 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         null=True,
         related_name="dokument_historie",
     )
-    licence = models.ForeignKey(
+    licence = models.TextField(blank=True, null=True)
+    typ_licence = models.ForeignKey(
         Heslar,
         models.RESTRICT,
-        related_name="dokumenty_licence_temp",
+        related_name="dokumenty_typ_licence",
         limit_choices_to={"nazev_heslare": HESLAR_LICENCE},
+        null=True, blank=False,
     )
     jazyky = models.ManyToManyField(
         Heslar,

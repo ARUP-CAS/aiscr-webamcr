@@ -7,6 +7,11 @@ import traceback
 import psycopg2
 from django.contrib.auth.hashers import PBKDF2PasswordHasher
 
+from core.ident_cely import get_heslar_ident
+from dokument.models import Dokument
+from heslar.hesla import HESLAR_LICENCE
+from heslar.models import HeslarNazev, Heslar
+
 SOURCE_DB_NAME = "django_migrated_db_source_db"
 DEFAULT_BATCH_SIZE = 10000
 TABLE_BATCH_SIZE = {"dokument_sekvence": 10 ** 4, "dokument_jazyk": 10 ** 4}
@@ -33,6 +38,26 @@ def write_batch(table_name, column_names, query_data, destination_cursor, destin
             print(err)
             print(query)
         destination_conn.commit()
+
+
+def set_licence_new_value():
+    heslar_nazev_licence = HeslarNazev(id=HESLAR_LICENCE, nazev="dokument_licence", povolit_zmeny=True)
+    heslar_nazev_licence.save()
+    licence_creative_commons = Heslar(heslo="Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní",
+                                      heslo_en="Creative Commons Attribution-NonCommercial 4.0 International",
+                                      zkratka="CC BY-NC 4.0", zkratka_en="CC BY-NC 4.0", razeni=1,
+                                      nazev_heslare=heslar_nazev_licence, ident_cely=get_heslar_ident())
+    licence_creative_commons.save()
+    licence_neznama = Heslar(heslo="neznámá", heslo_en="unknown", zkratka="neznámá", zkratka_en="unknown", razeni=2,
+                             nazev_heslare=heslar_nazev_licence, ident_cely=get_heslar_ident())
+    licence_neznama.save()
+    pristupnost_neznama = Heslar.objects.get(ident_cely="HES-000868")
+    for instance in Dokument.objects.all():
+        if instance.organizace.zverejneni_pristupnost == pristupnost_neznama:
+            instance.typ_licence = licence_neznama
+        else:
+            instance.typ_licence = licence_creative_commons
+        instance.save()
 
 
 def copy_data(source_host, destination_host, source_db, destination_db, source_user, destination_user, source_password,
@@ -316,3 +341,4 @@ if __name__ == "__main__":
                       destination_password=sys.argv[8])
     reset_sequences(destination_host=sys.argv[2], destination_db=sys.argv[4], destination_user=sys.argv[6],
                       destination_password=sys.argv[8])
+    set_licence_new_value()
