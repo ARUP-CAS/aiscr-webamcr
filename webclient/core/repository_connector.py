@@ -261,7 +261,7 @@ class FedoraRepositoryConnector:
         if self.transaction_uid:
             if headers is None:
                 headers = {}
-            headers["Atomic-ID"] = (f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
+            headers["Atomic-ID"] = (f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
                                     f"fcr:tx/{self.transaction_uid}")
         if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
             response = requests.post(url, headers=headers, auth=auth, verify=False)
@@ -734,7 +734,7 @@ class FedoraRepositoryConnector:
             logger.warning("core_repository_connector.record_ident_change.no_ident_cely_old",
                          extra={"ident_cely": self.record.ident_cely})
             return
-        base_url = f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
+        base_url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
         ident_cely_new = self.record.ident_cely
         data = f"INSERT DATA {{<> <http://purl.org/dc/terms/isReplacedBy> " \
                f"'{base_url}{settings.FEDORA_SERVER_NAME}/record/{ident_cely_new}'}}"
@@ -837,7 +837,7 @@ class FedoraTransaction:
     def commit_transaction(self):
         logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.start",
                      extra={"transaction_uid": self.uid})
-        url = f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx/{self.uid}"
+        url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx/{self.uid}"
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         response = requests.put(url, auth=auth, verify=False)
         if not str(response.status_code).startswith("2"):
@@ -855,7 +855,7 @@ class FedoraTransaction:
 
     def __create_transaction(self):
         logger.debug("core_repository_connector.FedoraTransaction.__create_transaction.start")
-        url = f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx"
+        url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx"
         auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
         response = requests.post(url, auth=auth, verify=False)
         if not str(response.status_code).startswith("2"):
