@@ -151,7 +151,7 @@
                   }
               })
               .catch(error => console.error({% trans "base.authentication_check.error" %}, error));
-      }
+      };
       {% if not user.is_authenticated %}
           setInterval(checkUserAuthentication, 60000);
           window.addEventListener('focus', function() {
@@ -160,6 +160,39 @@
       {% else %}
           setTimeout(checkUserAuthentication,10);
       {% endif %}
+  </script>
+  <script>
+    $('#english').click(function(){
+      this.disabled=true;
+      $('#czech').attr("disabled", "disabled"); 
+      $.ajax({
+        type: "POST",
+        url: "{% url 'set_language' %}",
+        data: {'language': 'en', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+        success: function(response) {
+             location.reload();
+         },
+         error: function(rs, e) {
+                alert(e);
+         }
+   });
+    });
+    $('#czech').click(function(){
+      this.disabled=true;
+      $('#english').attr("disabled", "disabled"); 
+      $.ajax({
+        type: "POST",
+        url: "{% url 'set_language' %}",
+        data: {'language': 'cs', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+        success: function(response) {
+             location.reload();
+         },
+         error: function(rs, e) {
+                alert(e);
+         }
+   });
+    });
+    
   </script>
 
 {% block script %}

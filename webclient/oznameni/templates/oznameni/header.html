@@ -21,6 +21,17 @@
           <img src="{% static 'logo-arub-cs.png' %}" alt=""/>
         </a>
       </div>
+      <div class="col mt-3">
+        <div class="nav-item app-flags">
+          {% get_current_language as LANGUAGE_CODE %}
+          <button id="czech" class="nav-link {% if "cs" in LANGUAGE_CODE  %}app-active{% endif %}" >
+            <img src="{% static 'flag-cs.svg' %}" alt="" class="app-flag" />
+          </button>
+          <button id="english" class="nav-link {% if "en" in LANGUAGE_CODE %}app-active{% endif %}">
+            <img src="{% static 'flag-en.svg' %}" alt="" class="app-flag" />
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
