@@ -22,7 +22,7 @@
               img {
                 opacity: .5;
               }
-            }  
+            }
           }
 
           img {
@@ -35,7 +35,22 @@
             }
           }
         }
-      } 
+
+        .app-flags {
+          margin-top: -5px !important;
+
+          .nav-link {
+            background: transparent;
+            border: 0;
+            padding-top: 4px !important;
+            padding-bottom: 4px !important;
+
+            &:not(.app-active) {
+              @extend .app-flag-inactive;
+            }
+          }
+        }
+      }
     }
 
     .bs-stepper {
@@ -63,6 +78,7 @@
         th {
           max-width: 100px;
         }
+
         td {
           vertical-align: middle;
         }

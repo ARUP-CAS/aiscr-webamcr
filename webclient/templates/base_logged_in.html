@@ -405,39 +405,6 @@
     });
   </script>
   <script>
-    $('#english').click(function(){
-      this.disabled=true;
-      $('#czech').attr("disabled", "disabled"); 
-      $.ajax({
-        type: "POST",
-        url: "{% url 'set_language' %}",
-        data: {'language': 'en', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
-        success: function(response) {
-             location.reload();
-         },
-         error: function(rs, e) {
-                alert(e);
-         }
-   });
-    });
-    $('#czech').click(function(){
-      this.disabled=true;
-      $('#english').attr("disabled", "disabled"); 
-      $.ajax({
-        type: "POST",
-        url: "{% url 'set_language' %}",
-        data: {'language': 'cs', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
-        success: function(response) {
-             location.reload();
-         },
-         error: function(rs, e) {
-                alert(e);
-         }
-   });
-    });
-    
-  </script>
-  <script>
 
       const update_map_scale_padding = () => {
           const leaflet_query = document.getElementsByClassName("leaflet-container");
