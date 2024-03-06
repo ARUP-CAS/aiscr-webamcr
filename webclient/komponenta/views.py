@@ -12,6 +12,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
+from core.repository_connector import FedoraTransaction
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -63,9 +64,13 @@ def detail(request, typ_vazby, ident_cely):
         instance=komponenta,
         prefix=ident_cely,
     )
+    fedora_transcation = FedoraTransaction()
+    komponenta.active_transaction = fedora_transcation
     if form.is_valid():
         logger.debug("komponenta.views.detail.form_valid", extra={"ident_cely": ident_cely})
-        form.save()
+        komponenta = form.save(commit=False)
+        komponenta.active_transaction = fedora_transcation
+        komponenta.save()
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
@@ -158,6 +163,8 @@ def detail(request, typ_vazby, ident_cely):
     response.set_cookie(
         "set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000
     )
+    komponenta.close_active_transaction_when_finished = True
+    komponenta.save()
     return response
 
 
@@ -179,7 +186,9 @@ def zapsat(request, typ_vazby, dj_ident_cely):
     komp_ident_cely = None
     if form.is_valid():
         logger.debug("komponenta.views.zapsat.form_valid")
+        fedora_transcation = FedoraTransaction()
         komponenta = form.save(commit=False)
+        komponenta.active_transaction = fedora_transcation
         try:
             if dj:
                 komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam)
@@ -193,6 +202,7 @@ def zapsat(request, typ_vazby, dj_ident_cely):
                 komponenta.komponenta_vazby = dj.komponenty
             else:
                 komponenta.komponenta_vazby = cast.komponenty
+            komponenta.close_active_transaction_when_finished = True
             komponenta.save()
             form.save_m2m()  # this must be called to store komponenta_aktivity
 
@@ -256,15 +266,18 @@ def smazat(request, typ_vazby, ident_cely):
     """
     Funkce pohledu pro smazání komponenty pomoci modalu.
     """
-    k = get_object_or_404(Komponenta, ident_cely=ident_cely)
+    komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
+    fedora_transcation = FedoraTransaction()
+    komponenta.active_transaction = fedora_transcation
     dj = None
     cast = None
-    if k.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
-        dj = k.komponenta_vazby.dokumentacni_jednotka
+    if komponenta.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
+        dj = komponenta.komponenta_vazby.dokumentacni_jednotka
     else:
-        cast = k.komponenta_vazby.casti_dokumentu
+        cast = komponenta.komponenta_vazby.casti_dokumentu
     if request.method == "POST":
-        resp = k.delete()
+        komponenta.close_active_transaction_when_finished = True
+        resp = komponenta.delete()
 
         if resp:
             logger.debug("komponenta.views.smazat.resp", extra={"resp": resp})
@@ -307,7 +320,7 @@ def smazat(request, typ_vazby, ident_cely):
                             "dokument:detail-komponenta",
                             args=[
                                 cast.dokument.ident_cely,
-                                k.ident_cely,
+                                komponenta.ident_cely,
                             ],
                         )
                     }
@@ -315,7 +328,7 @@ def smazat(request, typ_vazby, ident_cely):
             return response
     else:
         context = {
-            "object": k,
+            "object": komponenta,
             "title": _("komponenta.views..smazat.title.text"),
             "id_tag": "smazat-komponenta-form",
             "button": _("komponenta.views.smazat.submitButton.text"),

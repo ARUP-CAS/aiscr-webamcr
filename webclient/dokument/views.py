@@ -54,6 +54,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
+from core.repository_connector import FedoraTransaction
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from core.models import Permissions as p, check_permissions
 from dal import autocomplete
@@ -340,9 +341,7 @@ class DokumentListView(SearchListView):
     def get_queryset(self):
         # Only allow to view 3D models
         subqry = Subquery(
-            Soubor.objects.filter(
-                mimetype__startswith="image", vazba=OuterRef("vazba")
-            ).values_list("id", flat=True)[:1]
+            Soubor.objects.filter(vazba=OuterRef("vazba")).values_list("id", flat=True)[:1]
         )
         qs = super().get_queryset().exclude(ident_cely__contains="3D")
         qs = qs.select_related(
@@ -743,7 +742,7 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
     id_tag = "vytvor-cast-form"
 
-    def get_zaznam(self):
+    def get_zaznam(self) -> Dokument:
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
             Dokument,
@@ -770,12 +769,18 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
         zaznam = self.get_zaznam()
         form = DokumentCastCreateForm(data=request.POST)
         if form.is_valid():
+            fedora_transaction = FedoraTransaction()
+            zaznam.active_transaction = fedora_transaction
             dc_ident = get_cast_dokumentu_ident(zaznam)
-            DokumentCast(
+            dc = DokumentCast(
                 dokument=zaznam,
                 ident_cely=dc_ident,
                 poznamka=form.cleaned_data["poznamka"],
-            ).save()
+            )
+            dc.active_transaction = fedora_transaction
+            dc.save()
+            zaznam.close_active_transaction_when_finished = True
+            zaznam.save()
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
             return JsonResponse(
                 {
@@ -808,7 +813,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         self.title = "title"
         self.button = "button"
 
-    def get_zaznam(self):
+    def get_zaznam(self) -> DokumentCast:
         ident_cely = self.kwargs.get("ident_cely")
         logger.debug("dokument.views.TransakceView.get_zaznam", extra={"ident_cely": ident_cely})
         return get_object_or_404(
@@ -881,14 +886,18 @@ class DokumentCastPripojitAkciView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         cast = self.get_zaznam()
+        cast: DokumentCast
         type_arch = self.request.GET.get("type")
         form = PripojitArchZaznamForm(data=request.POST, type_arch=type_arch, dok=True)
         if form.is_valid():
             logger.debug("dokument.views.DokumentCastPripojitAkciView.post.form_valid")
+            fedora_transaction = FedoraTransaction()
+            cast.active_transaction = fedora_transaction
             arch_z_id = form.cleaned_data["arch_z"]
             arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
             cast.archeologicky_zaznam = arch_z
             cast.projekt = None
+            cast.close_active_transaction_when_finished = True
             cast.save()
             messages.add_message(request, messages.SUCCESS, self.success_message)
         else:
@@ -1033,6 +1042,8 @@ def edit(request, ident_cely):
     required_fields = get_required_fields_dokument(dokument)
     required_fields_next = get_required_fields_dokument(dokument, next=1)
     if request.method == "POST":
+        fedora_transaction = FedoraTransaction()
+        dokument.active_transaction = fedora_transaction
         form_d = EditDokumentForm(
             request.POST,
             instance=dokument,
@@ -1048,22 +1059,26 @@ def edit(request, ident_cely):
         if form_d.is_valid() and form_extra.is_valid():
             logger.debug("dokument.views.edit.both_forms_valid")
             instance_d = form_d.save(commit=False)
+            instance_d: Dokument
+            instance_d.active_transaction = fedora_transaction
             instance_d.osoby.set(form_extra.cleaned_data["dokument_osoba"])
-            # instance_d.osoby.set(form_d.cleaned_data["jazyky"])
             if form_extra.cleaned_data["let"]:
                 instance_d.let = Let.objects.get(id=form_extra.cleaned_data["let"])
-            #save autors with order
             instance_d.autori.clear()
             i = 1
             for autor in form_d.cleaned_data["autori"]:
-                DokumentAutor(
+                da = DokumentAutor(
                     dokument=dokument,
                     autor=autor,
                     poradi=i,
-                ).save()
+                )
+                da.active_transaction = fedora_transaction
+                da.save()
                 i = i + 1
-            # form_d.save_m2m()
-            form_extra.save()
+            dokument_extra = form_extra.save(commit=False)
+            dokument_extra.active_transaction = fedora_transaction
+            dokument_extra.save()
+            instance_d.close_active_transaction_when_finished = True
             instance_d.save()
             if form_d.has_changed() or form_extra.has_changed():
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
@@ -1384,24 +1399,29 @@ def odeslat(request, ident_cely):
     """
     Funkce pohledu pro odeslání dokumentu cez modal.
     """
-    d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    dokument: Dokument
     logger.debug("dokument.views.odeslat.start", extra={"ident_cely": ident_cely})
-    if d.stav != D_STAV_ZAPSANY:
+    if dokument.stav != D_STAV_ZAPSANY:
         logger.debug("dokument.views.odeslat.permission_denied", extra={"ident_cely": ident_cely})
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
-    if check_stav_changed(request, d):
+    if check_stav_changed(request, dokument):
         logger.debug("dokument.views.odeslat.check_stav_changed", extra={"ident_cely": ident_cely})
 
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
-        d.set_odeslany(request.user)
+        fedora_transaction = FedoraTransaction()
+        dokument.active_transaction = fedora_transaction
+        dokument.set_odeslany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
         logger.debug("dokument.views.odeslat.sucess")
+        # dokument.close_active_transaction_when_finished = True
+        dokument.save()
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
     else:
-        warnings = d.check_pred_odeslanim()
+        warnings = dokument.check_pred_odeslanim()
         if warnings:
             logger.debug("dokument.views.odeslat.warnings", extra={"warnings": warnings, "ident_cely": ident_cely})
             request.session["temp_data"] = warnings
@@ -1409,9 +1429,9 @@ def odeslat(request, ident_cely):
             return JsonResponse(
                 {"redirect": get_detail_json_view(ident_cely)}, status=403
             )
-    form_check = CheckStavNotChangedForm(initial={"old_stav": d.stav})
+    form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})
     context = {
-        "object": d,
+        "object": dokument,
         "title": _("dokument.views.odeslat.title"),
         "id_tag": "odeslat-dokument-form",
         "button": _("dokument.views.odeslat.submitButton.text"),
@@ -1427,25 +1447,30 @@ def archivovat(request, ident_cely):
     """
     Funkce pohledu pro archivaci dokumentu cez modal.
     """
-    d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    dokument: Dokument
     logger.debug("dokument.views.archivovat.start", extra={"ident_cely": ident_cely})
-    if d.stav != D_STAV_ODESLANY:
+    if dokument.stav != D_STAV_ODESLANY:
         logger.debug("dokument.views.archivovat.permission_denied", extra={"ident_cely": ident_cely})
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
-    if check_stav_changed(request, d):
+    if check_stav_changed(request, dokument):
         logger.debug("dokument.views.archivovat.check_stav_changed", extra={"ident_cely": ident_cely})
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
-        old_ident = d.ident_cely
+        fedora_transaction = FedoraTransaction()
+        dokument.active_transaction = fedora_transaction
+        old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
-            rada = get_dokument_rada(d.typ_dokumentu, d.material_originalu)
+            rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
             try:
-                d.set_permanent_ident_cely(d.ident_cely[2], rada)
+                dokument.set_permanent_ident_cely(dokument.ident_cely[2], rada)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+                # dokument.close_active_transaction_when_finished = True
+                dokument.save()
                 return JsonResponse(
                     {"redirect": get_detail_json_view(ident_cely)}, status=403
                 )
@@ -1453,18 +1478,22 @@ def archivovat(request, ident_cely):
                 messages.add_message(
                     request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT_CHYBY_SOUBOR
                 )
+                # dokument.close_active_transaction_when_finished = True
+                dokument.save()
                 return JsonResponse(
                     {"redirect": get_detail_json_view(ident_cely)}, status=403
                 )
             else:
-                d.save()
-                logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": d.ident_cely})
-        d.set_archivovany(request.user, old_ident)
+                dokument.save()
+                logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": dokument.ident_cely})
+        dokument.set_archivovany(request.user, old_ident)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
-        Mailer.send_ek01(document=d)
-        return JsonResponse({"redirect": get_detail_json_view(d.ident_cely)})
+        Mailer.send_ek01(document=dokument)
+        # dokument.close_active_transaction_when_finished = True
+        dokument.save()
+        return JsonResponse({"redirect": get_detail_json_view(dokument.ident_cely)})
     else:
-        warnings = d.check_pred_archivaci()
+        warnings = dokument.check_pred_archivaci()
         logger.debug("dokument.views.archivovat.warnings", extra={"warnings": warnings})
         if warnings:
             request.session["temp_data"] = warnings
@@ -1472,9 +1501,9 @@ def archivovat(request, ident_cely):
             return JsonResponse(
                 {"redirect": get_detail_json_view(ident_cely)}, status=403
             )
-    form_check = CheckStavNotChangedForm(initial={"old_stav": d.stav})
+    form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})
     context = {
-        "object": d,
+        "object": dokument,
         "title": _("dokument.views.archivovat.title"),
         "id_tag": "archivovat-dokument-form",
         "button": _("dokument.views.archivovat.submitButton.text"),
@@ -1489,20 +1518,23 @@ def vratit(request, ident_cely):
     """
     Funkce pohledu pro vrácení dokumentu cez modal.
     """
-    d = get_object_or_404(Dokument, ident_cely=ident_cely)
-    if d.stav != D_STAV_ODESLANY and d.stav != D_STAV_ARCHIVOVANY:
+    dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    if dokument.stav != D_STAV_ODESLANY and dokument.stav != D_STAV_ARCHIVOVANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
-    if check_stav_changed(request, d):
+    if check_stav_changed(request, dokument):
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
+            fedora_transaction = FedoraTransaction()
+            dokument.active_transaction = fedora_transaction
             duvod = form.cleaned_data["reason"]
-            if d.stav == D_STAV_ODESLANY:
-                Mailer.send_ek02(document=d, reason=duvod)
-            d.set_vraceny(request.user, d.stav - 1, duvod)
+            if dokument.stav == D_STAV_ODESLANY:
+                Mailer.send_ek02(document=dokument, reason=duvod)
+            dokument.set_vraceny(request.user, dokument.stav - 1, duvod)
             messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_VRACEN)
+            dokument.save()
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
         else:
             logger.debug("dokument.views.vratit.not_valid", extra={"errors": form.errors})
@@ -1510,9 +1542,9 @@ def vratit(request, ident_cely):
                 {"redirect": get_detail_json_view(ident_cely)}, status=403
             )
     else:
-        form = VratitForm(initial={"old_stav": d.stav})
+        form = VratitForm(initial={"old_stav": dokument.stav})
     context = {
-        "object": d,
+        "object": dokument,
         "form": form,
         "title": _("dokument.views.vratit.title"),
         "id_tag": "vratit-dokument-form",
@@ -1656,7 +1688,10 @@ def zapsat(request, zaznam=None):
         )
         if form_d.is_valid():
             logger.debug("dokument.views.zapsat.valid")
+            fedora_transaction = FedoraTransaction()
             dokument = form_d.save(commit=False)
+            dokument: Dokument
+            dokument.active_transaction = fedora_transaction
             dokument.rada = get_dokument_rada(
                 dokument.typ_dokumentu, dokument.material_originalu
             )
@@ -1690,19 +1725,25 @@ def zapsat(request, zaznam=None):
                 # Vytvorit defaultni cast dokumentu
                 if zaznam:
                     if isinstance(zaznam, ArcheologickyZaznam):
-                        DokumentCast(
+                        dc = DokumentCast(
                             dokument=dokument,
                             ident_cely=get_cast_dokumentu_ident(dokument),
                             archeologicky_zaznam=zaznam,
-                        ).save()
+                        )
+                        dc.active_transaction = fedora_transaction
+                        dc.save()
                     else:
-                        DokumentCast(
+                        dc = DokumentCast(
                             dokument=dokument,
                             ident_cely=get_cast_dokumentu_ident(dokument),
                             projekt=zaznam,
-                        ).save()
+                        )
+                        dc.active_transaction = fedora_transaction
+                        dc.save()
 
                 form_d.save_m2m()
+                dokument.close_active_transaction_when_finished = True
+                dokument.save()
 
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                 return redirect("dokument:detail", ident_cely=dokument.ident_cely)

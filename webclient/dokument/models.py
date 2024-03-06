@@ -348,21 +348,20 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             sequence.region + "-" + sequence.rada.zkratka + "-" + str(sequence.rok) + "{0}".format(sequence.sekvence).zfill(5)
         )
         old_ident_cely = self.ident_cely
+        self.record_ident_change(old_ident_cely, self.active_transaction, perm_ident_cely)
         self.ident_cely = perm_ident_cely
-        self.suppress_signal = True
         self.save()
-        transaction = self.save_metadata(use_celery=False)
-        self.record_ident_change(old_ident_cely, transaction)
-        if transaction:
-            transaction.mark_transaction_as_closed()
+        self.save_metadata(use_celery=False)
 
         for dc in self.casti.all():
             for komponenta in dc.komponenty.komponenty.all():
                 komponenta.ident_cely = perm_ident_cely + komponenta.ident_cely[-5:]
+                komponenta.active_transaction = self.active_transaction
                 komponenta.save()
                 logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_components",
                                extra={"ident_cely": komponenta.ident_cely})
             dc.ident_cely = perm_ident_cely + dc.ident_cely[-5:]
+            dc.active_transaction = self.active_transaction
             dc.save()
             logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_dokumentacni_casti",
                          extra={"ident_cely": dc.ident_cely})
@@ -464,6 +463,8 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         null=True,
         related_name="casti_dokumentu",
     )
+    active_transaction = None
+    close_active_transaction_when_finished = False
 
     class Meta:
         db_table = "dokument_cast"

@@ -38,8 +38,6 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
         dj: DokumentacniJednotka
         transaction = dj.archeologicky_zaznam.save_metadata(transaction)
         logger.debug("pian.signals.pian_save_metadata.save_metadata", extra={"transaction": transaction})
-    if transaction:
-        transaction.mark_transaction_as_closed()
     logger.debug("pian.signals.pian_save_metadata.end", extra={"instance": instance.ident_cely,
                                                                "transaction": transaction})
 
@@ -50,8 +48,6 @@ def samostatny_nalez_okres_delete_repository_container(sender, instance: Pian, *
                  extra={"instance": instance.ident_cely})
     if not instance.suppress_signal:
         transaction = instance.record_deletion()
-        if transaction:
-            transaction.mark_transaction_as_closed()
         logger.debug("pian.signals.samostatny_nalez_okres_delete_repository_container.save_metadata",
                      extra={"instance": instance.ident_cely, "transaction": transaction})
     if instance.historie and instance.historie.pk:

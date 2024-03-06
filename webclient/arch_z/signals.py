@@ -1,6 +1,7 @@
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
@@ -37,30 +38,30 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
     logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"record_pk": instance.pk})
-    transaction = None
+    fedora_transaction = instance.active_transaction
     if not instance.suppress_signal:
-        transaction = instance.save_metadata()
         try:
             if instance.akce and instance.akce.projekt:
-                transaction = instance.akce.projekt.save_metadata(transaction)
+                instance.akce.projekt.save_metadata(fedora_transaction)
         except ObjectDoesNotExist as err:
             logger.debug("arch_z.signals.create_arch_z_metadata.no_akce",
                          extra={"record_ident_cely": instance.ident_cely, "err": err})
-    if instance.initial_pristupnost is not None and instance.pristupnost.id != instance.initial_pristupnost.id:
-        for dok_jednotka in instance.dokumentacni_jednotky_akce.all():
-            if dok_jednotka.pian:
-                initial_pristupnost \
-                    = dok_jednotka.pian.evaluate_pristupnost_change(instance.initial_pristupnost.id, instance.id)
-                pristupnost = dok_jednotka.pian.evaluate_pristupnost_change(instance.pristupnost.id, instance.id)
-                if initial_pristupnost.id != pristupnost.id and dok_jednotka.pian:
-                    logger.debug("arch_z.signals.create_arch_z_metadata.update_pian_metadata",
-                                 extra={"pian": dok_jednotka.pian.ident_cely,
-                                        "initial_pripustnost": initial_pristupnost.pk, "pripustnost": pristupnost.pk})
-                    transaction = dok_jednotka.pian.save_metadata(transaction)
-    if transaction:
-        transaction.mark_transaction_as_closed()
+        if instance.initial_pristupnost is not None and instance.pristupnost.id != instance.initial_pristupnost.id:
+            for dok_jednotka in instance.dokumentacni_jednotky_akce.all():
+                if dok_jednotka.pian:
+                    initial_pristupnost \
+                        = dok_jednotka.pian.evaluate_pristupnost_change(instance.initial_pristupnost.id, instance.id)
+                    pristupnost = dok_jednotka.pian.evaluate_pristupnost_change(instance.pristupnost.id, instance.id)
+                    if initial_pristupnost.id != pristupnost.id and dok_jednotka.pian:
+                        logger.debug("arch_z.signals.create_arch_z_metadata.update_pian_metadata",
+                                     extra={"pian": dok_jednotka.pian.ident_cely,
+                                            "initial_pripustnost": initial_pristupnost.pk,
+                                            "pripustnost": pristupnost.pk})
+                        dok_jednotka.pian.save_metadata(fedora_transaction)
+        close_transaction = instance.close_active_transaction_when_finished
+        transaction.on_commit(lambda: instance.save_metadata(close_transaction=close_transaction))
     logger.debug("arch_z.signals.create_arch_z_metadata.end", extra={"record_pk": instance.pk,
-                                                                     "transaction": transaction})
+                                                                     "transaction": fedora_transaction})
 
 
 @receiver(post_save, sender=Akce)
@@ -77,15 +78,15 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
         Funkce pro aktualizaci metadat externího odkazu.
     """
     logger.debug("arch_z.signals.create_externi_odkaz_metadata.start", extra={"record_pk": instance.pk})
-    transaction = None
+    fedora_transaction = instance.active_transaction
     if instance.archeologicky_zaznam is not None:
-        transaction = instance.archeologicky_zaznam.save_metadata()
+        instance.archeologicky_zaznam.save_metada(fedora_transaction)
     if instance.externi_zdroj is not None:
-        transaction = instance.externi_zdroj.save_metadata(transaction)
-    if transaction:
-        transaction.mark_transaction_as_closed()
+        instance.externi_zdroj.save_metadata(fedora_transaction)
+    close_transaction = instance.close_active_transaction_when_finished
+    transaction.on_commit(lambda: instance.save_metadata(close_transaction=close_transaction))
     logger.debug("arch_z.signals.create_externi_odkaz_metadata.end", extra={"record_pk": instance.pk,
-                                                                            "transaction": transaction})
+                                                                            "transaction": fedora_transaction})
 
 
 @receiver(pre_delete, sender=ArcheologickyZaznam)
@@ -95,7 +96,7 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
     """
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.start",
                  extra={"record_ident_cely": instance.ident_cely})
-    transaction = instance.record_deletion()
+    transaction = instance.active_transaction
     try:
         if instance.akce and instance.akce.projekt is not None:
             instance.akce.projekt.save_metadata(transaction)
@@ -114,8 +115,7 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
         for eo in instance.externi_odkazy.all():
             eo.suppress_signal_arch_z = True
             eo.delete()
-    if transaction:
-        transaction.mark_transaction_as_closed()
+    transaction = instance.record_deletion(instance.close_active_transaction_when_finished)
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.end",
                  extra={"record_ident_cely": instance.ident_cely, "transaction": transaction})
 
@@ -124,12 +124,12 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
 def delete_arch_z_repository_update_connected_records(sender, instance: ArcheologickyZaznam, **kwargs):
     logger.debug("arch_z.signals.delete_arch_z_repository_update_connected_records.start",
                  extra={"record_ident": instance.ident_cely})
-    transaction = None
+    transaction = instance.active_transaction
     for item in instance.casti_dokumentu.all():
         item: DokumentCast
-        transaction = item.dokument.save_metadata(transaction)
-    if transaction:
-        transaction.mark_transaction_as_closed()
+        item.dokument.save_metadata(transaction)
+    close_transaction = instance.close_active_transaction_when_finished
+    transaction.on_commit(lambda: instance.save_metadata(close_transaction=close_transaction))
     logger.debug("arch_z.signals.delete_arch_z_repository_update_connected_records.end",
                  extra={"record_ident": instance.ident_cely, "transaction": transaction})
 
@@ -141,13 +141,13 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     """
     logger.debug("arch_z.signals.delete_externi_odkaz_repository_container.start",
                  extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z})
-    transaction = None
+    transaction = instance.active_transaction
     if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
-        transaction = instance.archeologicky_zaznam.save_metadata(transaction)
+        instance.archeologicky_zaznam.save_metadata(transaction)
     if instance.externi_zdroj is not None:
-        transaction = instance.externi_zdroj.save_metadata(transaction)
-    if transaction:
-        transaction.mark_transaction_as_closed()
+        instance.externi_zdroj.save_metadata(transaction)
+    close_transaction = instance.close_active_transaction_when_finished
+    transaction.on_commit(lambda: instance.save_metadata(close_transaction=close_transaction))
     logger.debug("arch_z.signals.delete_externi_odkaz_repository_container.end",
                  extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z,
                         "transaction": transaction})

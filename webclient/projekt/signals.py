@@ -80,8 +80,6 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
         for item in instance.casti_dokumentu.all():
             item: DokumentCast
             transaction = item.dokument.save_metadata(transaction)
-    if transaction:
-        transaction.mark_transaction_as_closed()
     logger.debug("projekt.signals.projekt_pre_delete.end", extra={"ident_cely": instance.ident_cely})
 
 
@@ -102,7 +100,4 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
         check_hlidaci_pes.delay(instance.pk)
     if not check_if_task_queued("Projekt", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["Projekt", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
-    if transaction:
-        transaction: FedoraTransaction
-        transaction.mark_transaction_as_closed()
     logger.debug("projekt.signals.projekt_post_save.end", extra={"ident_cely": instance.ident_cely})

@@ -44,7 +44,7 @@ from simple_history.models import HistoricalRecords
 
 import logging
 
-from xml_generator.models import ModelWithMetadata, METADATA_UPDATE_TIMEOUT
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -219,16 +219,9 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         from core.repository_connector import FedoraTransaction
         if not transaction:
             transaction = FedoraTransaction()
-        if use_celery is True:
-            if ModelWithMetadata.update_queued(self.__class__.__name__, self.pk):
-                return
-            from cron.tasks import save_record_metadata
-            save_record_metadata.apply_async([self.__class__.__name__, self.pk, transaction.uid],
-                                             countdown=METADATA_UPDATE_TIMEOUT)
-        else:
-            from core.repository_connector import FedoraRepositoryConnector
-            connector = FedoraRepositoryConnector(self, transaction.uid)
-            connector.save_metadata(True)
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self, transaction.uid)
+        connector.save_metadata(True)
         return transaction
 
     def record_deletion(self):

@@ -70,6 +70,8 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
         null=False,
     )
     aktivity = models.ManyToManyField(Heslar, through="KomponentaAktivita")
+    active_transaction = None
+    close_active_transaction_when_finished = False
 
     @property
     def ident_cely_safe(self):

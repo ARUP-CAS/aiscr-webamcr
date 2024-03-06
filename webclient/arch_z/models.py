@@ -165,7 +165,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             poznamka=poznamka_historie,
         ).save()
         if old_ident is not None and not ident_change_recorded:
-            self.record_ident_change(old_ident)
+            self.record_ident_change(old_ident, getattr(self.active_transaction, "uid", None))
 
     def set_vraceny(self, user, new_state, poznamka):
         """
@@ -334,7 +334,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         )
         self._set_connected_records_ident(self.ident_cely)
         self.save()
-        self.record_ident_change(old_ident)
+        self.record_ident_change(old_ident, getattr(self.active_transaction, "uid", None))
 
     def _set_connected_records_ident(self, new_ident):
         for dj in self.dokumentacni_jednotky_akce.all():
@@ -595,6 +595,8 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         related_name="externi_odkazy",
     )
     suppress_signal_arch_z = False
+    active_transaction = None
+    close_active_transaction_when_finished = False
 
     class Meta:
         db_table = "externi_odkaz"
