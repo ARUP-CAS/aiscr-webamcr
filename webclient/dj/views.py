@@ -16,6 +16,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY,
 )
+from core.repository_connector import FedoraTransaction
 from core.utils import (
     update_all_katastr_within_akce_or_lokalita,
     update_main_katastr_within_ku,
@@ -49,12 +50,15 @@ def detail(request, typ_vazby, ident_cely):
     """
     logger.debug("dj.views.detail.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
+    fedora_transaction = FedoraTransaction()
     pian_db: Pian = dj.pian
+    pian_db.active_transaction = fedora_transaction
     old_typ = dj.typ.id
     form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
         logger.debug("dj.views.detail.form_is_valid", extra={"ident_cely": dj.ident_cely})
-        dj = form.save(commit=False)
+        dj: DokumentacniJednotka = form.save(commit=False)
+        dj.active_transaction = fedora_transaction
         if dj.pian is None:
             logger.debug("dj.views.detail.empty_pian", {"ident_cely": dj.ident_cely})
             if pian_db is not None and not(old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR):
@@ -81,6 +85,7 @@ def detail(request, typ_vazby, ident_cely):
             )
             for dokumentacni_jednotka in dokumentacni_jednotka_query:
                 dokumentacni_jednotka.typ = typ
+                dokumentacni_jednotka.active_transaction = fedora_transaction
                 dokumentacni_jednotka.save()
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ.heslo == "Sonda":
@@ -92,6 +97,7 @@ def detail(request, typ_vazby, ident_cely):
             )
             for dokumentacni_jednotka in dokumentacni_jednotka_query:
                 dokumentacni_jednotka.typ = typ
+                dokumentacni_jednotka.active_transaction = fedora_transaction
                 dokumentacni_jednotka.save()
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ.heslo == "Lokalita":
@@ -104,6 +110,7 @@ def detail(request, typ_vazby, ident_cely):
                 dokumentacni_jednotka.typ = Heslar.objects.filter(
                     Q(nazev_heslare=HESLAR_DJ_TYP) & Q(id=TYP_DJ_LOKALITA)
                 ).first()
+                dokumentacni_jednotka.active_transaction = fedora_transaction
                 dokumentacni_jednotka.save()
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ == Heslar.objects.get(id=TYP_DJ_KATASTR):
@@ -145,7 +152,9 @@ def detail(request, typ_vazby, ident_cely):
         if form.is_valid():
             logger.debug("dj.views.detail.adb_detail.form_is_valid", extra={"ident_cely": dj.ident_cely,
                                                                             "adb_ident_cely": ident_cely})
-            form.save()
+            adb = form.save(commit=False)
+            adb.active_transaction = fedora_transaction
+            adb.save()
             if form.changed_data:
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
@@ -177,6 +186,7 @@ def detail(request, typ_vazby, ident_cely):
                 vyskovy_bod = instances[i]
                 vyskovy_bod_form = list(filter(lambda x: x.instance == vyskovy_bod, formset.forms))[0]
                 vyskovy_bod: VyskovyBod
+                vyskovy_bod.active_transaction = fedora_transaction
                 if isinstance(vyskovy_bod, VyskovyBod):
                     logger.debug("dj.views.detail.adb_zapsat_vyskove_body.save",
                                  extra={"vyskovy_bod": vyskovy_bod.__dict__,
@@ -203,6 +213,8 @@ def detail(request, typ_vazby, ident_cely):
             )
 
     response = dj.archeologicky_zaznam.get_redirect(dj.ident_cely)
+    dj.close_active_transaction_when_finished = True
+    dj.save()
     return response
 
 
@@ -230,6 +242,9 @@ def zapsat(request, arch_z_ident_cely):
         else:
             dj.komponenty = vazba
             dj.archeologicky_zaznam = az
+            fedora_transaction = FedoraTransaction()
+            dj.active_transaction = fedora_transaction
+            dj.close_active_transaction_when_finished = True
             resp = dj.save()
             logger.debug("dj.views.detail.zapsat.dj_resp", {"resp": resp})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
@@ -250,6 +265,9 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         try:
             dj.deleted_by_user = request.user
+            fedora_transaction = FedoraTransaction()
+            dj.active_transaction = fedora_transaction
+            dj.close_active_transaction_when_finished = True
             resp = dj.delete()
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
             if resp:
@@ -286,7 +304,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
     id_tag = "zmenit-katastr-form"
 
-    def get_zaznam(self):
+    def get_zaznam(self) -> DokumentacniJednotka:
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
             DokumentacniJednotka,
@@ -313,10 +331,14 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         zaznam = self.get_zaznam()
         form = ChangeKatastrForm(data=request.POST)
         if form.is_valid():
+            fedora_transaction = FedoraTransaction()
             az = zaznam.archeologicky_zaznam
             az: ArcheologickyZaznam
+            az.active_transaction = fedora_transaction
             az.hlavni_katastr = form.cleaned_data["katastr"]
             az.save()
+            zaznam.active_transaction = fedora_transaction
+            zaznam.close_active_transaction_when_finished = True
             if form.cleaned_data["katastr"].pian is not None:
                 zaznam.pian = form.cleaned_data["katastr"].pian
                 zaznam.save()

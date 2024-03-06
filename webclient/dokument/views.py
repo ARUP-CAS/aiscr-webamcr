@@ -1811,11 +1811,15 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
                 request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM
             )
             return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=404)
+        fedora_transaction = FedoraTransaction()
+        dokument_cast[0].active_transaction = fedora_transaction
         resp = dokument_cast[0].delete()
         logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
         if remove_orphan:
+            orphan_dokument.active_transaction = fedora_transaction
             orphan_dokument.delete()
             logger.debug("dokument.views.odpojit.deleted")
+        fedora_transaction.mark_transaction_as_closed()
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODPOJEN)
         return JsonResponse({"redirect": zaznam.get_absolute_url()})
     else:

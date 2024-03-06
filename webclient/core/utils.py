@@ -14,6 +14,7 @@ from core.message_constants import (
     VALIDATION_NOT_SIMPLE,
     VALIDATION_NOT_VALID,
 )
+from core.repository_connector import FedoraTransaction
 from dj.models import DokumentacniJednotka
 from django.db import connection
 from django.urls import reverse
@@ -227,7 +228,7 @@ def update_main_katastr_within_ku(ident_cely, ku_nazev):
         return None
 
 
-def update_all_katastr_within_akce_or_lokalita(ident_cely):
+def update_all_katastr_within_akce_or_lokalita(ident_cely, fedora_transaction: FedoraTransaction = None):
     """
     Funkce pro update katastru u akce a lokalit.
     """
@@ -272,6 +273,7 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
             ArcheologickyZaznamKatastr.objects.filter(
                 archeologicky_zaznam_id=zaznam.id
             ).exclude(katastr_id__in=ostatni_id).delete()
+        zaznam.active_transaction = fedora_transaction
         zaznam.save()
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
 

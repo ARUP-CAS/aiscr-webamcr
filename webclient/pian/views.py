@@ -21,6 +21,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
+from core.repository_connector import FedoraTransaction
 from core.utils import (
     file_validate_epsg,
     file_validate_geometry,
@@ -111,8 +112,13 @@ def detail(request, ident_cely):
         )
     elif form.is_valid():
         logger.debug("pian.views.detail.form.valid", extra={"pian_ident_cely": pian.ident_cely})
-        form.save()
+        fedora_transaction = FedoraTransaction()
+        pian = form.save(commit=False)
+        pian.active_transaction = fedora_transaction
+        pian.save()
         update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
+        pian.close_active_transaction_when_finished = True
+        pian.save()
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
@@ -137,15 +143,17 @@ def odpojit(request, dj_ident_cely):
     """
     Funkce pohledu pro odpojení pianu pomocí modalu.
     """
-    dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
+    dj: DokumentacniJednotka = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian_djs = DokumentacniJednotka.objects.filter(pian=dj.pian)
     delete_pian = (
         True if pian_djs.count() < 2 and dj.pian.stav == PIAN_NEPOTVRZEN else False
     )
     pian = dj.pian
     if request.method == "POST":
+        fedora_transaction = FedoraTransaction()
         dj.archeologicky_zaznam.get_absolute_url()
         dj.pian = None
+        dj.active_transaction = fedora_transaction
         dj.save()
         update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
         logger.debug("pian.views.odpojit.odpojen", extra={"pian_ident_cely": pian.ident_cely})
@@ -189,21 +197,26 @@ def potvrdit(request, dj_ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = dj.pian
     if pian == PIAN_POTVRZEN:
-            raise PermissionDenied
+        raise PermissionDenied
     if request.method == "POST":
         redirect_view = dj.archeologicky_zaznam.get_absolute_url(dj_ident_cely)
+        fedora_transaction = FedoraTransaction()
+        pian.active_transaction = fedora_transaction
         try:
             old_ident = pian.ident_cely
             pian.set_permanent_ident_cely()
         except MaximalIdentNumberError:
             messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
             logger.debug("pian.views.potvrdit", extra={"pian_ident_cely": pian.ident_cely})
+            fedora_transaction.mark_transaction_as_closed()
             return JsonResponse(
                 {"redirect": redirect_view},
                 status=403,
             )
         else:
-            pian.set_potvrzeny(request.user,old_ident)
+            pian.set_potvrzeny(request.user, old_ident)
+            pian.close_active_transaction_when_finished = True
+            pian.save()
             logger.debug("pian.views.potvrdit.potvrzen", extra={"pian_ident_cely": pian.ident_cely})
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
             response = JsonResponse({"redirect": dj.get_absolute_url()})
@@ -296,11 +309,16 @@ def create(request, dj_ident_cely):
                 logger.warning("pian.views.create.error", extra={"message": messages.ERROR, "exception": e.message})
                 messages.add_message(request, messages.ERROR, e.message)
             else:
+                fedora_transaction = FedoraTransaction()
+                pian.active_transaction = fedora_transaction
                 pian.save()
                 pian.set_vymezeny(request.user)
+                dj.active_transaction = fedora_transaction
                 dj.pian = pian
                 dj.save()
-                update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
+                update_all_katastr_within_akce_or_lokalita(dj_ident_cely, fedora_transaction)
+                pian.close_active_transaction_when_finished = True
+                pian.save()
                 logger.warning("pian.views.create.error", extra={"info": ZAZNAM_USPESNE_VYTVOREN, "dj_pk": dj.pk})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
         else:

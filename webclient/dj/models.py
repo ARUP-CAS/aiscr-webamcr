@@ -45,6 +45,8 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         db_column="archeologicky_zaznam",
         related_name="dokumentacni_jednotky_akce",
     )
+    active_transaction = None
+    close_active_transaction_when_finished = False
 
     class Meta:
         db_table = "dokumentacni_jednotka"

@@ -352,12 +352,11 @@ def edit_ulozeni(request, ident_cely):
         )
         if form.is_valid():
             logger.debug("pas.views.edit_ulozeni.form_valid")
-            formObj = form.save(commit=False)
-            formObj.predano_organizace = get_object_or_404(
+            fedora_transaction = FedoraTransaction()
+            sn: SamostatnyNalez = form.save(commit=False)
+            sn.predano_organizace = get_object_or_404(
                 Organizace, id=sn.projekt.organizace_id
             )
-            sn: SamostatnyNalez = formObj.save()
-            fedora_transaction = FedoraTransaction()
             sn.active_transaction = fedora_transaction
             sn.close_active_transaction_when_finished = True
             sn.save()
@@ -749,6 +748,8 @@ def zadost(request):
                     stav=SPOLUPRACE_NEAKTIVNI,
                     historie=hv,
                 )
+                s.active_transaction = FedoraTransaction()
+                s.close_activate_transaction_when_finished = True
                 s.save()
                 hist = Historie(
                     typ_zmeny=SPOLUPRACE_ZADOST,
