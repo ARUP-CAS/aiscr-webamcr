@@ -62,10 +62,10 @@ def odstavka_in_progress(view_func):
         if last_maintenance is None:
             odstavka = OdstavkaSystemu.objects.filter(
                 info_od__lte=datetime.today(),
-                datum_odstavky__gte=datetime.today(),
+                datum_odstavky__lte=datetime.today(),
                 status=True,
             ).order_by("-datum_odstavky", "-cas_odstavky")
-            if odstavka:
+            if odstavka.count():
                 last_maintenance = odstavka[0]
                 cache.set("last_maintenance", last_maintenance, 600)
         if last_maintenance is not None:
