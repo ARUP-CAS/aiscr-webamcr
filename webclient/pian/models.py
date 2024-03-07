@@ -78,14 +78,17 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     @property
     def pristupnost_pom(self):
-        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
-        pristupnosti_ids = set()
-        for dok_jednotka in dok_jednotky:
-            if dok_jednotka.archeologicky_zaznam is not None \
-                    and dok_jednotka.archeologicky_zaznam.pristupnost is not None:
-                pristupnosti_ids.add(dok_jednotka.archeologicky_zaznam.pristupnost.id)
-        if len(pristupnosti_ids) > 0:
-            return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
+        try:
+            dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+            pristupnosti_ids = set()
+            for dok_jednotka in dok_jednotky:
+                if dok_jednotka.archeologicky_zaznam is not None \
+                        and dok_jednotka.archeologicky_zaznam.pristupnost is not None:
+                    pristupnosti_ids.add(dok_jednotka.archeologicky_zaznam.pristupnost.id)
+            if len(pristupnosti_ids) > 0:
+                return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
+        except ValueError as err:
+            logger.debug("pian.models.Pian.pristupnost_pom.value_error", extra={"err": err})
         return Heslar.objects.get(ident_cely="HES-000865")
     
     @property
@@ -261,7 +264,7 @@ class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
         ]
 
 
-def vytvor_pian(katastr):
+def vytvor_pian(katastr, fedora_transaction):
     """
     Funkce pro vytvoření pianu v DB podle katastru.
     """
@@ -287,6 +290,7 @@ def vytvor_pian(katastr):
         typ = Heslar.objects.get(pk=GEOMETRY_PLOCHA)
         pian = Pian(stav=PIAN_POTVRZEN, zm10=zm10s, zm50=zm50s, typ=typ, presnost=presnost, geom=geom,
                     geom_system="4326")
+        pian.active_transaction = fedora_transaction
         pian.set_permanent_ident_cely()
         pian.save()
         pian.zaznamenej_zapsani(User.objects.filter(email="amcr@arup.cas.cz").first())

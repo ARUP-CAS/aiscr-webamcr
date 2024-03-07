@@ -1,7 +1,8 @@
 import logging
 
+from django.db import transaction
 from django.db.models import Q
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
 
 from dj.models import DokumentacniJednotka
@@ -20,35 +21,43 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
     """
     logger.debug("dj.signals.create_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
+    close_transaction = instance.close_active_transaction_when_finished
     if created and instance.typ.id == TYP_DJ_KATASTR and instance.pian is None:
         logger.debug("dj.signals.create_dokumentacni_jednotka.not_localized")
         ruian_katastr: RuianKatastr = instance.archeologicky_zaznam.hlavni_katastr
         if ruian_katastr.pian is not None:
             pian = ruian_katastr.pian
             instance.pian = pian
+            instance.close_active_transaction_when_finished = False
             instance.save()
-            logger.debug("dj.signals.create_dokumentacni_jednotka.finined", extra={'dj_pk': instance.pk})
-
+            logger.debug("dj.signals.create_dokumentacni_jednotka.finined",
+                         extra={'dj_pk': instance.pk, "transaction": getattr(fedora_transaction, "uid", None)})
         else:
             try:
-                instance.pian = vytvor_pian(ruian_katastr)
+                instance.pian = vytvor_pian(ruian_katastr, fedora_transaction)
+                instance.close_active_transaction_when_finished = False
                 instance.save()
-                logger.debug("dj.signals.create_dokumentacni_jednotka.finined", extra={"dj_pk": instance.pk})
-            except Exception as e:
-                logger.debug("pian not created")
+                logger.debug("dj.signals.create_dokumentacni_jednotka.finined",
+                             extra={"dj_pk": instance.pk, "transaction": getattr(fedora_transaction, "uid", None)})
+            except Exception as err:
+                logger.debug("dj.signals.create_dokumentacni_jednotka.not_created",
+                             extra={"err": err, "transaction": getattr(fedora_transaction, "uid", None)})
     elif instance.pian != instance.initial_pian:
         logger.debug("dj.signals.create_dokumentacni_jednotka.update_pian", extra={
             "pian_db": instance.initial_pian.ident_cely if instance.initial_pian else "None",
             "pian": instance.pian.ident_cely if instance.pian else "None",
+            "transaction": getattr(fedora_transaction, "uid", None)
         })
         if instance.pian is not None:
             instance.pian.save_metadata(fedora_transaction)
         if instance.initial_pian is not None:
             instance.initial_pian.save_metadata(fedora_transaction)
-    instance.archeologicky_zaznam.save_metadata(fedora_transaction,
-                                                close_transaction=instance.close_active_transaction_when_finished)
+    instance.archeologicky_zaznam.save_metadata(fedora_transaction)
+    if close_transaction:
+        transaction.on_commit(lambda: fedora_transaction.mark_transaction_as_closed())
     logger.debug("dj.signals.create_dokumentacni_jednotka.end",
-                 extra={"transaction": getattr(fedora_transaction, "uid", None)})
+                 extra={"transaction": getattr(fedora_transaction, "uid", None),
+                        "close_transaction": instance.close_active_transaction_when_finished})
 
 
 @receiver(pre_delete, sender=DokumentacniJednotka)

@@ -55,14 +55,21 @@ class ModelWithMetadata(models.Model):
 
     def save_metadata(self, fedora_transaction=None, use_celery=True, include_files=False, close_transaction=False):
         from core.repository_connector import FedoraTransaction
+        stack = inspect.stack()
+        caller = stack[1]
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
         elif fedora_transaction is None and self.active_transaction is None:
             raise ValueError("No Fedora transaction")
         if not isinstance(fedora_transaction, FedoraTransaction):
             raise ValueError("fedora_transaction must be a FedoraTransaction class object")
-        stack = inspect.stack()
-        caller = stack[1]
+        if not self.ident_cely:
+            logger.warning("xml_generator.models.ModelWithMetadata.save_metadata.no_ident",
+                           extra={"ident_cely": self.ident_cely, "use_celery": use_celery, "record_pk": self.pk,
+                                  "record_class": self.__class__.__name__, "transaction": fedora_transaction.uid,
+                                  "close_transaction": close_transaction, "caller": [f"{caller}\n"
+                                                                                     for caller in stack]})
+            return
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.start",
                      extra={"ident_cely": self.ident_cely, "use_celery": use_celery, "record_pk": self.pk,
                             "record_class": self.__class__.__name__, "transaction":

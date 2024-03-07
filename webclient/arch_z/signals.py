@@ -59,7 +59,10 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                                             "pripustnost": pristupnost.pk})
                         dok_jednotka.pian.save_metadata(fedora_transaction)
         close_transaction = instance.close_active_transaction_when_finished
-        transaction.on_commit(lambda: instance.save_metadata(close_transaction=close_transaction))
+        if close_transaction:
+            transaction.on_commit(lambda: instance.save_metadata(close_transaction=True))
+        else:
+            instance.save_metadata(fedora_transaction)
     logger.debug("arch_z.signals.create_arch_z_metadata.end", extra={"record_pk": instance.pk,
                                                                      "transaction": fedora_transaction})
 
@@ -96,10 +99,10 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
     """
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.start",
                  extra={"record_ident_cely": instance.ident_cely})
-    transaction = instance.active_transaction
+    fedora_transaction = instance.active_transaction
     try:
         if instance.akce and instance.akce.projekt is not None:
-            instance.akce.projekt.save_metadata(transaction)
+            instance.akce.projekt.save_metadata(fedora_transaction)
     except ObjectDoesNotExist as err:
         logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.no_akce",
                      extra={"record_ident_cely": instance.ident_cely, "err": err})
@@ -115,9 +118,9 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
         for eo in instance.externi_odkazy.all():
             eo.suppress_signal_arch_z = True
             eo.delete()
-    transaction = instance.record_deletion(instance.close_active_transaction_when_finished)
+    fedora_transaction = instance.record_deletion(instance.close_active_transaction_when_finished)
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.end",
-                 extra={"record_ident_cely": instance.ident_cely, "transaction": transaction})
+                 extra={"record_ident_cely": instance.ident_cely, "transaction": fedora_transaction})
 
 
 @receiver(pre_delete, sender=ArcheologickyZaznam)

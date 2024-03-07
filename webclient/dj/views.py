@@ -52,7 +52,8 @@ def detail(request, typ_vazby, ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     fedora_transaction = FedoraTransaction()
     pian_db: Pian = dj.pian
-    pian_db.active_transaction = fedora_transaction
+    if pian_db is not None:
+        pian_db.active_transaction = fedora_transaction
     old_typ = dj.typ.id
     form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
@@ -87,7 +88,7 @@ def detail(request, typ_vazby, ident_cely):
                 dokumentacni_jednotka.typ = typ
                 dokumentacni_jednotka.active_transaction = fedora_transaction
                 dokumentacni_jednotka.save()
-            update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
+            update_all_katastr_within_akce_or_lokalita(dj.ident_cely, fedora_transaction)
         elif dj.typ.heslo == "Sonda":
             logger.debug("dj.views.detail.sonda", extra={"ident_cely": dj.ident_cely})
             typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(id=TYP_DJ_SONDA_ID)).first()
@@ -99,7 +100,7 @@ def detail(request, typ_vazby, ident_cely):
                 dokumentacni_jednotka.typ = typ
                 dokumentacni_jednotka.active_transaction = fedora_transaction
                 dokumentacni_jednotka.save()
-            update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
+            update_all_katastr_within_akce_or_lokalita(dj.ident_cely, fedora_transaction)
         elif dj.typ.heslo == "Lokalita":
             logger.debug("dj.views.detail.lokalita", extra={"ident_cely": dj.ident_cely})
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
@@ -112,7 +113,7 @@ def detail(request, typ_vazby, ident_cely):
                 ).first()
                 dokumentacni_jednotka.active_transaction = fedora_transaction
                 dokumentacni_jednotka.save()
-            update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
+            update_all_katastr_within_akce_or_lokalita(dj.ident_cely, fedora_transaction)
         elif dj.typ == Heslar.objects.get(id=TYP_DJ_KATASTR):
             logger.debug("dj.views.detail.katastr", extra={"ident_cely": dj.ident_cely})
             new_ku = form.cleaned_data["ku_change"]
@@ -123,17 +124,15 @@ def detail(request, typ_vazby, ident_cely):
             dj.save()
             if len(new_ku) > 3:
                 update_main_katastr_within_ku(dj.ident_cely, new_ku)
-        transaction = None
         if dj.pian is not None and (pian_db is None or pian_db.pk != dj.pian.pk):
             logger.debug("dj.views.detail.update_pian_metadata",
                          extra={"pian_db": pian_db.ident_cely if pian_db else "None",
                                 "instance_pian": dj.pian.ident_cely, "ident_cely": dj.ident_cely})
-            transaction = dj.pian.save_metadata(transaction)
+            dj.pian.active_transaction = fedora_transaction
+            dj.pian.save()
         if pian_db is not None and (dj.pian is None or dj.pian.pk != pian_db.pk):
             logger.debug("dj.views.detail.changed_or_removed_pian", extra={"ident_cely": dj.ident_cely})
-            transaction = pian_db.save_metadata(transaction)
-        if transaction:
-            transaction.mark_transaction_as_closed()
+            pian_db.save()
     else:
         logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors,
                                                                    "ident_cely": dj.ident_cely})
@@ -269,7 +268,7 @@ def smazat(request, ident_cely):
             dj.active_transaction = fedora_transaction
             dj.close_active_transaction_when_finished = True
             resp = dj.delete()
-            update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
+            update_all_katastr_within_akce_or_lokalita(dj.ident_cely, fedora_transaction)
             if resp:
                 logger.debug("dj.views.detail.smazat.deleted", {"resp": resp})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)

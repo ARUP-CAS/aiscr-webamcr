@@ -392,22 +392,23 @@ def create(request):
                             "button": _("projekt.views.create.submitButton.text"),
                         },
                     )
+            fedora_transaction = FedoraTransaction()
+            projekt.active_transaction = fedora_transaction
             if x1 and x2:
                 projekt.geom = Point(x1, x2)
             try:
                 projekt.set_permanent_ident_cely(False)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+                fedora_transaction.mark_transaction_as_closed()
             else:
-                fedora_trasnaction = FedoraTransaction()
-                projekt.active_transaction = fedora_trasnaction
                 projekt.save()
                 projekt.set_zapsany(request.user)
                 form_projekt.save_m2m()
                 if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                     # Vytvoreni oznamovatele - kontrola formu uz je na zacatku
                     oznamovatel = form_oznamovatel.save(commit=False)
-                    oznamovatel.active_transaction = fedora_trasnaction
+                    oznamovatel.active_transaction = fedora_transaction
                     oznamovatel.projekt = projekt
                     oznamovatel.save()
                 if projekt.should_generate_confirmation_document:

@@ -325,7 +325,8 @@ class FedoraRepositoryConnector:
         return response
 
     def _create_container(self):
-        logger.debug("core_repository_connector._create_container.start", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector._create_container.start",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.CREATE_CONTAINER)
         headers = {
             'Slug': self.record.ident_cely,
@@ -333,7 +334,8 @@ class FedoraRepositoryConnector:
         }
         self._send_request(url, FedoraRequestType.CREATE_CONTAINER, headers=headers)
         self._create_link()
-        logger.debug("core_repository_connector._create_container.end", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector._create_container.end",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
     def _create_link(self):
         logger.debug("core_repository_connector._create_link.start", extra={"ident_cely": self.record.ident_cely,
@@ -830,6 +832,15 @@ class FedoraTransactionCommitFailedError(Exception):
     pass
 
 
+class FedoraTransactionUnsupportedOperationError(Exception):
+    pass
+
+
+class FedoraTransactionOperation(Enum):
+    COMMIT = 1
+    ROLLBACK = 2
+
+
 class FedoraTransaction:
     def __init__(self, uid=None):
         if uid is None:
@@ -876,13 +887,18 @@ class FedoraTransaction:
                      extra={"uid": self.uid})
         return False
 
-    def _commit_transaction(self):
+    def _send_transaction_request(self, operation=FedoraTransactionOperation.COMMIT):
         logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.start",
                      extra={"transaction_uid": self.uid})
         url = (f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}"
                f"/rest/fcr:tx/{self.uid}")
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
-        response = requests.put(url, auth=auth, verify=False)
+        if operation == FedoraTransactionOperation.COMMIT:
+            response = requests.put(url, auth=auth, verify=False)
+        elif operation == FedoraTransactionOperation.ROLLBACK:
+            response = requests.delete(url, auth=auth, verify=False)
+        else:
+            raise FedoraTransactionUnsupportedOperationError(operation)
         if not str(response.status_code).startswith("2"):
             logger.error("core_repository_connector.FedoraTransaction.commit_transaction.failed",
                          extra={"transaction": self.uid, "response": response.text})
@@ -890,10 +906,17 @@ class FedoraTransaction:
         logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.end",
                      extra={"transaction": self.uid})
 
+    def rollback_transaction(self):
+        logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.start",
+                     extra={"transaction": self.uid})
+        self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
+        logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
+                     extra={"transaction": self.uid})
+
     def mark_transaction_as_closed(self):
         logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.start",
                      extra={"transaction": self.uid})
-        self._commit_transaction()
+        self._send_transaction_request()
         logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
                      extra={"transaction": self.uid})
 

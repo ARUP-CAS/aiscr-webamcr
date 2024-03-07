@@ -63,7 +63,7 @@ from core.utils import (
     get_heatmap_pian_density,
     get_message,
     get_num_pians_from_envelope,
-    get_dj_pians_from_envelope,
+    get_dj_pians_from_envelope, CannotFindCadasterCentre,
 )
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
@@ -1233,23 +1233,26 @@ def post_akce2kat(request):
     akce_ident_cely = body["akce_ident_cely"]
 
     if len(katastr_name) > 0:
-        [bod, geom, presnost,zoom,pian_ident_cely,color] = get_centre_from_akce(katastr_name, akce_ident_cely) 
-        if len(str(bod)) > 0:
-            return JsonResponse(
-                {
-                    "lat": str(bod[0]),
-                    "lng": str(bod[1]),
-                    "zoom": str(zoom),
-                    "geom": str(geom).split(";")[1].replace(", ", ",")
-                    if geom
-                    else None,
-                    "presnost": str(presnost) if geom else 4,
-                    "pian_ident_cely": str(pian_ident_cely),
-                    "color":str(color),
-                },
-                status=200,
-            )
-    return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": "","pian_ident_cely":""}, status=200)
+        try:
+            bod, geom, presnost, zoom, pian_ident_cely, color = get_centre_from_akce(katastr_name, akce_ident_cely)
+            if len(str(bod)) > 0:
+                return JsonResponse(
+                    {
+                        "lat": str(bod[0]),
+                        "lng": str(bod[1]),
+                        "zoom": str(zoom),
+                        "geom": str(geom).split(";")[1].replace(", ", ",")
+                        if geom
+                        else None,
+                        "presnost": str(presnost) if geom else 4,
+                        "pian_ident_cely": str(pian_ident_cely),
+                        "color": str(color),
+                    },
+                    status=200,
+                )
+        except CannotFindCadasterCentre as err:
+            logger.error("arch_z.views.post_akce2kat.error", extra={"err": err})
+            return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": "", "pian_ident_cely": ""}, status=200)
 
 
 def get_history_dates(historie_vazby, request_user):

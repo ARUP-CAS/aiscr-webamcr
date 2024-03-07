@@ -1875,19 +1875,27 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
 
         for dokument_id in dokument_ids:
             dokument = get_object_or_404(Dokument, id=dokument_id)
+            fedora_transaction = FedoraTransaction()
+            dokument.active_transaction = fedora_transaction
             relace = casti_zaznamu.filter(dokument__id=dokument_id)
             if not relace.exists():
                 dc_ident = get_cast_dokumentu_ident(dokument)
                 if isinstance(zaznam, ArcheologickyZaznam):
-                    DokumentCast(
+                    dc = DokumentCast(
                         archeologicky_zaznam=zaznam,
                         dokument=dokument,
                         ident_cely=dc_ident,
-                    ).save()
+                    )
+                    dc.active_transaction = fedora_transaction
+                    dc.save()
                 else:
-                    DokumentCast(
+                    dc = DokumentCast(
                         projekt=zaznam, dokument=dokument, ident_cely=dc_ident
-                    ).save()
+                    )
+                    dc.active_transaction = fedora_transaction
+                    dc.save()
+                dokument.close_active_transaction_when_finished = True
+                dokument.save()
                 logger.debug("dokument.views.pripojit.pripojit",
                              extra={"debug_name": debug_name, "ident_zaznam": ident_zaznam,
                                     "ident_cely": dokument.ident_cely})

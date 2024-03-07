@@ -12,6 +12,13 @@ from .models import Heslar, RuianKatastr, RuianKraj, RuianOkres, HeslarDatace, H
 logger = logging.getLogger(__name__)
 
 
+def get_or_create_transaction(instance):
+    if instance.active_transaction:
+        return instance.active_transaction
+    else:
+        return FedoraTransaction()
+
+
 @receiver(pre_save, sender=Heslar)
 def save_ident_cely(sender, instance: Heslar, **kwargs):
     """
@@ -150,28 +157,28 @@ def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
 @receiver(pre_delete, sender=RuianKatastr)
 def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **kwargs):
     logger.debug("heslo.signals.ruian_katastr_delete_repository_container.start")
-    transaction = FedoraTransaction()
-    instance.record_deletion(transaction, close_transaction=True)
+    fedora_transaction = get_or_create_transaction(instance)
+    instance.record_deletion(fedora_transaction, close_transaction=True)
     logger.debug("heslo.signals.ruian_katastr_delete_repository_container.end",
-                 extra={"transaction": getattr(transaction, "uid", None)})
+                 extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
 @receiver(pre_delete, sender=RuianKraj)
 def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs):
     logger.debug("heslo.signals.ruian_kraj_delete_repository_container.start")
-    transaction = FedoraTransaction()
-    instance.record_deletion(transaction, close_transaction=True)
+    fedora_transaction = get_or_create_transaction(instance)
+    instance.record_deletion(fedora_transaction, close_transaction=True)
     logger.debug("heslo.signals.ruian_kraj_delete_repository_container.end",
-                 extra={"transaction": getattr(transaction, "uid", None)})
+                 extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
 @receiver(pre_delete, sender=RuianOkres)
 def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwargs):
     logger.debug("heslo.signals.ruian_okres_delete_repository_container.start")
-    transaction = FedoraTransaction()
-    instance.record_deletion(transaction, close_transaction=True)
+    fedora_transaction = get_or_create_transaction(instance)
+    instance.record_deletion(fedora_transaction, close_transaction=True)
     logger.debug("heslo.signals.ruian_okres_delete_repository_container.end",
-                 extra={"transaction": getattr(transaction, "uid", None)})
+                 extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
 @receiver(post_delete, sender=HeslarHierarchie)
