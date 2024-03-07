@@ -36,9 +36,6 @@ from .constants import (
 )
 from .repository_connector import RepositoryBinaryFile
 
-from PIL import Image
-from pypdf import PdfReader
-
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +113,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
     sha_512 = models.CharField(max_length=128, null=True, blank=True, db_index=True)
     suppress_signal = False
+    active_transaction = None
+    close_active_transaction_when_finished = False
+    binary_data = None
 
     @property
     def url(self):
@@ -212,32 +212,6 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             vazba=self.historie,
         ).save()
         logger.debug(_("core.models.soubor.zaznamenej_nahrani_nove_verze.finished"), extra={"historie": hist})
-
-    def save(self, *args, **kwargs):
-        """
-        Metóda pro uložení souboru do DB. Navíc se počítá počet stran pro pdf, případne počet frames pro obrázek.
-        """
-        # TODO: Rewrite this
-        super().save(*args, **kwargs)
-        repository_binary_file = self.get_repository_content()
-        if repository_binary_file and self.nazev.lower().endswith("pdf"):
-            try:
-                reader = PdfReader(repository_binary_file.content)
-                self.rozsah = len(reader.pages)
-            except:
-                logger.debug(_("core.models.Soubor.save_error_reading_pdf"))
-                self.rozsah = 1
-        elif repository_binary_file and self.nazev.lower().endswith("tif"):
-            try:
-                img = Image.open(repository_binary_file.content)
-            except:
-                logger.debug(_("core.models.Soubor.save_error_reading_tif"))
-                self.rozsah = 1
-            else:
-                self.rozsah = img.n_frames
-        else:
-            self.rozsah = 1
-        super().save(*args, **kwargs)
 
     @classmethod
     def get_file_extension_by_mime(cls, file):

@@ -32,19 +32,22 @@ def create_dokument_vazby(sender, instance, **kwargs):
 @receiver(post_save, sender=SamostatnyNalez)
 def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, **kwargs):
     logger.debug("pas.signals.save_metadata_samostatny_nalez.start", extra={"ident_cely": instance.ident_cely})
-    transaction = instance.save_metadata()
-    instance.projekt.save_metadata(transaction)
+    fedora_transaction = instance.active_transaction
+    instance.projekt.save_metadata(fedora_transaction)
+    instance.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
     if not check_if_task_queued("SamostatnyNalez", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["SamostatnyNalez", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
     logger.debug("pas.signals.save_metadata_samostatny_nalez.end", extra={"ident_cely": instance.ident_cely,
-                                                                          "transaction": transaction})
+                                                                          "transaction": fedora_transaction})
 
 
 @receiver(pre_delete, sender=SamostatnyNalez)
 def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **kwargs):
     logger.debug("pas.signals.dokument_delete_container_soubor_vazby.start",
                  extra={"ident_cely": instance.ident_cely})
-    transaction = instance.record_deletion()
+    fedora_transaction = instance.active_transaction
+    transaction = instance.record_deletion(fedora_transaction,
+                                           close_transaction=instance.close_active_transaction_when_finished)
     if instance.soubory and instance.soubory.pk:
         instance.soubory.delete()
     if instance.historie and instance.historie.pk:
@@ -53,29 +56,38 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
 
 
-@receiver(pre_save, sender=UzivatelSpoluprace)
+@receiver(post_save, sender=UzivatelSpoluprace)
 def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.save_uzivatel_spoluprce.start", extra={"pk": instance.pk})
-    instance.vedouci.save_metadata(use_celery=False)
-    instance.spolupracovnik.save_metadata(use_celery=False)
+    fedora_transaction = instance.active_transaction
+    instance.vedouci.save_metadata(fedora_transaction)
+    instance.spolupracovnik.save_metadata(fedora_transaction,
+                                          close_transaction=instance.close_activate_transaction_when_finished)
     logger.debug("pas.signals.save_uzivatel_spoluprce.end", extra={"pk": instance.pk})
 
 
 @receiver(pre_delete, sender=UzivatelSpoluprace)
 def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.start", extra={"pk": instance.pk})
+    fedora_transaction = instance.active_transaction
+    instance.vedouci.save_metadata(fedora_transaction)
+    instance.spolupracovnik.save_metadata(fedora_transaction,
+                                          close_transaction=instance.close_activate_transaction_when_finished)
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
-    logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.end", extra={"pk": instance.pk})
+    logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.end",
+                 extra={"pk": instance.pk,  "transaction": getattr(fedora_transaction, "uid", None)})
 
 
 @receiver(post_delete, sender=UzivatelSpoluprace)
 def delete_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.delete_uzivatel_spoluprce.start", extra={"pk": instance.pk})
     Historie.save_record_deletion_record(record=instance)
-    transaction = instance.vedouci.save_metadata(use_celery=False)
-    instance.spolupracovnik.save_metadata(transaction, use_celery=False)
+    fedora_transaction = instance.active_transaction
+    instance.vedouci.save_metadata(fedora_transaction)
+    instance.spolupracovnik.save_metadata(fedora_transaction,
+                                          close_transaction=instance.close_activate_transaction_when_finished)
     if not check_if_task_queued("UzivatelSpoluprace", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["UzivatelSpoluprace", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
-    logger.debug("pas.signals.delete_uzivatel_spoluprce.end", extra={"pk": instance.pk,
-                                                                     "transaction": transaction})
+    logger.debug("pas.signals.delete_uzivatel_spoluprce.end",
+                 extra={"pk": instance.pk, "transaction": getattr(fedora_transaction, "uid", None)})

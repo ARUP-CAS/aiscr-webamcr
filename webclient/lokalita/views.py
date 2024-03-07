@@ -20,6 +20,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
 )
+from core.repository_connector import FedoraTransaction
 from core.views import SearchListView
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
@@ -199,15 +200,20 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
+        logger.debug("lokalita.views.LokalitaCreateView.form_valid.start")
         logger.debug(CreateArchZForm(self.request.POST))
         form_az = CreateArchZForm(self.request.POST)
         if form_az.is_valid():
-            logger.debug("Form to save new Lokalita and AZ OK")
+            fedora_transaction = FedoraTransaction()
+            logger.debug("lokalita.views.LokalitaCreateView.form_valid.true",
+                         extra={"transaction": getattr(fedora_transaction, "uid", None)})
             az = form_az.save(commit=False)
-            logger.debug(az)
+            az: ArcheologickyZaznam
+            az.active_transaction = fedora_transaction
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
             lokalita = form.save(commit=False)
+            lokalita.active_transaction = fedora_transaction
             az.save()
             form_az.save_m2m()
             region = az.hlavni_katastr.okres.kraj.rada_id
@@ -217,6 +223,9 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
             az.set_zapsany(self.request.user)
             lokalita.archeologicky_zaznam = az
             lokalita.save()
+
+            az.close_active_transaction_when_finished = True
+            az.save()
 
             messages.add_message(
                 self.request, messages.SUCCESS, LOKALITA_USPESNE_ZAPSANA
@@ -276,7 +285,11 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         )
         if form_az.is_valid():
             logger.debug("Lokalita.EditFormAz is valid")
-            form_az.save()
+            fedora_transaction = FedoraTransaction()
+            az = form_az.save(commit=False)
+            az.active_transaction = fedora_transaction
+            az.close_active_transaction_when_finished = True
+            az.save()
             messages.add_message(
                 self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN
             )
@@ -300,33 +313,6 @@ class LokalitaRelatedView(LokalitaDetailView):
 
     model = Lokalita
     slug_field = "archeologicky_zaznam__ident_cely"
-    """
-    def get_jednotky(self):
-        ident_cely = self.kwargs.get("ident_cely")
-        return (
-            DokumentacniJednotka.objects.filter(
-                archeologicky_zaznam__ident_cely=ident_cely
-            )
-            .select_related("komponenty", "typ", "pian")
-            .prefetch_related(
-                "komponenty__komponenty",
-                "komponenty__komponenty__aktivity",
-                "komponenty__komponenty__obdobi",
-                "komponenty__komponenty__areal",
-                "komponenty__komponenty__objekty",
-                "komponenty__komponenty__predmety",
-                "adb",
-            )
-        )
-
-    def get_shows(self):
-        return get_detail_template_shows(
-            self.get_object().archeologicky_zaznam,
-            self.get_jednotky(),
-            self.request.user,
-            app="lokalita",
-        )
-    """
 
 
 class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):

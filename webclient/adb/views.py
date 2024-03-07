@@ -10,6 +10,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
+from core.repository_connector import FedoraTransaction
 from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.contrib import messages
@@ -46,6 +47,9 @@ def zapsat(request, dj_ident_cely):
         except MaximalIdentNumberError as e:
             messages.add_message(request, messages.ERROR, e.message)
         else:
+            fedora_transaction = FedoraTransaction()
+            adb.active_transaction = fedora_transaction
+            adb.close_active_transaction_when_finished = True
             adb.dokumentacni_jednotka = dj
             adb.sm5 = sm5
             adb.save()
@@ -78,6 +82,9 @@ def smazat(request, ident_cely):
         if adb.container_creation_queued():
             messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
             return JsonResponse({"redirect": dj.get_absolute_url()}, status=403)
+        fedora_transaction = FedoraTransaction()
+        adb.active_transaction = fedora_transaction
+        adb.close_active_transaction_when_finished = True
         resp = adb.delete()
 
         if resp:
@@ -119,6 +126,7 @@ def smazat_vb(request, ident_cely):
     Po úspešném smazání je uživatel presměrován na next_url z requestu.
     """
     zaznam = get_object_or_404(VyskovyBod, ident_cely=ident_cely)
+    zaznam: VyskovyBod
     context = {
         "object": zaznam,
         "title": _("adb.views.smazat_vb.modalForm.title"),
@@ -126,6 +134,9 @@ def smazat_vb(request, ident_cely):
         "button": _("adb.views.smazat_vb.modalForm.submit.button"),
     }
     if request.method == "POST":
+        fedora_transaction = FedoraTransaction()
+        zaznam.fedora_transaction = fedora_transaction
+        zaznam.close_active_transaction_when_finished = True
         resp = zaznam.delete()
         next_url = request.POST.get("next")
         if next_url:

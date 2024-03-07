@@ -67,6 +67,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
+from core.repository_connector import FedoraTransaction
 from core.utils import (
     get_heatmap_project,
     get_heatmap_project_density,
@@ -391,12 +392,15 @@ def create(request):
                             "button": _("projekt.views.create.submitButton.text"),
                         },
                     )
+            fedora_transaction = FedoraTransaction()
+            projekt.active_transaction = fedora_transaction
             if x1 and x2:
                 projekt.geom = Point(x1, x2)
             try:
                 projekt.set_permanent_ident_cely(False)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+                fedora_transaction.mark_transaction_as_closed()
             else:
                 projekt.save()
                 projekt.set_zapsany(request.user)
@@ -404,6 +408,7 @@ def create(request):
                 if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                     # Vytvoreni oznamovatele - kontrola formu uz je na zacatku
                     oznamovatel = form_oznamovatel.save(commit=False)
+                    oznamovatel.active_transaction = fedora_transaction
                     oznamovatel.projekt = projekt
                     oznamovatel.save()
                 if projekt.should_generate_confirmation_document:
@@ -413,6 +418,8 @@ def create(request):
                     Mailer.send_ep01a(project=projekt)
                 else:
                     Mailer.send_ep01b(project=projekt)
+                projekt.close_active_transaction_when_finished = True
+                projekt.save()
                 return redirect("projekt:detail", ident_cely=projekt.ident_cely)
         else:
             logger.debug("projekt.views.create.form_projekt_not_valid", extra={"errors": form_projekt.errors})
@@ -465,20 +472,25 @@ def edit(request, ident_cely):
             # Workaroud to not check if long and lat has been changed, only geom is interesting
             form.fields["coordinate_x1"].initial = x1
             form.fields["coordinate_x2"].initial = x2
-            p = form.save()
-            old_geom = p.geom
-            new_geom = Point(x1,x2)
+            fedora_trasnaction = FedoraTransaction()
+            projekt = form.save(commit=False)
+            projekt.active_transaction = fedora_trasnaction
+            projekt.save()
+            old_geom = projekt.geom
+            new_geom = Point(x1, x2)
             geom_changed = False
             if old_geom is None or new_geom.coords != old_geom.coords:
-                p.geom = new_geom
-                p.save()
+                projekt.geom = new_geom
+                projekt.save()
                 geom_changed = True
-                logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": p.geom})
+                logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": projekt.geom})
             else:
                 logger.warning("projekt.views.edit.form_valid.geom_not_updated")
             if form.changed_data or geom_changed:
                 logger.debug("projekt.views.edit.form_valid.form_changed", extra={"changed_data": form.changed_data})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            projekt.close_active_transaction_when_finished = True
+            projekt.save()
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
             logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"form_errors": form.errors})
@@ -516,6 +528,9 @@ def smazat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
+        fedora_trasnaction = FedoraTransaction()
+        projekt.active_transaction = fedora_trasnaction
+        projekt.close_active_transaction_when_finished = True
         projekt.deleted_by_user = request.user
         projekt.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
@@ -556,15 +571,19 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
     
     def add_accessibility_lookup(self,permission, qs):
         accessibility_key = self.permission_model_lookup+"pristupnost_filter__in"
-        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id))
-        filter = {accessibility_key:accessibilities}
+        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST,
+                                                id__in=self.group_to_accessibility
+                                                .get(self.request.user.hlavni_role.id))
+        query_filter = {accessibility_key: accessibilities}
         pristupnost = (
             SamostatnyNalez.objects.filter(projekt=OuterRef("pk")).distinct()
             .order_by("pristupnost__razeni")
             .values("pristupnost")
         )
         qs_new = qs.annotate(pristupnost_filter=Subquery(pristupnost[:1]))
-        return qs_new.filter(Q(**filter) | Q(pristupnost_filter__isnull=True) | self.add_ownership_lookup(permission.accessibility))
+        return qs_new.filter(Q(**query_filter) | Q(pristupnost_filter__isnull=True)
+                             | self.add_ownership_lookup(permission.accessibility))
+
 
 class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
     """
@@ -667,7 +686,9 @@ def schvalit(request, ident_cely):
             else:
                 logger.debug("projekt.views.schvalit.perm_ident", extra={"ident_cely": ident_cely,
                                                                          "permIdent_cely": projekt.ident_cely})
-        projekt.set_schvaleny(request.user,old_ident)
+        fedora_transaction = FedoraTransaction()
+        projekt.active_transaction = fedora_transaction
+        projekt.set_schvaleny(request.user, old_ident)
         projekt.save()
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             projekt.create_confirmation_document(user=request.user)
@@ -676,6 +697,8 @@ def schvalit(request, ident_cely):
             Mailer.send_ep01a(project=projekt)
         else:
             Mailer.send_ep01b(project=projekt)
+        projekt.close_active_transaction_when_finished = True
+        projekt.save()
         return JsonResponse(
             {
                 "redirect": reverse(
@@ -723,12 +746,16 @@ def prihlasit(request, ident_cely):
         form = PrihlaseniProjektForm(request.POST, instance=projekt)
         if form.is_valid():
             projekt = form.save(commit=False)
+            fedora_transaction = FedoraTransaction()
+            projekt.active_transaction = fedora_transaction
             projekt.set_prihlaseny(request.user)
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN)
             if projekt.ident_cely[0] == OBLAST_CECHY:
                 Mailer.send_ep03a(project=projekt)
             else:
                 Mailer.send_ep03b(project=projekt)
+            projekt.close_active_transaction_when_finished = True
+            projekt.save()
             return JsonResponse(
                 {
                     "redirect": reverse(
@@ -777,10 +804,14 @@ def zahajit_v_terenu(request, ident_cely):
 
         if form.is_valid():
             projekt = form.save(commit=False)
+            fedora_transaction = FedoraTransaction()
+            projekt.active_transaction = fedora_transaction
             projekt.set_zahajeny_v_terenu(request.user)
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_ZAHAJEN_V_TERENU
             )
+            projekt.close_active_transaction_when_finished = True
+            projekt.save()
             return JsonResponse(
                 {
                     "redirect": reverse(
@@ -828,10 +859,14 @@ def ukoncit_v_terenu(request, ident_cely):
         form = UkoncitVTerenuForm(request.POST, instance=projekt)
         if form.is_valid():
             projekt = form.save(commit=False)
+            fedora_transaction = FedoraTransaction()
+            projekt.active_transaction = fedora_transaction
             projekt.set_ukoncen_v_terenu(request.user)
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_UKONCEN_V_TERENU
             )
+            projekt.active_transaction = True
+            projekt.save()
             return JsonResponse(
                 {
                     "redirect": reverse(
@@ -877,16 +912,22 @@ def uzavrit(request, ident_cely):
         )
     if request.method == "POST":
         # Move all events to state A2
-        akce = Akce.objects.filter(projekt=projekt)
-        for a in akce:
-            if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
+        fedora_transaction = FedoraTransaction()
+        projekt.active_transaction = fedora_transaction
+        akce_query = Akce.objects.filter(projekt=projekt)
+        for akce in akce_query:
+            if akce.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
                 logger.debug("projekt.views.uzavrit.set_a2", extra={"ident_cely": ident_cely})
-                a.archeologicky_zaznam.set_odeslany(request.user)
-            for dokument_cast in a.archeologicky_zaznam.casti_dokumentu.all():
+                akce.archeologicky_zaznam.set_odeslany(request.user)
+                akce.archeologicky_zaznam.active_transaction = fedora_transaction
+            for dokument_cast in akce.archeologicky_zaznam.casti_dokumentu.all():
                 if dokument_cast.dokument.stav == D_STAV_ZAPSANY:
                     logger.debug("projekt.views.uzavrit.set_d2", extra={"ident_cely": ident_cely})
+                    dokument_cast.dokument.active_transaction = fedora_transaction
                     dokument_cast.dokument.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
+        projekt.close_active_transaction_when_finished = True
+        projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
         return JsonResponse(
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}
@@ -953,7 +994,10 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
+        fedora_transaction = FedoraTransaction()
+        projekt.active_transaction = fedora_transaction
         projekt.set_archivovany(request.user)
+        projekt.close_active_transaction_when_finished = True
         projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ARCHIVOVAN)
         return JsonResponse(
@@ -1029,7 +1073,10 @@ def navrhnout_ke_zruseni(request, ident_cely):
                 duvod_to_save = form.cleaned_data["reason_text"]
             else:
                 duvod_to_save = duvod_to_save
+            fedora_transaction = FedoraTransaction()
+            projekt.active_transaction = fedora_transaction
             projekt.set_navrzen_ke_zruseni(request.user, duvod_to_save)
+            projekt.close_active_transaction_when_finished = True
             projekt.save()
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI
@@ -1093,7 +1140,10 @@ def zrusit(request, ident_cely):
         form = ZruseniProjektForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason_text"]
+            fedora_transaction = FedoraTransaction()
+            projekt.active_transaction = fedora_transaction
             projekt.set_zruseny(request.user, duvod)
+            projekt.close_active_transaction_when_finished = True
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
             Mailer.send_ep04(project=projekt, reason=duvod)
@@ -1162,7 +1212,10 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
+            fedora_transaction = FedoraTransaction()
+            projekt.active_transaction = fedora_transaction
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
+            projekt.close_active_transaction_when_finished = True
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
             return JsonResponse(
@@ -1212,7 +1265,10 @@ def vratit_navrh_zruseni(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
+            fedora_transaction = FedoraTransaction()
+            projekt.active_transaction = fedora_transaction
             projekt.set_znovu_zapsan(request.user, duvod)
+            projekt.close_active_transaction_when_finished = True
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
             Mailer.send_ep05(project=projekt)
@@ -1248,13 +1304,11 @@ def odpojit_dokument(request, ident_cely, proj_ident_cely):
         logger.debug("Projekt neni typu pruzkumny")
         messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_PRUZKUMNY)
         return redirect(proj.get_absolute_url())
-    relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_cely,projekt=proj)
+    relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_cely, projekt=proj)
     if not relace_dokumentu.count() > 0:
         logger.error("Projekt - Dokument wrong relation")
-        messages.add_message(
-                    request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                )
-        return redirect(request.GET.get("next","core:home"))
+        messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+        return redirect(request.GET.get("next", "core:home"))
     return odpojit(request, ident_cely, proj_ident_cely, proj)
 
 

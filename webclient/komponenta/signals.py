@@ -23,26 +23,28 @@ def delete_komponenta_vazby(sender, instance: KomponentaVazby, **kwargs):
 @receiver(post_save, sender=Komponenta)
 def komponenta_save(sender, instance: Komponenta, **kwargs):
     logger.debug("komponenta.signals.komponenta_save.start", extra={"pk": instance.pk})
-    transaction = None
+    transaction = instance.active_transaction
+    close_transaction = instance.close_active_transaction_when_finished
     if instance.komponenta_vazby.navazany_objekt:
         navazany_objekt = instance.komponenta_vazby.navazany_objekt
         if isinstance(navazany_objekt, DokumentCast):
-            transaction = navazany_objekt.dokument.save_metadata(transaction)
+            navazany_objekt.dokument.save_metadata(transaction, close_transaction=close_transaction)
         elif isinstance(navazany_objekt, DokumentacniJednotka):
-            transaction = navazany_objekt.archeologicky_zaznam.save_metadata(transaction)
-    if transaction:
-        transaction.mark_transaction_as_closed()
-    logger.debug("komponenta.signals.komponenta_save.end", extra={"transaction": transaction, "pk": instance.pk})
+            navazany_objekt.archeologicky_zaznam.save_metadata(transaction, close_transaction=close_transaction)
+    logger.debug("komponenta.signals.komponenta_save.end",
+                 extra={"transaction": getattr(transaction, "uid", None), "pk": instance.pk})
 
 
 @receiver(pre_delete, sender=Komponenta)
 def komponenta_delete(sender, instance: Komponenta, **kwargs):
-    transaction = None
+    logger.debug("komponenta.signals.komponenta_delete.start", extra={"pk": instance.pk})
+    transaction = instance.active_transaction
+    close_transaction = instance.close_active_transaction_when_finished
     if instance.komponenta_vazby.navazany_objekt:
         navazany_objekt = instance.komponenta_vazby.navazany_objekt
         if isinstance(navazany_objekt, DokumentCast):
-            transaction = navazany_objekt.dokument.save_metadata()
+            navazany_objekt.dokument.save_metadata(transaction, close_transaction=close_transaction)
         elif isinstance(navazany_objekt, DokumentacniJednotka):
-            transaction = navazany_objekt.archeologicky_zaznam.save_metadata(transaction)
-    if transaction:
-        transaction.mark_transaction_as_closed()
+            navazany_objekt.archeologicky_zaznam.save_metadata(transaction, close_transaction=close_transaction)
+    logger.debug("komponenta.signals.komponenta_delete.end",
+                 extra={"transaction": getattr(transaction, "uid", None), "pk": instance.pk})

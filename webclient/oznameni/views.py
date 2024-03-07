@@ -9,6 +9,7 @@ from core.constants import (
 )
 from core.ident_cely import get_temporary_project_ident
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
+from core.repository_connector import FedoraTransaction
 from core.utils import get_cadastre_from_point
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -73,56 +74,60 @@ def index(request, test_run=False):
             and (test_run or settings.SKIP_RECAPTCHA or form_captcha.is_valid())
         ):
             logger.debug("oznameni.views.index.all_forms_valid")
-            o = form_ozn.save(commit=False)
-            p: Projekt = form_projekt.save(commit=False)
-            p.suppress_signal = True
-            p.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
+            oznamovatel = form_ozn.save(commit=False)
+            projekt: Projekt = form_projekt.save(commit=False)
+            fedora_transaction = FedoraTransaction()
+            projekt.suppress_signal = True
+            projekt.active_transaction = fedora_transaction
+            projekt.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
             dalsi_katastry = form_projekt.cleaned_data["katastry"]
-            p.geom = Point(
+            projekt.geom = Point(
                 float(request.POST.get("coordinate_x1")),
                 float(request.POST.get("coordinate_x2")),
             )
-            p.hlavni_katastr = get_cadastre_from_point(p.geom)
-            logger.debug("oznameni.views.index.hlavni_katastr", extra={"hlavni_katastr": p.hlavni_katastr})
+            projekt.hlavni_katastr = get_cadastre_from_point(projekt.geom)
+            logger.debug("oznameni.views.index.hlavni_katastr", extra={"hlavni_katastr": projekt.hlavni_katastr,
+                                                                       "transaction": getattr(fedora_transaction,
+                                                                                              "uid", None)})
             # p.save()
-            if p.hlavni_katastr is not None and not ident_cely:
-                p.ident_cely = get_temporary_project_ident(
-                    p.hlavni_katastr.okres.kraj.rada_id
+            if projekt.hlavni_katastr is not None and not ident_cely:
+                projekt.ident_cely = get_temporary_project_ident(
+                    projekt.hlavni_katastr.okres.kraj.rada_id
                 )
             else:
-                logger.debug("oznameni.views.index.unknow_location", extra={"point": str(p.geom)})
-            p.save()
-            o.projekt = p
-            o.save()
-            p.set_vytvoreny()
-            p.katastry.add(*[i for i in dalsi_katastry])
-            transaction = p.save_metadata(False)
-            if transaction:
-                transaction.mark_transaction_as_closed()
+                logger.debug("oznameni.views.index.unknow_location", extra={"point": str(projekt.geom)})
+            projekt.save()
+            oznamovatel.projekt = projekt
+            oznamovatel.save()
+            projekt.set_vytvoreny()
+            projekt.katastry.add(*[i for i in dalsi_katastry])
+            projekt.suppress_signal = False
+            projekt.close_active_transaction_when_finished = True
+            projekt.save()
 
             confirmation = {
-                "oznamovatel": o.oznamovatel,
-                "zastupce": o.odpovedna_osoba,
-                "adresa": o.adresa,
-                "telefon": o.telefon,
-                "email": o.email,
-                "katastr": p.hlavni_katastr,
+                "oznamovatel": oznamovatel.oznamovatel,
+                "zastupce": oznamovatel.odpovedna_osoba,
+                "adresa": oznamovatel.adresa,
+                "telefon": oznamovatel.telefon,
+                "email": oznamovatel.email,
+                "katastr": projekt.hlavni_katastr,
                 "dalsi_katastry": dalsi_katastry,
-                "ident_cely": p.ident_cely,
-                "planovane_zahajeni": p.planovane_zahajeni,
-                "podnet": p.podnet,
-                "lokalizace": p.lokalizace,
-                "parcelni_cislo": p.parcelni_cislo,
-                "oznaceni_stavby": p.oznaceni_stavby,
+                "ident_cely": projekt.ident_cely,
+                "planovane_zahajeni": projekt.planovane_zahajeni,
+                "podnet": projekt.podnet,
+                "lokalizace": projekt.lokalizace,
+                "parcelni_cislo": projekt.parcelni_cislo,
+                "oznaceni_stavby": projekt.oznaceni_stavby,
             }
 
             context = {"confirm": confirmation}
-            if p.ident_cely[2].upper() == OBLAST_CECHY:
-                Mailer.send_eo01(project=p)
+            if projekt.ident_cely[2].upper() == OBLAST_CECHY:
+                Mailer.send_eo01(project=projekt)
             else:
-                Mailer.send_eo02(project=p)
+                Mailer.send_eo02(project=projekt)
             response = render(request, "oznameni/index_2.html", context)
-            response.set_cookie("project", hash(p.ident_cely), 3600)
+            response.set_cookie("project", hash(projekt.ident_cely), 3600)
             return response
         else:
             extra = {"form_ozn_errors": form_ozn.errors, "form_projekt_errors": form_projekt.errors}
@@ -133,8 +138,12 @@ def index(request, test_run=False):
     # Part 2 of the announcement form
     elif request.method == "POST" and "ident_cely" in request.POST:
         logger.debug(f"oznameni.views.index.second_part_start")
-        p = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
-        p.set_oznameny()
+        projekt = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
+        fedora_transaction = FedoraTransaction()
+        projekt.active_transaction = fedora_transaction
+        projekt.set_oznameny()
+        projekt.close_active_transaction_when_finished = True
+        projekt.save()
         context = {"ident_cely": request.POST["ident_cely"]}
         return render(request, "oznameni/success.html", context)
     elif request.method == "GET" and "ident_cely" in request.GET:
@@ -188,7 +197,7 @@ def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci oznamovatele.
     """
-    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     oznameni = projekt.oznamovatel
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
@@ -196,8 +205,12 @@ def edit(request, ident_cely):
         form = OznamovatelForm(request.POST, instance=oznameni, required_next=True)
         if form.is_valid():
             oznameni = form.save(commit=False)
-            oznameni.projekt=projekt
+            oznameni.projekt = projekt
             oznameni.save()
+            fedora_transaction = FedoraTransaction()
+            projekt.active_transaction = fedora_transaction
+            projekt.close_active_transaction_when_finished = True
+            projekt.save()
             if form.changed_data:
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("/projekt/detail/" + oznameni.projekt.ident_cely)
@@ -260,7 +273,7 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
-        projekt = context["object"]
+        projekt: Projekt = context["object"]
         if check_stav_changed(request, projekt):
             return JsonResponse(
                 {"redirect": projekt.get_absolute_url()},
@@ -272,7 +285,11 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
             ozn.projekt = projekt
             ozn.save()
 
-            logger.debug("Pridan oznamovatel do projektu: " + str(projekt.ident_cely))
+            fedora_transaction = FedoraTransaction()
+            projekt.active_transaction = fedora_transaction
+            projekt.close_active_transaction_when_finished = True
+            projekt.save()
+
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)

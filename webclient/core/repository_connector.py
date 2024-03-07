@@ -1,9 +1,9 @@
 import hashlib
+import inspect
 import io
 import logging
 import re
 import time
-from datetime import datetime
 from enum import Enum
 from io import BytesIO
 from PIL import Image
@@ -17,7 +17,6 @@ from requests.auth import HTTPBasicAuth
 
 from core.utils import get_mime_type
 from xml_generator.generator import DocumentGenerator
-from xml_generator.models import check_if_task_queued, METADATA_UPDATE_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +123,10 @@ class FedoraRepositoryConnector:
         else:
             self.transaction_uid = None
         self.restored_container = False
+        stack = inspect.stack()
+        caller = stack[1]
+        logger.debug("core_repository_connector.__init__.end",
+                     extra={"caller": caller, "transaction": self.transaction_uid, "ident_cely": record.ident_cely})
 
     def _get_model_name(self):
         class_name = self.record.__class__.__name__
@@ -171,7 +174,8 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY,
                               FedoraRequestType.CREATE_BINARY_FILE_THUMB,
                               FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE):
-            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}"
+            ident_cely = ident_cely if ident_cely else self.record.ident_cely
+            return f"{base_url}/record/{ident_cely}/file/{uuid}"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT):
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
@@ -179,7 +183,8 @@ class FedoraRepositoryConnector:
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/thumb"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE,
                               FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE):
-            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/thumb-large"
+            ident_cely = ident_cely if ident_cely else self.record.ident_cely
+            return f"{base_url}/record/{ident_cely}/file/{uuid}/thumb-large"
         elif request_type == FedoraRequestType.DELETE_TOMBSTONE:
             return f"{base_url}/record/{self.record.ident_cely}/fcr:tombstone"
         elif request_type == FedoraRequestType.DELETE_LINK_TOMBSTONE:
@@ -254,7 +259,7 @@ class FedoraRepositoryConnector:
 
     def _send_request(self, url: str, request_type: FedoraRequestType, *,
                       headers=None, data=None) -> Optional[requests.Response]:
-        extra = {"url": url, "request_type": request_type}
+        extra = {"url": url, "request_type": request_type, "transaction": self.transaction_uid}
         logger.debug("core_repository_connector._send_request.start", extra=extra)
         auth = self._get_auth(request_type)
         response = None
@@ -309,8 +314,10 @@ class FedoraRepositoryConnector:
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
             else:
-                extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text}
-
+                stack = inspect.stack()
+                caller = stack[1]
+                extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
+                         "transaction": self.transaction_uid, "url": url, "caller": caller}
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
                 raise FedoraError(url, response.text, response.status_code)
         else:
@@ -318,7 +325,8 @@ class FedoraRepositoryConnector:
         return response
 
     def _create_container(self):
-        logger.debug("core_repository_connector._create_container.start", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector._create_container.start",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.CREATE_CONTAINER)
         headers = {
             'Slug': self.record.ident_cely,
@@ -326,10 +334,12 @@ class FedoraRepositoryConnector:
         }
         self._send_request(url, FedoraRequestType.CREATE_CONTAINER, headers=headers)
         self._create_link()
-        logger.debug("core_repository_connector._create_container.end", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector._create_container.end",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
     def _create_link(self):
-        logger.debug("core_repository_connector._create_link.start", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector._create_link.start", extra={"ident_cely": self.record.ident_cely,
+                                                                            "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.CREATE_LINK)
         headers = {
             'Slug': self.record.ident_cely,
@@ -338,22 +348,25 @@ class FedoraRepositoryConnector:
         data = "@prefix ore: <http://www.openarchives.org/ore/terms/> " \
                f". <> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}>"
         self._send_request(url, FedoraRequestType.CREATE_LINK, headers=headers, data=data)
-        logger.debug("core_repository_connector._create_link.end", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector._create_link.end", extra={"ident_cely": self.record.ident_cely,
+                                                                          "transaction": self.transaction_uid})
 
     def container_exists(self):
-        logger.debug("core_repository_connector._container_exists.start", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector._container_exists.start",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_CONTAINER)
         if result is None or result.status_code == 404:
             logger.debug("core_repository_connector._container_exists.false",
-                         extra={"ident_cely": self.record.ident_cely})
+                         extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
             return False
-        logger.debug("core_repository_connector._container_exists.true", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector._container_exists.true",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         return True
 
     def _connect_deleted_container(self):
         logger.debug("core_repository_connector._connect_deleted_container.start",
-                     extra={"ident_cely": self.record.ident_cely})
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.CONNECT_DELETED_RECORD_1)
         headers = {
             "Content-Type": "application/sparql-update",
@@ -372,69 +385,75 @@ class FedoraRepositoryConnector:
         self._send_request(url, FedoraRequestType.CONNECT_DELETED_RECORD_4)
 
         logger.debug("core_repository_connector._connect_deleted_container.end",
-                     extra={"ident_cely": self.record.ident_cely})
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
     def _check_container(self):
-        logger.debug("core_repository_connector._check_container.start", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector._check_container.start",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_CONTAINER)
         regex = re.compile(r"dcterms:type *\"deleted\" *;")
         if hasattr(result, "text") and regex.search(result.text):
             logger.debug("core_repository_connector._check_container.connect_delete",
-                         extra={"ident_cely": self.record.ident_cely})
+                         extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
             self._connect_deleted_container()
             self.restored_container = True
         elif result.status_code == 404:
             logger.debug("core_repository_connector._check_container.create",
-                         extra={"ident_cely": self.record.ident_cely})
+                         extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
             self._create_container()
         url = self._get_request_url(FedoraRequestType.GET_LINK)
         result = self._send_request(url, FedoraRequestType.GET_LINK)
         if result.status_code == 404:
             self._create_link()
-        logger.debug("core_repository_connector._check_container.end", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector._check_container.end",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
     def _create_binary_file_container(self):
         logger.debug("core_repository_connector._create_binary_file_container.start",
-                     extra={"ident_cely": self.record.ident_cely})
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTAINER)
         headers = {
             "Slug": "file"
         }
         self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER, headers=headers)
         logger.debug("core_repository_connector._create_binary_file_container.end",
-                     extra={"ident_cely": self.record.ident_cely})
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
     def _check_binary_file_container(self):
         logger.debug("core_repository_connector._check_binary_file_containe.start",
-                     extra={"ident_cely": self.record.ident_cely})
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTAINER)
         if result.status_code == 404:
             self._create_binary_file_container()
         logger.debug("core_repository_connector._check_binary_file_container.end",
-                     extra={"ident_cely": self.record.ident_cely})
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
     def _generate_metadata(self):
         logger.debug("core_repository_connector._generate_metadata.start",
-                     extra={"ident_cely": self.record.ident_cely})
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         document_generator = DocumentGenerator(self.record)
         document = document_generator.generate_document()
         hash512 = hashlib.sha512(document).hexdigest()
-        logger.debug("core_repository_connector._generate_metadata.end", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector._generate_metadata.end",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         return document, hash512
 
     def get_metadata(self, update=False) -> bytes:
-        logger.debug("core_repository_connector.get_metadata.start", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector.get_metadata.start",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         self.save_metadata(update)
         url = self._get_request_url(FedoraRequestType.GET_METADATA)
         response = self._send_request(url, FedoraRequestType.GET_METADATA)
-        logger.debug("core_repository_connector.get_metadata.end", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector.get_metadata.end",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         return response.content
 
     def save_metadata(self, update=True):
-        logger.debug("core_repository_connector.save_metadata.start", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector.save_metadata.start",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_METADATA)
         result = self._send_request(url, FedoraRequestType.GET_METADATA)
@@ -456,11 +475,13 @@ class FedoraRepositoryConnector:
             document, headers = generate_metadata()
             url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
             self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
-        logger.debug("core_repository_connector.save_metadata.end", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector.save_metadata.end",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
     def save_binary_file(self, file_name, content_type, file: io.BytesIO) -> RepositoryBinaryFile:
         logger.debug("core_repository_connector.save_binary_file.start",
-                     extra={"file_name": file_name, "ident_cely": self.record.ident_cely})
+                     extra={"file_name": file_name, "ident_cely": self.record.ident_cely,
+                            "transaction": self.transaction_uid})
         self._check_binary_file_container()
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
         result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE)
@@ -478,7 +499,7 @@ class FedoraRepositoryConnector:
         self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         self._save_thumbs(file_name, file, uuid)
         logger.debug("core_repository_connector.save_binary_file.end",
-                     extra={"url": uuid, "ident_cely": self.record.ident_cely})
+                     extra={"url": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         return rep_bin_file
 
     @staticmethod
@@ -520,15 +541,17 @@ class FedoraRepositoryConnector:
                              extra={"err": err, "file_name": file_name, "large": large})
                 return None
 
-    def _save_thumbs(self, file_name, file, uuid, update=False):
+    def _save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None):
         logger.debug("core_repository_connector._save_thumb.start",
-                     extra={"file_name": file_name, "ident_cely": self.record.ident_cely})
+                     extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "update": update,
+                            "uuid": uuid, "transaction": self.transaction_uid})
         for large in (True, False):
             file.seek(0)
             data = self.__generate_thumb(file_name, file, large)
             if not data:
                 logger.error("core_repository_connector._save_thumb.error",
-                             extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large})
+                             extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large,
+                                    "update": update, "uuid": uuid, "transaction": self.transaction_uid})
                 continue
             data = data.read()
             file_sha_512 = hashlib.sha512(data).hexdigest()
@@ -539,16 +562,21 @@ class FedoraRepositoryConnector:
                 "Digest": f"sha-512={file_sha_512}",
                 "Slug": f"thumb{'-large' * large}"
             }
+            ident_cely = ident_cely_old if ident_cely_old else self.record.ident_cely
             if large:
                 if update:
-                    url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE, uuid=uuid)
+                    url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE, uuid=uuid,
+                                                ident_cely=ident_cely)
                 else:
-                    url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE, uuid=uuid)
+                    url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE, uuid=uuid,
+                                                ident_cely=ident_cely)
             else:
                 if update:
-                    url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB, uuid=uuid)
+                    url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB, uuid=uuid,
+                                                ident_cely=ident_cely)
                 else:
-                    url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_THUMB, uuid=uuid)
+                    url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_THUMB, uuid=uuid,
+                                                ident_cely=ident_cely)
             if large:
                 if update:
                     self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE, headers=headers,
@@ -563,16 +591,15 @@ class FedoraRepositoryConnector:
                 else:
                     self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_THUMB, headers=headers, data=data)
             logger.debug("core_repository_connector._save_thumb.end",
-                         extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large})
-        else:
-            logger.warning("core_repository_connector._save_thumb.no_thumb",
-                           extra={"file_name": file_name, "ident_cely": self.record.ident_cely})
+                         extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large,
+                                "update": update, "uuid": uuid, "transaction": self.transaction_uid})
 
     def migrate_binary_file(self, soubor, include_content=True, check_if_exists=True,
                             ident_cely_old=None) -> Optional[RepositoryBinaryFile]:
         from core.models import Soubor
         soubor: Soubor
-        logger.debug("core_repository_connector.migrate_binary_file.start", extra={"soubor": soubor.pk})
+        logger.debug("core_repository_connector.migrate_binary_file.start",
+                     extra={"soubor": soubor.pk, "transaction": self.transaction_uid})
         if soubor.repository_uuid is not None and check_if_exists:
             return None
         self._check_binary_file_container()
@@ -607,14 +634,16 @@ class FedoraRepositoryConnector:
             }
             url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
             self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
+            self._save_thumbs(soubor.nazev, data, soubor.repository_uuid, ident_cely_old=ident_cely_old)
             logger.debug("core_repository_connector.migrate_binary_file.end",
-                         extra={"uuid": uuid, "ident_cely": self.record.ident_cely})
+                         extra={"uuid": uuid, "ident_cely": self.record.ident_cely,
+                                "transaction": self.transaction_uid})
             return rep_bin_file
 
     def get_binary_file(self, uuid, ident_cely_old=None, thumb_small=False, thumb_large=False) -> RepositoryBinaryFile:
         logger.debug("core_repository_connector.get_binary_file.start",
                      extra={"url": uuid, "ident_cely_old": ident_cely_old, "thumb_small": thumb_small,
-                            "thumb_large": thumb_large})
+                            "thumb_large": thumb_large, "transaction": self.transaction_uid})
         if thumb_small:
             url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB, uuid=uuid)
         elif thumb_large:
@@ -635,12 +664,14 @@ class FedoraRepositoryConnector:
         rep_bin_file = RepositoryBinaryFile(uuid, file)
         logger.debug("core_repository_connector.get_binary_file.end",
                      extra={"url": uuid, "sha_512": rep_bin_file.sha_512, "ident_cely_old": ident_cely_old,
-                            "thumb_small": thumb_small, "thumb_large": thumb_large})
+                            "thumb_small": thumb_small, "thumb_large": thumb_large,
+                            "transaction": self.transaction_uid})
         return rep_bin_file
 
     def update_binary_file(self, file_name, content_type, file: io.BytesIO, uuid: str) -> RepositoryBinaryFile:
         logger.debug("core_repository_connector.update_binary_file.start",
-                     extra={"file_name": file_name, "ident_cely": self.record.ident_cely})
+                     extra={"file_name": file_name, "ident_cely": self.record.ident_cely,
+                            "transaction": self.transaction_uid})
         rep_bin_file = RepositoryBinaryFile(uuid, file, file_name)
         data = file.read()
         file_sha_512 = hashlib.sha512(data).hexdigest()
@@ -653,7 +684,7 @@ class FedoraRepositoryConnector:
         self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         self._save_thumbs(file_name, file, uuid, True)
         logger.debug("core_repository_connector.update_binary_file.end",
-                     extra={"url": uuid, "ident_cely": self.record.ident_cely})
+                     extra={"url": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         return rep_bin_file
 
     def delete_binary_file(self, soubor):
@@ -661,7 +692,8 @@ class FedoraRepositoryConnector:
         soubor: Soubor
         if soubor.repository_uuid:
             logger.debug("core_repository_connector.delete_binary_file.start",
-                         extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely})
+                         extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely,
+                                "transaction": self.transaction_uid})
             headers = {
                 'Content-Type': 'application/sparql-update'
             }
@@ -672,7 +704,8 @@ class FedoraRepositoryConnector:
                          extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely})
         else:
             logger.debug("core_repository_connector.delete_binary_file.no_repository_uuid",
-                         extra={"soubor_pk": soubor.pk, "ident_cely": self.record.ident_cely})
+                         extra={"soubor_pk": soubor.pk, "ident_cely": self.record.ident_cely,
+                                "transaction": self.transaction_uid})
 
     def delete_binary_file_completely(self, soubor):
         logger.debug("core_repository_connector.delete_binary_file_completely.start",
@@ -682,35 +715,41 @@ class FedoraRepositoryConnector:
         url = self._get_request_url(FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY, uuid=soubor.repository_uuid)
         self._send_request(url, FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY)
         logger.debug("core_repository_connector.delete_binary_file_completely.end",
-                     extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely})
+                     extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely,
+                            "transaction": self.transaction_uid})
 
     def delete_container(self):
         self._delete_link()
-        logger.debug("core_repository_connector.delete_container.start", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector.delete_container.start",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.DELETE_CONTAINER)
         self._send_request(url, FedoraRequestType.DELETE_CONTAINER)
         url = self._get_request_url(FedoraRequestType.DELETE_TOMBSTONE)
         self._send_request(url, FedoraRequestType.DELETE_TOMBSTONE)
-        logger.debug("core_repository_connector.delete_container.end", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector.delete_container.end",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
     def _delete_link(self):
-        logger.debug("core_repository_connector.delete_link.start", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector.delete_link.start",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.DELETE_LINK_CONTAINER)
         self._send_request(url, FedoraRequestType.DELETE_LINK_CONTAINER)
         url = self._get_request_url(FedoraRequestType.DELETE_LINK_TOMBSTONE)
         self._send_request(url, FedoraRequestType.DELETE_LINK_TOMBSTONE)
-        logger.debug("core_repository_connector.delete_link.end", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector.delete_link.end",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
     def record_deletion(self):
-        logger.debug("core_repository_connector.record_deletion.start", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector.record_deletion.start",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.GET_DELETED_LINK, ident_cely=self.record.ident_cely)
         result = self._send_request(url, FedoraRequestType.GET_DELETED_LINK)
         if result is not None and result.status_code != 404:
             logger.debug("core_repository_connector.record_deletion.already_exists",
-                         extra={"ident_cely": self.record.ident_cely})
+                         extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         else:
             logger.debug("core_repository_connector.record_deletion.adding_link",
-                         extra={"ident_cely": self.record.ident_cely})
+                         extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
             headers = {
                 "Content-Type": "application/sparql-update"
             }
@@ -725,14 +764,16 @@ class FedoraRepositoryConnector:
                     f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}>"
             url = self._get_request_url(FedoraRequestType.RECORD_DELETION_ADD_MARK)
             self._send_request(url, FedoraRequestType.RECORD_DELETION_ADD_MARK, headers=headers, data=data)
-        logger.debug("core_repository_connector.record_deletion.end", extra={"ident_cely": self.record.ident_cely})
+        logger.debug("core_repository_connector.record_deletion.end",
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
     def record_ident_change(self, ident_cely_old):
-        logger.debug("core_repository_connector.record_ident_change.start", extra={"ident_cely": self.record.ident_cely,
-                                                                                   "ident_cely_old": ident_cely_old})
+        logger.debug("core_repository_connector.record_ident_change.start",
+                     extra={"ident_cely": self.record.ident_cely, "ident_cely_old": ident_cely_old,
+                            "transaction": self.transaction_uid})
         if ident_cely_old is None or self.record.ident_cely == ident_cely_old:
             logger.warning("core_repository_connector.record_ident_change.no_ident_cely_old",
-                         extra={"ident_cely": self.record.ident_cely})
+                           extra={"ident_cely": self.record.ident_cely})
             return
         base_url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
         ident_cely_new = self.record.ident_cely
@@ -744,7 +785,7 @@ class FedoraRepositoryConnector:
         url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1, ident_cely=ident_cely_old)
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1, headers=headers, data=data)
         data = f"INSERT DATA {{<> <http://purl.org/dc/terms/replaces> " \
-                f"'{base_url}{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}'}}"
+               f"'{base_url}{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}'}}"
         headers = {
             "Content-Type": "application/sparql-update"
         }
@@ -765,7 +806,8 @@ class FedoraRepositoryConnector:
         url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, ident_cely=ident_cely_new)
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, headers=headers, data=data)
         logger.debug("core_repository_connector.record_ident_change.end", extra={"ident_cely": self.record.ident_cely,
-                                                                                 "ident_cely_old": ident_cely_old})
+                                                                                 "ident_cely_old": ident_cely_old,
+                                                                                 "transaction": self.transaction_uid})
         from dokument.models import Dokument
         if isinstance(self.record, Dokument):
             for item in self.record.soubory.soubory.all():
@@ -790,6 +832,15 @@ class FedoraTransactionCommitFailedError(Exception):
     pass
 
 
+class FedoraTransactionUnsupportedOperationError(Exception):
+    pass
+
+
+class FedoraTransactionOperation(Enum):
+    COMMIT = 1
+    ROLLBACK = 2
+
+
 class FedoraTransaction:
     def __init__(self, uid=None):
         if uid is None:
@@ -801,7 +852,9 @@ class FedoraTransaction:
     def __str__(self):
         return self.uid
 
-    def check_remaining_tasks(self, include_commit_task=False):
+    def check_remaining_tasks(self, include_commit_task_only=False):
+        logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.start",
+                     extra={"uid": self.uid})
         app = Celery("webclient")
         app.config_from_object("django.conf:settings", namespace="CELERY")
         app.autodiscover_tasks()
@@ -825,33 +878,47 @@ class FedoraTransaction:
                         continue
                     if transaction_uid == self.uid:
                         task_name = task.get("name")
-                        if (task.get("name") != "cron.tasks.commit_transaction_after_all_tasks_finished" or
-                                include_commit_task):
-                            logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.found",
-                                         extra={"transaction_uid": transaction_uid, "uid": self.uid,
-                                                "task_id": task.get("id"), "task_data": task, "task_name": task_name,
-                                                "task_name_type": type(task_name)})
-                            return True
+                        logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.found",
+                                     extra={"transaction": transaction_uid, "uid": self.uid,
+                                            "task_id": task.get("id"), "task_data": task, "task_name": task_name,
+                                            "task_name_type": type(task_name)})
+                        return True
+        logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.not_found",
+                     extra={"uid": self.uid})
         return False
 
-    def commit_transaction(self):
+    def _send_transaction_request(self, operation=FedoraTransactionOperation.COMMIT):
         logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.start",
                      extra={"transaction_uid": self.uid})
-        url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx/{self.uid}"
+        url = (f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}"
+               f"/rest/fcr:tx/{self.uid}")
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
-        response = requests.put(url, auth=auth, verify=False)
+        if operation == FedoraTransactionOperation.COMMIT:
+            response = requests.put(url, auth=auth, verify=False)
+        elif operation == FedoraTransactionOperation.ROLLBACK:
+            response = requests.delete(url, auth=auth, verify=False)
+        else:
+            raise FedoraTransactionUnsupportedOperationError(operation)
         if not str(response.status_code).startswith("2"):
             logger.error("core_repository_connector.FedoraTransaction.commit_transaction.failed",
-                         extra={"transaction_uid": self.uid, "response": response.text})
+                         extra={"transaction": self.uid, "response": response.text})
             raise FedoraTransactionCommitFailedError(response.text)
         logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.end",
-                     extra={"transaction_uid": self.uid})
+                     extra={"transaction": self.uid})
+
+    def rollback_transaction(self):
+        logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.start",
+                     extra={"transaction": self.uid})
+        self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
+        logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
+                     extra={"transaction": self.uid})
 
     def mark_transaction_as_closed(self):
-        already_running = self.check_remaining_tasks(True)
-        if not already_running:
-            from cron.tasks import commit_transaction_after_all_tasks_finished
-            commit_transaction_after_all_tasks_finished.apply_async([self.uid, ], countdown=METADATA_UPDATE_TIMEOUT)
+        logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.start",
+                     extra={"transaction": self.uid})
+        self._send_transaction_request()
+        logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
+                     extra={"transaction": self.uid})
 
     def __create_transaction(self):
         logger.debug("core_repository_connector.FedoraTransaction.__create_transaction.start")

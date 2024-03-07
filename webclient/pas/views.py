@@ -43,7 +43,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
-from core.repository_connector import FedoraRepositoryConnector
+from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
     get_cadastre_from_point,
     get_cadastre_from_point_with_geometry,
@@ -143,7 +143,9 @@ def create(request, ident_cely=None):
                     "pas.views.create.corrd_format_error",
                     extra={"geom": geom, "geom_sjtsk": geom_sjtsk},
                 )
-            sn = form.save(commit=False)
+            sn: SamostatnyNalez = form.save(commit=False)
+            fedora_transaction = FedoraTransaction()
+            sn.active_transaction = fedora_transaction
             try:
                 sn.ident_cely = get_sn_ident(sn.projekt)
             except MaximalIdentNumberError:
@@ -160,9 +162,11 @@ def create(request, ident_cely=None):
                         sn.geom = geom
                     if geom_sjtsk is not None:
                         sn.geom_sjtsk = geom_sjtsk
-                    form.save()
+                    sn.save()
                     sn.set_zapsany(request.user)
                     form.save_m2m()
+                    sn.close_active_transaction_when_finished = True
+                    sn.save()
                     messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                     return redirect("pas:detail", ident_cely=sn.ident_cely)
                 else:
@@ -170,6 +174,7 @@ def create(request, ident_cely=None):
                                 extra={"ident_cely": sn.ident_cely})
                     messages.add_message(request, messages.ERROR, _("pas.views.zapsat.create."
                                                                     "check_container_deleted_or_not_exists_error"))
+                    fedora_transaction.mark_transaction_as_closed()
 
         else:
             logger.info("pas.views.create.form_invalid", extra={"errors": form.errors})
@@ -285,7 +290,11 @@ def edit(request, ident_cely):
                 sn.geom = geom
             if geom_sjtsk is not None:
                 sn.geom_sjtsk = geom_sjtsk
-            form.save()
+            sn: SamostatnyNalez = form.save(commit=False)
+            fedora_transaction = FedoraTransaction()
+            sn.fedora_transaction = fedora_transaction
+            sn.close_active_transaction_when_finished = True
+            sn.save()
             if form.changed_data:
                 logger.debug(
                     "pas.views.edit.form_changed_data",
@@ -343,11 +352,14 @@ def edit_ulozeni(request, ident_cely):
         )
         if form.is_valid():
             logger.debug("pas.views.edit_ulozeni.form_valid")
-            formObj = form.save(commit=False)
-            formObj.predano_organizace = get_object_or_404(
+            fedora_transaction = FedoraTransaction()
+            sn: SamostatnyNalez = form.save(commit=False)
+            sn.predano_organizace = get_object_or_404(
                 Organizace, id=sn.projekt.organizace_id
             )
-            formObj.save()
+            sn.active_transaction = fedora_transaction
+            sn.close_active_transaction_when_finished = True
+            sn.save()
             if form.changed_data:
                 logger.debug(
                     "pas.views.edit_ulozeni.form_changed_data",
@@ -385,7 +397,7 @@ def vratit(request, ident_cely):
     """
     Funkce pohledu pro vrácení stavu samostatného nálezu pomocí modalu.
     """
-    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    sn: SamostatnyNalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if not SN_ARCHIVOVANY >= sn.stav > SN_ZAPSANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse(
@@ -402,7 +414,10 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
+            fedora_transaction = FedoraTransaction()
+            sn.active_transaction = fedora_transaction
             sn.set_vracen(request.user, sn.stav - 1, duvod)
+            sn.close_active_transaction_when_finished = True
             sn.save()
             Mailer.send_en03_en04(samostatny_nalez=sn, reason=duvod)
             messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_VRACEN)
@@ -456,7 +471,11 @@ def odeslat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
+        fedora_transaction = FedoraTransaction()
+        sn.active_transaction = fedora_transaction
         sn.set_odeslany(request.user)
+        sn.close_active_transaction_when_finished = True
+        sn.save()
         messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ODESLAN)
         return JsonResponse(
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
@@ -504,12 +523,15 @@ def potvrdit(request, ident_cely):
     if request.method == "POST":
         form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True)
         if form.is_valid():
-            formObj = form.save(commit=False)
-            formObj.set_potvrzeny(request.user)
-            formObj.predano_organizace = get_object_or_404(
+            form_obj: SamostatnyNalez = form.save(commit=False)
+            fedora_transaction = FedoraTransaction()
+            form_obj.active_transaction = fedora_transaction
+            form_obj.set_potvrzeny(request.user)
+            form_obj.predano_organizace = get_object_or_404(
                 Organizace, id=sn.projekt.organizace_id
             )
-            formObj.save()
+            form_obj.close_active_transaction_when_finished = True
+            form_obj.save()
             messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_POTVRZEN)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
@@ -550,7 +572,11 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
+        fedora_transaction = FedoraTransaction()
+        sn.fedora_transaction = fedora_transaction
         sn.set_archivovany(request.user)
+        sn.close_active_transaction_when_finished = True
+        sn.save()
         messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ARCHIVOVAN)
         return JsonResponse(
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
@@ -722,6 +748,8 @@ def zadost(request):
                     stav=SPOLUPRACE_NEAKTIVNI,
                     historie=hv,
                 )
+                s.active_transaction = FedoraTransaction()
+                s.close_activate_transaction_when_finished = True
                 s.save()
                 hist = Historie(
                     typ_zmeny=SPOLUPRACE_ZADOST,

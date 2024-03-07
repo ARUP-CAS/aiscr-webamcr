@@ -33,15 +33,16 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
     Metóda se volá pred uložením záznamu.
     """
     logger.debug("pian.signals.pian_save_metadata.start", extra={"instance": instance.ident_cely})
-    transaction = instance.save_metadata()
+    fedora_transaction = instance.active_transaction
     for dj in instance.dokumentacni_jednotky_pianu.all():
         dj: DokumentacniJednotka
-        transaction = dj.archeologicky_zaznam.save_metadata(transaction)
-        logger.debug("pian.signals.pian_save_metadata.save_metadata", extra={"transaction": transaction})
-    if transaction:
-        transaction.mark_transaction_as_closed()
-    logger.debug("pian.signals.pian_save_metadata.end", extra={"instance": instance.ident_cely,
-                                                               "transaction": transaction})
+        dj.archeologicky_zaznam.save_metadata(fedora_transaction)
+        logger.debug("pian.signals.pian_save_metadata.save_metadata",
+                     extra={"transaction": getattr(fedora_transaction, "uid", None)})
+    instance.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
+    logger.debug("pian.signals.pian_save_metadata.end",
+                 extra={"instance": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None),
+                        "close_transaction": instance.close_active_transaction_when_finished})
 
 
 @receiver(pre_delete, sender=Pian)
@@ -49,11 +50,10 @@ def samostatny_nalez_okres_delete_repository_container(sender, instance: Pian, *
     logger.debug("pian.signals.samostatny_nalez_okres_delete_repository_container.start",
                  extra={"instance": instance.ident_cely})
     if not instance.suppress_signal:
-        transaction = instance.record_deletion()
-        if transaction:
-            transaction.mark_transaction_as_closed()
+        fedora_transaction = instance.active_transaction
+        instance.record_deletion(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
         logger.debug("pian.signals.samostatny_nalez_okres_delete_repository_container.save_metadata",
-                     extra={"instance": instance.ident_cely, "transaction": transaction})
+                     extra={"instance": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)})
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
         logger.debug("pian.signals.samostatny_nalez_okres_delete_repository_container.history_delete",

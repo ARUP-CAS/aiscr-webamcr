@@ -58,7 +58,7 @@ from core.message_constants import (
     SPATNY_ZAZNAM_SOUBOR_VAZBA,
 )
 from core.models import Soubor
-from core.repository_connector import RepositoryBinaryFile, FedoraRepositoryConnector
+from core.repository_connector import RepositoryBinaryFile, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
     get_mime_type,
     get_multi_transform_towgs84,
@@ -340,7 +340,8 @@ def post_upload(request):
     """
     source_url = request.POST.get("source-url", "")
     update = "fileID" in request.POST
-    s = None
+    fedora_transaction = FedoraTransaction()
+    soubor_instance = None
     original_filename = request.FILES.get("file").name
     if not update:
         logger.debug("core.views.post_upload.start", extra={"objectID": request.POST.get("objectID", None),
@@ -375,10 +376,11 @@ def post_upload(request):
     else:
         logger.debug("core.views.post_upload.updating", extra={"fileID": request.POST["fileID"],
                                                                "source_url": source_url})
-        s: Soubor = get_object_or_404(Soubor, id=request.POST["fileID"])
-        logger.debug("core.views.post_upload.update", extra={"s": s.pk})
-        objekt = s.vazba.navazany_objekt
-        new_name = s.nazev
+        soubor_instance: Soubor = get_object_or_404(Soubor, id=request.POST["fileID"])
+        soubor_instance.active_transaction = fedora_transaction
+        logger.debug("core.views.post_upload.update", extra={"s": soubor_instance.pk})
+        objekt = soubor_instance.vazba.navazany_objekt
+        new_name = soubor_instance.nazev
     soubor: TemporaryUploadedFile = request.FILES.get("file")
     soubor.seek(0)
     if not Soubor.check_mime_for_url(soubor, source_url):
@@ -412,7 +414,7 @@ def post_upload(request):
                 renamed = False
             rep_bin_file = conn.save_binary_file(new_name, mimetype, soubor_data)
             sha_512 = rep_bin_file.sha_512
-            s: Soubor = Soubor(
+            soubor_instance: Soubor = Soubor(
                 vazba=objekt.soubory,
                 nazev=new_name,
                 mimetype=mimetype,
@@ -420,24 +422,26 @@ def post_upload(request):
                 path=rep_bin_file.url_without_domain,
                 sha_512=sha_512,
             )
+            soubor_instance.active_transaction = fedora_transaction
+            soubor_instance.binary_data = soubor_data
             duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
-            response_data = {"filename": s.nazev}
+            response_data = {"filename": soubor_instance.nazev}
             if not duplikat.exists():
-                logger.debug("core.views.post_upload.saving", extra={"s": s})
-                s.save()
+                logger.debug("core.views.post_upload.saving", extra={"s": soubor_instance})
+                soubor_instance.save()
                 if not request.user.is_authenticated:
                     user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
-                    s.zaznamenej_nahrani(user_admin, original_filename)
+                    soubor_instance.zaznamenej_nahrani(user_admin, original_filename)
                 else:
-                    s.zaznamenej_nahrani(request.user, original_filename)
+                    soubor_instance.zaznamenej_nahrani(request.user, original_filename)
             else:
-                logger.debug("core.views.post_upload.already_exists", extra={"s": s})
-                s.save()
+                logger.debug("core.views.post_upload.already_exists", extra={"s": soubor_instance})
+                soubor_instance.save()
                 if not request.user.is_authenticated:
                     user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
-                    s.zaznamenej_nahrani(user_admin, original_filename)
+                    soubor_instance.zaznamenej_nahrani(user_admin, original_filename)
                 else:
-                    s.zaznamenej_nahrani(request.user, original_filename)
+                    soubor_instance.zaznamenej_nahrani(request.user, original_filename)
                 # Find parent record and send it to the user
                 parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
                     if duplikat.first().vazba.navazany_objekt is not None else ""
@@ -448,17 +452,21 @@ def post_upload(request):
                 help_translation = _('core.views.post_upload.renamed.text1')
                 help_translation2 = _('core.views.post_upload.renamed.text2')
                 response_data["file_renamed"] = (f"{help_translation} {new_name}. {help_translation2}",)
-            logger.debug("core.views.post_upload.end", extra={"file_id": s.pk})
-            response_data["id"] = s.pk
+            logger.debug("core.views.post_upload.end", extra={"file_id": soubor_instance.pk})
+            response_data["id"] = soubor_instance.pk
+            soubor_instance.close_active_transaction_when_finished = True
+            soubor_instance.save()
             return JsonResponse(response_data, status=200)
         else:
             original_name = soubor.name
-            if s is None:
+            if soubor_instance is None:
+                # fedora_transaction.mark_transaction_as_closed()
                 return JsonResponse(
                     {"error": f"Chyba při zpracování souboru"},
                     status=500,
                 )
-            if s.vazba.typ_vazby is None:
+            if soubor_instance.vazba.typ_vazby is None:
+                # fedora_transaction.mark_transaction_as_closed()
                 return JsonResponse(
                     {"error": f"Chybí vazba souboru"},
                     status=500,
@@ -470,6 +478,7 @@ def post_upload(request):
                 logger.debug("core.views.post_upload.check_mime_for_url.rejected",
                              extra={"original_name": original_name})
                 help_translation = _('core.views.post_upload.mime_rename_failed')
+                # fedora_transaction.mark_transaction_as_closed()
                 return JsonResponse({"error": f"{help_translation}"}, status=400)
             file_name_extension = new_name.split(".")[-1].lower()
             if file_name_extension not in mime_extensions:
@@ -479,25 +488,26 @@ def post_upload(request):
                              extra={"mimetype": mimetype, "original_name": original_name, "new_name": new_name})
             else:
                 renamed = False
-            if s.repository_uuid is not None:
+            if soubor_instance.repository_uuid is not None:
                 extension = soubor.name.split(".")[-1]
-                new_name = f'{".".join(s.nazev.split(".")[:-1])}.{extension}'
-                rep_bin_file = conn.update_binary_file(new_name, mimetype, soubor_data, s.repository_uuid)
-                logger.debug("core.views.post_upload.update", extra={"pk": s.pk, "new_name": new_name,
+                new_name = f'{".".join(soubor_instance.nazev.split(".")[:-1])}.{extension}'
+                rep_bin_file = conn.update_binary_file(new_name, mimetype, soubor_data, soubor_instance.repository_uuid)
+                logger.debug("core.views.post_upload.update", extra={"pk": soubor_instance.pk, "new_name": new_name,
                                                                      "original_name": original_name})
-                s.nazev = new_name
-                s.size_mb = rep_bin_file.size_mb
-                s.mimetype = mimetype
-                s.sha_512 = rep_bin_file.sha_512
-                s.save()
-                s.zaznamenej_nahrani_nove_verze(request.user, original_name)
+                soubor_instance.nazev = new_name
+                soubor_instance.size_mb = rep_bin_file.size_mb
+                soubor_instance.mimetype = mimetype
+                soubor_instance.sha_512 = rep_bin_file.sha_512
+                soubor_instance.binary_data = soubor_data
+                soubor_instance.save()
+                soubor_instance.zaznamenej_nahrani_nove_verze(request.user, original_name)
             if rep_bin_file is not None:
                 duplikat = (
                     Soubor.objects.filter(sha_512=rep_bin_file.sha_512)
-                    .filter(~Q(id=s.id))
+                    .filter(~Q(id=soubor_instance.id))
                     .order_by("pk")
                 )
-                response_data = {"filename": s.nazev}
+                response_data = {"filename": soubor_instance.nazev}
                 if duplikat.count() > 0:
                     parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
                         if duplikat.first().vazba.navazany_objekt is not None else ""
@@ -508,13 +518,19 @@ def post_upload(request):
                     help_translation = _('core.views.post_upload.renamed.text1')
                     help_translation2 = _('core.views.post_upload.renamed.text2')
                     response_data["file_renamed"] = (f"{help_translation} {new_name}. {help_translation2}",)
-                response_data["id"] = s.pk
+                response_data["id"] = soubor_instance.pk
+                soubor_instance.close_active_transaction_when_finished = True
+                soubor_instance.save()
                 return JsonResponse(response_data, status=200)
             else:
                 logger.warning("core.views.post_upload.rep_bin_file_is_none")
+                soubor_instance.close_active_transaction_when_finished = True
+                soubor_instance.save()
                 return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
     else:
         logger.warning("core.views.post_upload.no_file")
+    soubor_instance.close_active_transaction_when_finished = True
+    soubor_instance.save()
     return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
 
 

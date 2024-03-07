@@ -26,6 +26,10 @@ from core.constants import ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
 logger = logging.getLogger(__name__)
 
 
+class CannotFindCadasterCentre(Exception):
+    pass
+
+
 def file_validate_epsg(epsg):
     if epsg == '4326' or epsg == 4326:
         return True
@@ -227,7 +231,7 @@ def update_main_katastr_within_ku(ident_cely, ku_nazev):
         return None
 
 
-def update_all_katastr_within_akce_or_lokalita(ident_cely):
+def update_all_katastr_within_akce_or_lokalita(ident_cely, fedora_transaction):
     """
     Funkce pro update katastru u akce a lokalit.
     """
@@ -272,6 +276,7 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
             ArcheologickyZaznamKatastr.objects.filter(
                 archeologicky_zaznam_id=zaznam.id
             ).exclude(katastr_id__in=ostatni_id).delete()
+        zaznam.active_transaction = fedora_transaction
         zaznam.save()
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
 
@@ -281,7 +286,6 @@ def get_centre_from_akce(katastr, akce_ident_cely):
     Funkce pro bodu, geomu a presnosti z akce.
     """
     from dj.models import DokumentacniJednotka
-    from django.db.models import Q
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
         " from public.ruian_katastr where "
@@ -298,7 +302,7 @@ def get_centre_from_akce(katastr, akce_ident_cely):
             bod_ku = RuianKatastr.objects.raw(query, [katastr])[0]
         except:
             bod_ku = RuianKatastr.objects.raw(query_old, [katastr])[0]
-        bod=[bod_ku.lat,bod_ku.lng]
+        bod = [bod_ku.lat, bod_ku.lng]
         geom = ""
         presnost = 4
         zoom = 12
@@ -306,7 +310,8 @@ def get_centre_from_akce(katastr, akce_ident_cely):
         color = 'green'
         if len(akce_ident_cely) > 1:
             for akce in [akce_ident_cely, akce_ident_cely.split("-D")[0]]:
-                DJs = DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom")).filter(ident_cely__istartswith=akce).order_by('ident_cely')
+                DJs = (DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom"))
+                       .filter(ident_cely__istartswith=akce).order_by('ident_cely'))
                 for dj in DJs:
                     logger.debug(dj.ident_cely)
                     if dj.pian and dj.pian.geom:
@@ -318,16 +323,16 @@ def get_centre_from_akce(katastr, akce_ident_cely):
                         pian_ident_cely = dj.pian.ident_cely
                         color = 'green'
                         break
-                if pian_ident_cely!='' and akce_ident_cely==akce:
+                if pian_ident_cely != '' and akce_ident_cely == akce:
                     color = 'gold'
                     break
-            return [bod, geom, presnost, zoom, pian_ident_cely,color]
+            return bod, geom, presnost, zoom, pian_ident_cely, color
     except IndexError:
         logger.error(
             "core.utils.get_centre_from_akce.error",
             extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely},
         )
-        return None
+        raise CannotFindCadasterCentre()
 
 
 def get_dj_pians_centroid(ident_cely, lat, lng):

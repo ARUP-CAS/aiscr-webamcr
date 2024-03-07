@@ -146,6 +146,8 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP},
     )
     geom = pgmodels.PointField(srid=5514, dim=3)
+    active_transaction = None
+    close_active_transaction_when_finished = False
 
     def set_geom(self, northing, easting, niveleta):
         """

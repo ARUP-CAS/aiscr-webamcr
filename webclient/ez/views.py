@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views import View
 
-
+from core.repository_connector import FedoraTransaction
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext as _
@@ -192,11 +192,16 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         ez = form.save(commit=False)
+        ez: ExterniZdroj
+        fedora_transaction = FedoraTransaction()
         ez.stav = EZ_STAV_ZAPSANY
         ez.ident_cely = get_temp_ez_ident()
+        ez.active_transaction = fedora_transaction
         ez.save()
         save_autor_editor(ez, form)
         ez.set_zapsany(self.request.user)
+        ez.close_active_transaction_when_finished = True
+        ez.save()
         messages.add_message(self.request, messages.SUCCESS, EZ_USPESNE_ZAPSAN)
         return HttpResponseRedirect(ez.get_absolute_url())
 
@@ -231,8 +236,10 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
+        self.object.active_transaction = FedoraTransaction()
         self.object.autori.clear()
         self.object.editori.clear()
+        self.object.close_active_transaction_when_finished = True
         self.object.save()
         save_autor_editor(self.object, form)
         messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
@@ -483,6 +490,9 @@ class ExterniOdkazPripojitView(TransakceView):
                 paginace=form.cleaned_data["paginace"],
                 archeologicky_zaznam=arch_z,
             )
+            fedora_transaction = FedoraTransaction()
+            eo.active_transaction = fedora_transaction
+            eo.close_active_transaction_when_finished = True
             eo.save()
             messages.add_message(
                 request, messages.SUCCESS, get_message(arch_z, "EO_USPESNE_PRIPOJEN")
@@ -689,6 +699,10 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
                 paginace=form.cleaned_data["paginace"],
                 archeologicky_zaznam=az,
             )
+            eo: ExterniOdkaz
+            fedora_transaction = FedoraTransaction()
+            eo.active_transaction = fedora_transaction
+            eo.close_active_transaction_when_finished = True
             eo.save()
             messages.add_message(
                 request, messages.SUCCESS, get_message(az, "EO_USPESNE_PRIPOJEN")
