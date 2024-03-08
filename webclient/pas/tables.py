@@ -113,7 +113,7 @@ class SamostatnyNalezTable(SearchTable):
         """
         soubor = record.nahled_soubor
         if soubor is not None:
-            thumbnail_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely, soubor.id,))
+            thumbnail_url = reverse("core:download_thumbnail", args=('pas', record.ident_cely, soubor.id,))
             thumbnail_large_url \
                 = reverse("core:download_thumbnail_large", args=('pas', record.ident_cely, soubor.id,))
             return format_html(
