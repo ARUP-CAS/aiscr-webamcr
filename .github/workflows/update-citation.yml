@@ -2,7 +2,7 @@ name: Update CITATION.cff
 
 on:
   release:
-    types: [published]
+    types: [created]
 
 jobs:
   update-citation:
