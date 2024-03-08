@@ -26,7 +26,7 @@ jobs:
     name: Connect to VPN, do deployment actions on DEV SERVER, Kill VPN
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get tag
         run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)${{ inputs.man_tag }}" >> $GITHUB_ENV
       - name: Install OpenVPN

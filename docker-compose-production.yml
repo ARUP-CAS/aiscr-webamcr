@@ -254,8 +254,6 @@ secrets:
     external: true
   prometheus_config:
     external: true
-  redis_data:
-    external: true
   postgresql_exporter:
     external: true
   postgresql_exporter_uri:
