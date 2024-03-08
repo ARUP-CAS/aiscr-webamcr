@@ -355,7 +355,7 @@ map.addControl(drawControl);
 let global_measuring_toolbox = new L.control.measure(
     {
         title: [map_translations['MeasureTitle']],
-        icon: '<img src="' + static_url + '/img/ruler-bold-32.png" style="width:20px"/>'
+        icon: '<img src="' + static_url + 'img/ruler-bold-32.png" style="width:20px"/>'
     });
 map.addControl(global_measuring_toolbox);
 
