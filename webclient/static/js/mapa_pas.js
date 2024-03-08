@@ -4,7 +4,6 @@ var point_global_JTSK = [0, 0];
 var lock = false;
 var GLOBAL_DEBUG_TEXT=false;
 
-var lock_sjtsk_low_precision=false;
 var global_map_can_load_projects=true //zkontroluj
 var boundsLock=false //zkontroluj
 
@@ -39,7 +38,6 @@ map.on('click', function (e) {
         if (global_map_can_edit) {
             if (!lock) {
                 if (map.getZoom() > 15) {
-                    lock_sjtsk_low_precision=false;
                     point_global_WGS84= amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
                     point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0], point_global_WGS84[1]));
                     point_leaf= [...point_global_WGS84].reverse();
@@ -169,71 +167,6 @@ var fill_katastr = () => {
 };
 
 
-var transformSinglePoint = async(x1_plus,x2_plus,push,addComa) => {
-    let xhr = new XMLHttpRequest();
-    xhr.open('POST', '/transformace-single-wgs84');
-    xhr.setRequestHeader('Content-type', 'application/json');
-    if (typeof global_csrftoken !== 'undefined') {
-        xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
-    } else {
-        console.log("neni X-CSRFToken token")
-    }
-    xhr.onload = function () {
-        try{
-            rs = JSON.parse(this.responseText)
-            point_global_WGS84 = amcr_static_coordinate_precision_wgs84([rs.x1,rs.x2])
-            point_leaf= [...point_global_WGS84].reverse();
-            addUniquePointToPoiLayer(point_leaf)
-            fill_katastr();
-            document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
-            document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
-            document.getElementById('id_coordinate_sjtsk_x1').value = -1*x1_plus
-            document.getElementById('id_coordinate_sjtsk_x2').value = -1*x2_plus
-            if(push){
-                lock_sjtsk_low_precision=false;
-                switch_coordinate_system();
-            }
-        }
-        catch(err){
-            $.getJSON("https://epsg.io/trans?x=-" + Number(Math.abs(x1_plus)).toFixed(2) + "&y=-" + Number(Math.abs(x2_plus)).toFixed(2) + "&s_srs=5514&t_srs=4326", async function (data) {
-                point_global_WGS84 = amcr_static_coordinate_precision_wgs84([data.x,data.y])
-                point_leaf= [...point_global_WGS84].reverse();
-                addUniquePointToPoiLayer(point_leaf)
-                fill_katastr();
-                document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
-                document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
-                document.getElementById('id_coordinate_sjtsk_x1').value = -1*x1_plus
-                document.getElementById('id_coordinate_sjtsk_x2').value = -1*x2_plus
-                if(push){
-                    lock_sjtsk_low_precision=true;
-                    switch_coordinate_system();
-                    alert([map_translations['TransformationError']]) // "Přesná transformace ze systemu S-JTSK není v současnosti dostupná, proto bude použita méně přesná transformace!"
-
-                }
-            }
-        )}
-
-    };
-    xhr.send(JSON.stringify({"c_x1" : x1_plus, "c_x2" : x2_plus}))
-};
-
-var transformMultiPoins = async(ipoints) => {
-    let xhr = new XMLHttpRequest();
-    xhr.open('POST', '/transformace-multi-wgs84');
-    xhr.setRequestHeader('Content-type', 'application/json');
-    if (typeof global_csrftoken !== 'undefined') {
-        xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
-    } else {
-        console.log("neni X-CSRFToken token")
-    }
-    xhr.onload = function () {
-        rs = JSON.parse(this.responseText)
-        debugText(rs)
-
-    };
-    xhr.send(JSON.stringify({"points" : ipoints}))
-};
-
 var is_in_czech_republic = (x1, x2) => {
     if (document.getElementById('visible_ss_combo').value == 1) {
         if (x1 >= 12.2401111182 && x1 <= 18.8531441586 && x2 >= 48.5553052842 && x2 <= 51.1172677679) {
@@ -277,19 +210,18 @@ let set_numeric_coordinates = async (push=false,addComa=false) => {
         if (document.getElementById('visible_ss_combo').value == 1) {
             point_global_WGS84 = amcr_static_coordinate_precision_wgs84([cor_x1, cor_x2]);
             point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(cor_x1, cor_x2), false);
-            point_leaf=[cor_x2,cor_x1]
-            addUniquePointToPoiLayer(point_leaf);
-            fill_katastr();
-            document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
-            document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
-            document.getElementById('id_coordinate_sjtsk_x1').value = point_global_JTSK[0]
-            document.getElementById('id_coordinate_sjtsk_x2').value = point_global_JTSK[1]
-            return true;
         } else if (document.getElementById('visible_ss_combo').value == 2) {
             point_global_JTSK = amcr_static_coordinate_precision_jtsk([cor_x1, cor_x2], false)
-            transformSinglePoint(Math.abs(Number(cor_x1).toFixed(2)),Math.abs(Number(cor_x2).toFixed(2)),false,addComa);//+y+x
-
+            point_global_WGS84 = amcr_static_coordinate_precision_wgs84(convertToWGS84(cor_x1, cor_x2));
         }
+        point_leaf=[point_global_WGS84[1],point_global_WGS84[0]]
+        addUniquePointToPoiLayer(point_leaf);
+        fill_katastr();
+        document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
+        document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
+        document.getElementById('id_coordinate_sjtsk_x1').value = point_global_JTSK[0]
+        document.getElementById('id_coordinate_sjtsk_x2').value = point_global_JTSK[1]
+        return true;
     }
     return false;
 };
@@ -302,23 +234,25 @@ var switch_coordinate_system = () => {
 
 var switch_coor_system = (new_system) => {
     debugText("switch system: " + new_system)
-    if (new_system == 1 && point_global_WGS84[0] != 0) {
-        document.getElementById('visible_x1').value = point_global_WGS84[0]
-        document.getElementById('visible_x2').value = point_global_WGS84[1]
-        document.getElementById('visible_x1').readOnly = false;
-        document.getElementById('visible_x2').readOnly = false;
+     
+    if (new_system == 1 ) {
         document.getElementById('id_coordinate_system').value="4326";
-    } else if (new_system >1 && point_global_JTSK[0] != 0) {
-        if(Math.abs(point_global_JTSK[0])<3000000){
-            document.getElementById('visible_x1').value = -1*Math.abs(point_global_JTSK[0]);
-            document.getElementById('visible_x2').value = -1*Math.abs(point_global_JTSK[1]);
+        if(point_global_WGS84[0] != 0){
+            document.getElementById('visible_x1').value = point_global_WGS84[0]
+            document.getElementById('visible_x2').value = point_global_WGS84[1]
+            document.getElementById('visible_x1').readOnly = false;
+            document.getElementById('visible_x2').readOnly = false;
+       
         }
-        document.getElementById('visible_x1').readOnly = false;
-        document.getElementById('visible_x2').readOnly = false;
-        if(!lock_sjtsk_low_precision){
-            document.getElementById('id_coordinate_system').value="5514";
-        } else {
-            document.getElementById('id_coordinate_system').value="5514*"
+    } else if (new_system >1) {
+        document.getElementById('id_coordinate_system').value="5514";   
+         if (point_global_JTSK[0] != 0) { 
+            if(Math.abs(point_global_JTSK[0])<3000000){
+                document.getElementById('visible_x1').value = -1*Math.abs(point_global_JTSK[0]);
+                document.getElementById('visible_x2').value = -1*Math.abs(point_global_JTSK[1]);
+            }
+            document.getElementById('visible_x1').readOnly = false;
+            document.getElementById('visible_x2').readOnly = false;  
         }
     }
 };
@@ -395,12 +329,10 @@ $(document).ready(function () {
         }
     }
 
-    if(my_sys=="S-JTSK"){
+    if(my_sys=="S-JTSK"  || my_sys=="S-JTSK*" || my_sys=='5514'){
         document.getElementById('visible_ss_combo').value = 2
-    }else if(my_sys=="S-JTSK*"){
-        lock_sjtsk_low_precision=true;
-        document.getElementById('visible_ss_combo').value = 2
-    }else {
+    }
+    else {
         document.getElementById('visible_ss_combo').value = 1
     }
 
