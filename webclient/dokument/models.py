@@ -661,6 +661,8 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     )
     tvar = models.ForeignKey(Heslar, models.RESTRICT, db_column="tvar")
     poznamka = models.TextField(blank=True, null=True)
+    active_transaction = None
+    close_active_transaction_when_finished = None
 
     class Meta:
         db_table = "tvar"

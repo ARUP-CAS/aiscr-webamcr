@@ -136,7 +136,7 @@ from projekt.forms import PripojitProjektForm
 from core.models import Soubor
 from django.db.models import Prefetch, Subquery, OuterRef
 
-from uzivatel.models import Osoba
+from uzivatel.models import Osoba, User
 
 from core.utils import (
     get_3d_from_envelope,
@@ -1119,7 +1119,7 @@ def edit_model_3D(request, ident_cely):
     """
     Funkce pohledu pro editaci modelu 3D.
     """
-    dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    dokument: Dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
     if dokument.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
@@ -1161,10 +1161,12 @@ def edit_model_3D(request, ident_cely):
         except Exception:
             logger.debug("dokument.views.edit_model_3D.coord_error", extra={"x1": x1, "x2": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
-            #save autors with order
-            instance_d = form_d.save(commit=False)
-            instance_d.autori.clear()
-            instance_d.save()
+            # save autors with order
+            fedora_transaction = FedoraTransaction()
+            dokument_from_form = form_d.save(commit=False)
+            dokument_from_form.active_transaction = fedora_transaction
+            dokument_from_form.autori.clear()
+            dokument_from_form.save()
             i = 1
             for autor in form_d.cleaned_data["autori"]:
                 DokumentAutor(
@@ -1176,13 +1178,17 @@ def edit_model_3D(request, ident_cely):
             if geom is not None:
                 dokument.extra_data.geom = geom
             form_extra.save()
-            form_komponenta.save()
+            komponenta = form_komponenta.save(commit=False)
+            komponenta.active_transaction = fedora_transaction
+            komponenta.save()
             if (
                 form_d.changed_data
                 or form_extra.changed_data
                 or form_komponenta.changed_data
             ):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            dokument_from_form.close_active_transaction_when_finished = True
+            dokument_from_form.save()
             return redirect("dokument:detail-model-3D", ident_cely=dokument.ident_cely)
         else:
             logger.debug("dokument.views.edit_model_3D.forms_not_valid",
@@ -1252,7 +1258,7 @@ def zapsat_do_akce(request, arch_z_ident_cely):
     """
     Funkce pohledu pro zapsání dokumentu do akce.
     """
-    zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
+    zaznam: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     return zapsat(request, zaznam)
 
 @login_required
@@ -1308,8 +1314,11 @@ def create_model_3D(request):
             logger.debug("dokument.views.create_model_3D.coord_error", extra={"x1": x1, "x2": x2})
 
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
-            logger.debug("dokument.views.create_model_3D.forms_valid")
+            fedora_transaction = FedoraTransaction()
+            logger.debug("dokument.views.create_model_3D.forms_valid",
+                         extra={"fedora_transaction": fedora_transaction.uid})
             dokument = form_d.save(commit=False)
+            dokument.active_transaction = fedora_transaction
             dokument.rada = Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D)
             dokument.material_originalu = Heslar.objects.get(
                 id=MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR
@@ -1331,8 +1340,9 @@ def create_model_3D(request):
                     ident_cely=get_cast_dokumentu_ident(dokument),
                     komponenty=kv,
                 )
+                dc.active_transaction = fedora_transaction
                 dc.save()
-                i=1
+                i = 1
                 for autor in form_d.cleaned_data["autori"]:
                     DokumentAutor(
                         dokument=dokument,
@@ -1348,9 +1358,13 @@ def create_model_3D(request):
                 extra_data.save()
 
                 komponenta = form_komponenta.save(commit=False)
+                komponenta.active_transaction = fedora_transaction
                 komponenta.komponenta_vazby = dc.komponenty
                 komponenta.ident_cely = dokument.ident_cely + "-K001"
                 komponenta.save()
+
+                dokument.close_active_transaction_when_finished = True
+                dokument.save()
 
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                 return redirect(
@@ -1417,7 +1431,7 @@ def odeslat(request, ident_cely):
         dokument.set_odeslany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
         logger.debug("dokument.views.odeslat.sucess")
-        # dokument.close_active_transaction_when_finished = True
+        dokument.close_active_transaction_when_finished = True
         dokument.save()
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
     else:
@@ -1469,8 +1483,8 @@ def archivovat(request, ident_cely):
                 dokument.set_permanent_ident_cely(dokument.ident_cely[2], rada)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
-                # dokument.close_active_transaction_when_finished = True
-                dokument.save()
+                fedora_transaction.rollback_transaction()
+                dokument.close_active_transaction_when_finished = True
                 return JsonResponse(
                     {"redirect": get_detail_json_view(ident_cely)}, status=403
                 )
@@ -1489,7 +1503,7 @@ def archivovat(request, ident_cely):
         dokument.set_archivovany(request.user, old_ident)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
         Mailer.send_ek01(document=dokument)
-        # dokument.close_active_transaction_when_finished = True
+        dokument.close_active_transaction_when_finished = True
         dokument.save()
         return JsonResponse({"redirect": get_detail_json_view(dokument.ident_cely)})
     else:
@@ -1534,6 +1548,7 @@ def vratit(request, ident_cely):
                 Mailer.send_ek02(document=dokument, reason=duvod)
             dokument.set_vraceny(request.user, dokument.stav - 1, duvod)
             messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_VRACEN)
+            dokument.close_active_transaction_when_finished = True
             dokument.save()
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
         else:
@@ -1559,29 +1574,33 @@ def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání dokumentu cez modal.
     """
-    d = get_object_or_404(Dokument, ident_cely=ident_cely)
-    d.deleted_by_user = request.user
-    if check_stav_changed(request, d):
+    dokument: Dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    dokument.deleted_by_user = request.user
+    if check_stav_changed(request, dokument):
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
-    if d.container_creation_queued():
+    if dokument.container_creation_queued():
         messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
-        resp1 = d.delete()
+        fedora_transaction = FedoraTransaction()
+        dokument.active_transaction = fedora_transaction
+        resp1 = dokument.delete()
         if resp1:
             logger.debug("dokument.views.smazat.deleted", extra={"resp1": resp1})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+            fedora_transaction.mark_transaction_as_closed()
             return JsonResponse({"redirect": reverse("core:home")})
         else:
             logger.warning("dokument.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+            fedora_transaction.rollback_transaction()
             return JsonResponse(
                 {"redirect": get_detail_json_view(ident_cely)}, status=403
             )
     else:
-        form_check = CheckStavNotChangedForm(initial={"old_stav": d.stav})
+        form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})
         context = {
-            "object": d,
+            "object": dokument,
             "title": _("dokument.views.smazat.title"),
             "id_tag": "smazat-dokument-form",
             "button": _("dokument.views.smazat.submitButton.text"),
@@ -1709,6 +1728,7 @@ def zapsat(request, zaznam=None):
                 )
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
+                fedora_transaction.rollback_transaction()
             else:
                 dokument.stav = D_STAV_ZAPSANY
                 dokument.save()

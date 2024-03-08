@@ -3,6 +3,7 @@ import logging
 from arch_z.models import ArcheologickyZaznam
 from core.constants import DOKUMENT_CAST_RELATION_TYPE, DOKUMENT_RELATION_TYPE
 from core.models import SouborVazby
+from core.repository_connector import FedoraTransaction
 from cron.tasks import update_single_redis_snapshot
 from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
@@ -75,9 +76,13 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
                  extra={"ident_cely": instance.ident_cely, "record_pk": instance.pk,
                         "close_active_transaction_when_finished": instance.close_active_transaction_when_finished})
     if not instance.suppress_signal:
+        fedora_transaction = instance.active_transaction
         close_transaction = instance.close_active_transaction_when_finished
-        transaction.on_commit(lambda:
-                              instance.save_metadata(close_transaction=close_transaction))
+        if close_transaction:
+            transaction.on_commit(lambda:
+                                  instance.save_metadata(fedora_transaction, close_transaction=close_transaction))
+        else:
+            instance.save_metadata(fedora_transaction)
         logger.debug("dokument.signals.dokument_save_metadata.done",
                      extra={"transaction": getattr(instance.active_transaction, "uid")})
     if not check_if_task_queued("Dokument", instance.pk, "update_single_redis_snapshot"):
@@ -90,10 +95,8 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
 def let_save_metadata(sender, instance: Let, **kwargs):
     logger.debug("dokument.signals.let_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
-        fedora_transaction = instance.save_metadata()
-        if fedora_transaction:
-            pass
-            # fedora_transaction.mark_transaction_as_closed()
+        fedora_transaction = instance.active_transaction
+        instance.save_metadata(fedora_transaction)
         logger.debug("dokument.signals.let_save_metadata.save_metadata",
                      extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
     logger.debug("dokument.signals.let_save_metadata.no_action", extra={"ident_cely": instance.ident_cely})
@@ -123,8 +126,7 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
     if instance.soubory and instance.soubory.pk:
         instance.soubory.delete()
     if fedora_transaction and instance.close_active_transaction_when_finished:
-        pass
-        # fedora_transaction.mark_transaction_as_closed()
+        fedora_transaction.mark_transaction_as_closed()
     logger.debug("dokument.signals.dokument_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
 
@@ -133,10 +135,8 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
 def let_delete_repository_container(sender, instance: Let, **kwargs):
     logger.debug("dokument.signals.let_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
-    fedora_transaction = instance.record_deletion()
-    if fedora_transaction:
-        pass
-        # fedora_transaction.mark_transaction_as_closed()
+    fedora_transaction = instance.active_transaction
+    instance.record_deletion(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
     logger.debug("dokument.signals.let_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
 
@@ -145,10 +145,10 @@ def let_delete_repository_container(sender, instance: Let, **kwargs):
 def dokument_cast_save_metadata(sender, instance: DokumentCast, created, **kwargs):
     extra = {"dokument_cast": instance.pk, "signal_created": created}
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra=extra)
+    from core.repository_connector import FedoraTransaction
+    fedora_transaction: FedoraTransaction = instance.active_transaction
     if (created or instance.initial_projekt != instance.projekt or
             instance.initial_archeologicky_zaznam != instance.archeologicky_zaznam):
-        from core.repository_connector import FedoraTransaction
-        fedora_transaction: FedoraTransaction = instance.active_transaction
         instance.dokument.save_metadata(fedora_transaction)
         extra["transaction"] = str(fedora_transaction.uid)
         if instance.archeologicky_zaznam is not None:
@@ -166,21 +166,24 @@ def dokument_cast_save_metadata(sender, instance: DokumentCast, created, **kwarg
             instance.initial_projekt.save_metadata(fedora_transaction)
             extra.update({"initial_projekt": instance.initial_projekt.ident_cely,
                           "initial_record_pk": instance.initial_projekt.pk})
-        fedora_transaction.mark_transaction_as_closed()
         logger.debug("dokument.signals.dokument_cast_save_metadata.changed", extra=extra)
     else:
         logger.debug("dokument.signals.dokument_cast_save_metadata.no_change", extra=extra)
+    if fedora_transaction and instance.close_active_transaction_when_finished:
+        fedora_transaction.mark_transaction_as_closed()
     logger.debug("dokument.signals.dokument_cast_save_metadata.end", extra=extra)
 
 
 @receiver(post_delete, sender=DokumentCast)
 def dokument_cast_save_metadata(sender, instance: DokumentCast, **kwargs):
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra={"pk": instance.pk})
-    fedora_transaction = instance.active_transaction
+    fedora_transaction: FedoraTransaction = instance.active_transaction
     if instance.initial_archeologicky_zaznam is not None:
-        fedora_transaction = instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction)
+        instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction)
     if instance.initial_projekt is not None:
-        fedora_transaction = instance.initial_projekt.save_metadata(fedora_transaction)
+        instance.initial_projekt.save_metadata(fedora_transaction)
+    if instance.close_active_transaction_when_finished:
+        fedora_transaction.mark_transaction_as_closed()
     logger.debug("dokument.signals.dokument_cast_save_metadata.end", extra={"pk": instance.pk,
                                                                             "transaction": fedora_transaction})
 
@@ -189,7 +192,9 @@ def dokument_cast_save_metadata(sender, instance: DokumentCast, **kwargs):
 def tvar_save(sender, instance: Tvar, created, **kwargs):
     logger.debug("dokument.signals.tvar_save.start", extra={"pk": instance.pk})
     if instance.dokument:
-        transaction = instance.dokument.save_metadata()
+        fedora_transaction = instance.active_transaction
+        instance.dokument.save_metadata(fedora_transaction,
+                                        close_transaction=instance.close_active_transaction_when_finished)
     logger.debug("dokument.signals.tvar_save.end", extra={"pk": instance.pk, "transaction": transaction})
 
 
@@ -197,5 +202,7 @@ def tvar_save(sender, instance: Tvar, created, **kwargs):
 def tvar_delete(sender, instance: Tvar, **kwargs):
     logger.debug("dokument.signals.tvar_delete.start", extra={"pk": instance.pk})
     if instance.dokument:
-        transaction = instance.dokument.save_metadata()
+        fedora_transaction = instance.active_transaction
+        instance.dokument.save_metadata(fedora_transaction,
+                                        close_transaction=instance.close_active_transaction_when_finished)
     logger.debug("dokument.signals.tvar_delete.end", extra={"pk": instance.pk, "transaction": transaction})
