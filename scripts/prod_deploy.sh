@@ -271,6 +271,7 @@ while getopts "hxbut:d" option; do
       d)  # Include database compose file in deployment
           echo "OPTION: -d"
           include_db=1
+          run_default
           ;;
      \?) # Invalid option
          echo_dec "OPTION: INVALID"
