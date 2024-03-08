@@ -133,6 +133,9 @@ Niže je přehled dostupných parametrů.
 * `-t <tag_name>`: Umožňuje specifikovat konkrétní tag image, místo použití výchozího tagu "latest".
    - **Příklad**: `scripts/prod_deploy.sh -t my-custom-tag`
    - **Popis**: Tento parametr umožňuje použít specifický tag Docker obrazu při nasazování služeb, což je užitečné pro nasazení specifické verze nebo konfigurace obrazu.
+* `-d`: Vytvoří kontejner s PostgreSQL databází.
+   - **Příklad**: `scripts/prod_deploy.sh -d`
+   - **Popis**: Tento parametr vytvoří kontejner s PostgreSQL databází, který je definován v souboru `docker-compose-production-database.yml`.
 
 **Předpoklady**: existující definice docker secrets, tyto secrets musejí být vytvořené přes příkaz ``docker secrets create <název secretu> <cesta k souboru s obsahem ze kterého se secret má vytvořit>``
 
@@ -142,6 +145,10 @@ Niže je přehled dostupných parametrů.
 * grafana_admin_password - heslo pro rozhraní grafana
 * elastic_pass - heslo ke službě elasticsearch
 * logstash_elastic_pass - heslo ke službě logstash
+* prometheus_config - nastavení služby prometheus
+* postgresql_exporter - heslo k PostgreSQL databázi, která má být monitorována
+* postgresql_exporter_uri - adresa rozhraní databáze PostgreSQL, která má být monitorována
+* logstash_elastic_host - adresa elasticsearch databáze
 
 **Souhrn:** ``./scripts/prod_deploy.sh``, docker swarm-mode, <ip_adresa_stanice:8080>, existující definice docker secrets.
 
