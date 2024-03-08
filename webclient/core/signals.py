@@ -7,6 +7,8 @@ from pypdf import PdfReader
 from core.models import Soubor
 from django.db.models.signals import post_save, post_delete, pre_delete, pre_save
 from django.dispatch import receiver
+
+from core.repository_connector import FedoraTransaction
 from historie.models import Historie
 from xml_generator.models import ModelWithMetadata
 
@@ -39,13 +41,16 @@ def soubor_get_rozsah(sender, instance, **kwargs):
 def soubor_save_update_record_metadata(sender, instance: Soubor, **kwargs):
     logger.debug("cron.signals.soubor_save_update_record_metadata.start",
                  extra={"close_active_transaction_when_finished": instance.close_active_transaction_when_finished})
+    fedora_transaction: FedoraTransaction = instance.active_transaction
     if instance.vazba is not None and isinstance(instance.vazba.navazany_objekt, ModelWithMetadata) \
             and instance.suppress_signal is False:
-        fedora_transaction = instance.active_transaction
-        fedora_transaction = instance.vazba.navazany_objekt.save_metadata(fedora_transaction)
+        instance.vazba.navazany_objekt.save_metadata(fedora_transaction,
+                                                     close_transaction=instance.close_active_transaction_when_finished)
         logger.debug("cron.signals.soubor_save_update_record_metadata.save_metadata",
                      extra={"transaction": getattr(fedora_transaction, "uid", ""),
                             "navazany_objekt": getattr(instance, "ident_cely", "")})
+    elif instance.close_active_transaction_when_finished:
+        fedora_transaction.mark_transaction_as_closed()
     logger.debug("cron.signals.soubor_save_update_record_metadata.no_action")
 
 
@@ -62,7 +67,9 @@ def soubor_delete_update_metadata(sender, instance: Soubor, **kwargs):
     logger.debug("cron.signals.soubor_delete_update_metadata.start", extra={"instance": instance.pk})
     if instance.vazba is not None and isinstance(instance.vazba.navazany_objekt, ModelWithMetadata) \
             and instance.suppress_signal is False:
-        transaction = instance.vazba.navazany_objekt.save_metadata()
+        fedora_transaction = instance.active_transaction
+        instance.vazba.navazany_objekt.save_metadata(fedora_transaction,
+                                                     close_transaction=instance.close_active_transaction_when_finished)
         logger.debug("cron.signals.soubor_delete_update_metadata.save_metadata",
                      extra={"transaction": transaction, "navazany_objekt": getattr(instance, "ident_cely", "")})
     logger.debug("cron.signals.soubor_delete_update_metadata.no_action", extra={"instance": instance.pk})

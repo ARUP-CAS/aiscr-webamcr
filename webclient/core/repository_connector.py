@@ -319,6 +319,8 @@ class FedoraRepositoryConnector:
                 extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
                          "transaction": self.transaction_uid, "url": url, "caller": caller}
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
+                fedora_transaction = FedoraTransaction(self.transaction_uid)
+                fedora_transaction.rollback_transaction()
                 raise FedoraError(url, response.text, response.status_code)
         else:
             logger.debug("core_repository_connector._send_request.response", extra=extra)

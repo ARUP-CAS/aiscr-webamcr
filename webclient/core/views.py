@@ -113,24 +113,30 @@ def delete_file(request, typ_vazby, ident_cely, pk):
     """
     Funkce pohledu pro smazání souboru. Funkce maže jak záznam v DB tak i soubor na disku.
     """
-    s = get_object_or_404(Soubor, pk=pk)
+    logger.debug("core.views.delete_file.start", extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby,
+                                                        "pk": pk, "method": request.method})
+    soubor: Soubor = get_object_or_404(Soubor, pk=pk)
+    fedora_transaction = FedoraTransaction()
     try:
         check_soubor_vazba(typ_vazby, ident_cely, pk)
-    except ZaznamSouborNotmatching as e:
-        logger.debug(e)
+    except ZaznamSouborNotmatching as err:
+        logger.debug("core.views.delete_file.vazbar_error", extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby,
+                                                        "pk": pk, "err": err})
         messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                     )
         if request.method == "POST":
             return redirect(request.POST.get("next","core:home"))
-        return redirect(request.GET.get("next","core:home"))
+        return redirect(request.GET.get("next", "core:home"))
     if request.method == "POST":
-        s.deleted_by_user = request.user
-        soubor_pk = s.pk
-        s.delete()
+        logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor.pk})
+        soubor.deleted_by_user = request.user
+        soubor.active_transaction = fedora_transaction
+        soubor_pk = soubor.pk
+        soubor.delete()
         if Soubor.objects.filter(pk=soubor_pk).exists():
             # Not sure if 404 is the only correct option
-            logger.debug("core.views.delete_file.not_deleted", extra={"file": s})
+            logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             django_messages = []
             for message in messages.get_messages(request):
@@ -141,15 +147,18 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                         "extra_tags": message.tags,
                     }
                 )
+            fedora_transaction.rollback_transaction()
             return JsonResponse({"messages": django_messages}, status=400)
         else:
             logger.debug("core.views.delete_file.deleted", extra={"soubor_pk": soubor_pk})
-            connector = FedoraRepositoryConnector(s.vazba.navazany_objekt)
+            connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
             if not request.POST.get("dropzone", False):
+                logger.debug("core.views.delete_file.deleted.delete_binary_file", extra={"soubor_pk": soubor_pk})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-                connector.delete_binary_file(s)
+                connector.delete_binary_file(soubor)
             else:
-                connector.delete_binary_file_completely(s)
+                logger.debug("core.views.delete_file.deleted.delete_binary_file_completely", extra={"soubor_pk": soubor_pk})
+                connector.delete_binary_file_completely(soubor)
         next_url = request.POST.get("next")
         if next_url:
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
@@ -159,10 +168,11 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 response = reverse("core:home")
         else:
             response = reverse("core:home")
+        fedora_transaction.mark_transaction_as_closed()
         return JsonResponse({"redirect": response})
     else:
         context = {
-            "object": s,
+            "object": soubor,
             "title": _("core.views.delete_file.title.text"),
             "id_tag": "smazat-soubor-form",
             "button": _("core.views.smazat.submitButton.text"),
@@ -359,6 +369,7 @@ def post_upload(request):
             objekt = samostatny_nalez[0]
             new_name = get_finds_soubor_name(objekt, request.FILES.get("file").name)
         else:
+            fedora_transaction.rollback_transaction()
             return JsonResponse(
                 {
                     "error": "Nelze pripojit soubor k neexistujicimu objektu "
@@ -367,6 +378,7 @@ def post_upload(request):
                 status=500,
             )
         if new_name is False:
+            fedora_transaction.rollback_transaction()
             return JsonResponse(
                 {
                     "error": f"Nelze pripojit soubor k objektu {request.POST['objectID']}. Objekt ma prilozen soubor s nejvetsim moznym nazvem"
@@ -396,7 +408,7 @@ def post_upload(request):
     rep_bin_file = None
     if soubor:
         if not update:
-            conn = FedoraRepositoryConnector(objekt)
+            conn = FedoraRepositoryConnector(objekt, fedora_transaction)
             mimetype = Soubor.get_mime_types(soubor)
             mime_extensions = Soubor.get_file_extension_by_mime(soubor)
             if len(mime_extensions) == 0:
@@ -460,25 +472,25 @@ def post_upload(request):
         else:
             original_name = soubor.name
             if soubor_instance is None:
-                # fedora_transaction.mark_transaction_as_closed()
+                fedora_transaction.rollback_transaction()
                 return JsonResponse(
                     {"error": f"Chyba při zpracování souboru"},
                     status=500,
                 )
             if soubor_instance.vazba.typ_vazby is None:
-                # fedora_transaction.mark_transaction_as_closed()
+                fedora_transaction.rollback_transaction()
                 return JsonResponse(
                     {"error": f"Chybí vazba souboru"},
                     status=500,
                 )
-            conn = FedoraRepositoryConnector(objekt)
+            conn = FedoraRepositoryConnector(objekt, fedora_transaction)
             mimetype = Soubor.get_mime_types(soubor)
             mime_extensions = Soubor.get_file_extension_by_mime(soubor)
             if len(mime_extensions) == 0:
                 logger.debug("core.views.post_upload.check_mime_for_url.rejected",
                              extra={"original_name": original_name})
                 help_translation = _('core.views.post_upload.mime_rename_failed')
-                # fedora_transaction.mark_transaction_as_closed()
+                fedora_transaction.rollback_transaction()
                 return JsonResponse({"error": f"{help_translation}"}, status=400)
             file_name_extension = new_name.split(".")[-1].lower()
             if file_name_extension not in mime_extensions:
