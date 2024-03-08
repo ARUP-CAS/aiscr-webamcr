@@ -88,9 +88,15 @@ run_default ()
 	exit
    fi
 
-   er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
-   ${cmd_deploy_base} ${compose_prod} ${stack_name}" && \
-   echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
+   if [ ${include_db} -eq 1 ]; then
+       er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
+       ${cmd_deploy_base} -c ${compose_prod} -c ${compose_db} ${stack_name}" && \
+       echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
+   else
+       er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
+       ${cmd_deploy_base} -c ${compose_prod} ${stack_name}" && \
+       echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
+   fi
 }
 
 Help ()
@@ -123,6 +129,10 @@ Help ()
        
        $./scripts/${script_name} -t <tag_name>
 
+    5) Deploy stack with database
+
+       $./scripts/${script_name} -d
+
     -----
     Summnary:
     -h help
@@ -130,6 +140,7 @@ Help ()
     -b (re)deploy all services in swarm mode (DEFAULT CASE)
     -u update all services using rolling approach 
     -t provide docker image tag name <tag_name>
+    -d deploy stack with database
 EOF
 }
 
@@ -176,6 +187,7 @@ network_name="prod-net" #MUST MATCH WITH COMPOSE FILES!!!
 
 compose_proxy="docker-compose-production-proxy.yml"
 compose_prod="docker-compose-production.yml"
+compose_db="docker-compose-production-database.yml"
 
 msg_fail_build="!! DEPLOYMENT not successfull"
 msg_pull_fail="!! PULL not successfull"
@@ -213,13 +225,13 @@ fi
 #Build commands
 cmd_stack_rm="docker stack rm ${stack_name}"
 cmd_pull_images="docker pull ${proxy_image_name} && docker pull ${prod_image_name}"
-cmd_deploy_base="docker stack deploy --compose-file"
+cmd_deploy_base="docker stack deploy"
 
 #Cleaning old images
 echo "Pruning unused Docker images..."
 docker image prune -f
 
-while getopts "hxbut:" option; do
+while getopts "hxbutd:" option; do
    option_passed="yes"
    case ${option} in
       h) # display Help
@@ -254,7 +266,11 @@ while getopts "hxbut:" option; do
         fi
         ;;
       t)
-	;;
+	      ;;
+      d)  # Include database compose file in deployment
+          echo "OPTION: -d"
+          include_db=1
+          ;;
      \?) # Invalid option
          echo_dec "OPTION: INVALID"
          echo "Error: Invalid option ${option}"

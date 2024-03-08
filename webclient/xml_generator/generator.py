@@ -61,8 +61,10 @@ class DocumentGenerator:
                     queryset = queryset[:limit]
                 for obj in queryset:
                     from uzivatel.models import User
+                    from core.repository_connector import FedoraTransaction
                     obj: Union[ModelWithMetadata, User]
-                    obj.save_metadata(use_celery=False, include_files=True)
+                    fedora_transaction = FedoraTransaction()
+                    obj.save_metadata(fedora_transaction, close_transaction=True)
                 logger.debug("xml_generator.generator.generate_metadata.loop.end",
                              extra={"limit": limit, "current_class": str(current_class)})
         else:
@@ -103,8 +105,10 @@ class DocumentGenerator:
                 queryset = queryset[:limit]
             for obj in queryset:
                 from uzivatel.models import User
+                from core.repository_connector import FedoraTransaction
                 obj: Union[ModelWithMetadata, User]
-                obj.save_metadata(use_celery=False, include_files=True)
+                fedora_transaction = FedoraTransaction()
+                obj.save_metadata(fedora_transaction, close_transaction=True)
             logger.debug("xml_generator.generator.generate_metadata.loop.end",
                          extra={"model_class": model_class, "limit": limit})
         logger.debug("xml_generator.generator.generate_metadata.end", extra={"model_class": model_class,
