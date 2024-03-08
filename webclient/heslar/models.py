@@ -173,6 +173,8 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
         Heslar, models.RESTRICT, db_column="heslo_nadrazene", related_name="nadrazene", verbose_name=_("heslar.models.HeslarHierarchie.heslo_nadrazene")
     )
     typ = models.TextField(verbose_name=_("heslar.models.HeslarHierarchie.typ"), choices=TYP_CHOICES)
+    initial_heslo_nadrazeno = None
+    initial_heslo_podrazene = None
 
     class Meta:
         db_table = "heslar_hierarchie"
@@ -228,6 +230,7 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
     skos_mapping_relation = models.CharField(max_length=20,
                                              verbose_name=_("heslar.models.HeslarOdkaz.skos_mapping_relation"),
                                              choices=SKOS_MAPPING_RELATION_CHOICES)
+    initial_heslo = None
 
     class Meta:
         db_table = "heslar_odkaz"
