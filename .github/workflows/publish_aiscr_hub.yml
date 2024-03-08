@@ -23,10 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
@@ -40,7 +40,7 @@ jobs:
       #---------------------
       - name: Extract metadata (tags, labels) for Docker production image
         id: meta_prod
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.DOCKER_HUB_REPO_PROD }}
       
@@ -60,7 +60,7 @@ jobs:
       #---------------------
       - name: Extract metadata (tags, labels) for Docker proxy image
         id: meta_proxy
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.DOCKER_HUB_REPO_PROXY }}
 
@@ -79,7 +79,7 @@ jobs:
       #---------------------
       - name: Extract metadata (tags, labels) for Docker redis image
         id: meta_redis
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.DOCKER_HUB_REPO_REDIS }}
 
