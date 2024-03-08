@@ -49,7 +49,7 @@ from core.constants import (
     VRACENI_ZRUSENI,
     ZMENA_AZ,
     ZMENA_HLAVNI_ROLE,
-    ZMENA_UDAJU_ADMIN, ZMENA_UDAJU_UZIVATEL, ZMENA_HESLA_UZIVATEL, ZMENA_HESLA_ADMIN,
+    ZMENA_UDAJU_ADMIN, ZMENA_UDAJU_UZIVATEL, ZMENA_HESLA_UZIVATEL, ZMENA_HESLA_ADMIN, RUSENI_STARE_PROJ, ZMENA_KATASTRU,
 )
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -77,6 +77,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         (VRACENI_PROJ, _("historie.models.historieStav.projekt.P-1")),
         (VRACENI_NAVRHU_ZRUSENI, _("historie.models.historieStav.projekt.P71")),
         (VRACENI_ZRUSENI, _("historie.models.historieStav.projekt.P81")),
+        (RUSENI_STARE_PROJ, _("historie.models.historieStav.projekt.P18")),
         # Akce + Lokalita (archeologicke zaznamy)
         (ZAPSANI_AZ, _("historie.models.historieStav.az.AZ01")),
         (ODESLANI_AZ, _("historie.models.historieStav.az.AZ12")),
@@ -101,6 +102,8 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         (ZMENA_HESLA_ADMIN, _("historie.models.historieStav.uzivatel.ZUU")),
         (ZMENA_UDAJU_UZIVATEL, _("historie.models.historieStav.uzivatel.ZUU")),
         (ZMENA_HESLA_UZIVATEL, _("historie.models.historieStav.uzivatel.ZHU")),
+        # Katastr
+        (ZMENA_KATASTRU, _("historie.models.historieStav.katastr.KAT")),
         # Pian
         (ZAPSANI_PIAN, _("historie.models.historieStav.pian.PI01")),
         (POTVRZENI_PIAN, _("historie.models.historieStav.pian.PI12")),

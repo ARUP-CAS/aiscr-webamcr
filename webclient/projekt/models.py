@@ -337,10 +337,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         ).save()
         self.save()
 
-    def set_zruseny(self, user, poznamka):
+    def set_zruseny(self, user, poznamka, typ_zmeny=None):
         """
         Metóda pro nastavení stavu zrušený a uložení změny do historie.
         """
+        typ_zmeny = typ_zmeny if typ_zmeny else RUSENI_PROJ
         self.datum_ukonceni = None
         self.termin_odevzdani_nz = None
         self.datum_zahajeni = None
@@ -349,7 +350,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         self.organizace = None
         self.stav = PROJEKT_STAV_ZRUSENY
         Historie(
-            typ_zmeny=RUSENI_PROJ, uzivatel=user, vazba=self.historie, poznamka=poznamka
+            typ_zmeny=typ_zmeny, uzivatel=user, vazba=self.historie, poznamka=poznamka
         ).save()
         self.save()
 

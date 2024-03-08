@@ -13,7 +13,7 @@ from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
 from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
-    OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
+    OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, RUSENI_STARE_PROJ
 from core.models import Soubor
 from cron.convertToSJTSK import get_multi_transform_to_sjtsk
 from cron.classes import MyList
@@ -651,7 +651,7 @@ def cancel_old_projects():
         cancelled_string = _("core.tasks.cancel_old_projects.cancelled")
         for project in projects:
             project: Projekt
-            project.set_zruseny(User.objects.get(email="amcr@arup.cas.cz"), cancelled_string)
+            project.set_zruseny(User.objects.get(email="amcr@arup.cas.cz"), cancelled_string, RUSENI_STARE_PROJ)
             logger.debug("core.cron.cancel_old_projects.do.project", extra={"ident_cely": project.ident_cely})
         logger.debug("core.cron.cancel_old_projects.do.end")
     except Exception as err:

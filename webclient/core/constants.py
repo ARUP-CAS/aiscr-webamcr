@@ -54,6 +54,7 @@ RUSENI_PROJ: Final = "P78"  # 8
 VRACENI_PROJ: Final = "P-1"  # New
 VRACENI_NAVRHU_ZRUSENI: Final = "P71"  # New
 VRACENI_ZRUSENI: Final = "P81"  # New
+RUSENI_STARE_PROJ: Final = "P18" # New
 # Akce + Lokalita (archeologicke zaznamy)
 ZAPSANI_AZ: Final = "AZ01"  # 1
 ODESLANI_AZ: Final = "AZ12"  # 2
@@ -80,6 +81,8 @@ ZMENA_HESLA_ADMIN: Final = "ZHA"
 ADMIN_UPDATE: Final = "AU"  # 0
 ZMENA_UDAJU_UZIVATEL: Final = "ZUU"
 ZMENA_HESLA_UZIVATEL: Final = "ZHU"
+# Katastr
+ZMENA_KATASTRU: Final = "KAT"
 
 # Uzivatel
 ROLE_BADATEL_ID = 1
