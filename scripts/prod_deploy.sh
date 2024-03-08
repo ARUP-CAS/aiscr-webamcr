@@ -231,7 +231,7 @@ cmd_deploy_base="docker stack deploy"
 echo "Pruning unused Docker images..."
 docker image prune -f
 
-while getopts "hxbutd:" option; do
+while getopts "hxbut:d" option; do
    option_passed="yes"
    case ${option} in
       h) # display Help
