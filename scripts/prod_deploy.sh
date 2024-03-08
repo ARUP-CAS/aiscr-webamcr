@@ -6,7 +6,7 @@
 #USAGE: deployment based on release on GITHUB, i.e. GitHub actions published docker images on Docker Hub
 
 # ------ !!!! ----------
-SKIP_ALL_CHECKS=1 #IF CHNAGED TO 1 then all MANUAL CHECKS, ie questions during script runtime are disabled!
+SKIP_ALL_CHECKS=1 #IF CHANGED TO 1 then all MANUAL CHECKS, ie questions during script runtime are disabled!
 # ------ !!!! ----------
 
 ask_continue () {
@@ -89,13 +89,14 @@ run_default ()
    fi
 
    if [ ${include_db} -eq 1 ]; then
-       er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
-       ${cmd_deploy_base} -c ${compose_prod} -c ${compose_db} ${stack_name}" && \
-       echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
+      er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
+      ${cmd_deploy_base} ${compose_prod} ${stack_name} && \
+      ${cmd_deploy_base} ${compose_db} ${stack_name}" && \
+      echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
    else
-       er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
-       ${cmd_deploy_base} -c ${compose_prod} ${stack_name}" && \
-       echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
+      er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
+      ${cmd_deploy_base} ${compose_prod} ${stack_name}" && \
+      echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
    fi
 }
 
@@ -225,7 +226,7 @@ fi
 #Build commands
 cmd_stack_rm="docker stack rm ${stack_name}"
 cmd_pull_images="docker pull ${proxy_image_name} && docker pull ${prod_image_name}"
-cmd_deploy_base="docker stack deploy"
+cmd_deploy_base="docker stack deploy --compose-file"
 
 #Cleaning old images
 echo "Pruning unused Docker images..."
