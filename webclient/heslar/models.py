@@ -173,7 +173,7 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
         Heslar, models.RESTRICT, db_column="heslo_nadrazene", related_name="nadrazene", verbose_name=_("heslar.models.HeslarHierarchie.heslo_nadrazene")
     )
     typ = models.TextField(verbose_name=_("heslar.models.HeslarHierarchie.typ"), choices=TYP_CHOICES)
-    initial_heslo_nadrazeno = None
+    initial_heslo_nadrazene = None
     initial_heslo_podrazene = None
 
     class Meta:
