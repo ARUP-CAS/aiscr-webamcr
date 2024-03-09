@@ -67,7 +67,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
-from core.repository_connector import FedoraTransaction
+from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
 from core.utils import (
     get_heatmap_project,
     get_heatmap_project_density,
@@ -402,25 +402,34 @@ def create(request):
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
                 fedora_transaction.mark_transaction_as_closed()
             else:
-                projekt.save()
-                projekt.set_zapsany(request.user)
-                form_projekt.save_m2m()
-                if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
-                    # Vytvoreni oznamovatele - kontrola formu uz je na zacatku
-                    oznamovatel = form_oznamovatel.save(commit=False)
-                    oznamovatel.active_transaction = fedora_transaction
-                    oznamovatel.projekt = projekt
-                    oznamovatel.save()
-                if projekt.should_generate_confirmation_document:
-                    projekt.create_confirmation_document(user=request.user)
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                if projekt.ident_cely[0] == OBLAST_CECHY:
-                    Mailer.send_ep01a(project=projekt)
+                repository_connector = FedoraRepositoryConnector(projekt)
+                if repository_connector.check_container_deleted_or_not_exists(projekt.ident_cely, "projekt"):
+                    projekt.save()
+                    projekt.set_zapsany(request.user)
+                    form_projekt.save_m2m()
+                    if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+                        # Vytvoreni oznamovatele - kontrola formu uz je na zacatku
+                        oznamovatel = form_oznamovatel.save(commit=False)
+                        oznamovatel.active_transaction = fedora_transaction
+                        oznamovatel.projekt = projekt
+                        oznamovatel.save()
+                    if projekt.should_generate_confirmation_document:
+                        projekt.create_confirmation_document(user=request.user)
+                    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                    if projekt.ident_cely[0] == OBLAST_CECHY:
+                        Mailer.send_ep01a(project=projekt)
+                    else:
+                        Mailer.send_ep01b(project=projekt)
+                    projekt.close_active_transaction_when_finished = True
+                    projekt.save()
+                    return redirect("projekt:detail", ident_cely=projekt.ident_cely)
                 else:
-                    Mailer.send_ep01b(project=projekt)
-                projekt.close_active_transaction_when_finished = True
-                projekt.save()
-                return redirect("projekt:detail", ident_cely=projekt.ident_cely)
+                    fedora_transaction.rollback_transaction()
+                    logger.debug("projekt.views.create.check_container_deleted_or_not_exists.incorrect",
+                                 extra={"ident_cely": projekt.ident_cely})
+                    messages.add_message(
+                        request, messages.ERROR, _("arch_z.views.zapsat.samostatnaAkce."
+                                                   "check_container_deleted_or_not_exists_error"))
         else:
             logger.debug("projekt.views.create.form_projekt_not_valid", extra={"errors": form_projekt.errors})
     else:
