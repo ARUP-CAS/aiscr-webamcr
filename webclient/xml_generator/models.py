@@ -156,11 +156,73 @@ class ModelWithMetadata(models.Model):
             raise ValueError("fedora_transaction must be a FedoraTransaction class object")
         if (old_ident_cely is not None and isinstance(old_ident_cely, str) and len(old_ident_cely) > 0
                 and new_ident_cely != old_ident_cely):
-            from cron.tasks import record_ident_change
-            record_ident_change(self.__class__.__name__, self.pk, old_ident_cely, fedora_transaction.uid,
-                                new_ident_cely)
+
+            from core.repository_connector import FedoraRepositoryConnector
+            connector = FedoraRepositoryConnector(self, fedora_transaction)
+            connector.record_ident_change(old_ident_cely)
+            logger.debug("cron.record_ident_change.do.end",
+                         extra={"record_pk": self.pk, "old_ident_cely": old_ident_cely, "new_ident_cely": new_ident_cely,
+                                "transaction": fedora_transaction.uid})
+            from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+            from dj.models import DokumentacniJednotka
+            from dokument.models import DokumentCast, Dokument
+            from ez.models import ExterniZdroj
+            from projekt.models import Projekt
+            from pian.models import Pian
+            from pas.models import SamostatnyNalez
+            from lokalita.models import Lokalita
+
+            def process_arch_z(record: ArcheologickyZaznam):
+                for inner_item in record.dokumentacni_jednotky_akce.all():
+                    inner_item: DokumentacniJednotka
+                    if inner_item.pian:
+                        inner_item.pian.save_metadata(fedora_transaction)
+                    if inner_item.adb:
+                        inner_item.adb.save_metadata(fedora_transaction)
+                for inner_item in record.casti_dokumentu.all():
+                    inner_item: DokumentCast
+                    inner_item.dokument.save_metadata(fedora_transaction)
+                for inner_item in record.externi_odkazy.all():
+                    inner_item: ExterniOdkaz
+                    inner_item.externi_zdroj.save_metadata(fedora_transaction)
+                    if inner_item.projekt:
+                        inner_item.projekt.save_metadata(fedora_transaction)
+
+            if isinstance(self, ArcheologickyZaznam):
+                process_arch_z(self)
+            elif isinstance(self, Dokument):
+                for item in self.casti.all():
+                    item: DokumentCast
+                    if item.archeologicky_zaznam:
+                        item.archeologicky_zaznam.save_metadata(fedora_transaction)
+                    if item.projekt:
+                        item.projekt.save_metadata(fedora_transaction)
+                    if item.let:
+                        item.let.save_metadata(fedora_transaction)
+            elif isinstance(self, ExterniZdroj):
+                for item in self.externi_odkazy_zdroje.all():
+                    item: ExterniOdkaz
+                    item.archeologicky_zaznam.save_metadata(fedora_transaction)
+            elif isinstance(self, Projekt):
+                for item in self.casti_dokumentu.all():
+                    item: DokumentCast
+                    item.dokument.save_metadata(fedora_transaction)
+                for item in self.samostatne_nalezy.all():
+                    item: SamostatnyNalez
+                    item.save_metadata(fedora_transaction)
+            elif isinstance(self, Lokalita):
+                archeologicky_zaznam: ArcheologickyZaznam = self.archeologicky_zaznam
+                process_arch_z(archeologicky_zaznam)
+            elif isinstance(self, SamostatnyNalez):
+                if self.projekt:
+                    self.projekt.save_metadata(fedora_transaction)
+            elif isinstance(self, Pian):
+                for item in self.dokumentacni_jednotky_pianu.all():
+                    item: DokumentacniJednotka
+                    item.archeologicky_zaznam.save_metadata(fedora_transaction)
         logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end",
-                     extra={"transaction": fedora_transaction, "old_ident_cely": old_ident_cely})
+                     extra={"transaction": fedora_transaction, "old_ident_cely": old_ident_cely,
+                            "new_ident_cely": new_ident_cely})
 
     class Meta:
         abstract = True
