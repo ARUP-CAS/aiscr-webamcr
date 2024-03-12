@@ -1305,7 +1305,7 @@ UPDATE heslar SET razeni = 109, heslo = 'Kokosové (Keelingovy) ostrovy', heslo_
 UPDATE heslar SET razeni = 110, heslo = 'Kolumbie', heslo_en = 'Colombia', zkratka = 'CO', popis = '' WHERE ident_cely = 'HES-001284';
 UPDATE heslar SET razeni = 111, heslo = 'Komory', heslo_en = 'Comoros (the)', zkratka = 'KM', popis = '' WHERE ident_cely = 'HES-001384';
 UPDATE heslar SET razeni = 112, heslo = 'Konžská republika', heslo_en = 'Congo (the)', zkratka = 'CG', popis = '' WHERE ident_cely = 'HES-001385';
-UPDATE heslar SET razeni = 113, heslo = 'Korejská lidově demokratická republika', heslo_en = 'Korea (the Democratic People's Republic of)', zkratka = 'KP', popis = '' WHERE ident_cely = 'HES-001373';
+UPDATE heslar SET razeni = 113, heslo = 'Korejská lidově demokratická republika', heslo_en = 'Korea (the Democratic People''s Republic of)', zkratka = 'KP', popis = '' WHERE ident_cely = 'HES-001373';
 UPDATE heslar SET razeni = 114, heslo = 'Korejská republika', heslo_en = 'Korea (the Republic of)', zkratka = 'KR', popis = '' WHERE ident_cely = 'HES-001225';
 UPDATE heslar SET razeni = 115, heslo = 'Kosovo', heslo_en = 'Kosovo', zkratka = 'XK', popis = '' WHERE ident_cely = 'HES-001200';
 UPDATE heslar SET razeni = 116, heslo = 'Kostarika', heslo_en = 'Costa Rica', zkratka = 'CR', popis = '' WHERE ident_cely = 'HES-001271';
@@ -1313,7 +1313,7 @@ UPDATE heslar SET razeni = 117, heslo = 'Kuba', heslo_en = 'Cuba', zkratka = 'CU
 UPDATE heslar SET razeni = 118, heslo = 'Kuvajt', heslo_en = 'Kuwait', zkratka = 'KW', popis = '' WHERE ident_cely = 'HES-001201';
 UPDATE heslar SET razeni = 119, heslo = 'Kypr', heslo_en = 'Cyprus', zkratka = 'CY', popis = '' WHERE ident_cely = 'HES-001237';
 UPDATE heslar SET razeni = 120, heslo = 'Kyrgyzstán', heslo_en = 'Kyrgyzstan', zkratka = 'KG', popis = '' WHERE ident_cely = 'HES-001297';
-UPDATE heslar SET razeni = 121, heslo = 'Laos', heslo_en = 'Lao People's Democratic Republic (the)', zkratka = 'LA', popis = '' WHERE ident_cely = 'HES-001298';
+UPDATE heslar SET razeni = 121, heslo = 'Laos', heslo_en = 'Lao People''s Democratic Republic (the)', zkratka = 'LA', popis = '' WHERE ident_cely = 'HES-001298';
 UPDATE heslar SET razeni = 122, heslo = 'Lesotho', heslo_en = 'Lesotho', zkratka = 'LS', popis = '' WHERE ident_cely = 'HES-001299';
 UPDATE heslar SET razeni = 123, heslo = 'Libanon', heslo_en = 'Lebanon', zkratka = 'LB', popis = '' WHERE ident_cely = 'HES-001239';
 UPDATE heslar SET razeni = 124, heslo = 'Libérie', heslo_en = 'Liberia', zkratka = 'LR', popis = '' WHERE ident_cely = 'HES-001314';
@@ -1369,7 +1369,7 @@ UPDATE heslar SET razeni = 173, heslo = 'Papua Nová Guinea', heslo_en = 'Papua 
 UPDATE heslar SET razeni = 174, heslo = 'Paraguay', heslo_en = 'Paraguay', zkratka = 'PY', popis = '' WHERE ident_cely = 'HES-001363';
 UPDATE heslar SET razeni = 175, heslo = 'Peru', heslo_en = 'Peru', zkratka = 'PE', popis = '' WHERE ident_cely = 'HES-001296';
 UPDATE heslar SET razeni = 176, heslo = 'Pitcairn', heslo_en = 'Pitcairn', zkratka = 'PN', popis = '' WHERE ident_cely = 'HES-001287';
-UPDATE heslar SET razeni = 177, heslo = 'Pobřeží slonoviny', heslo_en = 'Côte d'Ivoire', zkratka = 'CI', popis = '' WHERE ident_cely = 'HES-001226';
+UPDATE heslar SET razeni = 177, heslo = 'Pobřeží slonoviny', heslo_en = 'Côte d''Ivoire', zkratka = 'CI', popis = '' WHERE ident_cely = 'HES-001226';
 UPDATE heslar SET razeni = 178, heslo = 'Polsko', heslo_en = 'Poland', zkratka = 'PL', popis = '' WHERE ident_cely = 'HES-001220';
 UPDATE heslar SET razeni = 179, heslo = 'Portoriko', heslo_en = 'Puerto Rico', zkratka = 'PR', popis = '' WHERE ident_cely = 'HES-001221';
 UPDATE heslar SET razeni = 180, heslo = 'Portugalsko', heslo_en = 'Portugal', zkratka = 'PT', popis = '' WHERE ident_cely = 'HES-001222';
