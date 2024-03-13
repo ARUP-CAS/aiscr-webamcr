@@ -1,14 +1,11 @@
-{% extends "base.html" %}
+{% extends "base_error.html" %}
 
-{% load static %}
 {% load i18n %}
 
 {% block title %}{% trans "templates.500.title" %}{% endblock %}
-{% block head %}
-{% endblock %}
 
-{% block content %}
-<h2>{% trans "templates.500.header" %}</h2>
-<p class="display-4">{% trans "templates.500.text" %}</p>
-<p>{% trans "templates.500.text.part2" %}</p>
+
+{% block error %}
+<h1 class="display-4">{% trans "templates.500.header" %}</h1>
+<p>{% trans "templates.500.text" %}</p>
 {% endblock %}

@@ -94,6 +94,7 @@ Dockerfile-DB-MAC
 docker-compose-mac-dev-local-db.yml
 pg_hba.conf
 docker-compose-debug-vscode.yml
+docker-compose-mac-dev-local-db-proxy.yml
 
 # kibana config
 kibana/kibana.yml
