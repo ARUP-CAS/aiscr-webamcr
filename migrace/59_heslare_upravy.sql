@@ -571,13 +571,11 @@ UPDATE heslar SET razeni = 1200, heslo = 'doba římská', heslo_en = 'Roman Per
 UPDATE heslar SET razeni = 1300, heslo = 'doba laténská–římská', heslo_en = 'La Tène–Roman Period', popis = '' WHERE ident_cely = 'HES-000407';
 UPDATE heslar SET razeni = 1400, heslo = 'doba stěhování národů', heslo_en = 'Migration Period', popis = '' WHERE ident_cely = 'HES-000408';
 UPDATE heslar SET razeni = 1500, heslo = 'doba římská–stěhování národů', heslo_en = 'Roman–Migration Period', popis = '' WHERE ident_cely = 'HES-000409';
-UPDATE heslar SET razeni = 1600, heslo = 'zemědělský pravěk', heslo_en = 'farming prehistory', popis = '' WHERE ident_cely = 'HES-000410';
 UPDATE heslar SET razeni = 1700, heslo = 'pravěk', heslo_en = 'prehistory', popis = '' WHERE ident_cely = 'HES-000411';
 UPDATE heslar SET razeni = 1800, heslo = 'raný středověk', heslo_en = 'Early Middle Ages', popis = '' WHERE ident_cely = 'HES-000412';
 UPDATE heslar SET razeni = 1900, heslo = 'vrcholný–pozdní středověk', heslo_en = 'High–Late Middle Ages', popis = '' WHERE ident_cely = 'HES-000413';
 UPDATE heslar SET razeni = 2000, heslo = 'středověk', heslo_en = 'Middle Ages', popis = '' WHERE ident_cely = 'HES-000414';
 UPDATE heslar SET razeni = 2100, heslo = 'novověk', heslo_en = 'Modern Period', popis = '' WHERE ident_cely = 'HES-000415';
-UPDATE heslar SET razeni = 2200, heslo = 'vrcholný středověk–novověk', heslo_en = 'High Middle Ages–Modern Period', popis = '' WHERE ident_cely = 'HES-000419';
 UPDATE heslar SET razeni = 2300, heslo = 'středověk–novověk', heslo_en = 'Middle Ages–Modern Period', popis = '' WHERE ident_cely = 'HES-000416';
 UPDATE heslar SET razeni = 2400, heslo = 'industriální období', heslo_en = 'Industrial Period', popis = '' WHERE ident_cely = 'HES-000417';
 UPDATE heslar SET razeni = 2500, heslo = 'novověk–industriální období', heslo_en = 'Modern–Industrial Period', popis = '' WHERE ident_cely = 'HES-000420';
@@ -1459,7 +1457,6 @@ INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (1410, 'star�
 INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (1420, 'mladší doba stěhování národů', 'Late Migration Period', 16);
 INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (1840, 'raný středověk 3', 'Early Middle Ages 3', 16);
 INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (1850, 'raný středověk 4', 'Early Middle Ages 4', 16);
-INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (1860, 'přechod raný/vrcholný středověk', 'Early/High Middle Ages Transition', 16);
 INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (410, 'starší neolit', 'Early Neolithic', 16);
 INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (420, 'střední–mladší neolit', 'Middle–Late Neolithic', 16);
 INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (510, 'časný eneolit', 'Proto-Eneolithic', 16);
@@ -1513,12 +1510,12 @@ UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE raze
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1410 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000344');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1420 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000345');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1500 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000346');
-UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1600 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000304');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1700 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000289');
-UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1800 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000385');
-UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1800 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000386');
+UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1700 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000304');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1800 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000276');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1800 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000301');
+UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1800 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000385');
+UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1800 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000386');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1840 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000277');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1840 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000278');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1840 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000302');
@@ -1527,17 +1524,17 @@ UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE raze
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1850 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000325');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1850 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000326');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1850 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000356');
-UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1860 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000270');
-UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1900 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000327');
-UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1900 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000328');
+UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1900 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000270');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1900 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000271');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1900 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000272');
+UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1900 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000327');
+UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1900 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000328');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 200 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000275');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 2000 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000380');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 2100 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000252');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 2100 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000381');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 2100 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000382');
-UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 2200 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000273');
+UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 2300 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000273');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 2300 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000392');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 2400 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000347');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 2400 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000348');
@@ -1618,6 +1615,8 @@ UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE raze
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 820 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000309');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 830 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000310');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 900 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000384');
+DELETE FROM heslar WHERE ident_cely = 'HES-000410';
+DELETE FROM heslar WHERE ident_cely = 'HES-000419';
 
 -- Odkazy na Getty AAT
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300000291, 'http://vocab.getty.edu/aat/300000291', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000067';
@@ -2003,7 +2002,6 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020756, 'http://vocab.getty.edu/aat/300020756', 'skos:narrowMatch' FROM heslar WHERE ident_cely = 'HES-000273';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020756, 'http://vocab.getty.edu/aat/300020756', 'skos:narrowMatch' FROM heslar WHERE ident_cely = 'HES-000392';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020756, 'http://vocab.getty.edu/aat/300020756', 'skos:narrowMatch' FROM heslar WHERE ident_cely = 'HES-000416';
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020756, 'http://vocab.getty.edu/aat/300020756', 'skos:narrowMatch' FROM heslar WHERE ident_cely = 'HES-000419';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020760, 'http://vocab.getty.edu/aat/300020760', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000270';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020760, 'http://vocab.getty.edu/aat/300020760', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000276';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020760, 'http://vocab.getty.edu/aat/300020760', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000301';
@@ -2594,7 +2592,6 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300411504, 'http://vocab.getty.edu/aat/300411504', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000510';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300417277, 'http://vocab.getty.edu/aat/300417277', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000289';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300417277, 'http://vocab.getty.edu/aat/300417277', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000304';
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300417277, 'http://vocab.getty.edu/aat/300417277', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000410';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300417277, 'http://vocab.getty.edu/aat/300417277', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000411';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300417379, 'http://vocab.getty.edu/aat/300417379', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000873';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300417379, 'http://vocab.getty.edu/aat/300417379', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000874';
@@ -2654,7 +2651,6 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106913, 'http://vocab.getty.edu/aat/300106913', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1420;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020764, 'http://vocab.getty.edu/aat/300020764', 'skos:closeMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1840;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020766, 'http://vocab.getty.edu/aat/300020766', 'skos:closeMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1850;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020760, 'http://vocab.getty.edu/aat/300020760', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1860;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019270, 'http://vocab.getty.edu/aat/300019270', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 410;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019272, 'http://vocab.getty.edu/aat/300019272', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 420;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106751, 'http://vocab.getty.edu/aat/300106751', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 510;
