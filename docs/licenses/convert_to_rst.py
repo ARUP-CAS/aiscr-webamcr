@@ -16,16 +16,15 @@ def csv_to_rst_table():
         }
         data_to_write.append(row)
 
-    with open("docs/licenses/licenses.csv", 'r', newline='', encoding='utf-8') as csv_file:
-        rest_table_data = ""
-        for row_index, row in enumerate(data_to_write):
-            for key, value in row.items():
-                rest_table_data += f"   * - {value}\n" if key == "Název knihovny" else f"     - {value}\n"
-        with open("docs/source/knihovny_for_edit.rst", encoding='utf-8') as rst_file:
-            content = rst_file.read()
-        content = content.replace("@licence_table", rest_table_data)
-        with open("docs/source/knihovny_read_only.rst", 'w', encoding='utf-8') as rst_file:
-            rst_file.write(content)
+    rest_table_data = ""
+    for row_index, row in enumerate(data_to_write):
+        for key, value in row.items():
+            rest_table_data += f"   * - {value}\n" if key == "Název knihovny" else f"     - {value}\n"
+    with open("docs/source/knihovny_for_edit.rst", encoding='utf-8') as rst_file:
+        content = rst_file.read()
+    content = content.replace("@licence_table", rest_table_data)
+    with open("docs/source/knihovny_read_only.rst", 'w', encoding='utf-8') as rst_file:
+        rst_file.write(content)
 
 
 csv_to_rst_table()
