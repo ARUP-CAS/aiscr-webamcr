@@ -53,7 +53,7 @@ class ModelWithMetadata(models.Model):
     def update_queued(class_name, pk):
         return check_if_task_queued(class_name, pk, "save_record_metadata")
 
-    def save_metadata(self, fedora_transaction=None, use_celery=True, include_files=False, close_transaction=False):
+    def save_metadata(self, fedora_transaction=None, include_files=False, close_transaction=False):
         from core.repository_connector import FedoraTransaction
         stack = inspect.stack()
         caller = stack[1]
@@ -65,13 +65,13 @@ class ModelWithMetadata(models.Model):
             raise ValueError("fedora_transaction must be a FedoraTransaction class object")
         if not self.ident_cely:
             logger.warning("xml_generator.models.ModelWithMetadata.save_metadata.no_ident",
-                           extra={"ident_cely": self.ident_cely, "use_celery": use_celery, "record_pk": self.pk,
+                           extra={"ident_cely": self.ident_cely, "record_pk": self.pk,
                                   "record_class": self.__class__.__name__, "transaction": fedora_transaction.uid,
                                   "close_transaction": close_transaction, "caller": [f"{caller}\n"
                                                                                      for caller in stack]})
             return
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.start",
-                     extra={"ident_cely": self.ident_cely, "use_celery": use_celery, "record_pk": self.pk,
+                     extra={"ident_cely": self.ident_cely, "record_pk": self.pk,
                             "record_class": self.__class__.__name__, "transaction":
                                 getattr(fedora_transaction, "uid", ""), "close_transaction": close_transaction,
                             "caller": caller})

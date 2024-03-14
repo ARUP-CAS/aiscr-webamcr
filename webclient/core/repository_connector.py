@@ -266,8 +266,11 @@ class FedoraRepositoryConnector:
         if self.transaction_uid:
             if headers is None:
                 headers = {}
-            headers["Atomic-ID"] = (f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
-                                    f"fcr:tx/{self.transaction_uid}")
+            if settings.FEDORA_TRANSACTION_URL:
+                headers["Atomic-ID"] = f"{settings.FEDORA_TRANSACTION_URL}rest/fcr:tx/{self.transaction_uid}"
+            else:
+                headers["Atomic-ID"] = (f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}"
+                                        f":{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx/{self.transaction_uid}")
         if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
             response = requests.post(url, headers=headers, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,

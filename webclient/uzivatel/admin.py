@@ -264,7 +264,6 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         logger.debug("uzivatel.admin.save_model.manage_user_groups",
                      extra={"max_id": max_id, "hlavni_role_pk": obj.hlavni_role.pk})
 
-
     def user_change_password(self, request, id, form_url=""):
         if request.method == "POST":
             user = self.get_object(request, unquote(id))
