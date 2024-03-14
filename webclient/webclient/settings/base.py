@@ -29,10 +29,7 @@ def get_secret(setting, default_value=None):
                 error_msg = error_msg = f"Add {setting} variable to {file_path} file"
                 raise ImproperlyConfigured(error_msg)
         else:
-            try:
-                return secrets[setting]
-            except KeyError:
-                return default_value
+            return secrets.get(setting, default_value)
     else:
         return secrets.get(setting, "X")
 
@@ -473,6 +470,7 @@ FEDORA_PORT_NUMBER = get_secret("FEDORA_PORT_NUMBER", "")
 FEDORA_ADMIN_USER = get_secret("FEDORA_ADMIN_USER", "")
 FEDORA_ADMIN_USER_PASSWORD = get_secret("FEDORA_ADMIN_USER_PASSWORD", "")
 FEDORA_PROTOCOL = get_secret("FEDORA_PROTOCOL", "https")
+FEDORA_TRANSACTION_URL = get_secret("FEDORA_TRANSACTION_URL", "")
 
 DIGIARCHIV_SERVER_URL = get_secret("DIGIARCHIV_SERVER_URL", "https://digiarchiv.aiscr.cz/")
 
