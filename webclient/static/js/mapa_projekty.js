@@ -33,6 +33,7 @@ var global_heat = false;
 var overlays = {
     [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
     [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
+    [map_translations['npuPamatkovaOchrana']]: npuOchrana,
     [map_translations['lokalizaceProjektu']]:poi_sugest,
     [map_translations['projektyP1']]:poi_p1,
     [map_translations['projektyP2']]:poi_p2,

@@ -272,7 +272,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
     # Filters by historie
     historie_typ_zmeny = MultipleChoiceFilter(
         choices=filter(
-            lambda x: x[0].startswith("P") and not x[0].startswith("PI"),
+            lambda x: x[0].startswith("P") and not x[0].startswith("PI") or x[0].startswith("KAT"),
             Historie.CHOICES,
         ),
         label=_("projekt.filters.projektFilter.historieTypeZmeny.label"),

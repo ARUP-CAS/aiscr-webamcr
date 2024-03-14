@@ -181,7 +181,7 @@ class SamostatnyNalezFilter(HistorieFilter):
 
     # Filters by historie
     historie_typ_zmeny = MultipleChoiceFilter(
-        choices=filter(lambda x: x[0].startswith("SN"), Historie.CHOICES),
+        choices=filter(lambda x: x[0].startswith("SN") or x[0].startswith("KAT"), Historie.CHOICES),
         label=_("pas.filters.samostatnyNalezFilter.historie_typ_zmeny.label"),
         field_name="historie__historie__typ_zmeny",
         widget=SelectMultiple(
