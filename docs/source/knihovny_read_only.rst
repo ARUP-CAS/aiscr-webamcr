@@ -1,106 +1,3 @@
-Cookies
-=======
-
-Cookies v prohlížeči jsou malé bloky dat, které webové stránky ukládají na vašem počítači. Tyto informace mohou
-obsahovat různé údaje, jako jsou vaše přihlašovací údaje, preference na dané webové stránce nebo obsah
-vašeho nákupního košíku na e-shopu.
-
-Když se na stránku vrátíte, prohlížeč pošle uložené cookies zpět na server, což umožňuje webu "si vás pamatovat".
-Díky tomu může web okamžitě načíst vaše nastavení, jako je například zvolený jazyk stránky, nebo vás automaticky
-přihlásit, aniž byste museli znovu zadávat své uživatelské jméno a heslo.
-
-Cookies jsou užitečné pro uživatele i provozovatele webů, protože zjednodušují a zpříjemňují procházení internetu.
-Níže naleznete přehled cookies, které ukládá aplikace AMČR.
-
-Pro zobrazení cookies, které ukládá aplikace AMČR ve vašem prohlížeči, můžete postupovat podle těchto obecných kroků.
-Přesné kroky se liší v závislosti na konkrétním prohlížeči, který používáte:
-
-**Google Chrome**:
-
-1. Klikněte na tři tečky v pravém horním rohu prohlížeče a vyberte „Nastavení“.
-2. Posuňte se dolů a klikněte na „Pokročilá nastavení“.
-3. V sekci „Soukromí a zabezpečení“ vyberte „Nastavení obsahu“ nebo „Nastavení webu“.
-4. Klikněte na „Cookies“.
-5. Zde můžete zobrazit a spravovat cookies pro konkrétní stránky.
-
-**Mozilla Firefox**:
-
-1. Klikněte na tři čáry v pravém horním rohu a vyberte „Možnosti“ nebo „Předvolby“.
-2. Vyberte panel „Soukromí a zabezpečení“.
-3. V sekci „Cookies a data stránek“ můžete zobrazit a spravovat cookies.
-
-**Safari**:
-
-1. V nabídce Safari vyberte „Předvolby“.
-2. Přejděte na kartu „Soukromí“.
-3. Zde můžete spravovat nastavení cookies a data webových stránek.
-
-**Microsoft Edge**:
-
-1. Klikněte na tři tečky v pravém horním rohu a vyberte „Nastavení“.
-2. Vyberte „Soukromí, vyhledávání a služby“.
-3. V sekci „Vymazat údaje procházení“ klikněte na „Zvolit, co chcete vymazat“.
-4. Vyberte „Cookies a další data webových stránek“ a poté „Zobrazit další“ pro správu cookies.
-
-ID relace (Session ID)
------------------------
-
-Session ID cookie je malý datový soubor, který webový server pošle a uloží v prohlížeči uživatele,
-když uživatelnavštíví webovou stránku. Tento cookie obsahuje jedinečný identifikátor, známý jako Session ID,
-který server používá k rozpoznání konkrétního uživatelského sezení. Díky tomu může server udržovat stavové
-informace pro uživatele, i když HTTP protokol, který webové stránky používají, je bezstavový. Bezstavovost znamená,
-že každý požadavek na server je nezávislý a server standardně neudržuje žádné informace o uživatelích mezi
-různými požadavky.
-
-Jak Session ID Cookie funguje:
-
-1. **Vytvoření Session ID**: Když uživatel poprvé navštíví webovou stránku, server vytvoří Session ID pro toto sezení. Toto ID je jedinečné pro každé sezení a slouží k identifikaci uživatele během jeho interakce s webem.
-2. **Uložení Session Cookie**: Server poté pošle toto Session ID zpět prohlížeči uživatele ve formě cookie. Prohlížeč cookie uloží a bude ho odesílat zpět serveru s každým dalším požadavkem na stránku.
-3. **Použití Session ID**: Při každém dalším požadavku na server prohlížeč posílá cookie s Session ID zpět serveru. Server použije toto ID k zjištění, že požadavky pocházejí od stejného uživatele, a může tak uživateli přizpůsobit obsah, udržovat stav přihlášení, sledovat nákupní košík v e-shopu atd.
-4. **Expirace a bezpečnost**: V případě aplikace AMČR dojde ke smazání cookie a odhlášení uživatele po hodinové neaktivitě. Poté je nutné se opět přhlásit.
-
-Session ID cookie je tedy klíčovým nástrojem pro udržení kontinuity a bezproblémové interakce mezi uživatelem
-a webovou aplikací v bezstavovém prostředí internetu.
-
-CSRF token
-----------
-
-CSRF token uložený do cookie má za cíl zvýšit bezpečnost aplikace.
-
-CSRF útoky, neboli útoky typu "Cross-Site Request Forgery", jsou formou zneužití, při kterém útočník využije důvěru,
-kterou má webová aplikace v prohlížeč uživatele. Představte si, že jste přihlášeni do webové aplikace AMČR
-a současně si prohlížíte jiné stránky. Pokud by aplikace nebyla chráněna proti útoku typu CSRF,
-útočník by mohl vytvořit škodlivou stránku nebo email, který bez vašeho vědomí
-odešle požadavek do aplikace AMČR, jako byste jej odeslali vy sami.
-
-Aby se webové aplikace chránily proti CSRF útokům, často používají tzv. CSRF tokeny. CSRF token je jedinečný,
-tajný řetězec, který server přidává do formulářů nebo URL adres, které vyžadují interakci uživatele. Když uživatel
-odesílá formulář nebo provádí akci, která vyžaduje ověření, server zkontroluje, zda se odeslaný token shoduje s tím,
-který byl vygenerován pro danou uživatelskou session. Pokud se tokeny neshodují nebo je token chybějící, server
-požadavek odmítne s předpokladem, že se může jednat o CSRF útok.
-
-Token zajišťuje, že každý požadavek, který má být proveden na serveru, musí být doprovázen platným tokenem,
-který nemůže být vygenerován na žádné jiné stránce než na té, kterou kontroluje server. Tím se zabraňuje útočníkům
-v zasílání neoprávněných požadavků v zastoupení ničeho netušících uživatelů.
-
-Další cookies
--------------
-
-Cookie `show-form` slouží k uložení formuláře, na který má být prohlížeč přesměrován. Jedná se zpravidla o případ,
-kdy uživatel/uživatelka provede akci na jednom formuláři a po potvrzení této akce je přesněmovaný na jiný formuláře.
-Hodnota s prefixem `detail_dj_form_` slouží k přesměrování na formulář dokumentační jednotky, například po odpojení
-PAINu.
-
-Cookie `detail-id-shown` slouží k nastavení zoomu mapy pro formulář detailu archeologického záznamu a lokality.
-
-Cookie `set-active` je používána k uchování aktivního prvku pro editaci.  Hodnota s prefixem
-`el_div_dokumentacni_jednotka_` slouží k označení aktuálně upravovaná dokumentační jednotce na stránce se detailem
-archeologického záznamu.
-
-Cookie `next_url` slouží k přesměrování, například po automatickém přihlášení.
-
-Cookie `zpet` slouží k nastavení odkazu pro přechod na předchozí stránku u obrazovky pro detail dokumentu.
-
 Použité knihovny a licence
 ==========================
 
@@ -619,107 +516,508 @@ Knihovny vkládané jako statické soubory
    :widths: 25 25 25 25
    :header-rows: 1
 
-   * - Název knihovny
-     - Verze
-     - Licence
-     - Odkaz
-   * - Bootstrap
-     - 4.5.3
+   * - Brotli
+     - 1.1.0
      - MIT License
-     - https://getbootstrap.com/
-   * - Bootstrap Icons
-     - 1.5.0
-     - MIT License
-     - https://icons.getbootstrap.com/
-   * - Bootstrap Select
-     - 1.13.14
-     - MIT License
-     - https://developer.snapappointments.com/bootstrap-select/
-   * - Bootstrap Datepicker
-     - 1.9.0
-     - Apache License
-     - https://bootstrap-datepicker.readthedocs.io/en/latest/
-   * - Django Autocomplete Light
-     -
-     - MIT License
-     - https://github.com/yourlabs/django-autocomplete-light
-   * - Dropzone
-     -
-     - MIT License
-     - https://www.dropzone.dev/
-   * - Easytimer
-     -
-     - MIT License
-     - https://albert-gonzalez.github.io/easytimer.js/
-   * - Google Tag Manager
-     -
-     -
-     - https://tagmanager.google.com/#/home
-   * - Heatmap.js
-     - 2.0.5
-     - MIT License
-     - https://www.patrick-wied.at/static/heatmapjs/
-   * - jQuery
-     - 3.5.1
-     - MIT License
-     - https://jquery.com/
-   * - Leaflet
-     - 1.7.1
+     - https://github.com/google/brotli
+   * - Django
+     - 4.2.7
      - BSD License
-     - https://leafletjs.com/
-   * - Leaflet Context Menu
+     - https://www.djangoproject.com/
+   * - MarkupPy
+     - 1.14
+     - MIT
+     - https://github.com/tylerbakke/MarkupPy
+   * - Pillow
+     - 10.1.0
+     - Historical Permission Notice and Disclaimer (HPND)
+     - https://python-pillow.org
+   * - PyRTF3
+     - 0.47.5
+     - GNU General Public License (GPL)
+     - https://github.com/xoviat/pyrtf
+   * - PySocks
+     - 1.7.1
+     - BSD
+     - https://github.com/Anorov/PySocks
+   * - PyYAML
+     - 6.0.1
+     - MIT License
+     - https://pyyaml.org/
+   * - amqp
+     - 5.2.0
+     - BSD License
+     - http://github.com/celery/py-amqp
+   * - asgiref
+     - 3.6.0
+     - BSD License
+     - https://github.com/django/asgiref/
+   * - async-timeout
+     - 4.0.3
+     - Apache Software License
+     - https://github.com/aio-libs/async-timeout
+   * - attrs
+     - 23.1.0
+     - MIT License
+     - https://www.attrs.org/en/stable/changelog.html
+   * - beautifulsoup4
+     - 4.12.2
+     - MIT License
+     - https://www.crummy.com/software/BeautifulSoup/bs4/
+   * - billiard
+     - 4.2.0
+     - BSD License
+     - https://github.com/celery/billiard
+   * - black
+     - 23.11.0
+     - MIT License
+     - https://github.com/psf/black
+   * - celery
+     - 5.3.6
+     - BSD License
+     - https://docs.celeryq.dev/
+   * - certifi
+     - 2023.11.17
+     - Mozilla Public License 2.0 (MPL 2.0)
+     - https://github.com/certifi/python-certifi
+   * - cfgv
+     - 3.4.0
+     - MIT License
+     - https://github.com/asottile/cfgv
+   * - chardet
+     - 5.2.0
+     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - https://github.com/chardet/chardet
+   * - charset-normalizer
+     - 3.3.2
+     - MIT License
+     - https://github.com/Ousret/charset_normalizer
+   * - click
+     - 8.1.7
+     - BSD License
+     - https://palletsprojects.com/p/click/
+   * - click-didyoumean
+     - 0.3.0
+     - MIT License
+     - UNKNOWN
+   * - click-plugins
+     - 1.1.1
+     - BSD License
+     - https://github.com/click-contrib/click-plugins
+   * - click-repl
+     - 0.3.0
+     - MIT
+     - https://github.com/untitaker/click-repl
+   * - confusable-homoglyphs
+     - 3.2.0
+     - MIT License
+     - https://github.com/vhf/confusable_homoglyphs
+   * - coverage
+     - 7.3.2
+     - Apache Software License
+     - https://github.com/nedbat/coveragepy
+   * - crispy-bootstrap4
+     - 2023.1
+     - MIT License
+     - https://github.com/django-crispy-forms/crispy-bootstrap4
+   * - cron-descriptor
      - 1.4.0
      - MIT License
-     - https://github.com/aratcliffe/Leaflet.contextmenu
-   * - Leaflet Control Search
-     -
-     - MIT License
-     - https://github.com/stefanocudini/leaflet-search
-   * - Leaflet Coordinates
-     -
-     - Creative Commons Attribution 3.0 Unported License.
-     - https://github.com/MrMufflon/Leaflet.Coordinates/tree/master
-   * - Leaflet Draw
-     - 1.0.4
-     - MIT License
-     - https://github.com/Leaflet/Leaflet.draw
-   * - Leaflet Easy Button
-     - v1
-     - MIT License
-     - https://danielmontague.com/projects/easyButton.js/v1/examples/
-   * - Leaflet FeatureGroup SubGroup
-     -
-     - BSD License
-     - https://github.com/ghybs/Leaflet.FeatureGroup.SubGroup/tree/master
-   * - Leaflet Fullscreen
-     - 1.0.1
-     - ISC License
-     - https://github.com/Leaflet/Leaflet.fullscreen
-   * - Leaflet Heatmap Overlay
-     -
-     - MIT License
-     - https://www.patrick-wied.at/static/heatmapjs/plugin-leaflet-layer.html
-   * - Leaflet Marker Cluster
-     - 1.5.3
-     - MIT License
-     - https://github.com/Leaflet/Leaflet.markercluster
-   * - Leaflet Measure
-     -
-     - MIT License
-     - https://github.com/ljagis/leaflet-measure
-   * - Leaflet Spin
-     -
-     - MIT License
-     - https://github.com/makinacorpus/Leaflet.Spin
-   * - Leaflet TileLayer Grayscale
-     -
-     -
-     - https://github.com/Zverik/leaflet-grayscale
-   * - LercDecode
-     - 1.0.1
+     - https://github.com/Salamek/cron-descriptor
+   * - defusedxml
+     - 0.7.1
+     - Python Software Foundation License
+     - https://github.com/tiran/defusedxml
+   * - distlib
+     - 0.3.7
+     - Python Software Foundation License
+     - https://github.com/pypa/distlib
+   * - django-add-default-value
+     - 0.10.0
      - Apache Software License
-     - https://unpkg.com/browse/lerc@1.0.1/
-   * - Select2
-     - 4.0.13
+     - https://github.com/3YOURMIND/django-add-default-value
+   * - django-appconf
+     - 1.0.6
+     - BSD License
+     - https://django-appconf.readthedocs.io/
+   * - django-auto-logout
+     - 0.5.1
+     - BSD License
+     - https://github.com/bugov/django-auto-logout
+   * - django-autocomplete-light
+     - 3.9.8rc29
      - MIT License
-     - https://github.com/select2/select2/tree/master
+     - http://django-autocomplete-light.rtfd.org
+   * - django-celery-beat
+     - 2.5.0
+     - BSD License
+     - https://github.com/celery/django-celery-beat
+   * - django-celery-results
+     - 2.5.1
+     - BSD License
+     - https://github.com/celery/django-celery-results
+   * - django-compressor
+     - 4.4
+     - MIT License
+     - https://django-compressor.readthedocs.io/en/latest/
+   * - django-crispy-forms
+     - 2.1
+     - MIT License
+     - https://github.com/django-crispy-forms/django-crispy-forms
+   * - django-debug-toolbar
+     - 4.2.0
+     - BSD License
+     - https://github.com/jazzband/django-debug-toolbar
+   * - django-debug-toolbar-template-profiler
+     - 2.1.0
+     - BSD License
+     - https://github.com/node13h/django-debug-toolbar-template-profiler
+   * - django-extensions
+     - 3.2.3
+     - MIT License
+     - https://github.com/django-extensions/django-extensions
+   * - django-filter
+     - 23.5
+     - BSD License
+     - https://github.com/carltongibson/django-filter/tree/main
+   * - django-libsass
+     - 0.9
+     - BSD License
+     - https://github.com/torchbox/django-libsass
+   * - django-livereload-server
+     - 0.5
+     - BSD License
+     - https://github.com/tjwalch/django-livereload-server
+   * - django-object-actions
+     - 4.2.0
+     - Apache Software License
+     - https://github.com/crccheck/django-object-actions
+   * - django-prometheus
+     - 2.3.1
+     - Apache Software License
+     - http://github.com/korfuri/django-prometheus
+   * - django-recaptcha
+     - 3.0.0
+     - BSD License
+     - https://github.com/torchbox/django-recaptcha
+   * - django-registration
+     - 3.3
+     - BSD License
+     - https://github.com/ubernostrum/django-registration/
+   * - django-rosetta
+     - 0.10.0
+     - MIT License
+     - https://github.com/mbi/django-rosetta
+   * - django-simple-history
+     - 3.4.0
+     - BSD License
+     - https://github.com/jazzband/django-simple-history
+   * - django-tables2
+     - 2.6.0
+     - BSD License
+     - https://github.com/jieter/django-tables2/
+   * - django-tables2-column-shifter
+     - 2.2.0
+     - BSD License
+     - https://github.com/djk2/django-tables2-column-shifter
+   * - django-timezone-field
+     - 6.1.0
+     - BSD License
+     - https://github.com/mfogel/django-timezone-field/
+   * - django-widget-tweaks
+     - 1.5.0
+     - MIT License
+     - https://github.com/jazzband/django-widget-tweaks
+   * - djangorestframework
+     - 3.14.0
+     - BSD License
+     - https://www.django-rest-framework.org/
+   * - djangorestframework-xml
+     - 2.0.0
+     - BSD License
+     - https://github.com/jpadilla/django-rest-framework-xml
+   * - et-xmlfile
+     - 1.1.0
+     - MIT License
+     - https://foss.heptapod.net/openpyxl/et_xmlfile
+   * - exceptiongroup
+     - 1.2.0
+     - MIT License
+     - https://github.com/agronholm/exceptiongroup/blob/main/CHANGES.rst
+   * - filelock
+     - 3.13.1
+     - The Unlicense (Unlicense)
+     - https://github.com/tox-dev/py-filelock
+   * - h11
+     - 0.14.0
+     - MIT License
+     - https://github.com/python-hyper/h11
+   * - identify
+     - 2.5.33
+     - MIT License
+     - https://github.com/pre-commit/identify
+   * - idna
+     - 3.6
+     - BSD License
+     - https://github.com/kjd/idna
+   * - inflate64
+     - 1.0.0
+     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - UNKNOWN
+   * - isort
+     - 5.13.1
+     - MIT License
+     - https://pycqa.github.io/isort/
+   * - kombu
+     - 5.3.4
+     - BSD License
+     - https://kombu.readthedocs.io
+   * - libsass
+     - 0.22.0
+     - MIT License
+     - https://sass.github.io/libsass-python/
+   * - lxml
+     - 4.9.3
+     - BSD License
+     - https://lxml.de/
+   * - multivolumefile
+     - 0.2.3
+     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - https://github.com/miurahr/multivolume
+   * - mypy-extensions
+     - 1.0.0
+     - MIT License
+     - https://github.com/python/mypy_extensions
+   * - nodeenv
+     - 1.8.0
+     - BSD License
+     - https://github.com/ekalinin/nodeenv
+   * - numpy
+     - 1.26.2
+     - BSD License
+     - https://numpy.org
+   * - odfpy
+     - 1.4.1
+     - Apache Software License; GNU General Public License (GPL); GNU Library or Lesser General Public License (LGPL)
+     - https://github.com/eea/odfpy
+   * - openpyxl
+     - 3.1.2
+     - MIT License
+     - https://openpyxl.readthedocs.io
+   * - outcome
+     - 1.3.0.post0
+     - Apache Software License; MIT License
+     - https://github.com/python-trio/outcome
+   * - packaging
+     - 23.2
+     - Apache Software License; BSD License
+     - https://github.com/pypa/packaging
+   * - pandas
+     - 2.1.4
+     - BSD License
+     - https://pandas.pydata.org
+   * - pathspec
+     - 0.12.1
+     - Mozilla Public License 2.0 (MPL 2.0)
+     - UNKNOWN
+   * - pdf2image
+     - 1.17.0
+     - MIT License
+     - https://github.com/Belval/pdf2image
+   * - phonenumbers
+     - 8.13.29
+     - Apache Software License
+     - https://github.com/daviddrysdale/python-phonenumbers
+   * - platformdirs
+     - 4.1.0
+     - MIT License
+     - https://github.com/platformdirs/platformdirs
+   * - polib
+     - 1.2.0
+     - MIT License
+     - https://github.com/izimobil/polib/
+   * - pre-commit
+     - 3.6.0
+     - MIT License
+     - https://github.com/pre-commit/pre-commit
+   * - prometheus-client
+     - 0.19.0
+     - Apache Software License
+     - https://github.com/prometheus/client_python
+   * - prompt-toolkit
+     - 3.0.43
+     - BSD License
+     - https://github.com/prompt-toolkit/python-prompt-toolkit
+   * - psutil
+     - 5.9.8
+     - BSD License
+     - https://github.com/giampaolo/psutil
+   * - psycopg2-binary
+     - 2.9.9
+     - GNU Library or Lesser General Public License (LGPL)
+     - https://psycopg.org/
+   * - py7zr
+     - 0.20.8
+     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - https://py7zr.readthedocs.io/
+   * - pybcj
+     - 1.0.2
+     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - https://codeberg.org/miurahr/pybcj
+   * - pycryptodomex
+     - 3.20.0
+     - Apache Software License; BSD License; Public Domain
+     - https://www.pycryptodome.org
+   * - pyparsing
+     - 3.1.1
+     - MIT License
+     - https://github.com/pyparsing/pyparsing/
+   * - pypdf
+     - 3.17.2
+     - BSD License
+     - https://github.com/py-pdf/pypdf
+   * - pyppmd
+     - 1.1.0
+     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - https://pyppmd.readthedocs.io/
+   * - python-crontab
+     - 3.0.0
+     - GNU Lesser General Public License v3 or later (LGPLv3+)
+     - https://gitlab.com/doctormo/python-crontab/
+   * - python-dateutil
+     - 2.8.2
+     - Apache Software License; BSD License
+     - https://github.com/dateutil/dateutil
+   * - python-logstash
+     - 0.4.8
+     - MIT License
+     - https://github.com/vklochan/python-logstash
+   * - python-magic
+     - 0.4.27
+     - MIT License
+     - http://github.com/ahupp/python-magic
+   * - pytz
+     - 2023.3.post1
+     - MIT License
+     - http://pythonhosted.org/pytz
+   * - pyzstd
+     - 0.15.9
+     - BSD License
+     - https://github.com/animalize/pyzstd
+   * - rarfile
+     - 4.1
+     - ISC License (ISCL)
+     - https://github.com/markokr/rarfile
+   * - rcssmin
+     - 1.1.1
+     - Apache License, Version 2.0
+     - http://opensource.perlig.de/rcssmin/
+   * - redis
+     - 5.0.1
+     - MIT License
+     - https://github.com/redis/redis-py
+   * - reportlab
+     - 4.0.8
+     - BSD License
+     - https://www.reportlab.com/
+   * - requests
+     - 2.31.0
+     - Apache Software License
+     - https://requests.readthedocs.io
+   * - rjsmin
+     - 1.2.1
+     - Apache License, Version 2.0
+     - http://opensource.perlig.de/rjsmin/
+   * - selenium
+     - 4.16.0
+     - Apache Software License
+     - https://www.selenium.dev
+   * - simplejson
+     - 3.19.2
+     - Academic Free License (AFL); MIT License
+     - https://github.com/simplejson/simplejson
+   * - six
+     - 1.16.0
+     - MIT License
+     - https://github.com/benjaminp/six
+   * - sniffio
+     - 1.3.0
+     - Apache Software License; MIT License
+     - https://github.com/python-trio/sniffio
+   * - sortedcontainers
+     - 2.4.0
+     - Apache Software License
+     - http://www.grantjenks.com/docs/sortedcontainers/
+   * - soupsieve
+     - 2.5
+     - MIT License
+     - https://github.com/facelessuser/soupsieve
+   * - sqlparse
+     - 0.4.4
+     - BSD License
+     - https://github.com/andialbrecht/sqlparse
+   * - tablib
+     - 3.5.0
+     - MIT License
+     - https://tablib.readthedocs.io
+   * - tabulate
+     - 0.9.0
+     - MIT License
+     - https://github.com/astanin/python-tabulate
+   * - texttable
+     - 1.7.0
+     - MIT License
+     - https://github.com/foutaise/texttable/
+   * - tomli
+     - 2.0.1
+     - MIT License
+     - https://github.com/hukkin/tomli
+   * - tornado
+     - 6.4
+     - Apache Software License
+     - http://www.tornadoweb.org/
+   * - trio
+     - 0.23.2
+     - Apache Software License; MIT License
+     - https://github.com/python-trio/trio
+   * - trio-websocket
+     - 0.11.1
+     - MIT License
+     - https://github.com/python-trio/trio-websocket
+   * - typing_extensions
+     - 4.9.0
+     - Python Software Foundation License
+     - https://github.com/python/typing_extensions
+   * - tzdata
+     - 2023.3
+     - Apache Software License
+     - https://github.com/python/tzdata
+   * - urllib3
+     - 2.1.0
+     - MIT License
+     - https://github.com/urllib3/urllib3/blob/main/CHANGES.rst
+   * - vine
+     - 5.1.0
+     - BSD License
+     - https://github.com/celery/vine
+   * - virtualenv
+     - 20.25.0
+     - MIT License
+     - https://github.com/pypa/virtualenv
+   * - wrapt
+     - 1.16.0
+     - BSD License
+     - https://github.com/GrahamDumpleton/wrapt
+   * - wsproto
+     - 1.2.0
+     - MIT License
+     - https://github.com/python-hyper/wsproto/
+   * - xlrd
+     - 2.0.1
+     - BSD License
+     - http://www.python-excel.org/
+   * - xlwt
+     - 1.3.0
+     - BSD License
+     - http://www.python-excel.org/
+
