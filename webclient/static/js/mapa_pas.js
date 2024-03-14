@@ -20,6 +20,7 @@ map.addLayer(poi_sugest);
 var overlays = {
     [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
     [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
+    [map_translations['npuPamatkovaOchrana']]: npuOchrana,
     [map_translations['FindLocation']]:poi_sugest,
     [map_translations['samostatneNalezy']]: poi_sn,
     [map_translations['pian']]:poi_pian,

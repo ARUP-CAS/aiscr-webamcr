@@ -266,8 +266,11 @@ class FedoraRepositoryConnector:
         if self.transaction_uid:
             if headers is None:
                 headers = {}
-            headers["Atomic-ID"] = (f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
-                                    f"fcr:tx/{self.transaction_uid}")
+            if settings.FEDORA_TRANSACTION_URL:
+                headers["Atomic-ID"] = f"{settings.FEDORA_TRANSACTION_URL}rest/fcr:tx/{self.transaction_uid}"
+            else:
+                headers["Atomic-ID"] = (f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}"
+                                        f":{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx/{self.transaction_uid}")
         if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
             response = requests.post(url, headers=headers, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
@@ -853,41 +856,6 @@ class FedoraTransaction:
 
     def __str__(self):
         return self.uid
-
-    def check_remaining_tasks(self, include_commit_task_only=False):
-        logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.start",
-                     extra={"uid": self.uid})
-        app = Celery("webclient")
-        app.config_from_object("django.conf:settings", namespace="CELERY")
-        app.autodiscover_tasks()
-        i = app.control.inspect(["worker1@amcr"])
-        queues = (i.scheduled(), i.active(), i.reserved())
-        for queue in queues:
-            for queue_name, queue_tasks in queue.items():
-                for task in queue_tasks:
-                    if not task.get("args"):
-                        logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.no_data",
-                                     extra={"task_id": task.get("id"), "task_data": task})
-                        continue
-                    args = task.get("args")
-                    if isinstance(args, list):
-                        transaction_uid = task.get("args")[-1]
-                    elif isinstance(args, str):
-                        transaction_uid = task.get("args")
-                    else:
-                        logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.no_data",
-                                     extra={"task_data": task})
-                        continue
-                    if transaction_uid == self.uid:
-                        task_name = task.get("name")
-                        logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.found",
-                                     extra={"transaction": transaction_uid, "uid": self.uid,
-                                            "task_id": task.get("id"), "task_data": task, "task_name": task_name,
-                                            "task_name_type": type(task_name)})
-                        return True
-        logger.debug("core_repository_connector.FedoraTransaction.check_remaining_tasks.not_found",
-                     extra={"uid": self.uid})
-        return False
 
     def _send_transaction_request(self, operation=FedoraTransactionOperation.COMMIT):
         logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.start",

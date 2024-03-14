@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 def adb_save_metadata(sender, instance: Adb, **kwargs):
     logger.debug("adb.signals.adb_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
-        fedora_transaction = instance.fedora_transaction
+        fedora_transaction = instance.active_transaction
         instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
         instance.save_metadata(close_transaction=instance.close_active_transaction_when_finished)
         logger.debug("adb.signals.adb_save_metadata.save_metadata", extra={"ident_cely": instance.ident_cely,

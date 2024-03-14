@@ -1,13 +1,11 @@
-{% extends "base.html" %}
+{% extends "base_error.html" %}
 
-{% load static %}
 {% load i18n %}
 
 {% block title %}{% trans "templates.403.title" %}{% endblock %}
-{% block head %}
-{% endblock %}
 
-{% block content %}
-<h2>{% trans "templates.403.header" %}</h2>
-<p class="display-4">{% trans "templates.403.text" %}</p>
+
+{% block error %}
+<h1 class="display-4">{% trans "templates.403.header" %}</h1>
+<p>{% trans "templates.403.text" %}</p>
 {% endblock %}

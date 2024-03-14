@@ -25,6 +25,7 @@ Dokumentace je delená na část popisující nasazování, adresarovou struktur
    databaze_konzistence_testy
    cookies
    knihovny_read_only
+   chybove_stranky
 
 
 

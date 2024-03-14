@@ -109,7 +109,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
 
     # Historie
     historie_typ_zmeny = MultipleChoiceFilter(
-        choices=filter(lambda x: x[0].startswith("AZ"), Historie.CHOICES),
+        choices=filter(lambda x: x[0].startswith("AZ") or x[0].startswith("KAT"), Historie.CHOICES),
         label=_("arch_z.filters.ArchZaznamFilter.historie_typ_zmeny.label"),
         field_name="archeologicky_zaznam__historie__historie__typ_zmeny",
         widget=SelectMultipleSeparator(),
