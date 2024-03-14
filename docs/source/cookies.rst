@@ -83,6 +83,25 @@ Token zajišťuje, že každý požadavek, který má být proveden na serveru, 
 který nemůže být vygenerován na žádné jiné stránce než na té, kterou kontroluje server. Tím se zabraňuje útočníkům
 v zasílání neoprávněných požadavků v zastoupení ničeho netušících uživatelů.
 
+Google Analytics Cookies
+------------------------
+
+Cookies od Google Analytics se využívají k analýze návštěvnosti webových stránek. Tyto cookies pomáhají provozovateli
+služby pochopit, jak návštěvníci interagují s webem. Informace, které tyto cookies shromažďují, zahrnují například
+počet návštěvníků na stránce, odkud návštěvníci přicházejí a které stránky navštěvují nejčastěji. Tato data
+umožňují zlepšovat fungování našeho webu a zajišťují, aby byl pro uživatele co nejpříjemnější a nejužitečnější.
+
+**Používání Google Analytics Cookies**:
+
+1. **Sběr dat**: Cookies od Google Analytics automaticky sbírají informace o vašem používání webu. Tato data zahrnují například, kolik času uživatelé stráví na stránce, na které odkazy klikají a které stránky navštívili.
+
+2. **Anonymizace IP**: V souladu s ochranou soukromí se IP adresy návštěvníků mohou anonymizovat. To znamená, že osobní identifikace uživatele je výrazně omezena.
+
+3. **Zpracování a analýza dat**: Informace shromážděné pomocí těchto cookies jsou zpracovány Google Analytics pro vytváření analytických reportů o aktivitách uživatelů na stránce. Tyto reporty pomáhají provozovatelům webu pochopit a zlepšit výkon stránky.
+
+Cookies služby Google Analytics neshromažďují informace, které by uživatele osobně identifikovaly. Veškeré informace jsou shromažďovány
+anonymně a slouží pouze k vylepšení funkčnosti webu.
+
 Další cookies
 -------------
 
