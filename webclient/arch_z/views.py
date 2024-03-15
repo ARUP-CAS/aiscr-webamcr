@@ -903,8 +903,8 @@ def zapsat(request, projekt_ident_cely=None):
             logger.debug("arch_z.views.zapsat.form_valid", extra={"projekt_ident_cely": projekt_ident_cely})
             az = form_az.save(commit=False)
             az: ArcheologickyZaznam
-            fedora_trasnaction = FedoraTransaction()
-            az.active_transaction = fedora_trasnaction
+            fedora_transaction = FedoraTransaction()
+            az.active_transaction = fedora_transaction
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
             try:
@@ -920,8 +920,8 @@ def zapsat(request, projekt_ident_cely=None):
             except MaximalEventCount:
                 messages.add_message(request, messages.ERROR, MAXIMUM_AKCII_DOSAZENO)
             else:
-                repository_connector = FedoraRepositoryConnector(az)
-                if repository_connector.check_container_deleted_or_not_exists(az.ident_cely, "archeologicky_zaznam"):
+                if FedoraRepositoryConnector.check_container_deleted_or_not_exists(az.ident_cely,
+                                                                                   "archeologicky_zaznam"):
                     az.save()
                     form_az.save_m2m()
                     # This must be called to save many to many (katastry)
@@ -963,7 +963,7 @@ def zapsat(request, projekt_ident_cely=None):
                     az.save()
                     return redirect("arch_z:detail", az.ident_cely)
                 else:
-                    fedora_trasnaction.mark_transaction_as_closed()
+                    fedora_transaction.rollback_transaction()
                     logger.debug("arch_z.views.zapsat.check_container_deleted_or_not_exists.incorrect",
                                  extra={"ident_cely": az.ident_cely})
                     messages.add_message(

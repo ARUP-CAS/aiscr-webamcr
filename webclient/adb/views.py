@@ -10,7 +10,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
-from core.repository_connector import FedoraTransaction
+from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
 from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.contrib import messages
@@ -47,13 +47,18 @@ def zapsat(request, dj_ident_cely):
         except MaximalIdentNumberError as e:
             messages.add_message(request, messages.ERROR, e.message)
         else:
-            fedora_transaction = FedoraTransaction()
-            adb.active_transaction = fedora_transaction
-            adb.close_active_transaction_when_finished = True
-            adb.dokumentacni_jednotka = dj
-            adb.sm5 = sm5
-            adb.save()
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+            if FedoraRepositoryConnector.check_container_deleted_or_not_exists(adb.ident_cely, "adb"):
+                fedora_transaction = FedoraTransaction()
+                adb.active_transaction = fedora_transaction
+                adb.close_active_transaction_when_finished = True
+                adb.dokumentacni_jednotka = dj
+                adb.sm5 = sm5
+                adb.save()
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+            else:
+                logger.debug("adb.views.zapsat.check_container_deleted_or_not_exists.incorrect",
+                             extra={"ident_cely": adb.indent_cely})
+                messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
     else:
         logger.debug("adb.views.zapsat.not_valid", extra={"errors": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)

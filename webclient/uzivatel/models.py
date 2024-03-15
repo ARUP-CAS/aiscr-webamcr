@@ -3,6 +3,7 @@ import string
 from typing import Union, Optional
 
 from distlib.util import cached_property
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 
 from core.constants import (
@@ -85,6 +86,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                                                 default=only_notification_groups)
     created_from_admin_panel = False
     suppress_signal = False
+    active_transaction = None
+    close_active_transaction_when_finished = False
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -203,7 +206,11 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         super().save(*args, **kwargs)
         if self.ident_cely.startswith("TEMP"):
             self.ident_cely = f"U-{str(self.pk).zfill(6)}"
-            super().save(*args, **kwargs)
+            from core.repository_connector import FedoraRepositoryConnector
+            if FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "uzivatel"):
+                super().save(*args, **kwargs)
+            else:
+                raise ValidationError(_("uzivatel.models.User.save.check_container_deleted_or_not_exists.invalid"))
         if self.is_active and \
                 self.groups.filter(
                     id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).count() == 0:
@@ -215,21 +222,41 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
 
-    def save_metadata(self, transaction=None, **kwargs):
+    def save_metadata(self, fedora_transaction=None, close_transaction=False, **kwargs):
         from core.repository_connector import FedoraTransaction
-        if not transaction:
-            transaction = FedoraTransaction()
+        if fedora_transaction is None and self.active_transaction is not None:
+            fedora_transaction = self.active_transaction
+        elif fedora_transaction is None and self.active_transaction is None:
+            raise ValueError("No Fedora transaction")
+        if not isinstance(fedora_transaction, FedoraTransaction):
+            raise ValueError("fedora_transaction must be a FedoraTransaction class object")
+        logger.debug("uzivatel.models.User.save_metadata.start",
+                     extra={"transaction": fedora_transaction.uid, "ident_cely": self.ident_cely})
         from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(self, transaction.uid)
+        connector = FedoraRepositoryConnector(self, fedora_transaction.uid)
         connector.save_metadata(True)
-        return transaction
+        if close_transaction is True or self.close_active_transaction_when_finished:
+            logger.debug("uzivatel.models.User.save_metadata.close_transaction",
+                         extra={"transaction": fedora_transaction.uid, "ident_cely": self.ident_cely})
+            fedora_transaction.mark_transaction_as_closed()
+        logger.debug("uzivatel.models.User.save_metadata.end",
+                     extra={"transaction": fedora_transaction.uid, "ident_cely": self.ident_cely})
 
-    def record_deletion(self):
+    def record_deletion(self, fedora_transaction=None, close_transaction=False):
         logger.debug("uzivatel.models.User.delete_repository_container.start")
+        if fedora_transaction is None and self.active_transaction is not None:
+            fedora_transaction = self.active_transaction
+        elif fedora_transaction is None and self.active_transaction is None:
+            raise ValueError("No Fedora transaction")
+        from core.repository_connector import FedoraTransaction
+        if not isinstance(fedora_transaction, FedoraTransaction):
+            raise ValueError("fedora_transaction must be a FedoraTransaction class object")
         from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(self)
+        connector = FedoraRepositoryConnector(self, fedora_transaction)
         logger.debug("uzivatel.models.User.delete_repository_container.end")
         connector.record_deletion()
+        if close_transaction is True:
+            fedora_transaction.mark_transaction_as_closed()
 
     @property
     def can_see_users_details(self):
@@ -320,7 +347,12 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         super().save(*args, **kwargs)
         if self.ident_cely.startswith("TEMP"):
             self.ident_cely = f"ORG-{str(self.pk).zfill(6)}"
-            super().save(*args, **kwargs)
+            from core.repository_connector import FedoraRepositoryConnector
+            if FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "organizace"):
+                super().save(*args, **kwargs)
+            else:
+                raise (
+                    ValidationError(_("uzivatel.models.Organizace.save.check_container_deleted_or_not_exists.invalid")))
 
     def __str__(self):
         return self.nazev_zkraceny
@@ -363,7 +395,11 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
         super().save(*args, **kwargs)
         if self.ident_cely.startswith("TEMP"):
             self.ident_cely = f"OS-{str(self.pk).zfill(6)}"
-            super().save(*args, **kwargs)
+            from core.repository_connector import FedoraRepositoryConnector
+            if FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "osoba"):
+                super().save(*args, **kwargs)
+            else:
+                raise ValidationError(_("uzivatel.models.Osoba.save.check_container_deleted_or_not_exists.invalid"))
 
     class Meta:
         db_table = "osoba"

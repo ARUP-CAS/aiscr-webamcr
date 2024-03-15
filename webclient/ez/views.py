@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views import View
 
-from core.repository_connector import FedoraTransaction
+from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext as _
@@ -196,14 +196,23 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
         fedora_transaction = FedoraTransaction()
         ez.stav = EZ_STAV_ZAPSANY
         ez.ident_cely = get_temp_ez_ident()
-        ez.active_transaction = fedora_transaction
-        ez.save()
-        save_autor_editor(ez, form)
-        ez.set_zapsany(self.request.user)
-        ez.close_active_transaction_when_finished = True
-        ez.save()
-        messages.add_message(self.request, messages.SUCCESS, EZ_USPESNE_ZAPSAN)
-        return HttpResponseRedirect(ez.get_absolute_url())
+        repository_connector = FedoraRepositoryConnector(ez)
+        if repository_connector.check_container_deleted_or_not_exists(ez.ident_cely, "ext_zdroj"):
+            ez.active_transaction = fedora_transaction
+            ez.save()
+            save_autor_editor(ez, form)
+            ez.set_zapsany(self.request.user)
+            ez.close_active_transaction_when_finished = True
+            ez.save()
+            messages.add_message(self.request, messages.SUCCESS, EZ_USPESNE_ZAPSAN)
+            return HttpResponseRedirect(ez.get_absolute_url())
+        else:
+            logger.debug("ez.views.ExterniZdrojCreateView.form_valid.check_container_deleted_or_not_exists.incorrect",
+                         extra={"ident_cely": ez.ident_cely})
+            messages.add_message(
+                self.request, messages.ERROR, _("ez.views.zapsat.ExterniZdrojCreateView."
+                                                "check_container_deleted_or_not_exists_error"))
+            return super().form_invalid(form)
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
