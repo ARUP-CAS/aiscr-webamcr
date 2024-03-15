@@ -4,6 +4,7 @@
 <script type="module">
     import "{% static 'cookie-consent/cookieconsent.umd.js' %}";
     import * as CookieConsent from "{% static 'cookie-consent/cookieconsent.esm.js' %}";
+
     CookieConsent.run({
         // root (parent) element where the modal will be appended as a last child
         root: 'body',
@@ -238,4 +239,14 @@
             }
         }
     });
+    if (CookieConsent.acceptedCategory('analytics')) {
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+        gtag('config', 'G-2CPY6QG01L');
+    }
 </script>
