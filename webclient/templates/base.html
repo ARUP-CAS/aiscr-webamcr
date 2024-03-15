@@ -78,6 +78,7 @@
   <link rel="stylesheet" href="{% static 'leaflet-search.css' %}"/>
   <script src="{% static 'leaflet-search.js' %}"></script>
   <title>{% block title %}{% endblock %}</title>
+  {% include "cookie_panel.html" %}
   {% block head %}{% endblock %}
 </head>
 <body class="{{ request.path|url_to_classes }}">
@@ -192,7 +193,7 @@
          }
    });
     });
-    
+
   </script>
 
 {% block script %}

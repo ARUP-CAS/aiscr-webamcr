@@ -24,7 +24,9 @@ jobs:
           sed -i "s/date-released:.*/date-released: $DATE/" CITATION.cff
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
+          git config --global pull.rebase true
           git add CITATION.cff
           git commit -m "Update CITATION.cff for release $VERSION"
+          git pull
           git push
 

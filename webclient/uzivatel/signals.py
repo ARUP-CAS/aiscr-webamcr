@@ -3,6 +3,7 @@ import logging
 from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed, pre_delete
 from django.dispatch import receiver
 
+from core.repository_connector import FedoraTransaction
 from historie.models import Historie
 from services.mailer import Mailer
 from uzivatel.models import Organizace, Osoba, User
@@ -14,17 +15,19 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Organizace)
 def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
     logger.debug("uzivatel.signals.orgnaizace_save_metadata.start", extra={"ident_cely": instance.ident_cely})
-    transaction = instance.save_metadata()
+    fedora_transaction = FedoraTransaction()
+    instance.save_metadata(fedora_transaction)
     logger.debug("uzivatel.signals.orgnaizace_save_metadata.end",
-                 extra={"ident_cely": instance.ident_cely, "transaction": transaction})
+                 extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction})
 
 
 @receiver(post_save, sender=Osoba)
 def osoba_save_metadata(sender, instance: Osoba, **kwargs):
     logger.debug("uzivatel.signals.osoba_save_metadata.start", extra={"ident_cely": instance.ident_cely})
-    transaction = instance.save_metadata()
+    fedora_transaction = FedoraTransaction()
+    instance.save_metadata(fedora_transaction)
     logger.debug("uzivatel.signals.osoba_save_metadata.end",
-                 extra={"ident_cely": instance.ident_cely, "transaction": transaction})
+                 extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction})
 
 
 @receiver(pre_save, sender=User)
@@ -104,12 +107,14 @@ def send_account_confirmed_email(sender, instance: User, created):
 def delete_user_connections(sender, instance, *args, **kwargs):
     logger.debug("uzivatel.signals.delete_user_connections.start", extra={"ident_cely": instance.ident_cely})
     Historie.save_record_deletion_record(record=instance)
-    transaction = instance.save_metadata(use_celery=False)
-    instance.record_deletion(transaction)
+    fedora_transaction = FedoraTransaction()
+    instance.save_metadata()
     if instance.history_vazba and instance.history_vazba.pk:
         instance.history_vazba.delete()
+    instance.record_deletion(fedora_transaction)
+    fedora_transaction.mark_transaction_as_closed()
     logger.debug("uzivatel.signals.delete_user_connections.end", extra={"ident_cely": instance.ident_cely,
-                                                                        "transaction": transaction})
+                                                                        "transaction": fedora_transaction})
 
 
 @receiver(post_delete, sender=User)

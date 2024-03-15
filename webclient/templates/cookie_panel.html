@@ -1,0 +1,241 @@
+{% load static %}
+{% load i18n %}
+<link href="{% static 'cookie-consent/cookieconsent.css' %}" rel="stylesheet"/>
+<script type="module">
+    import "{% static 'cookie-consent/cookieconsent.umd.js' %}";
+    import * as CookieConsent from "{% static 'cookie-consent/cookieconsent.esm.js' %}";
+    CookieConsent.run({
+        // root (parent) element where the modal will be appended as a last child
+        root: 'body',
+        // 'opt-in', 'opt-out'
+        mode: 'opt-in',
+        // auto-show the consent modal if consent is not valid
+        autoShow: true,
+        // create a dark overlay and blocks the page scroll until consent is expressed
+        disablePageInteraction: true,
+        // prevent bots from indexing the modal's content.
+        hideFromBots: true,
+        // manage consent revisions
+        revision: 0,
+        // intercept all script tags with a data-category attribute, and enables them based on the accepted categories
+        manageScriptTags: true,
+        // clear cookies when user rejects a specific category
+        autoClearCookies: true,
+        // delay the generation of the modal's markup until they're about to become visible
+        // useful to improve the TTI score
+        lazyHtmlGeneration: true,
+        // customize the plugin's cookies
+        cookie: {
+            name: 'cc_cookie',
+            domain: window.location.hostname,
+            path: '/',
+            expiresAfterDays: 182,
+            sameSite: 'Lax',
+            useLocalStorage: false
+        },
+        guiOptions: {
+            consentModal: {
+                layout: 'bar',
+                position: 'bottom',
+                flipButtons: false,
+                equalWeightButtons: true
+            },
+            preferencesModal: {
+                layout: 'box',
+                position: 'right center',
+                flipButtons: false,
+                equalWeightButtons: true
+            }
+        },
+        // callbacks
+        onFirstConsent: ({
+                             cookie
+                         }) => {
+            console.log('onFirstConsent fired', cookie);
+        },
+        onConsent: ({
+                        cookie
+                    }) => {
+            console.log('onConsent fired!', cookie)
+        },
+        onChange: ({
+                       changedCategories,
+                       changedServices
+                   }) => {
+            console.log('onChange fired!', changedCategories, changedServices);
+        },
+        onModalReady: ({
+                           modalName
+                       }) => {
+            console.log('ready:', modalName);
+        },
+        onModalShow: ({
+                          modalName
+                      }) => {
+            console.log('visible:', modalName);
+        },
+        onModalHide: ({
+                          modalName
+                      }) => {
+            console.log('hidden:', modalName);
+        },
+        categories: {
+            necessary: {
+                enabled: true, // this category is enabled by default
+                readOnly: true // this category cannot be disabled
+            },
+            analytics: {
+                readOnly: false,
+                enabled: true,
+                autoClear: {
+                    cookies: [{
+                        name: /^_ga/, // regex: match all cookies starting with '_ga'
+                    },
+                        {
+                            name: '_gid', // string: exact cookie name
+                        }
+                    ]
+                },
+                services: {
+                    ga: {
+                        label: "{% trans "base.cookie_modal.ga.title" %}",
+                        onAccept: () => {
+                        },
+                        onReject: () => {
+                        },
+                        cookies: [
+                            {
+                                name: /^(_ga|_gid)/
+                            }
+                        ]
+                    },
+                }
+            },
+        },
+        language: {
+            default: 'cs',
+            rtl: 'ar',  // enable RTL for Arabic
+            autoDetect: 'browser', // 'document', 'browser'
+            translations: {
+                en: {
+                    consentModal: {
+                        title: "{% trans "base.cookie_modal.en.title" %}",
+                        description: "{% trans 'base.cookie_modal.en.description' %}",
+                        acceptAllBtn: "{% trans 'base.cookie_modal.en.accept_all_btn' %}",
+                        acceptNecessaryBtn: "{% trans 'base.cookie_modal.en.accept_necessary_btn' %}",
+                        showPreferencesBtn: "{% trans 'base.cookie_modal.en.show_preferences_btn' %}",
+                    },
+                    preferencesModal: {
+                        title: "{% trans 'base.cookie_modal.en.title' %}",
+                        acceptAllBtn: "{% trans 'base.cookie_modal.en.accept_all_btn' %}",
+                        acceptNecessaryBtn: "{% trans 'base.cookie_modal.en.accept_necessary_btn' %}",
+                        savePreferencesBtn: "{% trans 'base.cookie_modal.en.save_preferences_btn' %}",
+                        closeIconLabel: "{% trans 'base.cookie_modal.en.close_icon_label' %}",
+                        serviceCounterLabel: "{% trans 'base.cookie_modal.en.service_counter_label' %}",
+
+                        sections: [{
+                            title: "{% trans 'base.cookie_modal.en.sections.your_privacy_choices.title' %}",
+                            description: "{% trans 'base.cookie_modal.en.sections.your_privacy_choices.description' %}",
+                        },
+                            {
+                                title: "{% trans 'base.cookie_modal.en.sections.strictly_necessary.title' %}",
+                                description: "{% trans 'base.cookie_modal.en.sections.strictly_necessary.description' %}",
+                                linkedCategory: 'necessary'
+                            },
+                            {
+                                title: "{% trans 'base.cookie_modal.en.sections.performance_analytics.title' %}",
+                                description: "{% trans 'base.cookie_modal.en.sections.performance_analytics.description' %}",
+                                linkedCategory: 'analytics',
+                                cookieTable: {
+                                    caption: "{% trans 'base.cookie_modal.en.sections.performance_analytics.cookie_table.caption' %}",
+                                    headers: {
+                                        name: "{% trans 'base.cookie_modal.en.sections.performance_analytics.cookie_table.headers.name' %}",
+                                        domain: "{% trans 'base.cookie_modal.en.sections.performance_analytics.cookie_table.headers.domain' %}",
+                                        desc: "{% trans 'base.cookie_modal.en.sections.performance_analytics.cookie_table.headers.desc' %}"
+                                    },
+                                    body: [{
+                                        name: '_ga',
+                                        domain: location.hostname,
+                                        desc: "{% trans 'base.cookie_modal.en.sections.performance_analytics.cookie_table.body.desc1' %}",
+                                    },
+                                        {
+                                            name: '_gid',
+                                            domain: location.hostname,
+                                            desc: "{% trans 'base.cookie_modal.en.sections.performance_analytics.cookie_table.body.desc2' %}",
+                                        }]
+                                }
+                            },
+                            {
+                                title: "{% trans 'base.cookie_modal.en.sections.targeting_advertising.title' %}",
+                                description: "{% trans 'base.cookie_modal.en.sections.targeting_advertising.description' %}",
+                                linkedCategory: 'ads',
+                            },
+                            {
+                                title: "{% trans 'base.cookie_modal.en.sections.more_information.title' %}",
+                                description: "{% trans 'base.cookie_modal.en.sections.more_information.description' %}",
+                            }]
+                    }
+                },
+                cs: {
+                    consentModal: {
+                        title: "{% trans "base.cookie_modal.cs.title" %}",
+                        description: "{% trans 'base.cookie_modal.cs.description' %}",
+                        acceptAllBtn: "{% trans 'base.cookie_modal.cs.accept_all_btn' %}",
+                        acceptNecessaryBtn: "{% trans 'base.cookie_modal.cs.accept_necessary_btn' %}",
+                        showPreferencesBtn: "{% trans 'base.cookie_modal.cs.show_preferences_btn' %}",
+                    },
+                    preferencesModal: {
+                        title: "{% trans 'base.cookie_modal.cs.title' %}",
+                        acceptAllBtn: "{% trans 'base.cookie_modal.cs.accept_all_btn' %}",
+                        acceptNecessaryBtn: "{% trans 'base.cookie_modal.cs.accept_necessary_btn' %}",
+                        savePreferencesBtn: "{% trans 'base.cookie_modal.cs.save_preferences_btn' %}",
+                        closeIconLabel: "{% trans 'base.cookie_modal.cs.close_icon_label' %}",
+                        serviceCounterLabel: "{% trans 'base.cookie_modal.cs.service_counter_label' %}",
+
+                        sections: [{
+                            title: "{% trans 'base.cookie_modal.cs.sections.your_privacy_choices.title' %}",
+                            description: "{% trans 'base.cookie_modal.cs.sections.your_privacy_choices.description' %}",
+                        },
+                            {
+                                title: "{% trans 'base.cookie_modal.cs.sections.strictly_necessary.title' %}",
+                                description: "{% trans 'base.cookie_modal.cs.sections.strictly_necessary.description' %}",
+                                linkedCategory: 'necessary'
+                            },
+                            {
+                                title: "{% trans 'base.cookie_modal.cs.sections.performance_analytics.title' %}",
+                                description: "{% trans 'base.cookie_modal.cs.sections.performance_analytics.description' %}",
+                                linkedCategory: 'analytics',
+                                cookieTable: {
+                                    caption: "{% trans 'base.cookie_modal.cs.sections.performance_analytics.cookie_table.caption' %}",
+                                    headers: {
+                                        name: "{% trans 'base.cookie_modal.cs.sections.performance_analytics.cookie_table.headers.name' %}",
+                                        domain: "{% trans 'base.cookie_modal.cs.sections.performance_analytics.cookie_table.headers.domain' %}",
+                                        desc: "{% trans 'base.cookie_modal.cs.sections.performance_analytics.cookie_table.headers.desc' %}"
+                                    },
+                                    body: [{
+                                        name: '_ga',
+                                        domain: location.hostname,
+                                        desc: "{% trans 'base.cookie_modal.cs.sections.performance_analytics.cookie_table.body.desc1' %}",
+                                    },
+                                        {
+                                            name: '_gid',
+                                            domain: location.hostname,
+                                            desc: "{% trans 'base.cookie_modal.cs.sections.performance_analytics.cookie_table.body.desc2' %}",
+                                        }]
+                                }
+                            },
+                            {
+                                title: "{% trans 'base.cookie_modal.cs.sections.targeting_advertising.title' %}",
+                                description: "{% trans 'base.cookie_modal.cs.sections.targeting_advertising.description' %}",
+                                linkedCategory: 'ads',
+                            },
+                            {
+                                title: "{% trans 'base.cookie_modal.cs.sections.more_information.title' %}",
+                                description: "{% trans 'base.cookie_modal.cs.sections.more_information.description' %}",
+                            }]
+                    }
+                }
+            }
+        }
+    });
+</script>

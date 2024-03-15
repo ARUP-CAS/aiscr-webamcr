@@ -215,7 +215,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
 
-    def save_metadata(self, transaction=None, use_celery=True, **kwargs):
+    def save_metadata(self, transaction=None, **kwargs):
         from core.repository_connector import FedoraTransaction
         if not transaction:
             transaction = FedoraTransaction()
@@ -229,7 +229,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         from core.repository_connector import FedoraRepositoryConnector
         connector = FedoraRepositoryConnector(self)
         logger.debug("uzivatel.models.User.delete_repository_container.end")
-        return connector.record_deletion()
+        connector.record_deletion()
 
     @property
     def can_see_users_details(self):
