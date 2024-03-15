@@ -50,6 +50,7 @@ jobs:
           git config --global user.name "GitHub Action"
           git add docs/source/knihovny_read_only.rst
           git commit -m "Update knihovny_read_only.rst for release $VERSION"
+          git pull
           git push
   build_publish_images:
     name: Build and push docker images for to Docker Hub

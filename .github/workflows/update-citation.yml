@@ -26,5 +26,6 @@ jobs:
           git config --global user.name "GitHub Action"
           git add CITATION.cff
           git commit -m "Update CITATION.cff for release $VERSION"
+          git pull
           git push
 
