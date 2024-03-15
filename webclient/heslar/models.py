@@ -2,7 +2,7 @@ import logging
 
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.db import models as pgmodels
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.utils.translation import gettext_lazy as _
@@ -75,6 +75,14 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
                 return self.heslo
             else:
                 return ""
+
+    def save(self, *args, **kwargs):
+        from core.repository_connector import FedoraRepositoryConnector
+        if (not self._state.adding or
+                FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "heslar")):
+            super().save(*args, **kwargs)
+        else:
+            raise ValidationError(_("heslar.models.Heslar.save.check_container_deleted_or_not_exists.invalid"))
 
 
 class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
@@ -275,6 +283,14 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
     def ident_cely(self):
         return f"ruian-{self.kod}"
 
+    def save(self, *args, **kwargs):
+        from core.repository_connector import FedoraRepositoryConnector
+        if (not self._state.adding or
+                FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "ruian_katastr")):
+            super().save(*args, **kwargs)
+        else:
+            raise ValidationError(_("heslar.models.RuianKatastr.save.check_container_deleted_or_not_exists.invalid"))
+
 
 class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
     """
@@ -299,6 +315,14 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
     @property
     def ident_cely(self):
         return f"ruian-{self.kod}"
+
+    def save(self, *args, **kwargs):
+        from core.repository_connector import FedoraRepositoryConnector
+        if (not self._state.adding or
+                FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "ruian_kraj")):
+            super().save(*args, **kwargs)
+        else:
+            raise ValidationError(_("heslar.models.RuianKraj.save.check_container_deleted_or_not_exists.invalid"))
 
 
 class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
@@ -325,3 +349,11 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
     @property
     def ident_cely(self):
         return f"ruian-{self.kod}"
+
+    def save(self, *args, **kwargs):
+        from core.repository_connector import FedoraRepositoryConnector
+        if (not self._state.adding or
+                FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "ruian_okres")):
+            super().save(*args, **kwargs)
+        else:
+            raise ValidationError(_("heslar.models.RuianOkres.save.check_container_deleted_or_not_exists.invalid"))

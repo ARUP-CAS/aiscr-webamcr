@@ -21,7 +21,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.repository_connector import FedoraTransaction
+from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
 from core.utils import (
     file_validate_epsg,
     file_validate_geometry,
@@ -260,7 +260,6 @@ def create(request, dj_ident_cely):
     form = PianCreateForm(data=request.POST)
     logger.debug("pian.views.create.form_data", extra={"form_data": form.data, "post_data": request.POST})
     c = connection.cursor()
-    validation_results = ""
     try:
         c.execute("BEGIN")
         c.callproc("validateGeom", [str(form.data["geom"])])
@@ -319,20 +318,27 @@ def create(request, dj_ident_cely):
                 logger.warning("pian.views.create.error", extra={"message": messages.ERROR, "exception": e.message})
                 messages.add_message(request, messages.ERROR, e.message)
             else:
-                fedora_transaction = FedoraTransaction()
-                pian.active_transaction = fedora_transaction
-                pian.save()
-                pian.set_vymezeny(request.user)
-                dj.active_transaction = fedora_transaction
-                dj.pian = pian
-                dj.save()
-                update_all_katastr_within_akce_or_lokalita(dj_ident_cely, fedora_transaction)
-                pian.close_active_transaction_when_finished = True
-                pian.save()
-                logger.debug("pian.views.create.finished",
-                             extra={"info": ZAZNAM_USPESNE_VYTVOREN, "dj_pk": dj.pk,
-                                    "transaction": fedora_transaction.uid})
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                if FedoraRepositoryConnector.check_container_deleted_or_not_exists(pian.ident_cely, "pian"):
+                    fedora_transaction = FedoraTransaction()
+                    pian.active_transaction = fedora_transaction
+                    pian.save()
+                    pian.set_vymezeny(request.user)
+                    dj.active_transaction = fedora_transaction
+                    dj.pian = pian
+                    dj.save()
+                    update_all_katastr_within_akce_or_lokalita(dj_ident_cely, fedora_transaction)
+                    pian.close_active_transaction_when_finished = True
+                    pian.save()
+                    logger.debug("pian.views.create.finished",
+                                 extra={"info": ZAZNAM_USPESNE_VYTVOREN, "dj_pk": dj.pk,
+                                        "transaction": fedora_transaction.uid})
+                    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                else:
+                    logger.info("pian.views.create.check_container_deleted_or_not_exists.incorrect",
+                                extra={"ident_cely": pian.ident_cely})
+                    messages.add_message(
+                        request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
+                    )
         else:
             logger.info("pian.views.create.assignment_error", extra={"zm10s": zm10s, "zm50s": zm50s})
             messages.add_message(

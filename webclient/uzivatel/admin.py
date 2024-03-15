@@ -11,6 +11,7 @@ from django.http import StreamingHttpResponse
 from django_object_actions import DjangoObjectActions, action
 
 from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN, ZMENA_HESLA_ADMIN
+from core.repository_connector import FedoraTransaction
 from historie.models import Historie
 from services.mailer import Mailer
 from notifikace_projekty.models import Pes
@@ -177,11 +178,13 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         return True
 
     def save_model(self, request, obj: User, form, change):
+        fedora_transaction = FedoraTransaction()
         user = request.user
-        user.created_from_admin_panel = True
         obj.created_from_admin_panel = True
+        obj.active_transaction = fedora_transaction
         logger.debug("uzivatel.admin.save_model.start",
-                     extra={"user": user.pk, "obj_pk": obj.pk, "change": change, "form": form})
+                     extra={"user": user.pk, "obj_pk": obj.pk, "change": change, "form": form,
+                            "transaction": fedora_transaction.uid})
         basic_groups_ids_list = [ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]
         try:
             user_db = User.objects.get(id=obj.pk)
@@ -240,15 +243,20 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
         if user_db is not None:
             logger.debug("uzivatel.admin.save_model.manage_user_groups",
-                         extra={"user": obj.pk, "user_groups": user_db.groups.values_list('id', flat=True)})
+                         extra={"user": obj.pk, "user_groups": user_db.groups.values_list('id', flat=True),
+                                "transaction": fedora_transaction.uid})
         if not obj.is_active:
-            logger.debug("uzivatel.admin.save_model.manage_user_groups.deactivated", extra={"user": obj.pk})
+            logger.debug("uzivatel.admin.save_model.manage_user_groups.deactivated",
+                         extra={"user": obj.pk, "transaction": fedora_transaction.uid})
             transaction.on_commit(lambda: obj.groups.set([], clear=True))
+            obj.save()
+            fedora_transaction.mark_transaction_as_closed()
             return
         logger.debug("uzivatel.admin.save_model.manage_user_groups",
-                     extra={"user": obj.pk, "group_count": groups.count()})
+                     extra={"user": obj.pk, "group_count": groups.count(), "transaction": fedora_transaction.uid})
         if groups.count() == 0:
-            logger.debug("uzivatel.admin.save_model.manage_user_groups.badatel_added", extra={"user": obj.pk})
+            logger.debug("uzivatel.admin.save_model.manage_user_groups.badatel_added",
+                         extra={"user": obj.pk, "transaction": fedora_transaction.uid})
             group = Group.objects.filter(pk=ROLE_BADATEL_ID)
             transaction.on_commit(lambda: obj.groups.set([group.first()] + list(other_groups.values_list('id', flat=True)),
                                   clear=True))
@@ -260,9 +268,13 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             logger.debug("send activate email or change email")
             Mailer.send_eu06(user=obj, groups=[main_group] + list(other_groups))
         logger.debug("uzivatel.admin.save_model.manage_user_groups.highest_groups",
-                     extra={"user": obj.pk, "user_groups": obj.groups.values_list('id', flat=True)})
+                     extra={"user": obj.pk, "user_groups": obj.groups.values_list('id', flat=True),
+                            "transaction": fedora_transaction.uid})
         logger.debug("uzivatel.admin.save_model.manage_user_groups",
-                     extra={"max_id": max_id, "hlavni_role_pk": obj.hlavni_role.pk})
+                     extra={"max_id": max_id, "hlavni_role_pk": obj.hlavni_role.pk,
+                            "transaction": fedora_transaction.uid})
+        obj.save()
+        fedora_transaction.mark_transaction_as_closed()
 
     def user_change_password(self, request, id, form_url=""):
         if request.method == "POST":

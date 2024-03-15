@@ -54,7 +54,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
-from core.repository_connector import FedoraTransaction
+from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from core.models import Permissions as p, check_permissions
 from dal import autocomplete
@@ -1730,44 +1730,47 @@ def zapsat(request, zaznam=None):
                 messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
                 fedora_transaction.rollback_transaction()
             else:
-                dokument.stav = D_STAV_ZAPSANY
-                dokument.save()
-                dokument.set_zapsany(request.user)
-                i = 1
-                for autor in form_d.cleaned_data["autori"]:
-                    DokumentAutor(
-                        dokument=dokument,
-                        autor=autor,
-                        poradi=i,
-                    ).save()
-                    i = i + 1
-
-                # Vytvorit defaultni cast dokumentu
-                if zaznam:
-                    if isinstance(zaznam, ArcheologickyZaznam):
-                        dc = DokumentCast(
+                if FedoraRepositoryConnector.check_container_deleted_or_not_exists(dokument.ident_cely, "dokument"):
+                    dokument.stav = D_STAV_ZAPSANY
+                    dokument.save()
+                    dokument.set_zapsany(request.user)
+                    i = 1
+                    for autor in form_d.cleaned_data["autori"]:
+                        DokumentAutor(
                             dokument=dokument,
-                            ident_cely=get_cast_dokumentu_ident(dokument),
-                            archeologicky_zaznam=zaznam,
-                        )
-                        dc.active_transaction = fedora_transaction
-                        dc.save()
-                    else:
-                        dc = DokumentCast(
-                            dokument=dokument,
-                            ident_cely=get_cast_dokumentu_ident(dokument),
-                            projekt=zaznam,
-                        )
-                        dc.active_transaction = fedora_transaction
-                        dc.save()
+                            autor=autor,
+                            poradi=i,
+                        ).save()
+                        i = i + 1
 
-                form_d.save_m2m()
-                dokument.close_active_transaction_when_finished = True
-                dokument.save()
+                    # Vytvorit defaultni cast dokumentu
+                    if zaznam:
+                        if isinstance(zaznam, ArcheologickyZaznam):
+                            dc = DokumentCast(
+                                dokument=dokument,
+                                ident_cely=get_cast_dokumentu_ident(dokument),
+                                archeologicky_zaznam=zaznam,
+                            )
+                            dc.active_transaction = fedora_transaction
+                            dc.save()
+                        else:
+                            dc = DokumentCast(
+                                dokument=dokument,
+                                ident_cely=get_cast_dokumentu_ident(dokument),
+                                projekt=zaznam,
+                            )
+                            dc.active_transaction = fedora_transaction
+                            dc.save()
 
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                return redirect("dokument:detail", ident_cely=dokument.ident_cely)
+                    form_d.save_m2m()
+                    dokument.close_active_transaction_when_finished = True
+                    dokument.save()
 
+                    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                    return redirect("dokument:detail", ident_cely=dokument.ident_cely)
+                else:
+                    logger.debug("dokument.views.zapsat.check_container_deleted_or_not_exists.invalid",
+                                 extra={"ident_cely": dokument.ident_cely})
         else:
             logger.debug("dokument.views.zapsat.not_valid", extra={"erros": form_d.errors})
 
