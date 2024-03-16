@@ -83,5 +83,4 @@ UPDATE samostatny_nalez SET presna_datace = '' WHERE presna_datace is NULL;
 UPDATE samostatny_nalez SET poznamka = '' WHERE poznamka is NULL;
 UPDATE samostatny_nalez SET pocet = '' WHERE pocet is NULL;
 UPDATE soubor SET sha_512 = '' WHERE sha_512 is NULL;
-UPDATE soubor SET path = '' WHERE path is NULL;
 UPDATE tvar SET poznamka = '' WHERE poznamka is NULL;
