@@ -35,7 +35,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from heslar.hesla import HESLAR_DJ_TYP
 from heslar.hesla_dynamicka import TYP_DJ_CAST, TYP_DJ_KATASTR, TYP_DJ_LOKALITA, TYP_DJ_SONDA_ID
-from heslar.models import Heslar
+from heslar.models import Heslar, RuianKatastr
 from komponenta.models import KomponentaVazby
 from pian.models import Pian, vytvor_pian
 
@@ -123,6 +123,8 @@ def detail(request, typ_vazby, ident_cely):
                 dj.pian = vytvor_pian(dj.archeologicky_zaznam.hlavni_katastr)
             dj.save()
             if len(new_ku) > 3:
+                new_ku_nazev, new_ku_okres_nazev = [x.strip(")").strip() for x in new_ku.split("(")]
+                new_ku = RuianKatastr.objects.get(nazev__iexact=new_ku_nazev, okres__nazev__iexact=new_ku_okres_nazev)
                 update_main_katastr_within_ku(dj.ident_cely, new_ku)
         if dj.pian is not None and (pian_db is None or pian_db.pk != dj.pian.pk):
             logger.debug("dj.views.detail.update_pian_metadata",

@@ -108,7 +108,7 @@ from heslar.hesla_dynamicka import (
     TYP_DJ_SONDA_ID,
     TYP_PROJEKTU_PRUZKUM_ID,
 )
-from heslar.models import Heslar
+from heslar.models import Heslar, RuianKatastr
 from heslar.views import heslar_12
 from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
@@ -1230,11 +1230,13 @@ def post_akce2kat(request):
     body = json.loads(request.body.decode("utf-8"))
     logger.debug("arch_z.views.post_akce2kat.start", extra={"body": body})
     katastr_name = body["cadastre"]
+    katastr_nazev, okres_nazev = [x.strip(")").strip() for x in katastr_name.split("(")]
+    katastr = RuianKatastr.objects.get(nazev__iexact=katastr_nazev, okres__nazev__iexact=okres_nazev)
     akce_ident_cely = body["akce_ident_cely"]
 
     if len(katastr_name) > 0:
         try:
-            bod, geom, presnost, zoom, pian_ident_cely, color = get_centre_from_akce(katastr_name, akce_ident_cely)
+            bod, geom, presnost, zoom, pian_ident_cely, color = get_centre_from_akce(katastr, akce_ident_cely)
             if len(str(bod)) > 0:
                 return JsonResponse(
                     {

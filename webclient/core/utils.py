@@ -211,7 +211,7 @@ def get_all_pians_with_akce(ident_cely):
         return None
 
 
-def update_main_katastr_within_ku(ident_cely, ku_nazev):
+def update_main_katastr_within_ku(ident_cely: str, katastr: RuianKatastr):
     """
     Funkce pro update katastru u akce podle katastrálního území.
     """
@@ -219,16 +219,11 @@ def update_main_katastr_within_ku(ident_cely, ku_nazev):
 
     query_update_archz = (
         "update PUBLIC.archeologicky_zaznam set hlavni_katastr="
-        " (select id from public.ruian_katastr where nazev=%s limit 1)"
+        " (select id from public.ruian_katastr where id=%s)"
         " where ident_cely = %s and typ_zaznamu IN('L')"
     )
-
-    try:
-        if len(ku_nazev) > 2:
-            cursor = connection.cursor()
-            cursor.execute(query_update_archz, [ku_nazev, akce_ident_cely])
-    except IndexError:
-        return None
+    cursor = connection.cursor()
+    cursor.execute(query_update_archz, [katastr.pk, akce_ident_cely])
 
 
 def update_all_katastr_within_akce_or_lokalita(ident_cely, fedora_transaction):
@@ -281,27 +276,21 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely, fedora_transaction):
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
 
 
-def get_centre_from_akce(katastr, akce_ident_cely):
+def get_centre_from_akce(katastr: RuianKatastr, akce_ident_cely):
     """
     Funkce pro bodu, geomu a presnosti z akce.
     """
+    logger.debug("core.utils.get_centre_from_akce.start",
+                 extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely})
     from dj.models import DokumentacniJednotka
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
         " from public.ruian_katastr where "
-        " upper(nazev)=upper(%s)"
+        " id=%s"
     )
-    query_old = (
-        "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
-        " from public.ruian_katastr where "
-        " upper(nazev)=upper(%s)"
-    )
+    bod = None
     try:
-        bod_ku = None
-        try:
-            bod_ku = RuianKatastr.objects.raw(query, [katastr])[0]
-        except:
-            bod_ku = RuianKatastr.objects.raw(query_old, [katastr])[0]
+        bod_ku = RuianKatastr.objects.raw(query, [katastr.pk])[0]
         bod = [bod_ku.lat, bod_ku.lng]
         geom = ""
         presnost = 4
@@ -313,10 +302,11 @@ def get_centre_from_akce(katastr, akce_ident_cely):
                 DJs = (DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom"))
                        .filter(ident_cely__istartswith=akce).order_by('ident_cely'))
                 for dj in DJs:
-                    logger.debug(dj.ident_cely)
+                    logger.debug("core.utils.get_centre_from_akce.loop_dj",
+                                 extra={"dj_ident_cely": dj.ident_cely, "pian": getattr(dj.pian, "ident_cely", None)})
                     if dj.pian and dj.pian.geom:
                         bod = dj.pian__centroid
-                        bod =[bod[1],bod[0]]
+                        bod = bod[1], bod[0]
                         zoom = 17
                         geom = dj.pian.geom
                         presnost = dj.pian.presnost.zkratka
@@ -327,10 +317,10 @@ def get_centre_from_akce(katastr, akce_ident_cely):
                     color = 'gold'
                     break
             return bod, geom, presnost, zoom, pian_ident_cely, color
-    except IndexError:
+    except IndexError as err:
         logger.error(
             "core.utils.get_centre_from_akce.error",
-            extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely},
+            extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely, "err": err, "bod": bod},
         )
         raise CannotFindCadasterCentre()
 
@@ -449,9 +439,7 @@ def get_project_geom(ident_cely):
         return queryset.only("id", "ident_cely", "geom", "stav")
     except IndexError:
         logger.debug(
-            "core.utils.get_projects_from_envelope.no_points",
-            extra={"left": left, "bottom": bottom, "right": right, "top": top},
-        )
+            "core.utils.get_projects_from_envelope.no_points", extra={"ident_cely": ident_cely})
         return None
 
 
