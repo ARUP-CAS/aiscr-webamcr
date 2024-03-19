@@ -378,7 +378,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             print(f'Response from clamd: {response}')
             s.close()
             logger.debug("core.models.Soubor.check_antivirus.response", extra={"response": response})
-            return response == "OK"
+            return response.upper() == "OK" or response.upper().endswith("OK")
         return None
 
 
