@@ -33,6 +33,10 @@ class FedoraError(Exception):
         super().__init__(self.message)
 
 
+class IdentChangeFedoraError(Exception):
+    pass
+
+
 class RepositoryBinaryFile:
     @staticmethod
     def get_url_without_domain(url):
@@ -567,7 +571,7 @@ class FedoraRepositoryConnector:
                 "Digest": f"sha-512={file_sha_512}",
                 "Slug": f"thumb{'-large' * large}"
             }
-            ident_cely = ident_cely_old if ident_cely_old else self.record.ident_cely
+            ident_cely = ident_cely_old if ident_cely_old and update else self.record.ident_cely
             if large:
                 if update:
                     url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE, uuid=uuid,
@@ -639,7 +643,7 @@ class FedoraRepositoryConnector:
             }
             url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
             self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
-            self._save_thumbs(soubor.nazev, data, soubor.repository_uuid, ident_cely_old=ident_cely_old)
+            self._save_thumbs(soubor.nazev, data, soubor.repository_uuid)
             logger.debug("core_repository_connector.migrate_binary_file.end",
                          extra={"uuid": uuid, "ident_cely": self.record.ident_cely,
                                 "transaction": self.transaction_uid})
@@ -777,9 +781,9 @@ class FedoraRepositoryConnector:
                      extra={"ident_cely": self.record.ident_cely, "ident_cely_old": ident_cely_old,
                             "transaction": self.transaction_uid})
         if ident_cely_old is None or self.record.ident_cely == ident_cely_old:
-            logger.warning("core_repository_connector.record_ident_change.no_ident_cely_old",
-                           extra={"ident_cely": self.record.ident_cely})
-            return
+            logger.error("core_repository_connector.record_ident_change.no_ident_cely_old",
+                         extra={"ident_cely": self.record.ident_cely, "ident_cely_old": ident_cely_old})
+            raise IdentChangeFedoraError()
         base_url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
         ident_cely_new = self.record.ident_cely
         data = f"INSERT DATA {{<> <http://purl.org/dc/terms/isReplacedBy> " \

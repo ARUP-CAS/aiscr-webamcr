@@ -348,8 +348,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             sequence.region + "-" + sequence.rada.zkratka + "-" + str(sequence.rok) + "{0}".format(sequence.sekvence).zfill(5)
         )
         old_ident_cely = self.ident_cely
-        self.record_ident_change(old_ident_cely, self.active_transaction, perm_ident_cely)
         self.ident_cely = perm_ident_cely
+        self.record_ident_change(old_ident_cely, self.active_transaction, perm_ident_cely)
         self.save()
         self.save_metadata()
 

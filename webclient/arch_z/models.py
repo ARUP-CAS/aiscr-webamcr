@@ -333,8 +333,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             sequence.region + "-" + str(sequence.typ.zkratka) + f"{sequence.sekvence:07}"
         )
         self._set_connected_records_ident(self.ident_cely)
-        self.save()
         self.record_ident_change(old_ident, getattr(self.active_transaction, "uid", None))
+        self.save()
 
     def _set_connected_records_ident(self, new_ident):
         for dj in self.dokumentacni_jednotky_akce.all():
