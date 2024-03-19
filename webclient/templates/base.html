@@ -131,7 +131,7 @@
         $(this).alert('close');
       });
       const checkUserAuthentication = () => {
-          fetch("{% url 'core:check_authentication' %}")
+          fetch(window.location.origin + "{% url 'core:check_authentication' %}")
               .then(response => {
                   if (response.ok) {
                       return response.json();
@@ -140,15 +140,15 @@
               })
               .then(data => {
                   console.log(data);
-                  if (data.is_authenticated) {;
+                  if (data.is_authenticated) {
                       const currentUrl = new URL(window.location.href);
                       const nextPath = currentUrl.searchParams.get("next");
-                      if (nextPath && currentUrl.toLowerCase().includes("accounts/login")) {
+                      if (nextPath && window.location.href.toLowerCase().includes("accounts/login")) {
                           window.location.href = `${window.location.protocol}//${window.location.host}${nextPath}`;
                       }
                   }
               })
-              .catch(error => console.error({% trans "base.authentication_check.error" %}, error));
+              .catch(error => console.error("{% trans "base.authentication_check.error" %}", error));
       };
       {% if not user.is_authenticated %}
           setInterval(checkUserAuthentication, 60000);
