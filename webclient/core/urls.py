@@ -55,4 +55,5 @@ urlpatterns = [
         name="post_ajax_get_pas_pian_limit",
     ),
     path("check-authentication", views.CheckUserAuthentication.as_view(), name="check_authentication"),
+    path("read-temp-value", views.ReadTempValueView.as_view(), name="read_temp_value")
 ]
