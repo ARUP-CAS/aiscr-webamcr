@@ -222,8 +222,8 @@ class Mailer:
     def _send_notification_for_projects(cls, projects, notification_type):
         logger.debug("services.mailer._send_notification_for_projects",
                      extra={"notification_type": notification_type, "project_count": projects.count()})
-        with ThreadPoolExecutor() as executor:
-            executor.map(Mailer._send_notification_for_project, projects, repeat(notification_type))
+        for project in projects:
+            Mailer._send_notification_for_project(project, notification_type)
 
     @classmethod
     def send_enz01(cls):
