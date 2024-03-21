@@ -1,0 +1,686 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.0/" targetNamespace="https://api.aiscr.cz/schema/amcr/2.0/" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.0.0">
+
+  <xs:annotation>
+    <xs:documentation>XML Schema for native export of the AMCR database (version 2.0.0). Related API: https://api.aiscr.cz/</xs:documentation>
+  </xs:annotation>
+
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/03/xml.xsd"/>
+
+  <!-- main-structure -->
+  <xs:element name="amcr">
+    <xs:complexType mixed="true"> <!-- returns "HTTP/1.1 403 Forbidden" for inaccessible records -->
+      <xs:choice minOccurs="0" maxOccurs="1">
+        <xs:element name="projekt" type="amcr:projektType"/> 
+        <xs:element name="archeologicky_zaznam" type="amcr:archeologicky_zaznamType"/> 
+        <xs:element name="let" type="amcr:letType"/> 
+        <xs:element name="adb" type="amcr:adbType"/> 
+        <xs:element name="dokument" type="amcr:dokumentType"/> 
+        <xs:element name="ext_zdroj" type="amcr:ext_zdrojType"/> 
+        <xs:element name="pian" type="amcr:pianType"/> 
+        <xs:element name="samostatny_nalez" type="amcr:samostatny_nalezType"/> 
+        <xs:element name="uzivatel" type="amcr:uzivatelType"/> 
+        <xs:element name="heslo" type="amcr:hesloType"/> 
+        <xs:element name="ruian_kraj" type="amcr:ruian_krajType"/> 
+        <xs:element name="ruian_okres" type="amcr:ruian_okresType"/> 
+        <xs:element name="ruian_katastr" type="amcr:ruian_katastrType"/> 
+        <xs:element name="organizace" type="amcr:organizaceType"/> 
+        <xs:element name="osoba" type="amcr:osobaType"/> 
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- main-classes -->
+  <xs:complexType name="projektType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="typ_projektu" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="okres" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="podnet" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="planovane_zahajeni" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="vedouci_projektu" minOccurs="0" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="organizace" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="uzivatelske_oznaceni" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="oznaceni_stavby" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="kulturni_pamatka" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="datum_zahajeni" minOccurs="0" maxOccurs="1" type="xs:date"/> 
+      <xs:element name="datum_ukonceni" minOccurs="0" maxOccurs="1" type="xs:date"/> 
+      <xs:element name="termin_odevzdani_nz" minOccurs="0" maxOccurs="1" type="xs:date"/> 
+      <xs:element name="pristupnost_pom" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:projekt-chranene_udajeType"/> 
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> 
+      <xs:element name="oznamovatel" minOccurs="0" maxOccurs="1" type="amcr:oznamovatelType"/> 
+      <xs:element name="soubor" minOccurs="0" maxOccurs="unbounded" type="amcr:souborType"/>  
+      <xs:element name="archeologicky_zaznam" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> 
+      <xs:element name="samostatny_nalez" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> 
+      <xs:element name="dokument" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="archeologicky_zaznamType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="okres" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="pristupnost" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:az-chranene_udajeType"/> 
+      <xs:choice minOccurs="1" maxOccurs="1">
+        <xs:element name="akce" type="amcr:akceType"/> 
+        <xs:element name="lokalita" type="amcr:lokalitaType"/> 
+      </xs:choice>
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> 
+      <xs:element name="dokumentacni_jednotka" minOccurs="0" maxOccurs="unbounded" type="amcr:dokumentacni_jednotkaType"/> 
+      <xs:element name="ext_odkaz" minOccurs="0" maxOccurs="unbounded" type="amcr:az-ext_odkazType"/> 
+  	  <xs:element name="dokument" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="letType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="datum" minOccurs="0" maxOccurs="1" type="xs:date"/> 
+      <xs:element name="hodina_zacatek" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="hodina_konec" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="pozorovatel" minOccurs="0" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="organizace" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="fotoaparat" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="pilot" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="typ_letounu" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="ucel_letu" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="letiste_start" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="letiste_cil" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="pocasi" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="dohlednost" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="uzivatelske_oznaceni" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="dokument" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="adbType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="dokumentacni_jednotka" minOccurs="1" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="stav_pom" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="typ_sondy" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="podnet" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="stratigraficke_jednotky" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="autor_popisu" minOccurs="1" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="rok_popisu" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="autor_revize" minOccurs="0" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="rok_revize" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="sm5" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="pristupnost_pom" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:adb-chranene_udajeType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="dokumentType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="let" minOccurs="0" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="typ_dokumentu" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="material_originalu" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="rada" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="posudek" minOccurs="0" maxOccurs="unbounded" type="amcr:vocabType"/> 
+      <xs:element name="autor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> 
+      <xs:element name="rok_vzniku" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="organizace" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="pristupnost" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="datum_zverejneni" minOccurs="0" maxOccurs="1" type="xs:date"/> 
+      <xs:element name="jazyk_dokumentu" minOccurs="0" maxOccurs="unbounded" type="amcr:vocabType"/> 
+      <xs:element name="ulozeni_originalu" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="oznaceni_originalu" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="popis" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="licence" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="osoba" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> 
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> 
+      <xs:element name="soubor" minOccurs="0" maxOccurs="unbounded" type="amcr:souborType"/>  
+      <xs:element name="extra_data" minOccurs="0" maxOccurs="1" type="amcr:extra_dataType"/> 
+      <xs:element name="tvar" minOccurs="0" maxOccurs="unbounded" type="amcr:tvarType"/> 
+      <xs:element name="dokument_cast" minOccurs="0" maxOccurs="unbounded" type="amcr:dokument_castType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ext_zdrojType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="typ" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="sysno" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="autor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> 
+      <xs:element name="nazev" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="edice_rada" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="rok_vydani_vzniku" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="isbn" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="issn" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="vydavatel" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="editor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> 
+      <xs:element name="sbornik_nazev" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="misto" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="casopis_denik_nazev" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="casopis_rocnik" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="datum_rd" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="paginace_titulu" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="link" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="typ_dokumentu" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="organizace" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> 
+      <xs:element name="ext_odkaz" minOccurs="0" maxOccurs="unbounded" type="amcr:ez-ext_odkazType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="pianType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="typ" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="presnost" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="geom_system" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="geom_updated_at" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> 
+      <xs:element name="geom_sjtsk_updated_at" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> 
+      <xs:element name="pristupnost_pom" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:pian-chranene_udajeType"/> 
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> 
+      <xs:element name="dokumentacni_jednotka" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="samostatny_nalezType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="evidencni_cislo" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="projekt" minOccurs="1" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="okres" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="hloubka" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="okolnosti" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="obdobi" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="presna_datace" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="druh_nalezu" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="specifikace" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="pocet" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="nalezce" minOccurs="0" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="datum_nalezu" minOccurs="0" maxOccurs="1" type="xs:date"/> 
+      <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="predano" minOccurs="0" maxOccurs="1" type="xs:boolean"/> 
+      <xs:element name="predano_organizace" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="geom_system" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="geom_updated_at" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> 
+      <xs:element name="geom_sjtsk_updated_at" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> 
+      <xs:element name="pristupnost" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:sn-chranene_udajeType"/> 
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/>   
+      <xs:element name="soubor" minOccurs="0" maxOccurs="unbounded" type="amcr:souborType"/>  
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- vocabulary-classes -->
+  <xs:complexType name="uzivatelType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="jmeno" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="prijmeni" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="email" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="osoba" minOccurs="0" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="organizace" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="jazyk" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="telefon" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="aktivni" minOccurs="1" maxOccurs="1" type="xs:boolean"/> 
+      <xs:element name="admin" minOccurs="1" maxOccurs="1" type="xs:boolean"/> 
+      <xs:element name="superadmin" minOccurs="1" maxOccurs="1" type="xs:boolean"/>    
+      <xs:element name="skupina" minOccurs="1" maxOccurs="unbounded" type="amcr:langstringType"/> 
+      <xs:element name="notifikace" minOccurs="0" maxOccurs="unbounded" type="xs:string"/> 
+      <xs:element name="hlidaci_pes" minOccurs="0" maxOccurs="unbounded" type="amcr:vocabType"/> 
+      <xs:element name="datum_registrace" minOccurs="1" maxOccurs="1" type="xs:dateTime"/> 
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> 
+      <xs:element name="spoluprace_nadrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_nadrizeniType"/> 
+      <xs:element name="spoluprace_podrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_podrizeniType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="hesloType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="nazev_heslare" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="heslo" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="heslo_en" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="popis" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="popis_en" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="zkratka" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="zkratka_en" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="razeni" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="hierarchie_vyse" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_vyseType"/> 
+      <xs:element name="hierarchie_nize" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_nizeType"/> 
+      <xs:element name="dokument_typ_material_rada" minOccurs="0" maxOccurs="unbounded" type="amcr:dokument_typ_material_radaType"/> 
+      <xs:element name="datace" minOccurs="0" maxOccurs="1" type="amcr:dataceType"/> 
+      <xs:element name="odkaz" minOccurs="0" maxOccurs="unbounded" type="amcr:odkazType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ruian_krajType">
+    <xs:sequence>
+      <xs:element name="kod" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="nazev_en" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="rada_id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="definicni_bod_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> 
+      <xs:element name="definicni_bod_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> 
+      <xs:element name="hranice_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> 
+      <xs:element name="hranice_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ruian_okresType">
+    <xs:sequence>
+      <xs:element name="kod" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="nazev_en" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="spz" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="kraj" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="definicni_bod_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> 
+      <xs:element name="definicni_bod_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> 
+      <xs:element name="hranice_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> 
+      <xs:element name="hranice_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ruian_katastrType">
+    <xs:sequence>
+      <xs:element name="kod" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="okres" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="pian" minOccurs="0" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="definicni_bod_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> 
+      <xs:element name="definicni_bod_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> 
+      <xs:element name="hranice_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> 
+      <xs:element name="hranice_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="organizaceType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="nazev_en" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="nazev_zkraceny" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="nazev_zkraceny_en" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
+      <xs:element name="typ_organizace" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="oao" minOccurs="1" maxOccurs="1" type="xs:boolean"/> 
+      <xs:element name="mesicu_do_zverejneni" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="zverejneni_pristupnost" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="email" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="telefon" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="adresa" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="ico" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="soucast" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="zanikla" minOccurs="1" maxOccurs="1" type="xs:boolean"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="osobaType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="jmeno" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="prijmeni" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="vypis" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="vypis_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="rok_narozeni" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="rok_umrti" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="rodne_prijmeni" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+    </xs:sequence>
+  </xs:complexType>
+ 
+  <!-- generic-clasess -->
+  <xs:complexType name="projekt-chranene_udajeType" mixed="true"> <!-- returns "HTTP/1.1 403 Forbidden" for inaccessible records -->
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="hlavni_katastr" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+        <xs:element name="dalsi_katastr" minOccurs="0" maxOccurs="unbounded" type="amcr:vocabType"/> 
+        <xs:element name="lokalizace" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="parcelni_cislo" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="geom_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> 
+        <xs:element name="geom_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> 
+        <xs:element name="kulturni_pamatka_cislo" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="kulturni_pamatka_popis" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      </xs:sequence>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="oznamovatelType" mixed="true"> <!-- returns "HTTP/1.1 403 Forbidden" for inaccessible records -->          
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="oznamovatel" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="odpovedna_osoba" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="adresa" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="telefon" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="email" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      </xs:sequence>          
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="historieType">
+   	<xs:sequence>      	
+   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="datum_zmeny" minOccurs="1" maxOccurs="1" type="xs:dateTime"/> 
+   	  <xs:element name="uzivatel" minOccurs="1" maxOccurs="1" type="amcr:refType"/> 
+   	  <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="typ_zmeny" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+   	</xs:sequence>     
+  </xs:complexType>
+  <xs:complexType name="souborType">
+   	<xs:sequence>      	
+   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="path" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="mimetype" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="rozsah" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+   	  <xs:element name="size_mb" minOccurs="1" maxOccurs="1" type="xs:decimal"/> 
+      <xs:element name="sha_512" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="url" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> 
+   	</xs:sequence>     
+  </xs:complexType>
+  <xs:complexType name="az-chranene_udajeType" mixed="true"> <!-- returns "HTTP/1.1 403 Forbidden" for inaccessible records -->
+    <xs:choice minOccurs="0" maxOccurs="1">  
+      <xs:sequence>
+        <xs:element name="hlavni_katastr" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+        <xs:element name="dalsi_katastr" minOccurs="0" maxOccurs="unbounded" type="amcr:vocabType"/> 
+        <xs:element name="uzivatelske_oznaceni" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      </xs:sequence>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="akceType">
+    <xs:sequence>
+      <xs:element name="projekt" minOccurs="0" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="typ" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="je_nz" minOccurs="1" maxOccurs="1" type="xs:boolean"/> 
+      <xs:element name="odlozena_nz" minOccurs="1" maxOccurs="1" type="xs:boolean"/> 
+      <xs:element name="hlavni_vedouci" minOccurs="0" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="organizace" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="vedouci_akce_ostatni" minOccurs="0" maxOccurs="unbounded" type="amcr:vedouci_akce_ostatniType"/> 
+      <xs:element name="specifikace_data" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="datum_zahajeni" minOccurs="0" maxOccurs="1" type="xs:date"/> 
+      <xs:element name="datum_ukonceni" minOccurs="0" maxOccurs="1" type="xs:date"/> 
+      <xs:element name="hlavni_typ" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="vedlejsi_typ" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="ulozeni_nalezu" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="ulozeni_dokumentace" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:akce-chranene_udajeType"/>      
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="vedouci_akce_ostatniType">
+    <xs:sequence>
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="vedouci" minOccurs="1" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="organizace" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="akce-chranene_udajeType" mixed="true"> <!-- returns "HTTP/1.1 403 Forbidden" for inaccessible records -->
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="lokalizace_okolnosti" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="souhrn_upresneni" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      </xs:sequence>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="lokalitaType">
+    <xs:sequence>
+      <xs:element name="typ_lokality" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="druh" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="zachovalost" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="jistota" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:lok-chranene_udajeType"/> 	
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="lok-chranene_udajeType" mixed="true"> <!-- returns "HTTP/1.1 403 Forbidden" for inaccessible records -->
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="popis" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      </xs:sequence>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="dokumentacni_jednotkaType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="pian" minOccurs="0" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="typ" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="negativni_jednotka" minOccurs="1" maxOccurs="1" type="xs:boolean"/> 
+      <xs:element name="nazev" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="adb" minOccurs="0" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="komponenta" minOccurs="0" maxOccurs="unbounded" type="amcr:komponentaType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="az-ext_odkazType">
+   	<xs:sequence>      	
+   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="ext_zdroj" minOccurs="1" maxOccurs="1" type="amcr:refType"/> 
+   	  <xs:element name="paginace" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+   	</xs:sequence>     
+  </xs:complexType>
+  <xs:complexType name="ez-ext_odkazType">
+   	<xs:sequence>      	
+   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="archeologicky_zaznam" minOccurs="1" maxOccurs="1" type="amcr:refType"/> 
+   	  <xs:element name="paginace" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+   	</xs:sequence>     
+  </xs:complexType>
+  <xs:complexType name="adb-chranene_udajeType" mixed="true"> <!-- returns "HTTP/1.1 403 Forbidden" for inaccessible records -->
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="uzivatelske_oznaceni_sondy" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="trat" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="cislo_popisne" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="parcelni_cislo" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="vyskovy_bod" minOccurs="0" maxOccurs="unbounded" type="amcr:vyskovy_bodType"/> 
+      </xs:sequence>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="vyskovy_bodType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="typ" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="geom_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> 
+      <xs:element name="geom_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="extra_dataType">
+    <xs:sequence>
+      <xs:element name="cislo_objektu" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="format" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="meritko" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="vyska" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="sirka" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="zachovalost" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="nahrada" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="pocet_variant_originalu" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="odkaz" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="datum_vzniku" minOccurs="0" maxOccurs="1" type="xs:date"/> 
+      <xs:element name="udalost_typ" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="udalost" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="zeme" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="region" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="rok_od" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="rok_do" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="duveryhodnost" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="geom_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> 
+      <xs:element name="geom_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="tvarType">
+    <xs:sequence>
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="tvar" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="dokument_castType">
+    <xs:sequence>
+      <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:choice minOccurs="0" maxOccurs="1">
+        <xs:element name="archeologicky_zaznam" type="amcr:refType" minOccurs="0" maxOccurs="1" /> 
+        <xs:element name="projekt" type="amcr:refType" minOccurs="0" maxOccurs="1" /> 
+      </xs:choice>
+      <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="komponenta" minOccurs="0" maxOccurs="unbounded" type="amcr:komponentaType"/> 
+      <xs:element name="neident_akce" minOccurs="0" maxOccurs="1" type="amcr:neident_akceType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="neident_akceType">
+    <xs:sequence>
+      <xs:element name="okres" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="katastr" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="vedouci" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> 
+      <xs:element name="rok_zahajeni" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="rok_ukonceni" minOccurs="0" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="lokalizace" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="popis" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="pian" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="komponentaType">
+   	<xs:sequence>      	
+   	  <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="obdobi" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+   	  <xs:element name="jistota" minOccurs="0" maxOccurs="1" type="xs:boolean"/> 
+   	  <xs:element name="presna_datace" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="areal" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+   	  <xs:element name="aktivita" minOccurs="0" maxOccurs="unbounded" type="amcr:vocabType"/> 
+   	  <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="nalez_objekt" minOccurs="0" maxOccurs="unbounded" type="amcr:nalez_objektType"/> 
+   	  <xs:element name="nalez_predmet" minOccurs="0" maxOccurs="unbounded" type="amcr:nalez_predmetType"/>
+   	</xs:sequence>     
+  </xs:complexType>
+  <xs:complexType name="nalez_objektType">
+   	<xs:sequence>      	
+   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="druh" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+   	  <xs:element name="specifikace" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+   	  <xs:element name="pocet" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+   	</xs:sequence>     
+  </xs:complexType>
+  <xs:complexType name="nalez_predmetType">
+   	<xs:sequence>      	
+   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="druh" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+   	  <xs:element name="specifikace" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+   	  <xs:element name="pocet" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+   	  <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+   	</xs:sequence>     
+  </xs:complexType>
+  <xs:complexType name="pian-chranene_udajeType" mixed="true"> <!-- returns "HTTP/1.1 403 Forbidden" for inaccessible records -->
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="zm10" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+        <xs:element name="geom_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> 
+        <xs:element name="geom_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> 
+        <xs:element name="geom_sjtsk_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> 
+        <xs:element name="geom_sjtsk_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> 
+      </xs:sequence>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="sn-chranene_udajeType" mixed="true"> <!-- returns "HTTP/1.1 403 Forbidden" for inaccessible records -->
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="katastr" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
+        <xs:element name="lokalizace" minOccurs="0" maxOccurs="1" type="xs:string"/>         	
+        <xs:element name="geom_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> 
+        <xs:element name="geom_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> 
+        <xs:element name="geom_sjtsk_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> 
+        <xs:element name="geom_sjtsk_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> 
+      </xs:sequence>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="spoluprace_nadrizeniType">
+    <xs:sequence>
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="vedouci" minOccurs="1" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="spoluprace_podrizeniType">
+    <xs:sequence>
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="spolupracovnik" minOccurs="1" maxOccurs="1" type="amcr:refType"/> 
+      <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> 
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="hierarchie_vyseType">
+    <xs:sequence>
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="heslo_nadrazene" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="typ" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/>       
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="hierarchie_nizeType">
+    <xs:sequence>
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="heslo_podrazene" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="typ" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/>          
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="dokument_typ_material_radaType">
+    <xs:sequence>
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="dokument_typ" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
+      <xs:element name="dokument_material" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/>         
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="dataceType">
+    <xs:sequence>
+      <xs:element name="rok_od_min" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="rok_od_max" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="rok_do_min" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="rok_do_max" minOccurs="1" maxOccurs="1" type="xs:integer"/> 
+      <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/>           	         
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="odkazType">
+    <xs:sequence>
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="zdroj" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="nazev_kodu" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="kod" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="uri" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="skos_mapping_relation" minOccurs="1" maxOccurs="1" type="xs:string"/> 
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- generic-types -->
+  <xs:complexType name="refType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="id" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="autorType">
+    <xs:simpleContent>
+      <xs:extension base="amcr:refType">
+        <xs:attribute name="poradi" type="xs:integer" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="wktType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="EPSG" type="xs:integer" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="gmlType">
+    <xs:sequence>
+      <xs:any namespace="http://www.opengis.net/gml/3.2" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="langstringType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute ref="xml:lang" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="vocabType">
+    <xs:simpleContent>
+      <xs:extension base="amcr:refType">
+        <xs:attribute ref="xml:lang" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+</xs:schema>
