@@ -87,7 +87,7 @@
                 </button>
                 <div class="dropdown-menu" aria-labelledby="btnGroupDropDownload">
                   {% for format in export_formats %}
-                    <a href="{% export_url format %}" class="dropdown-item">
+                    <a class="dropdown-item" data-toggle="modal" data-target="#export-progress-modal" data-url="{% export_url format %}" data-backdrop="static" data-keyboard="false">
                       {% trans "templates.searchList.stahnout.label" %} <code>.{{ format }}</code>
                     </a>
                   {% endfor %}
@@ -122,6 +122,7 @@
           </div>
       </div>
     </div>
+    {% include "core/export_modal.html" %}
   </div>
 {% endblock %}
 
@@ -216,6 +217,18 @@ $('#soubor-modal').on('show.bs.modal', function (event) {
   const fullsrc = element.dataset.fullsrc;
   modalImg.src = fullsrc;
 })
+$('#export-progress-modal').on('show.bs.modal', (event) => {
+  updateProgressBar(0);
+  const triggerElement = $(event.relatedTarget);
+  const url = triggerElement.data('url');
+  const link = document.createElement('a');
+  link.href = url;
+  document.body.appendChild(link);
+  checkValue();
+  link.click();
+  document.body.removeChild(link);
+})
+
 </script>
 {% endblock %}
 {% block script2 %}

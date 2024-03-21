@@ -266,6 +266,8 @@ class Model3DListView(SearchListView):
     export_name = "export_modely_"
     app = "knihovna_3d"
     toolbar = "toolbar_dokument.html"
+    redis_snapshot_prefix = "dokument"
+    redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
 
     def init_translations(self):

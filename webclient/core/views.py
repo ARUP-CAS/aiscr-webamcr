@@ -865,6 +865,11 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     redis_snapshot_prefix = None
 
     def create_export(self, export_format):
+        def update_progress_bar(r_inner, key_inner, new_value):
+            old_value = int(r.get(key_inner).decode("utf-8"))
+            new_value = max(old_value, new_value)
+            r_inner.set(key_inner, new_value)
+
         logger.debug("core.views.SearchListView.create_export.start", extra={"export_format": export_format})
         if self.redis_value_list_field and self.redis_snapshot_prefix:
             r = RedisConnector.get_connection()
@@ -872,9 +877,13 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             dataset = self.get_table_data()
             ident_cely_list = set(dataset.values_list(self.redis_value_list_field, flat=True))
             ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
+            r.set("test", 10)
+            ident_cely_list_len = len(ident_cely_list)
             pipe = r.pipeline()
-            for key in ident_cely_list:
+            for i, key in enumerate(ident_cely_list):
                 pipe.hgetall(key)
+                if i % 1000 == 0:
+                    update_progress_bar(r, "test", int(i / ident_cely_list_len * 0.5))
             data = pipe.execute()
             data = pandas.DataFrame(data)
             data.columns = [x.decode("utf-8") for x in data.columns]
@@ -882,14 +891,17 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             for column in self.get_table().columns:
                 column_names[str(column.name)] = column.verbose_name
             data = data.rename(columns=column_names)
+            update_progress_bar(r, "test", 60)
             for column in data.select_dtypes(include=['object']):
                 data[column] = data[column].str.decode('utf-8')
             if export_format == TableExport.CSV:
                 response["Content-Disposition"] = f'attachment; filename="export.csv"'
                 data.to_csv(path_or_buf=response, index=False)
+                update_progress_bar(r, "test", 90)
             elif export_format == TableExport.JSON:
                 response["Content-Disposition"] = f'attachment; filename="export.json"'
                 data.to_json(path_or_buf=response, orient="records", force_ascii=False, index=False)
+                update_progress_bar(r, "test", 90)
             elif export_format == TableExport.XLSX:
                 excel_file = BytesIO()
                 with pandas.ExcelWriter(excel_file, engine='openpyxl') as writer:
@@ -898,6 +910,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 response = HttpResponse(excel_file.read(),
                                         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                 response['Content-Disposition'] = 'attachment; filename=export.xlsx'
+                update_progress_bar(r, "test", 90)
+            update_progress_bar(r, "test", 100)
             logger.debug("core.views.SearchListView.create_export.end", extra={"export_format": export_format, "column_names": column_names})
             return response
 
@@ -1120,3 +1134,11 @@ def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
         return True
     else:
         raise ZaznamSouborNotmatching
+
+
+class ReadTempValueView(View):
+    def get(self, request):
+        r = RedisConnector.get_connection()
+        temp_name = self.request.GET.get("temp_value", "test")
+        value = r.get(temp_name)
+        return JsonResponse({temp_name: int(value.decode("utf-8"))})

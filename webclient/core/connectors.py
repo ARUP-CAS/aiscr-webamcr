@@ -12,7 +12,7 @@ class RedisConnector:
         cls.r = redis.Redis(host="redis", port=6379, password=get_plain_redis_pass())
 
     @classmethod
-    def get_connection(cls):
+    def get_connection(cls) -> redis.Redis:
         if not cls.r:
             cls._create_connection()
         return cls.r
