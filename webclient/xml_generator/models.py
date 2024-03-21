@@ -197,7 +197,7 @@ class ModelWithMetadata(models.Model):
                         item.archeologicky_zaznam.save_metadata(fedora_transaction)
                     if item.projekt:
                         item.projekt.save_metadata(fedora_transaction)
-                    if item.let:
+                    if hasattr(item, "let") and item.let:
                         item.let.save_metadata(fedora_transaction)
             elif isinstance(self, ExterniZdroj):
                 for item in self.externi_odkazy_zdroje.all():
