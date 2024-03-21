@@ -322,7 +322,7 @@ class FedoraRepositoryConnector:
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
             else:
                 stack = inspect.stack()
-                caller = stack[1]
+                caller = [x for x in stack]
                 extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
                          "transaction": self.transaction_uid, "url": url, "caller": caller}
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
@@ -430,7 +430,7 @@ class FedoraRepositoryConnector:
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
     def _check_binary_file_container(self):
-        logger.debug("core_repository_connector._check_binary_file_containe.start",
+        logger.debug("core_repository_connector._check_binary_file_container.start",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTAINER)
@@ -818,7 +818,10 @@ class FedoraRepositoryConnector:
                                                                                  "ident_cely_old": ident_cely_old,
                                                                                  "transaction": self.transaction_uid})
         from dokument.models import Dokument
-        if isinstance(self.record, Dokument):
+        from pas.models import SamostatnyNalez
+        from projekt.models import Projekt
+        if (isinstance(self.record, Dokument) or isinstance(self.record, Projekt)
+                or isinstance(self.record, SamostatnyNalez)):
             for item in self.record.soubory.soubory.all():
                 from core.models import Soubor
                 item: Soubor

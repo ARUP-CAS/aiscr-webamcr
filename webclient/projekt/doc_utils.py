@@ -413,15 +413,16 @@ class OznameniPDFCreator(DocumentCreator):
         file.seek(0)
         filename = f"oznameni_{self.projekt.ident_cely}{postfix}.pdf"
 
-        con = FedoraRepositoryConnector(self.projekt)
+        con = FedoraRepositoryConnector(self.projekt, self.fedora_transaction)
         rep_bin_file: RepositoryBinaryFile = con.save_binary_file(filename, "application/pdf", file)
         return rep_bin_file
 
-    def __init__(self, oznamovatel, projekt, additional=False):
+    def __init__(self, oznamovatel, projekt, fedora_transaction, additional=False):
         from oznameni.models import Oznamovatel
         self.oznamovatel: Oznamovatel = oznamovatel
         from projekt.models import Projekt
         self.projekt: Projekt = projekt
+        self.fedora_transaction = fedora_transaction
         self.additional = additional
         self.styles = getSampleStyleSheet()
         self._create_style_dict()

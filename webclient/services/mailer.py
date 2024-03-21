@@ -383,7 +383,7 @@ class Mailer:
     @classmethod
     def send_ep02(cls, psi, project):
         IDENT_CELY = 'E-P-02'
-        logger.debug("services.mailer.send_ep02", extra={"ident_cely": IDENT_CELY})
+        logger.debug("services.mailer.send_ep02.start", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         for pes in psi:
             subject = notification_type.predmet.format(ident_cely=project.ident_cely)
@@ -393,6 +393,7 @@ class Mailer:
             })
             cls.__send(subject=subject, to=pes.user.email, html_content=html,
                        notification_type=notification_type, user=pes.user)
+        logger.debug("services.mailer.send_ep02.end", extra={"ident_cely": IDENT_CELY})
 
     @classmethod
     def _send_ep03(cls, project, notification_type):

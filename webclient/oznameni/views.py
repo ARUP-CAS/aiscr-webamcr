@@ -137,7 +137,7 @@ def index(request, test_run=False):
 
     # Part 2 of the announcement form
     elif request.method == "POST" and "ident_cely" in request.POST:
-        logger.debug(f"oznameni.views.index.second_part_start")
+        logger.debug(f"oznameni.views.index.second_part.start", extra={"ident_cely": request.POST["ident_cely"]})
         projekt = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
         fedora_transaction = FedoraTransaction()
         projekt.active_transaction = fedora_transaction
@@ -145,6 +145,8 @@ def index(request, test_run=False):
         projekt.close_active_transaction_when_finished = True
         projekt.save()
         context = {"ident_cely": request.POST["ident_cely"]}
+        logger.debug(f"oznameni.views.index.second_part.end",
+                     extra={"ident_cely": request.POST["ident_cely"], "transaction": fedora_transaction.uid})
         return render(request, "oznameni/success.html", context)
     elif request.method == "GET" and "ident_cely" in request.GET:
         cookie_project = request.COOKIES.get("project", None)
