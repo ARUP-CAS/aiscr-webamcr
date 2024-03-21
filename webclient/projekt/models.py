@@ -41,7 +41,7 @@ from core.constants import (
 )
 from core.exceptions import MaximalIdentNumberError
 from core.models import ProjektSekvence, Soubor, SouborVazby
-from core.repository_connector import RepositoryBinaryFile, FedoraRepositoryConnector
+from core.repository_connector import RepositoryBinaryFile, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import get_mime_type
 from heslar.hesla import (
     HESLAR_PAMATKOVA_OCHRANA,
@@ -198,7 +198,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metóda pro nastavení stavu schvýlený a uložení změny do historie.
         """
-        logger.debug("projekt.models.Projekt.set_schvaleny.start", extra={"old_ident": old_ident})
+        logger.debug("projekt.models.Projekt.set_schvaleny.start",
+                     extra={"old_ident_cely": old_ident, "new_idet_cely": self.ident_cely,
+                            "transaction": self.active_transaction.uid})
         self.stav = PROJEKT_STAV_ZAPSANY
         Historie(
             typ_zmeny=SCHVALENI_OZNAMENI_PROJ,
@@ -207,7 +209,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             poznamka=f"{old_ident} -> {self.ident_cely}",
         ).save()
         self.save()
-        logger.debug("projekt.models.Projekt.set_schvaleny.end", extra={"old_ident": old_ident})
+        logger.debug("projekt.models.Projekt.set_schvaleny.end",
+                     extra={"old_ident_cely": old_ident, "new_idet_cely": self.ident_cely,
+                            "transaction": self.active_transaction.uid})
 
     def set_zapsany(self, user):
         """
@@ -217,7 +221,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Historie(typ_zmeny=ZAPSANI_PROJ, uzivatel=user, vazba=self.historie).save()
         self.save()
         if self.typ_projektu == TYP_PROJEKTU_ZACHRANNY_ID:
-            self.create_confirmation_document(user=user)
+            self.create_confirmation_document(self.active_transaction, user=user)
 
     def set_prihlaseny(self, user):
         """
@@ -502,6 +506,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metóda na nastavení permanentního identu akce z projektu sekvence.
         """
+        logger.debug("projekt.models.projekt.set_permanent_ident_cely.start",
+                     extra={"ident_cely_old": self.ident_cely,
+                            "transaction": getattr(self.active_transaction, "uid", None)})
         MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
         region = self.hlavni_katastr.okres.kraj.rada_id
@@ -527,23 +534,32 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 if missing[0] >= MAXIMUM:
                     logger.error("dokuments.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                     raise MaximalIdentNumberError(MAXIMUM)
-                sequence.sekvence=missing[0]
+                sequence.sekvence = missing[0]
         sequence.save()
         old_ident = self.ident_cely
         self.ident_cely = (
             sequence.region + "-" + str(sequence.rok) + f"{sequence.sekvence:05}"
         )
-        self.save()
         if update_repository:
+            if not self.active_transaction:
+                raise ValueError("No Fedora transaction")
+            logger.debug("projekt.models.projekt.set_permanent_ident_cely.update_repository",
+                         extra={"ident_cely_old": old_ident, "ident_cely_new": self.ident_cely,
+                                "fedora_transaction": self.active_transaction.uid})
             self.record_ident_change(old_ident)
+        self.save()
+        logger.debug("projekt.models.projekt.set_permanent_ident_cely.end",
+                     extra={"ident_cely_old": old_ident, "ident_cely_new": self.ident_cely,
+                            "transaction": getattr(self.active_transaction, "uid", None)})
 
-    def create_confirmation_document(self, additional=False, user=None):
+    def create_confirmation_document(self, fedora_transaction: FedoraTransaction, additional=False, user=None):
         """
         Metóda na vytvoření oznámovací dokumentace.
         """
         logger.debug("projekt.models.create_confirmation_document.start",
-                     extra={"projekt_ident": self.ident_cely, "additional": additional, "user": user})
-        creator = OznameniPDFCreator(self.oznamovatel, self, additional)
+                     extra={"projekt_ident": self.ident_cely, "additional": additional, "user": user,
+                            "transaction": fedora_transaction.uid})
+        creator = OznameniPDFCreator(self.oznamovatel, self, fedora_transaction, additional)
         rep_bin_file: RepositoryBinaryFile = creator.build_document()
         duplikat = Soubor.objects.filter(nazev=rep_bin_file.filename)
         filename = rep_bin_file.filename
@@ -556,16 +572,19 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 size_mb=rep_bin_file.size_mb,
                 sha_512=rep_bin_file.sha_512,
             )
+            soubor.active_transaction = fedora_transaction
             soubor.save()
             logger.debug("projekt.models.create_confirmation_document.created",
-                         extra={"projekt_ident": self.ident_cely, "soubor": soubor.pk, "created_filename": filename})
+                         extra={"projekt_ident": self.ident_cely, "soubor": soubor.pk, "created_filename": filename,
+                                "transaction": fedora_transaction.uid})
             if user:
                 soubor.zaznamenej_nahrani(user)
             else:
                 soubor.create_soubor_vazby()
         else:
             logger.debug("projekt.models.create_confirmation_document.duplicat_exists",
-                         extra={"projekt_ident": self.ident_cely, "filename": filename})
+                         extra={"projekt_ident": self.ident_cely, "filename": filename,
+                                "transaction": fedora_transaction.uid})
 
     @property
     def expert_list_can_be_created(self):

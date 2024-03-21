@@ -143,14 +143,14 @@ class ModelWithMetadata(models.Model):
             fedora_transaction.mark_transaction_as_closed()
 
     def record_ident_change(self, old_ident_cely, fedora_transaction=None, new_ident_cely=None):
-        new_ident_cely = new_ident_cely if new_ident_cely else self.ident_cely
-        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.start",
-                     extra={"transaction": fedora_transaction, "old_ident_cely": old_ident_cely,
-                            "new_ident_cely": new_ident_cely})
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
         elif fedora_transaction is None and self.active_transaction is None:
             raise ValueError("No Fedora transaction")
+        new_ident_cely = new_ident_cely if new_ident_cely else self.ident_cely
+        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.start",
+                     extra={"transaction": fedora_transaction, "old_ident_cely": old_ident_cely,
+                            "new_ident_cely": new_ident_cely})
         from core.repository_connector import FedoraTransaction
         if not isinstance(fedora_transaction, FedoraTransaction):
             raise ValueError("fedora_transaction must be a FedoraTransaction class object")
@@ -221,7 +221,7 @@ class ModelWithMetadata(models.Model):
                     item: DokumentacniJednotka
                     item.archeologicky_zaznam.save_metadata(fedora_transaction)
         logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end",
-                     extra={"transaction": fedora_transaction, "old_ident_cely": old_ident_cely,
+                     extra={"transaction": fedora_transaction.uid, "old_ident_cely": old_ident_cely,
                             "new_ident_cely": new_ident_cely})
 
     class Meta:

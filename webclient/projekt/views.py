@@ -414,7 +414,7 @@ def create(request):
                         oznamovatel.projekt = projekt
                         oznamovatel.save()
                     if projekt.should_generate_confirmation_document:
-                        projekt.create_confirmation_document(user=request.user)
+                        projekt.create_confirmation_document(fedora_transaction, user=request.user)
                     messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                     if projekt.ident_cely[0] == OBLAST_CECHY:
                         Mailer.send_ep01a(project=projekt)
@@ -664,7 +664,8 @@ def schvalit(request, ident_cely):
     """
     Funkce pohledu pro schválení projektu pomoci modalu.
     """
-    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    logger.debug("projekt.views.schvalit.start", extra={"ident_cely": ident_cely})
+    projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_OZNAMENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse(
@@ -678,12 +679,19 @@ def schvalit(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
+        fedora_transaction = FedoraTransaction()
+        projekt.active_transaction = fedora_transaction
+        logger.debug("projekt.views.schvalit.post.start", extra={"ident_cely": ident_cely,
+                                                                 "transaction": fedora_transaction.uid})
         old_ident = projekt.ident_cely
         if projekt.ident_cely[0] == "X":
             try:
                 projekt.set_permanent_ident_cely()
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+                fedora_transaction.rollback_transaction()
+                logger.debug("projekt.views.schvalit.post.max_error",
+                             extra={"ident_cely": ident_cely, "transaction": fedora_transaction.uid})
                 return JsonResponse(
                     {
                         "redirect": reverse(
@@ -693,14 +701,11 @@ def schvalit(request, ident_cely):
                     status=403,
                 )
             else:
-                logger.debug("projekt.views.schvalit.perm_ident", extra={"ident_cely": ident_cely,
-                                                                         "permIdent_cely": projekt.ident_cely})
-        fedora_transaction = FedoraTransaction()
-        projekt.active_transaction = fedora_transaction
+                logger.debug("projekt.views.schvalit.perm_ident", extra={"old_ident": old_ident,
+                                                                         "new_ident_cely": projekt.ident_cely})
         projekt.set_schvaleny(request.user, old_ident)
-        projekt.save()
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
-            projekt.create_confirmation_document(user=request.user)
+            projekt.create_confirmation_document(fedora_transaction, user=request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
         if projekt.ident_cely[0] == OBLAST_CECHY:
             Mailer.send_ep01a(project=projekt)
@@ -708,6 +713,8 @@ def schvalit(request, ident_cely):
             Mailer.send_ep01b(project=projekt)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
+        logger.debug("projekt.views.schvalit.post.done",
+                     extra={"old_ident": old_ident, "new_ident": ident_cely, "transaction": fedora_transaction.uid})
         return JsonResponse(
             {
                 "redirect": reverse(
@@ -1343,16 +1350,20 @@ def generovat_oznameni(request, ident_cely):
     Funkce pohledu pro generování oznámení projektu pomoci modalu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    fedora_transaction = FedoraTransaction()
+    projekt.active_transaction = fedora_transaction
     if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
         logger.debug("Projekt neni typu pruzkumny")
         messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
         return redirect(projekt.get_absolute_url())
-    projekt.create_confirmation_document(additional=True, user=request.user)
-    if request.POST.get("odeslat_oznamovateli",False):
+    projekt.create_confirmation_document(fedora_transaction, additional=True, user=request.user)
+    if request.POST.get("odeslat_oznamovateli", False):
         if projekt.ident_cely[0] == OBLAST_CECHY:
             Mailer.send_ep01a(project=projekt)
         else:
             Mailer.send_ep01b(project=projekt)
+    projekt.close_active_transaction_when_finished = True
+    projekt.save()
     return redirect(projekt.get_absolute_url())
 
 
@@ -1362,11 +1373,15 @@ class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         ident_cely = kwargs['ident_cely']
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-        projekt.create_confirmation_document(additional=True, user=self.request.user)
+        fedora_transaction = FedoraTransaction()
+        projekt.active_transaction = fedora_transaction
+        projekt.create_confirmation_document(fedora_transaction, additional=True, user=self.request.user)
         if projekt.ident_cely[0] == OBLAST_CECHY:
             Mailer.send_ep01a(project=projekt)
         else:
             Mailer.send_ep01b(project=projekt)
+        projekt.close_active_transaction_when_finished = True
+        projekt.save()
         return super().get_redirect_url(*args, **kwargs)
 
 
