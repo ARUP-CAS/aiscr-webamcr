@@ -292,7 +292,7 @@ def edit(request, ident_cely):
                 sn.geom_sjtsk = geom_sjtsk
             sn: SamostatnyNalez = form.save(commit=False)
             fedora_transaction = FedoraTransaction()
-            sn.fedora_transaction = fedora_transaction
+            sn.active_transaction = fedora_transaction
             sn.close_active_transaction_when_finished = True
             sn.save()
             if form.changed_data:
@@ -573,7 +573,7 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         fedora_transaction = FedoraTransaction()
-        sn.fedora_transaction = fedora_transaction
+        sn.active_transaction = fedora_transaction
         sn.set_archivovany(request.user)
         sn.close_active_transaction_when_finished = True
         sn.save()

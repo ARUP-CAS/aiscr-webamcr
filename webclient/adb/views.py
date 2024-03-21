@@ -140,7 +140,7 @@ def smazat_vb(request, ident_cely):
     }
     if request.method == "POST":
         fedora_transaction = FedoraTransaction()
-        zaznam.fedora_transaction = fedora_transaction
+        zaznam.active_transaction = fedora_transaction
         zaznam.close_active_transaction_when_finished = True
         resp = zaznam.delete()
         next_url = request.POST.get("next")
