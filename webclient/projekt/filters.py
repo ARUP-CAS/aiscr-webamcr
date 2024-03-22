@@ -20,7 +20,7 @@ from django_filters import (
     CharFilter,
     DateFromToRangeFilter,
     ModelMultipleChoiceFilter,
-    MultipleChoiceFilter,
+    MultipleChoiceFilter, FilterSet,
 )
 from django_filters.widgets import DateRangeWidget
 
@@ -56,7 +56,7 @@ class Users(QuerySet):
         return self.select_related("first_name", "last_name")
 
 
-class KatastrFilter(filters.FilterSet):
+class KatastrFilterMixin(FilterSet):
     """
     Třída pro filtrování záznamu podle katastru, kraje, okresu a popisních údajů.
     Třída je prepoužita v dalších filtrech.
@@ -151,7 +151,7 @@ class KatastrFilter(filters.FilterSet):
         ).distinct()
 
 
-class ProjektFilter(HistorieFilter, KatastrFilter):
+class ProjektFilter(HistorieFilter, KatastrFilterMixin):
     """
     Třída pro filtrování projektů.
     """

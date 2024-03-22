@@ -77,135 +77,12 @@ class SouborTypFilter(MultipleChoiceFilter):
         return super().field
 
 
-class HistorieFilter(filters.FilterSet):
+class HistorieFilter:
     """
     Třída pro zakladní filtrování historie. Třída je dedená v jednotlivých filtracích záznamů.
     """
-    filter_typ = None
-    typ_vazby = None
-    # Filters by historie
-    historie_typ_zmeny = MultipleChoiceFilter(
-        choices=filter(lambda x: x[0].startswith("D"), Historie.CHOICES),
-        label=_("dokument.filters.historieFilter.historieTypZmeny.label"),
-        field_name="historie__historie__typ_zmeny",
-        widget=SelectMultiple(
-            attrs={
-                "class": "selectpicker",
-                "data-multiple-separator": "; ",
-                "data-live-search": "true",
-            }
-        ),
-        distinct=True,
-    )
 
-    historie_datum_zmeny_od = DateFromToRangeFilter(
-        label=_("dokument.filters.historieFilter.historieDatumZmeny.label"),
-        field_name="historie__historie__datum_zmeny",
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
-        distinct=True,
-    )
-
-    historie_uzivatel_organizace = ModelMultipleChoiceFilter(
-        queryset=Organizace.objects.all(),
-        field_name="historie__historie__uzivatel__organizace",
-        label=_("ez.filters.historieFilter.filter_historie_uzivatel_organizace.label"),
-        widget=SelectMultipleSeparator(),
-        distinct=True,
-    )
-
-    @staticmethod
-    def get_cache_queryset_name(typ_vazby, uzivatel_organizace=None, uzivatel=None):
-        query_params_string = f"history_queryset_{typ_vazby}"
-        if uzivatel_organizace:
-            if isinstance(uzivatel_organizace, Organizace):
-                query_params_string += f"_organizace_{uzivatel_organizace.pk}"
-            else:
-                query_params_string += f"_organizace_{','.join([str(x.pk) for x in uzivatel_organizace])}"
-        if uzivatel:
-            if isinstance(uzivatel, User):
-                query_params_string += f"_uzivatel_{uzivatel.pk}"
-            else:
-                query_params_string += f"_uzivatel_{','.join([str(x.pk) for x in uzivatel])}"
-        return query_params_string
-
-    @classmethod
-    def get_cached_queryset(cls, typ_vazby, uzivatel_organizace=None, uzivatel=None):
-        query_params_string = cls.get_cache_queryset_name(typ_vazby, uzivatel_organizace, uzivatel)
-        r = RedisConnector.get_connection()
-        value_list = r.get(query_params_string)
-        if value_list:
-            logger.debug("dokument.filters.HistorieFilter.save_cached_queryset.found",
-                         extra={"query_params_string": query_params_string})
-            return pickle.loads(value_list)
-        logger.debug("dokument.filters.HistorieFilter.save_cached_queryset.not_found",
-                     extra={"query_params_string": query_params_string})
-
-    @classmethod
-    def save_cached_queryset(cls, typ_vazby, uzivatel_organizace=None, uzivatel=None, historie=None):
-        if not historie:
-            historie = cls.get_filtered_history_dataset(typ_vazby, uzivatel_organizace, uzivatel)
-        query_params_string = cls.get_cache_queryset_name(typ_vazby, uzivatel_organizace, uzivatel)
-        values = pickle.dumps(list(set(historie.values_list("vazba__id", flat=True))))
-        r = RedisConnector.get_connection()
-        r.set(query_params_string, values)
-        logger.debug("dokument.filters.HistorieFilter.save_cached_queryset.saved",
-                     extra={"query_params_string": query_params_string, "query_count": historie.count()})
-
-    @staticmethod
-    def get_filtered_history_dataset(typ_vazby=None, uzivatel_organizace=None, uzivatel=None) -> QuerySet:
-        if typ_vazby:
-            historie = Historie.objects.filter(vazba__typ_vazby=typ_vazby)
-        else:
-            historie = Historie.objects.all()
-        if uzivatel_organizace:
-            if isinstance(uzivatel_organizace, Organizace):
-                historie = historie.filter(organizace_snapshot=uzivatel_organizace)
-            else:
-                historie = historie.filter(organizace_snapshot__in=uzivatel_organizace)
-        if uzivatel:
-            if isinstance(uzivatel, User):
-                historie = historie.filter(uzivatel=uzivatel)
-            else:
-                historie = historie.filter(uzivatel__in=uzivatel)
-        return historie
-
-    def _get_history_subquery(self):
-        logger.debug("dokument.filters.HistorieFilter._get_history_subquery.start")
-        uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace", None)
-        zmena = self.form.cleaned_data.pop("historie_typ_zmeny", None)
-        uzivatel = self.form.cleaned_data.pop("historie_uzivatel", None)
-        datum = self.form.cleaned_data.pop("historie_datum_zmeny_od", None)
-
-        if self.typ_vazby and not datum and not zmena:
-            cached_queryset = self.get_cached_queryset(self.typ_vazby, uzivatel_organizace, uzivatel)
-            if cached_queryset:
-                return cached_queryset
-
-        if uzivatel_organizace or zmena or uzivatel or datum:
-            if self.typ_vazby:
-                cached_queryset = self.get_cached_queryset(self.typ_vazby, uzivatel_organizace, uzivatel)
-                if cached_queryset:
-                    historie = Historie.objects.filter(id__in=cached_queryset)
-                else:
-                    historie = self.get_filtered_history_dataset(self.typ_vazby, uzivatel_organizace, uzivatel)
-            else:
-                historie = self.get_filtered_history_dataset(uzivatel_organizace=uzivatel_organizace, uzivatel=uzivatel)
-            if zmena:
-                historie = historie.filter(typ_zmeny__in=zmena)
-            if datum and datum.start:
-                historie = historie.filter(datum_zmeny__gte=datum.start)
-            if datum and datum.stop:
-                historie = historie.filter(datum_zmeny__lte=datum.stop)
-            if not zmena and not datum:
-                self.save_cached_queryset(self.typ_vazby, uzivatel_organizace, uzivatel, historie)
-            logger.debug("dokument.filters.HistorieFilter._get_history_subquery.end",
-                         extra={"query": str(historie.query)})
-            return historie
-        return None
-
-    def __init__(self, *args, **kwargs):
-        super(HistorieFilter, self).__init__(*args, **kwargs)
-        user: User = kwargs.get("request").user
+    def set_filter_fields(self, user):
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
             self.filters["historie_uzivatel"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.all(),
@@ -222,6 +99,32 @@ class HistorieFilter(filters.FilterSet):
                 widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
                 distinct=True,
             )
+        self.filters["historie_typ_zmeny"] = MultipleChoiceFilter(
+            choices=filter(lambda x: x[0].startswith("D"), Historie.CHOICES),
+            label=_("dokument.filters.historieFilter.historieTypZmeny.label"),
+            field_name="historie__historie__typ_zmeny",
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            distinct=True,
+        )
+        self.filters["historie_datum_zmeny_od"] = DateFromToRangeFilter(
+            label=_("dokument.filters.historieFilter.historieDatumZmeny.label"),
+            field_name="historie__historie__datum_zmeny",
+            widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+            distinct=True,
+        )
+        self.filters["historie_uzivatel_organizace"] = ModelMultipleChoiceFilter(
+            queryset=Organizace.objects.all(),
+            field_name="historie__historie__uzivatel__organizace",
+            label=_("ez.filters.historieFilter.filter_historie_uzivatel_organizace.label"),
+            widget=SelectMultipleSeparator(),
+            distinct=True,
+        )
 
 
 class Model3DFilter(HistorieFilter):

@@ -10,9 +10,7 @@ INSTALLED_APPS += [
     "debug_toolbar",
 ]
 
-MIDDLEWARE += [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
-]
+MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware",] + MIDDLEWARE
 
 DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.history.HistoryPanel",
@@ -33,7 +31,7 @@ DEBUG_TOOLBAR_PANELS = [
 
 # This is only so that debug toolbar is shown when developing in docker
 hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
-INTERNAL_IPS = [ip[:-1] + "1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
+INTERNAL_IPS = [ip[:-1] + "1" for ip in ips] + ["127.0.0.1", "10.0.2.2", "localhost", '192.168.1.1']
 
 CRISPY_FAIL_SILENTLY = not DEBUG
 
@@ -62,3 +60,7 @@ SITE_URL = 'http://localhost:8000'
 # Fake key
 RECAPTCHA_PRIVATE_KEY = "OtKcTKoJwtIyCm0XFEf0EA5kVMV4hHaDaJfmyr"
 SKIP_RECAPTCHA = True
+
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': lambda _request: DEBUG,
+}
