@@ -75,6 +75,18 @@ def get_redis_pass(default_value=""):
 
 
 redis_url = os.getenv("REDIS_URL", "redis:6379")
+CACHEOPS_REDIS = "redis://"+get_redis_pass()+redis_url
+
+CACHEOPS = {
+    "arch_z.Akce": {"ops": "all", "timeout": 60*5},
+    "arch_z.ArcheologickyZaznam": {"ops": "all", "timeout": 60*5},
+    "projekt.Projekt": {"ops": "all", "timeout": 60*5},
+    "auth.*": {"ops": "all", "timeout": 60*5},
+    "ez.ExterniZdroj": {"ops": "all", "timeout": 60*5},
+    "heslar.*": {"ops": "all", "timeout": 60*60},
+    "dokument.Dokument": {"ops": "all", "timeout": 60*5},
+    "pas.SamostatnyNalez": {"ops": "all", "timeout": 60*5},
+}
 
 SECRET_KEY = get_secret("SECRET_KEY")
 
@@ -143,7 +155,8 @@ INSTALLED_APPS = [
     "cron",
     'rest_framework',
     'rest_framework.authtoken',
-    "django_object_actions"
+    "django_object_actions",
+    "cacheops",
 ]
 
 MIDDLEWARE = [

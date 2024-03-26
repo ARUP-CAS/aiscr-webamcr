@@ -72,6 +72,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         db_column="rada",
         related_name="dokumenty_rady",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
+        db_index=True
     )
     typ_dokumentu = models.ForeignKey(
         Heslar,
@@ -79,14 +80,16 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         db_column="typ_dokumentu",
         related_name="dokumenty_typu_dokumentu",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
+        db_index=True
     )
     organizace = models.ForeignKey(
-        Organizace, models.RESTRICT, db_column="organizace"
+        Organizace, models.RESTRICT, db_column="organizace", db_index=True
     )
     rok_vzniku = models.PositiveIntegerField(
         blank=True,
         null=True,
         validators=[MinValueValidator(1900), MaxValueValidator(2050)],
+        db_index=True
     )
     pristupnost = models.ForeignKey(
         Heslar,
@@ -96,6 +99,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
         blank=True,
         null=True,
+        db_index=True
     )
     material_originalu = models.ForeignKey(
         Heslar,
@@ -103,6 +107,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         db_column="material_originalu",
         related_name="dokumenty_materialu",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
+        db_index=True,
     )
     popis = models.TextField(blank=True, null=True)
     poznamka = models.TextField(blank=True, null=True)
@@ -114,9 +119,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         null=True,
         related_name="dokumenty_ulozeni",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_ULOZENI},
+        db_index=True,
     )
     oznaceni_originalu = models.TextField(blank=True, null=True)
-    stav = models.SmallIntegerField(choices=STATES)
+    stav = models.SmallIntegerField(choices=STATES, db_index=True)
     ident_cely = models.TextField(unique=True)
     datum_zverejneni = models.DateField(blank=True, null=True)
     soubory = models.OneToOneField(
@@ -126,6 +132,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         blank=True,
         null=True,
         related_name="dokument_souboru",
+        db_index=True,
     )
     historie = models.OneToOneField(
         HistorieVazby,
@@ -134,13 +141,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         blank=True,
         null=True,
         related_name="dokument_historie",
+        db_index=True,
     )
     licence = models.ForeignKey(
         Heslar,
         models.RESTRICT,
         related_name="dokumenty_licence",
         limit_choices_to={"nazev_heslare": HESLAR_LICENCE},
-        null=True, blank=False,
+        null=True, blank=False, db_index=True
     )
     jazyky = models.ManyToManyField(
         Heslar,
@@ -170,6 +178,13 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     class Meta:
         db_table = "dokument"
         ordering = ["ident_cely"]
+        indexes = [
+            models.Index(fields=["stav", "ident_cely"]),
+            models.Index(fields=["stav", "ident_cely", "historie"]),
+            models.Index(fields=["stav", "ident_cely", "organizace"]),
+            models.Index(fields=["stav", "ident_cely", "typ_dokumentu"]),
+            models.Index(fields=["stav", "ident_cely", "typ_dokumentu", "organizace"]),
+        ]
 
     def __str__(self):
         return self.ident_cely

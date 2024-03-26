@@ -108,9 +108,9 @@
               <li><a href="{% url 'lokalita:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.home" %}</a></li>
               <li><a href="{% url 'lokalita:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.zapsat" %}</a></li>
               <li><a href="{% url 'lokalita:list' %}?sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.lokality.vybrat" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.lokality.mojelokality" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.lokality.mojelokality" %}</a></li>
               {% if user.can_see_ours_item %}
-                <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.lokality.naselokality" %}</a></li>
+                <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.lokality.naselokality" %}</a></li>
               {% endif %}
               {% if show_lokalita_archivovat %}
               <li><a href="{% url 'lokalita:list' %}?stav=2&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.lokality.archivovat" %}</a></li>

@@ -1485,14 +1485,22 @@ class AkceListView(SearchListView):
         self.toolbar_label = _("core.views.AkceListView.toolbar_label.text")
 
     @staticmethod
-    def rename_field_for_ordering(field):
+    def rename_field_for_ordering(field: str):
+        field = field.replace("-", "")
         return {
-            "hlavni_katastr": "archeologicky_zaznam__hlavni_katastr__nazev"
+            "ident_cely": "archeologicky_zaznam__ident_cely",
+            "pristupnost": "archeologicky_zaznam__pristupnost",
+            "hlavni_katastr": "archeologicky_zaznam__hlavni_katastr__nazev",
+            "katastry": "archeologicky_zaznam__katastry",
+            "stav": "archeologicky_zaznam__stav",
+            "organizace": "organizace__nazev_zkraceny",
+            "vedouci_organizace": "vedouci_organizace",
+            "vedouci": "vedouci_snapshot",
+            "uzivatelske_oznaceni": "archeologicky_zaznam__uzivatelske_oznaceni",
         }.get(field, field)
 
     def get_queryset(self):
         sort_params = self._get_sort_params()
-
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
         qs = qs.distinct("pk", *sort_params)

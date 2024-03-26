@@ -99,6 +99,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         unique_together = (("typ_zaznamu", "historie"), )
         indexes = [
             models.Index(fields=["stav", "ident_cely"]),
+            models.Index(fields=["hlavni_katastr", "ident_cely"]),
+            models.Index(fields=["hlavni_katastr", "ident_cely", "stav"]),
+            models.Index(fields=["hlavni_katastr", "ident_cely", "historie"]),
+            models.Index(fields=["hlavni_katastr", "ident_cely", "historie", "stav"]),
         ]
 
     def set_zapsany(self, user):
@@ -522,6 +526,10 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
                 name='akce_typ_check',
             ),
         ]
+        models.Index(fields=["archeologicky_zaznam", "datum_ukonceni"]),
+        models.Index(fields=["datum_zahajeni", "datum_ukonceni"]),
+        models.Index(fields=["datum_zahajeni", "datum_ukonceni", "projekt"]),
+        models.Index(fields=["archeologicky_zaznam", "datum_zahajeni", "datum_ukonceni"]),
 
     def get_absolute_url(self):
         """

@@ -15,11 +15,12 @@ from django_filters import (
     ModelMultipleChoiceFilter,
     MultipleChoiceFilter,
     NumberFilter,
-    DateFromToRangeFilter,
+    DateFromToRangeFilter, FilterSet,
 )
 
 from core.connectors import RedisConnector
-from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_DOK, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
+from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_DOK, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, \
+    DOKUMENT_RELATION_TYPE
 from dokument.models import Dokument, DokumentCast, Tvar
 from historie.models import Historie
 from django.db.models import Q, OuterRef, Subquery, F, QuerySet
@@ -77,7 +78,7 @@ class SouborTypFilter(MultipleChoiceFilter):
         return super().field
 
 
-class HistorieFilter:
+class HistorieFilter(FilterSet):
     """
     Třída pro zakladní filtrování historie. Třída je dedená v jednotlivých filtracích záznamů.
     """
@@ -126,11 +127,41 @@ class HistorieFilter:
             distinct=True,
         )
 
+    def _get_history_subquery(self):
+        logger.debug("dokument.filters.HistorieFilter._get_history_subquery.start")
+        uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace", None)
+        zmena = self.form.cleaned_data.pop("historie_typ_zmeny", None)
+        uzivatel = self.form.cleaned_data.pop("historie_uzivatel", None)
+        datum = self.form.cleaned_data.pop("historie_datum_zmeny_od", None)
 
-class Model3DFilter(HistorieFilter):
+        if not uzivatel_organizace and not zmena and not uzivatel and not datum:
+            return
+
+        filtered_fields = {"typ_vazby": self.typ_vazby}
+        if uzivatel:
+            filtered_fields["uzivatel"] = uzivatel
+            self.filters.pop("historie_uzivatel")
+        if uzivatel_organizace:
+            filtered_fields["uzivatel_organizace"] = uzivatel_organizace
+            self.filters.pop("historie_uzivatel_organizace")
+        if zmena:
+            filtered_fields["zmena"] = zmena
+            self.filters.pop("historie_typ_zmeny")
+        if datum and datum.start:
+            filtered_fields["datum_zmeny__gte"] = datum.start
+        if datum and datum.stop:
+            filtered_fields["datum_zmeny__lte"] = datum.stop
+        if datum:
+            self.filters.pop("historie_datum_zmeny_od")
+        return filtered_fields
+
+
+class Model3DFilter(HistorieFilter, FilterSet):
     """
     Třída pro zakladní filtrování modelu 3D a jejich potomků.
     """
+
+    typ_vazby = DOKUMENT_RELATION_TYPE
 
     ident_cely = CharFilter(
         lookup_expr="icontains",
@@ -253,14 +284,20 @@ class Model3DFilter(HistorieFilter):
     )
 
     def filter_queryset(self, queryset):
-        logger.debug("dokument.filters.Model3DFilter.filter_queryset.start")
+        logger.debug("dokument.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(Model3DFilter, self).filter_queryset(queryset)
         if historie:
-            historie_subquery = (historie.values('vazba__dokument_historie__id')
-                                 .filter(vazba__dokument_historie__id=OuterRef("id")))
-            queryset = queryset.filter(id__in=Subquery(historie_subquery))
-        logger.debug("dokument.filters.Model3DFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+            queryset_history = Q(historie__typ_vazby=historie["typ_vazby"])
+            if "uzivatel" in historie:
+                queryset_history &= Q(historie__historie__uzivatel__in=historie["uzivatel"])
+            if "uzivatel_organizace" in historie:
+                queryset_history &= Q(historie__historie__organizace_snapshot__in
+                                      =historie["uzivatel_organizace"])
+            if "typ_zmeny" in historie:
+                queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            queryset = queryset.filter(queryset_history)
+        logger.debug("dokument.filters.AkceFilter.filter_queryset.end", extra={"query": str(queryset.query)})
         return queryset
 
     def filter_popisne_udaje(self, queryset, name, value):
@@ -282,6 +319,7 @@ class Model3DFilter(HistorieFilter):
 
     def __init__(self, *args, **kwargs):
         super(Model3DFilter, self).__init__(*args, **kwargs)
+        user: User = kwargs.get("request").user
         self.filters["obdobi"] = MultipleChoiceFilter(
             field_name="casti__komponenty__komponenty__obdobi",
             label=_("dokument.filters.dokumentFilter.obdobi.label"),
@@ -349,6 +387,7 @@ class Model3DFilter(HistorieFilter):
             ),
             distinct=True,
         )
+        self.set_filter_fields(user)
         self.helper = Model3DFilterFormHelper()
 
 
@@ -794,17 +833,6 @@ class DokumentFilter(Model3DFilter):
         ),
         distinct=True,
     )
-
-    def filter_queryset(self, queryset):
-        logger.debug("dokument.filters.DokumentFilter.filter_queryset.start")
-        historie = self._get_history_subquery()
-        queryset = super(DokumentFilter, self).filter_queryset(queryset)
-        if historie:
-            historie_subquery = (historie.values('vazba__dokument_historie__id')
-                                 .filter(vazba__dokument_historie__id=OuterRef("id")))
-            queryset = queryset.filter(id__in=Subquery(historie_subquery))
-        logger.debug("dokument.filters.DokumentFilter.filter_queryset.end", extra={"query": str(queryset.query)})
-        return queryset
 
     def filter_uzemni_prislusnost(self, queryset, name, value):
         """

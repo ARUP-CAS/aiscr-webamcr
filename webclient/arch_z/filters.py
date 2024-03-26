@@ -85,26 +85,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     """
     # Filters by historie
 
-    def _get_history_subquery(self):
-        logger.debug("dokument.filters.HistorieFilter._get_history_subquery.start")
-        uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace", None)
-        zmena = self.form.cleaned_data.pop("historie_typ_zmeny", None)
-        uzivatel = self.form.cleaned_data.pop("historie_uzivatel", None)
-        datum = self.form.cleaned_data.pop("historie_datum_zmeny_od", None)
-
-        filtered_fields = {"typ_vazby": self.typ_vazby}
-        if uzivatel:
-            filtered_fields["uzivatel"] = uzivatel
-        if uzivatel_organizace:
-            filtered_fields["uzivatel_organizace"] = uzivatel_organizace
-        if zmena:
-            filtered_fields["zmena"] = zmena
-        if datum and datum.start:
-            filtered_fields["datum_zmeny__gte"] = datum.start
-        if datum and datum.stop:
-            filtered_fields["datum_zmeny__lte"] = datum.stop
-        return filtered_fields
-
+    typ_vazby = ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
     stav = MultipleChoiceFilter(
         choices=ArcheologickyZaznam.STATES,
         field_name="archeologicky_zaznam__stav",
@@ -136,8 +117,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
-
-
 
     # Dj a Pian
     dj_typ = ModelMultipleChoiceFilter(
@@ -185,8 +164,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
-
-    
 
     komponenta_jistota = MultipleChoiceFilter(
         label=_("arch_z.filters.ArchZaznamFilter.komponenta_jistota.label"),
@@ -393,8 +370,6 @@ class AkceFilter(ArchZaznamFilter):
     """
     Class pro filtrování akce.
     """
-
-    typ_vazby = ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
@@ -674,17 +649,18 @@ class AkceFilter(ArchZaznamFilter):
 
     def filter_queryset(self, queryset):
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.start")
-        queryset = super(AkceFilter, self).filter_queryset(queryset)
         historie = self._get_history_subquery()
-        queryset_history = Q(archeologicky_zaznam__historie__typ_vazby=historie["typ_vazby"])
-        if "uzivatel" in historie:
-            queryset_history &= Q(archeologicky_zaznam__historie__historie__uzivatel=historie["uzivatel"])
-        if "uzivatel_organizace" in historie:
-            queryset_history &= Q(archeologicky_zaznam__historie__historie__organizace_snapshot__in
-                                  =historie["uzivatel_organizace"])
-        if "typ_zmeny" in historie:
-            queryset_history &= Q(archeologicky_zaznam__historie__historie__typ_zmeny=historie["typ_zmeny"])
-        queryset = queryset.filter(queryset_history)
+        queryset = super(AkceFilter, self).filter_queryset(queryset)
+        if historie:
+            queryset_history = Q(archeologicky_zaznam__historie__typ_vazby=historie["typ_vazby"])
+            if "uzivatel" in historie:
+                queryset_history &= Q(archeologicky_zaznam__historie__historie__uzivatel__in=historie["uzivatel"])
+            if "uzivatel_organizace" in historie:
+                queryset_history &= Q(archeologicky_zaznam__historie__historie__organizace_snapshot__in
+                                      =historie["uzivatel_organizace"])
+            if "typ_zmeny" in historie:
+                queryset_history &= Q(archeologicky_zaznam__historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            queryset = queryset.filter(queryset_history)
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.end", extra={"query": str(queryset.query)})
         return queryset
 

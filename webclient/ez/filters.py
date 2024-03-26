@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from django_filters import (
     CharFilter,
     ModelMultipleChoiceFilter,
-    MultipleChoiceFilter,
+    MultipleChoiceFilter, FilterSet,
 )
 
 from core.constants import ZAPSANI_EXT_ZD
@@ -28,7 +28,7 @@ from uzivatel.models import Organizace, Osoba, User
 logger = logging.getLogger(__name__)
 
 
-class ExterniZdrojFilter(HistorieFilter):
+class ExterniZdrojFilter(HistorieFilter, FilterSet):
     """
     Třída pro zakladní filtrování externího zdroju a jejich potomků.
     """
@@ -131,9 +131,15 @@ class ExterniZdrojFilter(HistorieFilter):
         historie = self._get_history_subquery()
         queryset = super(ExterniZdrojFilter, self).filter_queryset(queryset)
         if historie:
-            historie_subquery = (historie.values('vazba__externizdroj__id')
-                                 .filter(vazba__externizdroj__id=OuterRef("id")))
-            queryset = queryset.filter(id__in=Subquery(historie_subquery))
+            queryset_history = Q(historie__typ_vazby=historie["typ_vazby"])
+            if "uzivatel" in historie:
+                queryset_history &= Q(historie__historie__uzivatel__in=historie["uzivatel"])
+            if "uzivatel_organizace" in historie:
+                queryset_history &= Q(historie__historie__organizace_snapshot__in
+                                      =historie["uzivatel_organizace"])
+            if "typ_zmeny" in historie:
+                queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            queryset = queryset.filter(queryset_history)
         logger.debug("ez.filters.ExterniZdrojFilter.filter_queryset.end", extra={"query": str(queryset.query)})
         return queryset
 
@@ -189,7 +195,9 @@ class ExterniZdrojFilter(HistorieFilter):
         )
 
     def __init__(self, *args, **kwargs):
+        user: User = kwargs.get("request").user
         super(ExterniZdrojFilter, self).__init__(*args, **kwargs)
+        self.set_filter_fields(user)
         self.helper = ExterniZdrojFilterFormHelper()
 
 
