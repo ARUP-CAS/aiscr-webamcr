@@ -10,9 +10,7 @@ INSTALLED_APPS += [
     "debug_toolbar",
 ]
 
-MIDDLEWARE += [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
-]
+MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware",] + MIDDLEWARE
 
 DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.history.HistoryPanel",
@@ -62,3 +60,7 @@ SITE_URL = 'http://localhost:8000'
 # Fake key
 RECAPTCHA_PRIVATE_KEY = "OtKcTKoJwtIyCm0XFEf0EA5kVMV4hHaDaJfmyr"
 SKIP_RECAPTCHA = True
+
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': lambda _request: DEBUG,
+}

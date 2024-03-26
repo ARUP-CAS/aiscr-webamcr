@@ -10,7 +10,7 @@ from core.constants import (
     OBLAST_CHOICES,
     OBLAST_MORAVA,
     OZNAMENI_PROJ,
-    SCHVALENI_OZNAMENI_PROJ,
+    SCHVALENI_OZNAMENI_PROJ, PROJEKT_RELATION_TYPE,
 )
 from crispy_forms.layout import HTML, Div, Layout
 from django.db.models import Q, QuerySet, OuterRef, Subquery
@@ -20,7 +20,7 @@ from django_filters import (
     CharFilter,
     DateFromToRangeFilter,
     ModelMultipleChoiceFilter,
-    MultipleChoiceFilter,
+    MultipleChoiceFilter, FilterSet,
 )
 from django_filters.widgets import DateRangeWidget
 
@@ -35,7 +35,7 @@ from heslar.hesla import (
 from heslar.models import Heslar, RuianKatastr, RuianKraj, RuianOkres
 from projekt.models import Projekt
 from psycopg2._range import DateRange
-from uzivatel.models import Organizace, Osoba
+from uzivatel.models import Organizace, Osoba, User
 from historie.models import Historie
 from dokument.filters import HistorieFilter
 from heslar.views import heslar_12
@@ -56,7 +56,7 @@ class Users(QuerySet):
         return self.select_related("first_name", "last_name")
 
 
-class KatastrFilter(filters.FilterSet):
+class KatastrFilterMixin(FilterSet):
     """
     Třída pro filtrování záznamu podle katastru, kraje, okresu a popisních údajů.
     Třída je prepoužita v dalších filtrech.
@@ -151,15 +151,16 @@ class KatastrFilter(filters.FilterSet):
         ).distinct()
 
 
-class ProjektFilter(HistorieFilter, KatastrFilter):
+class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     """
     Třída pro filtrování projektů.
     """
+    typ_vazby = PROJEKT_RELATION_TYPE
+
     ident_cely = CharFilter(
         lookup_expr="icontains",
         distinct=True,
     )
-
 
     typ_projektu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PROJEKT_TYP),
@@ -466,12 +467,17 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     def filter_queryset(self, queryset):
         logger.debug("projekt.filters.AkceFilter.filter_queryset.start")
-        historie = self._get_history_subquery()
         queryset = super(ProjektFilter, self).filter_queryset(queryset)
-        if historie:
-            historie_subquery = (historie.values('vazba__projekt_historie__id')
-                                 .filter(vazba__projekt_historie__id=OuterRef("id")))
-            queryset = queryset.filter(id__in=Subquery(historie_subquery))
+        historie = self._get_history_subquery()
+        queryset_history = Q(historie__typ_vazby=historie["typ_vazby"])
+        if "uzivatel" in historie:
+            queryset_history &= Q(historie__historie__uzivatel=historie["uzivatel"])
+        if "uzivatel_organizace" in historie:
+            queryset_history &= Q(historie__historie__organizace_snapshot__in
+                                  =historie["uzivatel_organizace"])
+        if "typ_zmeny" in historie:
+            queryset_history &= Q(historie__historie__typ_zmeny=historie["typ_zmeny"])
+        queryset = queryset.filter(queryset_history)
         logger.debug("projekt.filters.AkceFilter.filter_queryset.end", extra={"query": str(queryset.query)})
         return queryset
 
@@ -642,14 +648,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     def __init__(self, *args, **kwargs):
         super(ProjektFilter, self).__init__(*args, **kwargs)
-        # try:
-        # self.filters["historie_uzivatel"].extra.update({"queryset": User.objects.all()})
-        # self.filters["akce_vedouci"].extra.update({"queryset": Osoba.objects.all()})
-        # self.filters["vedouci_projektu"].extra.update({"queryset": Osoba.objects.all()})
-        # except utils.ProgrammingError as err:
-        # self.filters["historie_uzivatel"].choices = []
-        # self.filters["akce_vedouci"].choices = []
-        # self.filters["vedouci_projektu"].extra.update({"queryset": None})
+        user: User = kwargs.get("request").user
         self.filters["typ_akce"] = MultipleChoiceFilter(
             choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
             method="filter_akce_typ",
@@ -677,6 +676,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
             distinct=True,
         )
         self.helper = ProjektFilterFormHelper()
+        self.set_filter_fields(user)
 
 
 class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):

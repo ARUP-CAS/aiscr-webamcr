@@ -12,7 +12,7 @@ from django_filters import (
     MultipleChoiceFilter,
     DateFromToRangeFilter,
     RangeFilter,
-    ChoiceFilter,
+    ChoiceFilter, FilterSet
 )
 from django_filters.widgets import DateRangeWidget, SuffixedMultiWidget
 from django_filters.fields import RangeField
@@ -42,9 +42,10 @@ from heslar.hesla import (
     HESLAR_PRISTUPNOST,
     HESLAR_VYSKOVY_BOD_TYP,
 )
-from heslar.models import Heslar
+from heslar.models import Heslar, RuianKraj, RuianOkres, RuianKatastr
+from historie.filters import HistorieOrganizaceMultipleChoiceFilter
 from historie.models import Historie
-from projekt.filters import KatastrFilter
+from projekt.filters import KatastrFilterMixin
 from core.forms import SelectMultipleSeparator
 from .models import Akce
 from arch_z.models import ArcheologickyZaznam
@@ -78,12 +79,13 @@ class NumberRangeFilter(RangeFilter):
     field_class = NumberRangeField
 
 
-class ArchZaznamFilter(HistorieFilter, KatastrFilter):
+class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     """
     Třída pro zakladní filtrování archeologických záznamů a jejich potomků.
     """
-    filter_typ = "arch_z"
+    # Filters by historie
 
+    typ_vazby = ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
     stav = MultipleChoiceFilter(
         choices=ArcheologickyZaznam.STATES,
         field_name="archeologicky_zaznam__stav",
@@ -112,29 +114,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         choices=filter(lambda x: x[0].startswith("AZ") or x[0].startswith("KAT"), Historie.CHOICES),
         label=_("arch_z.filters.ArchZaznamFilter.historie_typ_zmeny.label"),
         field_name="archeologicky_zaznam__historie__historie__typ_zmeny",
-        widget=SelectMultipleSeparator(),
-        distinct=True,
-    )
-
-    historie_datum_zmeny_od = DateFromToRangeFilter(
-        label=_("arch_z.filters.ArchZaznamFilter.historie_datum_zmeny_od.label"),
-        field_name="archeologicky_zaznam__historie__historie__datum_zmeny",
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
-        distinct=True,
-    )
-
-    historie_uzivatel = ModelMultipleChoiceFilter(
-        queryset=User.objects.all(),
-        field_name="archeologicky_zaznam__historie__historie__uzivatel",
-        label=_("arch_z.filters.ArchZaznamFilter.historie_uzivatel.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
-        distinct=True,
-    )
-
-    historie_uzivatel_organizace = ModelMultipleChoiceFilter(
-        queryset=Organizace.objects.all(),
-        field_name="archeologicky_zaznam__historie__historie__uzivatel__organizace",
-        label=_("arch_z.filters.ArchZaznamFilter.historie_uzivatel_organizace.label"),
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
@@ -185,8 +164,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
-
-    
 
     komponenta_jistota = MultipleChoiceFilter(
         label=_("arch_z.filters.ArchZaznamFilter.komponenta_jistota.label"),
@@ -386,14 +363,13 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
             widget=SelectMultipleSeparator(),
             distinct=True,
         )
+        self.set_filter_fields(user)
 
 
 class AkceFilter(ArchZaznamFilter):
     """
     Class pro filtrování akce.
     """
-
-    typ_vazby = ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
@@ -676,12 +652,15 @@ class AkceFilter(ArchZaznamFilter):
         historie = self._get_history_subquery()
         queryset = super(AkceFilter, self).filter_queryset(queryset)
         if historie:
-            if isinstance(historie, list):
-                queryset = queryset.filter(archeologicky_zaznam__historie__in=historie)
-            else:
-                historie_subquery = (historie.values('vazba__id')
-                                     .filter(vazba__id=OuterRef("archeologicky_zaznam__historie")))
-                queryset = queryset.filter(archeologicky_zaznam__historie__in=Subquery(historie_subquery))
+            queryset_history = Q(archeologicky_zaznam__historie__typ_vazby=historie["typ_vazby"])
+            if "uzivatel" in historie:
+                queryset_history &= Q(archeologicky_zaznam__historie__historie__uzivatel__in=historie["uzivatel"])
+            if "uzivatel_organizace" in historie:
+                queryset_history &= Q(archeologicky_zaznam__historie__historie__organizace_snapshot__in
+                                      =historie["uzivatel_organizace"])
+            if "typ_zmeny" in historie:
+                queryset_history &= Q(archeologicky_zaznam__historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            queryset = queryset.filter(queryset_history)
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.end", extra={"query": str(queryset.query)})
         return queryset
 
@@ -702,6 +681,11 @@ class AkceFilter(ArchZaznamFilter):
                     "data-live-search": "true",
                 }
             ),
+        )
+        self.filters["historie_uzivatel_organizace"] = HistorieOrganizaceMultipleChoiceFilter(
+            label=_("arch_z.filters.ArchZaznamFilter.historie_uzivatel_organizace.label"),
+            widget=SelectMultipleSeparator(),
+            distinct=True,
         )
         self.helper = AkceFilterFormHelper()
 

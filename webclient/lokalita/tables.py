@@ -27,7 +27,7 @@ class LokalitaTable(SearchTable):
     druh = tables.columns.Column(
         verbose_name=_("lokalita.tables.lokalitaTable.druh.label"),
         default="",
-        order_by="druh__nazev_zkraceny"
+        order_by="druh__heslo"
     )
     nazev = tables.columns.Column(
         verbose_name=_("lokalita.tables.lokalitaTable.nazev.label"),
@@ -36,17 +36,17 @@ class LokalitaTable(SearchTable):
     typ_lokality = tables.columns.Column(
         verbose_name=_("lokalita.tables.lokalitaTable.typ_lokality.label"),
         default="",
-        order_by="typ_lokality__nazev_zkraceny"
+        order_by="typ_lokality__heslo"
     )
     zachovalost = tables.columns.Column(
         verbose_name=_("lokalita.tables.lokalitaTable.zachovalost.label"),
         default="",
-        order_by="zachovalost__nazev_zkraceny"
+        order_by="zachovalost__heslo"
     )
     jistota = tables.columns.Column(
         verbose_name=_("lokalita.tables.lokalitaTable.jistota.label"),
         default="",
-        order_by="jistota__nazev_zkraceny"
+        order_by="jistota__heslo"
     )
     uzivatelske_oznaceni = tables.Column(
         verbose_name=_("lokalita.tables.lokalitaTable.uzivatelskeOznaceni.label"),

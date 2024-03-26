@@ -60,13 +60,13 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     """
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
-    is_superuser = models.BooleanField(default=False, verbose_name="Globální administrátor")
+    is_superuser = models.BooleanField(default=False, verbose_name="Globální administrátor", db_index=True)
     ident_cely = models.CharField(unique=True, max_length=150)
-    first_name = models.CharField(max_length=150, verbose_name="Jméno")
-    last_name = models.CharField(max_length=150, verbose_name="Příjmení")
+    first_name = models.CharField(max_length=150, verbose_name="Jméno", db_index=True)
+    last_name = models.CharField(max_length=150, verbose_name="Příjmení", db_index=True)
     email = models.CharField(max_length=254, unique=True)
-    is_staff = models.BooleanField(default=False, verbose_name="Přístup do admin. rozhraní")
-    is_active = models.BooleanField(default=False, verbose_name="Aktivní")
+    is_staff = models.BooleanField(default=False, verbose_name="Přístup do admin. rozhraní", db_index=True)
+    is_active = models.BooleanField(default=False, verbose_name="Aktivní", db_index=True)
     date_joined = models.DateTimeField(default=timezone.now)
     osoba = models.ForeignKey('Osoba', models.RESTRICT, db_column='osoba', blank=True, null=True, db_index=True)
     organizace = models.ForeignKey(
@@ -299,7 +299,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
     """
     Class pro db model organizace.
     """
-    nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255)
+    nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255, db_index=True)
     nazev_zkraceny = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"), max_length=255,
                                       unique=True)
     typ_organizace = models.ForeignKey(
@@ -329,7 +329,8 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
                                max_length=100)
     adresa = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.adresa"),
                               max_length=255)
-    ico = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.ico"), max_length=100)
+    ico = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.ico"), max_length=100,
+                           db_index=True)
     soucast = models.ForeignKey('self', models.RESTRICT, db_column='soucast', blank=True, null=True)
     nazev_en = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"),
                                 max_length=255)
