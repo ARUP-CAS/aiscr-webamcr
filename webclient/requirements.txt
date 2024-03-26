@@ -1,4 +1,4 @@
-Django==4.2.11
+Django==5.0.3
 psycopg2-binary==2.9.9
 pytz==2024.1
 simplejson==3.19.2
