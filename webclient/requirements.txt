@@ -13,7 +13,7 @@ django-compressor==4.4
 django-libsass==0.9 
 django-autocomplete-light==3.9.8rc29
 django-widget-tweaks==1.5.0
-tablib[all]==3.5.0
+tablib[all]==3.6.0
 django-simple-history==3.5.0
 distlib==0.3.8
 django-rosetta==0.10.0
@@ -32,17 +32,17 @@ django-celery-beat==2.6.0
 django-celery-results==2.5.1
 django-prometheus==2.3.1
 python-logstash==0.4.8
-djangorestframework==3.15.0
+djangorestframework==3.15.1
 djangorestframework-xml==2.0.0
 lxml==5.1.0
 python-magic==0.4.27
 pdf2image==1.17.0
-phonenumbers==8.13.32
+phonenumbers==8.13.33
 py7zr==0.21.0
 rarfile==4.1
 django-cacheops==7.0.2
 # DEV requirements
-pre-commit==3.6.2
+pre-commit==3.7.0
 isort==5.13.2
 coverage==7.4.4
 django-debug-toolbar==4.3.0
@@ -52,7 +52,7 @@ django-debug-toolbar-template-profiler==2.1.0
 psycopg2==2.9.9
 django-object-actions==4.2.0
 
-pre-commit==3.6.2
+pre-commit==3.7.0
 isort==5.13.2
 coverage==7.4.4
 django-debug-toolbar==4.3.0
