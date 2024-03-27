@@ -501,3 +501,5 @@ TEST_ENV = os.getenv("TEST_ENV_SETTING", False)
 
 CLAMD_HOST = None
 CLAMD_PORT = None
+
+DATE_INPUT_FORMATS = ('%-d.%-m.%Y','%d.%m.%Y',)

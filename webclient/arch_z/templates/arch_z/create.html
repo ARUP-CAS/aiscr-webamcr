@@ -228,11 +228,11 @@
     else {
       $(".dateinput").datepicker('destroy')
       $(".dateinput").datepicker({
-          format: "dd.mm.yyyy",
+          format: "d.m.yyyy",
           viewMode: "days",
           minViewMode: "days",
       })
-      datum_zahajeni.value = "01.01." + datum_zahajeni.value.slice(-4)
+      datum_zahajeni.value = "1.1." + datum_zahajeni.value.slice(-4)
       datum_ukonceni.value = "31.12." + datum_ukonceni.value.slice(-4)
     }
   })

@@ -214,3 +214,34 @@ class PermissionSkipImportForm(forms.Form):
         label=_("core.forms.permissionSkipImport.file.label"),
         widget=forms.FileInput(attrs={"accept": ".csv"}),
     )
+
+
+class BaseFilterForm(forms.Form):
+    list_to_check = ["historie_datum_zmeny_od"]
+
+    def clean(self):
+        cleaned_data = super(BaseFilterForm, self).clean()
+        error_list = []
+        ERRORS = {
+        "historie_datum_zmeny_od":_("core.forms.baseFilterForm.historie_datum_zmeny.error"),
+        "planovane_zahajeni":_("core.forms.baseFilterForm.planovane_zahajeni.error"),
+        "termin_odevzdani_nz": _("core.forms.baseFilterForm.termin_odevzdani_nz.error"),
+        "datum_ukonceni": _("core.forms.baseFilterForm.datum_ukonceni.error"),
+        "datum_zahajeni": _("core.forms.baseFilterForm.datum_zahajeni.error"),
+        "akce_datum_ukonceni": _("core.forms.baseFilterForm.akce_datum_ukonceni.error"),
+        "akce_datum_zahajeni": _("core.forms.baseFilterForm.akce_datum_zahajeni.error"),
+        "datum_vzniku": _("core.forms.baseFilterForm.datum_vzniku.error"),
+        "let_datum": _("core.forms.baseFilterForm.let_datum.error"),
+        "datum_zverejneni": _("core.forms.baseFilterForm.datum_zverejneni.error"),
+        "datum_nalezu":_("core.forms.baseFilterForm.datum_nalezu.error"),
+        }
+        for field_name in self.list_to_check:
+            if cleaned_data.get(field_name):
+                start_date = cleaned_data.get(field_name).start
+                end_date = cleaned_data.get(field_name).stop
+                if start_date and end_date:
+                    if start_date > end_date:
+                        error_list.append(ERRORS[field_name])
+        if error_list:
+            raise forms.ValidationError(error_list)
+        return cleaned_data

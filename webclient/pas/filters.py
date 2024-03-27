@@ -41,6 +41,7 @@ from uzivatel.models import Organizace, Osoba, User
 from dokument.filters import HistorieFilter
 from heslar.views import heslar_12
 from core.forms import SelectMultipleSeparator
+from pas.forms import PasFilterForm
 
 logger = logging.getLogger(__name__)
 
@@ -167,7 +168,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     datum_nalezu = DateFromToRangeFilter(
         label=_("pas.filters.samostatnyNalezFilter.datumNalezu.label"),
         field_name="datum_nalezu",
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
 
@@ -214,6 +215,7 @@ class SamostatnyNalezFilter(HistorieFilter):
         fields = {
             "predano": ["exact"],
         }
+        form = PasFilterForm
 
     def __init__(self, *args, **kwargs):
         super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)

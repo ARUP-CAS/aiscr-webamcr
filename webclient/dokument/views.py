@@ -2055,12 +2055,12 @@ def get_required_fields_dokument(zaznam=None, next=0):
             "typ_dokumentu",
             "material_originalu",
             "licence",
+            "pristupnost",
         ]
     if stav > D_STAV_ZAPSANY - next:
         required_fields += [
             "ulozeni_originalu",
             "popis",
-            "pristupnost",
             "jazyky",
         ]
     return required_fields

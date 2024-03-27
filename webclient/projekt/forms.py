@@ -16,6 +16,7 @@ from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
 from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_ZRUSENY
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
+from core.forms import BaseFilterForm
 
 logger_s = logging.getLogger(__name__)
 
@@ -780,3 +781,15 @@ class PripojitProjektForm(forms.Form):
         )
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    "projekt",
+                    css_class="col-sm-2",
+                ),
+                css_class="row",
+            ),
+        )
+
+class ProjektFilterForm(BaseFilterForm):
+    list_to_check = ["historie_datum_zmeny_od","planovane_zahajeni", "termin_odevzdani_nz","datum_ukonceni","datum_zahajeni","akce_datum_zahajeni","akce_datum_ukonceni"]

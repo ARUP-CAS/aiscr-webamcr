@@ -40,8 +40,9 @@ body {
 
 #app-page-wrapper {
   @media (min-width: 768px) {
-     min-width: calc(100vh - 300px);
+    min-width: calc(100vh - 300px);
   }
+
   width: 100%;
   -webkit-transition: margin .25s ease-out;
   -moz-transition: margin .25s ease-out;
@@ -93,6 +94,7 @@ body {
   @media (min-width: 574px) {
     padding-left: 0;
   }
+
   @media (max-width: 574px) {
     padding-top: 1rem;
   }
@@ -196,4 +198,33 @@ div .app-right .btn-group .btn {
 
 .modal-body .select2-selection__clear {
   margin-top: 0.125rem !important;
+}
+
+#tvar_table.table,
+.table.vedouci-table {
+  th:first-child {
+    width: 16.66667%;
+    max-width: 16.66667%;
+  }
+
+  td:first-child {
+    width: 16.66667%;
+    max-width: 16.66667%;
+  }
+
+  th.col-2 {
+    width: 16.66667%;
+    max-width: 16.66667%;
+  }
+
+  td.col-2 {
+    width: 16.66667%;
+    max-width: 16.66667%;
+  }
+
+  td:read-only {
+    small {
+      display: none;
+    }
+  }
 }

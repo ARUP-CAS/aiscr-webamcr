@@ -283,7 +283,7 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("arch_z", css_class="col-sm-8"),
+                Div("arch_z", css_class="col-sm-2"),
                 pagin,
                 css_class="row",
             ),

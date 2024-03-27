@@ -220,3 +220,12 @@ class ChangeKatastrForm(forms.Form):
         super(ChangeKatastrForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    "katastr",
+                    css_class="col-sm-4",
+                ),
+                css_class="row",
+            ),
+        )

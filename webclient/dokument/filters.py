@@ -65,6 +65,7 @@ from komponenta.models import Komponenta
 from nalez.models import NalezObjekt
 from core.models import Soubor
 from core.forms import SelectMultipleSeparator
+from dokument.forms import DokumentFilterForm
 
 logger = logging.getLogger(__name__)
 
@@ -217,12 +218,17 @@ class Model3DFilter(HistorieFilter, FilterSet):
         queryset=Osoba.objects.all(),
     )
 
-    rok_vzniku_od = NumberFilter(
-        field_name="rok_vzniku", label=_("dokument.filters.dokumentFilter.rokVznikuOd.label"), lookup_expr="gte"
-    )
-
-    rok_vzniku_do = NumberFilter(
-        field_name="rok_vzniku", label=" ", lookup_expr="lte"
+    rok_vzniku = RangeFilter(
+        label=_("dokument.filters.dokumentFilter.rok_vzniku.label"),
+        method="filter_roky",
+        widget=DateRangeWidget(
+            attrs={
+                "max": "2100-12-31",
+                "class": "textinput textInput dateinput form-control date_roky",
+            }
+        ),
+        distinct=True,
+        field_name="rok_vzniku",
     )
 
     duveryhodnost = NumberFilter(
@@ -312,10 +318,52 @@ class Model3DFilter(HistorieFilter, FilterSet):
             | Q(casti__komponenty__komponenty__objekty__poznamka__icontains=value)
             | Q(casti__komponenty__komponenty__predmety__poznamka__icontains=value)
         )
+    
+    def filter_roky(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle roku revize a popisu ADB.
+        """
+        if value:
+            if value.start is not None and value.stop is not None:
+                self.lookup_expr = "range"
+                value = (value.start, value.stop)
+            elif value.start is not None:
+                self.lookup_expr = "gte"
+                value = value.start
+            elif value.stop is not None:
+                self.lookup_expr = "lte"
+                value = value.stop
+        lookup1 = "%s__%s" % (
+            name,
+            self.lookup_expr,
+        )
+        return queryset.filter(**{lookup1: value}).distinct()
+    
+    def filter_roky_range(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle roku revize a popisu ADB.
+        """
+        if value:
+            if value.start is not None:
+                lookup1 = "%s__%s" % (
+                    name[0],
+                    "gte",
+                )
+                value1 = value.start
+                queryset = queryset.filter(**{lookup1: value1}).distinct()
+            if value.stop is not None:
+                lookup2 = "%s__%s" % (
+                    name[1],
+                    "lte",
+                )
+                value2 = value.stop
+                queryset = queryset.filter(**{lookup2: value2}).distinct()
+        return queryset
 
     class Meta:
         model = Dokument
         exclude = []
+        form = DokumentFilterForm
 
     def __init__(self, *args, **kwargs):
         super(Model3DFilter, self).__init__(*args, **kwargs)
@@ -409,8 +457,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
                     Div("stav", css_class="col-sm-2"),
                     Div("organizace", css_class="col-sm-2"),
                     Div("autor", css_class="col-sm-2"),
-                    Div("rok_vzniku_od", css_class="col-sm-2"),
-                    Div("rok_vzniku_do", css_class="col-sm-2"),
+                    Div("rok_vzniku", css_class="col-sm-4 app-daterangepicker"),
                     Div("duveryhodnost", css_class="col-sm-2"),
                     Div("popisne_udaje", css_class="col-sm-4"),
                     Div("zeme", css_class="col-sm-2"),
@@ -516,13 +563,13 @@ class DokumentFilter(Model3DFilter):
 
     datum_zverejneni = DateFromToRangeFilter(
         label=_("dokument.filters.dokumentFilter.datumZverejneni.label"),
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
     datum_vzniku = DateFromToRangeFilter(
         label=_("dokument.filters.dokumentFilter.datumVzniku.label"),
         field_name="extra_data__datum_vzniku",
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
     zachovalost = ModelMultipleChoiceFilter(
@@ -544,15 +591,19 @@ class DokumentFilter(Model3DFilter):
         widget=SelectMultipleSeparator(),
     )
 
-    rok_udalosti_od = NumberFilter(
-        field_name="extra_data__rok_od",
+    rok_udalosti = RangeFilter(
         label=_("dokument.filters.dokumentFilter.rokUdalosti.label"),
-        lookup_expr="gte",
+        method="filter_roky_range",
+        widget=DateRangeWidget(
+            attrs={
+                "max": "2100-12-31",
+                "class": "textinput textInput dateinput form-control date_roky",
+            }
+        ),
+        distinct=True,
+        field_name=["extra_data__rok_od","extra_data__rok_do"]
     )
 
-    rok_udalosti_do = NumberFilter(
-        field_name="extra_data__rok_do", label=" ", lookup_expr="lte"
-    )
     osoby = ModelMultipleChoiceFilter(
         label=_("dokument.filters.dokumentFilter.osoby.label"),
         widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
@@ -624,16 +675,17 @@ class DokumentFilter(Model3DFilter):
         queryset=Osoba.objects.all(),
     )
 
-    neident_rok_zahajeni_od = NumberFilter(
-        field_name="casti__neident_akce__rok_zahajeni",
+    neident_rok_zahajeni = RangeFilter(
         label=_("dokument.filters.dokumentFilter.neidentRokZahajeni.label"),
-        lookup_expr="gte",
-    )
-
-    neident_rok_ukonceni_do = NumberFilter(
-        field_name="casti__neident_akce__rok_ukonceni",
-        label=" ",
-        lookup_expr="lte",
+        method="filter_roky_range",
+        widget=DateRangeWidget(
+            attrs={
+                "max": "2100-12-31",
+                "class": "textinput textInput dateinput form-control date_roky",
+            }
+        ),
+        distinct=True,
+        field_name=["casti__neident_akce__rok_zahajeni", "casti__neident_akce__rok_ukonceni"]
     )
 
     neident_poznamka = CharFilter(
@@ -651,7 +703,7 @@ class DokumentFilter(Model3DFilter):
     let_datum = DateFromToRangeFilter(
         label=_("dokument.filters.dokumentFilter.letDatum.label"),
         field_name="let__datum",
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
 
@@ -1061,8 +1113,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     Div("stav", css_class="col-sm-2"),
                     Div("autor", css_class="col-sm-2"),
                     Div("organizace", css_class="col-sm-2"),
-                    Div("rok_vzniku_od", css_class="col-sm-2"),
-                    Div("rok_vzniku_do", css_class="col-sm-2"),
+                    Div("rok_vzniku", css_class="col-sm-4 app-daterangepicker"),
                     Div("popisne_udaje", css_class="col-sm-4"),
                     Div("jazyky", css_class="col-sm-2"),
                     Div("ulozeni_originalu", css_class="col-sm-2"),
@@ -1115,8 +1166,8 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     Div("format", css_class="col-sm-2"),
                     Div("zeme", css_class="col-sm-2"),
                     Div("udalost_typ", css_class="col-sm-2"),
-                    Div("rok_udalosti_od", css_class="col-sm-2"),
-                    Div("rok_udalosti_do", css_class="col-sm-2"),
+                    Div("rok_udalosti", css_class="col-sm-4 app-daterangepicker"),
+                    #Div("rok_udalosti_do", css_class="col-sm-2"),
                     Div("osoby", css_class="col-sm-2"),
                     Div("duveryhodnost_od", css_class="col-sm-2"),
                     Div("duveryhodnost_do", css_class="col-sm-2"),
@@ -1165,8 +1216,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     Div("neident_katastr", css_class="col-sm-2"),
                     Div("neident_vedouci", css_class="col-sm-2"),
-                    Div("neident_rok_zahajeni_od", css_class="col-sm-2"),
-                    Div("neident_rok_ukonceni_do", css_class="col-sm-2"),
+                    Div("neident_rok_zahajeni", css_class="col-sm-4 app-daterangepicker"),
                     Div("neident_poznamka", css_class="col-sm-2"),
                     id="neidentAkceCollapse",
                     css_class="collapse row",

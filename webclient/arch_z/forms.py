@@ -3,7 +3,7 @@ import re
 from django.forms import ValidationError
 
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
-from core.forms import TwoLevelSelectField
+from core.forms import BaseFilterForm, TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
@@ -539,3 +539,7 @@ class CreateAkceForm(forms.ModelForm):
                 self.cleaned_data["datum_ukonceni"]
             )
         return self.cleaned_data["datum_ukonceni"]
+
+
+class ArchzFilterForm(BaseFilterForm):
+    list_to_check = ["historie_datum_zmeny_od", "datum_ukonceni","datum_zahajeni"]

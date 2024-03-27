@@ -65,6 +65,12 @@ class CreateADBForm(forms.ModelForm):
             "poznamka": forms.TextInput(),
             "autor_popisu": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
             "autor_revize": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
+            "rok_popisu": forms.DateInput(attrs={
+                "class": "dateinput form-control date_roky",
+            }),
+            "rok_revize": forms.DateInput(attrs={
+                "class": "dateinput form-control date_roky",
+            }),
         }
 
         help_texts = {

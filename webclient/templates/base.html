@@ -120,12 +120,22 @@
 {% block script_sidebar %}{% endblock %}
 
   <script>
-      $("document").ready($(".dateinput").datepicker({
-          format: "dd.mm.yyyy",
+      $(document).ready(function () {
+        $(".dateinput").not(".date_roky").datepicker({
+          format: "d.m.yyyy",
           language: 'cs',
           todayHighlight: true,
           endDate: new Date(2100,12,31)
-      }));
+      })
+        $(".date_roky").datepicker({
+          format: "yyyy",
+          viewMode: "years",
+            minViewMode: "years",
+          language: 'cs',
+          todayHighlight: true,
+          endDate: new Date(2100,12,31)
+      })
+    })
 
       $(".app-alert-floating").not(".notclosing").delay(5000).slideUp(200, function () {
         $(this).alert('close');
