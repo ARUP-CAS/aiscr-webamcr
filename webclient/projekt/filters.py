@@ -39,6 +39,7 @@ from uzivatel.models import Organizace, Osoba, User
 from historie.models import Historie
 from dokument.filters import HistorieFilter
 from heslar.views import heslar_12
+from projekt.forms import ProjektFilterForm
 
 logger = logging.getLogger(__name__)
 
@@ -191,14 +192,14 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     datum_zahajeni = DateFromToRangeFilter(
         field_name="datum_zahajeni",
         label=_("projekt.filters.projektFilter.datumZahajeni.label"),
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
 
     datum_ukonceni = DateFromToRangeFilter(
         field_name="datum_ukonceni",
         label=_("projekt.filters.projektFilter.datumUkonceni.label"),
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
 
@@ -235,14 +236,14 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     planovane_zahajeni = DateFromToRangeFilter(
         # field_name="planovane_zahajeni",
         method="filter_planovane_zahajeni",
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
 
     termin_odevzdani_nz = DateFromToRangeFilter(
         field_name="termin_odevzdani_nz",
         label=_("projekt.filters.projektFilter.terminOdevzdani.label"),
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
 
@@ -377,13 +378,13 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     akce_datum_zahajeni = DateFromToRangeFilter(
         field_name="akce__datum_zahajeni",
         label=_("projekt.filters.projektFilter.akceDatumZahajeni.label"),
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
     akce_datum_ukonceni = DateFromToRangeFilter(
         field_name="akce__datum_ukonceni",
         label=_("projekt.filters.projektFilter.akceDatumUkonceni.label"),
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
     
@@ -645,6 +646,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
             "ident_cely",
             "hlavni_katastr",
         ]
+        form = ProjektFilterForm
 
     def __init__(self, *args, **kwargs):
         super(ProjektFilter, self).__init__(*args, **kwargs)

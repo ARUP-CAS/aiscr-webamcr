@@ -1,7 +1,7 @@
 
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
-from core.forms import TwoLevelSelectField
+from core.forms import BaseFilterForm, TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from crispy_forms.bootstrap import AppendedText
@@ -339,7 +339,7 @@ class CreateZadostForm(forms.Form):
     )
     text = forms.CharField(
         widget=forms.Textarea,
-        required=False,
+        required=True,
         help_text=_("pas.forms.createZadostForm.text.tooltip"),
         label=_("pas.forms.createZadostForm.text.label")
     )
@@ -348,3 +348,6 @@ class CreateZadostForm(forms.Form):
         super(CreateZadostForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+
+class PasFilterForm(BaseFilterForm):
+    list_to_check = ["historie_datum_zmeny_od","datum_nalezu"]

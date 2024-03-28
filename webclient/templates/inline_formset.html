@@ -54,7 +54,7 @@
                         {% include 'bootstrap4/field.html' with tag="td" form_show_labels=False %}
                         
                     {% endfor %}
-                    <td>
+                    <td{% if form_id == "tvar" and show.tvary_smazat%} class="col-2"{% endif %}>
                         
                         {% if form.id.value %} 
                             {% if form_id and form_id == "vb" and j.show_vb_smazat %}

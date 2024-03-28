@@ -204,8 +204,16 @@ class Modal {
 
     resetScripts(){
         $('.selectpicker').selectpicker('refresh');
-        $(".dateinput").datepicker({
-            format: "dd.mm.yyyy",
+        $(".dateinput").not(".date_roky").datepicker({
+            format: "d.m.yyyy",
+            language: 'cs',
+            todayHighlight: true,
+            endDate: new Date(2100,12,31)
+        });
+        $(".date_roky").datepicker({
+            format: "yyyy",
+            viewMode: "years",
+            minViewMode: "years",
             language: 'cs',
             todayHighlight: true,
             endDate: new Date(2100,12,31)

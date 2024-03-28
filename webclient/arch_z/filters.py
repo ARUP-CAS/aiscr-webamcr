@@ -47,6 +47,7 @@ from historie.filters import HistorieOrganizaceMultipleChoiceFilter
 from historie.models import Historie
 from projekt.filters import KatastrFilterMixin
 from core.forms import SelectMultipleSeparator
+from arch_z.forms import ArchzFilterForm
 from .models import Akce
 from arch_z.models import ArcheologickyZaznam
 from uzivatel.models import Organizace, Osoba, User
@@ -408,14 +409,14 @@ class AkceFilter(ArchZaznamFilter):
     datum_zahajeni = DateFromToRangeFilter(
         label=_("arch_z.filters.AkceFilter.datum_zahajeni.label"),
         field_name="datum_zahajeni",
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
 
     datum_ukonceni = DateFromToRangeFilter(
         label=_("arch_z.filters.AkceFilter.datum_ukonceni.label"),
         field_name="datum_ukonceni",
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
 
@@ -504,7 +505,7 @@ class AkceFilter(ArchZaznamFilter):
         widget=DateRangeWidget(
             attrs={
                 "max": "2100-12-31",
-                "class": "textinput textInput dateinput form-control adb_roky",
+                "class": "textinput textInput dateinput form-control date_roky",
             }
         ),
         distinct=True,
@@ -667,6 +668,7 @@ class AkceFilter(ArchZaznamFilter):
     class Meta:
         model = Akce
         exclude = ("projekt",)
+        form = ArchzFilterForm
 
     def __init__(self, *args, **kwargs):
         super(AkceFilter, self).__init__(*args, **kwargs)

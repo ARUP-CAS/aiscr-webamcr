@@ -97,8 +97,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         db_column="pristupnost",
         related_name="dokumenty_pristupnosti",
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         db_index=True
     )
     material_originalu = models.ForeignKey(

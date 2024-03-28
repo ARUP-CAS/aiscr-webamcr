@@ -28,6 +28,7 @@ from heslar.hesla_dynamicka import (
 )
 from heslar.models import Heslar
 from uzivatel.models import Osoba
+from core.forms import BaseFilterForm
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +136,8 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "region_extra": forms.TextInput(),
             "udalost": forms.TextInput(),
             "odkaz": forms.TextInput(),
+            "rok_od":forms.DateInput(attrs={"class": "dateinput form-control date_roky",}),
+            "rok_do":forms.DateInput(attrs={"class": "dateinput form-control date_roky",}),
         }
         labels = {
             "datum_vzniku": _("dokument.forms.editDokumentExtraDataForm.datumVzniku.label"),
@@ -356,6 +359,9 @@ class EditDokumentForm(forms.ModelForm):
             ),
             "popis": forms.TextInput(),
             "poznamka": forms.TextInput(),
+            "rok_vzniku":forms.DateInput(attrs={
+                "class": "dateinput form-control date_roky",
+            }),
         }
         labels = {
             "organizace": _("dokument.forms.editDokumentForm.organizace.label"),
@@ -530,6 +536,9 @@ class CreateModelDokumentForm(forms.ModelForm):
             "oznaceni_originalu": forms.TextInput(),
             "popis": forms.TextInput(),
             "poznamka": forms.TextInput(),
+            "rok_vzniku":forms.DateInput(attrs={
+                "class": "dateinput form-control date_roky",
+            }),
         }
         labels = {
             "typ_dokumentu": _("dokument.forms.createModelDokumentForm.typDokumentu.label"),
@@ -843,3 +852,6 @@ class TvarFormSetHelper(FormHelper):
         self.template = "inline_formset.html"
         self.form_tag = False
         self.form_id = "tvar"
+
+class DokumentFilterForm(BaseFilterForm):
+    list_to_check = ["historie_datum_zmeny_od","datum_vzniku","let_datum","datum_zverejneni"]

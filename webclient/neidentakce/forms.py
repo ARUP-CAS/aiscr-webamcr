@@ -38,6 +38,9 @@ class NeidentAkceForm(forms.ModelForm):
             "lokalizace": forms.TextInput(),
             "popis": forms.TextInput(),
             "poznamka": forms.TextInput(),
+            "rok_zahajeni":forms.DateInput(attrs={"class": "dateinput form-control date_roky",}),
+            "rok_ukonceni":forms.DateInput(attrs={"class": "dateinput form-control date_roky",}),
+            
         }
         labels = {
             "katastr": _("neidentAkce.forms.neidentAkceForm.katastr.label"),
