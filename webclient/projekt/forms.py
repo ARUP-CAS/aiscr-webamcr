@@ -103,9 +103,9 @@ class CreateProjektForm(forms.ModelForm):
                     Div(
                         Div(
                             Div(
-                                Div("typ_projektu", css_class="col-sm-3"),
-                                Div("hlavni_katastr", css_class="col-sm-3"),
-                                Div("katastry", css_class="col-sm-6"),
+                                Div("typ_projektu", css_class="col-md-6 col-lg-3"),
+                                Div("hlavni_katastr", css_class="col-md-6 col-lg-3"),
+                                Div("katastry", css_class="col-md-12 col-lg-6"),
                                 Div("podnet", css_class="col-sm-12"),
                                 Div("lokalizace", css_class="col-sm-12"),
                                 Div("parcelni_cislo", css_class="col-sm-12"),
@@ -115,11 +115,11 @@ class CreateProjektForm(forms.ModelForm):
                                 Div("coordinate_x2", css_class="hidden"),
                                 css_class="row",
                             ),
-                            css_class="col-sm-9 col-12",
+                            css_class="col-md-6 col-12",
                         ),
                         Div(
                             Div(id="projectMap"),
-                            css_class="col-sm-3 col-12",
+                            css_class="col-md-6 col-12",
                         ),
                         css_class="row",
                     ),

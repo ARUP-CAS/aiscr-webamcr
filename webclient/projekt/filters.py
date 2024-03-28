@@ -470,15 +470,16 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         logger.debug("projekt.filters.AkceFilter.filter_queryset.start")
         queryset = super(ProjektFilter, self).filter_queryset(queryset)
         historie = self._get_history_subquery()
-        queryset_history = Q(historie__typ_vazby=historie["typ_vazby"])
-        if "uzivatel" in historie:
-            queryset_history &= Q(historie__historie__uzivatel=historie["uzivatel"])
-        if "uzivatel_organizace" in historie:
-            queryset_history &= Q(historie__historie__organizace_snapshot__in
-                                  =historie["uzivatel_organizace"])
-        if "typ_zmeny" in historie:
-            queryset_history &= Q(historie__historie__typ_zmeny=historie["typ_zmeny"])
-        queryset = queryset.filter(queryset_history)
+        if historie:
+            queryset_history = Q(historie__typ_vazby=historie["typ_vazby"])
+            if "uzivatel" in historie:
+                queryset_history &= Q(historie__historie__uzivatel=historie["uzivatel"])
+            if "uzivatel_organizace" in historie:
+                queryset_history &= Q(historie__historie__organizace_snapshot__in
+                                      =historie["uzivatel_organizace"])
+            if "typ_zmeny" in historie:
+                queryset_history &= Q(historie__historie__typ_zmeny=historie["typ_zmeny"])
+            queryset = queryset.filter(queryset_history)
         logger.debug("projekt.filters.AkceFilter.filter_queryset.end", extra={"query": str(queryset.query)})
         return queryset
 
