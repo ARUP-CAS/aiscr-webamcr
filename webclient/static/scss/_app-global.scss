@@ -5,6 +5,10 @@
   display: none;
 } */
 
+.tooltip {
+  pointer-events: none;
+}
+
 // colors
 .app-color-success {
   color: $success !important;

@@ -15,7 +15,7 @@ from django_filters import (
     ModelMultipleChoiceFilter,
     MultipleChoiceFilter,
     NumberFilter,
-    DateFromToRangeFilter, FilterSet,
+    DateFromToRangeFilter, FilterSet, RangeFilter,
 )
 
 from core.connectors import RedisConnector
