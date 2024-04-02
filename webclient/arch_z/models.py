@@ -87,6 +87,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         related_name="zaznamy_hlavnich_katastru",
         db_index=True
     )
+    initial_stav = None
+    initial_pristupnost = None
 
     class Meta:
         db_table = "archeologicky_zaznam"
@@ -425,8 +427,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
         if hasattr(self, "pristupnost") and self.pristupnost is not None:
             self.initial_pristupnost = self.pristupnost
-        else:
-            self.initial_pristupnost = None
+        if hasattr(self, "stav") and self.stav is not None:
+            self.initial_stav = self.stav
 
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):

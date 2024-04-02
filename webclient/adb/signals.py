@@ -4,6 +4,7 @@ from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
 from adb.models import Adb, VyskovyBod
+from core.repository_connector import FedoraTransaction
 
 logger = logging.getLogger(__name__)
 
@@ -11,10 +12,14 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Adb)
 def adb_save_metadata(sender, instance: Adb, **kwargs):
     logger.debug("adb.signals.adb_save_metadata.start", extra={"ident_cely": instance.ident_cely})
+    update_fields = kwargs.get("update_fields", None)
     if not instance.suppress_signal:
-        fedora_transaction = instance.active_transaction
-        instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
-        instance.save_metadata(close_transaction=instance.close_active_transaction_when_finished)
+        fedora_transaction: FedoraTransaction = instance.active_transaction
+        if update_fields:
+            instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
+            instance.save_metadata(close_transaction=instance.close_active_transaction_when_finished)
+        elif instance.close_active_transaction_when_finished:
+            fedora_transaction.mark_transaction_as_closed()
         logger.debug("adb.signals.adb_save_metadata.save_metadata", extra={"ident_cely": instance.ident_cely,
                                                                            "transaction": fedora_transaction})
     logger.debug("adb.signals.adb_save_metadata.end", extra={"ident_cely": instance.ident_cely})
