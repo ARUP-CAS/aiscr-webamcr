@@ -25,7 +25,6 @@ DB_USER=$(jq -r '.DB_USER' $CONFIG_FILE)
 DB_PASS=$(jq -r '.DB_PASS' $CONFIG_FILE)
 DB_HOST=$(jq -r '.DB_HOST' $CONFIG_FILE)
 DB_PORT=$(jq -r '.DB_PORT' $CONFIG_FILE)
-IMAGE_TAG=$(jq -r '.IMAGE_TAG' $CONFIG_FILE)
 
 if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASS" ] || [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ]; then
     echo "Failed to parse the configuration file or one of the required fields is empty."
