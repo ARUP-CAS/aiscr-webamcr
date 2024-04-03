@@ -35,7 +35,7 @@ fi
 export PGPASSWORD=$DB_PASS
 NEW_DB_NAME="${DB_NAME}_backup_${IMAGE_TAG}_$(date +%Y%m%d)"
 
-DB_EXISTS=$(psql -h $DB_HOST -p $DB_PORT -U $DB_USER -tAc "SELECT 1 FROM pg_database WHERE datname = '$NEW_DB_NAME'")
+DB_EXISTS=$(psql -h $DB_HOST -p $DB_PORT -U $DB_USER  -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = '$NEW_DB_NAME'")
 
 if [ "$DB_EXISTS" = "1" ]; then
     echo "Database already exists: $NEW_DB_NAME"
