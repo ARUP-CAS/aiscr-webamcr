@@ -13,6 +13,7 @@ services:
       - nginx_data:/vol/web/nginx/data
     environment:
       - TEST_ENV_SETTING
+      - IMAGE_TAG=${IMAGE_TAG}
     networks:
       - prod-net
     ports:
@@ -60,6 +61,8 @@ services:
   celery_worker:
     image: aiscr/webamcr:${IMAGE_TAG}
     command: celery -A webclient worker -l INFO -n worker1@amcr
+    environment:
+      - IMAGE_TAG=${IMAGE_TAG}
     secrets:
       - db_conf
       - mail_conf
@@ -82,6 +85,8 @@ services:
   celery_beat:
     image: aiscr/webamcr:${IMAGE_TAG}
     command: celery -A webclient beat -l INFO
+    environment:
+      - IMAGE_TAG=${IMAGE_TAG}
     secrets:
       - db_conf
       - mail_conf
