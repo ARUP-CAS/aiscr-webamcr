@@ -374,8 +374,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                     break
                 s.send(len(chunk).to_bytes(4, byteorder='big') + chunk)
             s.send(b'\0\0\0\0')
-            response = s.recv(buffer_size).decode('utf-8')
-            print(f'Response from clamd: {response}')
+            response = s.recv(buffer_size).decode('utf-8').rstrip("\u0000")
             s.close()
             logger.debug("core.models.Soubor.check_antivirus.response", extra={"response": response})
             return response.upper() == "OK" or response.upper().endswith("OK")
