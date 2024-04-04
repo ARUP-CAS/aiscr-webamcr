@@ -25,6 +25,8 @@ from heslar.hesla import (
 from heslar.hesla_dynamicka import (
     ALLOWED_DOKUMENT_TYPES,
     MODEL_3D_DOKUMENT_TYPES,
+    JAZYK_CS,
+    PRIMARNE_DIGITALNI,
 )
 from heslar.models import Heslar
 from uzivatel.models import Osoba
@@ -438,12 +440,12 @@ class EditDokumentForm(forms.ModelForm):
             )
         if create:
             self.fields["jazyky"].initial = [
-                Heslar.objects.get(nazev_heslare=HESLAR_JAZYK, zkratika="CS").pk
+                Heslar.objects.get(nazev_heslare=HESLAR_JAZYK, id=JAZYK_CS).pk
             ]
             self.fields["ulozeni_originalu"].initial = [
                 Heslar.objects.get(
                     nazev_heslare=HESLAR_DOKUMENT_ULOZENI,
-                    heslo="primárně digitální dokument",
+                    id=PRIMARNE_DIGITALNI,
                 ).pk
             ]
             self.fields["licence"].initial = (Heslar.objects.filter(nazev_heslare=HESLAR_LICENCE)
