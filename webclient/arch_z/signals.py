@@ -8,6 +8,7 @@ from django.dispatch import receiver
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz, Akce
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 from cron.tasks import update_single_redis_snapshot
+from dj.models import DokumentacniJednotka
 from dokument.models import DokumentCast
 from historie.models import HistorieVazby
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
@@ -48,6 +49,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                          extra={"record_ident_cely": instance.ident_cely, "err": err})
         if instance.initial_pristupnost is not None and instance.pristupnost.id != instance.initial_pristupnost.id:
             for dok_jednotka in instance.dokumentacni_jednotky_akce.all():
+                dok_jednotka: DokumentacniJednotka
                 if dok_jednotka.pian:
                     initial_pristupnost \
                         = dok_jednotka.pian.evaluate_pristupnost_change(instance.initial_pristupnost.id, instance.id)
@@ -58,6 +60,9 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                                             "initial_pripustnost": initial_pristupnost.pk,
                                             "pripustnost": pristupnost.pk})
                         dok_jednotka.pian.save_metadata(fedora_transaction)
+                if dok_jednotka.has_adb() and (instance.initial_stav != instance.stav
+                                               or instance.initial_pristupnost != instance.pristupnost):
+                    dok_jednotka.adb.save_metadata()
         close_transaction = instance.close_active_transaction_when_finished
         if close_transaction:
             transaction.on_commit(lambda: instance.save_metadata(close_transaction=True))
