@@ -105,8 +105,19 @@ class ExterniZdrojListView(SearchListView):
         self.toolbar_name = _("ez.templates.ExterniZdrojListView.toolbar_name.text")
         self.toolbar_label = _("ez.views.ExterniZdrojListView.toolbar_label.text")
 
+    @staticmethod
+    def rename_field_for_ordering(field: str):
+        field = field.replace("-", "")
+        return {
+            "autori": "autori_snapshot",
+            "editori": "editori_snapshot"
+        }.get(field, field)
+
     def get_queryset(self):
+        sort_params = self._get_sort_params()
+        sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
+        qs = qs.distinct("pk", *sort_params)
         qs = qs.select_related(
             "typ",
         ).prefetch_related(

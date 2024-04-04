@@ -41,6 +41,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         db_column="presnost",
         related_name="piany_presnosti",
         limit_choices_to=Q(nazev_heslare=HESLAR_PIAN_PRESNOST) & Q(zkratka__lt="4"),
+        db_index=True,
     )
     typ = models.ForeignKey(
         Heslar,
@@ -48,21 +49,24 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         db_column="typ",
         related_name="piany_typu",
         limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP},
+        db_index=True,
     )
-    geom = pgmodels.GeometryField(null=False, srid=4326)
-    geom_sjtsk = pgmodels.GeometryField(blank=True, null=True, srid=5514)
-    geom_system = models.CharField(max_length=6, default="4326")
+    geom = pgmodels.GeometryField(null=False, srid=4326, db_index=True)
+    geom_sjtsk = pgmodels.GeometryField(blank=True, null=True, srid=5514, db_index=True)
+    geom_system = models.CharField(max_length=6, default="4326", db_index=True)
     zm10 = models.ForeignKey(
         "Kladyzm",
         models.RESTRICT,
         db_column="zm10",
         related_name="pian_zm10",
+        db_index=True,
     )
     zm50 = models.ForeignKey(
         "Kladyzm",
         models.RESTRICT,
         db_column="zm50",
         related_name="pian_zm50",
+        db_index=True,
     )
     ident_cely = models.CharField(unique=True, max_length=16)
     historie = models.OneToOneField(
@@ -71,8 +75,9 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         db_column="historie",
         related_name="pian_historie",
         null=True,
+        db_index=True,
     )
-    stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN)
+    stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN, db_index=True)
     geom_updated_at = models.DateTimeField(blank=True, null=True)
     geom_sjtsk_updated_at = models.DateTimeField(blank=True, null=True)
 

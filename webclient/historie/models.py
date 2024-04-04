@@ -207,7 +207,7 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
     def __str__(self):
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 
-    def get_last_transaction_date(self, transaction_type, anonymized=True):
+    def get_last_transaction_date(self, transaction_type, anonymized: bool = True, user_protected: bool = True) -> dict:
         """
         Metóda pro zjištení datumu posledné transakce daného typu.
         """
@@ -226,7 +226,10 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
             )
         if len(transakce_list) > 0:
             resp["datum"] = transakce_list[0].datum_zmeny
-            resp["uzivatel"] = transakce_list[0].uzivatel_protected(anonymized)
+            if user_protected is False and anonymized is False:
+                resp["uzivatel"] = transakce_list[0].uzivatel
+            else:
+                resp["uzivatel"] = transakce_list[0].uzivatel_protected(anonymized)
         return resp
 
     @property

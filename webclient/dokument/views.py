@@ -282,14 +282,26 @@ class Model3DListView(SearchListView):
         self.toolbar_name = _("dokument.views.Model3DListView.toolbar_name.text")
         self.toolbar_label = _("dokument.views.Model3DListView.toolbar_label.text")
 
+    @staticmethod
+    def rename_field_for_ordering(field: str):
+        field = field.replace("-", "")
+        return {
+            "typ_dokumentu": "typ_dokumentu__razeni",
+            "autori": "autori_snapshot",
+        }.get(field, field)
+
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["is_3d"] = True
         return context
 
     def get_queryset(self):
-        # Only allow to view 3D models
-        qs = super().get_queryset().filter(ident_cely__contains="3D")
+        sort_params = self._get_sort_params()
+        sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
+        qs = super().get_queryset()
+        qs = qs.distinct("pk", *sort_params)
+        qs = qs.filter(ident_cely__contains="3D")
         qs = qs.select_related(
             "typ_dokumentu", "extra_data", "organizace", "extra_data__format"
         ).prefetch_related(
@@ -340,12 +352,23 @@ class DokumentListView(SearchListView):
         context["is_3d"] = False
         return context
 
+    @staticmethod
+    def rename_field_for_ordering(field: str):
+        field = field.replace("-", "")
+        return {
+            "typ_dokumentu": "typ_dokumentu__razeni",
+            "autori": "autori_snapshot",
+        }.get(field, field)
+
     def get_queryset(self):
-        # Only allow to view 3D models
+        sort_params = self._get_sort_params()
+        sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
+        qs = super().get_queryset()
+        qs = qs.distinct("pk", *sort_params)
         subqry = Subquery(
             Soubor.objects.filter(vazba=OuterRef("vazba")).values_list("id", flat=True)[:1]
         )
-        qs = super().get_queryset().exclude(ident_cely__contains="3D")
+        qs = qs.exclude(ident_cely__contains="3D")
         qs = qs.select_related(
             "typ_dokumentu",
             "extra_data",

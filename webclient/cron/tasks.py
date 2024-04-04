@@ -54,20 +54,21 @@ def send_notifications():
      Každý den kontrola a odeslání emailů E-N-01 a E-N-02
     """
     try:
-        logger.debug("cron.Notifications.do.start")
+        logger.debug("cron.tasks.send_notifications.do.start")
         Mailer.send_enz01()
-        logger.debug("cron.Notifications.do.send_enz_01.end")
+        logger.debug("cron.tasks.send_notifications.do.send_enz_01.end")
         Mailer.send_enz02()
-        logger.debug("cron.Notifications.do.send_enz_02.end")
+        logger.debug("cron.tasks.send_notifications.do.send_enz_02.end")
         dataEn01 = collect_en01_en02(stav=ODESLANI_SN)
         for email, projekt_id_list in dataEn01.items():
             Mailer.send_en01(send_to=email, projekt_id_list=projekt_id_list)
         dataEn02 = collect_en01_en02(stav=ARCHIVACE_SN)
-        for email, ids in dataEn02.items():
+        for email, projekt_id_list in dataEn02.items():
             Mailer.send_en02(send_to=email, projekt_id_list=projekt_id_list)
-        logger.debug("cron.Notifications.do.end")
+        logger.debug("cron.tasks.send_notifications.do.end")
     except Exception as err:
-        logger.error("cron.send_notifications.do.error", extra={"error": err})
+        logger.error("cron.tasks.send_notifications.do.error",
+                     extra={"error": str(err), "traceback": traceback.format_exc()})
 
 
 @shared_task

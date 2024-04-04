@@ -204,19 +204,26 @@ class Mailer:
 
     @classmethod
     def _send_notification_for_project(cls, project, notification_type):
-        project_history = project.historie.get_last_transaction_date(PRIHLASENI_PROJ)
-        user = project_history['uzivatel']
-        if cls._notification_should_be_sent(notification_type=notification_type, user=user):
-            if not cls._notification_was_sent(notification_type, user):
-                subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-                html = render_to_string(notification_type.cesta_sablony, {
-                    "title": subject,
-                    "ident_cely": project.ident_cely,
-                    "katastr": project.hlavni_katastr.nazev,
-                    "site_url": settings.SITE_URL
-                })
-                cls.__send(subject=subject, to=user.email, html_content=html, notification_type=notification_type,
-                           user=user)
+        from projekt.models import Projekt
+        from uzivatel.models import User
+        project: Projekt
+        project_history = project.historie.get_last_transaction_date(PRIHLASENI_PROJ, False, False)
+        if "uzivatel" in project_history and isinstance(project_history["uzivatel"], User):
+            user = project_history['uzivatel']
+            if cls._notification_should_be_sent(notification_type=notification_type, user=user):
+                if not cls._notification_was_sent(notification_type, user):
+                    subject = notification_type.predmet.format(ident_cely=project.ident_cely)
+                    html = render_to_string(notification_type.cesta_sablony, {
+                        "title": subject,
+                        "ident_cely": project.ident_cely,
+                        "katastr": project.hlavni_katastr.nazev,
+                        "site_url": settings.SITE_URL
+                    })
+                    cls.__send(subject=subject, to=user.email, html_content=html, notification_type=notification_type,
+                               user=user)
+        else:
+            logger.info("services.mailer._send_notification_for_project.no_uzivatel",
+                        extra={"ident_cely": project.ident_cely, "project_history": project_history})
 
     @classmethod
     def _send_notification_for_projects(cls, projects, notification_type):
