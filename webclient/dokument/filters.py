@@ -84,7 +84,7 @@ class HistorieFilter(FilterSet):
     Třída pro zakladní filtrování historie. Třída je dedená v jednotlivých filtracích záznamů.
     """
 
-    HISTORIE_TYP_ZMENY_STARTS_WITH = "D"
+    HISTORIE_TYP_ZMENY_STARTS_WITH = None
     TYP_VAZBY = None
 
     def set_filter_fields(self, user):
@@ -167,7 +167,8 @@ class Model3DFilter(HistorieFilter, FilterSet):
     Třída pro zakladní filtrování modelu 3D a jejich potomků.
     """
 
-    typ_vazby = DOKUMENT_RELATION_TYPE
+    TYP_VAZBY = DOKUMENT_RELATION_TYPE
+    HISTORIE_TYP_ZMENY_STARTS_WITH = "D"
 
     ident_cely = CharFilter(
         lookup_expr="icontains",
@@ -509,6 +510,10 @@ class DokumentFilter(Model3DFilter):
     """
     Třída pro zakladní filtrování dokumentu a jejich potomků.
     """
+
+    TYP_VAZBY = DOKUMENT_RELATION_TYPE
+    HISTORIE_TYP_ZMENY_STARTS_WITH = "D"
+
     rada = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_RADA),
         label=_("dokument.filters.dokumentFilter.rada.label"),
