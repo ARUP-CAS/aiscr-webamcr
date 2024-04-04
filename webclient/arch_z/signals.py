@@ -61,7 +61,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                                             "pripustnost": pristupnost.pk})
                         dok_jednotka.pian.save_metadata(fedora_transaction)
                 if dok_jednotka.has_adb() and (instance.initial_stav != instance.stav
-                                               or instance.initial_stav != instance.stav):
+                                               or instance.initial_pristupnost != instance.pristupnost):
                     dok_jednotka.adb.save_metadata()
         close_transaction = instance.close_active_transaction_when_finished
         if close_transaction:

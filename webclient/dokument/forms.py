@@ -438,7 +438,7 @@ class EditDokumentForm(forms.ModelForm):
             )
         if create:
             self.fields["jazyky"].initial = [
-                Heslar.objects.get(nazev_heslare=HESLAR_JAZYK, heslo="CS").pk
+                Heslar.objects.get(nazev_heslare=HESLAR_JAZYK, zkratika="CS").pk
             ]
             self.fields["ulozeni_originalu"].initial = [
                 Heslar.objects.get(

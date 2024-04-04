@@ -1,6 +1,8 @@
 import logging
 from math import fabs
 
+from model_utils import FieldTracker
+
 from core.exceptions import MaximalIdentNumberError
 from dj.models import DokumentacniJednotka
 from django.contrib.gis.db import models as pgmodels
@@ -83,6 +85,10 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         validators=[MinValueValidator(1900), MaxValueValidator(2050)],
     )
     sm5 = models.ForeignKey(Kladysm5, models.RESTRICT, db_column="sm5")
+    tracker = FieldTracker()
+    close_active_transaction_when_finished = False
+    active_transaction = None
+    suppress_signal = False
 
     class Meta:
         db_table = "adb"
@@ -148,6 +154,8 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
     geom = pgmodels.PointField(srid=5514, dim=3)
     active_transaction = None
     close_active_transaction_when_finished = False
+    tracker = FieldTracker()
+    suppress_signal = False
 
     def set_geom(self, northing, easting, niveleta):
         """

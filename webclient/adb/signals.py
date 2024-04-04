@@ -11,19 +11,31 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Adb)
 def adb_save_metadata(sender, instance: Adb, **kwargs):
-    logger.debug("adb.signals.adb_save_metadata.start", extra={"ident_cely": instance.ident_cely})
-    update_fields = kwargs.get("update_fields", None)
+    logger.debug("adb.signals.adb_save_metadata.start",
+                 extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal})
     if not instance.suppress_signal:
         fedora_transaction: FedoraTransaction = instance.active_transaction
-        if update_fields:
+        if instance.tracker.changed():
             instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
             instance.save_metadata(close_transaction=instance.close_active_transaction_when_finished)
         elif instance.close_active_transaction_when_finished:
             fedora_transaction.mark_transaction_as_closed()
         logger.debug("adb.signals.adb_save_metadata.save_metadata", extra={"ident_cely": instance.ident_cely,
-                                                                           "transaction": fedora_transaction})
+                                                                           "transaction": fedora_transaction.uid})
     logger.debug("adb.signals.adb_save_metadata.end", extra={"ident_cely": instance.ident_cely})
 
+
+@receiver(post_save, sender=VyskovyBod)
+def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
+    logger.debug("adb.signals.vyskovy_bod_save_metadata.start",
+                 extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal})
+    if not instance.suppress_signal and instance.tracker.changed():
+        fedora_transaction: FedoraTransaction = instance.active_transaction
+        instance.adb.save_metadata(fedora_transaction=fedora_transaction)
+        logger.debug("adb.signals.vyskovy_bod_save_metadata.save_metadata",
+                     extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid})
+    logger.debug("adb.signals.vyskovy_bod_save_metadata.end",
+                 extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal})
 
 @receiver(pre_delete, sender=Adb)
 def adb_delete_repository_container(sender, instance: Adb, **kwargs):
@@ -32,7 +44,7 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
     instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
     instance.record_deletion(close_transaction=fedora_transaction.close_active_transaction_when_finished)
     logger.debug("adb.signals.adb_delete_repository_container.end",
-                 extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction})
+                 extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid})
 
 
 @receiver(pre_delete, sender=VyskovyBod)
