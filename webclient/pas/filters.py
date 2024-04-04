@@ -23,7 +23,8 @@ from core.constants import (
     OBLAST_CECHY,
     OBLAST_CHOICES,
     OBLAST_MORAVA,
-    ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_SN,
+    ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID,
+    SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
@@ -46,10 +47,14 @@ from pas.forms import PasFilterForm
 logger = logging.getLogger(__name__)
 
 
-class SamostatnyNalezFilter(HistorieFilter):
+class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
     """
     Třída pro zakladní filtrování samostatného nálezu a jejich potomků.
     """
+
+    TYP_VAZBY = SAMOSTATNY_NALEZ_RELATION_TYPE
+    HISTORIE_TYP_ZMENY_STARTS_WITH = "SN"
+
     ident_cely = CharFilter(
         lookup_expr="icontains",
         label=_("pas.filters.pasFilter.ident_cely.label")
@@ -219,6 +224,7 @@ class SamostatnyNalezFilter(HistorieFilter):
 
     def __init__(self, *args, **kwargs):
         super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
+        user: User = kwargs.get("request").user
         self.filters["obdobi"] = MultipleChoiceFilter(
             method="filter_obdobi",
             label=_("pas.filters.samostatnyNalezFilter.obdobi.label"),
@@ -255,6 +261,7 @@ class SamostatnyNalezFilter(HistorieFilter):
                 }
             ),
         )
+        self.set_filter_fields(user)
         self.helper = SamostatnyNalezFilterFormHelper()
 
     def filter_queryset(self, queryset):
@@ -262,9 +269,15 @@ class SamostatnyNalezFilter(HistorieFilter):
         historie = self._get_history_subquery()
         queryset = super(SamostatnyNalezFilter, self).filter_queryset(queryset)
         if historie:
-            historie_subquery = (historie.values('vazba__sn_historie__id')
-                                 .filter(vazba__sn_historie__id=OuterRef("id")))
-            queryset = queryset.filter(id__in=Subquery(historie_subquery))
+            queryset_history = Q(historie__typ_vazby=historie["typ_vazby"])
+            if "uzivatel" in historie:
+                queryset_history &= Q(historie__historie__uzivatel__in=historie["uzivatel"])
+            if "uzivatel_organizace" in historie:
+                queryset_history &= Q(historie__historie__organizace_snapshot__in
+                                      =historie["uzivatel_organizace"])
+            if "typ_zmeny" in historie:
+                queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            queryset = queryset.filter(queryset_history)
         logger.debug("pas.filters.SamostatnyNalezFilter.filter_queryset.end", extra={"query": str(queryset.query)})
         return queryset
 
@@ -301,7 +314,7 @@ class SamostatnyNalezFilter(HistorieFilter):
         return queryset
 
 
-class UzivatelSpolupraceFilter(filters.FilterSet):
+class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
     """
     Třída pro zakladní filtrování uživatelské spolupráce a jejich potomků.
     """

@@ -84,6 +84,9 @@ class HistorieFilter(FilterSet):
     Třída pro zakladní filtrování historie. Třída je dedená v jednotlivých filtracích záznamů.
     """
 
+    HISTORIE_TYP_ZMENY_STARTS_WITH = "D"
+    TYP_VAZBY = None
+
     def set_filter_fields(self, user):
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
             self.filters["historie_uzivatel"] = ModelMultipleChoiceFilter(
@@ -102,7 +105,9 @@ class HistorieFilter(FilterSet):
                 distinct=True,
             )
         self.filters["historie_typ_zmeny"] = MultipleChoiceFilter(
-            choices=filter(lambda x: x[0].startswith("D"), Historie.CHOICES),
+            choices=filter(lambda x: x[0].startswith(self.HISTORIE_TYP_ZMENY_STARTS_WITH) and
+                                     not (self.HISTORIE_TYP_ZMENY_STARTS_WITH == "P" and x[0].startswith("PI")),
+                           Historie.CHOICES),
             label=_("dokument.filters.historieFilter.historieTypZmeny.label"),
             field_name="historie__historie__typ_zmeny",
             widget=SelectMultiple(
@@ -138,7 +143,7 @@ class HistorieFilter(FilterSet):
         if not uzivatel_organizace and not zmena and not uzivatel and not datum:
             return
 
-        filtered_fields = {"typ_vazby": self.typ_vazby}
+        filtered_fields = {"typ_vazby": self.TYP_VAZBY}
         if uzivatel:
             filtered_fields["uzivatel"] = uzivatel
             self.filters.pop("historie_uzivatel")

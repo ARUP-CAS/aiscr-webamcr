@@ -631,9 +631,23 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         self.toolbar_name = _("pas.views.samostatnyNalezListView.toolbar.title")
         self.toolbar_label = _("pas.views.samostatnyNalezListView.toolbar_label.text")
 
+    @staticmethod
+    def rename_field_for_ordering(field: str):
+        field = field.replace("-", "")
+        return {
+            "katastr": "katastr__nazev",
+            "nalezce": "nalezce__vypis_cely",
+            "predano_organizace": "predano_organizace__nazev_zkraceny",
+            "obdobi": "obdobi__razeni",
+            "druh_nalezu": "druh_nalezu__razeni",
+            "specifikace": "specifikace__razeni"
+        }.get(field, field)
+
     def get_queryset(self):
-        # Only allow to view 3D models
+        sort_params = self._get_sort_params()
+        sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
+        qs = qs.distinct("pk", *sort_params)
         qs = qs.select_related(
             "obdobi",
             "specifikace",

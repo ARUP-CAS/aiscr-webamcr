@@ -86,7 +86,9 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     """
     # Filters by historie
 
-    typ_vazby = ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
+    TYP_VAZBY = ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
+    HISTORIE_TYP_ZMENY_STARTS_WITH = "AZ"
+
     stav = MultipleChoiceFilter(
         choices=ArcheologickyZaznam.STATES,
         field_name="archeologicky_zaznam__stav",
@@ -530,6 +532,19 @@ class AkceFilter(ArchZaznamFilter):
         label=_("arch_z.filters.AkceFilter.vb_niveleta.label"),
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__adb__vyskove_body__niveleta",
         distinct=True,
+    )
+
+    typ = MultipleChoiceFilter(
+        method="filter_akce_typ",
+        label=_("arch_z.filters.AkceFilter.typ.label"),
+        choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
+        widget=SelectMultiple(
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
+        ),
     )
 
     def filter_akce_typ(self, queryset, name, value):

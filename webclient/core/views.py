@@ -790,14 +790,14 @@ class PermissionFilterMixin():
             ),
         )
         if not permission.base:
-            logger.debug("no base")
+            logger.debug("core.views.PermissionFilterMixin.filter_by_permission.no_base")
             return qs.none()
         if permission.status:
             qs = qs.filter(**self.add_status_lookup(permission))
         if permission.ownership:
-            qs = qs.filter(self.add_ownership_lookup(permission.ownership,qs))
+            qs = qs.filter(self.add_ownership_lookup(permission.ownership, qs))
         if permission.accessibility:
-            qs = self.add_accessibility_lookup(permission,qs)
+            qs = self.add_accessibility_lookup(permission, qs)
 
         return qs
 
@@ -829,7 +829,7 @@ class PermissionFilterMixin():
             str_oper = self.permission_model_lookup + "stav" + operator_str    
             filterdoc.update(
                 {
-                    str_oper:status
+                    str_oper: status
                 }
             )
         return filterdoc
@@ -1045,7 +1045,6 @@ def post_ajax_get_pas_and_pian_limit(request):
     logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"num": num})
     if num< 5000:
         back = []
-        remove_duplicity = []
 
         if req_pas:
             #pases = get_pas_from_envelope(*params[0:4],request)

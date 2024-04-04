@@ -156,7 +156,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     """
     Třída pro filtrování projektů.
     """
-    typ_vazby = PROJEKT_RELATION_TYPE
+    HISTORIE_TYP_ZMENY_STARTS_WITH = "P"
+    TYP_VAZBY = PROJEKT_RELATION_TYPE
+
 
     ident_cely = CharFilter(
         lookup_expr="icontains",

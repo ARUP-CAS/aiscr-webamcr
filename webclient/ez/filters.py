@@ -12,7 +12,7 @@ from django_filters import (
     MultipleChoiceFilter, FilterSet,
 )
 
-from core.constants import ZAPSANI_EXT_ZD
+from core.constants import ZAPSANI_EXT_ZD, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, EXTERNI_ZDROJ_RELATION_TYPE
 from heslar.hesla import (
     HESLAR_DOKUMENT_TYP,
     HESLAR_EXTERNI_ZDROJ_TYP,
@@ -32,6 +32,10 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
     """
     Třída pro zakladní filtrování externího zdroju a jejich potomků.
     """
+
+    HISTORIE_TYP_ZMENY_STARTS_WITH = "EZ"
+    TYP_VAZBY = EXTERNI_ZDROJ_RELATION_TYPE
+
     stav = MultipleChoiceFilter(
         choices=ExterniZdroj.STATES,
         field_name="stav",
