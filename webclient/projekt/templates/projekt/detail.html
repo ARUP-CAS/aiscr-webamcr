@@ -480,7 +480,7 @@
           <div class="col-md-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.datumZahajeni.label" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.datum_zahajeni|date:'d.m.Y'|check_if_none }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.datum_zahajeni|date:'j.n.Y'|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-md-1">
@@ -490,7 +490,7 @@
           <div class="col-md-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.datumUkonceni.label" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.datum_ukonceni|date:'d.m.Y'|check_if_none }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.datum_ukonceni|date:'j.n.Y'|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-md-1">
@@ -500,7 +500,7 @@
           <div class="col-md-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "projekt.templates.detail.detailPart.terminOdevzdani.label" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.termin_odevzdani_nz|date:'d.m.Y'|check_if_none }}" readonly><!--missings-->
+              <input class="form-control" type="text" value="{{ projekt.termin_odevzdani_nz|date:'j.n.Y'|check_if_none }}" readonly><!--missings-->
             </div>
           </div>
         </div>

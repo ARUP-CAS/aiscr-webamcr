@@ -100,7 +100,7 @@
             <div class="form-group">
               <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.datumZahajeni.label" %}</label>
               {% if presna_specifikace %}
-              <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'d.m.Y'|check_if_none }}"
+              <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'j.n.Y'|check_if_none }}"
                      readonly>
               {% else %}
               <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'Y'|check_if_none }}"
@@ -112,7 +112,7 @@
             <div class="form-group">
               <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.datumUkonceni.label" %}</label>
               {% if presna_specifikace %}
-              <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'d.m.Y'|check_if_none }}"
+              <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'j.n.Y'|check_if_none }}"
                      readonly>
               {% else %}
               <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'Y'|check_if_none }}"

@@ -405,7 +405,7 @@ class EditDokumentForm(forms.ModelForm):
         }
 
     def __init__(
-        self, *args, readonly=False, required=None, required_next=None, **kwargs
+        self, *args, readonly=False, required=None, required_next=None, can_edit_datum_zverejneni=False,**kwargs
     ):
         create = kwargs.pop("create", None)
         region_not_required = kwargs.pop("region_not_required", None)
@@ -498,7 +498,8 @@ class EditDokumentForm(forms.ModelForm):
                     self.fields[key].widget.attrs["class"] = (
                         "required-next" if key in required_next else ""
                     )
-        self.fields["datum_zverejneni"].disabled = True
+        if not can_edit_datum_zverejneni:
+            self.fields["datum_zverejneni"].disabled = True
         self.fields["autori"].widget.choices = list(Osoba.objects.filter(
             dokumentautor__dokument=self.instance
         ).order_by("dokumentautor__poradi").values_list("id","vypis_cely"))

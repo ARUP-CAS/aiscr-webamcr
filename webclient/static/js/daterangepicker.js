@@ -7,7 +7,7 @@ var load_daterangepicker = function (div_id) {
         locale: {
             cancelLabel: drp_translations['cancelLabel'],  // "Zrušit"
             applyLabel: drp_translations['applyLabel'],  // "Vybrat odhad začátku prací"
-            format: 'D.M.YYY'
+            format: 'D.M.YYYY'
         },
     });
 }

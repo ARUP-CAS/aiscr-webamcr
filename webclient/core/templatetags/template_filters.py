@@ -57,9 +57,9 @@ def render_daterange(value):
     if isinstance(value, DateRange):
         if value.lower and value.upper:
             return (
-                value.lower.strftime("%d.%m.%Y")
+                value.lower.strftime("%-d.%-m.%Y")
                 + " - "
-                + (value.upper - datetime.timedelta(days=1)).strftime("%d.%m.%Y")
+                + (value.upper - datetime.timedelta(days=1)).strftime("%-d.%-m.%Y")
             )
     return str(value)
 
