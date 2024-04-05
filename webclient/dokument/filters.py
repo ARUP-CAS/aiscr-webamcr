@@ -151,7 +151,7 @@ class HistorieFilter(FilterSet):
             filtered_fields["uzivatel_organizace"] = uzivatel_organizace
             self.filters.pop("historie_uzivatel_organizace")
         if zmena:
-            filtered_fields["zmena"] = zmena
+            filtered_fields["typ_zmeny"] = zmena
             self.filters.pop("historie_typ_zmeny")
         if datum and datum.start:
             filtered_fields["datum_zmeny__gte"] = datum.start
