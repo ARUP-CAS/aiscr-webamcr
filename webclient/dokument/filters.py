@@ -122,7 +122,7 @@ class HistorieFilter(FilterSet):
         self.filters["historie_datum_zmeny_od"] = DateFromToRangeFilter(
             label=_("dokument.filters.historieFilter.historieDatumZmeny.label"),
             field_name="historie__historie__datum_zmeny",
-            widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+            widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
             distinct=True,
         )
         self.filters["historie_uzivatel_organizace"] = ModelMultipleChoiceFilter(

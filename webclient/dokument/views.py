@@ -1064,6 +1064,10 @@ def edit(request, ident_cely):
         extra_data.save()
     else:
         extra_data = dokument.extra_data
+    if request.user.hlavni_role.id in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+        can_edit_datum_zverejneni = True
+    else:
+        can_edit_datum_zverejneni = False
     required_fields = get_required_fields_dokument(dokument)
     required_fields_next = get_required_fields_dokument(dokument, next=1)
     if request.method == "POST":
@@ -1074,6 +1078,7 @@ def edit(request, ident_cely):
             instance=dokument,
             required=get_required_fields_dokument(dokument),
             required_next=get_required_fields_dokument(dokument, 1),
+            can_edit_datum_zverejneni=can_edit_datum_zverejneni,
         )
         form_extra = EditDokumentExtraDataForm(
             request.POST,
@@ -1116,6 +1121,7 @@ def edit(request, ident_cely):
             instance=dokument,
             required=required_fields,
             required_next=required_fields_next,
+            can_edit_datum_zverejneni=can_edit_datum_zverejneni,
         )
         form_extra = EditDokumentExtraDataForm(
             rada=dokument.rada,
