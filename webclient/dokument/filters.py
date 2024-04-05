@@ -155,10 +155,9 @@ class HistorieFilter(FilterSet):
             self.filters.pop("historie_typ_zmeny")
         if datum and datum.start:
             filtered_fields["datum_zmeny__gte"] = datum.start
+            self.filters.pop("historie_datum_zmeny_od")
         if datum and datum.stop:
             filtered_fields["datum_zmeny__lte"] = datum.stop
-        if datum:
-            self.filters.pop("historie_datum_zmeny_od")
         return filtered_fields
 
 
@@ -306,6 +305,10 @@ class Model3DFilter(HistorieFilter, FilterSet):
             if "uzivatel_organizace" in historie:
                 queryset_history &= Q(historie__historie__organizace_snapshot__in
                                       =historie["uzivatel_organizace"])
+            if "datum_zmeny__gte" in historie:
+                queryset_history &= Q(historie__historie__datum_zmeny__gte=historie["datum_zmeny__gte"])
+            if "datum_zmeny__lte" in historie:
+                queryset_history &= Q(historie__historie__datum_zmeny__lte=historie["datum_zmeny__lte"])
             if "typ_zmeny" in historie:
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             queryset = queryset.filter(queryset_history)

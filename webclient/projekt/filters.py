@@ -479,6 +479,10 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
             if "uzivatel_organizace" in historie:
                 queryset_history &= Q(historie__historie__organizace_snapshot__in
                                       =historie["uzivatel_organizace"])
+            if "datum_zmeny__gte" in historie:
+                queryset_history &= Q(historie__historie__datum_zmeny__gte=historie["datum_zmeny__gte"])
+            if "datum_zmeny__lte" in historie:
+                queryset_history &= Q(historie__historie__datum_zmeny__lte=historie["datum_zmeny__lte"])
             if "typ_zmeny" in historie:
                 queryset_history &= Q(historie__historie__typ_zmeny=historie["typ_zmeny"])
             queryset = queryset.filter(queryset_history)
