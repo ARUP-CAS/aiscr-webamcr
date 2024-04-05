@@ -484,7 +484,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
             if "datum_zmeny__lte" in historie:
                 queryset_history &= Q(historie__historie__datum_zmeny__lte=historie["datum_zmeny__lte"])
             if "typ_zmeny" in historie:
-                queryset_history &= Q(historie__historie__typ_zmeny=historie["typ_zmeny"])
+                queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             queryset = queryset.filter(queryset_history)
         logger.debug("projekt.filters.AkceFilter.filter_queryset.end", extra={"query": str(queryset.query)})
         return queryset
