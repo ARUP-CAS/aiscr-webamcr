@@ -71,6 +71,12 @@ class LokalitaFilter(ArchZaznamFilter):
             if "uzivatel_organizace" in historie:
                 queryset_history &= Q(archeologicky_zaznam__historie__historie__organizace_snapshot__in
                                       =historie["uzivatel_organizace"])
+            if "datum_zmeny__gte" in historie:
+                queryset_history &= Q(archeologicky_zaznam__historie__historie__datum_zmeny__gte
+                                      =historie["datum_zmeny__gte"])
+            if "datum_zmeny__lte" in historie:
+                queryset_history &= Q(archeologicky_zaznam__historie__historie__datum_zmeny__lte
+                                      =historie["datum_zmeny__lte"])
             if "typ_zmeny" in historie:
                 queryset_history &= Q(archeologicky_zaznam__historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             queryset = queryset.filter(queryset_history)
