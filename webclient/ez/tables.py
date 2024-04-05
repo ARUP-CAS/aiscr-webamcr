@@ -25,7 +25,7 @@ class ExterniZdrojTable(SearchTable):
     stav = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.stav.label"))
     typ = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.typ.label"))
     rok_vydani_vzniku = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.rok_vydani_vzniku.label"))
-    datum_rd = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.datum_rd.label"))
+    datum_rd = tables.columns.DateColumn(default="", verbose_name=_("ez.tables.ezTable.datum_rd.label"),format="Y-m-d")
     edice_rada = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.edice_rada.label"))
     vydavatel = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.vydavatel.label"))
     typ_dokumentu = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.typ_dokumentu.label"))

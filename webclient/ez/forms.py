@@ -95,7 +95,7 @@ class ExterniZdrojForm(forms.ModelForm):
             "nazev": forms.Textarea(attrs={"rows": 1}),
             "casopis_denik_nazev": forms.Textarea(attrs={"rows": 1}),
             "casopis_rocnik": forms.TextInput(),
-            "datum_rd": forms.TextInput(),
+            "datum_rd": forms.DateInput(),
             "paginace_titulu": forms.TextInput(),
             "sbornik_nazev": forms.Textarea(attrs={"rows": 1}),
             "edice_rada": forms.TextInput(),

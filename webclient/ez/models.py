@@ -67,7 +67,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
     isbn = models.TextField(blank=True, null=True)
     issn = models.TextField(blank=True, null=True)
     link = models.TextField(blank=True, null=True)
-    datum_rd = models.TextField(blank=True, null=True)
+    datum_rd = models.DateField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
     poznamka = models.TextField(blank=True, null=True)
     ident_cely = models.TextField(unique=True)

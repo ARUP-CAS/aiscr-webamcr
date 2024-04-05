@@ -42,10 +42,10 @@ class DateRangeWidget(forms.TextInput):
         if isinstance(value, DateRange):
             if value.lower and value.upper:
                 return (
-                    value.lower.strftime("%d.%m.%Y")
+                    value.lower.strftime("%-d.%-m.%Y")
                     + " - "
                     + (value.upper - datetime.timedelta(days=1)).strftime(
-                        "%d.%m.%Y"
+                        "%-d.%-m.%Y"
                     )  # Now I must substract one day
                 )
 
