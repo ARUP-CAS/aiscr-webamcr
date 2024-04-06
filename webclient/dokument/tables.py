@@ -118,7 +118,7 @@ class DokumentTable(SearchTable):
     poznamka = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.poznamka.label"))
     ulozeni_originalu = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.ulozeni_originalu.label"))
     oznaceni_originalu = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.oznaceni_originalu.label"))
-    datum_zverejneni = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.datum_zverejneni.label"))
+    datum_zverejneni = tables.columns.DateColumn(default="", verbose_name=_("dokument.tables.dokumentTable.datum_zverejneni.label"),format ='Y-m-d',)
     licence = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.licence.label"))
     nahled = tables.columns.Column(
         default="",

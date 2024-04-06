@@ -58,13 +58,15 @@ class AkceTable(SearchTable):
         default="",
         accessor="archeologicky_zaznam__uzivatelske_oznaceni",
     )
-    datum_zahajeni = tables.columns.Column(
+    datum_zahajeni = tables.columns.DateColumn(
         verbose_name=_("arch_z.tables.AkceTable.datum_zahajeni.label"),
         default="",
+        format= "Y-m-d",
     )
-    datum_ukonceni = tables.columns.Column(
+    datum_ukonceni = tables.columns.DateColumn(
         verbose_name=_("arch_z.tables.AkceTable.datum_ukonceni.label"),
         default="",
+        format= "Y-m-d",
     )
     hlavni_typ = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.hlavni_typ.label"),

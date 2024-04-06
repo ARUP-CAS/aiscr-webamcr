@@ -249,7 +249,7 @@ USE_I18N = True
 
 USE_L10N = False
 DATE_FORMAT = "d.m.Y"
-DATE_INPUT_FORMATS = ["%d.%m.%Y", "%d/%m/%Y", "%Y-%m-%d"]
+DATE_INPUT_FORMATS = ["%-d.%-m.%Y","%d.%m.%Y", "%d/%m/%Y", "%Y-%m-%d"]
 
 USE_TZ = True
 
@@ -501,5 +501,3 @@ TEST_ENV = os.getenv("TEST_ENV_SETTING", False)
 
 CLAMD_HOST = None
 CLAMD_PORT = None
-
-DATE_INPUT_FORMATS = ('%-d.%-m.%Y','%d.%m.%Y',)
