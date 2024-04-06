@@ -52,7 +52,8 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
             instance.pian.save_metadata(fedora_transaction)
         if instance.initial_pian is not None:
             instance.initial_pian.save_metadata(fedora_transaction)
-    instance.archeologicky_zaznam.save_metadata(fedora_transaction)
+    if created or instance.tracker.changed():
+        instance.archeologicky_zaznam.save_metadata(fedora_transaction)
     if close_transaction:
         transaction.on_commit(lambda: fedora_transaction.mark_transaction_as_closed())
     logger.debug("dj.signals.create_dokumentacni_jednotka.end",

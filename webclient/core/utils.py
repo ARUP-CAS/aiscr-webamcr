@@ -253,8 +253,10 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely, fedora_transaction):
         ident_cely=akce_ident_cely
     ).first()
     if zaznam:
-        if hlavni_id is not None:
+        katastr_changed = False
+        if hlavni_id is not None and zaznam.hlavni_katastr_id != hlavni_id:
             zaznam.hlavni_katastr_id = hlavni_id
+            katastr_changed = True
 
         if ostatni_id:
             archeologicky_zaznam_katastr_query = ArcheologickyZaznamKatastr.objects.filter(
@@ -271,8 +273,9 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely, fedora_transaction):
             ArcheologickyZaznamKatastr.objects.filter(
                 archeologicky_zaznam_id=zaznam.id
             ).exclude(katastr_id__in=ostatni_id).delete()
-        zaznam.active_transaction = fedora_transaction
-        zaznam.save()
+        if katastr_changed:
+            zaznam.active_transaction = fedora_transaction
+            zaznam.save()
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
 
 

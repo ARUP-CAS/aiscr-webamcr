@@ -1019,6 +1019,9 @@ class DokumentCastSmazatView(TransakceView):
             cast.komponenty = None
             cast.save()
             komps.delete()
+        fedora_transaction = FedoraTransaction()
+        cast.active_transaction = fedora_transaction
+        cast.close_active_transaction_when_finished = True
         cast.delete()
         messages.add_message(request, messages.SUCCESS, self.success_message)
         return JsonResponse({"redirect": dokument.get_absolute_url()})
@@ -1867,6 +1870,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
             return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=404)
         fedora_transaction = FedoraTransaction()
         dokument_cast[0].active_transaction = fedora_transaction
+        dokument_cast[0].close_active_transaction_when_finished = True
         resp = dokument_cast[0].delete()
         logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
         if remove_orphan:
