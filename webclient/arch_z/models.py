@@ -147,6 +147,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         Metóda pro nastavení stavu archivovaný a uložení změny do historie.
         Pokud je akce samostatná a má dočasný ident, nastavý se konečný ident.
         """
+        self.suppress_signal = True
         self.stav = AZ_STAV_ARCHIVOVANY
         poznamka_historie = None
         self.save()
@@ -174,8 +175,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             vazba=self.historie,
             poznamka=poznamka_historie,
         ).save()
+        self.suppress_signal = False
         if old_ident is not None and not ident_change_recorded:
-            self.record_ident_change(old_ident, getattr(self.active_transaction, "uid", None))
+            self.record_ident_change(old_ident, self.active_transaction)
 
     def set_vraceny(self, user, new_state, poznamka):
         """
@@ -343,7 +345,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             sequence.region + "-" + str(sequence.typ.zkratka) + f"{sequence.sekvence:07}"
         )
         self._set_connected_records_ident(self.ident_cely)
-        self.record_ident_change(old_ident, getattr(self.active_transaction, "uid", None))
+        self.record_ident_change(old_ident, self.active_transaction)
         self.save()
 
     def _set_connected_records_ident(self, new_ident):

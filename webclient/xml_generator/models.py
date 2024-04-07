@@ -175,18 +175,27 @@ class ModelWithMetadata(models.Model):
             def process_arch_z(record: ArcheologickyZaznam):
                 for inner_item in record.dokumentacni_jednotky_akce.all():
                     inner_item: DokumentacniJednotka
-                    if inner_item.pian:
+                    try:
                         inner_item.pian.save_metadata(fedora_transaction)
-                    if inner_item.adb:
+                    except ObjectDoesNotExist as err:
+                        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.process_arch_z"
+                                     ".no_pian", extra={"err": err})
+                    try:
                         inner_item.adb.save_metadata(fedora_transaction)
+                    except ObjectDoesNotExist as err:
+                        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.process_arch_z.no_adb",
+                                     extra={"err": err})
                 for inner_item in record.casti_dokumentu.all():
                     inner_item: DokumentCast
                     inner_item.dokument.save_metadata(fedora_transaction)
                 for inner_item in record.externi_odkazy.all():
                     inner_item: ExterniOdkaz
                     inner_item.externi_zdroj.save_metadata(fedora_transaction)
-                    if inner_item.projekt:
+                    try:
                         inner_item.projekt.save_metadata(fedora_transaction)
+                    except ObjectDoesNotExist as err:
+                        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.process_arch_z"
+                                     ".no_projekt", extra={"err": err})
 
             if isinstance(self, ArcheologickyZaznam):
                 process_arch_z(self)

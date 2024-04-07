@@ -717,7 +717,6 @@ def archivovat(request, ident_cely):
         fedora_trasnaction = FedoraTransaction()
         az.active_transaction = fedora_trasnaction
         az.set_archivovany(request.user)
-        az.save()
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
                 archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY
@@ -728,8 +727,7 @@ def archivovat(request, ident_cely):
             request, messages.SUCCESS, get_message(az, "USPESNE_ARCHIVOVANA")
         )
         Mailer.send_ea02(arch_z=az)
-        az.close_active_transaction_when_finished = True
-        az.save()
+        fedora_trasnaction.mark_transaction_as_closed()
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_archivaci()

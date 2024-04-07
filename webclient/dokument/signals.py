@@ -147,30 +147,31 @@ def dokument_cast_save_metadata(sender, instance: DokumentCast, created, **kwarg
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra=extra)
     from core.repository_connector import FedoraTransaction
     fedora_transaction: FedoraTransaction = instance.active_transaction
-    if (created or instance.initial_projekt != instance.projekt or
-            instance.initial_archeologicky_zaznam != instance.archeologicky_zaznam):
+    if not instance.suppress_signal:
         instance.dokument.save_metadata(fedora_transaction)
-        extra["transaction"] = str(fedora_transaction.uid)
-        if instance.archeologicky_zaznam is not None:
-            instance.archeologicky_zaznam.save_metadata(fedora_transaction)
-            extra.update({"archeologicky_zaznam": instance.archeologicky_zaznam.ident_cely,
-                          "record_pk": instance.archeologicky_zaznam.pk})
-        if instance.initial_archeologicky_zaznam is not None:
-            instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction)
-            extra.update({"initial_archeologicky_zaznam": instance.initial_archeologicky_zaznam.ident_cely,
-                          "initial_record_pk": instance.initial_archeologicky_zaznam.pk})
-        if instance.projekt is not None:
-            instance.projekt.save_metadata(fedora_transaction)
-            extra.update({"projekt": instance.projekt.ident_cely, "record_pk": instance.projekt.pk})
-        if instance.initial_projekt is not None:
-            instance.initial_projekt.save_metadata(fedora_transaction)
-            extra.update({"initial_projekt": instance.initial_projekt.ident_cely,
-                          "initial_record_pk": instance.initial_projekt.pk})
-        logger.debug("dokument.signals.dokument_cast_save_metadata.changed", extra=extra)
-    else:
-        logger.debug("dokument.signals.dokument_cast_save_metadata.no_change", extra=extra)
-    if fedora_transaction and instance.close_active_transaction_when_finished:
-        fedora_transaction.mark_transaction_as_closed()
+        if (created or instance.initial_projekt != instance.projekt or
+                instance.initial_archeologicky_zaznam != instance.archeologicky_zaznam):
+            extra["transaction"] = str(fedora_transaction.uid)
+            if instance.archeologicky_zaznam is not None:
+                instance.archeologicky_zaznam.save_metadata(fedora_transaction)
+                extra.update({"archeologicky_zaznam": instance.archeologicky_zaznam.ident_cely,
+                              "record_pk": instance.archeologicky_zaznam.pk})
+            if instance.initial_archeologicky_zaznam is not None:
+                instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction)
+                extra.update({"initial_archeologicky_zaznam": instance.initial_archeologicky_zaznam.ident_cely,
+                              "initial_record_pk": instance.initial_archeologicky_zaznam.pk})
+            if instance.projekt is not None:
+                instance.projekt.save_metadata(fedora_transaction)
+                extra.update({"projekt": instance.projekt.ident_cely, "record_pk": instance.projekt.pk})
+            if instance.initial_projekt is not None:
+                instance.initial_projekt.save_metadata(fedora_transaction)
+                extra.update({"initial_projekt": instance.initial_projekt.ident_cely,
+                              "initial_record_pk": instance.initial_projekt.pk})
+            logger.debug("dokument.signals.dokument_cast_save_metadata.changed", extra=extra)
+        else:
+            logger.debug("dokument.signals.dokument_cast_save_metadata.no_change", extra=extra)
+        if fedora_transaction and instance.close_active_transaction_when_finished:
+            fedora_transaction.mark_transaction_as_closed()
     logger.debug("dokument.signals.dokument_cast_save_metadata.end", extra=extra)
 
 
