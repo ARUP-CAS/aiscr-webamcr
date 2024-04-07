@@ -1,5 +1,6 @@
 import inspect
 import logging
+from typing import Optional
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
@@ -79,6 +80,17 @@ def update_akce_snapshot(sender, instance: Akce, **kwargs):
     logger.debug("arch_z.signals.update_akce_snapshot.start", extra={"record_pk": instance.pk})
     if not check_if_task_queued("Akce", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["Akce", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
+    fedora_transaction: Optional[FedoraTransaction, None] = instance.active_transaction
+    if instance.projekt is not None and instance.initial_projekt is None:
+        instance.projekt.save_metadata(fedora_transaction)
+    if instance.projekt is None and instance.initial_projekt is not None:
+        instance.initial_projekt.save_metadata(fedora_transaction)
+    if (instance.projekt is not None and instance.initial_projekt is not None
+            and instance.projekt != instance.initial_projekt):
+        instance.projekt.save_metadata(fedora_transaction)
+        instance.initial_projekt.save_metadata(fedora_transaction)
+    if fedora_transaction and instance.close_active_transaction_when_finished:
+        fedora_transaction.mark_transaction_as_closed()
     logger.debug("arch_z.signals.update_akce_snapshot.end", extra={"record_pk": instance.pk})
 
 
