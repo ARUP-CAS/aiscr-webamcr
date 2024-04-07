@@ -191,11 +191,6 @@ class ModelWithMetadata(models.Model):
                 for inner_item in record.externi_odkazy.all():
                     inner_item: ExterniOdkaz
                     inner_item.externi_zdroj.save_metadata(fedora_transaction)
-                    try:
-                        inner_item.projekt.save_metadata(fedora_transaction)
-                    except ObjectDoesNotExist as err:
-                        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.process_arch_z"
-                                     ".no_projekt", extra={"err": err})
 
             if isinstance(self, ArcheologickyZaznam):
                 process_arch_z(self)

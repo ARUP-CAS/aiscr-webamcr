@@ -8,6 +8,7 @@ from django.dispatch import receiver
 
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz, Akce
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
+from core.repository_connector import FedoraTransaction
 from cron.tasks import update_single_redis_snapshot
 from dj.models import DokumentacniJednotka
 from dokument.models import DokumentCast
@@ -87,13 +88,14 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
         Funkce pro aktualizaci metadat externího odkazu.
     """
     logger.debug("arch_z.signals.create_externi_odkaz_metadata.start", extra={"record_pk": instance.pk})
-    fedora_transaction = instance.active_transaction
+    fedora_transaction: FedoraTransaction = instance.active_transaction
     if instance.archeologicky_zaznam is not None:
-        instance.archeologicky_zaznam.save_metada(fedora_transaction)
+        instance.archeologicky_zaznam.save_metadata(fedora_transaction)
     if instance.externi_zdroj is not None:
         instance.externi_zdroj.save_metadata(fedora_transaction)
     close_transaction = instance.close_active_transaction_when_finished
-    transaction.on_commit(lambda: instance.save_metadata(close_transaction=close_transaction))
+    if close_transaction:
+        fedora_transaction.mark_transaction_as_closed()
     logger.debug("arch_z.signals.create_externi_odkaz_metadata.end", extra={"record_pk": instance.pk,
                                                                             "transaction": fedora_transaction})
 

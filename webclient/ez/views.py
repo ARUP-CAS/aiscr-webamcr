@@ -714,7 +714,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
         if form.is_valid():
             ez_id = form.cleaned_data["ez"]
             ez = ExterniZdroj.objects.get(id=ez_id)
-            eo = ExterniOdkaz.objects.create(
+            eo = ExterniOdkaz(
                 externi_zdroj=ez,
                 paginace=form.cleaned_data["paginace"],
                 archeologicky_zaznam=az,
