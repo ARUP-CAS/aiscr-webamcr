@@ -35,16 +35,15 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
         sv.save()
         instance.soubory = sv
         if instance.let is not None:
-            fedora_transaction = instance.let.save_metadata(fedora_transaction)
+            instance.let.save_metadata(fedora_transaction)
     else:
-        old_instance = Dokument.objects.get(pk=instance.pk)
         if not instance.suppress_signal:
-            if old_instance.let is None and instance.let is not None:
-                fedora_transaction = instance.let.save_metadata(fedora_transaction)
-            elif old_instance.let is not None and instance.let is None:
-                fedora_transaction = old_instance.let.save_metadata(fedora_transaction)
-            elif old_instance.let is not None and instance.let is not None and old_instance.let != instance.let:
-                fedora_transaction = old_instance.let.save_metadata(fedora_transaction)
+            if instance.initial_let is None and instance.let is not None:
+                instance.let.save_metadata(fedora_transaction)
+            elif instance.initial_let is not None and instance.let is None:
+                instance.initial_let.save_metadata(fedora_transaction)
+            elif instance.let is not None and instance.initial_let is not None and instance.initial_let != instance.let:
+                instance.initial_let.save_metadata(fedora_transaction)
                 instance.let.save_metadata(fedora_transaction)
     try:
         instance.set_snapshots()
