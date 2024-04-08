@@ -1038,6 +1038,7 @@ switchMap = function (overview = false) {
                     if (JSON.parse(this.responseText).algorithm == "detail") {
                         let resPoints = JSON.parse(this.responseText).points
                         var count = JSON.parse(this.responseText).count;
+                        poi_dj.clearLayers();
                         resPoints.forEach((i) => {
 
                             if(i.type=="pas"){
@@ -1055,8 +1056,7 @@ switchMap = function (overview = false) {
                                             ||
                                              (currentUrl.includes("pian/zapsat"))
                                             ) {
-                                            if(gold_pian_ident_cely!=i.ident_cely){
-                                                poi_dj.clearLayers();
+                                            if(gold_pian_ident_cely!=i.ident_cely){                                                
                                                 addPointToPoiLayer(i.geom, poi_dj, i.ident_cely, true,i.presnost)
                                             }
                                         }
