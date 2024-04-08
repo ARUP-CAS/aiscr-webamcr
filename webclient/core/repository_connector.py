@@ -235,8 +235,13 @@ class FedoraRepositoryConnector:
                                 FedoraRequestType.GET_DELETED_LINK)
         result_3 = send_request(f"{cls.get_base_url()}/model/{model_name}/member/{ident_cely}",
                                 FedoraRequestType.GET_LINK)
+
+        result_4 = send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
+        regex = re.compile(r"dcterms:type *\"deleted\" *;")
+        is_deleted = hasattr(result_4, "text") and regex.search(result_4.text)
+
         if result.status_code == 200:
-            if cls.check_container_deleted(ident_cely):
+            if is_deleted:
                 if result_2.status_code == 200:
                     logger.debug("core_repository_connector.check_container_is_deleted.true",
                                  extra={"ident_cely": ident_cely, "result_text": result.text})

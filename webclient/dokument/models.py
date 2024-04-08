@@ -514,7 +514,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initial_projekt = self.projekt
-        self.initial_archeologicky_zaznam = self.archeologicky_zaznamlet
+        self.initial_archeologicky_zaznam = self.archeologicky_zaznam
 
 
 class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):

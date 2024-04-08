@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import CheckConstraint, Q
 
 from core.connectors import RedisConnector
@@ -150,6 +151,14 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     )
     geom_updated_at = models.DateTimeField(null=True, blank=True)
     geom_sjtsk_updated_at = models.DateTimeField(null=True, blank=True)
+    initial_pristupnost = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        try:
+            self.initial_pristupnost = self.pristupnost
+        except ObjectDoesNotExist:
+            self.initial_pristupnost = None
 
     def set_zapsany(self, user):
         """
