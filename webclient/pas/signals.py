@@ -30,10 +30,11 @@ def create_dokument_vazby(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=SamostatnyNalez)
-def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, **kwargs):
+def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, **kwargs):
     logger.debug("pas.signals.save_metadata_samostatny_nalez.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
-    instance.projekt.save_metadata(fedora_transaction)
+    if (created or instance.initial_pristupnost != instance.pristupnost) and instance.projekt:
+        instance.projekt.save_metadata(fedora_transaction)
     instance.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
     if not check_if_task_queued("SamostatnyNalez", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["SamostatnyNalez", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
@@ -46,6 +47,8 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
     logger.debug("pas.signals.dokument_delete_container_soubor_vazby.start",
                  extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
+    if instance.projekt:
+        instance.projekt.save_metadata(fedora_transaction)
     transaction = instance.record_deletion(fedora_transaction,
                                            close_transaction=instance.close_active_transaction_when_finished)
     if instance.soubory and instance.soubory.pk:

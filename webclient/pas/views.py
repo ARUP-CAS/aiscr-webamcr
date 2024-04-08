@@ -669,7 +669,7 @@ def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání samostatného nálezu pomocí modalu.
     """
-    nalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    nalez: SamostatnyNalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if check_stav_changed(request, nalez):
         return JsonResponse(
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
@@ -680,6 +680,8 @@ def smazat(request, ident_cely):
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}, status=403)
     if request.method == "POST":
         nalez.deleted_by_user = request.user
+        nalez.active_transaction = FedoraTransaction()
+        nalez.close_active_transaction_when_finished = True
         resp1 = nalez.delete()
         if resp1:
             logger.info(

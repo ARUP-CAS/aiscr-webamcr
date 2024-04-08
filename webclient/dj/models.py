@@ -1,5 +1,7 @@
 from audioop import reverse
 
+from model_utils import FieldTracker
+
 from arch_z.models import ArcheologickyZaznam
 from django.db import models
 from django.urls import reverse
@@ -45,6 +47,7 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         db_column="archeologicky_zaznam",
         related_name="dokumentacni_jednotky_akce",
     )
+    tracker = FieldTracker()
     active_transaction = None
     close_active_transaction_when_finished = False
 

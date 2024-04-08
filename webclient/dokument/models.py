@@ -174,6 +174,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     )
     autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
     osoby_snapshot = models.CharField(max_length=5000, null=True, blank=True)
+    initial_let = None
 
     class Meta:
         db_table = "dokument"
@@ -185,6 +186,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             models.Index(fields=["stav", "ident_cely", "typ_dokumentu"]),
             models.Index(fields=["stav", "ident_cely", "typ_dokumentu", "organizace"]),
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.initial_let = self.let
 
     def __str__(self):
         return self.ident_cely
@@ -480,6 +485,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     )
     active_transaction = None
     close_active_transaction_when_finished = False
+    suppress_signal = False
 
     class Meta:
         db_table = "dokument_cast"

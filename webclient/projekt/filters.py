@@ -475,7 +475,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         if historie:
             queryset_history = Q(historie__typ_vazby=historie["typ_vazby"])
             if "uzivatel" in historie:
-                queryset_history &= Q(historie__historie__uzivatel=historie["uzivatel"])
+                queryset_history &= Q(historie__historie__uzivatel__in=historie["uzivatel"])
             if "uzivatel_organizace" in historie:
                 queryset_history &= Q(historie__historie__organizace_snapshot__in
                                       =historie["uzivatel_organizace"])

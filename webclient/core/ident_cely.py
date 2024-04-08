@@ -1,4 +1,6 @@
 import logging
+from typing import Optional
+
 from django.db import connection
 import re
 
@@ -48,7 +50,7 @@ def get_temporary_project_ident(region: str) -> str:
     return "X-" + region + "-" + id_number
     
 
-def get_project_event_ident(project: Projekt) -> str:
+def get_project_event_ident(project: Projekt) -> Optional[str]:
     """
     Metóda pro výpočet identu projektové akce.
 
@@ -58,19 +60,22 @@ def get_project_event_ident(project: Projekt) -> str:
     """
     MAXIMAL_PROJECT_EVENTS: int = 26
     if project.ident_cely:
-        predicate = project.ident_cely + "%"
-        q = "select id, ident_cely from public.archeologicky_zaznam where ident_cely like %s order by ident_cely desc"
-        idents = ArcheologickyZaznam.objects.raw(q, [predicate])
-        if len(idents) < MAXIMAL_PROJECT_EVENTS:
-            if idents:
-                last_ident = idents[0].ident_cely
-                return project.ident_cely + chr(ord(last_ident[-1]) + 1)
+        with connection.cursor() as cursor:
+            predicate = project.ident_cely + "%"
+            query = "select id, ident_cely from public.archeologicky_zaznam where ident_cely like %s order by ident_cely desc"
+            cursor.execute(query, [predicate])
+            idents = cursor.fetchall()
+
+            if len(idents) < MAXIMAL_PROJECT_EVENTS:
+                if idents:
+                    last_ident = idents[0][1]  # Assuming the second column is 'ident_cely'
+                    return project.ident_cely + chr(ord(last_ident[-1]) + 1)
+                else:
+                    return project.ident_cely + "A"
             else:
-                return project.ident_cely + "A"
-        else:
-            logger.error("core.ident_cely.get_project_event_ident.error",
-                         extra={"message": "Maximal number of project events is 26."})
-            raise MaximalEventCount(MAXIMAL_PROJECT_EVENTS)
+                logger.error("core.ident_cely.get_project_event_ident.error",
+                             extra={"message": "Maximal number of project events is 26."})
+                raise MaximalEventCount(MAXIMAL_PROJECT_EVENTS)
     else:
         logger.error("core.ident_cely.get_project_event_ident.error",
                      extra={"message": "Project is missing ident_cely"})

@@ -147,6 +147,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         Metóda pro nastavení stavu archivovaný a uložení změny do historie.
         Pokud je akce samostatná a má dočasný ident, nastavý se konečný ident.
         """
+        self.suppress_signal = True
         self.stav = AZ_STAV_ARCHIVOVANY
         poznamka_historie = None
         self.save()
@@ -174,8 +175,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             vazba=self.historie,
             poznamka=poznamka_historie,
         ).save()
+        self.suppress_signal = False
         if old_ident is not None and not ident_change_recorded:
-            self.record_ident_change(old_ident, getattr(self.active_transaction, "uid", None))
+            self.record_ident_change(old_ident, self.active_transaction)
 
     def set_vraceny(self, user, new_state, poznamka):
         """
@@ -343,7 +345,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             sequence.region + "-" + str(sequence.typ.zkratka) + f"{sequence.sekvence:07}"
         )
         self._set_connected_records_ident(self.ident_cely)
-        self.record_ident_change(old_ident, getattr(self.active_transaction, "uid", None))
+        self.record_ident_change(old_ident, self.active_transaction)
         self.save()
 
     def _set_connected_records_ident(self, new_ident):
@@ -425,10 +427,12 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def __init__(self, *args, **kwargs):
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
-        if hasattr(self, "pristupnost") and self.pristupnost is not None:
-            self.initial_pristupnost = self.pristupnost
-        if hasattr(self, "stav") and self.stav is not None:
-            self.initial_stav = self.stav
+        if self.initial_pristupnost is None:
+            try:
+                self.initial_pristupnost = self.pristupnost
+            except ObjectDoesNotExist:
+                self.initial_pristupnost = None
+        self.initial_stav = self.stav
 
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):
@@ -517,8 +521,9 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         Organizace, on_delete=models.RESTRICT, db_column="organizace", blank=True, null=True, db_index=True
     )
     vedouci_snapshot = models.CharField(max_length=5000, null=True, blank=True)
-
     suppress_signal = False
+    active_transaction = None
+    close_active_transaction_when_finished = False
 
     class Meta:
         db_table = "akce"
@@ -532,6 +537,10 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         models.Index(fields=["datum_zahajeni", "datum_ukonceni"]),
         models.Index(fields=["datum_zahajeni", "datum_ukonceni", "projekt"]),
         models.Index(fields=["archeologicky_zaznam", "datum_zahajeni", "datum_ukonceni"]),
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.initial_projekt = self.projekt
 
     def get_absolute_url(self):
         """

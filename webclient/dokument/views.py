@@ -585,6 +585,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
     id_tag = "edit-cast-form"
     form_class = DokumentCastForm
     slug_field = "ident_cely"
+    active_transaction = None
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -605,8 +606,19 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         dc = context["object"]
         return dc.get_absolute_url()
 
+    def get_object(self, queryset=None):
+        if hasattr(self, "object"):
+            self.object = self.object
+        else:
+            self.object = super().get_object(queryset)
+        if self.active_transaction and not self.object.active_transaction:
+            self.object.active_transaction = self.active_transaction
+        return self.object
+
     def post(self, request, *args, **kwargs):
+        self.active_transaction = FedoraTransaction()
         super().post(request, *args, **kwargs)
+        self.active_transaction.mark_transaction_as_closed()
         return JsonResponse({"redirect": self.get_success_url()})
 
     def form_valid(self, form):
@@ -1019,6 +1031,9 @@ class DokumentCastSmazatView(TransakceView):
             cast.komponenty = None
             cast.save()
             komps.delete()
+        fedora_transaction = FedoraTransaction()
+        cast.active_transaction = fedora_transaction
+        cast.close_active_transaction_when_finished = True
         cast.delete()
         messages.add_message(request, messages.SUCCESS, self.success_message)
         return JsonResponse({"redirect": dokument.get_absolute_url()})

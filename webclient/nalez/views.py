@@ -1,5 +1,7 @@
 import logging
+from typing import Union
 
+from arch_z.models import ArcheologickyZaznam
 from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
@@ -16,6 +18,10 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
+
+from core.repository_connector import FedoraTransaction
+from dj.models import DokumentacniJednotka
+from dokument.models import Dokument, DokumentCast
 from heslar.hesla import (
     HESLAR_OBJEKT_DRUH,
     HESLAR_OBJEKT_DRUH_KAT,
@@ -48,7 +54,7 @@ def smazat_nalez(request, typ_vazby, typ, ident_cely):
             "id_tag": "smazat-objekt-form",
             "button": _("nalez.views.smazatNalez.objekt.submitButton"),
         }
-    if typ == "predmet":
+    elif typ == "predmet":
         zaznam = get_object_or_404(NalezPredmet, id=ident_cely)
         context = {
             "object": zaznam,
@@ -56,7 +62,12 @@ def smazat_nalez(request, typ_vazby, typ, ident_cely):
             "id_tag": "smazat-objekt-form",
             "button": _("nalez.views.smazatNalez.predmet.submitButton"),
         }
-    if request.method == "POST":
+    else:
+        return
+    if request.method == "POST" and zaznam:
+        zaznam: Union[NalezObjekt, NalezPredmet]
+        zaznam.active_transaction = FedoraTransaction()
+        zaznam.close_active_transaction_when_finished = True
         resp = zaznam.delete()
         next_url = request.POST.get("next")
         if next_url:
