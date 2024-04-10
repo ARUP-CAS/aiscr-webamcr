@@ -29,6 +29,11 @@ WITH posudky AS
 INSERT INTO dokument_posudek (dokument, posudek) SELECT dok, pos FROM posudky WHERE NOT EXISTS (SELECT * FROM dokument_posudek WHERE dokument = dok AND posudek = pos);
 DELETE FROM dokument_posudek WHERE posudek = (SELECT id FROM heslar WHERE ident_cely = 'HES-000622');
 
+-- Sloučení duplicitních letišť
+UPDATE let SET letiste_start = (SELECT id FROM heslar WHERE ident_cely = 'HES-000182') WHERE letiste_start = (SELECT id FROM heslar WHERE ident_cely = 'HES-000183');
+UPDATE let SET letiste_cil = (SELECT id FROM heslar WHERE ident_cely = 'HES-000182') WHERE letiste_cil = (SELECT id FROM heslar WHERE ident_cely = 'HES-000183');
+DELETE FROM heslar WHERE ident_cely = 'HES-000183';
+
 -- Úprava hesel
 UPDATE heslar SET razeni = 1, heslo = 'absolutní datování', heslo_en = 'absolute dating', popis = 'Méně obvyklé, samostatně nezmiňované metody absolutního datovaní (např. kosmogenní nuklidy, termoluminiscenční metoda, aj.).' WHERE ident_cely = 'HES-000634';
 UPDATE heslar SET razeni = 1, heslo = 'anonym', heslo_en = 'anonymous', zkratka = 'A', popis = '' WHERE ident_cely = 'HES-000865';
@@ -47,13 +52,13 @@ UPDATE heslar SET razeni = 1, heslo = 'konference', heslo_en = 'conference', pop
 UPDATE heslar SET razeni = 1, heslo = 'muzeum', heslo_en = 'museum', popis = '' WHERE ident_cely = 'HES-001127';
 UPDATE heslar SET razeni = 1, heslo = 'náhodný/povrchový nález', heslo_en = 'chance find', popis = '' WHERE ident_cely = 'HES-001139';
 UPDATE heslar SET razeni = 1, heslo = 'nálezová zpráva', heslo_en = 'fieldwork report', popis = '' WHERE ident_cely = 'HES-001075';
-UPDATE heslar SET razeni = 1, heslo = 'nemovitá památka', heslo_en = 'monument', zkratka = 'N', popis = '' WHERE ident_cely = 'HES-001122';
+UPDATE heslar SET razeni = 1, heslo = 'nemovitá památka', heslo_en = 'heritage site', zkratka = 'N', popis = '' WHERE ident_cely = 'HES-001122';
 UPDATE heslar SET razeni = 1, heslo = 'neznámá', heslo_en = 'unknown', popis = '' WHERE ident_cely = 'HES-000099';
 UPDATE heslar SET razeni = 1, heslo = 'neznámé počasí', heslo_en = 'unknown weather', popis = '' WHERE ident_cely = 'HES-000586';
 UPDATE heslar SET razeni = 1, heslo = 'objekt', heslo_en = 'feature', zkratka = 'O', popis = '' WHERE ident_cely = 'HES-001125';
 UPDATE heslar SET razeni = 1, heslo = 'obývání', heslo_en = 'residential activity', zkratka = 'síd', popis = '' WHERE ident_cely = 'HES-000001';
 UPDATE heslar SET razeni = 1, heslo = 'odborný záměr', heslo_en = 'expert project', popis = '' WHERE ident_cely = 'HES-000594';
-UPDATE heslar SET razeni = 1, heslo = 'odchylka jednotky metrů', heslo_en = 'deviation of meters', zkratka = '1', popis = 'odchylka jednotky metrů' WHERE ident_cely = 'HES-000861';
+UPDATE heslar SET razeni = 1, heslo = 'odchylka jednotky metrů', heslo_en = 'deviation in meters', zkratka = '1', popis = 'odchylka jednotky metrů' WHERE ident_cely = 'HES-000861';
 UPDATE heslar SET razeni = 1, heslo = 'polygon archeologického průzkumu', heslo_en = 'archaeological survey polygon', popis = '' WHERE ident_cely = 'HES-000132';
 UPDATE heslar SET razeni = 1, heslo = 'povrch sondy', heslo_en = 'trench surface', popis = '' WHERE ident_cely = 'HES-001157';
 UPDATE heslar SET razeni = 1, heslo = 'povrch', heslo_en = 'surface', popis = '' WHERE ident_cely = 'HES-000242';
@@ -133,6 +138,7 @@ UPDATE heslar SET razeni = 102, heslo = 'konstrukce dlaždicová', heslo_en = 't
 UPDATE heslar SET razeni = 102, heslo = 'most/brod', heslo_en = 'bridge/ford', popis = '' WHERE ident_cely = 'HES-000049';
 UPDATE heslar SET razeni = 102, heslo = 'technická keramika', heslo_en = 'technical ceramics', popis = '' WHERE ident_cely = 'HES-000774';
 UPDATE heslar SET razeni = 1020, heslo = 'střední doba laténská (LtB–C1)', heslo_en = 'Middle La Tène Period (LtB–C1)', zkratka = 'la.sd', popis = '' WHERE ident_cely = 'HES-000333';
+UPDATE heslar SET razeni = 1025, heslo = 'střední/mladší doba laténská (LtC1–2)', heslo_en = 'Middle/Late La Tène Period (LtC1–2)', zkratka = 'la.c', popis = '' WHERE ident_cely = 'HES-001447';
 UPDATE heslar SET razeni = 103, heslo = '(polo)zemnice', heslo_en = 'pit house', popis = '' WHERE ident_cely = 'HES-000497';
 UPDATE heslar SET razeni = 103, heslo = 'Kanada', heslo_en = 'Canada', zkratka = 'CA', popis = '' WHERE ident_cely = 'HES-001293';
 UPDATE heslar SET razeni = 103, heslo = 'konstrukce kamenná', heslo_en = 'stonework', popis = '' WHERE ident_cely = 'HES-000896';
@@ -141,7 +147,7 @@ UPDATE heslar SET razeni = 103, heslo = 'železnice', heslo_en = 'railway', popi
 UPDATE heslar SET razeni = 1030, heslo = 'mladší–pozdní doba laténská (LtC2–D)', heslo_en = 'Late–Final La Tène Period (LtC2–D)', zkratka = 'la.m-p', popis = '' WHERE ident_cely = 'HES-000255';
 UPDATE heslar SET razeni = 1031, heslo = 'kultura púchovská', heslo_en = 'Púchov Culture', zkratka = 'lr.puc', popis = '' WHERE ident_cely = 'HES-000256';
 UPDATE heslar SET razeni = 1032, heslo = 'kultura przeworská', heslo_en = 'Przeworsk Culture', zkratka = 'lr.prw', popis = '' WHERE ident_cely = 'HES-000257';
-UPDATE heslar SET razeni = 104, heslo = 'haltýř', heslo_en = 'cooling well', popis = '' WHERE ident_cely = 'HES-000478';
+UPDATE heslar SET razeni = 104, heslo = 'haltýř', heslo_en = 'spring house', popis = '' WHERE ident_cely = 'HES-000478';
 UPDATE heslar SET razeni = 104, heslo = 'Kapverdy', heslo_en = 'Cape Verde', zkratka = 'CV', popis = '' WHERE ident_cely = 'HES-001343';
 UPDATE heslar SET razeni = 104, heslo = 'konstrukce dřevěná', heslo_en = 'wooden structure', popis = '' WHERE ident_cely = 'HES-000897';
 UPDATE heslar SET razeni = 104, heslo = 'zlomek kosti', heslo_en = 'bone fragment', popis = '' WHERE ident_cely = 'HES-000639';
@@ -185,8 +191,8 @@ UPDATE heslar SET razeni = 110, heslo = 'starší paleolit', heslo_en = 'Lower P
 UPDATE heslar SET razeni = 110, heslo = 'sýpka/špýchar', heslo_en = 'granary/storehouse', popis = '' WHERE ident_cely = 'HES-000484';
 UPDATE heslar SET razeni = 1100, heslo = 'doba halštatská–laténská', heslo_en = 'Hallstatt–La Tène Period', popis = '' WHERE ident_cely = 'HES-000405';
 UPDATE heslar SET razeni = 1100, heslo = 'doba halštatská–laténská', heslo_en = 'Hallstatt–La Tène Period', zkratka = 'ha-la', popis = '' WHERE ident_cely = 'HES-000334';
-UPDATE heslar SET razeni = 1100, heslo = 'nehotový výrobek/polotovar', heslo_en = 'semiproduct', popis = '' WHERE ident_cely = 'HES-000828';
-UPDATE heslar SET razeni = 1100, heslo = 'nehotový výrobek/polotovar', heslo_en = 'semiproduct', popis = '' WHERE ident_cely = 'HES-000852';
+UPDATE heslar SET razeni = 1100, heslo = 'nehotový výrobek/polotovar', heslo_en = 'semiproduct/blank', popis = '' WHERE ident_cely = 'HES-000828';
+UPDATE heslar SET razeni = 1100, heslo = 'nehotový výrobek/polotovar', heslo_en = 'semiproduct/blank', popis = '' WHERE ident_cely = 'HES-000852';
 UPDATE heslar SET razeni = 1100, heslo = 'pohřební objekt', heslo_en = 'funerary structure', popis = '' WHERE ident_cely = 'HES-000426';
 UPDATE heslar SET razeni = 1100, heslo = 'pohřební objekt', heslo_en = 'funerary structure', popis = '' WHERE ident_cely = 'HES-000581';
 UPDATE heslar SET razeni = 1101, heslo = 'hrob', heslo_en = 'grave', popis = '' WHERE ident_cely = 'HES-000427';
@@ -207,7 +213,7 @@ UPDATE heslar SET razeni = 111, heslo = 'Komory', heslo_en = 'Comoros (the)', zk
 UPDATE heslar SET razeni = 111, heslo = 'šibenice', heslo_en = 'gallows', popis = '' WHERE ident_cely = 'HES-000511';
 UPDATE heslar SET razeni = 1110, heslo = 'pohřeb zvířete', heslo_en = 'animal burial', popis = '' WHERE ident_cely = 'HES-000436';
 UPDATE heslar SET razeni = 1111, heslo = 'pohřeb v sídlištním objektu', heslo_en = 'burial in settlement context', popis = '' WHERE ident_cely = 'HES-000437';
-UPDATE heslar SET razeni = 1112, heslo = 'stéla', heslo_en = 'stelae', popis = '' WHERE ident_cely = 'HES-000469';
+UPDATE heslar SET razeni = 1112, heslo = 'stéla', heslo_en = 'stela', popis = '' WHERE ident_cely = 'HES-000469';
 UPDATE heslar SET razeni = 112, heslo = 'Konžská republika', heslo_en = 'Congo (the)', zkratka = 'CG', popis = '' WHERE ident_cely = 'HES-001385';
 UPDATE heslar SET razeni = 112, heslo = 'zvonice', heslo_en = 'bell tower', popis = '' WHERE ident_cely = 'HES-000485';
 UPDATE heslar SET razeni = 113, heslo = 'Korejská lidově demokratická republika', heslo_en = 'Korea (the Democratic People''s Republic of)', zkratka = 'KP', popis = '' WHERE ident_cely = 'HES-001373';
@@ -360,7 +366,7 @@ UPDATE heslar SET razeni = 1401, heslo = 'brusle', heslo_en = 'ice skate', popis
 UPDATE heslar SET razeni = 1401, heslo = 'místo těžby', heslo_en = 'extracting place', popis = '' WHERE ident_cely = 'HES-000559';
 UPDATE heslar SET razeni = 1402, heslo = 'člun', heslo_en = 'boat', popis = '' WHERE ident_cely = 'HES-000744';
 UPDATE heslar SET razeni = 1402, heslo = 'lom', heslo_en = 'quarry', popis = '' WHERE ident_cely = 'HES-000560';
-UPDATE heslar SET razeni = 1403, heslo = 'faléra', heslo_en = 'phalerae', popis = '' WHERE ident_cely = 'HES-000745';
+UPDATE heslar SET razeni = 1403, heslo = 'faléra', heslo_en = 'phalera', popis = '' WHERE ident_cely = 'HES-000745';
 UPDATE heslar SET razeni = 1403, heslo = 'obval', heslo_en = 'spoil bank', popis = '' WHERE ident_cely = 'HES-000561';
 UPDATE heslar SET razeni = 1404, heslo = 'pinka', heslo_en = 'binge', popis = '' WHERE ident_cely = 'HES-000562';
 UPDATE heslar SET razeni = 1404, heslo = 'podkova', heslo_en = 'horseshoe', popis = '' WHERE ident_cely = 'HES-000746';
@@ -403,7 +409,7 @@ UPDATE heslar SET razeni = 1500, heslo = 'doba římská–stěhování národů
 UPDATE heslar SET razeni = 1500, heslo = 'součást hrobu', heslo_en = 'grave component', popis = '' WHERE ident_cely = 'HES-000673';
 UPDATE heslar SET razeni = 1500, heslo = 'součást hrobu', heslo_en = 'grave component', popis = '' WHERE ident_cely = 'HES-000856';
 UPDATE heslar SET razeni = 1501, heslo = 'rakev', heslo_en = 'coffin', popis = '' WHERE ident_cely = 'HES-000704';
-UPDATE heslar SET razeni = 1502, heslo = 'stéla', heslo_en = 'stele', popis = '' WHERE ident_cely = 'HES-000688';
+UPDATE heslar SET razeni = 1502, heslo = 'stéla', heslo_en = 'stela', popis = '' WHERE ident_cely = 'HES-000688';
 UPDATE heslar SET razeni = 151, heslo = 'Mongolsko', heslo_en = 'Mongolia', zkratka = 'MN', popis = '' WHERE ident_cely = 'HES-001240';
 UPDATE heslar SET razeni = 151, heslo = 'nález v druhotné poloze', heslo_en = 'find in secondary context', popis = 'prostor s nálezy přemístěnými postdepozičními procesy' WHERE ident_cely = 'HES-000061';
 UPDATE heslar SET razeni = 152, heslo = 'Montserrat', heslo_en = 'Montserrat', zkratka = 'MS', popis = '' WHERE ident_cely = 'HES-001241';
@@ -581,10 +587,10 @@ UPDATE heslar SET razeni = 2, heslo = 'dendrochronologie', heslo_en = 'dendrochr
 UPDATE heslar SET razeni = 2, heslo = 'deštivo', heslo_en = 'rainy', popis = '' WHERE ident_cely = 'HES-000587';
 UPDATE heslar SET razeni = 2, heslo = 'dno sondy', heslo_en = 'trench bottom', popis = '' WHERE ident_cely = 'HES-001158';
 UPDATE heslar SET razeni = 2, heslo = 'jiná organizace', heslo_en = 'other organisation', popis = '' WHERE ident_cely = 'HES-001128';
-UPDATE heslar SET razeni = 2, heslo = 'linie', heslo_en = 'polyline', popis = '' WHERE ident_cely = 'HES-001134';
+UPDATE heslar SET razeni = 2, heslo = 'linie', heslo_en = 'line', popis = '' WHERE ident_cely = 'HES-001134';
 UPDATE heslar SET razeni = 2, heslo = 'němčina', heslo_en = 'German', zkratka = 'DE', popis = '' WHERE ident_cely = 'HES-000168';
 UPDATE heslar SET razeni = 2, heslo = 'neodborné narušení', heslo_en = 'non-professional intervention', popis = '' WHERE ident_cely = 'HES-001140';
-UPDATE heslar SET razeni = 2, heslo = 'odchylka desítky metrů', heslo_en = 'deviation of tens of meters', zkratka = '2', popis = 'odchylka desítky metrů' WHERE ident_cely = 'HES-000862';
+UPDATE heslar SET razeni = 2, heslo = 'odchylka desítky metrů', heslo_en = 'deviation in tens of meters', zkratka = '2', popis = 'odchylka desítky metrů' WHERE ident_cely = 'HES-000862';
 UPDATE heslar SET razeni = 2, heslo = 'ochranné pásmo', heslo_en = 'protection zone', popis = '' WHERE ident_cely = 'HES-000176';
 UPDATE heslar SET razeni = 2, heslo = 'ornice', heslo_en = 'arable topsoil', popis = '' WHERE ident_cely = 'HES-000243';
 UPDATE heslar SET razeni = 2, heslo = 'pohřbívání', heslo_en = 'burial activity', zkratka = 'poh', popis = '' WHERE ident_cely = 'HES-000002';
@@ -771,7 +777,6 @@ UPDATE heslar SET razeni = 3, heslo = 'angličtina', heslo_en = 'English', zkrat
 UPDATE heslar SET razeni = 3, heslo = 'archeolog', heslo_en = 'archaeologist', zkratka = 'C', popis = '' WHERE ident_cely = 'HES-000867';
 UPDATE heslar SET razeni = 3, heslo = 'archiv ARÚ', heslo_en = 'IAP archive', popis = '' WHERE ident_cely = 'HES-001168';
 UPDATE heslar SET razeni = 3, heslo = 'bodové objekty uspořádané', heslo_en = 'organized point features', popis = '' WHERE ident_cely = 'HES-001030';
-UPDATE heslar SET razeni = 3, heslo = 'Brno-Slatina', heslo_en = 'Brno-Slatina', popis = '' WHERE ident_cely = 'HES-000183';
 UPDATE heslar SET razeni = 3, heslo = 'bromkopie', heslo_en = 'hectograph copy', popis = '' WHERE ident_cely = 'HES-000219';
 UPDATE heslar SET razeni = 3, heslo = 'cín', heslo_en = 'tin', popis = '' WHERE ident_cely = 'HES-000967';
 UPDATE heslar SET razeni = 3, heslo = 'článek v novinách', heslo_en = 'newspaper article', zkratka = 'D', popis = '' WHERE ident_cely = 'HES-001120';
@@ -780,18 +785,18 @@ UPDATE heslar SET razeni = 3, heslo = 'expertní posudek', heslo_en = 'expert re
 UPDATE heslar SET razeni = 3, heslo = 'geodetický průzkum', heslo_en = 'geodetic survey', popis = '' WHERE ident_cely = 'HES-001141';
 UPDATE heslar SET razeni = 3, heslo = 'inženýrsko-geologický průzkum', heslo_en = 'engineering-geological survey', popis = '' WHERE ident_cely = 'HES-000596';
 UPDATE heslar SET razeni = 3, heslo = 'krajina', heslo_en = 'landscape', zkratka = 'K', popis = '' WHERE ident_cely = 'HES-001124';
-UPDATE heslar SET razeni = 3, heslo = 'kulturní památka', heslo_en = 'culture monument', popis = '' WHERE ident_cely = 'HES-000177';
+UPDATE heslar SET razeni = 3, heslo = 'kulturní památka', heslo_en = 'listed monument', popis = '' WHERE ident_cely = 'HES-000177';
 UPDATE heslar SET razeni = 3, heslo = 'někdy v letech', heslo_en = 'approximate years', popis = 'možno zadat pouze rok; pouze u neregistrovaných akcí' WHERE ident_cely = 'HES-000889';
 UPDATE heslar SET razeni = 3, heslo = 'nízká kvalita', heslo_en = 'poor quality', zkratka = '3', popis = 'orientační hodnota' WHERE ident_cely = 'HES-000239';
 UPDATE heslar SET razeni = 3, heslo = 'oblačno', heslo_en = 'cloudy', popis = '' WHERE ident_cely = 'HES-000588';
-UPDATE heslar SET razeni = 3, heslo = 'odchylka stovky metrů', heslo_en = 'deviation of hundreds of meters', zkratka = '3', popis = 'odchylka stovky metrů' WHERE ident_cely = 'HES-000863';
+UPDATE heslar SET razeni = 3, heslo = 'odchylka stovky metrů', heslo_en = 'deviation in hundreds of meters', zkratka = '3', popis = 'odchylka stovky metrů' WHERE ident_cely = 'HES-000863';
 UPDATE heslar SET razeni = 3, heslo = 'pastvina/louka', heslo_en = 'pasture topsoil', popis = '' WHERE ident_cely = 'HES-000244';
-UPDATE heslar SET razeni = 3, heslo = 'plocha', heslo_en = 'polygon', popis = '' WHERE ident_cely = 'HES-001135';
 UPDATE heslar SET razeni = 3, heslo = 'podloží', heslo_en = 'subsoil', popis = '' WHERE ident_cely = 'HES-001159';
+UPDATE heslar SET razeni = 3, heslo = 'polygon', heslo_en = 'polygon', popis = '' WHERE ident_cely = 'HES-001135';
 UPDATE heslar SET razeni = 3, heslo = 'průzkum', heslo_en = 'survey', popis = '' WHERE ident_cely = 'HES-001138';
 UPDATE heslar SET razeni = 3, heslo = 'radiouhlíkové datování', heslo_en = 'radiocarbon dating', popis = 'Metoda datování biologického materiálu pomocí poločasu rozpadu radioaktivního izotopu uhlíku 14C.' WHERE ident_cely = 'HES-000608';
 UPDATE heslar SET razeni = 3, heslo = 'sonda', heslo_en = 'trench', popis = '' WHERE ident_cely = 'HES-001072';
-UPDATE heslar SET razeni = 3, heslo = 'terénní pracoviště', heslo_en = 'fieldwork organisation', popis = '' WHERE ident_cely = 'HES-001129';
+UPDATE heslar SET razeni = 3, heslo = 'terénní pracoviště', heslo_en = 'fieldwork unit', popis = '' WHERE ident_cely = 'HES-001129';
 UPDATE heslar SET razeni = 3, heslo = 'výroba', heslo_en = 'production activity', zkratka = 'výr', popis = '' WHERE ident_cely = 'HES-000003';
 UPDATE heslar SET razeni = 3, heslo = 'zahraniční výzkum', heslo_en = 'fieldwork abroad', popis = '' WHERE ident_cely = 'HES-001154';
 UPDATE heslar SET razeni = 3, heslo = 'zachováno 0–30 %', heslo_en = '0–30% preserved', zkratka = '3', popis = 'nemusí být skenován' WHERE ident_cely = 'HES-001175';
@@ -887,14 +892,14 @@ UPDATE heslar SET razeni = 4, heslo = 'Brno-Tuřany', heslo_en = 'Brno-Tuřany',
 UPDATE heslar SET razeni = 4, heslo = 'dehet', heslo_en = 'tar', popis = '' WHERE ident_cely = 'HES-000968';
 UPDATE heslar SET razeni = 4, heslo = 'diapozitiv barevný', heslo_en = 'colour photoslide', zkratka = 'dia-bar', popis = '' WHERE ident_cely = 'HES-000220';
 UPDATE heslar SET razeni = 4, heslo = 'fotografie diapozitivy', heslo_en = 'photoslides', zkratka = 'FD', popis = '' WHERE ident_cely = 'HES-000876';
-UPDATE heslar SET razeni = 4, heslo = 'francouzsština', heslo_en = 'French', zkratka = 'FR', popis = '' WHERE ident_cely = 'HES-000170';
+UPDATE heslar SET razeni = 4, heslo = 'francouzština', heslo_en = 'French', zkratka = 'FR', popis = '' WHERE ident_cely = 'HES-000170';
 UPDATE heslar SET razeni = 4, heslo = 'geofyzikální průzkum', heslo_en = 'geophysical survey', popis = '' WHERE ident_cely = 'HES-001142';
 UPDATE heslar SET razeni = 4, heslo = 'havárie/stavební narušení', heslo_en = 'accident/building disruption', popis = '' WHERE ident_cely = 'HES-000597';
 UPDATE heslar SET razeni = 4, heslo = 'katastrální území', heslo_en = 'cadastral area', popis = '' WHERE ident_cely = 'HES-001073';
 UPDATE heslar SET razeni = 4, heslo = 'kniha', heslo_en = 'book', zkratka = 'A', popis = '' WHERE ident_cely = 'HES-001117';
 UPDATE heslar SET razeni = 4, heslo = 'krajina', heslo_en = 'landscape', popis = '' WHERE ident_cely = 'HES-000136';
 UPDATE heslar SET razeni = 4, heslo = 'lesní hrabanka', heslo_en = 'woodland topsoil', popis = '' WHERE ident_cely = 'HES-000245';
-UPDATE heslar SET razeni = 4, heslo = 'národní kulturní památka', heslo_en = 'natinonal culture monument', popis = '' WHERE ident_cely = 'HES-000178';
+UPDATE heslar SET razeni = 4, heslo = 'národní kulturní památka', heslo_en = 'listed national monument', popis = '' WHERE ident_cely = 'HES-000178';
 UPDATE heslar SET razeni = 4, heslo = 'není, nezjištěno', heslo_en = 'unavailable/unknown', zkratka = '4', popis = '' WHERE ident_cely = 'HES-000240';
 UPDATE heslar SET razeni = 4, heslo = 'oblačno, zataženo', heslo_en = 'cloudy, overcast', popis = '' WHERE ident_cely = 'HES-000589';
 UPDATE heslar SET razeni = 4, heslo = 'plošný objekt', heslo_en = 'polygonal feature', popis = 'zhruba nad 100 m2' WHERE ident_cely = 'HES-001031';
@@ -950,7 +955,7 @@ UPDATE heslar SET razeni = 409, heslo = 'výplň/zásyp', heslo_en = 'fill/depos
 UPDATE heslar SET razeni = 41, heslo = '3D textura', heslo_en = '3D texture', popis = '' WHERE ident_cely = 'HES-001115';
 UPDATE heslar SET razeni = 41, heslo = 'Curaçao', heslo_en = 'Curaçao', zkratka = 'CW', popis = '' WHERE ident_cely = 'HES-001243';
 UPDATE heslar SET razeni = 41, heslo = 'kaple', heslo_en = 'chapel', popis = '' WHERE ident_cely = 'HES-000020';
-UPDATE heslar SET razeni = 41, heslo = 'muzeum/skanzen', heslo_en = 'museum/landscape museum', popis = '' WHERE ident_cely = 'HES-000129';
+UPDATE heslar SET razeni = 41, heslo = 'muzeum/skanzen', heslo_en = 'museum/open-air museum', popis = '' WHERE ident_cely = 'HES-000129';
 UPDATE heslar SET razeni = 41, heslo = 'proutí', heslo_en = 'wattle', popis = '' WHERE ident_cely = 'HES-001005';
 UPDATE heslar SET razeni = 410, heslo = 'kámen drahý', heslo_en = 'gemstone', popis = '' WHERE ident_cely = 'HES-000929';
 UPDATE heslar SET razeni = 410, heslo = 'skořápka plodu', heslo_en = 'fruit shell/nutshell', popis = '' WHERE ident_cely = 'HES-000754';
@@ -966,7 +971,7 @@ UPDATE heslar SET razeni = 413, heslo = 'kámen štípaný', heslo_en = 'lithics
 UPDATE heslar SET razeni = 413, heslo = 'vejce', heslo_en = 'eggshell', popis = '' WHERE ident_cely = 'HES-000646';
 UPDATE heslar SET razeni = 413, heslo = 'želiezovská skupina', heslo_en = 'Želizovce Group', zkratka = 'ne.zel', popis = '' WHERE ident_cely = 'HES-000340';
 UPDATE heslar SET razeni = 414, heslo = 'keramika', heslo_en = 'ceramic', popis = '' WHERE ident_cely = 'HES-000933';
-UPDATE heslar SET razeni = 414, heslo = 'oberlauterbašská kultura', heslo_en = 'Oberlauterbach Culture', zkratka = 'ne.obe', popis = '' WHERE ident_cely = 'HES-000305';
+UPDATE heslar SET razeni = 414, heslo = 'oberlauterbašská skupina', heslo_en = 'Oberlauterbach Group', zkratka = 'ne.obe', popis = '' WHERE ident_cely = 'HES-000305';
 UPDATE heslar SET razeni = 414, heslo = 'zub', heslo_en = 'tooth', popis = '' WHERE ident_cely = 'HES-000647';
 UPDATE heslar SET razeni = 415, heslo = 'keramika fajáns/majolika', heslo_en = 'faience/maiolica', popis = '' WHERE ident_cely = 'HES-000934';
 UPDATE heslar SET razeni = 416, heslo = 'keramika kamenina', heslo_en = 'stoneware', popis = '' WHERE ident_cely = 'HES-000935';
@@ -984,7 +989,7 @@ UPDATE heslar SET razeni = 420, heslo = 'střední–mladší neolit', heslo_en 
 UPDATE heslar SET razeni = 421, heslo = 'kost lidská', heslo_en = 'human bone', popis = '' WHERE ident_cely = 'HES-000905';
 UPDATE heslar SET razeni = 421, heslo = 'kultura s vypíchanou keramikou', heslo_en = 'Stroke Pottery Culture', zkratka = 'ne.vyp', popis = '' WHERE ident_cely = 'HES-000361';
 UPDATE heslar SET razeni = 422, heslo = 'kost zvířecí', heslo_en = 'animal bone', popis = '' WHERE ident_cely = 'HES-000906';
-UPDATE heslar SET razeni = 422, heslo = 'moravská malovaná keramika (neolit)', heslo_en = 'Moravian Painted Ware Culture 1', zkratka = 'ne.mm1', popis = '' WHERE ident_cely = 'HES-000362';
+UPDATE heslar SET razeni = 422, heslo = 'kultura s moravskou malovanou keramikou 1', heslo_en = 'Moravian Painted Ware Culture 1', zkratka = 'ne.mm1', popis = '' WHERE ident_cely = 'HES-000362';
 UPDATE heslar SET razeni = 423, heslo = 'kov', heslo_en = 'metal', popis = '' WHERE ident_cely = 'HES-000907';
 UPDATE heslar SET razeni = 423, heslo = 'lengyelská kultura', heslo_en = 'Lengyel Culture', zkratka = 'ne.len', popis = '' WHERE ident_cely = 'HES-000306';
 UPDATE heslar SET razeni = 424, heslo = 'kov barevný', heslo_en = 'nonferrous metal', popis = '' WHERE ident_cely = 'HES-000908';
@@ -1049,7 +1054,7 @@ UPDATE heslar SET razeni = 5, heslo = 'Alžírsko', heslo_en = 'Algeria', zkratk
 UPDATE heslar SET razeni = 5, heslo = 'analýza stabilních izotopů', heslo_en = 'stable isotope analysis', popis = 'Metoda získávání informací o výživě a migracích jedinců za pomocí poměrových analýz stabilních izotopů.' WHERE ident_cely = 'HES-000618';
 UPDATE heslar SET razeni = 5, heslo = 'archiv autora', heslo_en = 'author''s archive', popis = 'fyzická osoba' WHERE ident_cely = 'HES-001170';
 UPDATE heslar SET razeni = 5, heslo = 'Czestochowa', heslo_en = 'Czestochowa', popis = '' WHERE ident_cely = 'HES-000185';
-UPDATE heslar SET razeni = 5, heslo = 'diapozitiv černobílý (film)', heslo_en = 'black-and-white photslide (film)', zkratka = 'dia-čb-film', popis = '' WHERE ident_cely = 'HES-000221';
+UPDATE heslar SET razeni = 5, heslo = 'diapozitiv černobílý (film)', heslo_en = 'black-and-white photoslide (film)', zkratka = 'dia-čb-film', popis = '' WHERE ident_cely = 'HES-000221';
 UPDATE heslar SET razeni = 5, heslo = 'dřevo', heslo_en = 'wood', popis = '' WHERE ident_cely = 'HES-000969';
 UPDATE heslar SET razeni = 5, heslo = 'duplicita', heslo_en = 'duplicate', zkratka = 'D', popis = 'kvalitní, má záznam, neskenován z důvodu věcné duplicity' WHERE ident_cely = 'HES-001177';
 UPDATE heslar SET razeni = 5, heslo = 'fotografie letecké (diapozitivy)', heslo_en = 'aerial photoslides', zkratka = 'LD', popis = '' WHERE ident_cely = 'HES-000880';
@@ -1077,7 +1082,7 @@ UPDATE heslar SET razeni = 50, heslo = 'stříbro', heslo_en = 'silver', popis =
 UPDATE heslar SET razeni = 500, heslo = 'deska', heslo_en = 'board', popis = '' WHERE ident_cely = 'HES-000712';
 UPDATE heslar SET razeni = 500, heslo = 'eneolit', heslo_en = 'Eneolithic', popis = '' WHERE ident_cely = 'HES-000399';
 UPDATE heslar SET razeni = 500, heslo = 'eneolit', heslo_en = 'Eneolithic', zkratka = 'eneoli', popis = '' WHERE ident_cely = 'HES-000285';
-UPDATE heslar SET razeni = 500, heslo = 'funkčně neurčený předmět', heslo_en = 'object of unknown function', popis = '' WHERE ident_cely = 'HES-000846';
+UPDATE heslar SET razeni = 500, heslo = 'funkčně neurčený předmět', heslo_en = 'object of unspecified function', popis = '' WHERE ident_cely = 'HES-000846';
 UPDATE heslar SET razeni = 500, heslo = 'inženýrské sítě', heslo_en = 'utilities', popis = '' WHERE ident_cely = 'HES-000515';
 UPDATE heslar SET razeni = 500, heslo = 'inženýrské sítě', heslo_en = 'utilities', popis = '' WHERE ident_cely = 'HES-000575';
 UPDATE heslar SET razeni = 501, heslo = 'drát', heslo_en = 'wire', popis = '' WHERE ident_cely = 'HES-000782';
@@ -1095,7 +1100,7 @@ UPDATE heslar SET razeni = 51, heslo = 'Ekvádor', heslo_en = 'Ecuador', zkratka
 UPDATE heslar SET razeni = 51, heslo = 'izolovaný pohřeb', heslo_en = 'isolated grave', popis = '' WHERE ident_cely = 'HES-000026';
 UPDATE heslar SET razeni = 51, heslo = 'švartna', heslo_en = 'sapropel', popis = '' WHERE ident_cely = 'HES-001015';
 UPDATE heslar SET razeni = 510, heslo = 'časný eneolit', heslo_en = 'Proto-Eneolithic', zkratka = 'en.ca', popis = '' WHERE ident_cely = 'HES-000286';
-UPDATE heslar SET razeni = 511, heslo = 'moravská malovaná keramika (eneolit)', heslo_en = 'Moravian Painted Ware Culture 2', zkratka = 'en.mm2', popis = '' WHERE ident_cely = 'HES-000363';
+UPDATE heslar SET razeni = 511, heslo = 'kultura s moravskou malovanou keramikou 2', heslo_en = 'Moravian Painted Ware Culture 2', zkratka = 'en.mm2', popis = '' WHERE ident_cely = 'HES-000363';
 UPDATE heslar SET razeni = 512, heslo = 'jordanovská kultura', heslo_en = 'Jordanów Culture', zkratka = 'en.jor', popis = '' WHERE ident_cely = 'HES-000287';
 UPDATE heslar SET razeni = 513, heslo = 'schusseriedská kultura', heslo_en = 'Schussenried Culture', zkratka = 'en.sch', popis = '' WHERE ident_cely = 'HES-000364';
 UPDATE heslar SET razeni = 514, heslo = 'michelsberská kultura', heslo_en = 'Michelsberg Culture', zkratka = 'en.mic', popis = '' WHERE ident_cely = 'HES-000365';
@@ -1121,8 +1126,8 @@ UPDATE heslar SET razeni = 541, heslo = 'jevišovická kultura', heslo_en = 'Jev
 UPDATE heslar SET razeni = 542, heslo = 'bošácká skupina', heslo_en = 'Bošáca Group', zkratka = 'en.bos', popis = '' WHERE ident_cely = 'HES-000357';
 UPDATE heslar SET razeni = 55, heslo = 'Faerské ostrovy', heslo_en = 'Faroe Islands (the)', zkratka = 'FO', popis = '' WHERE ident_cely = 'HES-001336';
 UPDATE heslar SET razeni = 55, heslo = 'vápno', heslo_en = 'quicklime', popis = '' WHERE ident_cely = 'HES-001019';
-UPDATE heslar SET razeni = 550, heslo = 'mladší–pozdní eneolit', heslo_en = 'Late–Final Eneolithic', zkratka = 'en.mlp', popis = '' WHERE ident_cely = 'HES-000374';
-UPDATE heslar SET razeni = 551, heslo = 'kultura se šňůrové keramikou', heslo_en = 'Corded Ware Culture', zkratka = 'en.snu', popis = '' WHERE ident_cely = 'HES-000375';
+UPDATE heslar SET razeni = 550, heslo = 'mladší/pozdní eneolit', heslo_en = 'Late/Final Eneolithic', zkratka = 'en.mlp', popis = '' WHERE ident_cely = 'HES-000374';
+UPDATE heslar SET razeni = 551, heslo = 'kultura se šňůrovou keramikou', heslo_en = 'Corded Ware Culture', zkratka = 'en.snu', popis = '' WHERE ident_cely = 'HES-000375';
 UPDATE heslar SET razeni = 552, heslo = 'kultura Kosihy-Čaka', heslo_en = 'Kosihy-Čaka Culture', zkratka = 'en.kča', popis = '' WHERE ident_cely = 'HES-000351';
 UPDATE heslar SET razeni = 553, heslo = 'kultura zvoncovitých pohárů', heslo_en = 'Bell Beaker Culture', zkratka = 'en.zvo', popis = '' WHERE ident_cely = 'HES-000318';
 UPDATE heslar SET razeni = 554, heslo = 'kultura Chlopice-Veselé', heslo_en = 'Chlopice-Veselé Culture', zkratka = 'en.chl', popis = '' WHERE ident_cely = 'HES-000352';
@@ -1139,7 +1144,7 @@ UPDATE heslar SET razeni = 6, heslo = 'A4 (21 x 30 cm)', heslo_en = 'A4 (21 x 30
 UPDATE heslar SET razeni = 6, heslo = 'Americká Samoa', heslo_en = 'American Samoa', zkratka = 'AS', popis = '' WHERE ident_cely = 'HES-001183';
 UPDATE heslar SET razeni = 6, heslo = 'antrakologie/xylotomie', heslo_en = 'anthracology/xylotomy', popis = 'Analýza zuhelnatělých (antrakologie) a nezuhelnatělých (xylotomie) pozůstatků dřev v archeologických kontextech.' WHERE ident_cely = 'HES-000604';
 UPDATE heslar SET razeni = 6, heslo = 'Czestochowa-Rudniky', heslo_en = 'Czestochowa-Rudniky', popis = '' WHERE ident_cely = 'HES-000186';
-UPDATE heslar SET razeni = 6, heslo = 'diapozitiv černobílý (sklo)', heslo_en = 'black-and-white photslide (glass)', zkratka = 'dia-čb-sklo', popis = '' WHERE ident_cely = 'HES-000222';
+UPDATE heslar SET razeni = 6, heslo = 'diapozitiv černobílý (sklo)', heslo_en = 'black-and-white photoslide (glass)', zkratka = 'dia-čb-sklo', popis = '' WHERE ident_cely = 'HES-000222';
 UPDATE heslar SET razeni = 6, heslo = 'fotografie letecké (digitální)', heslo_en = 'aerial photographs (digital)', zkratka = 'DL', popis = '' WHERE ident_cely = 'HES-000872';
 UPDATE heslar SET razeni = 6, heslo = 'geologický vrt', heslo_en = 'geological core sample', popis = '' WHERE ident_cely = 'HES-001144';
 UPDATE heslar SET razeni = 6, heslo = 'grafit', heslo_en = 'graphite', popis = '' WHERE ident_cely = 'HES-000970';
@@ -1151,7 +1156,7 @@ UPDATE heslar SET razeni = 6, heslo = 'latina', heslo_en = 'Latin', zkratka = 'L
 UPDATE heslar SET razeni = 6, heslo = 'linie ohrazující', heslo_en = 'delimiting line', popis = '' WHERE ident_cely = 'HES-001033';
 UPDATE heslar SET razeni = 6, heslo = 'nízká výpovědní hodnota', heslo_en = 'low relevancy', zkratka = 'N', popis = 'kvalitní, má záznam, neskenován kvůli nízké vypovídací hodnotě' WHERE ident_cely = 'HES-001178';
 UPDATE heslar SET razeni = 6, heslo = 'originál ztracen/zničen', heslo_en = 'original lost/destroyed', popis = '' WHERE ident_cely = 'HES-001171';
-UPDATE heslar SET razeni = 6, heslo = 'památková rezervace', heslo_en = 'heritage reservation', popis = '' WHERE ident_cely = 'HES-000180';
+UPDATE heslar SET razeni = 6, heslo = 'památková rezervace', heslo_en = 'heritage reserve', popis = '' WHERE ident_cely = 'HES-000180';
 UPDATE heslar SET razeni = 6, heslo = 'raný středověk', heslo_en = 'Early Medieval', popis = '' WHERE ident_cely = 'HES-001162';
 UPDATE heslar SET razeni = 6, heslo = 'slunečno, oblačno', heslo_en = 'sunny, cloudy', popis = '' WHERE ident_cely = 'HES-000591';
 UPDATE heslar SET razeni = 6, heslo = 'výzkumná instituce', heslo_en = 'research organisation', popis = '' WHERE ident_cely = 'HES-001131';
@@ -1162,8 +1167,8 @@ UPDATE heslar SET razeni = 60, heslo = 'jiná evidence', heslo_en = 'other evide
 UPDATE heslar SET razeni = 60, heslo = 'jiná evidence', heslo_en = 'other evidence', popis = '' WHERE ident_cely = 'HES-001068';
 UPDATE heslar SET razeni = 60, heslo = 'zub lidský', heslo_en = 'human tooth', popis = '' WHERE ident_cely = 'HES-001024';
 UPDATE heslar SET razeni = 600, heslo = 'komunikace', heslo_en = 'transportation structure', popis = '' WHERE ident_cely = 'HES-000576';
-UPDATE heslar SET razeni = 600, heslo = 'militaria', heslo_en = 'weapons and armor', popis = '' WHERE ident_cely = 'HES-000784';
-UPDATE heslar SET razeni = 600, heslo = 'militaria', heslo_en = 'weapons and armor', popis = '' WHERE ident_cely = 'HES-000847';
+UPDATE heslar SET razeni = 600, heslo = 'militaria', heslo_en = 'weapons and armour', popis = '' WHERE ident_cely = 'HES-000784';
+UPDATE heslar SET razeni = 600, heslo = 'militaria', heslo_en = 'weapons and armour', popis = '' WHERE ident_cely = 'HES-000847';
 UPDATE heslar SET razeni = 600, heslo = 'neolit–eneolit', heslo_en = 'Neolithic–Eneolithic', popis = '' WHERE ident_cely = 'HES-000400';
 UPDATE heslar SET razeni = 600, heslo = 'neolit–eneolit', heslo_en = 'Neolithic–Eneolithic', zkratka = 'ne-en', popis = '' WHERE ident_cely = 'HES-000387';
 UPDATE heslar SET razeni = 600, heslo = 'součást komunikace', heslo_en = 'transportation structure', popis = '' WHERE ident_cely = 'HES-000519';
@@ -1249,8 +1254,8 @@ UPDATE heslar SET razeni = 708, heslo = 'smírčí kříž', heslo_en = 'wayside
 UPDATE heslar SET razeni = 71, heslo = 'důl', heslo_en = 'mine', popis = '' WHERE ident_cely = 'HES-000033';
 UPDATE heslar SET razeni = 71, heslo = 'Guadeloupe', heslo_en = 'Guadeloupe', zkratka = 'GP', popis = '' WHERE ident_cely = 'HES-001203';
 UPDATE heslar SET razeni = 710, heslo = 'starší doba bronzová', heslo_en = 'Early Bronze Age', zkratka = 'br.st', popis = '' WHERE ident_cely = 'HES-000319';
-UPDATE heslar SET razeni = 711, heslo = 'protoúnětická kultura', heslo_en = 'Proto-Unetician Culture', zkratka = 'en.pun', popis = '' WHERE ident_cely = 'HES-000391';
-UPDATE heslar SET razeni = 712, heslo = 'únětická kultura', heslo_en = 'Unetician Culture', zkratka = 'br.une', popis = '' WHERE ident_cely = 'HES-000358';
+UPDATE heslar SET razeni = 711, heslo = 'protoúnětická kultura', heslo_en = 'Proto-Únětice Culture', zkratka = 'en.pun', popis = '' WHERE ident_cely = 'HES-000391';
+UPDATE heslar SET razeni = 712, heslo = 'únětická kultura', heslo_en = 'Únětice Culture', zkratka = 'br.une', popis = '' WHERE ident_cely = 'HES-000358';
 UPDATE heslar SET razeni = 713, heslo = 'nitranská kultura', heslo_en = 'Nitra Culture', zkratka = 'br.nit', popis = '' WHERE ident_cely = 'HES-000359';
 UPDATE heslar SET razeni = 714, heslo = 'hatvanská kultura', heslo_en = 'Hatvan Culture', zkratka = 'br.hat', popis = '' WHERE ident_cely = 'HES-000320';
 UPDATE heslar SET razeni = 715, heslo = 'věteřovská kultura', heslo_en = 'Věteřov Culture', zkratka = 'br.vet', popis = '' WHERE ident_cely = 'HES-000321';
@@ -1294,7 +1299,7 @@ UPDATE heslar SET razeni = 8, heslo = 'fotografie předmětů', heslo_en = 'phot
 UPDATE heslar SET razeni = 8, heslo = 'Choceň', heslo_en = 'Choceň', popis = '' WHERE ident_cely = 'HES-000188';
 UPDATE heslar SET razeni = 8, heslo = 'jantar', heslo_en = 'amber', popis = '' WHERE ident_cely = 'HES-000972';
 UPDATE heslar SET razeni = 8, heslo = 'nerelevantní', heslo_en = 'irrelevant', zkratka = 'x', popis = '' WHERE ident_cely = 'HES-000174';
-UPDATE heslar SET razeni = 8, heslo = 'neuveden', heslo_en = 'unknown', popis = '' WHERE ident_cely = 'HES-000601';
+UPDATE heslar SET razeni = 8, heslo = 'neznámý', heslo_en = 'unknown', popis = '' WHERE ident_cely = 'HES-000601';
 UPDATE heslar SET razeni = 8, heslo = 'novověk', heslo_en = 'Modern', popis = '' WHERE ident_cely = 'HES-001164';
 UPDATE heslar SET razeni = 8, heslo = 'ohrazení kruhové malé', heslo_en = 'circular enclosure (small)', popis = '' WHERE ident_cely = 'HES-001035';
 UPDATE heslar SET razeni = 8, heslo = 'vodní plocha/tok', heslo_en = 'water body/stream', popis = '' WHERE ident_cely = 'HES-000249';
@@ -1310,9 +1315,9 @@ UPDATE heslar SET razeni = 800, heslo = 'nádoba', heslo_en = 'vessel', popis = 
 UPDATE heslar SET razeni = 800, heslo = 'objekt/stopa výroby', heslo_en = 'production feature/trace', popis = '' WHERE ident_cely = 'HES-000578';
 UPDATE heslar SET razeni = 800, heslo = 'výrobní objekt', heslo_en = 'production feature', popis = '' WHERE ident_cely = 'HES-000542';
 UPDATE heslar SET razeni = 801, heslo = 'akvamanile', heslo_en = 'aquamanile', popis = '' WHERE ident_cely = 'HES-000651';
-UPDATE heslar SET razeni = 801, heslo = 'místo zpracování', heslo_en = 'processing site', popis = '' WHERE ident_cely = 'HES-000543';
+UPDATE heslar SET razeni = 801, heslo = 'místo zpracování', heslo_en = 'processing place', popis = '' WHERE ident_cely = 'HES-000543';
 UPDATE heslar SET razeni = 802, heslo = 'amfora', heslo_en = 'amphorae', popis = '' WHERE ident_cely = 'HES-000652';
-UPDATE heslar SET razeni = 802, heslo = 'místo výroby', heslo_en = 'production site', popis = '' WHERE ident_cely = 'HES-000544';
+UPDATE heslar SET razeni = 802, heslo = 'místo výroby', heslo_en = 'production place', popis = '' WHERE ident_cely = 'HES-000544';
 UPDATE heslar SET razeni = 803, heslo = 'cedník', heslo_en = 'colander', popis = '' WHERE ident_cely = 'HES-000682';
 UPDATE heslar SET razeni = 803, heslo = 'hamr', heslo_en = 'hammer mill', popis = '' WHERE ident_cely = 'HES-000545';
 UPDATE heslar SET razeni = 804, heslo = 'dýmka', heslo_en = 'pipe', popis = '' WHERE ident_cely = 'HES-000635';
@@ -1336,7 +1341,7 @@ UPDATE heslar SET razeni = 811, heslo = 'billendorfská kultura (HaC)', heslo_en
 UPDATE heslar SET razeni = 811, heslo = 'lahev', heslo_en = 'bottle', popis = '' WHERE ident_cely = 'HES-000691';
 UPDATE heslar SET razeni = 811, heslo = 'zahrada', heslo_en = 'garden', popis = '' WHERE ident_cely = 'HES-000526';
 UPDATE heslar SET razeni = 812, heslo = 'bylanská kultura', heslo_en = 'Bylany Culture', zkratka = 'ha.byl', popis = '' WHERE ident_cely = 'HES-000331';
-UPDATE heslar SET razeni = 812, heslo = 'lampa/kahan', heslo_en = 'lamp', popis = '' WHERE ident_cely = 'HES-000695';
+UPDATE heslar SET razeni = 812, heslo = 'lampa/kahan', heslo_en = 'lamp/burner', popis = '' WHERE ident_cely = 'HES-000695';
 UPDATE heslar SET razeni = 813, heslo = 'halštatská mohylová kultura', heslo_en = 'Hallstatt Tumulus Culture', zkratka = 'ha.moh', popis = '' WHERE ident_cely = 'HES-000332';
 UPDATE heslar SET razeni = 813, heslo = 'mísa', heslo_en = 'bowl', popis = '' WHERE ident_cely = 'HES-000719';
 UPDATE heslar SET razeni = 814, heslo = 'horákovská kultura', heslo_en = 'Horákov Culture', zkratka = 'ha.hor', popis = '' WHERE ident_cely = 'HES-000307';
@@ -1442,9 +1447,11 @@ UPDATE heslar SET razeni = 97, heslo = 'Jižní Georgie a Jižní Sandwichovy os
 UPDATE heslar SET razeni = 98, heslo = 'Jižní Súdán', heslo_en = 'South Sudan', zkratka = 'SS', popis = '' WHERE ident_cely = 'HES-001318';
 UPDATE heslar SET razeni = 99, heslo = 'Jordánsko', heslo_en = 'Jordan', zkratka = 'JO', popis = '' WHERE ident_cely = 'HES-001383';
 
+
 -- Doplnění kategorií pro období
 INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (1010, 'časná doba laténská (LtA)', 'Early La Tène Period (LtA)', 16);
 INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (1020, 'střední doba laténská (LtB–C1)', 'Middle La Tène Period (LtB–C1)', 16);
+INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (1025, 'střední/mladší doba laténská (LtC1–2)', 'Middle/Late La Tène Period (LtC1–2)', 16);
 INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (1030, 'mladší–pozdní doba laténská (LtC2–D)', 'Late–Final La Tène Period (LtC2–D)', 16);
 INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (1040, 'pozdní doba laténská (LtD)', 'Final La Tène Period (LtD)', 16);
 INSERT INTO heslar (razeni, heslo, heslo_en, nazev_heslare) VALUES (110, 'starší paleolit', 'Lower Palaeolithic', 16);
@@ -1477,6 +1484,7 @@ UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE raze
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1010 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000329');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1010 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000355');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1020 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000333');
+UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1025 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-001447');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1030 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000255');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1030 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000256');
 UPDATE heslar_hierarchie SET heslo_nadrazene = (SELECT id FROM heslar WHERE razeni = 1030 AND nazev_heslare = 16) WHERE heslo_podrazene = (SELECT id FROM heslar WHERE ident_cely = 'HES-000257');
@@ -1729,6 +1737,7 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300006969, 'http://vocab.getty.edu/aat/300006969', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000502';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300006985, 'http://vocab.getty.edu/aat/300006985', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000500';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300007023, 'http://vocab.getty.edu/aat/300007023', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000469';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300007023, 'http://vocab.getty.edu/aat/300007023', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000688';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300007031, 'http://vocab.getty.edu/aat/300007031', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-001122';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300007391, 'http://vocab.getty.edu/aat/300007391', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-001433';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300007466, 'http://vocab.getty.edu/aat/300007466', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000021';
@@ -1766,7 +1775,7 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300008347, 'http://vocab.getty.edu/aat/300008347', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000133';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300008372, 'http://vocab.getty.edu/aat/300008372', 'skos:narrowMatch' FROM heslar WHERE ident_cely = 'HES-000068';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300008389, 'http://vocab.getty.edu/aat/300008389', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000074';
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300008400, 'http://vocab.getty.edu/aat/300008400', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000075';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300008400, 'http://vocab.getty.edu/aat/300008400', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000075';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300008542, 'http://vocab.getty.edu/aat/300008542', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-001435';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300008591, 'http://vocab.getty.edu/aat/300008591', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000050';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300008626, 'http://vocab.getty.edu/aat/300008626', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000136';
@@ -1909,12 +1918,15 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019258, 'http://vocab.getty.edu/aat/300019258', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000253';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019258, 'http://vocab.getty.edu/aat/300019258', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000395';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019260, 'http://vocab.getty.edu/aat/300019260', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000291';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019260, 'http://vocab.getty.edu/aat/300019260', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 110;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019261, 'http://vocab.getty.edu/aat/300019261', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000313';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019261, 'http://vocab.getty.edu/aat/300019261', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000314';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019261, 'http://vocab.getty.edu/aat/300019261', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000274';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019261, 'http://vocab.getty.edu/aat/300019261', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 120;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019262, 'http://vocab.getty.edu/aat/300019262', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000261';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019262, 'http://vocab.getty.edu/aat/300019262', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000282';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019262, 'http://vocab.getty.edu/aat/300019262', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000315';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019262, 'http://vocab.getty.edu/aat/300019262', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 130;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019264, 'http://vocab.getty.edu/aat/300019264', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000275';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019264, 'http://vocab.getty.edu/aat/300019264', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000396';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019267, 'http://vocab.getty.edu/aat/300019267', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000267';
@@ -1922,16 +1934,20 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019270, 'http://vocab.getty.edu/aat/300019270', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000305';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019270, 'http://vocab.getty.edu/aat/300019270', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000340';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019270, 'http://vocab.getty.edu/aat/300019270', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000268';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019270, 'http://vocab.getty.edu/aat/300019270', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 410;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019272, 'http://vocab.getty.edu/aat/300019272', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000362';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019272, 'http://vocab.getty.edu/aat/300019272', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000389';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019272, 'http://vocab.getty.edu/aat/300019272', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000360';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019272, 'http://vocab.getty.edu/aat/300019272', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 420;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019275, 'http://vocab.getty.edu/aat/300019275', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000390';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019275, 'http://vocab.getty.edu/aat/300019275', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000401';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019276, 'http://vocab.getty.edu/aat/300019276', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000320';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019276, 'http://vocab.getty.edu/aat/300019276', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000321';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019276, 'http://vocab.getty.edu/aat/300019276', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000359';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019276, 'http://vocab.getty.edu/aat/300019276', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000319';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019276, 'http://vocab.getty.edu/aat/300019276', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 710;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019277, 'http://vocab.getty.edu/aat/300019277', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000322';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019277, 'http://vocab.getty.edu/aat/300019277', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 720;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019278, 'http://vocab.getty.edu/aat/300019278', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000293';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019278, 'http://vocab.getty.edu/aat/300019278', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000294';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019278, 'http://vocab.getty.edu/aat/300019278', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000297';
@@ -1939,7 +1955,9 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019278, 'http://vocab.getty.edu/aat/300019278', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000330';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019278, 'http://vocab.getty.edu/aat/300019278', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000339';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019278, 'http://vocab.getty.edu/aat/300019278', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000383';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019278, 'http://vocab.getty.edu/aat/300019278', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 750;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019278, 'http://vocab.getty.edu/aat/300019278', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000290';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019278, 'http://vocab.getty.edu/aat/300019278', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 740;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019279, 'http://vocab.getty.edu/aat/300019279', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000288';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019279, 'http://vocab.getty.edu/aat/300019279', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000309';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019279, 'http://vocab.getty.edu/aat/300019279', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000334';
@@ -1947,6 +1965,7 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019279, 'http://vocab.getty.edu/aat/300019279', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000405';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019279, 'http://vocab.getty.edu/aat/300019279', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000407';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019279, 'http://vocab.getty.edu/aat/300019279', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000409';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019279, 'http://vocab.getty.edu/aat/300019279', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 820;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019279, 'http://vocab.getty.edu/aat/300019279', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000384';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019279, 'http://vocab.getty.edu/aat/300019279', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000403';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019291, 'http://vocab.getty.edu/aat/300019291', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000312';
@@ -1970,6 +1989,7 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019362, 'http://vocab.getty.edu/aat/300019362', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000353';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019362, 'http://vocab.getty.edu/aat/300019362', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000388';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019362, 'http://vocab.getty.edu/aat/300019362', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000281';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019362, 'http://vocab.getty.edu/aat/300019362', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 730;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019368, 'http://vocab.getty.edu/aat/300019368', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000300';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019368, 'http://vocab.getty.edu/aat/300019368', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000307';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019368, 'http://vocab.getty.edu/aat/300019368', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000308';
@@ -1979,6 +1999,8 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019368, 'http://vocab.getty.edu/aat/300019368', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000376';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019368, 'http://vocab.getty.edu/aat/300019368', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000377';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019368, 'http://vocab.getty.edu/aat/300019368', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000378';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019368, 'http://vocab.getty.edu/aat/300019368', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 810;
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019368, 'http://vocab.getty.edu/aat/300019368', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 830;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019368, 'http://vocab.getty.edu/aat/300019368', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000354';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019368, 'http://vocab.getty.edu/aat/300019368', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000402';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000255';
@@ -1989,12 +2011,19 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000329';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000333';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000355';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1010;
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1020;
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1025;
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1030;
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1040;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000254';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000404';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019537, 'http://vocab.getty.edu/aat/300019537', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000386';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020533, 'http://vocab.getty.edu/aat/300020533', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000336';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020533, 'http://vocab.getty.edu/aat/300020533', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000341';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020533, 'http://vocab.getty.edu/aat/300020533', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000393';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020533, 'http://vocab.getty.edu/aat/300020533', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1210;
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020533, 'http://vocab.getty.edu/aat/300020533', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1220;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020533, 'http://vocab.getty.edu/aat/300020533', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000335';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020533, 'http://vocab.getty.edu/aat/300020533', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000406';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020756, 'http://vocab.getty.edu/aat/300020756', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000380';
@@ -2011,10 +2040,12 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020764, 'http://vocab.getty.edu/aat/300020764', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000278';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020764, 'http://vocab.getty.edu/aat/300020764', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000302';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020764, 'http://vocab.getty.edu/aat/300020764', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000379';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020764, 'http://vocab.getty.edu/aat/300020764', 'skos:closeMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1840;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020766, 'http://vocab.getty.edu/aat/300020766', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000303';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020766, 'http://vocab.getty.edu/aat/300020766', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000326';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020766, 'http://vocab.getty.edu/aat/300020766', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000356';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020766, 'http://vocab.getty.edu/aat/300020766', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000325';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020766, 'http://vocab.getty.edu/aat/300020766', 'skos:closeMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1850;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300021033, 'http://vocab.getty.edu/aat/300021033', 'skos:narrowMatch' FROM heslar WHERE ident_cely = 'HES-000350';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300021033, 'http://vocab.getty.edu/aat/300021033', 'skos:narrowMatch' FROM heslar WHERE ident_cely = 'HES-000420';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300021033, 'http://vocab.getty.edu/aat/300021033', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000252';
@@ -2192,9 +2223,11 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106724, 'http://vocab.getty.edu/aat/300106724', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000397';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106730, 'http://vocab.getty.edu/aat/300106730', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000266';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106730, 'http://vocab.getty.edu/aat/300106730', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000264';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106730, 'http://vocab.getty.edu/aat/300106730', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 140;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106747, 'http://vocab.getty.edu/aat/300106747', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000351';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106747, 'http://vocab.getty.edu/aat/300106747', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000352';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106747, 'http://vocab.getty.edu/aat/300106747', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000374';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106747, 'http://vocab.getty.edu/aat/300106747', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 550;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106751, 'http://vocab.getty.edu/aat/300106751', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000287';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106751, 'http://vocab.getty.edu/aat/300106751', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000363';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106751, 'http://vocab.getty.edu/aat/300106751', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000364';
@@ -2203,13 +2236,17 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106751, 'http://vocab.getty.edu/aat/300106751', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000369';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106751, 'http://vocab.getty.edu/aat/300106751', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000286';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106751, 'http://vocab.getty.edu/aat/300106751', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000366';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106751, 'http://vocab.getty.edu/aat/300106751', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 510;
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106751, 'http://vocab.getty.edu/aat/300106751', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 520;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106753, 'http://vocab.getty.edu/aat/300106753', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000279';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106753, 'http://vocab.getty.edu/aat/300106753', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000371';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106753, 'http://vocab.getty.edu/aat/300106753', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000372';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106753, 'http://vocab.getty.edu/aat/300106753', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000370';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106753, 'http://vocab.getty.edu/aat/300106753', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 530;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106755, 'http://vocab.getty.edu/aat/300106755', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000357';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106755, 'http://vocab.getty.edu/aat/300106755', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000373';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106755, 'http://vocab.getty.edu/aat/300106755', 'skos:relatedMatch' FROM heslar WHERE ident_cely = 'HES-000280';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106755, 'http://vocab.getty.edu/aat/300106755', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 540;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106757, 'http://vocab.getty.edu/aat/300106757', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000285';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106757, 'http://vocab.getty.edu/aat/300106757', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000399';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106810, 'http://vocab.getty.edu/aat/300106810', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000292';
@@ -2220,6 +2257,8 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106913, 'http://vocab.getty.edu/aat/300106913', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000343';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106913, 'http://vocab.getty.edu/aat/300106913', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000344';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106913, 'http://vocab.getty.edu/aat/300106913', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000345';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106913, 'http://vocab.getty.edu/aat/300106913', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1410;
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106913, 'http://vocab.getty.edu/aat/300106913', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1420;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106913, 'http://vocab.getty.edu/aat/300106913', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000342';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106913, 'http://vocab.getty.edu/aat/300106913', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000408';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300107826, 'http://vocab.getty.edu/aat/300107826', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000269';
@@ -2325,6 +2364,8 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300192073, 'http://vocab.getty.edu/aat/300192073', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-001444';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300193015, 'http://vocab.getty.edu/aat/300193015', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000714';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300193015, 'http://vocab.getty.edu/aat/300193015', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000849';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300194594, 'http://vocab.getty.edu/aat/300194594', 'skos:narrowMatch' FROM heslar WHERE ident_cely = 'HES-000828';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300194594, 'http://vocab.getty.edu/aat/300194594', 'skos:narrowMatch' FROM heslar WHERE ident_cely = 'HES-000852';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300194765, 'http://vocab.getty.edu/aat/300194765', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000690';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300195349, 'http://vocab.getty.edu/aat/300195349', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000770';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300195474, 'http://vocab.getty.edu/aat/300195474', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000051';
@@ -2550,8 +2591,6 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300387350, 'http://vocab.getty.edu/aat/300387350', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000848';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300387395, 'http://vocab.getty.edu/aat/300387395', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000937';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300387395, 'http://vocab.getty.edu/aat/300387395', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000983';
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300387427, 'http://vocab.getty.edu/aat/300387427', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000828';
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300387427, 'http://vocab.getty.edu/aat/300387427', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000852';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300387502, 'http://vocab.getty.edu/aat/300387502', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000014';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300387704, 'http://vocab.getty.edu/aat/300387704', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000568';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300387704, 'http://vocab.getty.edu/aat/300387704', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000567';
@@ -2563,10 +2602,9 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300388693, 'http://vocab.getty.edu/aat/300388693', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000172';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300389168, 'http://vocab.getty.edu/aat/300389168', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000173';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300389290, 'http://vocab.getty.edu/aat/300389290', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000171';
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300389849, 'http://vocab.getty.edu/aat/300389849', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000030';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300389849, 'http://vocab.getty.edu/aat/300389849', 'skos:narrowMatch' FROM heslar WHERE ident_cely = 'HES-000030';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300389893, 'http://vocab.getty.edu/aat/300389893', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-001113';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300390564, 'http://vocab.getty.edu/aat/300390564', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000317';
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300391177, 'http://vocab.getty.edu/aat/300391177', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000688';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300391436, 'http://vocab.getty.edu/aat/300391436', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000056';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300391436, 'http://vocab.getty.edu/aat/300391436', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-000095';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300393219, 'http://vocab.getty.edu/aat/300393219', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000569';
@@ -2637,35 +2675,6 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300451414, 'http://vocab.getty.edu/aat/300451414', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-001139';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300451454, 'http://vocab.getty.edu/aat/300451454', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000905';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300451454, 'http://vocab.getty.edu/aat/300451454', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000986';
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1010;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1020;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1030;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1040;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019260, 'http://vocab.getty.edu/aat/300019260', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 110;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019261, 'http://vocab.getty.edu/aat/300019261', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 120;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020533, 'http://vocab.getty.edu/aat/300020533', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1210;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020533, 'http://vocab.getty.edu/aat/300020533', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1220;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019262, 'http://vocab.getty.edu/aat/300019262', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 130;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106730, 'http://vocab.getty.edu/aat/300106730', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 140;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106913, 'http://vocab.getty.edu/aat/300106913', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1410;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106913, 'http://vocab.getty.edu/aat/300106913', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1420;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020764, 'http://vocab.getty.edu/aat/300020764', 'skos:closeMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1840;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300020766, 'http://vocab.getty.edu/aat/300020766', 'skos:closeMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1850;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019270, 'http://vocab.getty.edu/aat/300019270', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 410;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019272, 'http://vocab.getty.edu/aat/300019272', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 420;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106751, 'http://vocab.getty.edu/aat/300106751', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 510;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106751, 'http://vocab.getty.edu/aat/300106751', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 520;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106753, 'http://vocab.getty.edu/aat/300106753', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 530;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106755, 'http://vocab.getty.edu/aat/300106755', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 540;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300106747, 'http://vocab.getty.edu/aat/300106747', 'skos:relatedMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 550;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019276, 'http://vocab.getty.edu/aat/300019276', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 710;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019277, 'http://vocab.getty.edu/aat/300019277', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 720;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019362, 'http://vocab.getty.edu/aat/300019362', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 730;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019278, 'http://vocab.getty.edu/aat/300019278', 'skos:exactMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 740;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019278, 'http://vocab.getty.edu/aat/300019278', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 750;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019368, 'http://vocab.getty.edu/aat/300019368', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 810;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019279, 'http://vocab.getty.edu/aat/300019279', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 820;
-INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty Art & Architecture Thesaurus', 'ID', 300019368, 'http://vocab.getty.edu/aat/300019368', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 830;
 
 -- Datace
 INSERT INTO heslar_datace (obdobi, rok_od_min, rok_od_max, rok_do_min, rok_do_max) SELECT id, -1000, -1000, -751, -751 FROM heslar WHERE ident_cely = 'HES-000383';
@@ -2726,6 +2735,7 @@ INSERT INTO heslar_datace (obdobi, rok_od_min, rok_od_max, rok_do_min, rok_do_ma
 INSERT INTO heslar_datace (obdobi, rok_od_min, rok_od_max, rok_do_min, rok_do_max) SELECT id, -2300, -2300, -481, -481 FROM heslar WHERE ident_cely = 'HES-000384';
 INSERT INTO heslar_datace (obdobi, rok_od_min, rok_od_max, rok_do_min, rok_do_max) SELECT id, -2300, -2300, -751, -751 FROM heslar WHERE ident_cely = 'HES-000390';
 INSERT INTO heslar_datace (obdobi, rok_od_min, rok_od_max, rok_do_min, rok_do_max) SELECT id, -2400, -2400, -2101, -2101 FROM heslar WHERE ident_cely = 'HES-000352';
+INSERT INTO heslar_datace (obdobi, rok_od_min, rok_od_max, rok_do_min, rok_do_max) SELECT id, -250, -250, -120, -120 FROM heslar WHERE ident_cely = 'HES-001447';
 INSERT INTO heslar_datace (obdobi, rok_od_min, rok_od_max, rok_do_min, rok_do_max) SELECT id, -2500, -2500, -2201, -2201 FROM heslar WHERE ident_cely = 'HES-000318';
 INSERT INTO heslar_datace (obdobi, rok_od_min, rok_od_max, rok_do_min, rok_do_max) SELECT id, -2800, -2800, -2301, -2301 FROM heslar WHERE ident_cely = 'HES-000351';
 INSERT INTO heslar_datace (obdobi, rok_od_min, rok_od_max, rok_do_min, rok_do_max) SELECT id, -2900, -2900, -2201, -2201 FROM heslar WHERE ident_cely = 'HES-000374';
