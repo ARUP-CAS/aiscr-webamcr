@@ -157,7 +157,7 @@
       <xs:element name="misto" minOccurs="0" maxOccurs="1" type="xs:string"/> 
       <xs:element name="casopis_denik_nazev" minOccurs="0" maxOccurs="1" type="xs:string"/> 
       <xs:element name="casopis_rocnik" minOccurs="0" maxOccurs="1" type="xs:string"/> 
-      <xs:element name="datum_rd" minOccurs="0" maxOccurs="1" type="xs:string"/> 
+      <xs:element name="datum_rd" minOccurs="0" maxOccurs="1" type="xs:date"/> 
       <xs:element name="paginace_titulu" minOccurs="0" maxOccurs="1" type="xs:string"/> 
       <xs:element name="link" minOccurs="0" maxOccurs="1" type="xs:string"/> 
       <xs:element name="typ_dokumentu" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
