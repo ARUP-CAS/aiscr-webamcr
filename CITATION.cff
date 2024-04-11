@@ -9,6 +9,8 @@ authors:
   orcid: "https://orcid.org/0000-0003-0422-8697"
 - family-names: "Ihnát"
   given-names: "Jan"
+- family-names: "Havrlant"
+  given-names: "Jan"
 - family-names: "Pajdla"
   given-names: "Petr"
   orcid: "https://orcid.org/0000-0001-7050-9572"
@@ -27,7 +29,7 @@ authors:
 - family-names: "Pavloň"
   given-names: "Tomáš"
 title: "Archeologická mapa České republiky"
-version: "v0.4.32-pre-release"
+version: "v0.4.33-pre-release"
 doi: 10.5281/zenodo.8363642
-date-released: 2024-04-08
+date-released: 2024-04-09
 url: "https://github.com/ARUP-CAS/aiscr-webamcr"
