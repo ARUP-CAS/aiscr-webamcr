@@ -887,6 +887,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             data = pipe.execute()
             data = pandas.DataFrame(data)
             data.columns = [x.decode("utf-8") for x in data.columns]
+            filtered_column_order = [col.name for col in self.get_table().columns if col.name in data.columns]
+            data = data[filtered_column_order]
             column_names = {}
             for column in self.get_table().columns:
                 column_names[str(column.name)] = column.verbose_name
