@@ -144,6 +144,17 @@ class CreateProjektForm(forms.ModelForm):
             if self.fields[key].disabled == True:
                 self.fields[key].help_text = ""
 
+    def clean(self):
+        cleaned_data = super().clean()
+
+        coordinate_x1 = cleaned_data.get('coordinate_x1')
+        coordinate_x2 = cleaned_data.get('coordinate_x2')
+
+        if not coordinate_x1 or not coordinate_x2:
+            raise forms.ValidationError(_("projekt.forms.CreateProjektForm.clean.missing_coords"))
+        return cleaned_data
+
+
 
 class EditProjektForm(forms.ModelForm):
     """
