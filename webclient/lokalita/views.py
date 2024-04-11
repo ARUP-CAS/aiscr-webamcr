@@ -165,6 +165,9 @@ class LokalitaDetailView(
         """
         return self.object.archeologicky_zaznam
 
+    def check_locality_arch_z_conflict(self):
+        return
+
     def get_context_data(self, **kwargs):
         """
         Metóda pro získaní contextu akci pro template.

@@ -74,9 +74,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.forms import inlineformset_factory
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -243,11 +243,19 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context["ostatni_vedouci_objekt_formset_readonly"] = True
         context["akce_zaznam_ostatni_vedouci"] = akce_zaznam_ostatni_vedouci
 
+    def check_locality_arch_z_conflict(self):
+        try:
+            if self.get_archeologicky_zaznam().lokalita:
+                raise Http404(_("arch_z.views.AkceRelatedRecordUpdateView.get_context_data.lokalita_error"))
+        except ObjectDoesNotExist:
+            return False
+
     def get_context_data(self, **kwargs):
         """
         Metóda pro získaní contextu akci pro template.
         """
         context = super().get_context_data(**kwargs)
+        self.check_locality_arch_z_conflict()
         self.arch_zaznam = self.get_archeologicky_zaznam()
         context["showbackdetail"] = False
         context["zaznam"] = self.arch_zaznam
@@ -287,7 +295,7 @@ class ArcheologickyZaznamDetailView(LoginRequiredMixin, AkceRelatedRecordUpdateV
     """
     template_name = "arch_z/dj/arch_z_detail.html"
 
-    def get_archeologicky_zaznam(self):
+    def get_archeologicky_zaznam(self) -> ArcheologickyZaznam:
         """
         Metóda pro získani záznamu akce z db podle ident_cely.
         """

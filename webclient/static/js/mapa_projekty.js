@@ -224,7 +224,7 @@ function onMarkerClick(ident_cely,e) {
         rs = JSON.parse(this.responseText).points
         text=""
         rs.forEach((i) => {
-            let link='<a href="/arch-z/akce/detail/'+i.akce+'/dj/'+i.dj+'" target="_blank">'+i.dj+'</a></br>'
+            let link='<a href="/id/' + i.dj + '" target="_blank">' + i.dj + '</a></br>'
             text=text+link
         })
         popup.setContent(text);
