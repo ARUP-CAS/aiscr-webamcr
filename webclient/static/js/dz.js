@@ -136,6 +136,7 @@ window.onload = function () {
             "application/docx, " +
             "application/pdf, " +
             "text/plain, " +
+            "text/csv, " +
             "application/msword, " +
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, " +
             "application/vnd.oasis.opendocument.text, " +

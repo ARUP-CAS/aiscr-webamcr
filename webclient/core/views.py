@@ -348,6 +348,16 @@ def post_upload(request):
     """
     Funkce pohledu pro upload souboru a k navázaní ke správnemu záznamu.
     """
+
+    def replace_last(source_string, old, new):
+        index = source_string.rfind(old)
+        if index != -1:
+            start_part = source_string[:index]
+            replace_part = source_string[index:index + len(old)].replace(old, new)
+            end_part = source_string[index + len(old):]
+            return start_part + replace_part + end_part
+        return source_string
+
     source_url = request.POST.get("source-url", "")
     update = "fileID" in request.POST
     fedora_transaction = FedoraTransaction()
@@ -418,7 +428,7 @@ def post_upload(request):
             file_name_extension = new_name.split(".")[-1].lower()
             if file_name_extension not in mime_extensions:
                 old_name = new_name
-                new_name = new_name.replace(new_name.split(".")[-1], mime_extensions[0])
+                new_name = replace_last(new_name, new_name.split(".")[-1], mime_extensions[0])
                 renamed = True
                 logger.debug("core.views.post_upload.check_mime_for_url.rename",
                              extra={"mimetype": mimetype, "old_name": old_name, "new_name": new_name})

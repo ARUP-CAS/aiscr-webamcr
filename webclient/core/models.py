@@ -347,6 +347,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # For .docx files
                 "application/pdf",  # For .pdf files
                 "text/plain",  # For .txt files
+                "text/csv"  # For .csv
                 "application/msword",  # For .doc files
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # For .xlsx files
                 "application/vnd.oasis.opendocument.text",  # For .odt files
