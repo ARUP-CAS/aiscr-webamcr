@@ -25,7 +25,7 @@ def csv_to_rst_table():
     content = content.replace("@licence_table", rest_table_data)
     with open("docs/source/knihovny_read_only.rst", 'w', encoding='utf-8') as rst_file:
         rst_file.write(content)
-    print("Data written to file 'docs/source/knihovny_read_only.rst'.")
+    print(f"{len(data_to_write)} libraries written to file 'docs/source/knihovny_read_only.rst'.")
 
 csv_to_rst_table()
 
