@@ -47,6 +47,514 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
    :widths: 25 25 25 25
    :header-rows: 1
 
+   * - Brotli
+     - 1.1.0
+     - MIT License
+     - https://github.com/google/brotli
+   * - Django
+     - 4.2.11
+     - BSD License
+     - https://www.djangoproject.com/
+   * - PyRTF3
+     - 0.47.5
+     - GNU General Public License (GPL)
+     - https://github.com/xoviat/pyrtf
+   * - PySocks
+     - 1.7.1
+     - BSD
+     - https://github.com/Anorov/PySocks
+   * - PyYAML
+     - 6.0.1
+     - MIT License
+     - https://pyyaml.org/
+   * - amqp
+     - 5.2.0
+     - BSD License
+     - http://github.com/celery/py-amqp
+   * - asgiref
+     - 3.8.1
+     - BSD License
+     - https://github.com/django/asgiref/
+   * - attrs
+     - 23.2.0
+     - MIT License
+     - https://www.attrs.org/en/stable/changelog.html
+   * - beautifulsoup4
+     - 4.12.3
+     - MIT License
+     - https://www.crummy.com/software/BeautifulSoup/bs4/
+   * - billiard
+     - 4.2.0
+     - BSD License
+     - https://github.com/celery/billiard
+   * - black
+     - 24.3.0
+     - MIT License
+     - https://github.com/psf/black
+   * - celery
+     - 5.3.6
+     - BSD License
+     - https://docs.celeryq.dev/
+   * - certifi
+     - 2024.2.2
+     - Mozilla Public License 2.0 (MPL 2.0)
+     - https://github.com/certifi/python-certifi
+   * - cfgv
+     - 3.4.0
+     - MIT License
+     - https://github.com/asottile/cfgv
+   * - chardet
+     - 5.2.0
+     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - https://github.com/chardet/chardet
+   * - charset-normalizer
+     - 3.3.2
+     - MIT License
+     - https://github.com/Ousret/charset_normalizer
+   * - click
+     - 8.1.7
+     - BSD License
+     - https://palletsprojects.com/p/click/
+   * - click-didyoumean
+     - 0.3.1
+     - MIT License
+     - https://github.com/click-contrib/click-didyoumean
+   * - click-plugins
+     - 1.1.1
+     - BSD License
+     - https://github.com/click-contrib/click-plugins
+   * - click-repl
+     - 0.3.0
+     - MIT
+     - https://github.com/untitaker/click-repl
+   * - confusable-homoglyphs
+     - 3.3.1
+     - MIT License
+     - https://github.com/vhf/confusable_homoglyphs
+   * - coverage
+     - 7.4.4
+     - Apache Software License
+     - https://github.com/nedbat/coveragepy
+   * - crispy-bootstrap4
+     - 2024.1
+     - MIT License
+     - https://github.com/django-crispy-forms/crispy-bootstrap4
+   * - cron-descriptor
+     - 1.4.3
+     - MIT License
+     - https://github.com/Salamek/cron-descriptor
+   * - defusedxml
+     - 0.7.1
+     - Python Software Foundation License
+     - https://github.com/tiran/defusedxml
+   * - distlib
+     - 0.3.8
+     - Python Software Foundation License
+     - https://github.com/pypa/distlib
+   * - django-add-default-value
+     - 0.10.0
+     - Apache Software License
+     - https://github.com/3YOURMIND/django-add-default-value
+   * - django-appconf
+     - 1.0.6
+     - BSD License
+     - https://django-appconf.readthedocs.io/
+   * - django-auto-logout
+     - 0.5.1
+     - BSD License
+     - https://github.com/bugov/django-auto-logout
+   * - django-autocomplete-light
+     - 3.9.8rc29
+     - MIT License
+     - http://django-autocomplete-light.rtfd.org
+   * - django-cacheops
+     - 7.0.2
+     - BSD License
+     - http://github.com/Suor/django-cacheops
+   * - django-celery-beat
+     - 2.6.0
+     - BSD License
+     - https://github.com/celery/django-celery-beat
+   * - django-celery-results
+     - 2.5.1
+     - BSD License
+     - https://github.com/celery/django-celery-results
+   * - django-compressor
+     - 4.4
+     - MIT License
+     - https://django-compressor.readthedocs.io/en/latest/
+   * - django-crispy-forms
+     - 2.1
+     - MIT License
+     - https://github.com/django-crispy-forms/django-crispy-forms
+   * - django-debug-toolbar
+     - 4.3.0
+     - BSD License
+     - https://github.com/jazzband/django-debug-toolbar
+   * - django-debug-toolbar-template-profiler
+     - 2.1.0
+     - BSD License
+     - https://github.com/node13h/django-debug-toolbar-template-profiler
+   * - django-extensions
+     - 3.2.3
+     - MIT License
+     - https://github.com/django-extensions/django-extensions
+   * - django-filter
+     - 24.2
+     - BSD License
+     - https://github.com/carltongibson/django-filter/tree/main
+   * - django-libsass
+     - 0.9
+     - BSD License
+     - https://github.com/torchbox/django-libsass
+   * - django-livereload-server
+     - 0.5.1
+     - BSD License
+     - https://github.com/tjwalch/django-livereload-server
+   * - django-model-utils
+     - 4.5.0
+     - BSD License
+     - https://github.com/jazzband/django-model-utils
+   * - django-object-actions
+     - 4.2.0
+     - Apache Software License
+     - https://github.com/crccheck/django-object-actions
+   * - django-prometheus
+     - 2.3.1
+     - Apache Software License
+     - http://github.com/korfuri/django-prometheus
+   * - django-recaptcha
+     - 3.0.0
+     - BSD License
+     - https://github.com/torchbox/django-recaptcha
+   * - django-registration
+     - 3.3
+     - BSD License
+     - https://github.com/ubernostrum/django-registration/
+   * - django-rosetta
+     - 0.10.0
+     - MIT License
+     - https://github.com/mbi/django-rosetta
+   * - django-simple-history
+     - 3.5.0
+     - BSD License
+     - https://github.com/jazzband/django-simple-history
+   * - django-tables2
+     - 2.6.0
+     - BSD License
+     - https://github.com/jieter/django-tables2/
+   * - django-tables2-column-shifter
+     - 2.2.0
+     - BSD License
+     - https://github.com/djk2/django-tables2-column-shifter
+   * - django-timezone-field
+     - 6.1.0
+     - BSD License
+     - https://github.com/mfogel/django-timezone-field/
+   * - django-widget-tweaks
+     - 1.5.0
+     - MIT License
+     - https://github.com/jazzband/django-widget-tweaks
+   * - djangorestframework
+     - 3.15.1
+     - BSD License
+     - https://www.django-rest-framework.org/
+   * - djangorestframework-xml
+     - 2.0.0
+     - BSD License
+     - https://github.com/jpadilla/django-rest-framework-xml
+   * - et-xmlfile
+     - 1.1.0
+     - MIT License
+     - https://foss.heptapod.net/openpyxl/et_xmlfile
+   * - filelock
+     - 3.13.4
+     - The Unlicense (Unlicense)
+     - https://github.com/tox-dev/py-filelock
+   * - funcy
+     - 2.0
+     - BSD License
+     - http://github.com/Suor/funcy
+   * - h11
+     - 0.14.0
+     - MIT License
+     - https://github.com/python-hyper/h11
+   * - identify
+     - 2.5.35
+     - MIT License
+     - https://github.com/pre-commit/identify
+   * - idna
+     - 3.7
+     - BSD License
+     - https://github.com/kjd/idna
+   * - inflate64
+     - 1.0.0
+     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - UNKNOWN
+   * - isort
+     - 5.13.2
+     - MIT License
+     - https://pycqa.github.io/isort/
+   * - kombu
+     - 5.3.6
+     - BSD License
+     - https://kombu.readthedocs.io
+   * - libsass
+     - 0.23.0
+     - MIT License
+     - https://sass.github.io/libsass-python/
+   * - lxml
+     - 5.2.1
+     - BSD License
+     - https://lxml.de/
+   * - multivolumefile
+     - 0.2.3
+     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - https://github.com/miurahr/multivolume
+   * - mypy-extensions
+     - 1.0.0
+     - MIT License
+     - https://github.com/python/mypy_extensions
+   * - nodeenv
+     - 1.8.0
+     - BSD License
+     - https://github.com/ekalinin/nodeenv
+   * - numpy
+     - 1.26.4
+     - BSD License
+     - https://numpy.org
+   * - odfpy
+     - 1.4.1
+     - Apache Software License; GNU General Public License (GPL); GNU Library or Lesser General Public License (LGPL)
+     - https://github.com/eea/odfpy
+   * - openpyxl
+     - 3.1.2
+     - MIT License
+     - https://openpyxl.readthedocs.io
+   * - outcome
+     - 1.3.0.post0
+     - Apache Software License; MIT License
+     - https://github.com/python-trio/outcome
+   * - packaging
+     - 24.0
+     - Apache Software License; BSD License
+     - https://github.com/pypa/packaging
+   * - pandas
+     - 2.2.2
+     - BSD License
+     - https://pandas.pydata.org
+   * - pathspec
+     - 0.12.1
+     - Mozilla Public License 2.0 (MPL 2.0)
+     - UNKNOWN
+   * - pdf2image
+     - 1.17.0
+     - MIT License
+     - https://github.com/Belval/pdf2image
+   * - phonenumbers
+     - 8.13.34
+     - Apache Software License
+     - https://github.com/daviddrysdale/python-phonenumbers
+   * - pillow
+     - 10.3.0
+     - Historical Permission Notice and Disclaimer (HPND)
+     - https://python-pillow.org
+   * - platformdirs
+     - 4.2.0
+     - MIT License
+     - https://github.com/platformdirs/platformdirs
+   * - polib
+     - 1.2.0
+     - MIT License
+     - https://github.com/izimobil/polib/
+   * - pre-commit
+     - 3.7.0
+     - MIT License
+     - https://github.com/pre-commit/pre-commit
+   * - prometheus_client
+     - 0.20.0
+     - Apache Software License
+     - https://github.com/prometheus/client_python
+   * - prompt-toolkit
+     - 3.0.43
+     - BSD License
+     - https://github.com/prompt-toolkit/python-prompt-toolkit
+   * - psutil
+     - 5.9.8
+     - BSD License
+     - https://github.com/giampaolo/psutil
+   * - psycopg2
+     - 2.9.9
+     - GNU Library or Lesser General Public License (LGPL)
+     - https://psycopg.org/
+   * - psycopg2-binary
+     - 2.9.9
+     - GNU Library or Lesser General Public License (LGPL)
+     - https://psycopg.org/
+   * - py7zr
+     - 0.21.0
+     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - https://py7zr.readthedocs.io/
+   * - pybcj
+     - 1.0.2
+     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - https://codeberg.org/miurahr/pybcj
+   * - pycryptodomex
+     - 3.20.0
+     - Apache Software License; BSD License; Public Domain
+     - https://www.pycryptodome.org
+   * - pyparsing
+     - 3.1.2
+     - MIT License
+     - https://github.com/pyparsing/pyparsing/
+   * - pypdf
+     - 4.2.0
+     - BSD License
+     - https://github.com/py-pdf/pypdf
+   * - pyppmd
+     - 1.1.0
+     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - https://pyppmd.readthedocs.io/
+   * - python-crontab
+     - 3.0.0
+     - GNU Lesser General Public License v3 or later (LGPLv3+)
+     - https://gitlab.com/doctormo/python-crontab/
+   * - python-dateutil
+     - 2.9.0.post0
+     - Apache Software License; BSD License
+     - https://github.com/dateutil/dateutil
+   * - python-logstash
+     - 0.4.8
+     - MIT License
+     - https://github.com/vklochan/python-logstash
+   * - python-magic
+     - 0.4.27
+     - MIT License
+     - http://github.com/ahupp/python-magic
+   * - pytz
+     - 2024.1
+     - MIT License
+     - http://pythonhosted.org/pytz
+   * - pyzstd
+     - 0.15.10
+     - BSD License
+     - https://github.com/Rogdham/pyzstd
+   * - rarfile
+     - 4.2
+     - ISC License (ISCL)
+     - https://github.com/markokr/rarfile
+   * - rcssmin
+     - 1.1.1
+     - Apache License, Version 2.0
+     - http://opensource.perlig.de/rcssmin/
+   * - redis
+     - 5.0.3
+     - MIT License
+     - https://github.com/redis/redis-py
+   * - reportlab
+     - 4.1.0
+     - BSD License
+     - https://www.reportlab.com/
+   * - requests
+     - 2.31.0
+     - Apache Software License
+     - https://requests.readthedocs.io
+   * - rjsmin
+     - 1.2.1
+     - Apache License, Version 2.0
+     - http://opensource.perlig.de/rjsmin/
+   * - selenium
+     - 4.19.0
+     - Apache Software License
+     - https://www.selenium.dev
+   * - simplejson
+     - 3.19.2
+     - Academic Free License (AFL); MIT License
+     - https://github.com/simplejson/simplejson
+   * - six
+     - 1.16.0
+     - MIT License
+     - https://github.com/benjaminp/six
+   * - sniffio
+     - 1.3.1
+     - Apache Software License; MIT License
+     - https://github.com/python-trio/sniffio
+   * - sortedcontainers
+     - 2.4.0
+     - Apache Software License
+     - http://www.grantjenks.com/docs/sortedcontainers/
+   * - soupsieve
+     - 2.5
+     - MIT License
+     - https://github.com/facelessuser/soupsieve
+   * - sqlparse
+     - 0.4.4
+     - BSD License
+     - https://github.com/andialbrecht/sqlparse
+   * - tablib
+     - 3.6.1
+     - MIT License
+     - https://tablib.readthedocs.io
+   * - tabulate
+     - 0.9.0
+     - MIT License
+     - https://github.com/astanin/python-tabulate
+   * - texttable
+     - 1.7.0
+     - MIT License
+     - https://github.com/foutaise/texttable/
+   * - tornado
+     - 6.4
+     - Apache Software License
+     - http://www.tornadoweb.org/
+   * - trio
+     - 0.25.0
+     - Apache Software License; MIT License
+     - https://github.com/python-trio/trio
+   * - trio-websocket
+     - 0.11.1
+     - MIT License
+     - https://github.com/python-trio/trio-websocket
+   * - typing_extensions
+     - 4.11.0
+     - Python Software Foundation License
+     - https://github.com/python/typing_extensions
+   * - tzdata
+     - 2024.1
+     - Apache Software License
+     - https://github.com/python/tzdata
+   * - uWSGI
+     - 2.0.24
+     - GNU General Public License v2 or later (GPLv2+)
+     - https://uwsgi-docs.readthedocs.io/en/latest/
+   * - urllib3
+     - 2.2.1
+     - MIT License
+     - https://github.com/urllib3/urllib3/blob/main/CHANGES.rst
+   * - vine
+     - 5.1.0
+     - BSD License
+     - https://github.com/celery/vine
+   * - virtualenv
+     - 20.25.1
+     - MIT License
+     - https://github.com/pypa/virtualenv
+   * - wrapt
+     - 1.16.0
+     - BSD License
+     - https://github.com/GrahamDumpleton/wrapt
+   * - wsproto
+     - 1.2.0
+     - MIT License
+     - https://github.com/python-hyper/wsproto/
+   * - xlrd
+     - 2.0.1
+     - BSD License
+     - http://www.python-excel.org/
+   * - xlwt
+     - 1.3.0
+     - BSD License
+     - http://www.python-excel.org/
 
 
 Knihovny vkládané jako statické soubory
