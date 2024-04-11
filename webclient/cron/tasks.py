@@ -677,16 +677,3 @@ def update_single_redis_snapshot(class_name: str, record_pk):
     if key and value:
         r.hset(key, mapping=value)
 
-
-@shared_task
-def update_cached_queryset(pk):
-    logger.debug("cron.tasks.update_cached_queryset.start", extra={"instance": pk})
-    instance = Historie.objects.get(pk=pk)
-    navazany_objekt = instance.vazba.navazany_objekt
-    if isinstance(navazany_objekt, ArcheologickyZaznam):
-        HistorieFilter.save_cached_queryset(ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, instance.uzivatel.organizace)
-        HistorieFilter.save_cached_queryset(ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, uzivatel=instance.uzivatel)
-        HistorieFilter.save_cached_queryset(ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, instance.uzivatel.organizace,
-                                            instance.uzivatel)
-    logger.debug("cron.tasks.update_cached_queryset.end", extra={"instance": instance.pk})
-
