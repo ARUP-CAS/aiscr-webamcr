@@ -881,7 +881,7 @@ def ukoncit_v_terenu(request, ident_cely):
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_UKONCEN_V_TERENU
             )
-            projekt.active_transaction = True
+            projekt.close_active_transaction_when_finished = True
             projekt.save()
             return JsonResponse(
                 {
