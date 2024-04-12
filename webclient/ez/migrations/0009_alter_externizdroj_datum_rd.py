@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             "update externi_zdroj set datum_rd = null where datum_rd = ''"
         ),
         migrations.RunSQL(
-            "ALTER TABLE externi_zdroj ALTER COLUMN datum_rd TYPE DATE USING to_date(datum_rd, 'DD.MM.YYYY');",
+            "ALTER TABLE externi_zdroj ALTER COLUMN datum_rd TYPE DATE USING to_date(datum_rd, 'YYYY-MM-DD');",
             "ALTER TABLE externi_zdroj ALTER COLUMN datum_rd TYPE VARCHAR;"
         ),
         migrations.AlterField(
