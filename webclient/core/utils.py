@@ -53,6 +53,8 @@ def file_validate_geometry(lower_geom):
     """
     Funkce pro validaci řetězce s WKT geometrií.
     """
+    if not isinstance(lower_geom, str):
+        return [False,'Not string']
     geom=" ".join(lower_geom.upper().split())
     geom=geom.replace(" (", "(") 
 
