@@ -296,7 +296,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://pycqa.github.io/isort/
    * - kombu
-     - 5.3.6
+     - 5.3.7
      - BSD License
      - https://kombu.readthedocs.io
    * - libsass
