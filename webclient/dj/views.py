@@ -120,7 +120,7 @@ def detail(request, typ_vazby, ident_cely):
             if dj.archeologicky_zaznam.hlavni_katastr.pian:
                 dj.pian = dj.archeologicky_zaznam.hlavni_katastr.pian
             else:
-                dj.pian = vytvor_pian(dj.archeologicky_zaznam.hlavni_katastr)
+                dj.pian = vytvor_pian(dj.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
             dj.save()
             if len(new_ku) > 3:
                 new_ku_nazev, new_ku_okres_nazev = [x.strip(")").strip() for x in new_ku.split("(")]
@@ -329,7 +329,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        zaznam = self.get_zaznam()
+        zaznam: DokumentacniJednotka = self.get_zaznam()
         form = ChangeKatastrForm(data=request.POST)
         if form.is_valid():
             fedora_transaction = FedoraTransaction()
@@ -344,7 +344,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
                 zaznam.pian = form.cleaned_data["katastr"].pian
                 zaznam.save()
             else: 
-                zaznam.pian = vytvor_pian(form.cleaned_data["katastr"])
+                zaznam.pian = vytvor_pian(form.cleaned_data["katastr"], fedora_transaction)
                 zaznam.save()
             zaznam.refresh_from_db()
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
