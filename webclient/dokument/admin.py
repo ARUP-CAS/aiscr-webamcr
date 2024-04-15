@@ -11,7 +11,7 @@ class DokumentWithMetadataAdmin(ObjectWithMetadataAdmin):
 @admin.register(Let)
 class LetAdmin(DokumentWithMetadataAdmin):
     """
-    Admin část pro správu modelu ruian katastr.
+    Admin část pro správu modelu Let.
     """
     list_display = ("ident_cely", "uzivatelske_oznaceni", "datum", "pilot", "pozorovatel")
     fields = ("ident_cely", "uzivatelske_oznaceni", "datum", "pilot", "pozorovatel", "ucel_letu", "typ_letounu",
