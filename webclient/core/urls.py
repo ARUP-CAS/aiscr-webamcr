@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views
 
@@ -57,4 +57,29 @@ urlpatterns = [
     path("check-authentication", views.CheckUserAuthentication.as_view(), name="check_authentication"),
     path("read-temp-value", views.ReadTempValueView.as_view(), name="read_temp_value"),
     path("reset-temp-value", views.ResetTempValueView.as_view(), name="reset_temp_value"),
+    path(
+        "rosetta/files/import/<str:po_filter>/<str:lang_id>/<int:idx>/",
+        views.TranslationImportView.as_view(),
+        name="rosetta-import-file"
+    ),
+    path(
+        "rosetta/files/<str:po_filter>/",
+        views.TranslationFileListWithBackupView.as_view(),
+        name="rosetta-file-list"
+    ),
+    path(
+        "rosetta/files/<str:po_filter>/<str:lang_id>/<int:idx>/",
+        views.TranslationFormWithBackupView.as_view(),
+        name="rosetta-form"
+    ),
+    path(
+        "rosetta/files/<str:po_filter>/<str:lang_id>/<int:idx>/download/",
+        views.TranslationFileDownloadBackup.as_view(),
+        name="rosetta-download-file"
+    ),
+    path(
+        "rosetta/files/<str:po_filter>/<str:lang_id>/<int:idx>/smazat/",
+        views.TranslationFileSmazatBackup.as_view(),
+        name="rosetta-smazat-file",
+    ),
 ]

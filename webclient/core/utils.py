@@ -1,12 +1,19 @@
 import json
 import logging
 import mimetypes
-import zlib
+import os
+import django
+import tempfile
+import glob
 
 import core.message_constants as mc
 import requests
 from arch_z.models import ArcheologickyZaznam, ArcheologickyZaznamKatastr
 from django.contrib.gis.db.models.functions import Centroid
+from django.conf import ENVIRONMENT_VARIABLE, settings
+from django.apps import apps
+from django.core.cache import caches
+
 from core.message_constants import (
     VALIDATION_EMPTY,
     VALIDATION_LINE_LENGTH,
@@ -22,8 +29,10 @@ from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from heslar.models import RuianKatastr
 from pian.models import Pian
 from core.constants import ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
+from rosetta.conf import settings as rosetta_settings
 
 logger = logging.getLogger(__name__)
+cache = caches[rosetta_settings.ROSETTA_CACHE_NAME]
 
 
 class CannotFindCadasterCentre(Exception):
@@ -1113,3 +1122,114 @@ class SearchTable(ColumnShiftTableBootstrap4):
                 soubor_url,
             )
         return ""
+
+
+def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party_apps=False):
+    """
+    scans a couple possible repositories of gettext catalogs for the given
+    language code
+
+    """
+
+    paths = []
+
+    # project/locale
+    if settings.SETTINGS_MODULE:
+        parts = settings.SETTINGS_MODULE.split('.')
+    else:
+        # if settings.SETTINGS_MODULE is None, we are probably in "test" mode
+        # and override_settings() was used
+        # see: https://code.djangoproject.com/ticket/25911
+        parts = os.environ.get(ENVIRONMENT_VARIABLE).split('.')
+    project = __import__(parts[0], {}, {}, [])
+    abs_project_path = os.path.normpath(os.path.abspath(os.path.dirname(project.__file__)))
+    if project_apps:
+        if os.path.exists(os.path.abspath(os.path.join(os.path.dirname(project.__file__), 'locale'))):
+            paths.append(os.path.abspath(os.path.join(os.path.dirname(project.__file__), 'locale')))
+        if os.path.exists(os.path.abspath(os.path.join(os.path.dirname(project.__file__), '..', 'locale'))):
+            paths.append(os.path.abspath(os.path.join(os.path.dirname(project.__file__), '..', 'locale')))
+
+    case_sensitive_file_system = True
+    tmphandle, tmppath = tempfile.mkstemp()
+    if os.path.exists(tmppath.upper()):
+        # Case insensitive file system.
+        case_sensitive_file_system = False
+
+    # django/locale
+    if django_apps:
+        django_paths = cache.get('rosetta_django_paths')
+        if django_paths is None:
+            django_paths = []
+            for root, dirnames, filename in os.walk(os.path.abspath(os.path.dirname(django.__file__))):
+                if 'locale' in dirnames:
+                    django_paths.append(os.path.join(root, 'locale'))
+                    continue
+            cache.set('rosetta_django_paths', django_paths, 60 * 60)
+        paths = paths + django_paths
+    # settings
+    for localepath in settings.LOCALE_PATHS:
+        if os.path.isdir(localepath):
+            paths.append(localepath)
+
+    # project/app/locale
+    for app_ in apps.get_app_configs():
+        if rosetta_settings.EXCLUDED_APPLICATIONS and app_.name in rosetta_settings.EXCLUDED_APPLICATIONS:
+            continue
+
+        app_path = app_.path
+        # django apps
+        if 'contrib' in app_path and 'django' in app_path and not django_apps:
+            continue
+
+        # third party external
+        if not third_party_apps and abs_project_path not in app_path:
+            continue
+
+        # local apps
+        if not project_apps and abs_project_path in app_path:
+            continue
+
+        if os.path.exists(os.path.abspath(os.path.join(app_path, 'locale'))):
+            paths.append(os.path.abspath(os.path.join(app_path, 'locale')))
+        if os.path.exists(os.path.abspath(os.path.join(app_path, '..', 'locale'))):
+            paths.append(os.path.abspath(os.path.join(app_path, '..', 'locale')))
+
+    ret = set()
+    langs = [lang]
+    if u'-' in lang:
+        _l, _c = map(lambda x: x.lower(), lang.split(u'-', 1))
+        langs += [u'%s_%s' % (_l, _c), u'%s_%s' % (_l, _c.upper()), u'%s_%s' % (_l, _c.capitalize())]
+    elif u'_' in lang:
+        _l, _c = map(lambda x: x.lower(), lang.split(u'_', 1))
+        langs += [u'%s-%s' % (_l, _c), u'%s-%s' % (_l, _c.upper()), u'%s_%s' % (_l, _c.capitalize())]
+
+    paths = map(os.path.normpath, paths)
+    paths = list(set(paths))
+    for path in paths:
+        # Exclude paths
+        if path not in rosetta_settings.ROSETTA_EXCLUDED_PATHS:
+            for lang_ in langs:
+                dirname = os.path.join(path, lang_, 'LC_MESSAGES')
+                for fn in rosetta_settings.POFILENAMES:
+                    filename = os.path.join(dirname, fn)
+                    abs_path = os.path.abspath(filename)
+                    # On case insensitive filesystems (looking at you, MacOS)
+                    # compare the lowercase absolute path of the po file
+                    # to all lowercased paths already collected.
+                    # This is not an issue on sane filesystems
+                    if not case_sensitive_file_system:
+                        if filename.lower() in [p.lower() for p in ret]:
+                            continue
+                    if os.path.isfile(abs_path):
+                        ret.add(abs_path)
+                pattern = os.path.join(dirname, "django_backup_*.po")
+                matching_files = glob.glob(pattern)
+                if matching_files:
+                    for file_path in matching_files:
+                        abs_path = os.path.abspath(file_path)
+                        if not case_sensitive_file_system:
+                            if file_path.lower() in [p.lower() for p in ret]:
+                                continue
+                        if os.path.isfile(abs_path):
+                            ret.add(abs_path)
+    return list(sorted(ret))

@@ -1,0 +1,47 @@
+{% extends "rosetta/base.html" %}{% load static %}
+{% load rosetta i18n %}
+
+{% block header %}
+    {{block.super}}
+    <div id="user-tools">
+        <p>
+            <span><a href="{% url 'rosetta-file-list' po_filter=po_filter %}">{% trans "Pick another file" %}</a> /
+            <a href="{% url 'rosetta-download-file' po_filter=po_filter lang_id=lang_id idx=idx %}">{% trans "Download this catalog" %}</a></span>
+        </p>
+    </div>
+    <script type="text/javascript">
+    </script>
+
+{% endblock %}
+
+{% block pagetitle %}{{block.super}} - {{rosetta_i18n_lang_name}} - {{rosetta_i18n_app}} {% endblock %}
+
+{% block breadcumbs %}
+    <div>
+        <a href="{% url 'rosetta-file-list' po_filter=po_filter %}">{% trans "Home" %}</a> &rsaquo;
+        {{ rosetta_i18n_lang_name }} &rsaquo;
+        {{ rosetta_i18n_app|title }}
+    </div>
+    {% if not rosetta_i18n_write %}<p class="errornote read-only">{% trans "File is read-only: download the file when done editing!" %}</p>{% endif %}
+    {% if messages %}
+        <div class="messages {{message.tags}}note save-conflict">
+        {% for message in messages %}
+            <div class="{{message.tags}}">{{ message|linebreaks }}</div>
+        {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block main %}
+    
+    <form action="." method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{form}}
+            <div class="submit-row">
+                
+                    <input type="submit" class="default" name="_next" value="{% trans "Save" %}" tabindex="{% increment tab_idx %}"/>
+                
+            </div>
+        </form>
+    </div>
+{% endblock %}

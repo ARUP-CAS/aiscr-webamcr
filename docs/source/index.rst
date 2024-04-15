@@ -26,6 +26,7 @@ Dokumentace je delená na část popisující nasazování, adresarovou struktur
    cookies
    knihovny_read_only
    chybove_stranky
+   preklady
 
 
 
