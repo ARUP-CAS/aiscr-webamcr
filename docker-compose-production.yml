@@ -12,6 +12,7 @@ services:
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
       - /opt/data-migrace:/vol/data-migrace
+      - /opt/selenium_test:/vol/web/selenium_test
     environment:
       - TEST_ENV_SETTING
       - IMAGE_TAG=${IMAGE_TAG}
