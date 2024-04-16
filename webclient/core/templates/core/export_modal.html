@@ -16,7 +16,7 @@
                  aria-valuemin="0" aria-valuemax="100"></div>
           </div>
           {% if table.rows|length >= 50000 %}
-            <p id="modal-confirm-download-link">{% trans "core.templates.core.export_modal.confirm_download" %}</p>
+            <p id="modal-confirm-download-par">{% trans "core.templates.core.export_modal.confirm_download" %}</p>
           {% else %}
             <p>{% trans "core.templates.core.export_modal.text" %}</p>
           {% endif %}
@@ -57,9 +57,11 @@
 
       document.addEventListener('DOMContentLoaded', function (event) {
           document.getElementById('export-progress-modal-button').addEventListener('click', resetTempValue);
+          document.getElementById('export-progress-modal-button-cancel').addEventListener('click', resetTempValue);
           document.getElementById('export-progress-modal-button-stop').addEventListener('click', () => {
-              window.stop();
-              enableCloseButton();
+              window.stop()
+              enableCloseButton()
+              resetTempValue()
           })
       })
 
