@@ -61,7 +61,7 @@
         {% if rosetta_settings.ENABLE_REFLANG %}
         <div class="actions">
             <label for="ref-language-selector">{% trans "Reference language" %}:</label>
-            <select class="select-across" id="ref-language-selector" onchange="javascript:window.location.href = this.value;">
+            <select class="select-across" id="ref-language-selector">
                 {% for langid, langname in LANGUAGES %}
                     <option{% if ref_lang == langid %} selected="selected"{% endif %} value="?ref_lang={{ langid }}">{{langname}}</option>
                 {% endfor %}
@@ -174,4 +174,10 @@
             </div>
         </form>
     </div>
+    <script>
+        document.getElementById('ref-language-selector').addEventListener('change', () => {
+            const newLocation = encodeURI(this.value);
+            window.location.href = newLocation;
+        });
+    </script>
 {% endblock %}
