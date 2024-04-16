@@ -6,7 +6,7 @@ import os
 from string import ascii_uppercase as letters
 
 from django.contrib.gis.db.models import PointField
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
@@ -764,6 +764,14 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
 
     def __str__(self):
         return self.ident_cely
+
+    def save(self, *args, **kwargs):
+        from core.repository_connector import FedoraRepositoryConnector
+        if (not self._state.adding or
+                FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "heslar")):
+            super().save(*args, **kwargs)
+        else:
+            raise ValidationError(_("dokument.models.Let.save.check_container_deleted_or_not_exists.invalid"))
 
 
 def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
