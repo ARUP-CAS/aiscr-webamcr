@@ -211,19 +211,28 @@ $('#soubor-modal').on('show.bs.modal', function (event) {
   modalImg.src = fullsrc;
 })
 $('#export-progress-modal').on('show.bs.modal', (event) => {
+      const hideDownloadLink = () => {
+          const downloadLink = document.getElementById('modal-confirm-download-link');
+          if (downloadLink) {
+              downloadLink.style.display = 'none';
+          }
+      }
+
     updateProgressBar(0);
     const triggerElement = $(event.relatedTarget);
     const url = triggerElement.data('url');
     {% if table.rows|length >= 50000 %}
-        const paragraph = $("#modal-confirm-download-link");
+        const paragraph = $("#modal-confirm-download-par");
         paragraph.next('a.source-link').remove();
         const modal_link = $('<a>')
             .attr('href', url)
+            .attr('id', 'modal-confirm-download-link')
             .addClass('source-link')
             .text('{% trans "core.templates.core.export_modal.link_text" %}')
             .css({display: 'block', marginTop: '10px'})
             .on('click', function() {
                 checkValue();  // Call the checkValue function
+                hideDownloadLink()
             });
         paragraph.after(modal_link);
     {% endif %}
