@@ -768,7 +768,7 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
     def save(self, *args, **kwargs):
         from core.repository_connector import FedoraRepositoryConnector
         if (not self._state.adding or
-                FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "heslar")):
+                FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "let")):
             super().save(*args, **kwargs)
         else:
             raise ValidationError(_("dokument.models.Let.save.check_container_deleted_or_not_exists.invalid"))
