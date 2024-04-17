@@ -39,6 +39,7 @@ from core.message_constants import (
     MAINTENANCE_AFTER_LOGOUT,
     AUTOLOGOUT_AFTER_LOGOUT,
 )
+from core.repository_connector import FedoraTransaction
 from historie.models import Historie
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
     UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
@@ -265,6 +266,8 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         form = self.form_class(data=request.POST, instance=self.request.user)
         if form.is_valid():
             obj = form.save(commit=False)
+            obj: User
+            obj.active_transaction = FedoraTransaction()
             obj.save(update_fields=("telefon",))
             poznamka = ", ".join([f"{fieldname}: {form.cleaned_data[fieldname]}" for fieldname in form.changed_data])
             if len(poznamka) > 0:
@@ -276,6 +279,8 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
                 ).save()
             messages.add_message(request, messages.SUCCESS,
                                  _("uzivatel.views.UserAccountUpdateView.post.success"))
+            obj.close_active_transaction_when_finished = True
+            obj.save()
         else:
             messages.add_message(request, messages.ERROR,
                                  _("uzivatel.views.UserAccountUpdateView.post.change_password.fail"))
@@ -302,6 +307,7 @@ def update_notifications(request):
     if form.is_valid():
         notifications = form.cleaned_data.get('notification_types')
         user: User = request.user
+        user.active_transaction = FedoraTransaction()
         notification_group_idents = [x.ident_cely for x in notifications.all()]
         for group_ident, current_group_notification_idents in NOTIFICATION_GROUPS.items():
             group_obj = UserNotificationType.objects.get(ident_cely=group_ident)
@@ -317,7 +323,8 @@ def update_notifications(request):
                     user.notification_types.remove(type_obj)
         messages.add_message(request, messages.SUCCESS,
                              _("uzivatel.views.update_notifications.post.success"))
-        user.save_metadata()
+        user.close_active_transaction_when_finished = True
+        user.save()
         return redirect("/uzivatel/edit/")
 
 

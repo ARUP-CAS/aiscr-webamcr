@@ -13,6 +13,7 @@ from core.message_constants import (
     HLIDACI_PES_NEUSPESNE_VYTVOREN,
     HLIDACI_PES_NEUSPESNE_SMAZAN,
 )
+from core.repository_connector import FedoraTransaction
 from heslar.models import RuianKatastr, RuianOkres, RuianKraj
 from uzivatel.models import User
 from django.views import View
@@ -120,6 +121,10 @@ class PesCreateView(LoginRequiredMixin, View):
             messages.add_message(
                 request, messages.SUCCESS, HLIDACI_PES_USPESNE_VYTVOREN
             )
+            user: User = request.user
+            user.active_transaction = FedoraTransaction()
+            user.close_active_transaction_when_finished = True
+            user.save()
         else:
             logger.debug("notifikace_projekty.PesCreateView.post.not_valid", extra={"errors": formset_pes.errors})
             request.session["_old_pes_post"] = request.POST
@@ -127,7 +132,6 @@ class PesCreateView(LoginRequiredMixin, View):
             messages.add_message(
                 request, messages.ERROR, HLIDACI_PES_NEUSPESNE_VYTVOREN
             )
-        request.user.save_metadata()
         return redirect("notifikace_projekty:list")
 
 
