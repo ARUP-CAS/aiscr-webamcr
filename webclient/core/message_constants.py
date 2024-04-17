@@ -147,3 +147,11 @@ HLIDACI_PES_NEUSPESNE_SMAZAN: Final = _("core.message_constants.notifikaceProjek
 
 #testovaci prostredi
 NEPRODUKCNI_PROSTREDI_INFO: Final = _("core.message_constants.neprodukcniTestovaciProstredi.text")
+
+#rosseta
+TRANSLATION_UPLOAD_SUCCESS: Final = _("core.message_constants.translationUploadSucces.text")
+TRANSLATION_DELETE_CANNOT_MAIN: Final = _("core.message_constants.translationDeleteCannotMain.text")
+TRANSLATION_DELETE_SUCCESS: Final = _("core.message_constants.translationDeleteSucces.text")
+TRANSLATION_DELETE_ERROR: Final = _("core.message_constants.translationDeleteError.text")
+TRANSLATION_FILE_TOOSMALL: Final = _("core.message_constants.translationFileTooSmall.text")
+TRANSLATION_FILE_WRONG_FORMAT: Final = _("core.message_constants.translationFileWrongFormat.text")

@@ -4,7 +4,14 @@ import logging
 import mimetypes
 import os
 import re
+import zipfile
+from pathlib import Path
 from io import StringIO, BytesIO
+from rosetta.views import TranslationFileListView, RosettaFileLevelMixin, get_app_name, TranslationFormView, TranslationFileDownload
+from rosetta.conf import settings as rosetta_settings
+from rosetta import get_version as get_rosetta_version
+from rosetta.access import can_translate_language
+from polib import pofile
 
 import pandas
 from PIL import Image
@@ -14,9 +21,10 @@ from django.core.files.uploadedfile import TemporaryUploadedFile
 from django_tables2 import SingleTableMixin
 from django_filters.views import FilterView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.functional import cached_property
 from django.views import View
 from django.views.generic import TemplateView
-
+from django.views.generic.edit import FormView
 
 
 from django.conf import settings
@@ -25,7 +33,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.gis.db.models.functions import AsWKT
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q, FilteredRelation, Value, F, OuterRef, Subquery
-from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse, FileResponse
+from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse, FileResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -47,12 +55,16 @@ from core.constants import (
     ROLE_ARCHEOLOG_ID, 
     ROLE_ARCHIVAR_ID
 )
-from core.forms import CheckStavNotChangedForm
+from core.forms import CheckStavNotChangedForm, TransaltionImportForm
 from core.message_constants import (
     DOKUMENT_NEKDO_ZMENIL_STAV,
     PROJEKT_NEKDO_ZMENIL_STAV,
     SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
+    TRANSLATION_DELETE_CANNOT_MAIN,
+    TRANSLATION_DELETE_ERROR,
+    TRANSLATION_DELETE_SUCCESS,
+    TRANSLATION_UPLOAD_SUCCESS,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_SMAZAN,
     SPATNY_ZAZNAM_SOUBOR_VAZBA,
@@ -60,6 +72,7 @@ from core.message_constants import (
 from core.models import Soubor
 from core.repository_connector import RepositoryBinaryFile, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
+    find_pos_with_backup,
     get_mime_type,
     get_multi_transform_towgs84,
     get_transform_towgs84,
@@ -1175,3 +1188,171 @@ class ResetTempValueView(View):
             return JsonResponse({"result": "success"})
         else:
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
+        
+class RosettaFileLevelMixinWithBackup(RosettaFileLevelMixin):
+    @cached_property
+    def po_file_path(self):
+        """Based on the url kwargs, infer and return the path to the .po file to
+        be shown/updated.
+
+        Throw a 404 if a file isn't found.
+        """
+        # This was formerly referred to as 'rosetta_i18n_fn'
+        idx = self.kwargs['idx']
+        idx = int(idx)  # idx matched url re expression; calling int() is safe
+
+        third_party_apps = self.po_filter in ('all', 'third-party')
+        django_apps = self.po_filter in ('all', 'django')
+        project_apps = self.po_filter in ('all', 'project')
+
+        po_paths = find_pos_with_backup(
+            self.language_id,
+            project_apps=project_apps,
+            django_apps=django_apps,
+            third_party_apps=third_party_apps,
+        )
+        po_paths.sort(key=get_app_name)
+
+        try:
+            path = po_paths[idx]
+        except IndexError:
+            raise Http404
+        return path
+
+class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
+    template_name = "rosetta/import_form.html"
+    form_class = TransaltionImportForm
+
+    def form_valid(self, form):
+        p = Path(self.po_file_path)
+        date_sufix = datetime.strftime(datetime.now(),"%d%m%Y%H%M")
+        p.rename(Path(p.parent, f"{p.stem}_backup_{date_sufix}{p.suffix}" ))
+        new_pofile = form.cleaned_data["file"]
+        self.handle_uploaded_file(new_pofile)
+        messages.add_message(
+            self.request, messages.SUCCESS, TRANSLATION_UPLOAD_SUCCESS
+        )
+        return redirect(reverse('rosetta-file-list',args=[self.po_filter]))
+    
+    def get_context_data(self, **kwargs):
+        context = super(TranslationImportView, self).get_context_data(**kwargs)
+        rosetta_i18n_lang_name = str(
+            dict(rosetta_settings.ROSETTA_LANGUAGES).get(self.language_id)
+        )
+        context.update(
+            {
+                'po_filter' : self.po_filter,
+                'lang_id' : self.kwargs['lang_id'],
+                'idx' : self.kwargs['idx'],
+                'rosetta_i18n_lang_name': rosetta_i18n_lang_name,
+                'rosetta_i18n_app': get_app_name(self.po_file_path),
+                'rosetta_i18n_write': self.po_file_is_writable,
+            }
+        )
+        return context
+    
+    def handle_uploaded_file(self, f):
+        with open(self.po_file_path, "wb+") as destination:
+            for chunk in f.chunks():
+                destination.write(chunk)
+
+class TranslationFileListWithBackupView(TranslationFileListView):
+    def get_context_data(self, **kwargs):
+        context = super(TranslationFileListView, self).get_context_data(**kwargs)
+
+        third_party_apps = self.po_filter in ('all', 'third-party')
+        django_apps = self.po_filter in ('all', 'django')
+        project_apps = self.po_filter in ('all', 'project')
+
+        languages = []
+        has_pos = False
+        for language in rosetta_settings.ROSETTA_LANGUAGES:
+            if not can_translate_language(self.request.user, language[0]):
+                continue
+
+            po_paths = find_pos_with_backup(
+                language[0],
+                project_apps=project_apps,
+                django_apps=django_apps,
+                third_party_apps=third_party_apps,
+            )
+            po_files = [
+                (get_app_name(lang), os.path.realpath(lang), pofile(lang))
+                for lang in po_paths
+            ]
+            po_files.sort(key=lambda app: app[0])
+            languages.append((language[0], _(language[1]), po_files))
+            has_pos = has_pos or bool(po_paths)
+
+        context['version'] = get_rosetta_version()
+        context['languages'] = languages
+        context['has_pos'] = has_pos
+        context['po_filter'] = self.po_filter
+        return context
+    
+class TranslationFormWithBackupView(RosettaFileLevelMixinWithBackup, LoginRequiredMixin, TranslationFormView):
+    def get_context_data(self, **kwargs):
+        context = super(TranslationFormWithBackupView, self).get_context_data(**kwargs)
+        po_filename = self.po_file_path.split("/")[-1]
+        context["po_filename"] = po_filename
+        context['rosetta_i18n_write'] = self.po_file_is_writable and "_backup_" not in po_filename
+        return context
+    
+class TranslationFileDownloadBackup(RosettaFileLevelMixinWithBackup, LoginRequiredMixin, TranslationFileDownload):
+    def get(self, request, *args, **kwargs):
+        try:
+            if len(self.po_file_path.split('/')) >= 5:
+                offered_fn = '_'.join(self.po_file_path.split('/')[-5:])
+            else:
+                offered_fn = self.po_file_path.split('/')[-1]
+            po_fn = str(self.po_file_path.split('/')[-1])
+            mo_fn = str(po_fn.replace('.po', '.mo'))  # not so smart, huh
+            zipdata = BytesIO()
+            with zipfile.ZipFile(zipdata, mode="w") as zipf:
+                zipf.writestr(po_fn, str(self.po_file).encode("utf8"))
+                abs_path = os.path.abspath(mo_fn)
+                if os.path.isfile(abs_path):
+                    zipf.writestr(mo_fn, self.po_file.to_binary())
+            zipdata.seek(0)
+
+            response = HttpResponse(zipdata.read())
+            filename = 'filename=%s.%s.zip' % (offered_fn, self.language_id)
+            response['Content-Disposition'] = 'attachment; %s' % filename
+            response['Content-Type'] = 'application/x-zip'
+            return response
+        except Exception as e:
+            logger.error(e)
+            return HttpResponseRedirect(
+                reverse('rosetta-file-list', kwargs={'po_filter': 'project'})
+            )
+
+class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequiredMixin, TemplateView):
+    template_name = "core/transakce_modal.html"
+    
+    
+    def get(self, request, *args, **kwargs):
+        context = {
+            "object_identification": self.po_file_path.split('/')[-1],
+            "title": _("core.views.translationFileSmazatbackup.title.text"),
+            "id_tag": "smazat-translation-form",
+            "button": _("core.views.translationFileSmazatbackup.submitButton.text"),
+        }
+        return self.render_to_response(context)
+    
+    def post(self, request, *args, **kwargs):
+        if self.po_file_path.split('/')[-1] == "django.po":
+            messages.add_message(
+                        self.request, messages.ERROR, TRANSLATION_DELETE_CANNOT_MAIN
+                    )
+        else:
+            try:
+                os.remove(self.po_file_path)
+                messages.add_message(
+                            self.request, messages.SUCCESS, TRANSLATION_DELETE_SUCCESS
+                        )
+            except Exception as e:
+                logger.error(e)
+                messages.add_message(
+                            self.request, messages.ERROR, TRANSLATION_DELETE_ERROR
+                        )
+        return JsonResponse({"redirect": reverse('rosetta-file-list', kwargs={'po_filter': 'project'})})

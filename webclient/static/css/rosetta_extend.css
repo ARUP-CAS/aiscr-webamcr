@@ -1,0 +1,17 @@
+:root {
+--success-fg: #19ad31;
+--body-bg: #fff;
+}
+.successnote {
+    font-size: 0.875rem;
+    font-weight: 700;
+    display: block;
+    padding: 10px 12px;
+    margin: 0 0 10px 0;
+    color: var(--success-fg);
+    border: 1px solid var(--success-fg);
+    border-radius: 4px;
+    background-color: var(--body-bg);
+    background-position: 5px 12px;
+    overflow-wrap: break-word;
+}

@@ -11,6 +11,8 @@ from bs4 import BeautifulSoup
 from polib import pofile
 from django.conf import settings
 
+from core.message_constants import TRANSLATION_FILE_TOOSMALL, TRANSLATION_FILE_WRONG_FORMAT
+
 logger = logging.getLogger(__name__)
 
 
@@ -244,4 +246,20 @@ class BaseFilterForm(forms.Form):
                         error_list.append(ERRORS[field_name])
         if error_list:
             raise forms.ValidationError(error_list)
+        return cleaned_data
+    
+class TransaltionImportForm(forms.Form):
+    file = forms.FileField(
+        required=True,
+        label=_("core.forms.TransaltionImportForm.file.label"),
+        widget=forms.FileInput(attrs={"accept": ".po"}),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        file = cleaned_data.get("file")
+        if file.size < 1000:
+            raise forms.ValidationError({"file":TRANSLATION_FILE_TOOSMALL})
+        if file.name.split('.')[-1] != 'po':
+            raise forms.ValidationError({"file":TRANSLATION_FILE_WRONG_FORMAT})
         return cleaned_data
