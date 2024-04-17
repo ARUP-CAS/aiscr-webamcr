@@ -1,9 +1,11 @@
 import logging
 
+from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed, pre_delete
 from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
 
-from core.repository_connector import FedoraTransaction
+from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
 from historie.models import Historie
 from services.mailer import Mailer
 from uzivatel.models import Organizace, Osoba, User
@@ -31,7 +33,7 @@ def osoba_save_metadata(sender, instance: Osoba, **kwargs):
 
 
 @receiver(pre_save, sender=User)
-def create_ident_cely(sender, instance, **kwargs):
+def create_ident_cely(sender, instance: User, **kwargs):
     """
     Přidelení identu celý pro usera.
     """
@@ -55,6 +57,13 @@ def create_ident_cely(sender, instance, **kwargs):
                 instance.ident_cely = "U-" + "{0}".format(str(number)).zfill(6)
             else:
                 instance.ident_cely = "U-000001"
+        if not FedoraRepositoryConnector.check_container_deleted_or_not_exists(instance.ident_cely, "uzivatel"):
+            raise ValidationError(_("uzivatel.models.User.save.check_container_deleted_or_not_exists.invalid"))
+        if not instance.active_transaction:
+            instance.active_transaction = FedoraTransaction()
+            instance.close_active_transaction_when_finished = True
+            logger.debug("uzivatel.signals.create_ident_cely.create_transaction",
+                         extra={"transaction": instance.active_transaction.uid})
     if kwargs["update_fields"] and len(kwargs["update_fields"]) == 1 and "last_login" in kwargs["update_fields"]:
         instance.suppress_signal = True
     logger.debug("uzivatel.signals.create_ident_cely.end", extra={"ident_cely": instance.ident_cely})
@@ -62,26 +71,24 @@ def create_ident_cely(sender, instance, **kwargs):
 
 @receiver(post_save, sender=User)
 def user_post_save_method(sender, instance: User, created: bool, **kwargs):
-    logger.debug("uzivatel.signals.user_post_save_method.start", extra={"user": instance.ident_cely})
     fedora_transaction = instance.active_transaction
+    logger.debug("uzivatel.signals.user_post_save_method.start",
+                 extra={"user": instance.ident_cely, "suppress_signal": instance.suppress_signal,
+                        "transaction": getattr(fedora_transaction, "uid", None)})
     if not instance.suppress_signal:
-        if not fedora_transaction:
-            fedora_transaction = FedoraTransaction()
-            instance.active_transaction = fedora_transaction
-            instance.close_active_transaction_when_finished = True
         instance.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
-    send_deactivation_email(sender, instance, **kwargs)
-    send_account_confirmed_email(sender, instance, created)
-    # Create or change token when user changed.
-    try:
-        old_token = Token.objects.get(user=instance)
-    except Token.DoesNotExist:
-        Token.objects.create(user=instance)
-    else:
-        old_token.delete()
-        Token.objects.create(user=instance)
-    logger.debug("uzivatel.signals.user_post_save_method.end",
-                 extra={"user": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)})
+        send_deactivation_email(sender, instance, **kwargs)
+        send_account_confirmed_email(sender, instance, created)
+        # Create or change token when user changed.
+        try:
+            old_token = Token.objects.get(user=instance)
+        except Token.DoesNotExist:
+            Token.objects.create(user=instance)
+        else:
+            old_token.delete()
+            Token.objects.create(user=instance)
+        logger.debug("uzivatel.signals.user_post_save_method.end",
+                     extra={"user": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)})
 
 
 def send_deactivation_email(sender, instance: User, **kwargs):

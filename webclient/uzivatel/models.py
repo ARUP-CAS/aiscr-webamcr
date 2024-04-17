@@ -180,22 +180,21 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         """
         save metóda pro přidelení identu celý.
         """
-        logger.debug("User.save.start")
+        logger.debug("uzivatel.User.save.start", extra={"state_adding": self._state.adding})
         # Random string is temporary before the id is assigned
-        if self._state.adding and not self.ident_cely:
-            self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
         if not self._state.adding and (not self.is_active or self.hlavni_role.pk == ROLE_BADATEL_ID):
             if self.is_active:
-                logger.debug("User.save.deactivate_spoluprace",
+                logger.debug("uzivatel.User.save.deactivate_spoluprace",
                              extra={"hlavni_role_id": self.hlavni_role.pk, "is_active": self.is_active})
             else:
-                logger.debug("User.save.deactivate_spoluprace", extra={"is_active": self.is_active})
+                logger.debug("uzivatel.User.save.deactivate_spoluprace", extra={"is_active": self.is_active})
             # local import to avoid circual import issue
             from pas.models import UzivatelSpoluprace
             spoluprace_query = UzivatelSpoluprace.objects.filter(vedouci=self)
-            logger.debug("User.save.deactivate_spoluprace", extra={"spoluprace_count": spoluprace_query.count()})
+            logger.debug("uzivatel.User.save.deactivate_spoluprace",
+                         extra={"spoluprace_count": spoluprace_query.count()})
             for spoluprace in spoluprace_query:
-                logger.debug("User.save.deactivate_spoluprace", extra={"spoluprace_id": spoluprace.pk})
+                logger.debug("uzivatel.User.save.deactivate_spoluprace", extra={"spoluprace_id": spoluprace.pk})
                 spoluprace.stav = SPOLUPRACE_NEAKTIVNI
                 spoluprace.save()
         if self.history_vazba is None:
@@ -204,13 +203,6 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             historie_vazba.save()
             self.history_vazba = historie_vazba
         super().save(*args, **kwargs)
-        if self.ident_cely.startswith("TEMP"):
-            self.ident_cely = f"U-{str(self.pk).zfill(6)}"
-            from core.repository_connector import FedoraRepositoryConnector
-            if FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "uzivatel"):
-                super().save(*args, **kwargs)
-            else:
-                raise ValidationError(_("uzivatel.models.User.save.check_container_deleted_or_not_exists.invalid"))
         if self.is_active and \
                 self.groups.filter(
                     id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).count() == 0:
