@@ -88,7 +88,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/billiard
    * - black
-     - 24.3.0
+     - 24.4.0
      - MIT License
      - https://github.com/psf/black
    * - celery
@@ -488,7 +488,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/facelessuser/soupsieve
    * - sqlparse
-     - 0.4.4
+     - 0.5.0
      - BSD License
      - https://github.com/andialbrecht/sqlparse
    * - tablib
@@ -524,7 +524,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/python/tzdata
    * - uWSGI
-     - 2.0.24
+     - 2.0.25.1
      - GNU General Public License v2 or later (GPLv2+)
      - https://uwsgi-docs.readthedocs.io/en/latest/
    * - urllib3
@@ -536,7 +536,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.25.1
+     - 20.25.2
      - MIT License
      - https://github.com/pypa/virtualenv
    * - wrapt
