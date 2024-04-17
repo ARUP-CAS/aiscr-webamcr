@@ -377,7 +377,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     suppress_signal = False
     active_transaction = None
-    close_activate_transaction_when_finished = False
+    close_active_transaction_when_finished = False
 
     @property
     def aktivni(self):

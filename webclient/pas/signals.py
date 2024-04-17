@@ -1,6 +1,9 @@
 import logging
 
+from django.db import transaction
+
 from core.constants import SAMOSTATNY_NALEZ_RELATION_TYPE
+from core.repository_connector import FedoraTransaction
 from cron.tasks import update_single_redis_snapshot
 from core.models import SouborVazby
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
@@ -65,7 +68,7 @@ def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     fedora_transaction = instance.active_transaction
     instance.vedouci.save_metadata(fedora_transaction)
     instance.spolupracovnik.save_metadata(fedora_transaction,
-                                          close_transaction=instance.close_activate_transaction_when_finished)
+                                          close_transaction=instance.close_active_transaction_when_finished)
     logger.debug("pas.signals.save_uzivatel_spoluprce.end", extra={"pk": instance.pk})
 
 
@@ -75,7 +78,7 @@ def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, 
     fedora_transaction = instance.active_transaction
     instance.vedouci.save_metadata(fedora_transaction)
     instance.spolupracovnik.save_metadata(fedora_transaction,
-                                          close_transaction=instance.close_activate_transaction_when_finished)
+                                          close_transaction=instance.close_active_transaction_when_finished)
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
     logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.end",
@@ -86,10 +89,11 @@ def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, 
 def delete_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.delete_uzivatel_spoluprce.start", extra={"pk": instance.pk})
     Historie.save_record_deletion_record(record=instance)
-    fedora_transaction = instance.active_transaction
+    fedora_transaction: FedoraTransaction = instance.active_transaction
     instance.vedouci.save_metadata(fedora_transaction)
-    instance.spolupracovnik.save_metadata(fedora_transaction,
-                                          close_transaction=instance.close_activate_transaction_when_finished)
+    instance.spolupracovnik.save_metadata(fedora_transaction)
+    if instance.close_active_transaction_when_finished:
+        transaction.on_commit(lambda: fedora_transaction.mark_transaction_as_closed())
     if not check_if_task_queued("UzivatelSpoluprace", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["UzivatelSpoluprace", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
     logger.debug("pas.signals.delete_uzivatel_spoluprce.end",

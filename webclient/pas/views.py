@@ -765,7 +765,7 @@ def zadost(request):
                     historie=hv,
                 )
                 s.active_transaction = FedoraTransaction()
-                s.close_activate_transaction_when_finished = True
+                s.close_active_transaction_when_finished = True
                 s.save()
                 hist = Historie(
                     typ_zmeny=SPOLUPRACE_ZADOST,
@@ -870,6 +870,8 @@ def aktivace(request, pk):
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
+        spoluprace.active_transaction = FedoraTransaction()
+        spoluprace.close_active_transaction_when_finished = True
         spoluprace.set_aktivni(request.user)
         messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_AKTIVOVANA)
         Mailer.send_en06(cooperation=spoluprace)
@@ -919,6 +921,8 @@ def deaktivace(request, pk):
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
+        spoluprace.active_transaction = FedoraTransaction()
+        spoluprace.close_active_transaction_when_finished = True
         spoluprace.set_neaktivni(request.user)
         messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_DEAKTIVOVANA)
         return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
@@ -954,6 +958,7 @@ def smazat_spolupraci(request, pk):
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
+        spoluprace.active_transaction = FedoraTransaction()
         resp1 = spoluprace.delete()
         if resp1:
             logger.info(
