@@ -50,6 +50,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
     def test_projekt_001(self):
         #Scenar_2 Otevření tabulky projekty
         #test 2.1
+        self.test_number=2
         self.login()
         # Go to projects
         self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
@@ -167,13 +168,12 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "id_adresa").send_keys("test")
         self.driver.find_element(By.ID, "id_telefon").send_keys(telefon)
         self.driver.find_element(By.ID, "id_email").send_keys("test@example.com")
-        self.driver.find_element(By.ID, "actionSubmitBtn").click()
-        self.wait(self.wait_interval)
         try: 
-            wait = WebDriverWait(self.driver, 30, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
-            element = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, css_selector)))
+            with Wait_for_page_load(self.driver):
+                self.driver.find_element(By.ID, "actionSubmitBtn").click()
         except Exception as e:
-            pass
+            pass        
+        self.wait(self.wait_interval)
         project_count_new = Projekt.objects.count()
 
         return [project_count_old , project_count_new]
@@ -190,6 +190,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
     def test_projekt_zapsat_p_001(self):
         #Scenar_3 Zapsání projektu (pozitivní scénář 1)
         #test 2.2
+        self.test_number=3
         logger.info("CoreSeleniumTest.test_projekt_zapsat_p_001.start")
         [project_count_old , project_count_new]=self.ProjektZapsat()        
         self.assertEqual(project_count_old + 1, project_count_new)
@@ -199,6 +200,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
     def test_projekt_zapsat_n_001(self):
         #Scenar_4 Zapsání projektu (negativní scénář 1)
         #test 2.3
+        self.test_number=4
         logger.info("CoreSeleniumTest.test_projekt_zapsat_n_001.start") 
         [project_count_old , project_count_new]=self.ProjektZapsat(date_from=-9,date_to=-5,css_selector=".nav-link > span:nth-child(2)")
                
@@ -210,6 +212,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         #Scenar_5 Zapsání projektu (negativní scénář 2)
         #test 2.4
         logger.info("CoreSeleniumTest.test_projekt_zapsat_n_002.start") 
+        self.test_number=5        
         [project_count_old , project_count_new]=self.ProjektZapsat(telefon="xxx",css_selector=".nav-link > span:nth-child(2)")
        
         self.assertEqual(project_count_old, project_count_new)
@@ -220,7 +223,8 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         #Scenar_6 Zapsání projektu (negativní scénář 3)
         #test 2.5
         logger.info("CoreSeleniumTest.test_projekt_zapsat_n_003.start")
-
+        self.test_number=6
+        
         [project_count_old , project_count_new]=self.ProjektZapsat(date_from=600,date_to=620,css_selector=".nav-link > span:nth-child(2)")        
        
         self.assertEqual(project_count_old, project_count_new)
@@ -242,12 +246,13 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
         #Scenar_7 Zahájení výzkumu (pozitivní scénář 1)
         #test 2.6 
         logger.info("ProjektZahajitVyzkumSeleniumTest.test_projekt_zahajit_vyzkum_p_001.start")
-
+        self.test_number=7
         self.login()
         self.go_to_form()
 
         self.driver.find_element(By.CSS_SELECTOR, ".odd:nth-child(2) a").click()
         self.driver.find_element(By.CSS_SELECTOR, "#projekt-zahajit-v-terenu > .app-controls-button-text").click()
+        self.wait(1)
         self.driver.find_element(By.ID, "id_datum_zahajeni").click()
         datum= (datetime.datetime.today() + datetime.timedelta(days=-5)).strftime('%d.%m.%Y') 
         self.driver.find_element(By.ID, "id_datum_zahajeni").send_keys(datum)
@@ -260,7 +265,8 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
         ident_cely=self.driver.current_url.split('/')[-1]
 
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ZAHAJENY_V_TERENU)
-        self.assertEqual(datum_input, datum)
+       
+        self.assertEqual(datetime.datetime.strptime(datum_input, '%d.%m.%Y') , datetime.datetime.strptime(datum, '%d.%m.%Y'))
         logger.info("ProjektZahajitVyzkumSeleniumTest.test_projekt_zahajit_vyzkum_p_001.end")
 
 
@@ -278,12 +284,13 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
         #Scenar_8 Ukončení výzkumu (pozitivní scénář 1)
         #test 2.7 
         logger.info("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_p_001.start")
-
+        self.test_number=8
         self.login()
         self.go_to_form()
         
         self.driver.find_element(By.CSS_SELECTOR, ".even:nth-child(7) a").click()
         self.driver.find_element(By.CSS_SELECTOR, "#projekt-ukoncit-v-terenu > .app-controls-button-text").click()
+        self.wait(1)
         self.driver.find_element(By.ID, "id_datum_ukonceni").click()
         datum= (datetime.datetime.today() + datetime.timedelta(days=-1)).strftime('%d.%m.%Y') 
         self.driver.find_element(By.ID, "id_datum_ukonceni").send_keys(datum)
@@ -301,13 +308,15 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
         #Scenar_9 Ukončení výzkumu (negativní scénář 1)
         #test 2.8 
         logger.info("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_n_001.start")
-
+        self.test_number=9
         self.login()
         self.go_to_form()
         
         self.driver.find_element(By.CSS_SELECTOR, ".even:nth-child(7) a").click()
         self.driver.find_element(By.CSS_SELECTOR, "#projekt-ukoncit-v-terenu > .app-controls-button-text").click()
+        self.wait(1)
         self.driver.find_element(By.ID, "id_datum_ukonceni").click()
+        self.wait(1)
         datum= (datetime.datetime.today() + datetime.timedelta(days=90)).strftime('%d.%m.%Y') 
         self.driver.find_element(By.ID, "id_datum_ukonceni").send_keys(datum)
         self.driver.find_element(By.ID, "submit-btn").click()
@@ -339,13 +348,14 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
         #Scenar_10 Uzavření projektu (pozitivní scénář 1)
         #test 2.9 
         logger.info("ProjektUzavritSeleniumTest.test_projekt_uzavrit_p_001.start")
-
+        self.test_number=10
         self.login()
         self.go_to_form()
 
         self.driver.find_element(By.LINK_TEXT, "C-201232899").click()
 
         self.driver.find_element(By.CSS_SELECTOR, "#projekt-uzavrit > .app-controls-button-text").click()
+        self.wait(1)
         with Wait_for_page_load(self.driver):
             self.driver.find_element(By.ID, "submit-btn").click()
 
@@ -358,7 +368,7 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
         #Scenar_11 Uzavření projektu (negativní scénář 1)
         #2.10 
         logger.info("ProjektUzavritSeleniumTest.test_projekt_uzavrit_n_001.start")
-
+        self.test_number=11
         self.login()
         self.go_to_form()
         self.driver.find_element(By.LINK_TEXT, "C-201230310").click()
@@ -391,13 +401,13 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         #Scenar_12 Archivace projektu (pozitivní scénář 1)
         #2.11  C-201231446 projekt/detail/C-201231446
         logger.info("ProjektArchivovatSeleniumTest.test_projekt_archivovat_p_001.start")
-
+        self.test_number=12
         self.login("archivar")
         self.go_to_form()
         
         self.driver.find_element(By.LINK_TEXT, "C-201231446").click()
         self.driver.find_element(By.CSS_SELECTOR, "#projekt-archivovat > .app-controls-button-text").click()
-
+        self.wait(1)
         with Wait_for_page_load(self.driver):            
             self.driver.find_element(By.ID, "submit-btn").click()       
 
@@ -410,7 +420,7 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         #Scenar_13 Archivace projektu (negativní scénář 1)
         #2.12 
         logger.info("ProjektArchivovatSeleniumTest.test_projekt_archivovat_p_001.start")
-
+        self.test_number=13
         self.login("archivar")
         self.go_to_form()
         
@@ -441,7 +451,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         #Scenar_14 Vrácení stavu u archivovaného projektu (pozitivní scénář 1)
         #2.13 
         logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_001.start")
-
+        self.test_number=14
         self.login("archivar")
         self.go_to_form()        
 
@@ -468,7 +478,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         #Scenar_15 Vrácení stavu u uzavřeného projektu (pozitivní scénář 1)
         #2.14 
         logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_002.start")
-
+        self.test_number=15
         self.login("archivar")
         self.go_to_form() 
 
@@ -495,7 +505,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         #Scenar_16 Vrácení stavu u ukončeného projektu (pozitivní scénář 1)
         #2.15 
         logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_003.start")
-
+        self.test_number=16
         self.login("archivar")
         self.go_to_form() 
 
@@ -522,7 +532,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         #Scenar_17 Vrácení stavu u zahájeného projektu (pozitivní scénář 1)
         #2.16 
         logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_004.start")
-
+        self.test_number=17
         self.login("archivar")
         self.go_to_form() 
 
@@ -549,7 +559,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         #Scenar_18 Vrácení stavu u přihlášeného projektu (pozitivní scénář 1)
         #2.17 
         logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_005.start")
-
+        self.test_number=18
         self.login("archivar")
         self.go_to_form() 
 
@@ -585,12 +595,13 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         #Scenar_19 Navržení zrušení projektu (pozitivní scénář 1)
         #2.18 
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_001.start")
-
+        self.test_number=19
         self.login("archivar")
         self.go_to_form()
         
         self.driver.find_element(By.LINK_TEXT, "C-201665792").click()
         self.driver.find_element(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text").click()
+        self.wait(1)
         self.driver.find_element(By.CSS_SELECTOR, ".custom-control:nth-child(2) > .custom-control-label").click()
         with Wait_for_page_load(self.driver):  
             self.driver.find_element(By.CSS_SELECTOR, ".btn-primary:nth-child(2)").click()
@@ -604,12 +615,13 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         #Scenar_20 Navržení zrušení projektu (pozitivní scénář 2)
         #2.19 
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_002.start")
-
+        self.test_number=20
         self.login("archivar")
         self.go_to_form()
         
         self.driver.find_element(By.LINK_TEXT, "C-201665792").click()
         self.driver.find_element(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text").click()
+        self.wait(1)
         self.driver.find_element(By.CSS_SELECTOR, ".custom-radio:nth-child(1) > .custom-control-label").click()
         self.wait(1)
         self.driver.find_element(By.ID, "id_projekt_id").click()
@@ -626,7 +638,7 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         #Scenar_21 Navržení zrušení projektu (negativní scénář 1)
         #2.20 
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_n_001.start")
-        
+        self.test_number=21       
         self.login("archivar")
         self.go_to_form()
         
@@ -660,7 +672,7 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
         #Scenar_22 Zrušení projektu (pozitivní scénář 1)
         #2.21
         logger.info("ProjektZrusitSeleniumTest.test_projekt_zrusit_p_001.start")
-
+        self.test_number=22
         self.login("archivar")
         self.go_to_form()
         
@@ -693,7 +705,7 @@ class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
     def test_projekt_vytvori_akci_p_001(self):
         #Scenar_23 Vytvoření projektové akce (pozitivní scénář 1)
         logger.info("ProjektVytvoreniProjektoveAkce.test_projekt_vytvori_akci_p_001.start")
-
+        self.test_number=23
         self.login()
         self.go_to_form()
         arch_z_count_old = Akce.objects.count()
@@ -717,6 +729,7 @@ class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
         #Scenar_33 Vytvoření projektové akce (negativní scénář 1) 
         #v poslední verzi už bylo pole vyplněné automaticky - scénář ztratil smysl
         logger.info("ProjektVytvoreniProjektoveAkce.test_projekt_vytvori_akci_n_001.start")
+        self.test_number=33
 
         
         logger.info("ProjektVytvoreniProjektoveAkce.test_projekt_vytvori_akci_n_001.end")

@@ -30,6 +30,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_pridani_dokumentacni_jednotky_p_001(self):
         #Scenar_24 Přidání dokumentační jednotky celek akce (pozitivní scénář 1)
         logger.info("AkcePridaniDokumentacniJednotky.test_pridani_dokumentacni_jednotky_p_001.start")
+        self.test_number=24
 
         self.login()
         self.go_to_form()
@@ -62,7 +63,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_pridani_dokumentacni_jednotky_n_001(self):
         #Scenar_34 Přidání dokumentační jednotky celek akce (negativní scénář 1)
         logger.info("AkcePridaniDokumentacniJednotky.test_pridani_dokumentacni_jednotky_n_001.start")
-
+        self.test_number=34
         self.login()
         self.go_to_form()
         #ArcheologickyZaznam.filter(ident_cely="C-202401502A")
@@ -98,7 +99,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_pridani_dokumentacni_jednotky_p_002(self):
         #Scenar_35 Přidání dokumentační jednotky část akce (pozitivní scénář 1)
         logger.info("AkcePridaniDokumentacniJednotky.test_pridani_dokumentacni_jednotky_p_002.start")
-
+        self.test_number=35
         self.login()
         self.go_to_form()
         #ArcheologickyZaznam.filter(ident_cely="C-202401502A")
@@ -129,7 +130,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_pridani_dokumentacni_jednotky_n_002(self):
         #Scenar_36 Přidání dokumentační jednotky část akce (negativní scénář 1)
         logger.info("AkcePridaniDokumentacniJednotky.test_pridani_dokumentacni_jednotky_n_002.start")
-
+        self.test_number=36
         self.login()
         self.go_to_form()
         #ArcheologickyZaznam.filter(ident_cely="C-202401502A")
@@ -165,7 +166,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_pridani_komponenty_dokumentacni_jednotky_p_001(self):
         #Scenar_37 Přidání komponenty k dokumentační jednotce celek akce (pozitivní scénář 1)
         logger.info("AkcePridaniDokumentacniJednotky.test_pridani_komponenty_dokumentacni_jednotky_p_001.start")
-
+        self.test_number=37
         self.login()
         self.go_to_form() #C-202309027
         #ArcheologickyZaznam.filter(ident_cely="C-202401502A")
@@ -203,7 +204,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_pridani_komponenty_dokumentacni_jednotky_n_001(self):
         #Scenar_40 Přidání komponenty k dokumentační jednotce celek akce (negativní scénář 1)
         logger.info("AkcePridaniDokumentacniJednotky.test_pridani_komponenty_dokumentacni_jednotky_n_001.start")
-
+        self.test_number=40
         self.login()
         self.go_to_form() #C-202309027
         #ArcheologickyZaznam.filter(ident_cely="C-202401502A")
@@ -242,7 +243,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_pridani_objektu_komponente_p_001(self):
         #Scenar_41 Přidání objektu k pozitivní komponentě (pozitivní scénář 1)
         logger.info("AkcePridaniDokumentacniJednotky.test_pridani_objektu_komponente_p_001.start")
-
+        self.test_number=41
         self.login()
         self.go_to_form() #C-202309027
         count_old=NalezObjekt.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202004814A-D01").count()
@@ -271,7 +272,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_pridani_predmetu_komponente_p_001(self):
         #Scenar_42 Přidání předmětu k pozitivní komponentě (pozitivní scénář 1)
         logger.info("AkcePridaniDokumentacniJednotky.test_pridani_predmetu_komponente_p_001.start")
-
+        self.test_number=42
         self.login()
         self.go_to_form() #C-202309027
 
@@ -307,7 +308,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_smazani_objektu_komponente_p_001(self):
         #Scenar_43 Smazání objektu k pozitivní komponentě (pozitivní scénář 1)
         logger.info("AkcePridaniDokumentacniJednotky.test_smazani_objektu_komponente_p_001.start")
-
+        self.test_number=43
         self.login()
         #self.go_to_form() X-C-91277520A
         count_old=NalezObjekt.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01").count()
@@ -321,6 +322,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
         self.driver.find_element(By.LINK_TEXT, "X-C-91277520A").click()
         self.driver.find_element(By.ID, "el_komponenta_X_C_91277520A_K001").click()
         self.driver.find_element(By.CSS_SELECTOR, "#objekt-smazat-101441 > .material-icons").click()
+        self.wait(self.wait_interval)
         with Wait_for_page_load(self.driver):
             self.driver.find_element(By.ID, "submit-btn").click()
        
@@ -333,7 +335,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_smazani_predmetu_komponente_p_001(self):
         #Scenar_44 Smazání předmětu k pozitivní komponentě (pozitivní scénář 1)
         logger.info("AkcePridaniDokumentacniJednotky.test_smazani_predmetu_komponente_p_001.start")
-
+        self.test_number=44
         self.login()
         #self.go_to_form() X-C-91277520A
         count_old=NalezPredmet.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01").count()
@@ -348,6 +350,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "el_komponenta_X_C_91277520A_K001").click()
 
         self.driver.find_element(By.CSS_SELECTOR, "#objekt-smazat-161256 > .material-icons").click()
+        self.wait(1)
         with Wait_for_page_load(self.driver):
           self.driver.find_element(By.ID, "submit-btn").click()
        
@@ -360,7 +363,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_vytvoreni_samostatne_akce_p_001(self):
         #Scenar_46 Vytvoření samostané akce (pozitivní scénář 1)
         logger.info("AkcePridaniDokumentacniJednotky.test_vytvoreni_samostatne_akce_p_001.start")
-
+        self.test_number=46
         self.login("badatel")
        
         arch_z_count_old = Akce.objects.count()
@@ -400,7 +403,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_vytvoreni_samostatne_akce_n_001(self):
         #Scenar_47 Vytvoření samostatné akce (negativní scénář 1)
         logger.info("AkcePridaniDokumentacniJednotky.test_vytvoreni_samostatne_akce_n_001.start")
-
+        self.test_number=47
         self.login("badatel")
        
         arch_z_count_old = Akce.objects.count()
@@ -442,7 +445,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_pridani_dokumentacni_jednotky_samostatne_akce_p_001(self):
         #Scenar_48 Přidání dokumentační jednotky celek akce (pozitivní scénář 1) 
         logger.info("AkcePridaniDokumentacniJednotky.test_pridani_dokumentacni_jednotky_samostatne_akce_p_001.start")
-
+        self.test_number=48
         self.login("badatel")       
         
         count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000001A").count()
@@ -467,7 +470,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_pridani_dokumentacni_jednotky_samostatne_akce_n_001(self):
         #Scenar_49 Přidání dokumentační jednotky “Celek akce” (negativní scénář 1) 
         logger.info("AkcePridaniDokumentacniJednotky.test_pridani_dokumentacni_jednotky_samostatne_akce_p_001.start")
-
+        self.test_number=49
         self.login("badatel")       
         
         count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000001A").count()
@@ -495,7 +498,7 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
     def test_pridani_komponenty_DJ_samostatne_akce_p_001(self):
         #Scenar_50 Přidání komponenty k DJ u samostatné akce (pozitivní scénář 1) 
         logger.info("AkcePridaniDokumentacniJednotky.test_pridani_komponenty_DJ_samostatne_akce_p_001.start")
-
+        self.test_number=50
         self.login("badatel")
        
         count_old=Komponenta.objects.filter(komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000002A-D01").count()

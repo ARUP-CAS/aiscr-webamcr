@@ -4,6 +4,9 @@ import socket
 import requests
 import json
 import psycopg2
+import pandas
+import os.path
+from datetime import datetime
 from webclient.settings.base import get_secret
 from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -61,7 +64,7 @@ class Wait_for_page_load(object):
 class BaseSeleniumTestClass(StaticLiveServerTestCase):   
     port = 5678   
     host = '0.0.0.0'
-
+    test_number = 0
 
 
     @classmethod
@@ -188,7 +191,7 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
             result = self._outcome.result
         ok = all(test != self for test, text in result.errors + result.failures)
 
-        # Demo output:  (print short info immediately - not important)
+        '''
         if ok:
             logger.info('%s OK' % (self.id(),))         
         else:
@@ -200,8 +203,34 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
                     msg = [x for x in text.split('\n')[1:]
                            if not x.startswith(' ')][0]
                     logger.info("%s: %s\n     %s" % (typ, self.id(), msg))
-        
-        
+        '''
+        if os.path.isfile(f'{settings.TEST_SCREENSHOT_PATH}results.xlsx'):
+            data= pandas.read_excel(f'{settings.TEST_SCREENSHOT_PATH}results.xlsx')
+            d= data.values.tolist()
+        else:
+            d=[]
+
+        index=self.test_number
+        if len(d)<index:
+            for i in range(len(d)+1, index+1):
+                d.append([i,"","",""])
+        d[index-1][1] = datetime.now()
+        d[index-1][2]= self.id()
+        if ok:
+            d[index-1][3]= "OK"
+        else:
+            if len(result.errors)>0:
+                d[index-1][3]= "ERROR" 
+            elif len(result.failures)>0:
+                d[index-1][3]= "FAIL" 
+
+        data = pandas.DataFrame(d)
+        data.columns =['index','date', 'test name', 'result']
+
+        try:
+            data.to_excel(f'{settings.TEST_SCREENSHOT_PATH}results.xlsx',index=False) 
+        except Exception as e:
+            pass
         super().tearDown()
         
     

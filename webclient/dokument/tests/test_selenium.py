@@ -32,16 +32,17 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_zapsani_dokumentu_p_001(self):
         #Scenar_64 Zapsání dokumentu (pozitivní scénář 1)
         logger.info("AkceDokumenty.test_zapsani_dokumentu_p_001.start")
-
+        self.test_number=64
         self.login("archivar")
         self.go_to_form_zapsat()
         
         count_old=Dokument.objects.count()          
-
+        self.wait(self.wait_interval)
         self.driver.find_element(By.CSS_SELECTOR, "#id-modal-region-div > #div_id_region .filter-option-inner-inner").click()
         self.driver.find_element(By.CSS_SELECTOR, "#bs-select-10-2 > .text").click()
-       
+        
         self.driver.find_element(By.CSS_SELECTOR, ".modal-footer > .btn-primary").click()
+        self.wait(1)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-selection__rendered").click()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
@@ -76,12 +77,12 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_zapsani_dokumentu_n_001(self):
         #Scenar_65 Zapsání dokumentu (negativní scénář 1)
         logger.info("AkceDokumenty.test_zapsani_dokumentu_n_001.start")
-
+        self.test_number=65
         self.login("archivar")
         self.go_to_form_zapsat()
         
         count_old=Dokument.objects.count()          
-
+        self.wait(self.wait_interval)
         self.driver.find_element(By.CSS_SELECTOR, "#id-modal-region-div > #div_id_region .filter-option-inner-inner").click()
         self.driver.find_element(By.CSS_SELECTOR, "#bs-select-10-2 > .text").click()
        
@@ -89,6 +90,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         #self.driver.find_element(By.CSS_SELECTOR, ".select2-selection__rendered").click()
         #self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
         #self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        self.wait(1)
         self.driver.find_element(By.ID, "id_rok_vzniku").click()
         self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")   
       
@@ -121,7 +123,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_odeslani_dokumentu_p_001(self):
         #Scenar_66 Odeslání dokumentu (pozitivní scénář 1)
         logger.info("AkceDokumenty.test_odeslani_dokumentu_p_001.start")
-
+        self.test_number=66
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -132,6 +134,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
         self.driver.find_element(By.LINK_TEXT, "X-C-TX-202413000").click()
         self.driver.find_element(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text").click()
+        self.wait(1)
         with Wait_for_page_load(self.driver):
             self.driver.find_element(By.ID, "submit-btn").click()
    
@@ -143,11 +146,12 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_odeslani_dokumentu_n_001(self):
         #Scenar_67 Odeslání dokumentu (negativní scénář 1)
         logger.info("AkceDokumenty.test_odeslani_dokumentu_n_001.start")
-
+        self.test_number=67
         self.login("archivar")
         self.go_to_form_vybrat()
       
-        self.assertEqual(Dokument.objects.filter(ident_cely='X-C-TX-202413001').first().stav , D_STAV_ZAPSANY)   
+        self.assertEqual(Dokument.objects.filter(ident_cely='X-C-TX-202413001').first().stav , D_STAV_ZAPSANY)  
+        self.wait(1) 
         self.driver.find_element(By.CSS_SELECTOR, ".mt-1").click()
         self.driver.find_element(By.ID, "id_ident_cely").click()
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413001")
@@ -168,7 +172,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_archivace_dokumentu_p_001(self):
         #Scenar_68 Archivace dokumentu (pozitivní scénář 1)
         logger.info("AkceDokumenty.test_archivace_dokumentu_p_001.start")
-
+        self.test_number=68
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -190,7 +194,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_archivace_dokumentu_n_001(self):
         #Scenar_69 Archivace dokumentu (negativní scénář 1)
         logger.info("AkceDokumenty.test_archivace_dokumentu_n_001.start")
-
+        self.test_number=69
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -215,7 +219,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_vraceni_odeslaneho_dokumentu_p_001(self):
         #Scenar_70 Vrácení odeslaného dokumentu (pozitivní scénář 1)
         logger.info("AkceDokumenty.test_vraceni_odeslaneho_dokumentu_p_001.start")
-
+        self.test_number=70
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -239,7 +243,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_vraceni_odeslaneho_dokumentu_n_001(self):
         #Scenar_71 Vrácení odeslaného dokumentu (negativní scénář 1)
         logger.info("AkceDokumenty.test_vraceni_odeslaneho_dokumentu_n_001.start")
-
+        self.test_number=71
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -264,7 +268,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_vraceni_archivovaneho_dokumentu_p_001(self):
         #Scenar_72 Vrácení archivovaného dokumentu (pozitivní scénář 1)
         logger.info("AkceDokumenty.test_vraceni_archivovaneho_dokumentu_p_001.start")
-
+        self.test_number=72
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -288,7 +292,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_vraceni_archivovaneho_dokumentu_n_001(self):
         #Scenar_73 Vrácení archivovaného dokumentu (negativní scénář 1)
         logger.info("AkceDokumenty.test_vraceni_archivovaneho_dokumentu_n_001.start")
-
+        self.test_number=73
         self.login("archivar")
         self.go_to_form_vybrat()
       

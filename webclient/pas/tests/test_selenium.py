@@ -62,7 +62,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def test_zapsani_samostatneho_nalezu_p_001(self):
         #Scenar_25 Zapsání samostatného nálezu (pozitivní scénář 1)
         logger.info("AkceSamostatneNalezy.test_zapsani_samostatneho_nalezu_p_001.start")
-
+        self.test_number=25
         self.login("badatel1")
         self.go_to_form()
         SN_count_old = SamostatnyNalez.objects.count()
@@ -111,7 +111,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def test_zapsani_samostatneho_nalezu_n_001(self):
         #Scenar_26 Zapsání samostatného nálezu (negativní scénář 1)
         logger.info("AkceSamostatneNalezy.test_zapsani_samostatneho_nalezu_n_001.start")
-
+        self.test_number=26
         self.login("badatel1")
         self.go_to_form()
         SN_count_old = SamostatnyNalez.objects.count()
@@ -161,7 +161,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def test_odeslani_samostatneho_nalezu_p_001(self):
         #Scenar_28 Odeslání samostatného nálezu (pozitivní scénář 1)        
         logger.info("AkceSamostatneNalezy.test_odeslani_samostatneho_nalezu_p_001.start")
-
+        self.test_number=28
         self.login("badatel1")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202105907-N00091').first().stav , SN_ZAPSANY)         
         
@@ -181,6 +181,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.driver.find_element(By.LINK_TEXT, _("core.templates.upload_file.submitButton.text")).click()
 
         self.driver.find_element(By.CSS_SELECTOR, "#pas-odeslat > .app-controls-button-text").click()
+        self.wait(1)
         with Wait_for_page_load(self.driver):
             self.driver.find_element(By.ID, "submit-btn").click()
 
@@ -190,7 +191,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def test_odeslani_samostatneho_nalezu_n_001(self):
         #Scenar_29 Odeslání samostatného nálezu (negativní scénář 1)     
         logger.info("AkceSamostatneNalezy.test_odeslani_samostatneho_nalezu_n_001.start")
-
+        self.test_number=29
         self.login("badatel1")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202105907-N00091').first().stav , SN_ZAPSANY)          
         
@@ -223,7 +224,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def test_potvrzeni_samostatneho_nalezu_p_001(self):
         #Scenar_30 Potvrzení samostatného nálezu (pozitivní scénář 1)     
         logger.info("AkceSamostatneNalezy.test_potvrzeni_samostatneho_nalezu_p_001.start")
-
+        self.test_number=30
         self.login("archeolog")        
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)   
        
@@ -237,6 +238,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
         self.driver.find_element(By.LINK_TEXT, "C-202211308-N00213").click()
         self.driver.find_element(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text").click()
+        self.wait(1)
         self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").click()
         self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").send_keys("123")
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_predano .filter-option-inner-inner").click()
@@ -254,7 +256,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def test_potvrzeni_samostatneho_nalezu_n_001(self):
         #Scenar_31 Potvrzení samostatného nálezu (negativní scénář 1)   
         logger.info("AkceSamostatneNalezy.test_potvrzeni_samostatneho_nalezu_n_001.start")
-
+        self.test_number=31
         self.login("archeolog")
         
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)   
@@ -269,6 +271,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
         self.driver.find_element(By.LINK_TEXT, "C-202211308-N00213").click()
         self.driver.find_element(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text").click()
+        self.wait(1)
         self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").click()
         self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").send_keys("123")
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_predano .filter-option-inner-inner").click()
@@ -289,7 +292,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def test_potvrzeni_samostatneho_nalezu_n_002(self):
         #Scenar_32 Potvrzení samostatného nálezu (negativní scénář 2)
         logger.info("AkceSamostatneNalezy.test_potvrzeni_samostatneho_nalezu_n_002.start")
-
+        self.test_number=32
         self.login("archeolog")
         
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)   
@@ -306,6 +309,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text").click()
         #self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").click()
         #self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").send_keys("123")
+        self.wait(1)
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_predano .filter-option-inner-inner").click()
         self.driver.find_element(By.ID, "bs-select-1-0").click()
 
@@ -324,7 +328,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def test_archivace_samostatneho_nalezu_p_001(self):
         #Scenar_38 Archivace samostatného nálezu (pozitivní scénář 1)
         logger.info("AkceSamostatneNalezy.test_archivace_samostatneho_nalezu_p_001.start")
-
+        self.test_number=38
         self.login("archivar")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_POTVRZENY) 
         self.driver.find_element(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body").click()
@@ -338,6 +342,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
         self.driver.find_element(By.LINK_TEXT, "C-202010474-N00002").click()
         self.driver.find_element(By.CSS_SELECTOR, "#pas-archivovat > .app-controls-button-text").click()
+        self.wait(1)
         with Wait_for_page_load(self.driver):
             self.driver.find_element(By.ID, "submit-btn").click()
         
@@ -348,7 +353,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def test_archivace_samostatneho_nalezu_n_001(self):
         #Scenar_39 Archivace samostatného nálezu (negativní scénář 1)
         logger.info("AkceSamostatneNalezy.test_archivace_samostatneho_nalezu_n_001.start")
-
+        self.test_number=39
         self.login("archivar")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_POTVRZENY) 
         self.driver.find_element(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body").click()
@@ -360,6 +365,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
         self.driver.find_element(By.LINK_TEXT, "C-202010474-N00002").click()
         self.driver.find_element(By.CSS_SELECTOR, "#file-smazat-518731 > .material-icons").click()
+        self.wait(1)
         with Wait_for_page_load(self.driver):
             self.driver.find_element(By.ID, "submit-btn").click()        
 
@@ -369,7 +375,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
                 self.driver.find_element(By.ID, "submit-btn").click()
         except Exception as e:
             pass
-        
+        self.wait(1)
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_POTVRZENY)  
         logger.info("AkceSamostatneNalezy.test_archivace_samostatneho_nalezu_n_001.end")
     
@@ -377,7 +383,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def test_vraceni_samostatneho_nalezu_p_001(self):
         #Scenar_45 Vrácení samostatného nálezu (pozitivní scénář 1)
         logger.info("AkceSamostatneNalezy.test_vraceni_samostatneho_nalezu_p_001.start")
-
+        self.test_number=45
         self.login("archivar")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202301371-N00015').first().stav , SN_POTVRZENY) 
         
