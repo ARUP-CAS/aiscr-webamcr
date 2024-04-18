@@ -39,24 +39,12 @@
 
   <div class="jumbotron mb-0">
     <h1 class="display-4">{% trans "oznameni.templates.oznameni.sucess.dakujemeText1" %}</h1>
-    <p class="lead">{% trans "oznameni.templates.oznameni.sucess.dakujemeText2" %}</p>
-    <p class="lead">{% trans "oznameni.templates.oznameni.sucess.dakujemeText3" %}<a
-        href="http://www.archeologickamapa.cz/">{% trans "oznameni.templates.oznameni.sucess.archMapaCr" %}
-      </a>{% trans "oznameni.templates.oznameni.sucess.dakujemeText4" %}<a
-        href="https://www.mkcr.cz/seznam-organizaci-opravnenych-k-provadeni-archeologickych-vyzkumu-278.html">{% trans "oznameni.templates.oznameni.sucess.opravnenychorg" %}
-      </a>{% trans "oznameni.templates.oznameni.sucess.dakujemeText5" %}</p>
-    <p class="lead">{% trans "oznameni.templates.oznameni.sucess.dakujemeText6" %}</p>
-    <p class="lead">{% trans "oznameni.templates.oznameni.sucess.dakujemeText7" %}<a
-        href="https://www.zakonyprolidi.cz/cs/1987-20#cast3">{% trans "oznameni.templates.oznameni.sucess.zakon" %}
-      </a>{% trans "oznameni.templates.oznameni.sucess.dakujemeText8" %}
-    </p>
+    {% trans "oznameni.templates.oznameni.sucess.dakujemeText2" %}
     <hr class="my-4">
     <div
         class="alert alert-success">{% trans "oznameni.templates.oznameni.sucess.dakujemeText9" %} {{ ident_cely }}.
     </div>
-    <p class="lead">{% trans "oznameni.templates.oznameni.sucess.dakujemeText10" %}</p>
-    <p class="lead">{% trans "oznameni.templates.oznameni.sucess.dakujemeText11" %}</p>
-    <p class="lead">{% trans "oznameni.templates.oznameni.sucess.dakujemeText12" %}</p>
+    {% trans "oznameni.templates.oznameni.sucess.dakujemeText10" %}
     <a class="btn btn-primary" href="{% url 'oznameni:index' %}" role="button">{% trans "oznameni.templates.oznameni.sucess.oznamitDalsiProjekt" %}</a>
   </div>
 
