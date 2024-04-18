@@ -447,7 +447,7 @@ DIGI_LINKS = {
     "ARU_PRAHA": "https://www.arup.cas.cz/",
     "ARU_BRNO": "https://www.arub.cz/",
     "ARUP_MAIL": '<a href="mailto:oznameni@arup.cas.cz">oznameni@arup.cas.cz</a>',
-    "ARUB_MAIL": "<a href='mailto:oznameni@arub.cas.cz'>oznameni@arub.cz</a>",
+    "ARUB_MAIL": "<a href='mailto:oznameni@arub.cz'>oznameni@arub.cz</a>",
 }
 
 # auto logout settings
