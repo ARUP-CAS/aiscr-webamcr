@@ -1474,7 +1474,23 @@ def odeslat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = FedoraTransaction()
         dokument.active_transaction = fedora_transaction
-        dokument.set_odeslany(request.user)
+        old_ident = dokument.ident_cely
+        # Nastav identifikator na permanentny
+        if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
+            rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
+            try:
+                dokument.set_permanent_ident_cely(dokument.ident_cely[2], rada)
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+                fedora_transaction.rollback_transaction()
+                dokument.close_active_transaction_when_finished = True
+                return JsonResponse(
+                    {"redirect": get_detail_json_view(ident_cely)}, status=403
+                )
+            else:
+                dokument.save()
+                logger.debug("dokument.views.odeslat.permanent", extra={"ident_cely": dokument.ident_cely})
+        dokument.set_odeslany(request.user, old_ident)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
         logger.debug("dokument.views.odeslat.sucess")
         dokument.close_active_transaction_when_finished = True
@@ -1531,15 +1547,6 @@ def archivovat(request, ident_cely):
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
                 fedora_transaction.rollback_transaction()
                 dokument.close_active_transaction_when_finished = True
-                return JsonResponse(
-                    {"redirect": get_detail_json_view(ident_cely)}, status=403
-                )
-            except FileNotFoundError as e:
-                messages.add_message(
-                    request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT_CHYBY_SOUBOR
-                )
-                # dokument.close_active_transaction_when_finished = True
-                dokument.save()
                 return JsonResponse(
                     {"redirect": get_detail_json_view(ident_cely)}, status=403
                 )
