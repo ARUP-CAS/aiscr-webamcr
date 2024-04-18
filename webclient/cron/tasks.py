@@ -677,3 +677,26 @@ def update_single_redis_snapshot(class_name: str, record_pk):
     if key and value:
         r.hset(key, mapping=value)
 
+
+@shared_task
+def update_materialized_views():
+    logger.debug("cron.tasks.update_materialized_views.start")
+    
+    query= (
+        "REFRESH MATERIALIZED VIEW amcr_heat_pas_l1;"
+        "REFRESH MATERIALIZED VIEW amcr_heat_pas_l2;"        
+        "REFRESH MATERIALIZED VIEW amcr_heat_pas_lx1;"
+        "REFRESH MATERIALIZED VIEW amcr_heat_pas_lx2;"        
+        "REFRESH MATERIALIZED VIEW amcr_heat_pian_l1;"
+        "REFRESH MATERIALIZED VIEW amcr_heat_pian_l2;"        
+        "REFRESH MATERIALIZED VIEW amcr_heat_pian_lx1;"
+        "REFRESH MATERIALIZED VIEW amcr_heat_pian_lx2;"        
+        "REFRESH MATERIALIZED VIEW amcr_heat_projekt_l1;"
+        "REFRESH MATERIALIZED VIEW amcr_heat_projekt_l2;"        
+        "REFRESH MATERIALIZED VIEW amcr_heat_projekt_lx1;"
+        "REFRESH MATERIALIZED VIEW amcr_heat_projekt_lx2;"
+    )     
+    cursor = connection.cursor()
+    cursor.execute(query)   
+    logger.debug("cron.tasks.update_materialized_views.end")
+    
