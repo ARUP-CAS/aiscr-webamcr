@@ -13,7 +13,7 @@ from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
 from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
-    OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, RUSENI_STARE_PROJ
+    OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, RUSENI_STARE_PROJ, UDAJ_ODSTRANEN
 from core.models import Soubor
 from core.coordTransform import get_multi_transform_to_sjtsk , get_multi_transform_to_wgs84
 from cron.classes import MyList
@@ -476,7 +476,7 @@ def delete_personal_data_canceled_projects():
     """
     try:
         logger.debug("core.cron.delete_personal_data_canceled_projects.do.start")
-        deleted_string = _("core.tasks.deletePersonalData.dataDeleted")
+        deleted_string = UDAJ_ODSTRANEN
         today = datetime.datetime.now().date()
         year_ago = today - datetime.timedelta(days=365)
         projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
