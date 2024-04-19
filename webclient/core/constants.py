@@ -182,3 +182,4 @@ PERMISSIONS_SHEET_URL_NAME = "URL"
 PERMISSIONS_SHEET_ACTION_NAME = "action"
 
 UDAJ_ODSTRANEN = "údaj odstraněn"
+STARY_PROJEKT_ZRUSEN = "Automatické zrušení projektů starších tří let, u kterých již nelze očekávat zahájení."
