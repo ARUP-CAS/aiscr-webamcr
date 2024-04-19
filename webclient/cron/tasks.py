@@ -476,7 +476,7 @@ def delete_personal_data_canceled_projects():
     """
     try:
         logger.debug("core.cron.delete_personal_data_canceled_projects.do.start")
-        deleted_string = _("core.tasks.nalez_to_sjtsk.data_deleted")
+        deleted_string = _("core.tasks.deletePersonalData.dataDeleted")
         today = datetime.datetime.now().date()
         year_ago = today - datetime.timedelta(days=365)
         projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
