@@ -5,7 +5,7 @@
     <div class="app-{{ app.app_label }} module{% if app.app_url in request.path|urlencode %} current-app{% endif %}">
       <table>
         <caption>
-          <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">{{ app.name }}</a>
+          <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}core.templates.admin.appList.models{% endblocktranslate %}">{{ app.name }}</a> <!-- Models in the {{ name }} application -->
         </caption>
         {% for model in app.models %}
           <tr class="model-{{ model.object_name|lower }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
