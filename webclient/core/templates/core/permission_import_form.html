@@ -15,10 +15,10 @@
 {% if not is_popup %}
 {% block breadcrumbs %}
 <div class="breadcrumbs">
-<a href="{% url 'admin:index' %}">{% translate 'core.templates.permissionImportForm.home' %}</a>
+<a href="{% url 'admin:index' %}">{% translate 'core.admin.templates.permissionImportForm.home' %}</a>
 &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
 &rsaquo; {% if has_view_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
-&rsaquo; {% if add %}{% blocktranslate with name=opts.verbose_name %}core.templates.permissionImportForm.add {{ name }}{% endblocktranslate %}{% else %}{{ original|truncatewords:"18" }}{% endif %}
+&rsaquo; {% if add %}{% blocktranslate with name=opts.verbose_name %}core.admin.templates.permissionImportForm.add {{ name }}{% endblocktranslate %}{% else %}{{ original|truncatewords:"18" }}{% endif %}
 </div>
 {% endblock %}
 {% endif %}
@@ -37,7 +37,7 @@
 <div>
 {% if errors %}
     <p class="errornote">
-    {% blocktranslate count counter=errors|length %}core.templates.permissionImportForm.correct.singular{% plural %}core.templates.permissionImportForm.correct.plural{% endblocktranslate %}  <!-- Please correct the error below. / Please correct the errors below. -->
+    {% blocktranslate count counter=errors|length %}core.admin.templates.permissionImportForm.correct.singular{% plural %}core.admin.templates.permissionImportForm.correct.plural{% endblocktranslate %}  <!-- Please correct the error below. / Please correct the errors below. -->
     </p>
     {{ adminform.form.non_field_errors }}
 {% endif %}
@@ -73,7 +73,7 @@
 {% endblock %}
 <div class="submit-row">
     {% block submit-row %}
-        <input type="submit" value="{% translate 'core.templates.permissionImportForm.save' %}" class="default" name="_save">
+        <input type="submit" value="{% translate 'core.admin.templates.permissionImportForm.save' %}" class="default" name="_save">
     {% endblock %}
     </div>
 {% block admin_change_form_document_ready %}
