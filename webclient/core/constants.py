@@ -117,7 +117,10 @@ OBLAST_CHOICES = (
 
 CESKY = "cs"
 ANGLICKY = "en"
-JAZYKY = ((CESKY, _("core.constants.cs.text")), (ANGLICKY, _("core.constants.cs.text")))
+JAZYKY = (
+    (CESKY, _("core.constants.cs.text")),
+    (ANGLICKY, _("core.constants.en.text"))
+)
 
 # Typy vazeb
 PROJEKT_RELATION_TYPE: Final = "projekt"
