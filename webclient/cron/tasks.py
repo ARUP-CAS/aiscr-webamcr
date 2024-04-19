@@ -13,7 +13,7 @@ from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
 from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
-    OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, RUSENI_STARE_PROJ, UDAJ_ODSTRANEN
+    OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, RUSENI_STARE_PROJ, UDAJ_ODSTRANEN, STARY_PROJEKT_ZRUSEN
 from core.models import Soubor
 from core.coordTransform import get_multi_transform_to_sjtsk , get_multi_transform_to_wgs84
 from cron.classes import MyList
@@ -582,7 +582,7 @@ def cancel_old_projects():
                     & Q(historie__historie__datum_zmeny__lt=toady_minus_3_years)) \
             .annotate(upper=Upper('planovane_zahajeni')).annotate(new_upper=F('upper')) \
             .filter(upper__lte=toady_minus_1_year)
-        cancelled_string = _("core.tasks.cancel_old_projects.cancelled")
+        cancelled_string = STARY_PROJEKT_ZRUSEN
         for project in projects:
             project: Projekt
             project.set_zruseny(User.objects.get(email="amcr@arup.cas.cz"), cancelled_string, RUSENI_STARE_PROJ)
