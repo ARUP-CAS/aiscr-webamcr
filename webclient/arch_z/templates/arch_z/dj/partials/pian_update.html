@@ -32,31 +32,54 @@
               } else {
                   console.log("neni X-CSRFToken token")
               }
-              xhr.onload = function () {
-                  rs = JSON.parse(this.responseText)
-                  if(rs.lat>0 || rs.zoom == 17){
-                    if(rs.lat>0){
-                      if(!global_blocked_by_query_geom){
-                        map.setView([rs.lat, rs.lng], rs.zoom)
-                      }
-                    }
-                    if (rs.zoom == 17) {
-                        if(!checkBlockedByQWuery() && !global_blocked_by_query_geom){
-                          drawnItems.clearLayers();
-                          addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,rs.pian_ident_cely,rs.geom,rs.presnost)
-                        }
-                    }
-                  } else{
-                        switchMap(false);
+              xhr.onload = function () {                  
+                  const rs = JSON.parse(this.responseText);
+                  if (rs.count==0 ){
+                      switchMap(false);
+                      return;
                   }
+                  zoom_pian=rs.pians.find((element) => element.color=='gold' )
+                  if(zoom_pian==undefined)zoom_pian= rs.pians[0];
+                  if(zoom_pian.zoom==12){
+                          if(zoom_pian.bbox!=""){
+                              box=[]
+                              zoom_pian.bbox.split("((")[1].split(")")[0].split(",").forEach(i => {                          
+                                  box.push([i.split(" ")[1].trim(), i.split(" ")[0].trim()]);
+                              })
+                              //latLng(40.712, -74.227),
+                              map.fitBounds([ [box[0][0],box[0][1] ],[box[2][0],box[2][1] ]]);
+                          }
+                          else map.setView([zoom_pian.lat, zoom_pian.lng], zoom_pian.zoom)
+                  }
+                  else{
+                      map.setView([zoom_pian.lat, zoom_pian.lng], zoom_pian.zoom)
+                      poi_dj.clearLayers(); 
+                      drawnItems.clearLayers();
+          
+                      rs.pians.forEach((pian) => {
+                        if(!checkBlockedByQWuery() && !global_blocked_by_query_geom && pian.color =='gold'  ){                                       
+                            addDJPian([pian.lat, pian.lng],  drawnItems,pian.pian_ident_cely,pian.geom,pian.presnost,pian.color);
+                        }  
+                       else  addDJPian([pian.lat, pian.lng],  poi_dj,pian.pian_ident_cely,pian.geom,pian.presnost,pian.color);                   
+                        
+                        
+                      })
+                      geomToText();
+                      save_edited_geometry_session();
+                  }
+
               };
               xhr.send(JSON.stringify(
                   {
                       'cadastre': document.getElementById("main_cadastre_id").value,
-                      'akce_ident_cely': '{{ zaznam.ident_cely }}',
+                      'akce_ident_cely': '{{ dj_ident_cely }}',
                   }))
-
-
+               /*   arch_select_perspective(
+                    currentUrl,
+                    document.getElementById("main_cadastre_id").value,
+                    '{{ zaznam.ident_cely }}',
+                    currentUrl.substr(currentUrl.lastIndexOf("-D"))
+                    )*/
         //show_form(`detail_pian_form_{{ pian_ident_cely}}`);
         map_show_edit(true);
         global_map_projekt_ident='{{ dj_ident_cely }}';
