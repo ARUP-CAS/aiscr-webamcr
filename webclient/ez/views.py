@@ -533,6 +533,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
     success_message = "success"
     form_class = ExterniOdkazForm
     slug_field = "id"
+    active_transaction = None
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         eo = self.get_object()
@@ -543,11 +544,8 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         else:
             check = True
         if check:
-            logger.debug("Externi odkaz - Externi Zdroj/ Archeologicky zaznam wrong relation")
-            messages.add_message(
-                            request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                        )
-            return JsonResponse({"redirect": self.get_object().get_absolute_url()},status=403)
+            messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+            return JsonResponse({"redirect": self.get_object().get_absolute_url()}, status=403)
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -574,8 +572,18 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
             ].externi_zdroj.get_absolute_url()
         return response
 
+    def get_object(self, queryset=None):
+        object = super().get_object()
+        object: ExterniOdkaz
+        if self.active_transaction:
+            object.close_active_transaction_when_finished = True
+            object.active_transaction = self.active_transaction
+        return object
+
     def post(self, request, *args, **kwargs):
+        self.active_transaction = FedoraTransaction()
         super().post(request, *args, **kwargs)
+        self.active_transaction = None
         return JsonResponse({"redirect": self.get_success_url()})
 
     def form_valid(self, form):
@@ -638,6 +646,8 @@ class ExterniOdkazOdpojitAZView(TransakceView):
     def post(self, request, *args, **kwargs):
         az = self.get_zaznam()
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
+        eo.active_transaction = FedoraTransaction()
+        eo.close_active_transaction_when_finished = True
         eo.delete()
         messages.add_message(
             request, messages.SUCCESS, get_message(az, "EO_USPESNE_ODPOJEN")

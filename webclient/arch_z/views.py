@@ -1395,7 +1395,7 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
     logger.debug("arch_z.views.smazat_akce_vedoucí.start", extra={"ident_cely": ident_cely,
                                                                   "akce_vedouci_id": akce_vedouci_id})
     zaznam: AkceVedouci = AkceVedouci.objects.get(id=akce_vedouci_id)
-    az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    az: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if request.method == "POST":
         if zaznam.akce.archeologicky_zaznam.ident_cely != ident_cely:
             logger.debug("arch_z.views.smazat_akce_vedoucí.error",
@@ -1403,10 +1403,8 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
             messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
             return JsonResponse({"redirect": az.get_absolute_url()}, status=403)
         zaznam.delete()
-        fedora_transaction = FedoraTransaction
-        zaznam.akce.archeologicky_zaznam.active_transaction = fedora_transaction
-        zaznam.akce.archeologicky_zaznam.close_active_transaction_when_finished = True
-        zaznam.akce.archeologicky_zaznam.save()
+        fedora_transaction = FedoraTransaction()
+        az.save_metadata(fedora_transaction, close_transaction=True)
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         logger.debug("arch_z.views.smazat_akce_vedoucí.success", extra={"ident_cely": ident_cely,
                                                                       "akce_vedouci_id": akce_vedouci_id})

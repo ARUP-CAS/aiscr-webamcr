@@ -89,7 +89,7 @@ def update_akce_snapshot(sender, instance: Akce, **kwargs):
             and instance.projekt != instance.initial_projekt):
         instance.projekt.save_metadata(fedora_transaction)
         instance.initial_projekt.save_metadata(fedora_transaction)
-    if fedora_transaction and instance.close_active_transaction_when_finished:
+    if instance.close_active_transaction_when_finished:
         fedora_transaction.mark_transaction_as_closed()
     logger.debug("arch_z.signals.update_akce_snapshot.end", extra={"record_pk": instance.pk})
 
@@ -164,13 +164,20 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     """
     logger.debug("arch_z.signals.delete_externi_odkaz_repository_container.start",
                  extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z})
-    transaction = instance.active_transaction
-    if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
-        instance.archeologicky_zaznam.save_metadata(transaction)
-    if instance.externi_zdroj is not None:
-        instance.externi_zdroj.save_metadata(transaction)
+    fedora_transaction = instance.active_transaction
+
+    def save_metadata(inner_close_transaction=False):
+        if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
+            instance.archeologicky_zaznam.save_metadata(fedora_transaction)
+        if instance.externi_zdroj is not None:
+            instance.externi_zdroj.save_metadata(fedora_transaction)
+        if inner_close_transaction:
+            fedora_transaction.mark_transaction_as_closed()
     close_transaction = instance.close_active_transaction_when_finished
-    transaction.on_commit(lambda: instance.save_metadata(close_transaction=close_transaction))
+    if close_transaction:
+        transaction.on_commit(lambda: save_metadata(True))
+    else:
+        save_metadata()
     logger.debug("arch_z.signals.delete_externi_odkaz_repository_container.end",
                  extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z,
-                        "transaction": transaction})
+                        "transaction": fedora_transaction})
