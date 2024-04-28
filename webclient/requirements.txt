@@ -1,4 +1,4 @@
-Django==4.2.11
+Django==5.0.4
 psycopg2-binary==2.9.9
 pytz==2024.1
 simplejson==3.19.2
@@ -18,13 +18,13 @@ django-simple-history==3.5.0
 distlib==0.3.8
 django-rosetta==0.10.0
 django-auto-logout==0.5.1
-reportlab==4.1.0
+reportlab==4.2.0
 PyRTF3==0.47.5
 pypdf==4.2.0
 Pillow==10.3.0
 beautifulsoup4==4.12.3
 django-extensions==3.2.3
-celery==5.3.6
+celery==5.4.0
 django-add-default-value==0.10.0
 selenium==4.19.0
 redis==5.0.3
@@ -37,7 +37,7 @@ djangorestframework-xml==2.0.0
 lxml==5.2.1
 python-magic==0.4.27
 pdf2image==1.17.0
-phonenumbers==8.13.34
+phonenumbers==8.13.35
 py7zr==0.21.0
 rarfile==4.2
 django-cacheops==7.0.2
