@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
+from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz, Akce
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 from core.repository_connector import FedoraTransaction
@@ -14,6 +15,7 @@ from cron.tasks import update_single_redis_snapshot
 from dj.models import DokumentacniJednotka
 from dokument.models import DokumentCast
 from historie.models import HistorieVazby
+from komponenta.models import Komponenta
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
 logger = logging.getLogger(__name__)
@@ -65,10 +67,16 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                         dok_jednotka.pian.save_metadata(fedora_transaction)
                 if dok_jednotka.has_adb() and (instance.initial_stav != instance.stav
                                                or instance.initial_pristupnost != instance.pristupnost):
-                    dok_jednotka.adb.save_metadata()
+                    dok_jednotka.adb.save_metadata(fedora_transaction)
+        if instance.initial_stav != instance.stav:
+            for dj in instance.dokumentacni_jednotky_akce.all():
+                dj: DokumentacniJednotka
+                if dj.has_adb():
+                    adb: Adb = dj.adb
+                    adb.save_metadata(fedora_transaction)
         close_transaction = instance.close_active_transaction_when_finished
         if close_transaction:
-            transaction.on_commit(lambda: instance.save_metadata(close_transaction=True))
+            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
         else:
             instance.save_metadata(fedora_transaction)
     logger.debug("arch_z.signals.create_arch_z_metadata.end", extra={"record_pk": instance.pk,
@@ -119,7 +127,6 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
     """
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.start",
                  extra={"record_ident_cely": instance.ident_cely})
-    fedora_transaction = instance.active_transaction
     try:
         if instance.akce and instance.akce.projekt is not None:
             instance.akce.projekt.save_metadata(fedora_transaction)
@@ -138,21 +145,21 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
         for eo in instance.externi_odkazy.all():
             eo.suppress_signal_arch_z = True
             eo.delete()
-    fedora_transaction = instance.record_deletion(instance.close_active_transaction_when_finished)
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.end",
-                 extra={"record_ident_cely": instance.ident_cely, "transaction": fedora_transaction})
+                 extra={"record_ident_cely": instance.ident_cely})
 
 
 @receiver(pre_delete, sender=ArcheologickyZaznam)
 def delete_arch_z_repository_update_connected_records(sender, instance: ArcheologickyZaznam, **kwargs):
     logger.debug("arch_z.signals.delete_arch_z_repository_update_connected_records.start",
                  extra={"record_ident": instance.ident_cely})
-    transaction = instance.active_transaction
+    fedora_transaction: FedoraTransaction = instance.active_transaction
     for item in instance.casti_dokumentu.all():
         item: DokumentCast
-        item.dokument.save_metadata(transaction)
+        item.dokument.save_metadata(fedora_transaction)
     close_transaction = instance.close_active_transaction_when_finished
-    transaction.on_commit(lambda: instance.save_metadata(close_transaction=close_transaction))
+    if close_transaction:
+        transaction.on_commit(lambda: fedora_transaction.mark_transaction_as_closed())
     logger.debug("arch_z.signals.delete_arch_z_repository_update_connected_records.end",
                  extra={"record_ident": instance.ident_cely, "transaction": transaction})
 
@@ -180,4 +187,4 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
         save_metadata()
     logger.debug("arch_z.signals.delete_externi_odkaz_repository_container.end",
                  extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z,
-                        "transaction": fedora_transaction})
+                        "transaction": fedora_transaction.uid})

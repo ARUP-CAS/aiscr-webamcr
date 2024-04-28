@@ -267,8 +267,6 @@ def smazat(request, typ_vazby, ident_cely):
     Funkce pohledu pro smazání komponenty pomoci modalu.
     """
     komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
-    fedora_transcation = FedoraTransaction()
-    komponenta.active_transaction = fedora_transcation
     dj = None
     cast = None
     if komponenta.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
@@ -276,6 +274,8 @@ def smazat(request, typ_vazby, ident_cely):
     else:
         cast = komponenta.komponenta_vazby.casti_dokumentu
     if request.method == "POST":
+        fedora_transaction = FedoraTransaction()
+        komponenta.active_transaction = fedora_transaction
         komponenta.close_active_transaction_when_finished = True
         resp = komponenta.delete()
 

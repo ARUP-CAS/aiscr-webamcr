@@ -585,13 +585,14 @@ def edit(request, ident_cely):
             logger.debug("arch_z.views.edit.form_valid")
             az = form_az.save(commit=False)
             az.active_transaction = fedora_trasnaction
-            az.close_active_transaction_when_finished = True
             az.save()
             akce = form_akce.save()
             ostatni_vedouci_objekt_formset.save()
             if form_az.changed_data or form_akce.changed_data:
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             akce.set_snapshots()
+            az.close_active_transaction_when_finished = True
+            az.save()
             return redirect("arch_z:detail", ident_cely=ident_cely)
         else:
             logger.warning("arch_z.views.edit.form_az_valid", extra={"form_az_errors": form_az.errors,
@@ -1029,7 +1030,7 @@ def smazat(request, ident_cely):
     Na začátku se kontroluje jestli nekdo nezmenil stav akce počas smazání.
     Po post volání se volá metóda na modelu pro smazání akce.
     """
-    az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    az: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if check_stav_changed(request, az):
         return JsonResponse(
             {"redirect": az.get_absolute_url()},
@@ -1044,10 +1045,11 @@ def smazat(request, ident_cely):
         projekt = None
     if request.method == "POST":
         try:
-            fedora_trasnaction = FedoraTransaction()
-            az.active_transaction = fedora_trasnaction
+            fedora_transaction = FedoraTransaction()
+            az.active_transaction = fedora_transaction
             az.close_active_transaction_when_finished = True
             az.deleted_by_user = request.user
+            az.record_deletion(fedora_transaction)
             az.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)

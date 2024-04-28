@@ -137,6 +137,7 @@ class ModelWithMetadata(models.Model):
                     self.soubory.delete()
         except ObjectDoesNotExist as err:
             logger.debug("xml_generator.models.ModelWithMetadata.no_files_to_delete.end", extra={"err": err})
+        connector.record_deletion()
         if close_transaction is True:
             logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.mark_transaction_as_closed",
                          extra={"transaction": getattr(fedora_transaction, "uid", "")})

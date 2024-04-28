@@ -1630,6 +1630,7 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = FedoraTransaction()
         dokument.active_transaction = fedora_transaction
+        dokument.record_deletion()
         resp1 = dokument.delete()
         if resp1:
             logger.debug("dokument.views.smazat.deleted", extra={"resp1": resp1})
@@ -1886,6 +1887,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
         logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
         if remove_orphan:
             orphan_dokument.active_transaction = fedora_transaction
+            orphan_dokument.record_deletion()
             orphan_dokument.delete()
             logger.debug("dokument.views.odpojit.deleted")
         fedora_transaction.mark_transaction_as_closed()
