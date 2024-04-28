@@ -140,7 +140,7 @@ class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
     Třída pohledu pro autocomplete dokument typu.
     """
     def get_queryset(self):
-        qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
+        qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP) \
         .filter(id__in=MODEL_3D_DOKUMENT_TYPES)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -152,7 +152,7 @@ class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySe
     Třída pohledu pro autocomplete dokument formatu.
     """
     def get_queryset(self):
-        qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT)
+        qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT) \
         .filter(id__in=MODEL_3D_DOKUMENT_FORMATS)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
