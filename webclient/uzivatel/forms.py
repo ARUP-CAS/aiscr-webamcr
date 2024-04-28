@@ -6,14 +6,17 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.password_validation import validate_password
 from django.forms import PasswordInput
+from django.template import loader
 from django.utils.translation import gettext_lazy as _
 from django_registration.forms import RegistrationForm
 from django.core.exceptions import ValidationError
+from django.core.mail import EmailMultiAlternatives
 from django.utils.safestring import mark_safe
 
 from core.widgets import ForeignKeyReadOnlyTextInput
 from core.validators import validate_phone_number
 from .models import Osoba, User, UserNotificationType
+from services.mailer import Mailer
 
 logger = logging.getLogger(__name__)
 
@@ -264,6 +267,39 @@ class UserPasswordResetForm(PasswordResetForm):
         self.fields["email"].help_text= _("uzivatel.forms.passwordReset.email.tooltip")
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+
+    def send_mail(
+        self,
+        subject_template_name,
+        email_template_name,
+        context,
+        from_email,
+        to_email,
+        html_email_template_name=None,
+    ):
+        """
+        Send a django.core.mail.EmailMultiAlternatives to `to_email`.
+        """
+        subject = loader.render_to_string(subject_template_name, context)
+        # Email subject *must not* contain newlines
+        subject = "".join(subject.splitlines())
+        body = loader.render_to_string(email_template_name, context)
+
+        email_message = EmailMultiAlternatives(subject, body, from_email, [to_email])
+        if html_email_template_name is not None:
+            html_email = loader.render_to_string(html_email_template_name, context)
+            email_message.attach_alternative(html_email, "text/html")
+        try:
+            email_message.send()
+            status = "OK"
+            exception = None
+        except Exception as e:
+            logger.error("services.mailer.send.error",
+                            extra={"from_email": from_email, "to": to_email, "subject": subject, "exception": e})
+            status = "NOK"
+            exception = e
+        notification_type = UserNotificationType.objects.get(ident_cely="E-U-05")
+        Mailer._log_notification(notification_type=notification_type, receiver_object=context['user'], receiver_address=to_email, status=status, exception=exception)
 
 
 
