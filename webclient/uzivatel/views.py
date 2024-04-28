@@ -308,19 +308,13 @@ def update_notifications(request):
         notifications = form.cleaned_data.get('notification_types')
         user: User = request.user
         user.active_transaction = FedoraTransaction()
-        notification_group_idents = [x.ident_cely for x in notifications.all()]
-        for group_ident, current_group_notification_idents in NOTIFICATION_GROUPS.items():
-            group_obj = UserNotificationType.objects.get(ident_cely=group_ident)
+        notification_group_idents = {x.ident_cely: x for x in notifications.all()}
+        for group_ident in NOTIFICATION_GROUPS.keys():
             if group_ident in notification_group_idents:
-                user.notification_types.add(group_obj)
+                 user.notification_types.add(notification_group_idents[group_ident])
             else:
-                user.notification_types.remove(group_obj)
-            for current_inner_ident in current_group_notification_idents:
-                type_obj = UserNotificationType.objects.get(ident_cely=current_inner_ident)
-                if group_ident in notification_group_idents:
-                    user.notification_types.add(type_obj)
-                else:
-                    user.notification_types.remove(type_obj)
+                type_obj = UserNotificationType.objects.get(ident_cely=group_ident)
+                user.notification_types.remove(type_obj)
         messages.add_message(request, messages.SUCCESS,
                              _("uzivatel.views.update_notifications.post.success"))
         user.close_active_transaction_when_finished = True

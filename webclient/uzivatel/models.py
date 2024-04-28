@@ -413,6 +413,14 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     """
     Class pro db model typ user notifikace.
     """
+    NOTIFICATION_GROUPS_NAMES = {
+    "S-E-A-XX": _("uzivatel.model.userNotificationType.S-E-A-XX.text"),
+    "S-E-N-01": _("uzivatel.model.userNotificationType.S-E-N-01.text"),
+    "S-E-N-02": _("uzivatel.model.userNotificationType.S-E-N-02.text"),
+    "S-E-N-05": _("uzivatel.model.userNotificationType.S-E-N-05.text"),
+    "S-E-K-01": _("uzivatel.model.userNotificationType.S-E-K-01.text"),
+    }
+    
     ident_cely = models.TextField(unique=True)
 
     def _get_settings_dict(self) -> Optional[dict]:
@@ -449,7 +457,10 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
         verbose_name_plural = _("uzivatel.models.UserNotificationType.namePlural")
 
     def __str__(self):
-        return self.ident_cely
+        try:
+            return str(self.NOTIFICATION_GROUPS_NAMES[self.ident_cely])
+        except Exception:
+            return self.ident_cely
 
 class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Model):
     """
@@ -459,6 +470,8 @@ class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Mo
     created_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="notification_log_items")
     receiver_address = models.CharField(max_length=254)
+    status = models.CharField(max_length=3, null=True, blank = True)
+    exception = models.CharField(max_length=1024, null=True, blank = True)
 
     class Meta:
         db_table = "notifikace_log"
