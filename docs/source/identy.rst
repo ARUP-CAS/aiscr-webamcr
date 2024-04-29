@@ -206,11 +206,35 @@ Uživatel
 Permanentní ident
 -----------------
 
-* Přiděluje se v databázi
+* Logika složení je: "U-" + šestimístné číslo ze sekvence `auth_user_ident_seq` doplněno na 6 číslic.
 
-* Logika složení je: ident_cely "U" + pořadové číslo uživatele doplněno na 6 čísel nulami
+* Příklad: "U-012345"
 
-* Kód: `auth_user.ident_cely`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L336 `get_uzivatel_ident`
+
+==========
+Organizace
+==========
+Permanentní ident
+-----------------
+
+* Logika složení je: "ORG-" + šestimístné číslo ze sekvence `organizace_ident_seq` doplněno na 6 číslic.
+
+* Příklad: "ORG-012345"
+
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L342 `get_organizace_ident`
+
+======
+Osoba
+======
+Permanentní ident
+-----------------
+
+* Logika složení je: "OS-" + šestimístné číslo ze sekvence `osoba_ident_seq` doplněno na 6 číslic.
+
+* Příklad: "OS-012345"
+
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L348 `get_osoba_ident`
 
 =========
 Lokalita
