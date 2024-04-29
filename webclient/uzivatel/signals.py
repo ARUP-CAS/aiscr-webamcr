@@ -10,6 +10,7 @@ from historie.models import Historie
 from services.mailer import Mailer
 from uzivatel.models import Organizace, Osoba, User
 from rest_framework.authtoken.models import Token
+from core.ident_cely import get_uzivatel_ident
 
 logger = logging.getLogger(__name__)
 
@@ -49,14 +50,7 @@ def create_ident_cely(sender, instance: User, **kwargs):
         instance.model_is_updated = False
         logger.debug("uzivatel.signals.create_ident_cely.running_create_ident_cely_receiver")
         if not instance.ident_cely:
-            users = User.objects.all().order_by("-ident_cely")
-            if users.count() > 0:
-                last_user = users.first()
-                dash_index = last_user.ident_cely.rfind("-")
-                number = int(last_user.ident_cely[dash_index + 1:]) + 1
-                instance.ident_cely = "U-" + "{0}".format(str(number)).zfill(6)
-            else:
-                instance.ident_cely = "U-000001"
+            instance.ident_cely = get_uzivatel_ident()
         if not FedoraRepositoryConnector.check_container_deleted_or_not_exists(instance.ident_cely, "uzivatel"):
             raise ValidationError(_("uzivatel.models.User.save.check_container_deleted_or_not_exists.invalid"))
         if not instance.active_transaction:

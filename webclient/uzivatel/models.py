@@ -30,11 +30,10 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import DEFERRED, CheckConstraint, Q
+from django.db.models import CheckConstraint, Q
 from django.db.models.functions import Collate
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django.utils.translation import get_language
 from django_prometheus.models import ExportModelOperationsMixin
 
 from heslar.hesla import HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
@@ -334,12 +333,9 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         save metóda pro přidelení identu celý.
         """
         logger.debug("Organizace.save.start")
-        # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
-            self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
-        super().save(*args, **kwargs)
-        if self.ident_cely.startswith("TEMP"):
-            self.ident_cely = f"ORG-{str(self.pk).zfill(6)}"
+            from core.ident_cely import get_organizace_ident
+            self.ident_cely = get_organizace_ident()
             from core.repository_connector import FedoraRepositoryConnector
             if FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "organizace"):
                 super().save(*args, **kwargs)
@@ -384,10 +380,8 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
         logger.debug("Osoba.save.start")
         # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
-            self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
-        super().save(*args, **kwargs)
-        if self.ident_cely.startswith("TEMP"):
-            self.ident_cely = f"OS-{str(self.pk).zfill(6)}"
+            from core.ident_cely import get_osoba_ident
+            self.ident_cely = get_osoba_ident()
             from core.repository_connector import FedoraRepositoryConnector
             if FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "osoba"):
                 super().save(*args, **kwargs)
