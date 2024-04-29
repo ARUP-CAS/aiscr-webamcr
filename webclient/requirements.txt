@@ -47,7 +47,7 @@ pre-commit==3.7.0
 isort==5.13.2
 coverage==7.4.4
 django-debug-toolbar==4.3.0
-black==24.4.0
+black==24.4.2
 django-livereload-server==0.5.1
 django-debug-toolbar-template-profiler==2.1.0
 psycopg2==2.9.9
@@ -57,7 +57,7 @@ pre-commit==3.7.0
 isort==5.13.2
 coverage==7.4.4
 django-debug-toolbar==4.3.0
-black==24.4.0
+black==24.4.2
 django-livereload-server==0.5.1
 django-debug-toolbar-template-profiler==2.1.0
 
