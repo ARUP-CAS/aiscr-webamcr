@@ -32,17 +32,17 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         logger.info("CoreSeleniumTest._check_column_hiding",
                      extra={"element_id_initial": element_id_initial, "column_header_text": column_header_text,
                               "initial": initial})
-        self.driver.find_element(By.CSS_SELECTOR, "#btnGroupDropTable > .material-icons").click()
+        self.ElementClick(By.CSS_SELECTOR, "#btnGroupDropTable > .material-icons")
 
         
         if self.driver.find_element(By.XPATH,f"//*[@data-td-class='{element_id_initial}']").get_attribute('data-state')=='on':
-            self.driver.find_element(By.XPATH,f"//*[@data-td-class='{element_id_initial}']").click()
+            self.ElementClick(By.XPATH,f"//*[@data-td-class='{element_id_initial}']")
         
         table = self.driver.find_element(By.TAG_NAME, "table")
         columns = self._get_table_columns(table)
         self.assertNotIn(column_header_text, columns)
         
-        self.driver.find_element(By.XPATH,f"//*[@data-td-class='{element_id_initial}']").click()
+        self.ElementClick(By.XPATH,f"//*[@data-td-class='{element_id_initial}']")
         columns = self._get_table_columns(table)
         self.assertIn(column_header_text, columns)
         
@@ -53,73 +53,73 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.test_number=2
         self.login()
         # Go to projects
-        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
         self.wait(self.wait_interval)
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")).click()
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
         self.wait(self.wait_interval)
        # Test sorting by all table columns
-        self.driver.find_element(By.LINK_TEXT, _("projekt.models.projekt.stav.label")).click()
+        self.ElementClick(By.LINK_TEXT, _("projekt.models.projekt.stav.label"))
         self.wait(self.wait_interval)
         #WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "btnGroupDropTable")))
         self.assertIn2("sort=stav","sort=-stav", self.driver)        
-        self.driver.find_element(By.LINK_TEXT, _("projekt.tables.ProjektTable.ident_cely.label")).click()
+        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.ident_cely.label"))
         self.wait(self.wait_interval)
         
         self.assertIn2("sort=ident_cely","sort=-ident_cely", self.driver)
 
-        self.driver.find_element(By.LINK_TEXT, _("projekt.models.projekt.hlavniKatastr.label")).click()
+        self.ElementClick(By.LINK_TEXT, _("projekt.models.projekt.hlavniKatastr.label"))
         self.wait(self.wait_interval)
         
         self.assertIn2("sort=hlavni_katastr","sort=-hlavni_katastr", self.driver)
-        self.driver.find_element(By.LINK_TEXT, _("projekt.models.projekt.podnet.label")).click()
+        self.ElementClick(By.LINK_TEXT, _("projekt.models.projekt.podnet.label"))
         self.wait(self.wait_interval)
         
         self.assertIn2("sort=podnet","sort=-podnet", self.driver)
 
-        self.driver.find_element(By.ID, "btnGroupDropTable").click()
+        self.ElementClick(By.ID, "btnGroupDropTable")
         if self.driver.find_element(By.XPATH,"//*[@data-td-class='lokalizace']").get_attribute('data-state')!='on':
-            self.driver.find_element(By.XPATH,"//*[@data-td-class='lokalizace']").click()
-        self.driver.find_element(By.ID, "btnGroupDropTable").click()
+            self.ElementClick(By.XPATH,"//*[@data-td-class='lokalizace']")
+        self.ElementClick(By.ID, "btnGroupDropTable")
         self.wait(self.wait_interval)
         
-        self.driver.find_element(By.LINK_TEXT, _("projekt.tables.ProjektTable.lokalizace.label")).click()
+        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.lokalizace.label"))
         self.wait(self.wait_interval)
         
         self.assertIn2("sort=lokalizace","sort=-lokalizace", self.driver)
         
-        self.driver.find_element(By.LINK_TEXT, _("projekt.tables.ProjektTable.datum_zahajeni.label")).click()
+        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.datum_zahajeni.label"))
         self.wait(self.wait_interval)
         
         self.assertIn2("sort=datum_zahajeni","sort=-datum_zahajeni", self.driver)
-        self.driver.find_element(By.LINK_TEXT, _("projekt.tables.ProjektTable.datum_ukonceni.label")).click()
+        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.datum_ukonceni.label"))
         self.wait(self.wait_interval)
         
         self.assertIn2("sort=datum_ukonceni","sort=-datum_ukonceni", self.driver)
-        self.driver.find_element(By.LINK_TEXT, _("projekt.tables.ProjektTable.organizace.label")).click()
+        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.organizace.label"))
         self.wait(self.wait_interval)
         
         self.assertIn2("sort=organizace","sort=-organizace", self.driver)        
 
-        self.driver.find_element(By.ID, "btnGroupDropTable").click()
+        self.ElementClick(By.ID, "btnGroupDropTable")
         if self.driver.find_element(By.XPATH,"//*[@data-td-class='vedouci_projektu']").get_attribute('data-state')!='on':
-            self.driver.find_element(By.XPATH,"//*[@data-td-class='vedouci_projektu']").click()
-        self.driver.find_element(By.ID, "btnGroupDropTable").click()
+            self.ElementClick(By.XPATH,"//*[@data-td-class='vedouci_projektu']")
+        self.ElementClick(By.ID, "btnGroupDropTable")
         
-        self.driver.find_element(By.LINK_TEXT, _("projekt.tables.ProjektTable.vedouci_projektu.label")).click()
+        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.vedouci_projektu.label"))
         self.wait(self.wait_interval)
         
         self.assertIn2("sort=vedouci_projektu","sort=-vedouci_projektu", self.driver)
         
-        self.driver.find_element(By.ID, "btnGroupDropTable").click()
+        self.ElementClick(By.ID, "btnGroupDropTable")
         if self.driver.find_element(By.XPATH,"//*[@data-td-class='uzivatelske_oznaceni']").get_attribute('data-state')!='on':
-            self.driver.find_element(By.XPATH,"//*[@data-td-class='uzivatelske_oznaceni']").click()
-        self.driver.find_element(By.ID, "btnGroupDropTable").click()
+            self.ElementClick(By.XPATH,"//*[@data-td-class='uzivatelske_oznaceni']")
+        self.ElementClick(By.ID, "btnGroupDropTable")
 
-        self.driver.find_element(By.LINK_TEXT, _("projekt.tables.ProjektTable.uzivatelske_oznaceni.label")).click()
+        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.uzivatelske_oznaceni.label"))
         self.wait(self.wait_interval)
         
         self.assertIn2("sort=uzivatelske_oznaceni","sort=-uzivatelske_oznaceni", self.driver)
-        self.driver.find_element(By.LINK_TEXT, _("projekt.tables.ProjektTable.planovane_zahajeni.label")).click()
+        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.planovane_zahajeni.label"))
         self.wait(self.wait_interval)
         
         self.assertIn2("sort=planovane_zahajeni","sort=-planovane_zahajeni", self.driver)
@@ -148,8 +148,8 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.login()
         self.go_to_form()
         project_count_old = Projekt.objects.count()
-        self.driver.find_element(By.CSS_SELECTOR, ".filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-1-1 > .text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
         self.driver.execute_script('''map.setZoom(16); return map.getZoom();''')
         self.clickAt(self.driver.find_element(By.ID, "projectMap"),0,0)
         self.wait(self.wait_interval)         
@@ -162,7 +162,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
                             datetime.datetime.today() + datetime.timedelta(days=date_to)).strftime('%d.%m.%Y')
         self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys(datum)
 
-        self.driver.find_element(By.ID, "id_oznamovatel").click()
+        self.ElementClick(By.ID, "id_oznamovatel")
         self.driver.find_element(By.ID, "id_oznamovatel").send_keys("test")
         self.driver.find_element(By.ID, "id_odpovedna_osoba").send_keys("test")
         self.driver.find_element(By.ID, "id_adresa").send_keys("test")
@@ -170,10 +170,10 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "id_email").send_keys("test@example.com")
         try: 
             with Wait_for_page_load(self.driver):
-                self.driver.find_element(By.ID, "actionSubmitBtn").click()
+                self.ElementClick(By.ID, "actionSubmitBtn")
         except Exception as e:
             pass        
-        self.wait(self.wait_interval)
+        self.wait(4)
         project_count_new = Projekt.objects.count()
 
         return [project_count_old , project_count_new]
@@ -183,8 +183,8 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
         element = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
 
-        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zapsat")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zapsat"))
 
 
     def test_projekt_zapsat_p_001(self):
@@ -238,8 +238,8 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
         wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
         element = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
 
-        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zahajitVyzkum")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zahajitVyzkum"))
           
 
     def test_projekt_zahajit_vyzkum_p_001(self):
@@ -250,13 +250,13 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
         self.login()
         self.go_to_form()
 
-        self.driver.find_element(By.CSS_SELECTOR, ".odd:nth-child(2) a").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-zahajit-v-terenu > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".odd:nth-child(2) a")
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-zahajit-v-terenu > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.ID, "id_datum_zahajeni").click()
+        self.ElementClick(By.ID, "id_datum_zahajeni")
         datum= (datetime.datetime.today() + datetime.timedelta(days=-5)).strftime('%d.%m.%Y') 
         self.driver.find_element(By.ID, "id_datum_zahajeni").send_keys(datum)
-        self.driver.find_element(By.ID, "submit-btn").click()
+        self.ElementClick(By.ID, "submit-btn")
         #self.wait(5) 
         wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
         element = wait.until(EC.element_to_be_clickable((By.ID, "projekt-ukoncit-v-terenu")))
@@ -276,8 +276,8 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
         wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
         element = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
 
-        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.ukoncitTeren")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.ukoncitTeren"))
            
 
     def test_projekt_ukoncit_vyzkum_p_001(self):
@@ -288,13 +288,13 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
         self.login()
         self.go_to_form()
         
-        self.driver.find_element(By.CSS_SELECTOR, ".even:nth-child(7) a").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-ukoncit-v-terenu > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(7) a")
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-ukoncit-v-terenu > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.ID, "id_datum_ukonceni").click()
+        self.ElementClick(By.ID, "id_datum_ukonceni")
         datum= (datetime.datetime.today() + datetime.timedelta(days=-1)).strftime('%d.%m.%Y') 
         self.driver.find_element(By.ID, "id_datum_ukonceni").send_keys(datum)
-        self.driver.find_element(By.ID, "submit-btn").click()
+        self.ElementClick(By.ID, "submit-btn")
         wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
         element = wait.until(EC.element_to_be_clickable((By.ID, "projekt-uzavrit")))
         ident_cely=self.driver.current_url.split('/')[-1]
@@ -312,14 +312,14 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
         self.login()
         self.go_to_form()
         
-        self.driver.find_element(By.CSS_SELECTOR, ".even:nth-child(7) a").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-ukoncit-v-terenu > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(7) a")
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-ukoncit-v-terenu > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.ID, "id_datum_ukonceni").click()
+        self.ElementClick(By.ID, "id_datum_ukonceni")
         self.wait(1)
         datum= (datetime.datetime.today() + datetime.timedelta(days=90)).strftime('%d.%m.%Y') 
         self.driver.find_element(By.ID, "id_datum_ukonceni").send_keys(datum)
-        self.driver.find_element(By.ID, "submit-btn").click()
+        self.ElementClick(By.ID, "submit-btn")
         try:
             wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
             element = wait.until(EC.element_to_be_clickable((By.ID, "projekt-uzavrit")))
@@ -340,8 +340,8 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
         wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
         element = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
 
-        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.UzavritProjekt")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.UzavritProjekt"))
 
 
     def test_projekt_uzavrit_p_001(self):
@@ -352,13 +352,13 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
         self.login()
         self.go_to_form()
 
-        self.driver.find_element(By.LINK_TEXT, "C-201232899").click()
+        self.ElementClick(By.LINK_TEXT, "C-201232899")
 
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-uzavrit > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-uzavrit > .app-controls-button-text")
         self.wait(1)
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "submit-btn").click()
-
+            self.ElementClick(By.ID, "submit-btn")
+        self.wait(1)
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_UZAVRENY)
         logger.info("ProjektUzavritSeleniumTest.test_projekt_uzavrit_p_001.end")
@@ -371,12 +371,12 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
         self.test_number=11
         self.login()
         self.go_to_form()
-        self.driver.find_element(By.LINK_TEXT, "C-201230310").click()
+        self.ElementClick(By.LINK_TEXT, "C-201230310")
 
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-uzavrit > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-uzavrit > .app-controls-button-text")
         try:
             with Wait_for_page_load(self.driver):
-                self.driver.find_element(By.ID, "submit-btn").click()
+                self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass
         ident_cely=self.driver.current_url.split('/')[-1]
@@ -393,8 +393,8 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
         element = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
 
-        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.archivovatProjekty")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.archivovatProjekty"))
 
 
     def test_projekt_archivovat_p_001(self):
@@ -405,11 +405,11 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form()
         
-        self.driver.find_element(By.LINK_TEXT, "C-201231446").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-archivovat > .app-controls-button-text").click()
+        self.ElementClick(By.LINK_TEXT, "C-201231446")
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-archivovat > .app-controls-button-text")
         self.wait(1)
         with Wait_for_page_load(self.driver):            
-            self.driver.find_element(By.ID, "submit-btn").click()       
+            self.ElementClick(By.ID, "submit-btn")       
 
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ARCHIVOVANY)
@@ -424,12 +424,12 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form()
         
-        self.driver.find_element(By.LINK_TEXT, "M-201400072").click()
+        self.ElementClick(By.LINK_TEXT, "M-201400072")
                 
         try:
             with Wait_for_page_load(self.driver):   
-                self.driver.find_element(By.CSS_SELECTOR, "#projekt-archivovat > .app-controls-button-text").click()         
-                self.driver.find_element(By.ID, "submit-btn").click()       
+                self.ElementClick(By.CSS_SELECTOR, "#projekt-archivovat > .app-controls-button-text")         
+                self.ElementClick(By.ID, "submit-btn")       
         except Exception as e:
             pass
         ident_cely=self.driver.current_url.split('/')[-1]
@@ -443,8 +443,8 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVratitSeleniumTest(BaseSeleniumTestClass): 
     def go_to_form(self):
-        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
         
         
     def test_projekt_vratit_p_001(self):
@@ -455,19 +455,19 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form()        
 
-        self.driver.find_element(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-2-6 > .text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-6 > .text")
 
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "C-202205168").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "C-202205168")
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.ID, "id_reason").click()
+        self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
         
         with Wait_for_page_load(self.driver):  
-            self.driver.find_element(By.ID, "submit-btn").click()
+            self.ElementClick(By.ID, "submit-btn")
 
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_UZAVRENY)
@@ -482,19 +482,19 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form() 
 
-        self.driver.find_element(By.CSS_SELECTOR, ".btn > .mr-1").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner").click()
-        self.driver.find_element(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.uzavren.label")+"\')]").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".even:nth-child(1) a").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
+        self.ElementClick(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.uzavren.label")+"\')]")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.ID, "id_reason").click()
+        self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
-        self.driver.find_element(By.ID, "submit-btn").click()
+        self.ElementClick(By.ID, "submit-btn")
         
         with Wait_for_page_load(self.driver):  
-            self.driver.find_element(By.ID, "submit-btn").click()
+            self.ElementClick(By.ID, "submit-btn")
 
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_UKONCENY_V_TERENU)
@@ -509,19 +509,19 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form() 
 
-        self.driver.find_element(By.CSS_SELECTOR, ".btn > .mr-1").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner").click()
-        self.driver.find_element(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.ukoncenVTerenu.label")+"\')]").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".even:nth-child(1) a").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
+        self.ElementClick(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.ukoncenVTerenu.label")+"\')]")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.ID, "id_reason").click()
+        self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
-        self.driver.find_element(By.ID, "submit-btn").click()
+        self.ElementClick(By.ID, "submit-btn")
         
         with Wait_for_page_load(self.driver):  
-            self.driver.find_element(By.ID, "submit-btn").click()
+            self.ElementClick(By.ID, "submit-btn")
 
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ZAHAJENY_V_TERENU)
@@ -536,19 +536,19 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form() 
 
-        self.driver.find_element(By.CSS_SELECTOR, ".btn > .mr-1").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner").click()
-        self.driver.find_element(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.zahajenVTerenu.label")+"\')]").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".even:nth-child(1) a").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
+        self.ElementClick(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.zahajenVTerenu.label")+"\')]")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.ID, "id_reason").click()
+        self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
-        self.driver.find_element(By.ID, "submit-btn").click()
+        self.ElementClick(By.ID, "submit-btn")
         
         with Wait_for_page_load(self.driver):  
-            self.driver.find_element(By.ID, "submit-btn").click()
+            self.ElementClick(By.ID, "submit-btn")
 
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_PRIHLASENY)
@@ -563,19 +563,19 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form() 
 
-        self.driver.find_element(By.CSS_SELECTOR, ".btn > .mr-1").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner").click()
-        self.driver.find_element(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.prihlasen.label")+"\')]").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".even:nth-child(1) a").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
+        self.ElementClick(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.prihlasen.label")+"\')]")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.ID, "id_reason").click()
+        self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
-        self.driver.find_element(By.ID, "submit-btn").click()
+        self.ElementClick(By.ID, "submit-btn")
         
         with Wait_for_page_load(self.driver):  
-            self.driver.find_element(By.ID, "submit-btn").click()
+            self.ElementClick(By.ID, "submit-btn")
 
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ZAPSANY)
@@ -587,8 +587,8 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
    
     def go_to_form(self):
-        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
           
 
     def test_projekt_zrusit_p_001(self):
@@ -599,12 +599,12 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form()
         
-        self.driver.find_element(By.LINK_TEXT, "C-201665792").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text").click()
+        self.ElementClick(By.LINK_TEXT, "C-201665792")
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.CSS_SELECTOR, ".custom-control:nth-child(2) > .custom-control-label").click()
+        self.ElementClick(By.CSS_SELECTOR, ".custom-control:nth-child(2) > .custom-control-label")
         with Wait_for_page_load(self.driver):  
-            self.driver.find_element(By.CSS_SELECTOR, ".btn-primary:nth-child(2)").click()
+            self.ElementClick(By.CSS_SELECTOR, ".btn-primary:nth-child(2)")
         
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI)
@@ -618,16 +618,16 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         self.test_number=20
         self.login("archivar")
         self.go_to_form()
-        
-        self.driver.find_element(By.LINK_TEXT, "C-201665792").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text").click()
+        with Wait_for_page_load(self.driver):  
+            self.ElementClick(By.LINK_TEXT, "C-201665792")
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.CSS_SELECTOR, ".custom-radio:nth-child(1) > .custom-control-label").click()
+        self.ElementClick(By.CSS_SELECTOR, ".custom-radio:nth-child(1) > .custom-control-label")
         self.wait(1)
-        self.driver.find_element(By.ID, "id_projekt_id").click()
+        self.ElementClick(By.ID, "id_projekt_id")
         self.driver.find_element(By.ID, "id_projekt_id").send_keys("test")
         with Wait_for_page_load(self.driver):  
-            self.driver.find_element(By.CSS_SELECTOR, ".btn-primary:nth-child(2)").click()
+            self.ElementClick(By.CSS_SELECTOR, ".btn-primary:nth-child(2)")
         
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI)
@@ -642,17 +642,17 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form()
         
-        self.driver.find_element(By.CSS_SELECTOR, ".btn > .mr-1").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner").click()
-        self.driver.find_element(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.uzavren.label")+"\')]").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
+        self.ElementClick(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.uzavren.label")+"\')]")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         
-        self.driver.find_element(By.LINK_TEXT, "C-202401104").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text").click()
+        self.ElementClick(By.LINK_TEXT, "C-202401104")
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text")
         try:            
             with Wait_for_page_load(self.driver):  
-                self.driver.find_element(By.CSS_SELECTOR, ".custom-control:nth-child(2) > .custom-control-label").click()
-                self.driver.find_element(By.CSS_SELECTOR, ".btn-primary:nth-child(2)").click()
+                self.ElementClick(By.CSS_SELECTOR, ".custom-control:nth-child(2) > .custom-control-label")
+                self.ElementClick(By.CSS_SELECTOR, ".btn-primary:nth-child(2)")
         except Exception as e:
             pass
         
@@ -664,8 +664,8 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):   
     def go_to_form(self):
-        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")).click() 
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")) 
     
 
     def test_projekt_zrusit_p_001(self):
@@ -676,18 +676,18 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form()
         
-        self.driver.find_element(By.CSS_SELECTOR, ".btn > .mr-1").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner").click()
-        self.driver.find_element(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.navrzenKeZruseni.label")+"\')]").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".even:nth-child(1) a").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
+        self.ElementClick(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.navrzenKeZruseni.label")+"\')]")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
         
-        self.driver.find_element(By.CSS_SELECTOR, "#projekt-zrusit > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, "#projekt-zrusit > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.ID, "id_reason_text").click()
+        self.ElementClick(By.ID, "id_reason_text")
         self.driver.find_element(By.ID, "id_reason_text").send_keys("test")
         with Wait_for_page_load(self.driver):  
-            self.driver.find_element(By.ID, "submit-btn").click()
+            self.ElementClick(By.ID, "submit-btn")
 
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ZRUSENY)
@@ -698,8 +698,8 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):   
     def go_to_form(self):
-        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")).click() 
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")) 
 
     
     def test_projekt_vytvori_akci_p_001(self):
@@ -709,16 +709,16 @@ class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
         self.login()
         self.go_to_form()
         arch_z_count_old = Akce.objects.count()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn > .mr-1").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner").click()
-        self.driver.find_element(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.zahajenVTerenu.label")+"\')]").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        #self.driver.find_element(By.CSS_SELECTOR, ".even:nth-child(1) a").click()
-        self.driver.find_element(By.LINK_TEXT, "C-202401502").click()        
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
+        self.ElementClick(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.zahajenVTerenu.label")+"\')]")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        #self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
+        self.ElementClick(By.LINK_TEXT, "C-202401502")        
         
         with Wait_for_page_load(self.driver):  
-            self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(6) .app-fx .material-icons").click()
-            self.driver.find_element(By.ID, "actionSubmitBtn").click()
+            self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(6) .app-fx .material-icons")
+            self.ElementClick(By.ID, "actionSubmitBtn")
 
         arch_z_count_new = Akce.objects.count()
         self.assertEqual(arch_z_count_old + 1, arch_z_count_new)

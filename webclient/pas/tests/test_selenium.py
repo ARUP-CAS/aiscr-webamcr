@@ -55,8 +55,8 @@ dropzone_instance.addFile(new_file)
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceSamostatneNalezy(BaseSeleniumTestClass):   
     def go_to_form(self):
-        self.driver.find_element(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.zapsat")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.zapsat"))
 
 
     def test_zapsani_samostatneho_nalezu_p_001(self):
@@ -67,30 +67,30 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.go_to_form()
         SN_count_old = SamostatnyNalez.objects.count()
 
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_projekt .filter-option-inner-inner").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_projekt .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("M-202105907")
         self.wait(self.wait_interval)
 
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
 
-        self.driver.find_element(By.ID, "select2-id_nalezce-container").click()
+        self.ElementClick(By.ID, "select2-id_nalezce-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Omelka, Zdeněk")
         self.wait(self.wait_interval)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.driver.find_element(By.ID, "id_datum_nalezu").send_keys("18.10.2023")
 
         self.driver.find_element(By.ID, "id_hloubka").send_keys("20")
-        self.driver.find_element(By.ID, "visible_ss_combo").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#visible_ss_combo > option:nth-child(2)").click()
-        self.driver.find_element(By.ID, "projectMap").click()
-        self.driver.find_element(By.ID, "projectMap").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".leaflet-control-measure > img").click()
-        self.driver.find_element(By.ID, "visible_x1").click()
+        self.ElementClick(By.ID, "visible_ss_combo")
+        self.ElementClick(By.CSS_SELECTOR, "#visible_ss_combo > option:nth-child(2)")
+        self.ElementClick(By.ID, "projectMap")
+        self.ElementClick(By.ID, "projectMap")
+        self.ElementClick(By.CSS_SELECTOR, ".leaflet-control-measure > img")
+        self.ElementClick(By.ID, "visible_x1")
         self.driver.find_element(By.ID, "visible_x1").send_keys("16,7494989")
-        self.driver.find_element(By.ID, "visible_x2").click()
+        self.ElementClick(By.ID, "visible_x2")
         self.driver.find_element(By.ID, "visible_x2").send_keys("49,2941092")
-        self.driver.find_element(By.ID, "div_id_lokalizace").click()
-        self.driver.find_element(By.ID, "id_lokalizace").click()
+        self.ElementClick(By.ID, "div_id_lokalizace")
+        self.ElementClick(By.ID, "id_lokalizace")
         self.driver.find_element(By.ID, "id_lokalizace").send_keys("test")
         self.driver.find_element(By.ID, "id_obdobi").send_keys("kultura púchovská")
         self.driver.find_element(By.ID, "id_obdobi").send_keys(Keys.ENTER)
@@ -98,11 +98,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "id_druh_nalezu").send_keys('lahev')
         self.driver.find_element(By.ID, "id_druh_nalezu").send_keys(Keys.ENTER)
 
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_specifikace .filter-option-inner-inner").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_specifikace .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("jantar")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "newEntitySubmitBtn").click()
+            self.ElementClick(By.ID, "newEntitySubmitBtn")
         SN_count_new = SamostatnyNalez.objects.count()
         self.assertEqual(SN_count_old + 1, SN_count_new) 
         logger.info("AkceSamostatneNalezy.test_zapsani_samostatneho_nalezu_p_001.end")
@@ -116,30 +116,30 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.go_to_form()
         SN_count_old = SamostatnyNalez.objects.count()
                
-        #self.driver.find_element(By.CSS_SELECTOR, "#div_id_projekt .filter-option-inner-inner").click()
+        #self.ElementClick(By.CSS_SELECTOR, "#div_id_projekt .filter-option-inner-inner")
         #self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("M-202004181")
         #self.wait(self.wait_interval)
 
         #self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
 
-        self.driver.find_element(By.ID, "select2-id_nalezce-container").click()
+        self.ElementClick(By.ID, "select2-id_nalezce-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Omelka, Zdeněk")
         self.wait(self.wait_interval)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.driver.find_element(By.ID, "id_datum_nalezu").send_keys("18.10.2023")
 
         self.driver.find_element(By.ID, "id_hloubka").send_keys("20")
-        self.driver.find_element(By.ID, "visible_ss_combo").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#visible_ss_combo > option:nth-child(2)").click()
-        self.driver.find_element(By.ID, "projectMap").click()
-        self.driver.find_element(By.ID, "projectMap").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".leaflet-control-measure > img").click()
-        self.driver.find_element(By.ID, "visible_x1").click()
+        self.ElementClick(By.ID, "visible_ss_combo")
+        self.ElementClick(By.CSS_SELECTOR, "#visible_ss_combo > option:nth-child(2)")
+        self.ElementClick(By.ID, "projectMap")
+        self.ElementClick(By.ID, "projectMap")
+        self.ElementClick(By.CSS_SELECTOR, ".leaflet-control-measure > img")
+        self.ElementClick(By.ID, "visible_x1")
         self.driver.find_element(By.ID, "visible_x1").send_keys("16,7494989")
-        self.driver.find_element(By.ID, "visible_x2").click()
+        self.ElementClick(By.ID, "visible_x2")
         self.driver.find_element(By.ID, "visible_x2").send_keys("49,2941092")
-        self.driver.find_element(By.ID, "div_id_lokalizace").click()
-        self.driver.find_element(By.ID, "id_lokalizace").click()
+        self.ElementClick(By.ID, "div_id_lokalizace")
+        self.ElementClick(By.ID, "id_lokalizace")
         self.driver.find_element(By.ID, "id_lokalizace").send_keys("test")
 
         self.driver.find_element(By.ID, "id_obdobi").send_keys("kultura púchovská")
@@ -148,11 +148,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "id_druh_nalezu").send_keys('lahev')
         self.driver.find_element(By.ID, "id_druh_nalezu").send_keys(Keys.ENTER)
 
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_specifikace .filter-option-inner-inner").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_specifikace .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("jantar")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "newEntitySubmitBtn").click()
+            self.ElementClick(By.ID, "newEntitySubmitBtn")
         SN_count_new = SamostatnyNalez.objects.count()
         self.assertEqual(SN_count_old , SN_count_new)   
         logger.info("AkceSamostatneNalezy.test_zapsani_samostatneho_nalezu_n_001.end")
@@ -165,11 +165,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.login("badatel1")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202105907-N00091').first().stav , SN_ZAPSANY)         
         
-        self.driver.find_element(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy")).click()
-        self.driver.find_element(By.LINK_TEXT, "M-202105907-N00091").click()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy"))
+        self.ElementClick(By.LINK_TEXT, "M-202105907-N00091")
         
-        self.driver.find_element(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons").click()    
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons")    
 
         with open("pas/tests/resources/test_foto_1.jpg", "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode()
@@ -178,12 +178,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
         element = wait.until(EC.element_to_be_clickable((By.LINK_TEXT,  _("core.templates.core.upload_file.dz.removeFile"))))
 
-        self.driver.find_element(By.LINK_TEXT, _("core.templates.upload_file.submitButton.text")).click()
+        self.ElementClick(By.LINK_TEXT, _("core.templates.upload_file.submitButton.text"))
 
-        self.driver.find_element(By.CSS_SELECTOR, "#pas-odeslat > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, "#pas-odeslat > .app-controls-button-text")
         self.wait(1)
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "submit-btn").click()
+            self.ElementClick(By.ID, "submit-btn")
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202105907-N00091').first().stav , SN_ODESLANY)        
         logger.info("AkceSamostatneNalezy.test_odeslani_samostatneho_nalezu_p_001.end")
@@ -195,11 +195,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.login("badatel1")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202105907-N00091').first().stav , SN_ZAPSANY)          
         
-        self.driver.find_element(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy")).click()
-        self.driver.find_element(By.LINK_TEXT, "M-202105907-N00091").click()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy"))
+        self.ElementClick(By.LINK_TEXT, "M-202105907-N00091")
         
-        #self.driver.find_element(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons").click()   
+        #self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons")   
 
         #with open("pas/tests/resources/test_foto_1.jpg", "rb") as image_file:
         #    encoded_string = base64.b64encode(image_file.read()).decode()
@@ -208,11 +208,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         #wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
         #element = wait.until(EC.element_to_be_clickable((By.LINK_TEXT,  _("core.templates.core.upload_file.dz.removeFile"))))
 
-        #self.driver.find_element(By.LINK_TEXT, _("core.templates.upload_file.submitButton.text")).click()
+        #self.ElementClick(By.LINK_TEXT, _("core.templates.upload_file.submitButton.text"))
         try:
-            self.driver.find_element(By.CSS_SELECTOR, "#pas-odeslat > .app-controls-button-text").click()
+            self.ElementClick(By.CSS_SELECTOR, "#pas-odeslat > .app-controls-button-text")
             with Wait_for_page_load(self.driver):
-                self.driver.find_element(By.ID, "submit-btn").click()
+                self.ElementClick(By.ID, "submit-btn")
                 
         except Exception as e:
             pass
@@ -228,26 +228,26 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.login("archeolog")        
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)   
        
-        self.driver.find_element(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
         
-        self.driver.find_element(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-11-1 > .text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-1 > .text")
        
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "C-202211308-N00213").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "C-202211308-N00213")
+        self.ElementClick(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").click()
+        self.ElementClick(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo")
         self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").send_keys("123")
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_predano .filter-option-inner-inner").click()
-        self.driver.find_element(By.ID, "bs-select-1-0").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_predano .filter-option-inner-inner")
+        self.ElementClick(By.ID, "bs-select-1-0")
 
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-2-3 > .text").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-3 > .text")
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "submit-btn").click()
+            self.ElementClick(By.ID, "submit-btn")
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_POTVRZENY)  
         logger.info("AkceSamostatneNalezy.test_potvrzeni_samostatneho_nalezu_p_001.end")
@@ -261,27 +261,27 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)   
        
-        self.driver.find_element(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
         
-        self.driver.find_element(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-11-1 > .text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-1 > .text")
        
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "C-202211308-N00213").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "C-202211308-N00213")
+        self.ElementClick(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").click()
+        self.ElementClick(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo")
         self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").send_keys("123")
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_predano .filter-option-inner-inner").click()
-        #self.driver.find_element(By.ID, "bs-select-1-0").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_predano .filter-option-inner-inner")
+        #self.ElementClick(By.ID, "bs-select-1-0")
 
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-2-3 > .text").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-3 > .text")
         try:
             with Wait_for_page_load(self.driver):
-                self.driver.find_element(By.ID, "submit-btn").click()
+                self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass
 
@@ -297,27 +297,27 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)   
        
-        self.driver.find_element(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
         
-        self.driver.find_element(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-11-1 > .text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-1 > .text")
        
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "C-202211308-N00213").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text").click()
-        #self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "C-202211308-N00213")
+        self.ElementClick(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text")
+        #self.ElementClick(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo")
         #self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").send_keys("123")
         self.wait(1)
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_predano .filter-option-inner-inner").click()
-        self.driver.find_element(By.ID, "bs-select-1-0").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_predano .filter-option-inner-inner")
+        self.ElementClick(By.ID, "bs-select-1-0")
 
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-2-3 > .text").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-3 > .text")
         try:
             with Wait_for_page_load(self.driver):
-                self.driver.find_element(By.ID, "submit-btn").click()
+                self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass
 
@@ -331,20 +331,20 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.test_number=38
         self.login("archivar")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_POTVRZENY) 
-        self.driver.find_element(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
         
-        self.driver.find_element(By.CSS_SELECTOR, ".mt-1").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-11-2 > .text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-2 > .text")
         
-        self.driver.find_element(By.CSS_SELECTOR, ".card > .card-body").click()
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "C-202010474-N00002").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#pas-archivovat > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".card > .card-body")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "C-202010474-N00002")
+        self.ElementClick(By.CSS_SELECTOR, "#pas-archivovat > .app-controls-button-text")
         self.wait(1)
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "submit-btn").click()
+            self.ElementClick(By.ID, "submit-btn")
         
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_ARCHIVOVANY)            
 
@@ -356,23 +356,23 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.test_number=39
         self.login("archivar")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_POTVRZENY) 
-        self.driver.find_element(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
         
-        self.driver.find_element(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand").click()
-        self.driver.find_element(By.ID, "id_ident_cely").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
+        self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202010474-N00002")
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "C-202010474-N00002").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#file-smazat-518731 > .material-icons").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "C-202010474-N00002")
+        self.ElementClick(By.CSS_SELECTOR, "#file-smazat-518731 > .material-icons")
         self.wait(1)
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "submit-btn").click()        
+            self.ElementClick(By.ID, "submit-btn")        
 
         try:
-            self.driver.find_element(By.CSS_SELECTOR, "#pas-archivovat > .app-controls-button-text").click()
+            self.ElementClick(By.CSS_SELECTOR, "#pas-archivovat > .app-controls-button-text")
             with Wait_for_page_load(self.driver):
-                self.driver.find_element(By.ID, "submit-btn").click()
+                self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass
         self.wait(1)
@@ -387,19 +387,19 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.login("archivar")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202301371-N00015').first().stav , SN_POTVRZENY) 
         
-        self.driver.find_element(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat")).click()
-        self.driver.find_element(By.CSS_SELECTOR, ".mt-1").click()
-        self.driver.find_element(By.ID, "id_ident_cely").click()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("M-202301371-N00015")
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "M-202301371-N00015").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#pas-vratit > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "M-202301371-N00015")
+        self.ElementClick(By.CSS_SELECTOR, "#pas-vratit > .app-controls-button-text")
         self.wait(1)
-        self.driver.find_element(By.ID, "id_reason").click()
+        self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "submit-btn").click()        
+            self.ElementClick(By.ID, "submit-btn")        
         
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202301371-N00015').first().stav , SN_ODESLANY)  
         logger.info("AkceSamostatneNalezy.test_vraceni_samostatneho_nalezu_p_001.end")

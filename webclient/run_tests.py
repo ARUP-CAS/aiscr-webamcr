@@ -28,8 +28,12 @@ test_count = 0
 for test_file  in test_list:
     
     logger.info("amcr_test_runner.start_test", extra={"test": f"{test_file}"})
-    subprocess.run(f"python3 manage.py test {test_file} --settings={SETTINGS} --noinput",
-                    shell=True, capture_output=True)
+    process = subprocess.Popen(f"python3 manage.py test {test_file} --settings={SETTINGS} --noinput", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    for line in process.stdout:
+        print(line, end="")
+    for line in process.stderr:
+        print(line, end="")
+    process.wait()    
     logger.info("amcr_test_runner.end_test", extra={"test_file": test_file} )
     test_count += 1
 logger.info("amcr_test_runner.end", extra={"test_count": test_count})

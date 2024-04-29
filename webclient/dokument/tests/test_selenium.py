@@ -20,13 +20,13 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceDokumenty(BaseSeleniumTestClass):   
     def go_to_form_zapsat(self):
-        self.driver.find_element(By.CSS_SELECTOR, ".app-entity-dokument > .card-body").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.dokumenty.zapsat")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.dokumenty.zapsat"))
 
 
     def go_to_form_vybrat(self):
-        self.driver.find_element(By.CSS_SELECTOR, ".app-entity-dokument > .card-body").click()
-        self.driver.find_element(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.dokumenty.vybrat")).click()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.dokumenty.vybrat"))
 
     
     def test_zapsani_dokumentu_p_001(self):
@@ -37,36 +37,36 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_zapsat()
         
         count_old=Dokument.objects.count()          
-        self.wait(self.wait_interval)
-        self.driver.find_element(By.CSS_SELECTOR, "#id-modal-region-div > #div_id_region .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-10-2 > .text").click()
+        #self.wait(self.wait_interval)
+        self.ElementClick(By.CSS_SELECTOR, "#id-modal-region-div > #div_id_region .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-10-2 > .text")
         
-        self.driver.find_element(By.CSS_SELECTOR, ".modal-footer > .btn-primary").click()
-        self.wait(1)
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-selection__rendered").click()
+        self.ElementClick(By.CSS_SELECTOR, ".modal-footer > .btn-primary")
+        #self.wait(1)
+        self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
-        self.driver.find_element(By.ID, "id_rok_vzniku").click()
+        self.ElementClick(By.ID, "id_rok_vzniku")
         self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")   
       
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_organizace .filter-option-inner-inner").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_organizace .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("Archeologický ústav Brno")
-        self.wait(self.wait_interval)
+        #self.wait(self.wait_interval)
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-2-1 > .text").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
         
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-3-0 > .text").click()
-        self.wait(1)
-        self.driver.find_element(By.ID, "id_popis").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-0 > .text")
+        #self.wait(1)
+        self.ElementClick(By.ID, "id_popis")
         self.driver.find_element(By.ID, "id_popis").send_keys("test")
-        self.driver.find_element(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner").click()
-        self.driver.find_element(By.ID, "bs-select-7-1").click()
+        self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.ID, "bs-select-7-1")
        
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "newDocumentSubmitBtn").click()
+            self.ElementClick(By.ID, "newDocumentSubmitBtn")
 
         count_new=Dokument.objects.count()     
 
@@ -82,36 +82,36 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_zapsat()
         
         count_old=Dokument.objects.count()          
-        self.wait(self.wait_interval)
-        self.driver.find_element(By.CSS_SELECTOR, "#id-modal-region-div > #div_id_region .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-10-2 > .text").click()
+        #self.wait(self.wait_interval)
+        self.ElementClick(By.CSS_SELECTOR, "#id-modal-region-div > #div_id_region .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-10-2 > .text")
        
-        self.driver.find_element(By.CSS_SELECTOR, ".modal-footer > .btn-primary").click()
-        #self.driver.find_element(By.CSS_SELECTOR, ".select2-selection__rendered").click()
+        self.ElementClick(By.CSS_SELECTOR, ".modal-footer > .btn-primary")
+        #self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         #self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
         #self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
-        self.wait(1)
-        self.driver.find_element(By.ID, "id_rok_vzniku").click()
+        #self.wait(1)
+        self.ElementClick(By.ID, "id_rok_vzniku")
         self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")   
       
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_organizace .filter-option-inner-inner").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_organizace .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("Archeologický ústav Brno")
-        self.wait(self.wait_interval)
+        #self.wait(self.wait_interval)
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-2-1 > .text").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
         
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#bs-select-3-0 > .text").click()
-        self.wait(1)
-        self.driver.find_element(By.ID, "id_popis").click()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-0 > .text")
+        #self.wait(1)
+        self.ElementClick(By.ID, "id_popis")
         self.driver.find_element(By.ID, "id_popis").send_keys("test")
-        self.driver.find_element(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner").click()
-        self.driver.find_element(By.ID, "bs-select-7-1").click()
+        self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.ID, "bs-select-7-1")
         try:       
             with Wait_for_page_load(self.driver):
-                self.driver.find_element(By.ID, "newDocumentSubmitBtn").click()
+                self.ElementClick(By.ID, "newDocumentSubmitBtn")
         except Exception as e:
             pass    
         count_new=Dokument.objects.count()     
@@ -128,15 +128,15 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
       
         self.assertEqual(Dokument.objects.filter(ident_cely='X-C-TX-202413000').first().stav , D_STAV_ZAPSANY)   
-        self.driver.find_element(By.CSS_SELECTOR, ".mt-1").click()
-        self.driver.find_element(By.ID, "id_ident_cely").click()
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413000")
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "X-C-TX-202413000").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text").click()
-        self.wait(1)
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "X-C-TX-202413000")
+        self.ElementClick(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text")
+        #self.wait(1)
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "submit-btn").click()
+            self.ElementClick(By.ID, "submit-btn")
    
         self.assertEqual(Dokument.objects.filter(ident_cely='X-C-TX-202413000').first().stav , D_STAV_ODESLANY)  
 
@@ -151,16 +151,16 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
       
         self.assertEqual(Dokument.objects.filter(ident_cely='X-C-TX-202413001').first().stav , D_STAV_ZAPSANY)  
-        self.wait(1) 
-        self.driver.find_element(By.CSS_SELECTOR, ".mt-1").click()
-        self.driver.find_element(By.ID, "id_ident_cely").click()
+        #self.wait(1) 
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413001")
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "X-C-TX-202413001").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "X-C-TX-202413001")
         try:
             with Wait_for_page_load(self.driver):
-                self.driver.find_element(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text").click()
-                self.driver.find_element(By.ID, "submit-btn").click()
+                self.ElementClick(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text")
+                self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass    
    
@@ -178,14 +178,14 @@ class AkceDokumenty(BaseSeleniumTestClass):
       
         self.assertEqual(Dokument.objects.filter(ident_cely='X-C-TX-202413020').first().stav , D_STAV_ODESLANY)   
         id=Dokument.objects.filter(ident_cely='X-C-TX-202413020').first().id
-        self.driver.find_element(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand").click()
-        self.driver.find_element(By.ID, "id_ident_cely").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
+        self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413020")
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "X-C-TX-202413020").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#dokument-archivovat > .app-controls-button-text").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "X-C-TX-202413020")
+        self.ElementClick(By.CSS_SELECTOR, "#dokument-archivovat > .app-controls-button-text")
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "submit-btn").click()
+            self.ElementClick(By.ID, "submit-btn")
         #self.wait(self.wait_interval+10)
         self.assertEqual(Dokument.objects.filter(id=id).first().stav , D_STAV_ARCHIVOVANY)   
         logger.info("AkceDokumenty.test_archivace_dokumentu_p_001.end")
@@ -200,15 +200,15 @@ class AkceDokumenty(BaseSeleniumTestClass):
       
         self.assertEqual(Dokument.objects.filter(ident_cely='X-C-TX-202413013').first().stav , D_STAV_ODESLANY)   
         id=Dokument.objects.filter(ident_cely='X-C-TX-202413013').first().id
-        self.driver.find_element(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand").click()
-        self.driver.find_element(By.ID, "id_ident_cely").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
+        self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413013")
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "X-C-TX-202413013").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "X-C-TX-202413013")
         try:
             with Wait_for_page_load(self.driver):
-                self.driver.find_element(By.CSS_SELECTOR, "#dokument-archivovat > .app-controls-button-text").click()
-                self.driver.find_element(By.ID, "submit-btn").click()
+                self.ElementClick(By.CSS_SELECTOR, "#dokument-archivovat > .app-controls-button-text")
+                self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass
         
@@ -224,17 +224,17 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
       
         self.assertEqual(Dokument.objects.filter(ident_cely='M-TX-201604272').first().stav , D_STAV_ODESLANY)   
-        self.driver.find_element(By.CSS_SELECTOR, ".mt-1").click()
-        self.driver.find_element(By.ID, "id_ident_cely").click()
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("M-TX-201604272")
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "M-TX-201604272").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text").click()
-        self.wait(1)
-        self.driver.find_element(By.ID, "id_reason").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "M-TX-201604272")
+        self.ElementClick(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text")
+        #self.wait(1)
+        self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "submit-btn").click()
+            self.ElementClick(By.ID, "submit-btn")
 
         self.assertEqual(Dokument.objects.filter(ident_cely='M-TX-201604272').first().stav , D_STAV_ZAPSANY)   
         logger.info("AkceDokumenty.test_vraceni_odeslaneho_dokumentu_p_001.end")    
@@ -248,17 +248,17 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
       
         self.assertEqual(Dokument.objects.filter(ident_cely='M-TX-201604272').first().stav , D_STAV_ODESLANY)   
-        self.driver.find_element(By.CSS_SELECTOR, ".mt-1").click()
-        self.driver.find_element(By.ID, "id_ident_cely").click()
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("M-TX-201604272")
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "M-TX-201604272").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text").click()
-        #self.driver.find_element(By.ID, "id_reason").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "M-TX-201604272")
+        self.ElementClick(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text")
+        #self.ElementClick(By.ID, "id_reason")
         #self.driver.find_element(By.ID, "id_reason").send_keys("test")
         try:
             with Wait_for_page_load(self.driver):
-                self.driver.find_element(By.ID, "submit-btn").click()
+                self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass
         self.assertEqual(Dokument.objects.filter(ident_cely='M-TX-201604272').first().stav , D_STAV_ODESLANY)   
@@ -273,17 +273,17 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
       
         self.assertEqual(Dokument.objects.filter(ident_cely='C-TX-202400071').first().stav , D_STAV_ARCHIVOVANY)   
-        self.driver.find_element(By.CSS_SELECTOR, ".mt-1").click()
-        self.driver.find_element(By.ID, "id_ident_cely").click()
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-TX-202400071")
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "C-TX-202400071").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text").click()
-        self.wait(1)
-        self.driver.find_element(By.ID, "id_reason").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "C-TX-202400071")
+        self.ElementClick(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text")
+        #self.wait(1)
+        self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.ID, "submit-btn").click()        
+            self.ElementClick(By.ID, "submit-btn")        
 
         self.assertEqual(Dokument.objects.filter(ident_cely='C-TX-202400071').first().stav , D_STAV_ODESLANY)   
         logger.info("AkceDokumenty.test_vraceni_archivovaneho_dokumentu_p_001.end") 
@@ -297,17 +297,17 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
       
         self.assertEqual(Dokument.objects.filter(ident_cely='C-TX-202400071').first().stav , D_STAV_ARCHIVOVANY)   
-        self.driver.find_element(By.CSS_SELECTOR, ".mt-1").click()
-        self.driver.find_element(By.ID, "id_ident_cely").click()
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-TX-202400071")
-        self.driver.find_element(By.CSS_SELECTOR, ".btn:nth-child(11)").click()
-        self.driver.find_element(By.LINK_TEXT, "C-TX-202400071").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text").click()
-        #self.driver.find_element(By.ID, "id_reason").click()
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "C-TX-202400071")
+        self.ElementClick(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text")
+        #self.ElementClick(By.ID, "id_reason")
         #self.driver.find_element(By.ID, "id_reason").send_keys("test")
         try:
             with Wait_for_page_load(self.driver):
-                self.driver.find_element(By.ID, "submit-btn").click()        
+                self.ElementClick(By.ID, "submit-btn")        
         except Exception as e:
             pass
         self.assertEqual(Dokument.objects.filter(ident_cely='C-TX-202400071').first().stav , D_STAV_ARCHIVOVANY)   

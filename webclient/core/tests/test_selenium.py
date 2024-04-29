@@ -46,9 +46,14 @@ class Wait_for_page_load(object):
         new_page = self.browser.find_element(By.TAG_NAME,'html')
         return new_page.id != self.old_page.id
     
+    def page_is_ready(self):
+        page_state = self.browser.execute_script('return document.readyState;')
+        return page_state == 'complete'
+    
 
     def __exit__(self, *_):
         self.wait_for(self.page_has_loaded)
+        self.wait_for(self.page_is_ready)
         
     
     def wait_for(self,condition_function):
@@ -62,9 +67,9 @@ class Wait_for_page_load(object):
 
 #@unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class BaseSeleniumTestClass(StaticLiveServerTestCase):   
-    port = 5678   
+    #port = 5678   
     host = '0.0.0.0'
-    test_number = 0
+    test_number = 1
 
 
     @classmethod
@@ -239,8 +244,47 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
     
     
     def wait(self,interval):
-        time.sleep(interval)    
-          
+        time.sleep(interval) 
+    
+    def wait_for(self,condition_function,by,value):
+        start_time = time.time()
+        while time.time() < start_time + 12:
+            if condition_function(by,value):
+                return True
+            else:
+                time.sleep(0.5)
+        return False
+    
+    def findElement(self,by,value):
+        elements=self.driver.find_elements(by,value)
+        if  len(elements)>0: return True
+        return False
+    def ElementIsClickable(self,by,value):
+        element=self.driver.find_element(by,value)
+        if  element.is_displayed() and element.is_enabled()  : return True
+        return False
+    
+    def ElementClick(self,by=By.ID, value: Optional[str] = None):       
+        res=self.wait_for(self.findElement,by,value)
+        if res==False:
+            logger.error("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "content": value,})
+            raise Exception("ElementClickError")  
+        res=self.wait_for(self.ElementIsClickable,by,value) 
+        if res==False:
+            logger.error("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "content": value,})
+            raise Exception("ElementIsNotClickableError")  
+        attempts = 0
+        while attempts < 10:
+            try:
+                self.driver.find_element(by,value).click()
+                break
+            except Exception as e:
+                attempts += 1
+                time.sleep(1)
+        if attempts >= 10:
+            logger.error("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "content": value,})
+            raise Exception("ElementClickError")                    
+             
         
     def clickAt(self,el,position_x,position_y):
         action = webdriver.common.action_chains.ActionChains(self.driver)
@@ -298,26 +342,27 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
     def login(self,type="archeolog"):
         port = self.server_thread.port
         self.driver.get(f"http://{settings.WEB_SERVER_ADDRESS}:{port}/")
-        if len(self.driver.find_elements(By.CSS_SELECTOR, ".cm__btn-group:nth-child(1) > .cm__btn:nth-child(1)"))>0:        
-            self.driver.find_element(By.CSS_SELECTOR, ".cm__btn-group:nth-child(1) > .cm__btn:nth-child(1)").click()
+        #if len(self.driver.find_elements(By.CSS_SELECTOR, ".cm__btn-group:nth-child(1) > .cm__btn:nth-child(1)"))>0:        
+        #self.ElementClick(By.CSS_SELECTOR, ".cm__btn-group:nth-child(1) > .cm__btn:nth-child(1)")
          
         with Wait_for_page_load(self.driver): 
-            self.driver.find_element(By.ID, "czech").click()
-        #self.driver.find_element(By.CSS_SELECTOR, "#czech > .app-flag").click()
-        #self.wait(self.wait_interval)
-
+            self.ElementClick(By.ID, "czech")
     
         self.driver.find_element(By.ID, "id_username").send_keys(self._username(type))
         self.driver.find_element(By.ID, "id_password").send_keys(self._password(type))
         with Wait_for_page_load(self.driver):
-            self.driver.find_element(By.CSS_SELECTOR, ".btn").click()
+            self.ElementClick(By.CSS_SELECTOR, ".btn")
 
         self.driver.set_window_rect(0,0,1360, 1020)   
 
 
 class CoreSeleniumTest(BaseSeleniumTestClass):
     def test_core_001(self):
+        #Scenar_1 Přihlášení do AMČR (pozitivní scénář 1)
+        logger.info("CoreSeleniumTest.test_core_001.start")
+        self.test_number=1
         self.login()
         self.assertEqual(self.driver.title, "AMČR Homepage")
+        logger.info("CoreSeleniumTest.test_core_001.end")
         
         
