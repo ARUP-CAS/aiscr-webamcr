@@ -22,3 +22,4 @@ DATABASES["default"]['TEST']={'MIGRATE': False}
 
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH = "/vol/web/selenium_test"  
+LOGGING["handlers"]["console"]["level"]="ERROR"
