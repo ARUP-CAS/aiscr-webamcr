@@ -105,7 +105,7 @@ def let_save_metadata(sender, instance: Let, **kwargs):
 def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
     logger.debug("dokument.signals.dokument_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
-    fedora_transaction = instance.record_deletion()
+    fedora_transaction = instance.active_transaction
     for item in instance.casti.all():
         item: DokumentCast
         if item.archeologicky_zaznam is not None:
@@ -124,8 +124,11 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
         instance.historie.delete()
     if instance.soubory and instance.soubory.pk:
         instance.soubory.delete()
-    if fedora_transaction and instance.close_active_transaction_when_finished:
-        fedora_transaction.mark_transaction_as_closed()
+    if instance.close_active_transaction_when_finished:
+        def close_transaction():
+            instance.record_deletion(fedora_transaction)
+            fedora_transaction.mark_transaction_as_closed()
+        transaction.on_commit(lambda: close_transaction)
     logger.debug("dokument.signals.dokument_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
 

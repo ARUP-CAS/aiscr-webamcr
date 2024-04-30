@@ -44,7 +44,7 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
     logger.debug("adb.signals.adb_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
     instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
-    instance.record_deletion(close_transaction=fedora_transaction.close_active_transaction_when_finished)
+    instance.record_deletion(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
     logger.debug("adb.signals.adb_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid})
 
@@ -54,7 +54,7 @@ def vyskovy_bod_delete_repository_container(sender, instance: VyskovyBod, **kwar
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
-    instance.adb.save_metadata(fedora_transaction, close_transaction=instance.active_close_transaction_when_finished)
+    instance.adb.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)})
 

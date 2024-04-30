@@ -85,6 +85,8 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
     )
     pocet = models.TextField(blank=True, null=True)
     poznamka = models.TextField(blank=True, null=True)
+    close_active_transaction_when_finished = False
+    active_transaction = None
 
     class Meta:
         db_table = "nalez_predmet"
