@@ -9,7 +9,7 @@ import glob
 import core.message_constants as mc
 import requests
 from arch_z.models import ArcheologickyZaznam, ArcheologickyZaznamKatastr
-from django.contrib.gis.db.models.functions import PointOnSurface
+from django.contrib.gis.db.models.functions import PointOnSurface ,Centroid
 from django.conf import ENVIRONMENT_VARIABLE, settings
 from django.apps import apps
 from django.core.cache import caches
