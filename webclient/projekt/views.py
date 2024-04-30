@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import logging
 from django.views import View
+from cacheops import invalidate_model
 
 import simplejson as json
 
@@ -109,7 +110,7 @@ from projekt.forms import (
     ZahajitVTerenuForm,
     ZruseniProjektForm,
 )
-from projekt.models import Projekt
+from projekt.models import Projekt, ProjektKatastr
 from projekt.tables import ProjektTable
 from uzivatel.forms import OsobaForm
 from services.mailer import Mailer
@@ -500,6 +501,8 @@ def edit(request, ident_cely):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
+            form.save_m2m()
+            invalidate_model(ProjektKatastr)
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
             logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"form_errors": form.errors})
