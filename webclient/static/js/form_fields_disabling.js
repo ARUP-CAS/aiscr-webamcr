@@ -27,15 +27,15 @@ function disableField(id, fields) {
             label = element.parentElement.parentElement.parentElement.parentElement.getElementsByTagName("label")[0]
         }
         select_id = "#" + id
-            if (element.disabled == false) {
-                fields.set(key, $(select_id).val());
-            }
-            $(select_id).val("").trigger('change');
-            $(select_id).prop("disabled", true);
-        if (!(element.classList.contains("select2multiple"))){
+        if (element.disabled == false) {
+            fields.set(key, $(select_id).val());
+        }
+        $(select_id).val("").trigger('change');
+        $(select_id).prop("disabled", true);
+        if (!(element.classList.contains("select2multiple"))) {
             $(select_id).selectpicker('refresh');
         }
-        if (!(element.classList.contains("select2multiple"))){
+        if (!(element.classList.contains("select2multiple"))) {
             element.classList.remove("required-next")
         }
         else {
@@ -66,24 +66,24 @@ function enableField(id, checked_field, fields, required_field) {
         if (label == null) {
             label = element.parentElement.parentElement.parentElement.parentElement.getElementsByTagName("label")[0]
         }
+        select_id = "#" + id
+        if (element.disabled == true) {
+            $(select_id).val(fields.get(key)).trigger('change');
+        }
+        $(select_id).prop("disabled", false);
+        if (!(element.classList.contains("select2multiple"))) {
+            $(select_id).selectpicker('refresh');
+        }
         if (checked_field.required == true) {
-            select_id = "#" + id
-            if (element.disabled == true) {
-                $(select_id).val(fields.get(key)).trigger('change');
-            }
-            $(select_id).prop("disabled", false);
-            if (!(element.classList.contains("select2multiple"))){
-                $(select_id).selectpicker('refresh');
-            }
             if (required_field) {
                 label.classList.add("requiredField");
                 element.required = true;
-                if (!(element.classList.contains("select2multiple"))){
+                if (!(element.classList.contains("select2multiple"))) {
                     if (!element.classList.contains("required-next")) {
                         element.classList.add("required-next")
                     }
                 }
-                else{
+                else {
                     if (!element.parentElement.getElementsByClassName("select2-selection")[0].classList.contains("required-next")) {
                         element.parentElement.getElementsByClassName("select2-selection")[0].classList.add("required-next")
                     }
@@ -96,10 +96,10 @@ function enableField(id, checked_field, fields, required_field) {
     }
     else {
         label = element.parentElement.parentElement.getElementsByTagName("label")[0]
+        if (element.disabled == true) {
+            element.value = fields.get(key);
+        }
         if (checked_field.required == true) {
-            if (element.disabled == true) {
-                element.value = fields.get(key);
-            }
             if (required_field) {
                 element.required = true;
                 label.classList.add("requiredField");
