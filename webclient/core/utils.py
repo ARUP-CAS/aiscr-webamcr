@@ -9,7 +9,7 @@ import glob
 import core.message_constants as mc
 import requests
 from arch_z.models import ArcheologickyZaznam, ArcheologickyZaznamKatastr
-from django.contrib.gis.db.models.functions import Centroid
+from django.contrib.gis.db.models.functions import PointOnSurface
 from django.conf import ENVIRONMENT_VARIABLE, settings
 from django.apps import apps
 from django.core.cache import caches
@@ -307,7 +307,7 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     try:
         if len(akce_ident_cely) > 1:
             akce=akce_ident_cely.split("-D")[0]
-            DJs = (DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom"))
+            DJs = (DokumentacniJednotka.objects.annotate(pian__centroid=PointOnSurface("pian__geom"))
                        .filter(ident_cely__istartswith=akce).order_by('ident_cely'))
             for dj in DJs:
                 logger.debug("core.utils.get_pians_from_akce.loop_dj",
