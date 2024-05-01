@@ -799,7 +799,7 @@ class FedoraRepositoryConnector:
         }
         data = f"@prefix ore: <http://www.openarchives.org/ore/terms/> . " \
                f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}> ."
-        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, ident_cely=ident_cely_old)
+        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4)
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, headers=headers, data=data)
 
         url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5, ident_cely=ident_cely_old)
