@@ -126,12 +126,14 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         Externí zdroje se posouvají do stavu zapsaný.
         """
         self.stav = AZ_STAV_ODESLANY
+        self.save()
+        poznamka_historie = self.check_set_permanent_ident()
         Historie(
             typ_zmeny=ODESLANI_AZ,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=poznamka_historie,
         ).save()
-        self.save()
         for dc in self.casti_dokumentu.all():
             if dc.dokument.stav == D_STAV_ZAPSANY:
                 dc.dokument.set_odeslany(user)
@@ -149,35 +151,14 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         """
         self.suppress_signal = True
         self.stav = AZ_STAV_ARCHIVOVANY
-        poznamka_historie = None
         self.save()
-        old_ident = None
-        ident_change_recorded = False
-        if (
-            self.typ_zaznamu == self.TYP_ZAZNAMU_AKCE
-            and self.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
-            and self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX)
-        ):
-            old_ident = self.ident_cely
-            self.set_akce_ident()
-            poznamka_historie = f"{old_ident} -> {self.ident_cely}"
-        if (
-            self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA 
-            and self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX)
-        ):
-            old_ident = self.ident_cely
-            self.set_lokalita_permanent_ident_cely()
-            ident_change_recorded = True
-            poznamka_historie = f"{old_ident} -> {self.ident_cely}"
+        poznamka_historie = self.check_set_permanent_ident()
         Historie(
             typ_zmeny=ARCHIVACE_AZ,
             uzivatel=user,
             vazba=self.historie,
             poznamka=poznamka_historie,
         ).save()
-        self.suppress_signal = False
-        if old_ident is not None and not ident_change_recorded:
-            self.record_ident_change(old_ident, self.active_transaction)
 
     def set_vraceny(self, user, new_state, poznamka):
         """
@@ -424,6 +405,28 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             return (self.get_create_user()[0].organizace,)
         else: 
             return ()
+        
+    def check_set_permanent_ident(self):
+        poznamka_historie = None
+        old_ident = None
+        ident_change_recorded = False
+        if self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
+            if (
+            self.typ_zaznamu == self.TYP_ZAZNAMU_AKCE
+            and self.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
+            ):
+                old_ident = self.ident_cely
+                self.set_akce_ident()
+                poznamka_historie = f"{old_ident} -> {self.ident_cely}"
+            else:
+                old_ident = self.ident_cely
+                self.set_lokalita_permanent_ident_cely()
+                ident_change_recorded = True
+                poznamka_historie = f"{old_ident} -> {self.ident_cely}"
+        self.suppress_signal = False
+        if old_ident is not None and not ident_change_recorded:
+            self.record_ident_change(old_ident, self.active_transaction)
+        return poznamka_historie
 
     def __init__(self, *args, **kwargs):
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)

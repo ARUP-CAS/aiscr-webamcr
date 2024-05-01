@@ -216,15 +216,20 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         ).save()
         self.save()
 
-    def set_odeslany(self, user):
+    def set_odeslany(self, user, old_ident):
         """
         Metóda pro nastavení stavu odeslaný a uložení změny do historie.
         """
         self.stav = D_STAV_ODESLANY
+        if old_ident != self.ident_cely:
+            poznamka_historie = f"{old_ident} -> {self.ident_cely}"
+        else:
+            poznamka_historie = None
         Historie(
             typ_zmeny=ODESLANI_DOK,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=poznamka_historie,
         ).save()
         self.save()
 
@@ -235,11 +240,15 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         self.stav = D_STAV_ARCHIVOVANY
         if not self.datum_zverejneni:
             self.set_datum_zverejneni()
+        if old_ident != self.ident_cely:
+            poznamka_historie = f"{old_ident} -> {self.ident_cely}"
+        else:
+            poznamka_historie = None
         Historie(
             typ_zmeny=ARCHIVACE_DOK,
             uzivatel=user,
             vazba=self.historie,
-            poznamka=f"{old_ident} -> {self.ident_cely}",
+            poznamka=poznamka_historie,
         ).save()
         self.save()
 
