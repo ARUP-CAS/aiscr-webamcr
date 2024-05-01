@@ -101,8 +101,6 @@ def index(request, test_run=False):
             oznamovatel.save()
             projekt.set_vytvoreny()
             projekt.katastry.add(*[i for i in dalsi_katastry])
-            projekt.suppress_signal = False
-            projekt.close_active_transaction_when_finished = True
             projekt.save()
 
             confirmation = {
