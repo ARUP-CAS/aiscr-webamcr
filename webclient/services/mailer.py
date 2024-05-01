@@ -1,20 +1,15 @@
 import datetime
 import logging
-from itertools import repeat
 from typing import Union
 
 
-from concurrent.futures import ThreadPoolExecutor
 
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 
 from core.constants import OZNAMENI_PROJ, UZAVRENI_PROJ, ZAPSANI_DOK, NAVRZENI_KE_ZRUSENI_PROJ, ODESLANI_AZ, \
-    SN_POTVRZENY, SN_ODESLANY, SN_ZAPSANY, AZ_STAV_ZAPSANY, AZ_STAV_ODESLANY, \
-    PROJEKT_STAV_UZAVRENY
+    SN_POTVRZENY, SN_ODESLANY, SN_ZAPSANY, AZ_STAV_ZAPSANY, AZ_STAV_ODESLANY
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-from django.core.exceptions import ObjectDoesNotExist
 
 import projekt.models
 import arch_z.models
@@ -27,7 +22,6 @@ from core.repository_connector import FedoraRepositoryConnector, RepositoryBinar
 from historie.models import Historie
 from oznameni.models import Oznamovatel
 from .mlstripper import MLStripper
-from urllib.parse import urljoin
 
 logger = logging.getLogger(__name__)
 
@@ -81,18 +75,21 @@ class Mailer:
         if notification_type.ident_cely in ALWAYS_ACTIVE:
             notification_is_enabled = True
         else:
+            if notification_type.ident_cely in str(NOTIFICATION_GROUPS.items()):
+                real_notification_type_ident = [key for key,val in NOTIFICATION_GROUPS.items() if notification_type.ident_cely in val][0]
+            else:
+                real_notification_type_ident = notification_type.ident_cely
             notification_is_enabled \
-                = user.notification_types.filter(ident_cely=notification_type.ident_cely).count() > 0
+                = user.notification_types.filter(ident_cely=real_notification_type_ident).count() > 0
         if notification_is_enabled:
             if user.is_active is False and notification_type.zasilat_neaktivnim is True:
                 result = True
             if user.is_active is True:
                 result = True
-        if result:
-            logger.debug("services.mailer._notification_should_be_sent",
-                         extra={"notification_type": notification_type.ident_cely, "user": user,
-                                "notification_is_enabled": notification_is_enabled, "user_active": user.is_active,
-                                "zasilat_neaktivnim": notification_type.zasilat_neaktivnim})
+        logger.debug("services.mailer._notification_should_be_sent",
+                        extra={"notification_type": notification_type.ident_cely, "user": user,
+                            "notification_is_enabled": notification_is_enabled, "user_active": user.is_active,
+                            "zasilat_neaktivnim": notification_type.zasilat_neaktivnim, "check_result":result})
         return result
 
     @classmethod
@@ -107,13 +104,18 @@ class Mailer:
 
     @classmethod
     def _log_notification(cls, notification_type: 'uzivatel.models.UserNotificationType', receiver_object,
-                          receiver_address):
+                          receiver_address, status, exception):
         try:
             uzivatel.models.User.objects.get(pk = receiver_object.pk)
-            uzivatel.models.NotificationsLog(notification_type=notification_type, user=receiver_object,
-                                         receiver_address=receiver_address).save()
         except Exception as e:
-            logger.debug("services.mailer._log_notification", extra = {"error":e})
+            logger.debug("services.mailer._log_notification", extra = {"exception":e})
+            receiver_object = None
+        finally:
+            try:
+                uzivatel.models.NotificationsLog(notification_type=notification_type, user=receiver_object,
+                                         receiver_address=receiver_address, status=status, exception=exception).save()
+            except Exception as e:
+                logger.debug("services.mailer._log_notification", extra = {"exception":e})
         logger.debug("services.mailer._log_notification",
                      extra={"notification_type": notification_type, "user": receiver_object,
                             "receiver_address": receiver_address})
@@ -131,10 +133,14 @@ class Mailer:
                 email.attach(attachment.filename, attachment.content.read(), mimetype=attachment.mime_type)
             try:
                 email.send()
+                status = "OK"
+                exception = None
             except Exception as e:
                 logger.error("services.mailer.send.error",
                              extra={"from_email": from_email, "to": to, "subject": subject, "exception": e})
-            cls._log_notification(notification_type=notification_type, receiver_object=user, receiver_address=to)
+                status = "NOK"
+                exception = e
+            cls._log_notification(notification_type=notification_type, receiver_object=user, receiver_address=to, status=status, exception=exception)
         else:
             logger.warning("services.mailer.send.invalid_email", extra={"to": to, "subject": subject})
 
@@ -304,7 +310,7 @@ class Mailer:
         logger.debug("services.mailer.send_ea01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         log_entry = project.historie.historie_set\
-            .filter(typ_zmeny=f"P{PROJEKT_STAV_UKONCENY_V_TERENU}{PROJEKT_STAV_UZAVRENY}") \
+            .filter(typ_zmeny=UZAVRENI_PROJ) \
             .order_by("datum_zmeny").first()
         cls._send_a(project, notification_type, log_entry.uzivatel)
 

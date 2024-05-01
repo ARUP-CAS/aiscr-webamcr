@@ -52,7 +52,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 4.2.11
+     - 5.0.4
      - BSD License
      - https://www.djangoproject.com/
    * - PyRTF3
@@ -88,11 +88,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/billiard
    * - black
-     - 24.4.0
+     - 24.4.2
      - MIT License
      - https://github.com/psf/black
    * - celery
-     - 5.3.6
+     - 5.4.0
      - BSD License
      - https://docs.celeryq.dev/
    * - certifi
@@ -132,7 +132,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.4.4
+     - 7.5.0
      - Apache Software License
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
@@ -268,7 +268,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.13.4
+     - 3.14.0
      - The Unlicense (Unlicense)
      - https://github.com/tox-dev/py-filelock
    * - funcy
@@ -280,7 +280,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.5.35
+     - 2.5.36
      - MIT License
      - https://github.com/pre-commit/identify
    * - idna
@@ -352,7 +352,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.34
+     - 8.13.35
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -360,7 +360,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Historical Permission Notice and Disclaimer (HPND)
      - https://python-pillow.org
    * - platformdirs
-     - 4.2.0
+     - 4.2.1
      - MIT License
      - https://github.com/platformdirs/platformdirs
    * - polib
@@ -448,11 +448,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rcssmin/
    * - redis
-     - 5.0.3
+     - 5.0.4
      - MIT License
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.1.0
+     - 4.2.0
      - BSD License
      - https://www.reportlab.com/
    * - requests
@@ -464,7 +464,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
-     - 4.19.0
+     - 4.20.0
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
@@ -536,7 +536,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.25.2
+     - 20.26.1
      - MIT License
      - https://github.com/pypa/virtualenv
    * - wrapt

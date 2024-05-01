@@ -54,7 +54,7 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_SPECIFIKACE,
 )
-from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
+from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES, MODEL_3D_DOKUMENT_FORMATS
 from heslar.models import Heslar, RuianKatastr
 from uzivatel.models import Organizace, User, Osoba
 from django.utils.translation import gettext_lazy as _
@@ -175,18 +175,16 @@ class Model3DFilter(HistorieFilter, FilterSet):
     )
 
     typ_dokumentu = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(
-            id__in=MODEL_3D_DOKUMENT_TYPES
-        ),
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP) \
+        .filter(id__in=MODEL_3D_DOKUMENT_TYPES),
         label=_("dokument.filters.dokumentFilter.typDokumentu.label"),
         field_name="typ_dokumentu",
         widget=SelectMultipleSeparator(),
     )
 
     format = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(
-            heslo__startswith="3D"
-        ),
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT) \
+        .filter(id__in=MODEL_3D_DOKUMENT_FORMATS),
         label=_("dokument.filters.dokumentFilter.format.label"),
         field_name="extra_data__format",
         widget=SelectMultipleSeparator(),
@@ -523,9 +521,8 @@ class DokumentFilter(Model3DFilter):
         widget=SelectMultipleSeparator(),
     )
     typ_dokumentu = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).exclude(
-            id__in=MODEL_3D_DOKUMENT_TYPES
-        ),
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP) \
+        .exclude(id__in=MODEL_3D_DOKUMENT_TYPES),
         label=_("dokument.filters.dokumentFilter.typDokumentu.label"),
         field_name="typ_dokumentu",
         widget=SelectMultipleSeparator(),
@@ -646,9 +643,8 @@ class DokumentFilter(Model3DFilter):
         distinct=True,
     )
     format = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).exclude(
-            heslo__startswith="3D"
-        ),
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT) \
+        .exclude(id__in=MODEL_3D_DOKUMENT_FORMATS),
         label=_("dokument.filters.dokumentFilter.format.label"),
         field_name="extra_data__format",
         widget=SelectMultipleSeparator(),

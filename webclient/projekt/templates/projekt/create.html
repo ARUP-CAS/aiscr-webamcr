@@ -3,6 +3,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% load template_tags %}
+{% load template_filters %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block head %}
@@ -121,8 +122,7 @@
   <script>
       $(document).ready(function () {
           const selectElement = document.getElementById('id_typ_projektu');
-          const ZACHRANNY_OPTION = 1
-
+          const ZACHRANNY_OPTION = '{% get_value_from_heslar "projekt_typ" "zachranny" %}';
           function makeFieldDisabled(field, disabled, start){
               $(field).prop('readonly', disabled);
               if (field !='#id_oznaceni_stavby' && field != '#id_poznamka'){
@@ -160,8 +160,7 @@
                 }
               }
           }
-
-          if (selectElement.selectedIndex != ZACHRANNY_OPTION) {
+          if (selectElement.value != ZACHRANNY_OPTION) {
             makeOznamovatelDisabled(true, false)
           } else {
             makeOznamovatelDisabled(false, true)
@@ -169,7 +168,7 @@
 
           // On change pak podle toho co je vybrano
           $(selectElement).on('changed.bs.select', function (e, clickedIndex) {
-              if (clickedIndex != ZACHRANNY_OPTION) {
+              if (selectElement.value != ZACHRANNY_OPTION) {
                   makeOznamovatelDisabled(true, false)
               } else {
                   makeOznamovatelDisabled(false ,false)

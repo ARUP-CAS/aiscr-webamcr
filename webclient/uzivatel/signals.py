@@ -1,15 +1,18 @@
 import logging
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
 from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
+from heslar.signals import get_or_create_transaction
 from historie.models import Historie
 from services.mailer import Mailer
 from uzivatel.models import Organizace, Osoba, User
 from rest_framework.authtoken.models import Token
+from core.ident_cely import get_uzivatel_ident
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +20,7 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Organizace)
 def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
     logger.debug("uzivatel.signals.orgnaizace_save_metadata.start", extra={"ident_cely": instance.ident_cely})
-    fedora_transaction = FedoraTransaction()
+    fedora_transaction = get_or_create_transaction(instance)
     instance.save_metadata(fedora_transaction, close_transaction=True)
     logger.debug("uzivatel.signals.orgnaizace_save_metadata.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction})
@@ -26,7 +29,7 @@ def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
 @receiver(post_save, sender=Osoba)
 def osoba_save_metadata(sender, instance: Osoba, **kwargs):
     logger.debug("uzivatel.signals.osoba_save_metadata.start", extra={"ident_cely": instance.ident_cely})
-    fedora_transaction = FedoraTransaction()
+    fedora_transaction = get_or_create_transaction(instance)
     instance.save_metadata(fedora_transaction, close_transaction=True)
     logger.debug("uzivatel.signals.osoba_save_metadata.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction})
@@ -49,14 +52,7 @@ def create_ident_cely(sender, instance: User, **kwargs):
         instance.model_is_updated = False
         logger.debug("uzivatel.signals.create_ident_cely.running_create_ident_cely_receiver")
         if not instance.ident_cely:
-            users = User.objects.all().order_by("-ident_cely")
-            if users.count() > 0:
-                last_user = users.first()
-                dash_index = last_user.ident_cely.rfind("-")
-                number = int(last_user.ident_cely[dash_index + 1:]) + 1
-                instance.ident_cely = "U-" + "{0}".format(str(number)).zfill(6)
-            else:
-                instance.ident_cely = "U-000001"
+            instance.ident_cely = get_uzivatel_ident()
         if not FedoraRepositoryConnector.check_container_deleted_or_not_exists(instance.ident_cely, "uzivatel"):
             raise ValidationError(_("uzivatel.models.User.save.check_container_deleted_or_not_exists.invalid"))
         if not instance.active_transaction:
@@ -76,7 +72,10 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
                  extra={"user": instance.ident_cely, "suppress_signal": instance.suppress_signal,
                         "transaction": getattr(fedora_transaction, "uid", None)})
     if not instance.suppress_signal:
-        instance.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
+        if instance.close_active_transaction_when_finished:
+            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, True))
+        else:
+            instance.save_metadata(fedora_transaction)
         send_deactivation_email(sender, instance, **kwargs)
         send_account_confirmed_email(sender, instance, created)
         # Create or change token when user changed.
@@ -144,7 +143,7 @@ def delete_profile(sender, instance: User, *args, **kwargs):
 def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
     logger.debug("uzivatel.signals.osoba_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
-    fedora_transaction = FedoraTransaction()
+    fedora_transaction = get_or_create_transaction(instance)
     instance.record_deletion(fedora_transaction, close_transaction=True)
     logger.debug("uzivatel.signals.osoba_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
@@ -154,7 +153,7 @@ def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
 def organizace_delete_repository_container(sender, instance: Organizace, **kwargs):
     logger.debug("uzivatel.signals.organizace_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
-    fedora_transaction = FedoraTransaction()
+    fedora_transaction = get_or_create_transaction(instance)
     instance.record_deletion(fedora_transaction, close_transaction=True)
     logger.debug("uzivatel.signals.organizace_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})

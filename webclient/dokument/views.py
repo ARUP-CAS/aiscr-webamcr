@@ -1,7 +1,6 @@
 import logging
-import os
+from cacheops import invalidate_model
 from typing import Any
-from django import http
 import simplejson as json
 
 from django.db.models.signals import post_save
@@ -91,6 +90,8 @@ from dokument.models import (
     DokumentAutor,
     DokumentCast,
     DokumentExtraData,
+    DokumentJazyk,
+    DokumentPosudek,
     Let,
     Tvar,
 )
@@ -702,7 +703,7 @@ class TvarEditView(LoginRequiredMixin, View):
     Třida pohledu pro uložení zmeny tvaru z formuláře.
     """
     def post(self, request, *args, **kwargs):
-        dokument = get_object_or_404(Dokument, ident_cely=self.kwargs["ident_cely"])
+        dokument: Dokument = get_object_or_404(Dokument, ident_cely=self.kwargs["ident_cely"])
         TvarFormset = inlineformset_factory(
             Dokument,
             Tvar,
@@ -716,6 +717,7 @@ class TvarEditView(LoginRequiredMixin, View):
             logger.debug("dokument.views.TvarEditView.form_valid")
             formset.save()
             if formset.has_changed():
+                dokument.save_metadata(FedoraTransaction(), close_transaction=True)
                 logger.debug("dokument.views.TvarEditView.form_data_changed")
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
@@ -765,6 +767,8 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         zaznam = self.get_zaznam()
+        zaznam.active_transaction = FedoraTransaction()
+        zaznam.close_active_transaction_when_finished = True
         dokument = zaznam.dokument
         zaznam.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
@@ -967,6 +971,8 @@ class DokumentCastPripojitProjektView(TransakceView):
         form = PripojitProjektForm(data=request.POST, dok=True)
         if form.is_valid():
             projekt = form.cleaned_data["projekt"]
+            cast.active_transaction = FedoraTransaction()
+            cast.close_active_transaction_when_finished = True
             cast.archeologicky_zaznam = None
             cast.projekt = Projekt.objects.get(id=projekt)
             cast.save()
@@ -1005,6 +1011,8 @@ class DokumentCastOdpojitView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         cast = self.get_zaznam()
+        cast.active_transaction = FedoraTransaction()
+        cast.close_active_transaction_when_finished = True
         cast.archeologicky_zaznam = None
         cast.projekt = None
         cast.save()
@@ -1024,15 +1032,15 @@ class DokumentCastSmazatView(TransakceView):
         self.success_message = DOKUMENT_CAST_USPESNE_SMAZANA
 
     def post(self, request, *args, **kwargs):
+        fedora_transaction = FedoraTransaction()
         cast = self.get_zaznam()
+        cast.active_transaction = fedora_transaction
         dokument = cast.dokument
         if cast.komponenty:
             komps = cast.komponenty
             cast.komponenty = None
             cast.save()
             komps.delete()
-        fedora_transaction = FedoraTransaction()
-        cast.active_transaction = fedora_transaction
         cast.close_active_transaction_when_finished = True
         cast.delete()
         messages.add_message(request, messages.SUCCESS, self.success_message)
@@ -1125,6 +1133,9 @@ def edit(request, ident_cely):
             dokument_extra.save()
             instance_d.close_active_transaction_when_finished = True
             instance_d.save()
+            form_d.save_m2m()
+            invalidate_model(DokumentJazyk)
+            invalidate_model(DokumentPosudek)
             if form_d.has_changed() or form_extra.has_changed():
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
@@ -1637,6 +1648,11 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = FedoraTransaction()
         dokument.active_transaction = fedora_transaction
+        dokument.record_deletion()
+        for item in dokument.casti.all():
+            item: DokumentCast
+            item.active_transaction = fedora_transaction
+            item.delete()
         resp1 = dokument.delete()
         if resp1:
             logger.debug("dokument.views.smazat.deleted", extra={"resp1": resp1})
@@ -1893,6 +1909,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
         logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
         if remove_orphan:
             orphan_dokument.active_transaction = fedora_transaction
+            orphan_dokument.record_deletion()
             orphan_dokument.delete()
             logger.debug("dokument.views.odpojit.deleted")
         fedora_transaction.mark_transaction_as_closed()

@@ -280,6 +280,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     allowed_states = []
     success_message = "success"
     action = ""
+    active_transaction = None
 
     def init_translation(self):
         self.title = "title"
@@ -288,10 +289,13 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
         logger.debug("ez.views.TransakceView.get_zaznam.start", extra={"ident_cely": ident_cely})
-        return get_object_or_404(
+        zaznam = get_object_or_404(
             ExterniZdroj,
             ident_cely=ident_cely,
         )
+        if self.active_transaction:
+            zaznam.active_transaction = self.active_transaction
+        return zaznam
 
     def get_context_data(self, **kwargs):
         self.init_translation()
@@ -379,6 +383,8 @@ class ExterniZdrojSmazatView(TransakceView):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
         zaznam.deleted_by_user = request.user
+        zaznam.active_transaction = FedoraTransaction()
+        zaznam.close_active_transaction_when_finished = True
         if hasattr(zaznam, "container_creation_queued") and zaznam.container_creation_queued():
             messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
             return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=403)
@@ -466,9 +472,12 @@ class ExterniOdkazOdpojitView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
+        self.active_transaction = FedoraTransaction()
         self.init_translation()
         ez = self.get_zaznam()
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
+        eo.active_transaction = self.active_transaction
+        eo.close_active_transaction_when_finished = True
         eo.delete()
         messages.add_message(request, messages.SUCCESS, self.success_message)
         return JsonResponse({"redirect": ez.get_absolute_url()})
@@ -503,15 +512,16 @@ class ExterniOdkazPripojitView(TransakceView):
         form = PripojitArchZaznamForm(data=request.POST, type_arch=context["type"])
         if form.is_valid():
             logger.debug("ez.views.ExterniOdkazPripojitView.post.form_valid")
+            self.active_transaction = FedoraTransaction()
+            ez = self.get_zaznam()
             arch_z_id = form.cleaned_data["arch_z"]
             arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
-            eo = ExterniOdkaz.objects.create(
+            eo = ExterniOdkaz(
                 externi_zdroj=ez,
                 paginace=form.cleaned_data["paginace"],
                 archeologicky_zaznam=arch_z,
             )
-            fedora_transaction = FedoraTransaction()
-            eo.active_transaction = fedora_transaction
+            eo.active_transaction = self.active_transaction
             eo.close_active_transaction_when_finished = True
             eo.save()
             messages.add_message(
@@ -533,6 +543,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
     success_message = "success"
     form_class = ExterniOdkazForm
     slug_field = "id"
+    active_transaction = None
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         eo = self.get_object()
@@ -543,11 +554,8 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         else:
             check = True
         if check:
-            logger.debug("Externi odkaz - Externi Zdroj/ Archeologicky zaznam wrong relation")
-            messages.add_message(
-                            request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                        )
-            return JsonResponse({"redirect": self.get_object().get_absolute_url()},status=403)
+            messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+            return JsonResponse({"redirect": self.get_object().get_absolute_url()}, status=403)
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -574,8 +582,18 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
             ].externi_zdroj.get_absolute_url()
         return response
 
+    def get_object(self, queryset=None):
+        object = super().get_object()
+        object: ExterniOdkaz
+        if self.active_transaction:
+            object.close_active_transaction_when_finished = True
+            object.active_transaction = self.active_transaction
+        return object
+
     def post(self, request, *args, **kwargs):
+        self.active_transaction = FedoraTransaction()
         super().post(request, *args, **kwargs)
+        self.active_transaction = None
         return JsonResponse({"redirect": self.get_success_url()})
 
     def form_valid(self, form):
@@ -636,6 +654,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
+        self.active_transaction = FedoraTransaction()
         az = self.get_zaznam()
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.delete()
@@ -689,10 +708,14 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
-        return get_object_or_404(
+        zaznam = get_object_or_404(
             ArcheologickyZaznam,
             ident_cely=ident_cely,
         )
+        if self.active_transaction:
+            zaznam.active_transaction = self.active_transaction
+            zaznam.close_active_transaction_when_finished = True
+        return zaznam
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -709,6 +732,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
+        self.active_transaction = FedoraTransaction()
         az = self.get_zaznam()
         form = PripojitExterniOdkazForm(data=request.POST)
         if form.is_valid():
@@ -720,9 +744,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
                 archeologicky_zaznam=az,
             )
             eo: ExterniOdkaz
-            fedora_transaction = FedoraTransaction()
-            eo.active_transaction = fedora_transaction
-            eo.close_active_transaction_when_finished = True
+            eo.active_transaction = self.active_transaction
             eo.save()
             messages.add_message(
                 request, messages.SUCCESS, get_message(az, "EO_USPESNE_PRIPOJEN")

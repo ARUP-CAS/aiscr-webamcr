@@ -8,7 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import get_language
 
 from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_DOKUMENT_FORMAT, HESLAR_PRISTUPNOST
-from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
+from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES, MODEL_3D_DOKUMENT_FORMATS
 from heslar.models import Heslar, HeslarNazev, RuianKatastr, HeslarHierarchie
 import logging
 
@@ -140,9 +140,8 @@ class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
     Třída pohledu pro autocomplete dokument typu.
     """
     def get_queryset(self):
-        qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(
-            id__in=MODEL_3D_DOKUMENT_TYPES
-        )
+        qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP) \
+        .filter(id__in=MODEL_3D_DOKUMENT_TYPES)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
         return qs
@@ -153,9 +152,8 @@ class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySe
     Třída pohledu pro autocomplete dokument formatu.
     """
     def get_queryset(self):
-        qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(
-            heslo__startswith="3D"
-        )
+        qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT) \
+        .filter(id__in=MODEL_3D_DOKUMENT_FORMATS)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
         return qs

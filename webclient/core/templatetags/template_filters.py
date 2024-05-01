@@ -173,6 +173,13 @@ def get_value_from_heslar(nazev_heslare, hodnota):
         ("az_stav", "odeslany"): constants.AZ_STAV_ODESLANY,
         ("samostatny_nalez_stav", "odeslany"): constants.SN_ODESLANY,
         ("samostatny_nalez_stav", "potvrzeny"): constants.SN_POTVRZENY,
+        ("kulturni_pamatky", "op"): hesla_dynamicka.KULTURNI_PAMATKA_OP,
+        ("kulturni_pamatky", "kp"): hesla_dynamicka.KULTURNI_PAMATKA_KP,
+        ("kulturni_pamatky", "nkp"): hesla_dynamicka.KULTURNI_PAMATKA_NKP,
+        ("kulturni_pamatky", "pz"): hesla_dynamicka.KULTURNI_PAMATKA_PZ,
+        ("kulturni_pamatky", "pr"): hesla_dynamicka.KULTURNI_PAMATKA_PR,
+        ("kulturni_pamatky", "un"): hesla_dynamicka.KULTURNI_PAMATKA_UN,
+        ("projekt_typ", "zachranny"): hesla_dynamicka.TYP_PROJEKTU_ZACHRANNY_ID,
     }
     if (nazev_heslare, hodnota) in values:
         return values[(nazev_heslare, hodnota)]

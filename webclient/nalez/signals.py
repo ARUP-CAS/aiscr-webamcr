@@ -15,7 +15,15 @@ logger = logging.getLogger(__name__)
 @receiver(post_delete, sender=NalezObjekt)
 def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
     logger.debug("nalez.signals.delete_nalez_objekt.start", extra={"pk": instance.pk})
-    fedora_transaction: FedoraTransaction = instance.active_transaction
+    if instance.active_transaction:
+        fedora_transaction: FedoraTransaction = instance.active_transaction
+    elif instance.komponenta.active_transaction:
+        fedora_transaction: FedoraTransaction = instance.komponenta.active_transaction
+    elif getattr(instance.komponenta.komponenta_vazby.navazany_objekt, "active_transaction", None):
+        fedora_transaction: FedoraTransaction = instance.komponenta.komponenta_vazby.navazany_objekt.active_transaction
+    else:
+        logger.debug("nalez.signals.delete_nalez_predmet.no_transaction", extra={"pk": instance.pk})
+        return
     if isinstance(instance.komponenta.komponenta_vazby.navazany_objekt, DokumentacniJednotka):
         logger.debug("nalez.signals.delete_nalez_objekt.dokumentacni_jednotka",
                      extra={"pk": instance.pk, "transaction": fedora_transaction.uid,
@@ -38,7 +46,15 @@ def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
 @receiver(post_delete, sender=NalezPredmet)
 def delete_nalez_predmet(sender, instance: NalezObjekt, **kwargs):
     logger.debug("nalez.signals.delete_nalez_predmet.start", extra={"pk": instance.pk})
-    fedora_transaction: FedoraTransaction = instance.active_transaction
+    if instance.active_transaction:
+        fedora_transaction: FedoraTransaction = instance.active_transaction
+    elif instance.komponenta.active_transaction:
+        fedora_transaction: FedoraTransaction = instance.komponenta.active_transaction
+    elif getattr(instance.komponenta.komponenta_vazby.navazany_objekt, "active_transaction", None):
+        fedora_transaction: FedoraTransaction = instance.komponenta.komponenta_vazby.navazany_objekt.active_transaction
+    else:
+        logger.debug("nalez.signals.delete_nalez_predmet.no_transaction", extra={"pk": instance.pk})
+        return
     if isinstance(instance.komponenta.komponenta_vazby.navazany_objekt, DokumentacniJednotka):
         logger.debug("nalez.signals.delete_nalez_predmet.dokumentacni_jednotka",
                      extra={"pk": instance.pk, "transaction": fedora_transaction.uid,

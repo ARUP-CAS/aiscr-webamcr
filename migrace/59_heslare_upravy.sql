@@ -34,6 +34,11 @@ UPDATE let SET letiste_start = (SELECT id FROM heslar WHERE ident_cely = 'HES-00
 UPDATE let SET letiste_cil = (SELECT id FROM heslar WHERE ident_cely = 'HES-000182') WHERE letiste_cil = (SELECT id FROM heslar WHERE ident_cely = 'HES-000183');
 DELETE FROM heslar WHERE ident_cely = 'HES-000183';
 
+-- Úprava památkové ochrany
+UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000175'), kulturni_pamatka_cislo = '', kulturni_pamatka_popis = '' WHERE kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000176');
+DELETE FROM heslar WHERE ident_cely = 'HES-000176';
+DELETE FROM heslar WHERE ident_cely = 'HES-000181';
+
 -- Úprava hesel
 UPDATE heslar SET razeni = 1, heslo = 'absolutní datování', heslo_en = 'absolute dating', popis = 'Méně obvyklé, samostatně nezmiňované metody absolutního datovaní (např. kosmogenní nuklidy, termoluminiscenční metoda, aj.).' WHERE ident_cely = 'HES-000634';
 UPDATE heslar SET razeni = 1, heslo = 'anonym', heslo_en = 'anonymous', zkratka = 'A', popis = '' WHERE ident_cely = 'HES-000865';
@@ -591,7 +596,6 @@ UPDATE heslar SET razeni = 2, heslo = 'linie', heslo_en = 'line', popis = '' WHE
 UPDATE heslar SET razeni = 2, heslo = 'němčina', heslo_en = 'German', zkratka = 'DE', popis = '' WHERE ident_cely = 'HES-000168';
 UPDATE heslar SET razeni = 2, heslo = 'neodborné narušení', heslo_en = 'non-professional intervention', popis = '' WHERE ident_cely = 'HES-001140';
 UPDATE heslar SET razeni = 2, heslo = 'odchylka desítky metrů', heslo_en = 'deviation in tens of meters', zkratka = '2', popis = 'odchylka desítky metrů' WHERE ident_cely = 'HES-000862';
-UPDATE heslar SET razeni = 2, heslo = 'ochranné pásmo', heslo_en = 'protection zone', popis = '' WHERE ident_cely = 'HES-000176';
 UPDATE heslar SET razeni = 2, heslo = 'ornice', heslo_en = 'arable topsoil', popis = '' WHERE ident_cely = 'HES-000243';
 UPDATE heslar SET razeni = 2, heslo = 'pohřbívání', heslo_en = 'burial activity', zkratka = 'poh', popis = '' WHERE ident_cely = 'HES-000002';
 UPDATE heslar SET razeni = 2, heslo = 'polygon průzkumu', heslo_en = 'survey polygon', zkratka = 'L', popis = '' WHERE ident_cely = 'HES-001123';
@@ -785,7 +789,7 @@ UPDATE heslar SET razeni = 3, heslo = 'expertní posudek', heslo_en = 'expert re
 UPDATE heslar SET razeni = 3, heslo = 'geodetický průzkum', heslo_en = 'geodetic survey', popis = '' WHERE ident_cely = 'HES-001141';
 UPDATE heslar SET razeni = 3, heslo = 'inženýrsko-geologický průzkum', heslo_en = 'engineering-geological survey', popis = '' WHERE ident_cely = 'HES-000596';
 UPDATE heslar SET razeni = 3, heslo = 'krajina', heslo_en = 'landscape', zkratka = 'K', popis = '' WHERE ident_cely = 'HES-001124';
-UPDATE heslar SET razeni = 3, heslo = 'kulturní památka', heslo_en = 'listed monument', popis = '' WHERE ident_cely = 'HES-000177';
+UPDATE heslar SET razeni = 2, heslo = 'kulturní památka', heslo_en = 'listed monument', popis = '' WHERE ident_cely = 'HES-000177';
 UPDATE heslar SET razeni = 3, heslo = 'někdy v letech', heslo_en = 'approximate years', popis = 'možno zadat pouze rok; pouze u neregistrovaných akcí' WHERE ident_cely = 'HES-000889';
 UPDATE heslar SET razeni = 3, heslo = 'nízká kvalita', heslo_en = 'poor quality', zkratka = '3', popis = 'orientační hodnota' WHERE ident_cely = 'HES-000239';
 UPDATE heslar SET razeni = 3, heslo = 'oblačno', heslo_en = 'cloudy', popis = '' WHERE ident_cely = 'HES-000588';
@@ -899,7 +903,7 @@ UPDATE heslar SET razeni = 4, heslo = 'katastrální území', heslo_en = 'cadas
 UPDATE heslar SET razeni = 4, heslo = 'kniha', heslo_en = 'book', zkratka = 'A', popis = '' WHERE ident_cely = 'HES-001117';
 UPDATE heslar SET razeni = 4, heslo = 'krajina', heslo_en = 'landscape', popis = '' WHERE ident_cely = 'HES-000136';
 UPDATE heslar SET razeni = 4, heslo = 'lesní hrabanka', heslo_en = 'woodland topsoil', popis = '' WHERE ident_cely = 'HES-000245';
-UPDATE heslar SET razeni = 4, heslo = 'národní kulturní památka', heslo_en = 'listed national monument', popis = '' WHERE ident_cely = 'HES-000178';
+UPDATE heslar SET razeni = 3, heslo = 'národní kulturní památka', heslo_en = 'listed national monument', popis = '' WHERE ident_cely = 'HES-000178';
 UPDATE heslar SET razeni = 4, heslo = 'není, nezjištěno', heslo_en = 'unavailable/unknown', zkratka = '4', popis = '' WHERE ident_cely = 'HES-000240';
 UPDATE heslar SET razeni = 4, heslo = 'oblačno, zataženo', heslo_en = 'cloudy, overcast', popis = '' WHERE ident_cely = 'HES-000589';
 UPDATE heslar SET razeni = 4, heslo = 'plošný objekt', heslo_en = 'polygonal feature', popis = 'zhruba nad 100 m2' WHERE ident_cely = 'HES-001031';
@@ -1066,7 +1070,7 @@ UPDATE heslar SET razeni = 5, heslo = 'kult', heslo_en = 'ritual activity', zkra
 UPDATE heslar SET razeni = 5, heslo = 'linie', heslo_en = 'linear feature', popis = '' WHERE ident_cely = 'HES-001032';
 UPDATE heslar SET razeni = 5, heslo = 'lokalita', heslo_en = 'site', popis = '' WHERE ident_cely = 'HES-001074';
 UPDATE heslar SET razeni = 5, heslo = 'mikroštítek', heslo_en = 'microfiche', zkratka = 'M', popis = 'vysoká kvalita, zpravidla skenován místo originálu' WHERE ident_cely = 'HES-000241';
-UPDATE heslar SET razeni = 5, heslo = 'památková zóna', heslo_en = 'heritage zone', popis = '' WHERE ident_cely = 'HES-000179';
+UPDATE heslar SET razeni = 4, heslo = 'památková zóna', heslo_en = 'heritage zone', popis = '' WHERE ident_cely = 'HES-000179';
 UPDATE heslar SET razeni = 5, heslo = 'pravěk', heslo_en = 'Prehistory', popis = '' WHERE ident_cely = 'HES-001161';
 UPDATE heslar SET razeni = 5, heslo = 'přirozený půdní horizont', heslo_en = 'natural topsoil', popis = '' WHERE ident_cely = 'HES-000246';
 UPDATE heslar SET razeni = 5, heslo = 'slovenština', heslo_en = 'Slovak', zkratka = 'SK', popis = '' WHERE ident_cely = 'HES-000171';
@@ -1156,7 +1160,7 @@ UPDATE heslar SET razeni = 6, heslo = 'latina', heslo_en = 'Latin', zkratka = 'L
 UPDATE heslar SET razeni = 6, heslo = 'linie ohrazující', heslo_en = 'delimiting line', popis = '' WHERE ident_cely = 'HES-001033';
 UPDATE heslar SET razeni = 6, heslo = 'nízká výpovědní hodnota', heslo_en = 'low relevancy', zkratka = 'N', popis = 'kvalitní, má záznam, neskenován kvůli nízké vypovídací hodnotě' WHERE ident_cely = 'HES-001178';
 UPDATE heslar SET razeni = 6, heslo = 'originál ztracen/zničen', heslo_en = 'original lost/destroyed', popis = '' WHERE ident_cely = 'HES-001171';
-UPDATE heslar SET razeni = 6, heslo = 'památková rezervace', heslo_en = 'heritage reserve', popis = '' WHERE ident_cely = 'HES-000180';
+UPDATE heslar SET razeni = 5, heslo = 'památková rezervace', heslo_en = 'heritage reserve', popis = '' WHERE ident_cely = 'HES-000180';
 UPDATE heslar SET razeni = 6, heslo = 'raný středověk', heslo_en = 'Early Medieval', popis = '' WHERE ident_cely = 'HES-001162';
 UPDATE heslar SET razeni = 6, heslo = 'slunečno, oblačno', heslo_en = 'sunny, cloudy', popis = '' WHERE ident_cely = 'HES-000591';
 UPDATE heslar SET razeni = 6, heslo = 'výzkumná instituce', heslo_en = 'research organisation', popis = '' WHERE ident_cely = 'HES-001131';
@@ -1230,7 +1234,6 @@ UPDATE heslar SET razeni = 7, heslo = 'podorničí/podloží', heslo_en = 'subso
 UPDATE heslar SET razeni = 7, heslo = 'ruština', heslo_en = 'Russian', zkratka = 'RU', popis = '' WHERE ident_cely = 'HES-000173';
 UPDATE heslar SET razeni = 7, heslo = 'slunečno, oblačno, zataženo', heslo_en = 'sunny, cloudy, overcast', popis = '' WHERE ident_cely = 'HES-000592';
 UPDATE heslar SET razeni = 7, heslo = 'středověk', heslo_en = 'Medieval', popis = '' WHERE ident_cely = 'HES-001163';
-UPDATE heslar SET razeni = 7, heslo = 'UNESCO', heslo_en = 'UNESCO', popis = '' WHERE ident_cely = 'HES-000181';
 UPDATE heslar SET razeni = 70, heslo = 'areál těžby', heslo_en = 'extracting site', popis = '' WHERE ident_cely = 'HES-000089';
 UPDATE heslar SET razeni = 70, heslo = 'areál těžby', heslo_en = 'extracting site', popis = 'areál těžby surovin ' WHERE ident_cely = 'HES-000032';
 UPDATE heslar SET razeni = 70, heslo = 'bez okolností', heslo_en = 'unknown context', popis = '' WHERE ident_cely = 'HES-001062';
