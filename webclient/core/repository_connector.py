@@ -110,6 +110,7 @@ class FedoraRequestType(Enum):
     GET_BINARY_FILE_CONTENT_THUMB_LARGE = 35
     UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE = 36
     GET_TOMBSTONE = 37
+    CHANGE_IDENT_CONNECT_RECORDS_5 = 38
 
 
 class FedoraRepositoryConnector:
@@ -194,7 +195,8 @@ class FedoraRepositoryConnector:
         elif request_type in (FedoraRequestType.RECORD_DELETION_ADD_MARK,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4):
             return f"{base_url}/model/deleted/member"
-        elif request_type in (FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2):
+        elif request_type in (FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5):
             if ident_cely:
                 return f"{base_url}/record/{ident_cely}"
             else:
@@ -303,7 +305,8 @@ class FedoraRepositoryConnector:
         elif request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
                               FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE,
                               FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY,
-                              FedoraRequestType.CONNECT_DELETED_RECORD_3, FedoraRequestType.CONNECT_DELETED_RECORD_4):
+                              FedoraRequestType.CONNECT_DELETED_RECORD_3, FedoraRequestType.CONNECT_DELETED_RECORD_4,
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5):
             response = requests.delete(url, headers=headers, auth=auth)
         elif request_type in (FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
@@ -798,9 +801,10 @@ class FedoraRepositoryConnector:
                f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}> ."
         url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, ident_cely=ident_cely_old)
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, headers=headers, data=data)
-        
-        # ZDE DOPLNIT VOLÁNÍ: curl -u [user]:[heslo] -X DELETE "{base_url}/AMCR/record/{ident_cely_old}"
-        
+
+        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5, ident_cely=ident_cely_old)
+        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5)
+
         logger.debug("core_repository_connector.record_ident_change.end", extra={"ident_cely": self.record.ident_cely,
                                                                                  "ident_cely_old": ident_cely_old,
                                                                                  "transaction": self.transaction_uid})
