@@ -1,5 +1,3 @@
-import random
-import string
 from typing import Union, Optional
 
 from distlib.util import cached_property
@@ -217,10 +215,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         from core.repository_connector import FedoraTransaction
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
-        elif fedora_transaction is None and self.active_transaction is None:
-            raise ValueError("No Fedora transaction")
-        if not isinstance(fedora_transaction, FedoraTransaction):
-            raise ValueError("fedora_transaction must be a FedoraTransaction class object")
+        elif ((fedora_transaction is None and self.active_transaction is None)
+              or not isinstance(fedora_transaction, FedoraTransaction)):
+            # Handling log-in page
+            return
         logger.debug("uzivatel.models.User.save_metadata.start",
                      extra={"transaction": fedora_transaction.uid, "ident_cely": self.ident_cely})
         from core.repository_connector import FedoraRepositoryConnector

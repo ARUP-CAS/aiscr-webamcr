@@ -959,6 +959,7 @@ def smazat_spolupraci(request, pk):
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
         spoluprace.active_transaction = FedoraTransaction()
+        spoluprace.close_active_transaction_when_finished = True
         resp1 = spoluprace.delete()
         if resp1:
             logger.info(
