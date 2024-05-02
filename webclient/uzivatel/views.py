@@ -198,16 +198,17 @@ class UserLogoutView(LogoutView):
     """
     Třída pohledu pro odhlášení uživatele, kvůli zobrazení info o logoutu
     """
-    def dispatch(self, request, *args, **kwargs):
-        if request.GET.get("autologout") == "true":
+    def post(self, request, *args, **kwargs):
+        if request.POST.get("logout_type") == "autologout":
+            logger.debug('message added')
             messages.add_message(
                 self.request, messages.SUCCESS, AUTOLOGOUT_AFTER_LOGOUT
             )
-        if request.GET.get("maintenance_logout") == "true":
+        if request.POST.get("logout_type") == "maintenance":
             messages.add_message(
                 self.request, messages.SUCCESS, MAINTENANCE_AFTER_LOGOUT
             )
-        return super().dispatch(request, *args, **kwargs)
+        return super().post(request, *args, **kwargs)
 
 
 class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
