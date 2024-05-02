@@ -322,7 +322,8 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
                         "presnost": str(dj.pian.presnost.zkratka),
                         "pian_ident_cely": str(dj.pian.ident_cely),
                         "color": 'gold' if akce_ident_cely == dj.ident_cely  else  'green',
-                        "bbox" : str(bod_ku.bbox) if dj.typ.id==TYP_DJ_KATASTR else ""
+                        "bbox" : str(bod_ku.bbox) if dj.typ.id==TYP_DJ_KATASTR else "",
+                        "DJ_ident_cely" : dj.ident_cely_safe,
                     }) 
 
         if len(pians)==0:    
