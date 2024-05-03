@@ -792,10 +792,10 @@ def vratit(request, ident_cely):
             projekt = None
             if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
                 projekt = az.akce.projekt
-                projekt.active_transaction = fedora_trasnaction
             # BR-A-3
             if az.stav == AZ_STAV_ODESLANY and projekt is not None:
                 #  Return also project from the states P6 or P5 to P4
+                projekt.active_transaction = fedora_trasnaction
                 projekt_stav = projekt.stav
                 logger.debug("arch_z.views.vratit.valid", extra={"ident": ident_cely, "stav": projekt.stav})
                 if projekt_stav == PROJEKT_STAV_UZAVRENY:

@@ -73,7 +73,7 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
                         "transaction": getattr(fedora_transaction, "uid", None)})
     if not instance.suppress_signal:
         if instance.close_active_transaction_when_finished:
-            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, True))
+            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
         else:
             instance.save_metadata(fedora_transaction)
         send_deactivation_email(sender, instance, **kwargs)

@@ -78,7 +78,7 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
         fedora_transaction = instance.active_transaction
         close_transaction = instance.close_active_transaction_when_finished
         if close_transaction:
-            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, True))
+            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
         else:
             instance.save_metadata(fedora_transaction)
         logger.debug("dokument.signals.dokument_save_metadata.done",
