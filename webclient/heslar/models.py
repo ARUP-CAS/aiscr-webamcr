@@ -78,10 +78,9 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     def save(self, *args, **kwargs):
         from core.repository_connector import FedoraRepositoryConnector
-        if (not self._state.adding or
-                FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "heslar")):
-            super().save(*args, **kwargs)
-        else:
+        super().save(*args, **kwargs)
+        if (self._state.adding and
+                not FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "heslar")):
             raise ValidationError(_("heslar.models.Heslar.save.check_container_deleted_or_not_exists.invalid"))
 
 
