@@ -1506,7 +1506,7 @@ def odeslat(request, ident_cely):
         logger.debug("dokument.views.odeslat.sucess")
         dokument.close_active_transaction_when_finished = True
         dokument.save()
-        return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
+        return JsonResponse({"redirect": get_detail_json_view(dokument.ident_cely)})
     else:
         warnings = dokument.check_pred_odeslanim()
         if warnings:
