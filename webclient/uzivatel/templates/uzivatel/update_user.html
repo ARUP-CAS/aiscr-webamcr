@@ -27,7 +27,9 @@
                 <hr class="mt-0"/>
                 <ul>
                     {% for item in sign_in_history %}
-                        <li style="color: #6c757d;" class="small">{{ item.last_login }}</li>
+                        <li style="color: #6c757d;" class="small">{{ item.prihlaseni_datum_cas }}
+                          ({% trans "uzivatel.templates.updateUser.ip_address" %} {{ item.ip_adresa }})
+                        </li>
                     {% endfor %}
                 </ul>
                 <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{% trans "uzivatel.templates.updateUser.submitButton" %}</button>
