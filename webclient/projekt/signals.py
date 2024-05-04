@@ -1,5 +1,7 @@
 import logging
 
+from cacheops import invalidate_model
+
 from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
 from core.models import SouborVazby
 from core.repository_connector import FedoraTransaction
@@ -72,6 +74,7 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     if instance.soubory and instance.soubory.soubory.exists():
         raise Exception(_("projekt.signals.projekt_pre_delete.cannot_delete"))
     fedora_transaction = instance.active_transaction
+    invalidate_model(Projekt)
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
     if instance.soubory and instance.soubory.pk:
@@ -92,6 +95,7 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
     # When projekt is created using the "oznameni" page, the metadata are saved directly without celery
     logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})
+    invalidate_model(Projekt)
     fedora_transaction = instance.active_transaction
     if getattr(instance, "suppress_signal", False) is not True:
         instance.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)

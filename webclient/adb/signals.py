@@ -1,9 +1,11 @@
 import logging
 
+from cacheops import invalidate_model
 from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
 from adb.models import Adb, VyskovyBod
+from arch_z.models import ArcheologickyZaznam
 from core.repository_connector import FedoraTransaction
 
 logger = logging.getLogger(__name__)
@@ -13,6 +15,7 @@ logger = logging.getLogger(__name__)
 def adb_save_metadata(sender, instance: Adb, created, **kwargs):
     logger.debug("adb.signals.adb_save_metadata.start",
                  extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal})
+    invalidate_model(ArcheologickyZaznam)
     if not instance.suppress_signal:
         fedora_transaction: FedoraTransaction = instance.active_transaction
         if instance.tracker.changed():
@@ -42,6 +45,7 @@ def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
 @receiver(pre_delete, sender=Adb)
 def adb_delete_repository_container(sender, instance: Adb, **kwargs):
     logger.debug("adb.signals.adb_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
+    invalidate_model(ArcheologickyZaznam)
     fedora_transaction = instance.active_transaction
     instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
     instance.record_deletion(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)

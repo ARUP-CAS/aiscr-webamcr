@@ -1,5 +1,6 @@
 import logging
 
+from cacheops import invalidate_model
 from django.db import transaction
 
 from core.constants import SAMOSTATNY_NALEZ_RELATION_TYPE
@@ -35,6 +36,7 @@ def create_dokument_vazby(sender, instance, **kwargs):
 @receiver(post_save, sender=SamostatnyNalez)
 def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, **kwargs):
     logger.debug("pas.signals.save_metadata_samostatny_nalez.start", extra={"ident_cely": instance.ident_cely})
+    invalidate_model(SamostatnyNalez)
     fedora_transaction = instance.active_transaction
     if (created or instance.initial_pristupnost != instance.pristupnost) and instance.projekt:
         instance.projekt.save_metadata(fedora_transaction)
@@ -52,6 +54,7 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
 def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **kwargs):
     logger.debug("pas.signals.dokument_delete_container_soubor_vazby.start",
                  extra={"ident_cely": instance.ident_cely})
+    invalidate_model(SamostatnyNalez)
     fedora_transaction = instance.active_transaction
     if instance.projekt:
         instance.projekt.save_metadata(fedora_transaction)
@@ -70,6 +73,7 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
 @receiver(post_save, sender=UzivatelSpoluprace)
 def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.save_uzivatel_spoluprce.start", extra={"pk": instance.pk})
+    invalidate_model(UzivatelSpoluprace)
     fedora_transaction = instance.active_transaction
     instance.vedouci.save_metadata(fedora_transaction)
     instance.spolupracovnik.save_metadata(fedora_transaction,
@@ -80,6 +84,7 @@ def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
 @receiver(pre_delete, sender=UzivatelSpoluprace)
 def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.start", extra={"pk": instance.pk})
+    invalidate_model(UzivatelSpoluprace)
     Historie.save_record_deletion_record(record=instance)
     fedora_transaction = instance.active_transaction
     instance.vedouci.save_metadata(fedora_transaction)

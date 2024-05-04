@@ -159,8 +159,9 @@ def organizace_delete_repository_container(sender, instance: Organizace, **kwarg
     logger.debug("uzivatel.signals.organizace_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
 
+
 @receiver(user_logged_in)
 def log_user_signin(sender, user, request, **kwargs):
     # Get the IP address from the request object
     ip_address = request.META.get('REMOTE_ADDR', None)
-    UzivatelPrihlaseniLog.objects.create(user=user, ip_address=ip_address)
+    UzivatelPrihlaseniLog.objects.create(user=user, ip_adresa=ip_address)
