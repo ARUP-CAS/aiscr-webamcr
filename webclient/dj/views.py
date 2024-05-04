@@ -136,7 +136,8 @@ def detail(request, typ_vazby, ident_cely):
         if pian_db is not None and (dj.pian is None or dj.pian.pk != pian_db.pk):
             logger.debug("dj.views.detail.changed_or_removed_pian", extra={"ident_cely": dj.ident_cely})
             pian_db.update_all_azs = False
-            pian_db.save()
+            if dj.typ != Heslar.objects.get(id=TYP_DJ_KATASTR):
+                pian_db.save()
     else:
         logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors,
                                                                    "ident_cely": dj.ident_cely})
