@@ -4,6 +4,7 @@ from io import BytesIO
 import pandas
 import redis
 import simplejson as json
+from cacheops import cache, CacheMiss
 from django.db.models import RestrictedError
 from django_tables2.export import TableExport
 

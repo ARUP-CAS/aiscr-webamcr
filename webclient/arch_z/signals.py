@@ -2,6 +2,7 @@ import inspect
 import logging
 from typing import Optional
 
+from cacheops import invalidate_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
@@ -44,6 +45,8 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
     logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"record_pk": instance.pk})
+
+    invalidate_model(ArcheologickyZaznam)
     fedora_transaction = instance.active_transaction
     if not instance.suppress_signal:
         try:
@@ -127,6 +130,7 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
     """
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.start",
                  extra={"record_ident_cely": instance.ident_cely})
+    fedora_transaction = instance.active_transaction
     try:
         if instance.akce and instance.akce.projekt is not None:
             instance.akce.projekt.save_metadata(fedora_transaction)
@@ -172,6 +176,7 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     logger.debug("arch_z.signals.delete_externi_odkaz_repository_container.start",
                  extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z})
     fedora_transaction = instance.active_transaction
+    invalidate_model(ArcheologickyZaznam)
 
     def save_metadata(inner_close_transaction=False):
         if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
