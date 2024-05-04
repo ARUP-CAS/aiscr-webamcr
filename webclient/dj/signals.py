@@ -1,11 +1,13 @@
 import logging
 
+from cacheops import invalidate_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
 
+from arch_z.models import ArcheologickyZaznam
 from core.constants import PIAN_NEPOTVRZEN
 from core.repository_connector import FedoraTransaction
 from dj.models import DokumentacniJednotka
@@ -28,6 +30,7 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
         logger.debug("dj.signals.save_dokumentacni_jednotka.suppress_signal",
                      extra={"ident_cely": instance.ident_cely})
         return
+    invalidate_model(ArcheologickyZaznam)
     fedora_transaction: FedoraTransaction = instance.active_transaction
     close_transaction = instance.close_active_transaction_when_finished
     if created and instance.typ.id == TYP_DJ_KATASTR and instance.pian is None:
@@ -94,6 +97,7 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
     fedora_transaction = instance.active_transaction
     pian: Pian = instance.pian
     save_pian_metadata = False
+    invalidate_model(ArcheologickyZaznam)
     if not pian:
         logger.debug("dj.signals.delete_dokumentacni_jednotka.no_pian", extra={"ident_cely": instance.ident_cely})
     else:
