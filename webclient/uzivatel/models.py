@@ -38,7 +38,6 @@ from heslar.hesla import HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.models import Heslar
 from services.notfication_settings import notification_settings
 from uzivatel.managers import CustomUserManager
-from simple_history.models import HistoricalRecords
 
 import logging
 
@@ -76,7 +75,6 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     telefon = models.CharField(
         max_length=100, blank=True, null=True, validators=[validate_phone_number], db_index=True
     )
-    history = HistoricalRecords()
     notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user',
                                                 db_table='auth_user_notifikace_typ',
                                                 limit_choices_to={'ident_cely__icontains': 'S-E-'},
@@ -282,6 +280,12 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     
     def get_create_org(self):
         return ()
+
+
+class UzivatelPrihlaseniLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    prihlaseni_datum_cas = models.DateTimeField(auto_now_add=True)
+    ip_adresa = models.CharField(max_length=45)
 
 
 class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
