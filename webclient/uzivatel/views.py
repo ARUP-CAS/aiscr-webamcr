@@ -43,7 +43,7 @@ from core.repository_connector import FedoraTransaction
 from historie.models import Historie
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
     UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
-from uzivatel.models import Osoba, User, UserNotificationType
+from uzivatel.models import Osoba, User, UserNotificationType, UzivatelPrihlaseniLog
 from core.views import PermissionFilterMixin
 from core.models import Permissions as p, check_permissions
 from services.mailer import Mailer
@@ -229,7 +229,8 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         context["form"] = self.form_class(instance=self.request.user)
         context["form_read_only"] = AuthReadOnlyUserChangeForm(instance=self.request.user, prefix="ro_")
         context["form_password"] = UpdatePasswordSettings(instance=self.request.user, prefix="pass")
-        context["sign_in_history"] = self.get_object().history.all()[:5]
+        context["sign_in_history"] = (UzivatelPrihlaseniLog.objects.filter(user=self.request.user)
+                                      .order_by("-prihlaseni_datum_cas")[:5])
         context["form_notifications"] = NotificationsForm(instance=self.request.user)
         context["show_edit_notifikace"] = check_permissions(p.actionChoices.notifikace_projekty, self.request.user, self.request.user.ident_cely)
         return context
