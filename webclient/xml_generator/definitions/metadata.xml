@@ -506,7 +506,6 @@
     <amcr:popis xml:lang="cs">sídlištní aktivita</amcr:popis>
     <amcr:popis_en xml:lang="en">settlement activity</amcr:popis_en>
     <amcr:zkratka xml:lang="cs">síd</amcr:zkratka>
-    <amcr:zkratka_en xml:lang="en">set</amcr:zkratka_en>
     <amcr:razeni>1</amcr:razeni>
     <amcr:hierarchie_vyse>
       <amcr:id>hier-1</amcr:id>

@@ -34,7 +34,6 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
     zkratka = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("heslar.models.Heslar.zkratka"))
     heslo_en = models.CharField(max_length=255, verbose_name=_("heslar.models.Heslar.heslo_en"))
     popis_en = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.popis_en"))
-    zkratka_en = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("heslar.models.Heslar.zkratka_en"))
     razeni = models.IntegerField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.razeni"))
 
     ident_prefix = "HES"
@@ -55,7 +54,6 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
         db_table = "heslar"
         unique_together = (
             ("nazev_heslare", "zkratka"),
-            ("nazev_heslare", "zkratka_en"),
             ("nazev_heslare", "heslo"),
             ("nazev_heslare", "heslo_en"),
         )
