@@ -1233,3 +1233,13 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
                         if os.path.isfile(abs_path):
                             ret.add(abs_path)
     return list(sorted(ret))
+
+
+def replace_last(source_string, old, new):
+    index = source_string.rfind(old)
+    if index != -1:
+        start_part = source_string[:index]
+        replace_part = source_string[index:index + len(old)].replace(old, new)
+        end_part = source_string[index + len(old):]
+        return start_part + replace_part + end_part
+    return source_string
