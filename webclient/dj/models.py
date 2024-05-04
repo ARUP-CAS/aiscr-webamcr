@@ -50,6 +50,7 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
     tracker = FieldTracker()
     active_transaction = None
     close_active_transaction_when_finished = False
+    suppress_signal = False
 
     class Meta:
         db_table = "dokumentacni_jednotka"

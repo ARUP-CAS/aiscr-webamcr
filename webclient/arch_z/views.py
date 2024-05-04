@@ -1050,6 +1050,10 @@ def smazat(request, ident_cely):
             az.close_active_transaction_when_finished = True
             az.deleted_by_user = request.user
             az.record_deletion(fedora_transaction)
+            for dj in az.dokumentacni_jednotky_akce.all():
+                dj: DokumentacniJednotka
+                dj.active_transaction = fedora_transaction
+                dj.delete()
             az.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)

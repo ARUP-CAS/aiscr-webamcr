@@ -314,7 +314,15 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2):
             response = requests.patch(url, auth=auth, headers=headers, data=data)
         extra["status_code"] = response.status_code
-        if request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
+
+        if request_type == FedoraRequestType.CONNECT_DELETED_RECORD_4:
+            extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
+                     "transaction": self.transaction_uid, "url": url}
+            if str(response.status_code)[0] == "2":
+                logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
+            else:
+                logger.warning("core_repository_connector._send_request.error", extra=extra)
+        elif request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
                                 FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
                                 FedoraRequestType.GET_LINK, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
                                 FedoraRequestType.GET_DELETED_LINK):

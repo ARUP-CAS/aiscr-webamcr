@@ -80,7 +80,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
         else:
             instance.save_metadata(fedora_transaction)
     logger.debug("arch_z.signals.create_arch_z_metadata.end", extra={"record_pk": instance.pk,
-                                                                     "transaction": fedora_transaction})
+                                                                     "transaction": fedora_transaction.uid})
 
 
 @receiver(post_save, sender=Akce)
