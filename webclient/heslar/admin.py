@@ -53,11 +53,11 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
     """
     Admin část pro správu modelu heslař.
     """
-    list_display = ("ident_cely", "nazev_heslare", "heslo", "zkratka", "heslo_en", "zkratka_en", "razeni")
+    list_display = ("ident_cely", "nazev_heslare", "heslo", "zkratka", "heslo_en", "razeni")
     fields = ("nazev_heslare", "ident_cely", "heslo",
-              "popis", "zkratka", "heslo_en", "popis_en", "zkratka_en", "razeni")
+              "popis", "zkratka", "heslo_en", "popis_en", "razeni")
     search_fields = ("ident_cely", "nazev_heslare__nazev", "heslo",
-                     "popis", "zkratka", "heslo_en", "popis_en", "zkratka_en", "razeni")
+                     "popis", "zkratka", "heslo_en", "popis_en", "razeni")
     list_filter = ("nazev_heslare",)
 
     def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
