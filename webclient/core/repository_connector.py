@@ -844,7 +844,20 @@ class FedoraRepositoryConnector:
             fedora_transaction = FedoraTransaction()
         record.active_transaction = fedora_transaction
         conn = FedoraRepositoryConnector(related_record, fedora_transaction)
-        file_path = os.path.join(storage_path, f"{record.pk}.txt")
+
+        def find_matching_file(directory, number):
+            for inner_file in os.listdir(directory):
+                filename, _ = os.path.splitext(inner_file)
+                if filename.isdigit() and int(filename) == number:
+                    return os.path.join(directory, inner_file)
+            return None
+
+        file_path = find_matching_file(storage_path, record.pk)
+        if file_path is None:
+            logger.warning("core_repository_connector.save_single_file_from_storage.file_not_found",
+                           extra={"record": record.pk, "storage_path": storage_path,
+                                  "transaction": fedora_transaction.uid})
+            return
         soubor_data = io.BytesIO()
         with open(file_path, 'rb') as file:
             content = file.read()
@@ -868,6 +881,11 @@ class FedoraRepositoryConnector:
         record.sha_512 = rep_bin_file.sha_512
         record.save()
         fedora_transaction.mark_transaction_as_closed()
+
+    @classmethod
+    def save_files_from_storage(cls, records: Union[list, range], storage_path: str) -> None:
+        for item in records:
+            cls.save_single_file_from_storage(item, storage_path)
 
 
 class FedoraTransactionQueueClosedError(Exception):
