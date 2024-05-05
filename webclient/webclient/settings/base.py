@@ -141,7 +141,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap4",
     "django_registration",
     "compressor",
-    "captcha",
+    "django_recaptcha",
     "widget_tweaks",
     "rosetta",
     "bs4",
