@@ -142,26 +142,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='uzivatel.usernotificationtype'),
         ),
         migrations.AddField(
-            model_name='historicaluser',
-            name='history_user',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AddField(
-            model_name='historicaluser',
-            name='history_vazba',
-            field=models.ForeignKey(blank=True, db_column='historie', db_constraint=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to='historie.historievazby'),
-        ),
-        migrations.AddField(
-            model_name='historicaluser',
-            name='organizace',
-            field=models.ForeignKey(blank=True, db_column='organizace', db_constraint=False, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='uzivatel.organizace'),
-        ),
-        migrations.AddField(
-            model_name='historicaluser',
-            name='osoba',
-            field=models.ForeignKey(blank=True, db_column='osoba', db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='uzivatel.osoba'),
-        ),
-        migrations.AddField(
             model_name='user',
             name='groups',
             field=models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.Group', verbose_name='groups'),
