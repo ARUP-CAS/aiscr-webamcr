@@ -2,10 +2,12 @@ import hashlib
 import inspect
 import io
 import logging
+import os
 import re
-import time
 from enum import Enum
 from io import BytesIO
+from os import path
+
 from PIL import Image
 from typing import Union, Optional
 
@@ -15,7 +17,7 @@ from django.conf import settings
 from pdf2image import convert_from_bytes
 from requests.auth import HTTPBasicAuth
 
-from core.utils import get_mime_type
+from core.utils import get_mime_type, replace_last
 from xml_generator.generator import DocumentGenerator
 
 logger = logging.getLogger(__name__)
@@ -829,6 +831,61 @@ class FedoraRepositoryConnector:
                 item.save()
                 self.migrate_binary_file(item, include_content=True, check_if_exists=False,
                                          ident_cely_old=ident_cely_old)
+
+    @classmethod
+    def save_single_file_from_storage(cls, record, storage_path: str, fedora_transaction=None) -> None:
+        from core.models import Soubor
+        from xml_generator.models import ModelWithMetadata
+        if isinstance(record, int):
+            record = Soubor.objects.get(pk=record)
+        record: Soubor
+        related_record: ModelWithMetadata = record.vazba.navazany_objekt
+        if not fedora_transaction:
+            fedora_transaction = FedoraTransaction()
+        record.active_transaction = fedora_transaction
+        conn = FedoraRepositoryConnector(related_record, fedora_transaction)
+
+        def find_matching_file(directory, number):
+            for inner_file in os.listdir(directory):
+                filename, _ = os.path.splitext(inner_file)
+                if filename.isdigit() and int(filename) == number:
+                    return os.path.join(directory, inner_file)
+            return None
+
+        file_path = find_matching_file(storage_path, record.pk)
+        if file_path is None:
+            logger.warning("core_repository_connector.save_single_file_from_storage.file_not_found",
+                           extra={"record": record.pk, "storage_path": storage_path,
+                                  "transaction": fedora_transaction.uid})
+            return
+        soubor_data = io.BytesIO()
+        with open(file_path, 'rb') as file:
+            content = file.read()
+            soubor_data.write(content)
+
+        mimetype = Soubor.get_mime_types(soubor_data)
+        mime_extensions = Soubor.get_file_extension_by_mime(soubor_data)
+        if len(mime_extensions) == 0:
+            return
+        file_name_extension = record.nazev.split(".")[-1].lower()
+        if file_name_extension not in mime_extensions:
+            new_name = replace_last(record.nazev, record.nazev.split(".")[-1], mime_extensions[0])
+            record.nazev = new_name
+        record.mimetype = mimetype
+        if record.repository_uuid:
+            rep_bin_file = conn.update_binary_file(record.nazev, "text/plain", soubor_data, record.repository_uuid)
+        else:
+            rep_bin_file = conn.save_binary_file(record.nazev, "text/plain", soubor_data)
+            record.path = rep_bin_file.url_without_domain
+        record.size_mb = rep_bin_file.size_mb
+        record.sha_512 = rep_bin_file.sha_512
+        record.save()
+        fedora_transaction.mark_transaction_as_closed()
+
+    @classmethod
+    def save_files_from_storage(cls, records: Union[list, range], storage_path: str) -> None:
+        for item in records:
+            cls.save_single_file_from_storage(item, storage_path)
 
 
 class FedoraTransactionQueueClosedError(Exception):
