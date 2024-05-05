@@ -3,14 +3,14 @@ psycopg2-binary==2.9.9
 simplejson==3.19.2
 django-crispy-forms==2.1
 crispy-bootstrap4
-django-recaptcha==3.0.0
+django-recaptcha==4.0.0
 django_registration==3.3
 django-filter==24.2
 django-tables2==2.6.0
 django-tables2-column-shifter==2.2.0
 django-compressor==4.4
 django-libsass==0.9 
-django-autocomplete-light==3.9.8rc29
+django-autocomplete-light==3.11.0
 django-widget-tweaks==1.5.0
 tablib[all]==3.6.1
 distlib==0.3.8
