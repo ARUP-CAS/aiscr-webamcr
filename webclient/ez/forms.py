@@ -58,7 +58,6 @@ class ExterniZdrojForm(forms.ModelForm):
             "organizace",
             "link",
             "poznamka",
-            "sysno",
         )
 
         labels = {
@@ -79,7 +78,6 @@ class ExterniZdrojForm(forms.ModelForm):
             "organizace": _("ez.forms.externiZdrojForm.organizace.label"),
             "link": _("ez.forms.externiZdrojForm.link.label"),
             "poznamka": _("ez.forms.externiZdrojForm.poznamka.label"),
-            "sysno": _("ez.forms.externiZdrojForm.sysno.label"),
         }
 
         widgets = {
@@ -106,7 +104,6 @@ class ExterniZdrojForm(forms.ModelForm):
             "organizace": forms.TextInput(),
             "link": forms.TextInput(),
             "poznamka": forms.TextInput(),
-            "sysno": forms.TextInput(),
         }
 
         help_texts = {
@@ -127,7 +124,6 @@ class ExterniZdrojForm(forms.ModelForm):
             "organizace": _("ez.forms.externiZdrojForm.organizace.tooltip"),
             "link": _("ez.forms.externiZdrojForm.link.tooltip"),
             "poznamka": _("ez.forms.externiZdrojForm.poznamka.tooltip"),
-            "sysno": _("ez.forms.externiZdrojForm.sysno.tooltip"),
         }
 
     def __init__(
@@ -181,7 +177,6 @@ class ExterniZdrojForm(forms.ModelForm):
                 Div("organizace", css_class="col-sm-2"),
                 Div("link", css_class="col-sm-8"),
                 Div("poznamka", css_class="col-sm-10"),
-                Div("sysno", css_class="col-sm-2"),
                 css_class="row",
             ),
         )
