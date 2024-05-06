@@ -86,6 +86,7 @@ CACHEOPS = {
     "heslar.*": {"ops": (), "timeout": 60*60},
     "dokument.Dokument": {"ops": (), "timeout": 60*5},
     "pas.SamostatnyNalez": {"ops": (), "timeout": 60*5},
+    "core.Permissions": {"ops": (), "timeout": 60*60},
 }
 
 SECRET_KEY = get_secret("SECRET_KEY")
@@ -408,6 +409,10 @@ LOGGING = {
             "level": "DEBUG",
         },
         "xml_generator": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+        },
+        "healthcheck": {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },

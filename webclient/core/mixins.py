@@ -1,7 +1,10 @@
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
 import logging
+
+from django.http import HttpResponseForbidden
 
 logger = logging.getLogger(__name__)
 
@@ -24,3 +27,13 @@ class ManyToManyRestrictedClassMixin:
                                    extra={"err": err})
         attr_list = [attr for attr in attr_list if getattr(self, attr).all().count() > 0]
         return len(attr_list) > 0
+
+class IPWhitelistMixin:
+    def dispatch(self, request, *args, **kwargs):
+        ALLOWED_IPS = settings.ALLOWED_HOSTS + ["127.0.0.1"]
+        client_ip = request.META.get('REMOTE_ADDR', '')  # Get client IP
+        if client_ip not in ALLOWED_IPS and "*" not in ALLOWED_IPS:  # Check if IP is allowed
+            logger.error("healthcheck.views.IPWhitelistMixin",
+                 extra={"client_ip": client_ip})
+            return HttpResponseForbidden("Access denied: Your IP is not allowed.")  # Deny access
+        return super().dispatch(request, *args, **kwargs)  # Otherwise, proceed with the view

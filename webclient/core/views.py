@@ -12,6 +12,7 @@ from rosetta.conf import settings as rosetta_settings
 from rosetta import get_version as get_rosetta_version
 from rosetta.access import can_translate_language
 from polib import pofile
+from django_prometheus.exports import ExportToDjangoView
 
 import pandas
 from PIL import Image
@@ -90,6 +91,7 @@ from heslar.hesla import HESLAR_PRISTUPNOST
 
 from heslar.models import Heslar
 from dj.models import DokumentacniJednotka
+from .mixins import IPWhitelistMixin
 from .connectors import RedisConnector
 from .exceptions import ZaznamSouborNotmatching
 from .models import Permissions, PermissionsSkip
@@ -1356,3 +1358,8 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
                             self.request, messages.ERROR, TRANSLATION_DELETE_ERROR
                         )
         return JsonResponse({"redirect": reverse('rosetta-file-list', kwargs={'po_filter': 'project'})})
+    
+    
+class PrometheusMetricsView(IPWhitelistMixin, View):
+    def get(self, request, *args, **kwargs):
+        return ExportToDjangoView(request)
