@@ -14,14 +14,10 @@
 		global_map_can_edit=false;
 	</script>
 		<!-- Map imports -->
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-		integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-		crossorigin=""/>
-	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-		integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-		crossorigin="">
+    <link rel="stylesheet" href="{% static 'js/Leaflet1.9.4/leaflet.css' %}"/>
+    <script src="{% static 'js/Leaflet1.9.4/leaflet.js' %}"></script>
 	</script>
-	<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+  <script src="{% static 'js/Leaflet.EasyButton2.4.0/easy-button.js' %}"></script>
   <script src="{% static 'coordTransform.js' %}"></script>
   <script src="{% static 'heatmap/heatmap.js' %}"></script>
   <script src="{% static 'heatmap/leaflet-heatmap.js' %}"></script>
@@ -29,10 +25,9 @@
   <link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
   <link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
   <!--Leaflet FullScreen-->
-  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
-  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css'
-        rel='stylesheet'/>
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+  <script src='{% static 'js/Leaflet.fullscreen1.0.1/Leaflet.fullscreen.min.js' %}'></script>
+  <link href='{% static 'js/Leaflet.fullscreen1.0.1/leaflet.fullscreen.css' %}'rel='stylesheet'/>
+  <link rel="stylesheet" href="{% static 'js/Leaflet.EasyButton2.4.0/easy-button.css' %}">
 	<!-- Date picker imports --> 
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
