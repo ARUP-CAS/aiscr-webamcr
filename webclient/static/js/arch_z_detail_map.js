@@ -633,7 +633,7 @@ function onMarkerClick(ident_cely,e) {
                 let link='<a href="/id/' + i.dj + '" target="_blank">' + i.dj + '</a></br>'
                 text = text + link
             } catch(e){
-                console.log("err:"+e)
+                addLogText("err:"+e)
             }
         })
         if(text=="") text="--"
@@ -646,7 +646,7 @@ var clickOnMap=(e)=>{
     if(global_map_can_grab_geom_from_map.length
         && global_map_can_grab_geom_from_map.includes('ku:')){
         if(getFiltrTypeIsKuSafe()){
-            console.log("Your zoom is: "+map.getZoom())
+            addLogText("Your zoom is: "+map.getZoom())
 
             var [x1, x2] = amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
 
@@ -656,7 +656,7 @@ var clickOnMap=(e)=>{
             if (typeof global_csrftoken !== 'undefined') {
                 xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
             } else {
-                console.log("neni X-CSRFToken token")
+                addLogText("neni X-CSRFToken token")
             }
             xhr.onload = function () {
                 rs = JSON.parse(this.responseText)
@@ -744,27 +744,21 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
             }
         })
     }
-
+    if(geom.options.icon) geom.options.iconOld=geom.options.icon;
+    if(geom.options.color)geom.options.colorOld=geom.options.color;
     geom.on('mouseover', function() {
         if(!global_map_can_edit){
-            if (geom instanceof L.Marker){
-                this.options.iconOld=this.options.icon;
+            if (geom instanceof L.Marker){                
                 if(this.options.changeIcon){
                     this.setIcon(pinIconYellowHW);
-                    if(this.polyline){
-                        this.polyline.options.iconOld=this.polyline.options.color;
-                        this.polyline.setStyle({color: 'gold'});
-                    }
+                    if(this.polyline) this.polyline.setStyle({color: 'gold'});
+                  
                 }else{
                     this.setIcon(pinIconYellowPoint);
                 }
-            } else {
-                this.options.iconOld=this.options.color;
+            } else {                
                 this.setStyle({color: 'gold'});
-                if(this.marker){
-                    this.marker.options.iconOld=this.marker.options.icon;
-                    this.marker.setIcon(pinIconYellowHW);
-                }
+                if(this.marker) this.marker.setIcon(pinIconYellowHW);               
             }
         }
     });
@@ -773,13 +767,12 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
         if(!global_map_can_edit){
             if (geom instanceof L.Marker){
                 this.setIcon(this.options.iconOld);
-                if(this.polyline) this.polyline.setStyle({color:this.polyline.options.iconOld});
+                if(this.polyline) this.polyline.setStyle({color:this.polyline.options.colorOld});
 
             } else {
-                this.setStyle({color:this.options.iconOld});
+                this.setStyle({color:this.options.colorOld});
                 if(this.marker)this.marker.setIcon(this.marker.options.iconOld);
             }
-            delete this.options.iconOld;
         }
     })
 }
@@ -810,7 +803,7 @@ const addDJPian = (geom, layer, pian_ident_cely, st_text, presnost,color,DJ_iden
         .addTo(layer));
         if (st_text.includes("POLYGON")) {
             st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
-                coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]));
+                coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0].replace("(","")]));
             })
             polyline=L.polygon(coor, { color: color });
             mouseOverGeometry(polyline
@@ -932,7 +925,7 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost) => {
         x0 = 0.0;
         x1 = 0.0
         c0 = 0
-        //console.log(coor)
+        //addLogText(coor)
         for (const i of coor) {
             if(!(st_text.includes("POLYGON") && c0==coor.length-1)){
                 x0 = x0 + parseFloat(i[0])
@@ -1013,7 +1006,7 @@ function loadGeomToEdit(ident_cely) {
                 try {
                     content = layer.getTooltip().getContent();
                 } catch (eee) {
-                    // console.log(layer)
+                    // addLogText(layer)
                 }
             }
             if (content == ident_cely) {
@@ -1083,7 +1076,7 @@ function loadGeomToEdit(ident_cely) {
 var boundsLock = 0;
 
 //map.on('zoomend', function() {
-//    console.log("zoomed")
+//    addLogText("zoomed")
 //    switchMap(true)
 //});
 
@@ -1091,7 +1084,7 @@ var boundsLock = 0;
 
 map.on('moveend', function () {
     addLogText("drzim def.geom :" + global_map_element)
-    //console.log(ident_cely)
+    //addLogText(ident_cely)
     addLogText("arch_z_detail_map.moveend")
     switchMap(false)
 });
@@ -1117,7 +1110,7 @@ switchMap = function (overview = false) {
     const currentUrl = window.location.href;
     if (global_map_can_load_pians && (map.hasLayer(poi_all) || map.hasLayer(poi_sn))) {
         if (overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest) {
-            console.log("Change: " + northWest + "  " + southEast + " " + zoom);
+            addLogText("Change: " + northWest + "  " + southEast + " " + zoom);
             boundsLock = bounds;
             let xhr = new XMLHttpRequest();
             xhr.open('POST', '/mapa-pian-pas');
@@ -1165,7 +1158,7 @@ switchMap = function (overview = false) {
                                         }
                                     }
                                 }catch(e){
-                                    console.log("err2: "+e)
+                                    addLogText("err2: "+e)
                                 }
                             }
                         })
@@ -1188,14 +1181,14 @@ switchMap = function (overview = false) {
                             heatPoints.push({lat:parseFloat(geom[1]), lng:parseFloat(geom[0]), count:i.pocet});//chyba je to geome
                         })
                         heatLayer = new HeatmapOverlay( heatmapOptions); //= L.heatLayer(heatPoints, heatmapOptions);
-                        //console.log({max:maxHeat,data:heatPoints})
+                        //addLogText({max:maxHeat,data:heatPoints})
                         heatLayer.setData({max:maxHeat,data:heatPoints})
                         map.addLayer(heatLayer);
                         poi_pian.clearLayers();
                         poi_pian_dp.clearLayers();
                     }
                     map.spin(false);
-                } catch(e){map.spin(false);console.log(e)}
+                } catch(e){map.spin(false);addLogText(e)}
             };
         }
     } else if(!map.hasLayer(poi_all) && !map.hasLayer(poi_sn)){
@@ -1212,7 +1205,7 @@ function loadKatastry() {
     if (typeof global_csrftoken !== 'undefined') {
         xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
     } else {
-        console.log("neni X-CSRFToken token")
+        addLogText("neni X-CSRFToken token")
     }
     xhr.onload = function () {
         rs = JSON.parse(this.responseText)
@@ -1253,7 +1246,7 @@ function searchByAjax(text, callResponse) {
             type: 'GET',
             data: { text: text },
             dataType: 'json',
-            success: function (json) { items1 = json.suggestions;/*console.log("Vyhledany Obce");*/ }
+            success: function (json) { items1 = json.suggestions;/*addLogText("Vyhledany Obce");*/ }
         }),
         $.ajax({//okres
             url:
@@ -1261,11 +1254,11 @@ function searchByAjax(text, callResponse) {
             type: 'GET',
             data: { text: text },
             dataType: 'json',
-            success: function (json) { items2 = json.suggestions;/*console.log("Vyhledany Okresy");*/ }
+            success: function (json) { items2 = json.suggestions;/*addLogText("Vyhledany Okresy");*/ }
         }),
 
     ];
-    Promise.all(ajaxCall).then(() => {/*console.log("Vyhledani ukonceno");*/callResponse([...items2, ...items1]); })
+    Promise.all(ajaxCall).then(() => {/*addLogText("Vyhledani ukonceno");*/callResponse([...items2, ...items1]); })
 }
 
 //uložení editované geometrie do session pro případnou opravu
@@ -1368,7 +1361,7 @@ function loadSession(){
 
 //zobrazení pianů akce a zoom na ně
 function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,selected_dj){
-    console.log("show Choose: "+currentUrl+" "+selected_ku+ " "+selected_ident_cely+" <"+selected_dj+">")
+    addLogText("show Choose: "+currentUrl+" "+selected_ku+ " "+selected_ident_cely+" <"+selected_dj+">")
 
     let xhr = new XMLHttpRequest();
     xhr.open('POST', '/arch-z/mapa-zoom');
@@ -1376,7 +1369,7 @@ function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,sele
     if (typeof global_csrftoken !== 'undefined') {
         xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
     } else {
-        console.log("neni X-CSRFToken token")
+        addLogText("neni X-CSRFToken token")
     }
     xhr.onload = function () {
         const rs = JSON.parse(this.responseText);
@@ -1394,7 +1387,7 @@ function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,sele
                 if(global_blocked_by_query_geom==false) {                       
                     coor=addDJPian([pian.lat, pian.lng],  layer,pian.pian_ident_cely,pian.geom,pian.presnost,pian.color,pian.DJ_ident_cely);
                 }
-                if(pian.color=="gold" && pian.zoom!=12){
+                if(pian.color=="gold" && pian.zoom!=12 && global_blocked_by_query_geom==false){
                     bbox=L.polyline(coor).getBounds()
                     viewParam=map._getBoundsCenterZoom(bbox);
                     if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, 18)    ;                
@@ -1402,7 +1395,7 @@ function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,sele
                     zoomed=true;                 
                 }
         })
-        if(zoomed==false){
+        if(zoomed==false && global_blocked_by_query_geom==false){
             zoom_pian=rs.pians.find((element) => element.color=='gold' )
             if(zoom_pian==undefined)zoom_pian=rs.pians.find((element) => element.zoom!=12)
             if(zoom_pian==undefined)zoom_pian= rs.pians[0];
@@ -1426,11 +1419,15 @@ function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,sele
         } 
 
     } ;
-    selected_dj=selected_dj.split("/")[0];
+
+    selected_dj=selected_dj.trim();
+
+    if(selected_dj!='')ident=selected_dj;
+    else ident=selected_ident_cely
     xhr.send(JSON.stringify(
         {
             'cadastre': selected_ku,
-            'akce_ident_cely':selected_ident_cely+selected_dj,
+            'akce_ident_cely':ident,
         }))
 
 }
@@ -1463,7 +1460,7 @@ window.addEventListener("load", (event) => {
                 .addTo(poi_model)
             } catch(e){
                 control.removeLayer(poi_model);
-                console.log("Projekt nema geometrii")
+                addLogText("Projekt nema geometrii")
             }
         })
         map.spin(false);
