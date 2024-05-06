@@ -16,7 +16,6 @@ class Migration(migrations.Migration):
             name='ExterniZdroj',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('sysno', models.TextField(blank=True, null=True)),
                 ('nazev', models.TextField(blank=True, null=True)),
                 ('edice_rada', models.TextField(blank=True, null=True)),
                 ('sbornik_nazev', models.TextField(blank=True, null=True)),
