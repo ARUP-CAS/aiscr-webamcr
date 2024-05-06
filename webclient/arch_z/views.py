@@ -4,6 +4,7 @@ from io import BytesIO
 import pandas
 import redis
 import simplejson as json
+from cacheops import cache, CacheMiss
 from django.db.models import RestrictedError
 from django_tables2.export import TableExport
 
@@ -792,10 +793,10 @@ def vratit(request, ident_cely):
             projekt = None
             if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
                 projekt = az.akce.projekt
-                projekt.active_transaction = fedora_trasnaction
             # BR-A-3
             if az.stav == AZ_STAV_ODESLANY and projekt is not None:
                 #  Return also project from the states P6 or P5 to P4
+                projekt.active_transaction = fedora_trasnaction
                 projekt_stav = projekt.stav
                 logger.debug("arch_z.views.vratit.valid", extra={"ident": ident_cely, "stav": projekt.stav})
                 if projekt_stav == PROJEKT_STAV_UZAVRENY:
@@ -1050,6 +1051,10 @@ def smazat(request, ident_cely):
             az.close_active_transaction_when_finished = True
             az.deleted_by_user = request.user
             az.record_deletion(fedora_transaction)
+            for dj in az.dokumentacni_jednotky_akce.all():
+                dj: DokumentacniJednotka
+                dj.active_transaction = fedora_transaction
+                dj.delete()
             az.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)

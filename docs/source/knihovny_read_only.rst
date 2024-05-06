@@ -164,7 +164,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/bugov/django-auto-logout
    * - django-autocomplete-light
-     - 3.9.8rc29
+     - 3.11.0
      - MIT License
      - http://django-autocomplete-light.rtfd.org
    * - django-cacheops
@@ -224,7 +224,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://github.com/korfuri/django-prometheus
    * - django-recaptcha
-     - 3.0.0
+     - 4.0.0
      - BSD License
      - https://github.com/torchbox/django-recaptcha
    * - django-registration
@@ -235,10 +235,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.10.0
      - MIT License
      - https://github.com/mbi/django-rosetta
-   * - django-simple-history
-     - 3.5.0
-     - BSD License
-     - https://github.com/jazzband/django-simple-history
    * - django-tables2
      - 2.6.0
      - BSD License

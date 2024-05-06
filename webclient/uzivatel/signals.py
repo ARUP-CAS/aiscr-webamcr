@@ -1,5 +1,6 @@
 import logging
 
+from django.contrib.auth import user_logged_in
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed, pre_delete
@@ -10,7 +11,7 @@ from core.repository_connector import FedoraTransaction, FedoraRepositoryConnect
 from heslar.signals import get_or_create_transaction
 from historie.models import Historie
 from services.mailer import Mailer
-from uzivatel.models import Organizace, Osoba, User
+from uzivatel.models import Organizace, Osoba, User, UzivatelPrihlaseniLog
 from rest_framework.authtoken.models import Token
 from core.ident_cely import get_uzivatel_ident
 
@@ -73,7 +74,7 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
                         "transaction": getattr(fedora_transaction, "uid", None)})
     if not instance.suppress_signal:
         if instance.close_active_transaction_when_finished:
-            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, True))
+            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
         else:
             instance.save_metadata(fedora_transaction)
         send_deactivation_email(sender, instance, **kwargs)
@@ -157,3 +158,10 @@ def organizace_delete_repository_container(sender, instance: Organizace, **kwarg
     instance.record_deletion(fedora_transaction, close_transaction=True)
     logger.debug("uzivatel.signals.organizace_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
+
+
+@receiver(user_logged_in)
+def log_user_signin(sender, user, request, **kwargs):
+    # Get the IP address from the request object
+    ip_address = request.META.get('REMOTE_ADDR', None)
+    UzivatelPrihlaseniLog.objects.create(user=user, ip_adresa=ip_address)

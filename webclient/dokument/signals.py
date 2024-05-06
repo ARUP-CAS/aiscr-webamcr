@@ -1,5 +1,7 @@
 import logging
 
+from cacheops import invalidate_model
+
 from arch_z.models import ArcheologickyZaznam
 from core.constants import DOKUMENT_CAST_RELATION_TYPE, DOKUMENT_RELATION_TYPE
 from core.models import SouborVazby
@@ -25,6 +27,7 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
     fedora_transaction = instance.active_transaction
     logger.debug("dokument.signals.create_dokument_vazby.start",
                  extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
+    invalidate_model(Dokument)
     if instance.pk is None:
         logger.debug("dokument.signals.create_dokument_vazby.creating_history_for_dokument.create_history",
                      extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
@@ -61,6 +64,7 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
     Metóda se volá pred uložením dokument části.
     """
     logger.debug("dokument.signals.create_dokument_cast_vazby.start", extra={"record_pk": instance.pk})
+    invalidate_model(Dokument)
     if instance.pk is None:
         logger.debug("Creating child komponenty for dokument cast" + str(instance))
         k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
@@ -75,10 +79,11 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
                  extra={"ident_cely": instance.ident_cely, "record_pk": instance.pk,
                         "close_active_transaction_when_finished": instance.close_active_transaction_when_finished})
     if not instance.suppress_signal:
+        invalidate_model(Dokument)
         fedora_transaction = instance.active_transaction
         close_transaction = instance.close_active_transaction_when_finished
         if close_transaction:
-            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, True))
+            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
         else:
             instance.save_metadata(fedora_transaction)
         logger.debug("dokument.signals.dokument_save_metadata.done",

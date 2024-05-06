@@ -36,6 +36,16 @@
           }
         }
       }
+      &.app-logout {
+        button {
+          background: transparent;
+          border: 0;
+        }
+        .nav-link {
+          display: inline-block;
+
+        }
+      }
 
       &.app-pipe {
         margin-top: 8px !important;

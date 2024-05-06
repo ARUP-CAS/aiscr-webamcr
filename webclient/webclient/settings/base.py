@@ -78,15 +78,13 @@ redis_url = os.getenv("REDIS_URL", "redis:6379")
 CACHEOPS_REDIS = "redis://"+get_redis_pass()+redis_url
 
 CACHEOPS = {
-    "arch_z.Akce": {"ops": (), "timeout": 60*5},
-    "arch_z.ArcheologickyZaznam": {"ops": (), "timeout": 60*5},
-    "projekt.Projekt": {"ops": (), "timeout": 60*5},
-    "auth.*": {"ops": (), "timeout": 60*5},
-    "ez.ExterniZdroj": {(): "all", "timeout": 60*5},
-    "heslar.*": {"ops": (), "timeout": 60*60},
-    "dokument.Dokument": {"ops": (), "timeout": 60*5},
-    "pas.SamostatnyNalez": {"ops": (), "timeout": 60*5},
-    "core.Permissions": {"ops": (), "timeout": 60*60},
+    "arch_z.Akce": {"ops": (), "timeout": 60},
+    "arch_z.ArcheologickyZaznam": {"ops": (), "timeout": 60},
+    "projekt.Projekt": {"ops": (), "timeout": 60},
+    "ez.ExterniZdroj": {(): "all", "timeout": 60},
+    "dokument.Dokument": {"ops": (), "timeout": 60},
+    "pas.SamostatnyNalez": {"ops": (), "timeout": 60},
+  "core.Permissions": {"ops": (), "timeout": 60*60},
 }
 
 SECRET_KEY = get_secret("SECRET_KEY")
@@ -144,8 +142,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap4",
     "django_registration",
     "compressor",
-    "captcha",
-    "simple_history",
+    "django_recaptcha",
     "widget_tweaks",
     "rosetta",
     "bs4",
@@ -170,7 +167,6 @@ MIDDLEWARE = [
     "core.middleware.TestEnvPopupMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "simple_history.middleware.HistoryRequestMiddleware",
     "django_auto_logout.middleware.auto_logout",
     "django.middleware.locale.LocaleMiddleware",
     'django_prometheus.middleware.PrometheusAfterMiddleware',

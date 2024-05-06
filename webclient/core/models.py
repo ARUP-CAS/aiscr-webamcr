@@ -220,7 +220,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             "image/jpeg": ("jpeg", "jpg"),
             "image/png": ("png",),
             "image/tiff": ("tiff", "tif"),
-            "text/plain": ("txt",),
+            "text/plain": ("txt", "csv"),
             "application/pdf": ("pdf",),
             "text/csv": ("csv",),
             "application/zip": ("zip",),

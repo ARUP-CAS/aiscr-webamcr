@@ -1,10 +1,14 @@
 import logging
 
+from cacheops import invalidate_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
 
+from arch_z.models import ArcheologickyZaznam
+from core.constants import PIAN_NEPOTVRZEN
 from core.repository_connector import FedoraTransaction
 from dj.models import DokumentacniJednotka
 from heslar.models import RuianKatastr
@@ -21,31 +25,36 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
         Metóda pro vytvoření pianu z katastru arch záznamu.
         Metóda se volá po uložením DJ.
     """
-    logger.debug("dj.signals.create_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
+    logger.debug("dj.signals.save_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
+    if instance.suppress_signal:
+        logger.debug("dj.signals.save_dokumentacni_jednotka.suppress_signal",
+                     extra={"ident_cely": instance.ident_cely})
+        return
+    invalidate_model(ArcheologickyZaznam)
     fedora_transaction: FedoraTransaction = instance.active_transaction
     close_transaction = instance.close_active_transaction_when_finished
     if created and instance.typ.id == TYP_DJ_KATASTR and instance.pian is None:
-        logger.debug("dj.signals.create_dokumentacni_jednotka.not_localized")
+        logger.debug("dj.signals.save_dokumentacni_jednotka.not_localized")
         ruian_katastr: RuianKatastr = instance.archeologicky_zaznam.hlavni_katastr
         if ruian_katastr.pian is not None:
             pian = ruian_katastr.pian
             instance.pian = pian
             instance.close_active_transaction_when_finished = False
             instance.save()
-            logger.debug("dj.signals.create_dokumentacni_jednotka.finined",
+            logger.debug("dj.signals.save_dokumentacni_jednotka.finined",
                          extra={'dj_pk': instance.pk, "transaction": getattr(fedora_transaction, "uid", None)})
         else:
             try:
                 instance.pian = vytvor_pian(ruian_katastr, fedora_transaction)
                 instance.close_active_transaction_when_finished = False
                 instance.save()
-                logger.debug("dj.signals.create_dokumentacni_jednotka.finined",
+                logger.debug("dj.signals.save_dokumentacni_jednotka.finined",
                              extra={"dj_pk": instance.pk, "transaction": getattr(fedora_transaction, "uid", None)})
             except Exception as err:
-                logger.debug("dj.signals.create_dokumentacni_jednotka.not_created",
+                logger.debug("dj.signals.save_dokumentacni_jednotka.not_created",
                              extra={"err": err, "transaction": getattr(fedora_transaction, "uid", None)})
     elif instance.pian != instance.initial_pian:
-        logger.debug("dj.signals.create_dokumentacni_jednotka.update_pian", extra={
+        logger.debug("dj.signals.save_dokumentacni_jednotka.update_pian", extra={
             "pian_db": instance.initial_pian.ident_cely if instance.initial_pian else "None",
             "pian": instance.pian.ident_cely if instance.pian else "None",
             "transaction": fedora_transaction.uid
@@ -53,7 +62,18 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
         if instance.pian is not None:
             instance.pian.save_metadata(fedora_transaction)
         if instance.initial_pian is not None:
-            instance.initial_pian.save_metadata(fedora_transaction)
+            try:
+                instance.initial_pian.save_metadata(fedora_transaction)
+            except ObjectDoesNotExist as err:
+                logger.debug("dj.signals.save_dokumentacni_jednotka.initial_pian_not_exists",
+                             extra={"transaction": fedora_transaction.uid})
+        initial_pian: Pian = instance.initial_pian
+        pian_djs = DokumentacniJednotka.objects.filter(pian=initial_pian)
+        if pian_djs.count() < 2 and initial_pian.stav == PIAN_NEPOTVRZEN:
+            logger.debug("dj.signals.save_dokumentacni_jednotka.delete_initial_pian",
+                         extra={"transaction": fedora_transaction.uid, "pian": instance.pian.ident_cely})
+            initial_pian.active_transaction = fedora_transaction
+            initial_pian.delete()
 
     def arch_z_save_metadata(inner_close_transaction=False):
         instance.archeologicky_zaznam.save_metadata(fedora_transaction)
@@ -66,7 +86,7 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
             arch_z_save_metadata()
     elif close_transaction:
         transaction.on_commit(lambda: fedora_transaction.mark_transaction_as_closed())
-    logger.debug("dj.signals.create_dokumentacni_jednotka.end",
+    logger.debug("dj.signals.save_dokumentacni_jednotka.end",
                  extra={"transaction": getattr(fedora_transaction, "uid", None),
                         "close_transaction": instance.close_active_transaction_when_finished})
 
@@ -77,6 +97,7 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
     fedora_transaction = instance.active_transaction
     pian: Pian = instance.pian
     save_pian_metadata = False
+    invalidate_model(ArcheologickyZaznam)
     if not pian:
         logger.debug("dj.signals.delete_dokumentacni_jednotka.no_pian", extra={"ident_cely": instance.ident_cely})
     else:

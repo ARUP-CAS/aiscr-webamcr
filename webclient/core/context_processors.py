@@ -102,14 +102,11 @@ def auto_logout_client(request):
             ctx["IDLE_WARNING_TIME"] = mark_safe(options["IDLE_WARNING_TIME"])
 
         if options.get("REDIRECT_TO_LOGIN_IMMEDIATELY"):
-            next_url = request.COOKIES.get("next_url", "/")
-            ctx["redirect_to_login_immediately"] = mark_safe(
-                f"window.location.href = '/accounts/logout/?autologout=true&next={request.path}'"
-            )
+            ctx["redirect_to_login_immediately"] = 'logoutFunction'
+            ctx["extra_param"] = mark_safe({"logout_type":"autologout","next":request.path})
         else:
-            ctx["redirect_to_login_immediately"] = mark_safe(
-                "$('#time').html('%s');" % _("core.context_processors.autologout.expired.text")
-            )
+            ctx["redirect_to_login_immediately"] = 'showTimeToExpire'
+            ctx["extra_param"] = mark_safe(_("core.context_processors.autologout.expired.text"))
         ctx["logout_warning_text"] = mark_safe("AUTOLOGOUT_EXPIRATION_WARNING")
     else:
         cache_name = str(request.user.id) + "_maintenanteLogoutTime"
@@ -122,9 +119,8 @@ def auto_logout_client(request):
         until_logout = logout_time - datetime.now()
         ctx["seconds_until_idle_end"] = int(until_logout.total_seconds())
         ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5
-        ctx["redirect_to_login_immediately"] = mark_safe(
-            "window.location.href = '/accounts/logout/?maintenance_logout=true'"
-        )
+        ctx["redirect_to_login_immediately"] = 'logoutFunction'
+        ctx["extra_param"] = mark_safe({'logout_type':'maintenance','next':request.path} )
         ctx["logout_warning_text"] = mark_safe("MAINTENANCE_LOGOUT_WARNING")
         ctx["maintenance"] = mark_safe("true")
 

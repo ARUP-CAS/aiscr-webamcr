@@ -96,7 +96,6 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
             return self.komponenta_vazby.dokumentacni_jednotka.get_permission_object()
         else:
             return self.komponenta_vazby.casti_dokumentu.get_permission_object()
-    
 
 
 class KomponentaAktivita(ExportModelOperationsMixin("komponenta_aktivita"), models.Model):

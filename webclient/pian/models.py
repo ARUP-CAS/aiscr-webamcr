@@ -215,7 +215,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         sequence.sekvence += 1
         sequence.save()
         self.save()
-        self.record_ident_change(old_ident)
+        self.record_ident_change(old_ident, fedora_transaction=self.active_transaction)
 
     def set_vymezeny(self, user):
         """
