@@ -323,7 +323,6 @@
     <amcr:ident_cely>BIB-123456</amcr:ident_cely>
     <amcr:stav>1</amcr:stav>
     <amcr:typ id="HES-123456" xml:lang="cs">kniha</amcr:typ>
-    <amcr:sysno>9874-1</amcr:sysno>
     <amcr:autor id="OS-123456" poradi="1">Novák, Jan</amcr:autor>
     <amcr:nazev>Knížka</amcr:nazev>
     <amcr:edice_rada>To nejlepší z archeologie</amcr:edice_rada>
