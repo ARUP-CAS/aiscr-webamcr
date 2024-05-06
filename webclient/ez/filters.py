@@ -51,12 +51,6 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         distinct=True,
     )
 
-    sysno = CharFilter(
-        label=_("ez.filters.sysno.label"),
-        lookup_expr="icontains",
-        distinct=True,
-    )
-
     typ = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_EXTERNI_ZDROJ_TYP),
         label=_("ez.filters.typ.label"),
@@ -225,7 +219,6 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 Div(
                     Div("ident_cely", css_class="col-sm-2"),
-                    Div("sysno", css_class="col-sm-2"),
                     Div("typ", css_class="col-sm-2"),
                     Div("stav", css_class="col-sm-2"),
                     Div("autori", css_class="col-sm-2"),
