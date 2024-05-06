@@ -317,7 +317,45 @@ L.drawLocal = {
         }
     }
 };
+L.Draw.Polyline.include({
+_createMarker: function (latlng) {
+    var marker = new L.Marker(latlng, {
+        icon: this.options.icon,
+        zIndexOffset: this.options.zIndexOffset * 2
+    });
+    marker.setOpacity(0.6);
+    this._markerGroup.addLayer(marker);
 
+    return marker;
+},
+}
+);
+ L.Edit.PolyVerticesEdit.include({
+
+    _createMarker: function (latlng, index) {
+		// Extending L.Marker in TouchEvents.js to include touch.
+		var marker = new L.Marker.Touch(latlng, {
+			draggable: true,
+			icon: this.options.icon,
+		});
+        marker.setOpacity(0.6);
+		marker._origLatLng = latlng;
+		marker._index = index;
+
+		marker
+			.on('dragstart', this._onMarkerDragStart, this)
+			.on('drag', this._onMarkerDrag, this)
+			.on('dragend', this._fireEdit, this)
+			.on('touchmove', this._onTouchMove, this)
+			.on('touchend', this._fireEdit, this)
+			.on('MSPointerMove', this._onTouchMove, this)
+			.on('MSPointerUp', this._fireEdit, this);
+
+		this._markerGroup.addLayer(marker);
+
+		return marker;
+	},
+});
 
 
 var drawControl = new L.Control.Draw({
@@ -329,13 +367,24 @@ var drawControl = new L.Control.Draw({
                 color: '#e1e100', // Color the shape will turn when intersects
                 message: [map_translations['DrawError']] // '<strong>Oh snap!<strong> you can\'t draw that!' Message that will show when intersect
             },
-            shapeOptions: {
-                color: '#ba0d27'
-            }
+            shapeOptions: { color: '#ba0d27', },
+            icon: new L.DivIcon({
+                iconSize: new L.Point(12, 12),
+                className: 'leaflet-div-icon leaflet-editing-icon my-own-class'
+            })
         },
         // disable toolbar item by setting it to false
         polyline: {
-            shapeOptions: { color: '#ba0d27' }
+            allowIntersection: false,
+            drawError: {
+                color: '#e1e100', // Color the shape will turn when intersects
+                message: [map_translations['DrawError']] // '<strong>Oh snap!<strong> you can\'t draw that!' Message that will show when intersect
+            },
+            shapeOptions: { color: '#ba0d27' },
+            icon: new L.DivIcon({
+                iconSize: new L.Point(12, 12),
+                className: 'leaflet-div-icon leaflet-editing-icon my-own-class'
+            })
         },
         circle: false, // Turns off this drawing tool
         rectangle: false,
@@ -344,10 +393,25 @@ var drawControl = new L.Control.Draw({
         },
         circlemarker: false,
     },
+   
     edit: {
-        featureGroup: drawnItems, //REQUIRED!!
-        remove: true
-    }
+        featureGroup: drawnItems, // REQUIRED
+        remove: false,
+        edit: {
+          selectedPathOptions: {
+            color: '#ba0d27' ,         
+            fillColor: '#fe57a1',       
+          }
+        },      
+        poly: {
+          icon: new L.DivIcon({
+            iconSize: new L.Point(12, 12),
+            className: 'leaflet-div-icon leaflet-editing-icon my-custom-icon'
+          }),          
+          allowIntersection: false,
+         
+        }
+      }
 });
 
 
