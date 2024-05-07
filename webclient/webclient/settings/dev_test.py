@@ -23,3 +23,4 @@ DATABASES["default"]['TEST']={'MIGRATE': False}
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH = "/vol/web/selenium_test"  
 LOGGING["handlers"]["console"]["level"]="ERROR"
+SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']

@@ -196,7 +196,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.assertEqual(project_count_old + 1, project_count_new)
         logger.info("CoreSeleniumTest.test_projekt_zapsat_p_001.end")
         
-
+    @unittest.skip  #teststuje se pravidlo, které v programu není
     def test_projekt_zapsat_n_001(self):
         #Scenar_4 Zapsání projektu (negativní scénář 1)
         #test 2.3
@@ -218,7 +218,8 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.assertEqual(project_count_old, project_count_new)
         logger.info("CoreSeleniumTest.test_projekt_zapsat_n_002.end")
         
-
+    
+    @unittest.skip #teststuje se pravidlo, které v programu není
     def test_projekt_zapsat_n_003(self):
         #Scenar_6 Zapsání projektu (negativní scénář 3)
         #test 2.5

@@ -171,7 +171,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "X-C-L000000002")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_L000000002_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_X-C-L000000002-D01 > .card-header .material-icons")
-        self.ElementClick(By.LINK_TEXT, "Přidat komponentu")
+        self.ElementClick(By.LINK_TEXT, _("lokalita.templates.dj.djUpdate.moreActions.pridatKomponentu.label"))
         self.ElementClick(By.CSS_SELECTOR, "#div_id_obdobi .filter-option-inner-inner")        
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("úně")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.DOWN)

@@ -35,27 +35,25 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
 
         self.login()
         self.go_to_form()
-        #ArcheologickyZaznam.filter(ident_cely="C-202401502A")
-        count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202401502A").count()
-        #arch_z_count_old = Akce.objects.count()
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(By.XPATH, "//span[contains(.,\'"+_("projekt.models.projekt.states.zahajenVTerenu.label")+"\')]")
+        
+        count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202307816A").count()
+        
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202307816")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.LINK_TEXT, "C-202401502")   
-             
+        self.ElementClick(By.LINK_TEXT, "C-202307816")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
-
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")       
         self.ElementClick(By.CSS_SELECTOR, "#div_id_negativni_jednotka .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
         with Wait_for_page_load(self.driver):
-            self.ElementClick(By.ID, "newDjSubmitButton")        
+            self.ElementClick(By.ID, "newDjSubmitButton")            
         
-        self.assertNotEqual(self.driver.find_element(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401502A_D01 > strong"), None)
-        count_new=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202401502A").count()
+        self.assertNotEqual(self.driver.find_element(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202307816A_D01 > strong"), None)
+        count_new=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202307816A").count()
 
         self.assertEqual(count_old + 1, count_new)
         logger.info("AkcePridaniDokumentacniJednotky.test_pridani_dokumentacni_jednotky_p_001.end")
@@ -518,7 +516,7 @@ class AkceSamostatneAkce(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
         #self.driver.execute_script("window.scrollTo(0,0)")
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_X-C-9000000002A-D01 .btn-group:nth-child(1) .material-icons")
-        self.ElementClick(By.LINK_TEXT, "Přidat komponentu")
+        self.ElementClick(By.LINK_TEXT, _("arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatKomponentu.label"))
         self.ElementClick(By.CSS_SELECTOR, "#div_id_obdobi .btn")
         self.ElementClick(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control")
         #self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.DOWN)
@@ -559,7 +557,7 @@ class AkceSamostatneAkce(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
         #self.driver.execute_script("window.scrollTo(0,0)")
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_X-C-9000000002A-D01 .btn-group:nth-child(1) .material-icons")
-        self.ElementClick(By.LINK_TEXT, "Přidat komponentu")
+        self.ElementClick(By.LINK_TEXT, _("arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatKomponentu.label"))
         self.ElementClick(By.CSS_SELECTOR, "#div_id_obdobi .btn")
         self.ElementClick(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control")
         #self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.DOWN)

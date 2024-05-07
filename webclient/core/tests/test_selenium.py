@@ -167,7 +167,7 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
                 prod_cursor.close()
             if prod_conn is not None:
                 prod_conn.close()            
-            connection.connect()
+        connection.connect()
             
     
     def assertIn2(self, member1 ,member2, container, msg=None):
