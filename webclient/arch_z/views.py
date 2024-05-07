@@ -59,7 +59,7 @@ from core.repository_connector import FedoraRepositoryConnector, FedoraTransacti
 from core.utils import (
     get_all_pians_with_akce,
     get_dj_pians_centroid,
-    get_centre_from_akce,
+    get_pians_from_akce,
     get_heatmap_pian,
     get_heatmap_pian_density,
     get_message,
@@ -1251,25 +1251,17 @@ def post_akce2kat(request):
 
     if len(katastr_name) > 0:
         try:
-            bod, geom, presnost, zoom, pian_ident_cely, color = get_centre_from_akce(katastr, akce_ident_cely)
-            if len(str(bod)) > 0:
-                return JsonResponse(
+            pians = get_pians_from_akce(katastr, akce_ident_cely)            
+            return JsonResponse(
                     {
-                        "lat": str(bod[0]),
-                        "lng": str(bod[1]),
-                        "zoom": str(zoom),
-                        "geom": str(geom).split(";")[1].replace(", ", ",")
-                        if geom
-                        else None,
-                        "presnost": str(presnost) if geom else 4,
-                        "pian_ident_cely": str(pian_ident_cely),
-                        "color": str(color),
+                        "pians": pians,
+                        "count": len(pians),                        
                     },
                     status=200,
                 )
         except CannotFindCadasterCentre as err:
             logger.error("arch_z.views.post_akce2kat.error", extra={"err": err})
-            return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": "", "pian_ident_cely": ""}, status=200)
+            return JsonResponse({ "pians": [], "count": 0,    }, status=200)
 
 
 def get_history_dates(historie_vazby, request_user):

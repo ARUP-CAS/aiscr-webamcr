@@ -24,41 +24,18 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById("djMap").scrollIntoView();
-      let xhr = new XMLHttpRequest();
-              xhr.open('POST', '/arch-z/mapa-zoom');
-              xhr.setRequestHeader('Content-type', 'application/json');
-              if (typeof global_csrftoken !== 'undefined') {
-                  xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
-              } else {
-                  console.log("neni X-CSRFToken token")
-              }
-              xhr.onload = function () {
-                  rs = JSON.parse(this.responseText)
-                  if(rs.lat>0 || rs.zoom == 17){
-                    if(rs.lat>0){
-                      if(!global_blocked_by_query_geom){
-                        map.setView([rs.lat, rs.lng], rs.zoom)
-                      }
-                    }
-                    if (rs.zoom == 17) {
-                        if(!checkBlockedByQWuery() && !global_blocked_by_query_geom){
-                          drawnItems.clearLayers();
-                          addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,rs.pian_ident_cely,rs.geom,rs.presnost)
-                        }
-                    }
-                  } else{
-                        switchMap(false);
-                  }
-              };
-              xhr.send(JSON.stringify(
-                  {
-                      'cadastre': document.getElementById("main_cadastre_id").value,
-                      'akce_ident_cely': '{{ zaznam.ident_cely }}',
-                  }))
-
-
+                 
+                  const currentUrl = window.location.href;
+                 arch_select_perspective(
+                    currentUrl,
+                    document.getElementById("main_cadastre_id").value,
+                    '{{ zaznam.ident_cely }}',
+                    '{{ dj_ident_cely }}'
+                    )
+                    map_show_edit(true);  
+                  
         //show_form(`detail_pian_form_{{ pian_ident_cely}}`);
-        map_show_edit(true);
+      
         global_map_projekt_ident='{{ dj_ident_cely }}';
        // switchMap(true,'{{ pian_ident_cely}}')
     });
