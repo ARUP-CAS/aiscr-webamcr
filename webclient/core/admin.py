@@ -9,6 +9,7 @@ import io
 from bs4 import BeautifulSoup
 from polib import pofile
 import csv
+from cacheops import invalidate_model
 
 from django.contrib import admin
 from django.shortcuts import redirect
@@ -252,6 +253,7 @@ class PermissionAdmin(admin.ModelAdmin):
                 "opts": opts,
             }
         )
+        invalidate_model(Permissions)
         return TemplateResponse(
             request,
             "core/permission_import_form.html",
@@ -304,21 +306,24 @@ class PermissionAdmin(admin.ModelAdmin):
             url_list = pd.read_json(out.getvalue())
         url = "/" + str(row[0]) + "/" + str(row[1]) if row[0]!="core" else "/" + str(row[1])
         if url_list["url"].eq(url).any():
-            i = 0
-            row_result = list()
-            while i < 4:
-                row_result.append(self.save_permission(row, i))
-                i += 1
-            if all(i == True for i in row_result):
-                return "ALL OK"
+            if pd.isna(row[2]) or row[2] in Permissions.actionChoices.values:
+                i = 0
+                row_result = list()
+                while i < 4:
+                    row_result.append(self.save_permission(row, i))
+                    i += 1
+                if all(i == True for i in row_result):
+                    return "ALL OK"
+                else:
+                    results = []
+                    for idx, i in enumerate(row_result):
+                        if i == True:
+                            results.append(str(number_to_role[idx] + " OK"))
+                        else:
+                            results.append(str(number_to_role[idx] + " NOK"))
+                return results
             else:
-                results = []
-                for idx, i in enumerate(row_result):
-                    if i == True:
-                        results.append(str(number_to_role[idx] + " OK"))
-                    else:
-                        results.append(str(number_to_role[idx] + " NOK"))
-            return results
+                return "NOK action"
         else:
             return "NOK address"
 

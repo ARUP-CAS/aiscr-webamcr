@@ -82,4 +82,5 @@ urlpatterns = [
         views.TranslationFileSmazatBackup.as_view(),
         name="rosetta-smazat-file",
     ),
+    path("metrics", views.PrometheusMetricsView.as_view(), name="prometheus-django-metrics"),
 ]
