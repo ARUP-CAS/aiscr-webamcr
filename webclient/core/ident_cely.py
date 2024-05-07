@@ -343,7 +343,7 @@ def get_organizace_ident():
     """
     Metoda pro výpočet identu organizce.
     """
-    return  f"ORG-{get_next_sequence('osoba_ident_seq'):06}"
+    return  f"ORG-{get_next_sequence('organizace_ident_seq'):06}"
 
 def get_osoba_ident():
     """
