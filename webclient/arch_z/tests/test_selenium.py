@@ -11,7 +11,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from core.tests.test_selenium import BaseSeleniumTestClass, Wait_for_page_load
-from arch_z.models import Akce
+from arch_z.models import Akce,ExterniOdkaz
 from dokument.models import DokumentCast
 from dj.models import DokumentacniJednotka
 from komponenta.models import Komponenta
@@ -897,3 +897,77 @@ class AkceSamostatneAkce(BaseSeleniumTestClass):
         count_new =DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000004A").count()
         self.assertEqual(count_old+1, count_new)
         logger.info("AkceSamostatneAkce.test_pridani_existujiciho_dokumentu_samostatne_akci_p_001.end")
+        
+
+    def test_pripojeni_externiho_zdroje_projektove_akci_p_001(self):
+        #Scenar_84 Připojení externího zdroje k projektové akci (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_pripojeni_externiho_zdroje_projektove_akci_p_001.start")
+        self.test_number=84
+        self.login("archeolog")       
+       
+        count_old=ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="C-202301164A").count()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-projekt > .card-body")
+        self.ElementClick(By.LINK_TEXT, self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")))
+        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202301164")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "C-202301164")
+        self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
+        self.ElementClick(By.CSS_SELECTOR, "#eo-pripojit-do-az > .material-icons")
+        self.ElementClick(By.ID, "select2-id_ez-container")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-BIB-1295324")        
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        self.wait(3)
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        
+        self.ElementClick(By.CSS_SELECTOR, "#eo-pripojit-do-az > .material-icons")
+        self.ElementClick(By.ID, "select2-id_ez-container")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-BIB-1295325")        
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        self.wait(3)
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+       
+        count_new =ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="C-202301164A").count()
+        self.assertEqual(count_old+2, count_new)
+        logger.info("AkceSamostatneAkce.test_pripojeni_externiho_zdroje_projektove_akci_p_001.end")
+        
+        
+        #X-C-9000000003A 
+        
+    def test_pripojeni_externiho_zdroje_samostatne_akci_p_001(self):
+        #Scenar_85 Připojení externího zdroje k samostatné akci (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_pripojeni_externiho_zdroje_projektove_akci_p_001.start")
+        self.test_number=85
+        self.login("archeolog")       
+       
+        count_old=ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000003A").count()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000003A")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "X-C-9000000003A")
+        self.ElementClick(By.CSS_SELECTOR, "#eo-pripojit-do-az > .material-icons")
+        self.ElementClick(By.ID, "select2-id_ez-container")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-BIB-1295324")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        self.wait(3)
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.ElementClick(By.CSS_SELECTOR, "#eo-pripojit-do-az > .material-icons")
+        self.ElementClick(By.ID, "select2-id_ez-container")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-BIB-1295325")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        self.wait(3)
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+       
+        count_new =ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000003A").count()
+        self.assertEqual(count_old+2, count_new)
+        logger.info("AkceSamostatneAkce.test_pripojeni_externiho_zdroje_projektove_akci_p_001.end")
+       
+        
