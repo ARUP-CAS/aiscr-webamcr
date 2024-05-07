@@ -52,7 +52,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.0.4
+     - 5.0.5
      - BSD License
      - https://www.djangoproject.com/
    * - PyRTF3
@@ -132,7 +132,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.5.0
+     - 7.5.1
      - Apache Software License
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
@@ -212,7 +212,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/tjwalch/django-livereload-server
    * - django-model-utils
-     - 4.5.0
+     - 4.5.1
      - BSD License
      - https://github.com/jazzband/django-model-utils
    * - django-object-actions
@@ -348,7 +348,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.35
+     - 8.13.36
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
