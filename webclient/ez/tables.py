@@ -21,7 +21,6 @@ class ExterniZdrojTable(SearchTable):
     casopis_denik_nazev = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.casopis_denik_nazev.label"))
     casopis_rocnik = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.casopis_rocnik.label"))
     sbornik_nazev = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.sbornik_nazev.label"))
-    sysno = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.sysno.label"))
     stav = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.stav.label"))
     typ = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.typ.label"))
     rok_vydani_vzniku = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.rok_vydani_vzniku.label"))
@@ -38,7 +37,6 @@ class ExterniZdrojTable(SearchTable):
     misto = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.misto.label"))
     nazev = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.nazev.label"))
     columns_to_hide = (
-        "sysno",
         "datum_rd",
         "edice_rada",
         "misto",
@@ -64,7 +62,6 @@ class ExterniZdrojTable(SearchTable):
             "casopis_denik_nazev",
             "casopis_rocnik",
             "sbornik_nazev",
-            "sysno",
             "datum_rd",
             "edice_rada",
             "misto",
@@ -79,7 +76,6 @@ class ExterniZdrojTable(SearchTable):
         )
         sequence = (
             "ident_cely",
-            "sysno",
             "stav",
             "typ",
             "autori",

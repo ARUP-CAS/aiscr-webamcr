@@ -37,7 +37,6 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         (EZ_STAV_POTVRZENY, _("ez.models.externiZdroj.states.potvrzeny.label")),
     )
 
-    sysno = models.TextField(blank=True, null=True)
     typ = models.ForeignKey(
         Heslar,
         models.RESTRICT,
