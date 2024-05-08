@@ -113,6 +113,7 @@ from heslar.hesla import (
 from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
+    MODEL_3D_DOKUMENT_TYPES,
     PRISTUPNOST_BADATEL_ID,
     TYP_PROJEKTU_PRUZKUM_ID,
 )
@@ -170,6 +171,7 @@ def detail_model_3D(request, ident_cely):
             "typ_dokumentu",
         ),
         ident_cely=ident_cely,
+        typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES
     )
     casti = dokument.casti.all()
     if casti.count() != 1:
@@ -435,14 +437,14 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context["warnings"] = self.request.session.pop("temp_data", None)
         dokument = get_object_or_404(
-            Dokument.objects.select_related(
+            Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES).select_related(
                 "soubory",
                 "organizace",
                 "material_originalu",
                 "typ_dokumentu",
                 "rada",
             ),
-            ident_cely=self.kwargs["ident_cely"],
+            ident_cely=self.kwargs["ident_cely"]
         )
         if not dokument.has_extra_data():
             extra_data = DokumentExtraData(dokument=dokument)
@@ -703,7 +705,7 @@ class TvarEditView(LoginRequiredMixin, View):
     Třida pohledu pro uložení zmeny tvaru z formuláře.
     """
     def post(self, request, *args, **kwargs):
-        dokument: Dokument = get_object_or_404(Dokument, ident_cely=self.kwargs["ident_cely"])
+        dokument: Dokument = get_object_or_404(Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES), ident_cely=self.kwargs["ident_cely"])
         TvarFormset = inlineformset_factory(
             Dokument,
             Tvar,
@@ -786,7 +788,7 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
     def get_zaznam(self) -> Dokument:
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
-            Dokument,
+            Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES),
             ident_cely=ident_cely,
         )
 
@@ -1079,7 +1081,7 @@ def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci dokumentu.
     """
-    dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    dokument = get_object_or_404(Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES), ident_cely=ident_cely)
     if dokument.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if not dokument.has_extra_data():
@@ -1176,7 +1178,7 @@ def edit_model_3D(request, ident_cely):
     """
     Funkce pohledu pro editaci modelu 3D.
     """
-    dokument: Dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    dokument: Dokument = get_object_or_404(Dokument, ident_cely=ident_cely, typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
     if dokument.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
@@ -1687,7 +1689,7 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
-        qs = Dokument.objects.exclude(ident_cely__contains=Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D).zkratka)
+        qs = Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
         return self.check_filter_permission(qs)
