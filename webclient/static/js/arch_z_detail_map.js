@@ -879,7 +879,7 @@ const addPointQuery = (geom, layer, ident_cely, st_text, presnost, popup_text) =
         .bindPopup(popup_text)
         .addTo(layer));
     }
-    map.setView(coor[0],17)
+    //map.setView(coor[0],17)
 
 }
 
@@ -1290,7 +1290,7 @@ window.addEventListener("load", function(){
     }
 });
 
-//kontrola geometrie asi nefunguje
+//kontrola geometrie 
 const validate_geometry = (geometry) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${window.location.origin}/pian/validovat-geometrii/`, false);
@@ -1301,7 +1301,7 @@ const validate_geometry = (geometry) => {
     xhr.send(data);
     if (xhr.status === 200) {
         const response = JSON.parse(xhr.responseText);
-        return response.validation_response;
+        return response.validation_result;
     } else {
         return false
     }
@@ -1316,10 +1316,10 @@ function loadSession(){
     let myParamL = urlParams.get('label');
     //global_map_can_grab_geom_from_map = true;
     if(myParamG !==null){
-        //const validate_geometry_result = validate_geometry(myParamG);
-        //if (!validate_geometry_result) {
-        //    return;
-        //}
+        const validate_geometry_result = validate_geometry(myParamG);
+        if (!validate_geometry_result) {
+            return;
+        }
         global_map_can_grab_geom_from_map = true;
         global_blocked_by_query_geom=true;
         drawnItems.clearLayers();
@@ -1384,7 +1384,7 @@ function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,sele
                 DJ_pians_ident_cely.push(pian.pian_ident_cely);
                 var layer = poi_dj ;
                 if(pian.color=="gold" && global_map_can_edit == true) layer = drawnItems;
-                if(global_blocked_by_query_geom==false) {                       
+                if(global_blocked_by_query_geom==false && pian.hasOwnProperty("DJ_ident_cely")) {                       
                     coor=addDJPian([pian.lat, pian.lng],  layer,pian.pian_ident_cely,pian.geom,pian.presnost,pian.color,pian.DJ_ident_cely);
                 }
                 if(pian.color=="gold" && pian.zoom!=12 && global_blocked_by_query_geom==false){
