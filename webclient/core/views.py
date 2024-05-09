@@ -1350,7 +1350,7 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
                 messages.add_message(
                             self.request, messages.ERROR, TRANSLATION_DELETE_ERROR
                         )
-return JsonResponse({"redirect": reverse('rosetta-file-list', kwargs={'po_filter': 'project'})})
+        return JsonResponse({"redirect": reverse('rosetta-file-list', kwargs={'po_filter': 'project'})})
     
     
 class PrometheusMetricsView(IPWhitelistMixin, View):
