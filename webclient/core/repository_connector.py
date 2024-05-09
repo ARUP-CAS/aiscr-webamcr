@@ -2,10 +2,12 @@ import hashlib
 import inspect
 import io
 import logging
+import os
 import re
-import time
 from enum import Enum
 from io import BytesIO
+from os import path
+
 from PIL import Image
 from typing import Union, Optional
 
@@ -15,7 +17,7 @@ from django.conf import settings
 from pdf2image import convert_from_bytes
 from requests.auth import HTTPBasicAuth
 
-from core.utils import get_mime_type
+from core.utils import get_mime_type, replace_last
 from xml_generator.generator import DocumentGenerator
 
 logger = logging.getLogger(__name__)
@@ -93,9 +95,7 @@ class FedoraRequestType(Enum):
     DELETE_TOMBSTONE = 16
     RECORD_DELETION_MOVE_MEMBERS = 17
     RECORD_DELETION_ADD_MARK = 18
-    CHANGE_IDENT_CONNECT_RECORDS_1 = 19
     CHANGE_IDENT_CONNECT_RECORDS_2 = 20
-    CHANGE_IDENT_CONNECT_RECORDS_3 = 21
     CHANGE_IDENT_CONNECT_RECORDS_4 = 22
     DELETE_LINK_CONTAINER = 23
     DELETE_LINK_TOMBSTONE = 24
@@ -112,6 +112,7 @@ class FedoraRequestType(Enum):
     GET_BINARY_FILE_CONTENT_THUMB_LARGE = 35
     UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE = 36
     GET_TOMBSTONE = 37
+    CHANGE_IDENT_CONNECT_RECORDS_5 = 38
 
 
 class FedoraRepositoryConnector:
@@ -196,9 +197,8 @@ class FedoraRepositoryConnector:
         elif request_type in (FedoraRequestType.RECORD_DELETION_ADD_MARK,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4):
             return f"{base_url}/model/deleted/member"
-        elif request_type in (FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
-                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
-                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3):
+        elif request_type in (FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5):
             if ident_cely:
                 return f"{base_url}/record/{ident_cely}"
             else:
@@ -307,22 +307,27 @@ class FedoraRepositoryConnector:
         elif request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
                               FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE,
                               FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY,
-                              FedoraRequestType.CONNECT_DELETED_RECORD_3, FedoraRequestType.CONNECT_DELETED_RECORD_4):
+                              FedoraRequestType.CONNECT_DELETED_RECORD_3, FedoraRequestType.CONNECT_DELETED_RECORD_4,
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5):
             response = requests.delete(url, headers=headers, auth=auth)
         elif request_type in (FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
-                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
-                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3,
                               FedoraRequestType.DELETE_BINARY_FILE,
                               FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2):
             response = requests.patch(url, auth=auth, headers=headers, data=data)
         extra["status_code"] = response.status_code
-        if request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
+
+        if request_type == FedoraRequestType.CONNECT_DELETED_RECORD_4:
+            extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
+                     "transaction": self.transaction_uid, "url": url}
+            if str(response.status_code)[0] == "2":
+                logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
+            else:
+                logger.warning("core_repository_connector._send_request.error", extra=extra)
+        elif request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
                                 FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
-                                FedoraRequestType.GET_LINK, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
-                                FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
-                                FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3, FedoraRequestType.GET_DELETED_LINK,
-                                ):
+                                FedoraRequestType.GET_LINK, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
+                                FedoraRequestType.GET_DELETED_LINK):
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
             else:
@@ -791,13 +796,6 @@ class FedoraRepositoryConnector:
             raise IdentChangeFedoraError()
         base_url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
         ident_cely_new = self.record.ident_cely
-        data = f"INSERT DATA {{<> <http://purl.org/dc/terms/isReplacedBy> " \
-               f"'{base_url}{settings.FEDORA_SERVER_NAME}/record/{ident_cely_new}'}}"
-        headers = {
-            "Content-Type": "application/sparql-update"
-        }
-        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1, ident_cely=ident_cely_old)
-        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1, headers=headers, data=data)
         data = f"INSERT DATA {{<> <http://purl.org/dc/terms/replaces> " \
                f"'{base_url}{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}'}}"
         headers = {
@@ -805,20 +803,18 @@ class FedoraRepositoryConnector:
         }
         url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, ident_cely=ident_cely_new)
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, headers=headers, data=data)
-        data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'renamed'}"
-        headers = {
-            "Content-Type": "application/sparql-update"
-        }
-        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3, ident_cely=ident_cely_old)
-        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3, headers=headers, data=data)
         headers = {
             "Slug": ident_cely_old,
             "Content-Type": "text/turtle"
         }
         data = f"@prefix ore: <http://www.openarchives.org/ore/terms/> . " \
                f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}> ."
-        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, ident_cely=ident_cely_new)
+        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4)
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, headers=headers, data=data)
+
+        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5, ident_cely=ident_cely_old)
+        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5)
+
         logger.debug("core_repository_connector.record_ident_change.end", extra={"ident_cely": self.record.ident_cely,
                                                                                  "ident_cely_old": ident_cely_old,
                                                                                  "transaction": self.transaction_uid})
@@ -835,6 +831,61 @@ class FedoraRepositoryConnector:
                 item.save()
                 self.migrate_binary_file(item, include_content=True, check_if_exists=False,
                                          ident_cely_old=ident_cely_old)
+
+    @classmethod
+    def save_single_file_from_storage(cls, record, storage_path: str, fedora_transaction=None) -> None:
+        from core.models import Soubor
+        from xml_generator.models import ModelWithMetadata
+        if isinstance(record, int):
+            record = Soubor.objects.get(pk=record)
+        record: Soubor
+        related_record: ModelWithMetadata = record.vazba.navazany_objekt
+        if not fedora_transaction:
+            fedora_transaction = FedoraTransaction()
+        record.active_transaction = fedora_transaction
+        conn = FedoraRepositoryConnector(related_record, fedora_transaction)
+
+        def find_matching_file(directory, number):
+            for inner_file in os.listdir(directory):
+                filename, _ = os.path.splitext(inner_file)
+                if filename.isdigit() and int(filename) == number:
+                    return os.path.join(directory, inner_file)
+            return None
+
+        file_path = find_matching_file(storage_path, record.pk)
+        if file_path is None:
+            logger.warning("core_repository_connector.save_single_file_from_storage.file_not_found",
+                           extra={"record": record.pk, "storage_path": storage_path,
+                                  "transaction": fedora_transaction.uid})
+            return
+        soubor_data = io.BytesIO()
+        with open(file_path, 'rb') as file:
+            content = file.read()
+            soubor_data.write(content)
+
+        mimetype = Soubor.get_mime_types(soubor_data)
+        mime_extensions = Soubor.get_file_extension_by_mime(soubor_data)
+        if len(mime_extensions) == 0:
+            return
+        file_name_extension = record.nazev.split(".")[-1].lower()
+        if file_name_extension not in mime_extensions:
+            new_name = replace_last(record.nazev, record.nazev.split(".")[-1], mime_extensions[0])
+            record.nazev = new_name
+        record.mimetype = mimetype
+        if record.repository_uuid:
+            rep_bin_file = conn.update_binary_file(record.nazev, "text/plain", soubor_data, record.repository_uuid)
+        else:
+            rep_bin_file = conn.save_binary_file(record.nazev, "text/plain", soubor_data)
+            record.path = rep_bin_file.url_without_domain
+        record.size_mb = rep_bin_file.size_mb
+        record.sha_512 = rep_bin_file.sha_512
+        record.save()
+        fedora_transaction.mark_transaction_as_closed()
+
+    @classmethod
+    def save_files_from_storage(cls, records: Union[list, range], storage_path: str) -> None:
+        for item in records:
+            cls.save_single_file_from_storage(item, storage_path)
 
 
 class FedoraTransactionQueueClosedError(Exception):

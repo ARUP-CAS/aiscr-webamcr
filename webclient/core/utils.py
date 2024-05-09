@@ -9,7 +9,7 @@ import glob
 import core.message_constants as mc
 import requests
 from arch_z.models import ArcheologickyZaznam, ArcheologickyZaznamKatastr
-from django.contrib.gis.db.models.functions import Centroid
+from django.contrib.gis.db.models.functions import PointOnSurface ,Centroid
 from django.conf import ENVIRONMENT_VARIABLE, settings
 from django.apps import apps
 from django.core.cache import caches
@@ -21,6 +21,7 @@ from core.message_constants import (
     VALIDATION_NOT_SIMPLE,
     VALIDATION_NOT_VALID,
 )
+from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 from dj.models import DokumentacniJednotka
 from django.db import connection
 from django.urls import reverse
@@ -290,50 +291,59 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely, fedora_transaction):
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
 
 
-def get_centre_from_akce(katastr: RuianKatastr, akce_ident_cely):
+def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     """
     Funkce pro bodu, geomu a presnosti z akce.
     """
-    logger.debug("core.utils.get_centre_from_akce.start",
+    logger.debug("core.utils.get_pians_from_akce.start",
                  extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely})
-    from dj.models import DokumentacniJednotka
     query = (
-        "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
+        "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng,ST_AsText(ST_Envelope(hranice)) as bbox "
         " from public.ruian_katastr where "
         " id=%s"
     )
-    bod = None
+    bod_ku = RuianKatastr.objects.raw(query, [katastr.pk])[0]
+    pians = []    
     try:
-        bod_ku = RuianKatastr.objects.raw(query, [katastr.pk])[0]
-        bod = [bod_ku.lat, bod_ku.lng]
-        geom = ""
-        presnost = 4
-        zoom = 12
-        pian_ident_cely = ''
-        color = 'green'
         if len(akce_ident_cely) > 1:
-            for akce in [akce_ident_cely, akce_ident_cely.split("-D")[0]]:
-                DJs = (DokumentacniJednotka.objects.annotate(pian__centroid=Centroid("pian__geom"))
+            akce=akce_ident_cely.split("-D")[0]
+            DJs = (DokumentacniJednotka.objects.annotate(pian__centroid=PointOnSurface("pian__geom"))
                        .filter(ident_cely__istartswith=akce).order_by('ident_cely'))
-                for dj in DJs:
-                    logger.debug("core.utils.get_centre_from_akce.loop_dj",
-                                 extra={"dj_ident_cely": dj.ident_cely, "pian": getattr(dj.pian, "ident_cely", None)})
-                    if dj.pian and dj.pian.geom:
-                        bod = dj.pian__centroid
-                        bod = bod[1], bod[0]
-                        zoom = 17
-                        geom = dj.pian.geom
-                        presnost = dj.pian.presnost.zkratka
-                        pian_ident_cely = dj.pian.ident_cely
-                        color = 'green'
-                        break
-                if pian_ident_cely != '' and akce_ident_cely == akce:
-                    color = 'gold'
-                    break
-            return bod, geom, presnost, zoom, pian_ident_cely, color
+            for dj in DJs:
+                logger.debug("core.utils.get_pians_from_akce.loop_dj",
+                                extra={"dj_ident_cely": dj.ident_cely, "pian": getattr(dj.pian, "ident_cely", None)})
+                if dj.pian and dj.pian.geom:
+                    bod = dj.pian__centroid  
+                    pians.append({
+                        "lat": str(bod[1]),
+                        "lng": str(bod[0]),
+                        "zoom": 12 if dj.typ.id==TYP_DJ_KATASTR else 17,
+                        "geom": "" if dj.typ.id==TYP_DJ_KATASTR else str(dj.pian.geom).split(";")[1].replace(", ", ","),  
+                        "presnost": str(dj.pian.presnost.zkratka),
+                        "pian_ident_cely": str(dj.pian.ident_cely),
+                        "color": 'gold' if akce_ident_cely == dj.ident_cely  else  'green',
+                        "bbox" : str(bod_ku.bbox) if dj.typ.id==TYP_DJ_KATASTR else "",
+                        "DJ_ident_cely" : dj.ident_cely_safe,
+                    }) 
+
+        if len(pians)==0:    
+            
+            bod = [bod_ku.lat, bod_ku.lng]
+            pians.append({
+                        "lat": str(bod_ku.lat),
+                        "lng": str(bod_ku.lng),
+                        "zoom": '12',
+                        "geom": '',
+                        "presnost": 4,
+                        "pian_ident_cely": '',
+                        "color": 'green' ,
+                        "bbox" : str(bod_ku.bbox),
+                    }) 
+           
+        return pians
     except IndexError as err:
         logger.error(
-            "core.utils.get_centre_from_akce.error",
+            "core.utils.get_pians_from_akce.error",
             extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely, "err": err, "bod": bod},
         )
         raise CannotFindCadasterCentre()
@@ -1233,3 +1243,13 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
                         if os.path.isfile(abs_path):
                             ret.add(abs_path)
     return list(sorted(ret))
+
+
+def replace_last(source_string, old, new):
+    index = source_string.rfind(old)
+    if index != -1:
+        start_part = source_string[:index]
+        replace_part = source_string[index:index + len(old)].replace(old, new)
+        end_part = source_string[index + len(old):]
+        return start_part + replace_part + end_part
+    return source_string

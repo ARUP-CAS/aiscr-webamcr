@@ -1,6 +1,7 @@
 {% load i18n %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load template_filters %}
 
 <form method="POST" id="prihlasit-form">
   <div class="modal-header">
@@ -69,12 +70,12 @@
         fields.set("id_kulturni_pamatka_cislo", "")
         fields.set("id_kulturni_pamatka_popis", "")
         var required = new Map()
-        required.set("176", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
-        required.set("177", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
-        required.set("178", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
-        required.set("179", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
-        required.set("180", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
-        required.set("181", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("{% get_value_from_heslar "kulturni_pamatky" "op" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("{% get_value_from_heslar "kulturni_pamatky" "kp" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("{% get_value_from_heslar "kulturni_pamatky" "nkp" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("{% get_value_from_heslar "kulturni_pamatky" "pz" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("{% get_value_from_heslar "kulturni_pamatky" "pr" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("{% get_value_from_heslar "kulturni_pamatky" "un" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
 
         changeFields(checked_field, fields,required,required);
         checked_field.addEventListener("change", changeFields.bind(event, checked_field, fields,required,required));

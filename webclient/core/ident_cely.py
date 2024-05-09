@@ -329,10 +329,27 @@ def get_temp_ez_ident():
 
 def get_heslar_ident():
     """
-    Metoda pro výpočet dočasného identu hesláře.
+    Metoda pro výpočet identu hesláře.
     """
     return f"{Heslar.ident_prefix}-{get_next_sequence('heslar_ident_cely_seq'):06}"
 
+def get_uzivatel_ident():
+    """
+    Metoda pro výpočet identu uživatele.
+    """
+    return f"U-{get_next_sequence('auth_user_ident_seq'):06}"
+
+def get_organizace_ident():
+    """
+    Metoda pro výpočet identu organizce.
+    """
+    return  f"ORG-{get_next_sequence('organizace_ident_seq'):06}"
+
+def get_osoba_ident():
+    """
+    Metoda pro výpočet identu osoby.
+    """
+    return  f"OS-{get_next_sequence('osoba_ident_seq'):06}"
 
 def get_record_from_ident(ident_cely):
     """

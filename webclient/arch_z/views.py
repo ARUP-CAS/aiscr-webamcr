@@ -4,6 +4,7 @@ from io import BytesIO
 import pandas
 import redis
 import simplejson as json
+from cacheops import cache, CacheMiss
 from django.db.models import RestrictedError
 from django_tables2.export import TableExport
 
@@ -58,7 +59,7 @@ from core.repository_connector import FedoraRepositoryConnector, FedoraTransacti
 from core.utils import (
     get_all_pians_with_akce,
     get_dj_pians_centroid,
-    get_centre_from_akce,
+    get_pians_from_akce,
     get_heatmap_pian,
     get_heatmap_pian_density,
     get_message,
@@ -585,13 +586,14 @@ def edit(request, ident_cely):
             logger.debug("arch_z.views.edit.form_valid")
             az = form_az.save(commit=False)
             az.active_transaction = fedora_trasnaction
-            az.close_active_transaction_when_finished = True
             az.save()
             akce = form_akce.save()
             ostatni_vedouci_objekt_formset.save()
             if form_az.changed_data or form_akce.changed_data:
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             akce.set_snapshots()
+            az.close_active_transaction_when_finished = True
+            az.save()
             return redirect("arch_z:detail", ident_cely=ident_cely)
         else:
             logger.warning("arch_z.views.edit.form_az_valid", extra={"form_az_errors": form_az.errors,
@@ -791,10 +793,10 @@ def vratit(request, ident_cely):
             projekt = None
             if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
                 projekt = az.akce.projekt
-                projekt.active_transaction = fedora_trasnaction
             # BR-A-3
             if az.stav == AZ_STAV_ODESLANY and projekt is not None:
                 #  Return also project from the states P6 or P5 to P4
+                projekt.active_transaction = fedora_trasnaction
                 projekt_stav = projekt.stav
                 logger.debug("arch_z.views.vratit.valid", extra={"ident": ident_cely, "stav": projekt.stav})
                 if projekt_stav == PROJEKT_STAV_UZAVRENY:
@@ -1029,7 +1031,7 @@ def smazat(request, ident_cely):
     Na začátku se kontroluje jestli nekdo nezmenil stav akce počas smazání.
     Po post volání se volá metóda na modelu pro smazání akce.
     """
-    az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    az: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if check_stav_changed(request, az):
         return JsonResponse(
             {"redirect": az.get_absolute_url()},
@@ -1044,10 +1046,15 @@ def smazat(request, ident_cely):
         projekt = None
     if request.method == "POST":
         try:
-            fedora_trasnaction = FedoraTransaction()
-            az.active_transaction = fedora_trasnaction
+            fedora_transaction = FedoraTransaction()
+            az.active_transaction = fedora_transaction
             az.close_active_transaction_when_finished = True
             az.deleted_by_user = request.user
+            az.record_deletion(fedora_transaction)
+            for dj in az.dokumentacni_jednotky_akce.all():
+                dj: DokumentacniJednotka
+                dj.active_transaction = fedora_transaction
+                dj.delete()
             az.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
@@ -1244,25 +1251,17 @@ def post_akce2kat(request):
 
     if len(katastr_name) > 0:
         try:
-            bod, geom, presnost, zoom, pian_ident_cely, color = get_centre_from_akce(katastr, akce_ident_cely)
-            if len(str(bod)) > 0:
-                return JsonResponse(
+            pians = get_pians_from_akce(katastr, akce_ident_cely)            
+            return JsonResponse(
                     {
-                        "lat": str(bod[0]),
-                        "lng": str(bod[1]),
-                        "zoom": str(zoom),
-                        "geom": str(geom).split(";")[1].replace(", ", ",")
-                        if geom
-                        else None,
-                        "presnost": str(presnost) if geom else 4,
-                        "pian_ident_cely": str(pian_ident_cely),
-                        "color": str(color),
+                        "pians": pians,
+                        "count": len(pians),                        
                     },
                     status=200,
                 )
         except CannotFindCadasterCentre as err:
             logger.error("arch_z.views.post_akce2kat.error", extra={"err": err})
-            return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": "", "pian_ident_cely": ""}, status=200)
+            return JsonResponse({ "pians": [], "count": 0,    }, status=200)
 
 
 def get_history_dates(historie_vazby, request_user):
@@ -1395,7 +1394,7 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
     logger.debug("arch_z.views.smazat_akce_vedoucí.start", extra={"ident_cely": ident_cely,
                                                                   "akce_vedouci_id": akce_vedouci_id})
     zaznam: AkceVedouci = AkceVedouci.objects.get(id=akce_vedouci_id)
-    az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    az: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if request.method == "POST":
         if zaznam.akce.archeologicky_zaznam.ident_cely != ident_cely:
             logger.debug("arch_z.views.smazat_akce_vedoucí.error",
@@ -1403,10 +1402,8 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
             messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
             return JsonResponse({"redirect": az.get_absolute_url()}, status=403)
         zaznam.delete()
-        fedora_transaction = FedoraTransaction
-        zaznam.akce.archeologicky_zaznam.active_transaction = fedora_transaction
-        zaznam.akce.archeologicky_zaznam.close_active_transaction_when_finished = True
-        zaznam.akce.archeologicky_zaznam.save()
+        fedora_transaction = FedoraTransaction()
+        az.save_metadata(fedora_transaction, close_transaction=True)
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         logger.debug("arch_z.views.smazat_akce_vedoucí.success", extra={"ident_cely": ident_cely,
                                                                       "akce_vedouci_id": akce_vedouci_id})
@@ -1795,7 +1792,10 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         show_add_komponenta = not jednotka.negativni_jednotka and check_permissions(p.actionChoices.lokalita_komponenta_zapsat, user, jednotka.ident_cely)
         show_pripojit_pian_mapa = show_add_pian and check_permissions(p.actionChoices.lokalita_pripojit_pian_mapa, user, jednotka.ident_cely)
         show_pripojit_pian_id = show_add_pian and check_permissions(p.actionChoices.lokalita_pripojit_pian_id, user, jednotka.ident_cely)
-    show_import_pian_change_user = jednotka.pian.stav == PIAN_NEPOTVRZEN if user.hlavni_role.pk in (ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID) else True
+    show_import_pian_change_user = jednotka.pian.stav == PIAN_NEPOTVRZEN and \
+        jednotka.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY if \
+            user.hlavni_role.pk in (ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID) else \
+                jednotka.archeologicky_zaznam.stav < AZ_STAV_ARCHIVOVANY
     dj_form_detail = {
         "ident_cely": jednotka.ident_cely,
         "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
@@ -1810,7 +1810,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_approve_pian": show_approve_pian,
         "show_pripojit_pian": True if jednotka.pian is None else False,
         "show_import_pian_new": show_add_pian and check_permissions(p.actionChoices.pian_import_new, user, jednotka.ident_cely),
-        "show_import_pian_change": not show_add_pian and show_import_pian_change_user and check_permissions(p.actionChoices.pian_import_change, user, jednotka.pian.ident_cely) and jednotka.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY,
+        "show_import_pian_change": not show_add_pian and show_import_pian_change_user and check_permissions(p.actionChoices.pian_import_change, user, jednotka.pian.ident_cely),
         "show_change_katastr": True if jednotka.typ.id == TYP_DJ_KATASTR and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely) else False,
         "show_dj_smazat": check_permissions(p.actionChoices.dj_smazat, user, jednotka.ident_cely),
         "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat,user,jednotka.ident_cely),

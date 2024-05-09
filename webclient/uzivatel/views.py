@@ -43,7 +43,7 @@ from core.repository_connector import FedoraTransaction
 from historie.models import Historie
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
     UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
-from uzivatel.models import Osoba, User, UserNotificationType
+from uzivatel.models import Osoba, User, UserNotificationType, UzivatelPrihlaseniLog
 from core.views import PermissionFilterMixin
 from core.models import Permissions as p, check_permissions
 from services.mailer import Mailer
@@ -198,16 +198,17 @@ class UserLogoutView(LogoutView):
     """
     Třída pohledu pro odhlášení uživatele, kvůli zobrazení info o logoutu
     """
-    def dispatch(self, request, *args, **kwargs):
-        if request.GET.get("autologout") == "true":
+    def post(self, request, *args, **kwargs):
+        if request.POST.get("logout_type") == "autologout":
+            logger.debug('message added')
             messages.add_message(
                 self.request, messages.SUCCESS, AUTOLOGOUT_AFTER_LOGOUT
             )
-        if request.GET.get("maintenance_logout") == "true":
+        if request.POST.get("logout_type") == "maintenance":
             messages.add_message(
                 self.request, messages.SUCCESS, MAINTENANCE_AFTER_LOGOUT
             )
-        return super().dispatch(request, *args, **kwargs)
+        return super().post(request, *args, **kwargs)
 
 
 class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
@@ -228,7 +229,8 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         context["form"] = self.form_class(instance=self.request.user)
         context["form_read_only"] = AuthReadOnlyUserChangeForm(instance=self.request.user, prefix="ro_")
         context["form_password"] = UpdatePasswordSettings(instance=self.request.user, prefix="pass")
-        context["sign_in_history"] = self.get_object().history.all()[:5]
+        context["sign_in_history"] = (UzivatelPrihlaseniLog.objects.filter(user=self.request.user)
+                                      .order_by("-prihlaseni_datum_cas")[:5])
         context["form_notifications"] = NotificationsForm(instance=self.request.user)
         context["show_edit_notifikace"] = check_permissions(p.actionChoices.notifikace_projekty, self.request.user, self.request.user.ident_cely)
         return context
@@ -308,19 +310,13 @@ def update_notifications(request):
         notifications = form.cleaned_data.get('notification_types')
         user: User = request.user
         user.active_transaction = FedoraTransaction()
-        notification_group_idents = [x.ident_cely for x in notifications.all()]
-        for group_ident, current_group_notification_idents in NOTIFICATION_GROUPS.items():
-            group_obj = UserNotificationType.objects.get(ident_cely=group_ident)
+        notification_group_idents = {x.ident_cely: x for x in notifications.all()}
+        for group_ident in NOTIFICATION_GROUPS.keys():
             if group_ident in notification_group_idents:
-                user.notification_types.add(group_obj)
+                 user.notification_types.add(notification_group_idents[group_ident])
             else:
-                user.notification_types.remove(group_obj)
-            for current_inner_ident in current_group_notification_idents:
-                type_obj = UserNotificationType.objects.get(ident_cely=current_inner_ident)
-                if group_ident in notification_group_idents:
-                    user.notification_types.add(type_obj)
-                else:
-                    user.notification_types.remove(type_obj)
+                type_obj = UserNotificationType.objects.get(ident_cely=group_ident)
+                user.notification_types.remove(type_obj)
         messages.add_message(request, messages.SUCCESS,
                              _("uzivatel.views.update_notifications.post.success"))
         user.close_active_transaction_when_finished = True

@@ -493,3 +493,6 @@ CREATE TABLE pom AS
 DELETE FROM historie USING pom WHERE historie.id = pom.id;
 DELETE FROM historie_vazby USING pom WHERE historie_vazby.id = pom.id;
 DROP TABLE pom;
+
+-- Odstranění sysno
+ALTER TABLE externi_zdroj DROP COLUMN sysno;

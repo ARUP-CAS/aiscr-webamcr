@@ -12,6 +12,7 @@ from rosetta.conf import settings as rosetta_settings
 from rosetta import get_version as get_rosetta_version
 from rosetta.access import can_translate_language
 from polib import pofile
+from django_prometheus.exports import ExportToDjangoView
 
 import pandas
 from PIL import Image
@@ -90,6 +91,7 @@ from heslar.hesla import HESLAR_PRISTUPNOST
 
 from heslar.models import Heslar
 from dj.models import DokumentacniJednotka
+from .mixins import IPWhitelistMixin
 from .connectors import RedisConnector
 from .exceptions import ZaznamSouborNotmatching
 from .models import Permissions, PermissionsSkip
@@ -361,16 +363,6 @@ def post_upload(request):
     """
     Funkce pohledu pro upload souboru a k navázaní ke správnemu záznamu.
     """
-
-    def replace_last(source_string, old, new):
-        index = source_string.rfind(old)
-        if index != -1:
-            start_part = source_string[:index]
-            replace_part = source_string[index:index + len(old)].replace(old, new)
-            end_part = source_string[index + len(old):]
-            return start_part + replace_part + end_part
-        return source_string
-
     source_url = request.POST.get("source-url", "")
     update = "fileID" in request.POST
     fedora_transaction = FedoraTransaction()
@@ -803,6 +795,7 @@ class PermissionFilterMixin():
                 qs = new_qs | qs.filter(**filterdoc)
             else:
                 qs = new_qs
+        qs = qs.cache()
         return qs
     
     def filter_by_permission(self, qs, permission):
@@ -1357,4 +1350,9 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
                 messages.add_message(
                             self.request, messages.ERROR, TRANSLATION_DELETE_ERROR
                         )
-        return JsonResponse({"redirect": reverse('rosetta-file-list', kwargs={'po_filter': 'project'})})
+return JsonResponse({"redirect": reverse('rosetta-file-list', kwargs={'po_filter': 'project'})})
+    
+    
+class PrometheusMetricsView(IPWhitelistMixin, View):
+    def get(self, request, *args, **kwargs):
+        return ExportToDjangoView(request)

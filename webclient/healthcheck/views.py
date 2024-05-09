@@ -1,7 +1,13 @@
+import logging
 from django.http import JsonResponse
 from io import StringIO
 from django.core import management
 import time
+from django.views import View
+
+from core.mixins import IPWhitelistMixin
+
+logger = logging.getLogger(__name__)
 
 
 def check_status():
@@ -17,8 +23,10 @@ def check_status():
     return ret_code, io_out.getvalue(), io_out_db.getvalue()
 
 
-def healthcheck_response(request):
-    status="healthy"
-    r_code, msg, msg_db = check_status()
-    status = ("healthy",200) if r_code == 0 else ("unhealthy",500)
-    return JsonResponse({ "status": f"{status[0]}", "django_check_default": f"{msg}", "django_check_db": f"{msg_db}", "exit-code": f"{r_code}", "time": f"{time.strftime('%Y-%m-%d %H:%M:%S')}" },status=status[1])
+
+class HealthCheckView(IPWhitelistMixin, View):
+    def get(self, request):
+        status="healthy"
+        r_code, msg, msg_db = check_status()
+        status = ("healthy",200) if r_code == 0 else ("unhealthy",500)
+        return JsonResponse({ "status": f"{status[0]}", "django_check_default": f"{msg}", "django_check_db": f"{msg_db}", "exit-code": f"{r_code}", "time": f"{time.strftime('%Y-%m-%d %H:%M:%S')}" },status=status[1])

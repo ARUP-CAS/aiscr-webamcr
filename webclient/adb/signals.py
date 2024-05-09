@@ -1,9 +1,11 @@
 import logging
 
+from cacheops import invalidate_model
 from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
 from adb.models import Adb, VyskovyBod
+from arch_z.models import ArcheologickyZaznam
 from core.repository_connector import FedoraTransaction
 
 logger = logging.getLogger(__name__)
@@ -13,6 +15,7 @@ logger = logging.getLogger(__name__)
 def adb_save_metadata(sender, instance: Adb, created, **kwargs):
     logger.debug("adb.signals.adb_save_metadata.start",
                  extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal})
+    invalidate_model(ArcheologickyZaznam)
     if not instance.suppress_signal:
         fedora_transaction: FedoraTransaction = instance.active_transaction
         if instance.tracker.changed():
@@ -42,9 +45,10 @@ def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
 @receiver(pre_delete, sender=Adb)
 def adb_delete_repository_container(sender, instance: Adb, **kwargs):
     logger.debug("adb.signals.adb_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
+    invalidate_model(ArcheologickyZaznam)
     fedora_transaction = instance.active_transaction
     instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
-    instance.record_deletion(close_transaction=fedora_transaction.close_active_transaction_when_finished)
+    instance.record_deletion(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
     logger.debug("adb.signals.adb_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid})
 
@@ -54,7 +58,7 @@ def vyskovy_bod_delete_repository_container(sender, instance: VyskovyBod, **kwar
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
-    instance.adb.save_metadata(fedora_transaction, close_transaction=instance.active_close_transaction_when_finished)
+    instance.adb.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)})
 

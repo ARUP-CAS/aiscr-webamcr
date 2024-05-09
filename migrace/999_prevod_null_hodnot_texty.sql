@@ -23,7 +23,6 @@ UPDATE dokument_extra_data SET region = '' WHERE region is NULL;
 UPDATE dokument_extra_data SET udalost = '' WHERE udalost is NULL;
 UPDATE dokumentacni_jednotka SET nazev = '' WHERE nazev is NULL;
 UPDATE externi_odkaz SET paginace = '' WHERE paginace is NULL;
-UPDATE externi_zdroj SET sysno = '' WHERE sysno is NULL;
 UPDATE externi_zdroj SET nazev = '' WHERE nazev is NULL;
 UPDATE externi_zdroj SET edice_rada = '' WHERE edice_rada is NULL;
 UPDATE externi_zdroj SET sbornik_nazev = '' WHERE sbornik_nazev is NULL;

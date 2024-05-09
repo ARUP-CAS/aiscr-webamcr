@@ -70,7 +70,6 @@ urlpatterns = [
     path("ext-zdroj/", include("ez.urls")),
     path("neident-akce/", include("neidentakce.urls")),
     path("notifikace-projekty/",  include("notifikace_projekty.urls")),
-    path('', include('django_prometheus.urls')),
     path("i18n/", include("django.conf.urls.i18n")),
 ]
 urlpatterns+=[re_path(r'^healthcheck/', include("healthcheck.urls"))]

@@ -131,10 +131,13 @@ def detail(request, typ_vazby, ident_cely):
                          extra={"pian_db": pian_db.ident_cely if pian_db else "None",
                                 "instance_pian": dj.pian.ident_cely, "ident_cely": dj.ident_cely})
             dj.pian.active_transaction = fedora_transaction
+            dj.pian.update_all_azs = False
             dj.pian.save()
         if pian_db is not None and (dj.pian is None or dj.pian.pk != pian_db.pk):
             logger.debug("dj.views.detail.changed_or_removed_pian", extra={"ident_cely": dj.ident_cely})
-            pian_db.save()
+            pian_db.update_all_azs = False
+            if dj.typ != Heslar.objects.get(id=TYP_DJ_KATASTR):
+                pian_db.save()
     else:
         logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors,
                                                                    "ident_cely": dj.ident_cely})
@@ -268,9 +271,9 @@ def smazat(request, ident_cely):
             dj.deleted_by_user = request.user
             fedora_transaction = FedoraTransaction()
             dj.active_transaction = fedora_transaction
-            dj.close_active_transaction_when_finished = True
             resp = dj.delete()
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely, fedora_transaction)
+            fedora_transaction.mark_transaction_as_closed()
             if resp:
                 logger.debug("dj.views.detail.smazat.deleted", {"resp": resp})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)

@@ -11,39 +11,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name="historicaluser",
-            name="first_name",
-            field=models.CharField(db_index=True, max_length=150, verbose_name="Jméno"),
-        ),
-        migrations.AlterField(
-            model_name="historicaluser",
-            name="is_active",
-            field=models.BooleanField(
-                db_index=True, default=False, verbose_name="Aktivní"
-            ),
-        ),
-        migrations.AlterField(
-            model_name="historicaluser",
-            name="is_staff",
-            field=models.BooleanField(
-                db_index=True, default=False, verbose_name="Přístup do admin. rozhraní"
-            ),
-        ),
-        migrations.AlterField(
-            model_name="historicaluser",
-            name="is_superuser",
-            field=models.BooleanField(
-                db_index=True, default=False, verbose_name="Globální administrátor"
-            ),
-        ),
-        migrations.AlterField(
-            model_name="historicaluser",
-            name="last_name",
-            field=models.CharField(
-                db_index=True, max_length=150, verbose_name="Příjmení"
-            ),
-        ),
-        migrations.AlterField(
             model_name="organizace",
             name="ico",
             field=models.CharField(

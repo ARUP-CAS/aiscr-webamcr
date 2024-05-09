@@ -11,46 +11,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterModelOptions(
-            name="historicaluser",
-            options={
-                "get_latest_by": ("history_date", "history_id"),
-                "ordering": ("-history_date", "-history_id"),
-                "verbose_name": "historical Uživatel",
-                "verbose_name_plural": "historical Uživatelé",
-            },
-        ),
-        migrations.AlterField(
-            model_name="historicaluser",
-            name="history_date",
-            field=models.DateTimeField(db_index=True),
-        ),
-        migrations.AlterField(
-            model_name="historicaluser",
-            name="history_vazba",
-            field=models.ForeignKey(
-                blank=True,
-                db_column="historie",
-                db_constraint=False,
-                null=True,
-                on_delete=django.db.models.deletion.DO_NOTHING,
-                related_name="+",
-                to="historie.historievazby",
-            ),
-        ),
-        migrations.AlterField(
-            model_name="historicaluser",
-            name="organizace",
-            field=models.ForeignKey(
-                blank=True,
-                db_column="organizace",
-                db_constraint=False,
-                null=True,
-                on_delete=django.db.models.deletion.DO_NOTHING,
-                related_name="+",
-                to="uzivatel.organizace",
-            ),
-        ),
         migrations.AlterField(
             model_name="user",
             name="history_vazba",

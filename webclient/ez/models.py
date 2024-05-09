@@ -37,7 +37,6 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         (EZ_STAV_POTVRZENY, _("ez.models.externiZdroj.states.potvrzeny.label")),
     )
 
-    sysno = models.TextField(blank=True, null=True)
     typ = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -110,10 +109,12 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         Metóda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
         """
         self.stav = EZ_STAV_ODESLANY
+        historie_poznamka=self.check_set_permanent_ident()
         Historie(
             typ_zmeny=ODESLANI_EXT_ZD,
             uzivatel=user,
             vazba=self.historie,
+            poznamka = historie_poznamka,
         ).save()
         self.save()
 
@@ -136,12 +137,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         Pokud je ident dočasný nahrazení identem stálým.
         """
         self.stav = EZ_STAV_POTVRZENY
-        historie_poznamka = None
-        if self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
-            old_ident = self.ident_cely
-            self.ident_cely = get_perm_ez_ident()
-            historie_poznamka = f"{old_ident} -> {self.ident_cely}"
-            self.record_ident_change(old_ident)
+        historie_poznamka=self.check_set_permanent_ident()
         Historie(
             typ_zmeny=POTVRZENI_EXT_ZD,
             uzivatel=user,
@@ -196,6 +192,15 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         table = ExterniZdrojTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
         return self.redis_snapshot_id, data
+    
+    def check_set_permanent_ident(self):
+        historie_poznamka = None
+        if self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
+            old_ident = self.ident_cely
+            self.ident_cely = get_perm_ez_ident()
+            historie_poznamka = f"{old_ident} -> {self.ident_cely}"
+            self.record_ident_change(old_ident)
+        return historie_poznamka
 
 def get_perm_ez_ident():
     """

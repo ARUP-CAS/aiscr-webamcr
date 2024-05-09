@@ -1,5 +1,3 @@
-import random
-import string
 from typing import Union, Optional
 
 from distlib.util import cached_property
@@ -30,18 +28,16 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import DEFERRED, CheckConstraint, Q
+from django.db.models import CheckConstraint, Q
 from django.db.models.functions import Collate
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django.utils.translation import get_language
 from django_prometheus.models import ExportModelOperationsMixin
 
 from heslar.hesla import HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.models import Heslar
 from services.notfication_settings import notification_settings
 from uzivatel.managers import CustomUserManager
-from simple_history.models import HistoricalRecords
 
 import logging
 
@@ -79,7 +75,6 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     telefon = models.CharField(
         max_length=100, blank=True, null=True, validators=[validate_phone_number], db_index=True
     )
-    history = HistoricalRecords()
     notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user',
                                                 db_table='auth_user_notifikace_typ',
                                                 limit_choices_to={'ident_cely__icontains': 'S-E-'},
@@ -218,10 +213,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         from core.repository_connector import FedoraTransaction
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
-        elif fedora_transaction is None and self.active_transaction is None:
-            raise ValueError("No Fedora transaction")
-        if not isinstance(fedora_transaction, FedoraTransaction):
-            raise ValueError("fedora_transaction must be a FedoraTransaction class object")
+        elif ((fedora_transaction is None and self.active_transaction is None)
+              or not isinstance(fedora_transaction, FedoraTransaction)):
+            # Handling log-in page
+            return
         logger.debug("uzivatel.models.User.save_metadata.start",
                      extra={"transaction": fedora_transaction.uid, "ident_cely": self.ident_cely})
         from core.repository_connector import FedoraRepositoryConnector
@@ -287,6 +282,12 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         return ()
 
 
+class UzivatelPrihlaseniLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    prihlaseni_datum_cas = models.DateTimeField(auto_now_add=True)
+    ip_adresa = models.CharField(max_length=45)
+
+
 class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
     """
     Class pro db model organizace.
@@ -334,12 +335,9 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         save metóda pro přidelení identu celý.
         """
         logger.debug("Organizace.save.start")
-        # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
-            self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
-        super().save(*args, **kwargs)
-        if self.ident_cely.startswith("TEMP"):
-            self.ident_cely = f"ORG-{str(self.pk).zfill(6)}"
+            from core.ident_cely import get_organizace_ident
+            self.ident_cely = get_organizace_ident()
             from core.repository_connector import FedoraRepositoryConnector
             if FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "organizace"):
                 super().save(*args, **kwargs)
@@ -384,10 +382,8 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
         logger.debug("Osoba.save.start")
         # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
-            self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
-        super().save(*args, **kwargs)
-        if self.ident_cely.startswith("TEMP"):
-            self.ident_cely = f"OS-{str(self.pk).zfill(6)}"
+            from core.ident_cely import get_osoba_ident
+            self.ident_cely = get_osoba_ident()
             from core.repository_connector import FedoraRepositoryConnector
             if FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "osoba"):
                 super().save(*args, **kwargs)
@@ -413,6 +409,14 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     """
     Class pro db model typ user notifikace.
     """
+    NOTIFICATION_GROUPS_NAMES = {
+    "S-E-A-XX": _("uzivatel.model.userNotificationType.S-E-A-XX.text"),
+    "S-E-N-01": _("uzivatel.model.userNotificationType.S-E-N-01.text"),
+    "S-E-N-02": _("uzivatel.model.userNotificationType.S-E-N-02.text"),
+    "S-E-N-05": _("uzivatel.model.userNotificationType.S-E-N-05.text"),
+    "S-E-K-01": _("uzivatel.model.userNotificationType.S-E-K-01.text"),
+    }
+    
     ident_cely = models.TextField(unique=True)
 
     def _get_settings_dict(self) -> Optional[dict]:
@@ -449,7 +453,10 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
         verbose_name_plural = _("uzivatel.models.UserNotificationType.namePlural")
 
     def __str__(self):
-        return self.ident_cely
+        try:
+            return str(self.NOTIFICATION_GROUPS_NAMES[self.ident_cely])
+        except Exception:
+            return self.ident_cely
 
 class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Model):
     """
@@ -459,6 +466,8 @@ class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Mo
     created_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="notification_log_items")
     receiver_address = models.CharField(max_length=254)
+    status = models.CharField(max_length=3, null=True, blank = True)
+    exception = models.CharField(max_length=1024, null=True, blank = True)
 
     class Meta:
         db_table = "notifikace_log"

@@ -11,17 +11,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name="historicaluser",
-            name="telefon",
-            field=models.CharField(
-                blank=True,
-                db_index=True,
-                max_length=100,
-                null=True,
-                validators=[core.validators.validate_phone_number],
-            ),
-        ),
-        migrations.AlterField(
             model_name="user",
             name="telefon",
             field=models.CharField(

@@ -12,18 +12,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name="historicaluser",
-            name="jazyk",
-            field=models.CharField(
-                choices=[
-                    ("cs", "core.constants.cs.text"),
-                    ("en", "core.constants.cs.text"),
-                ],
-                default="cs",
-                max_length=15,
-            ),
-        ),
-        migrations.AlterField(
             model_name="user",
             name="jazyk",
             field=models.CharField(

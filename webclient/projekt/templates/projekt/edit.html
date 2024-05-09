@@ -16,12 +16,8 @@
 		global_map_can_edit=false;
 	</script>
 	<!-- Leaflet imports -->
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-		integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-		crossorigin=""/>
-	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-		integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-		crossorigin="">
+  <link rel="stylesheet" href="{% static 'js/Leaflet1.9.4/leaflet.css' %}"/>
+    <script src="{% static 'js/Leaflet1.9.4/leaflet.js' %}"></script>
 	</script>
 
   <script src="{% static 'coordTransform.js' %}"></script>
@@ -31,12 +27,11 @@
   <link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
   <link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
 	<!--Leaflet FullScreen-->
-	<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
-	<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css'
-		rel='stylesheet'/>
-	<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+  <script src='{% static 'js/Leaflet.fullscreen1.0.1/Leaflet.fullscreen.min.js' %}'></script>
+  <link href='{% static 'js/Leaflet.fullscreen1.0.1/leaflet.fullscreen.css' %}'rel='stylesheet'/>
+  <script src="{% static 'js/Leaflet.EasyButton2.4.0/easy-button.js' %}"></script>
 
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+  <link rel="stylesheet" href="{% static 'js/Leaflet.EasyButton2.4.0/easy-button.css' %}">
 	<!-- Date picker imports -->
 	<script>
     		var drp_translations = {
@@ -142,12 +137,12 @@
         fields.set("id_kulturni_pamatka_cislo", "")
         fields.set("id_kulturni_pamatka_popis", "")
         var required = new Map()
-        required.set("176", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
-        required.set("177", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
-        required.set("178", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
-        required.set("179", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
-        required.set("180", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
-        required.set("181", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("{% get_value_from_heslar "kulturni_pamatky" "op" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("{% get_value_from_heslar "kulturni_pamatky" "kp" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("{% get_value_from_heslar "kulturni_pamatky" "nkp" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("{% get_value_from_heslar "kulturni_pamatky" "pz" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("{% get_value_from_heslar "kulturni_pamatky" "pr" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("{% get_value_from_heslar "kulturni_pamatky" "un" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
 
         changeFields(checked_field, fields,required,required);
         checked_field.addEventListener("change", changeFields.bind(event, checked_field, fields,required,required));
@@ -194,7 +189,7 @@
       // oznaceni stavby podle typu projektu
       $(document).ready(function () {
           const selectElement = document.getElementById('id_typ_projektu');
-          const ZACHRANNY_OPTION = 1
+          const ZACHRANNY_OPTION = '{% get_value_from_heslar "projekt_typ" "zachranny" %}';
 
           const makeFieldDisabled = (field, disabled) => {
               $(field).prop('readonly', disabled);
@@ -202,7 +197,7 @@
                   $(field).val("");
               }
           }
-          if (selectElement.selectedIndex != ZACHRANNY_OPTION) {
+          if (selectElement.value != ZACHRANNY_OPTION) {
             makeFieldDisabled('#id_oznaceni_stavby', true)
           } else {
             makeFieldDisabled('#id_oznaceni_stavby', false)
@@ -210,7 +205,7 @@
 
           // On change pak podle toho co je vybrano
           $(selectElement).on('changed.bs.select', function (e, clickedIndex) {
-              if (clickedIndex != ZACHRANNY_OPTION) {
+              if (selectElement.value != ZACHRANNY_OPTION) {
                 makeFieldDisabled('#id_oznaceni_stavby', true)
               } else {
                 makeFieldDisabled('#id_oznaceni_stavby', false)

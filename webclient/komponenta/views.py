@@ -1,4 +1,5 @@
 import logging
+from cacheops import invalidate_model
 
 from arch_z.models import ArcheologickyZaznam
 from core.exceptions import MaximalIdentNumberError
@@ -38,7 +39,7 @@ from heslar.hesla import (
 from heslar.models import Heslar
 from heslar.views import heslar_12
 from komponenta.forms import CreateKomponentaForm
-from komponenta.models import Komponenta
+from komponenta.models import Komponenta, KomponentaAktivita
 from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
 from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
@@ -71,6 +72,8 @@ def detail(request, typ_vazby, ident_cely):
         komponenta = form.save(commit=False)
         komponenta.active_transaction = fedora_transcation
         komponenta.save()
+        form.save_m2m()
+        invalidate_model(KomponentaAktivita)
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
@@ -267,8 +270,6 @@ def smazat(request, typ_vazby, ident_cely):
     Funkce pohledu pro smazání komponenty pomoci modalu.
     """
     komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
-    fedora_transcation = FedoraTransaction()
-    komponenta.active_transaction = fedora_transcation
     dj = None
     cast = None
     if komponenta.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
@@ -276,6 +277,8 @@ def smazat(request, typ_vazby, ident_cely):
     else:
         cast = komponenta.komponenta_vazby.casti_dokumentu
     if request.method == "POST":
+        fedora_transaction = FedoraTransaction()
+        komponenta.active_transaction = fedora_transaction
         komponenta.close_active_transaction_when_finished = True
         resp = komponenta.delete()
 

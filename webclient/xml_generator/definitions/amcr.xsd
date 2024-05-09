@@ -144,7 +144,6 @@
       <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{ident_cely}" -->
       <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> <!-- "{stav}" -->
       <xs:element name="typ" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{typ.ident_cely}" | "{typ.heslo}" -->
-      <xs:element name="sysno" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{sysno}" -->
       <xs:element name="autor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{externizdrojautor_set.autor.ident_cely}" | "{externizdrojautor_set.poradi}" | "{externizdrojautor_set.autor.vypis_cely}" -->
       <xs:element name="nazev" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{nazev}" -->
       <xs:element name="edice_rada" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{edice_rada}" -->
@@ -243,7 +242,6 @@
       <xs:element name="popis" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> <!-- "{popis}" -->
       <xs:element name="popis_en" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> <!-- "{popis_en}" -->
       <xs:element name="zkratka" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> <!-- "{zkratka}" -->
-      <xs:element name="zkratka_en" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> <!-- "{zkratka_en}" -->
       <xs:element name="razeni" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{razeni}" -->
       <xs:element name="hierarchie_vyse" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_vyseType"/> <!-- "{nadrazena_hesla}" -->
       <xs:element name="hierarchie_nize" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_nizeType"/> <!-- "{podrazena_hesla}" -->

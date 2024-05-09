@@ -8,7 +8,6 @@ import django.db.models.deletion
 import django.db.models.fields.related
 import django.db.models.functions.comparison
 import django.utils.timezone
-import simple_history.models
 import uzivatel.models
 import django.core.validators
 
@@ -50,35 +49,6 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Uživatelé',
                 'db_table': 'auth_user',
             },
-        ),
-        migrations.CreateModel(
-            name='HistoricalUser',
-            fields=[
-                ('id', models.IntegerField(auto_created=True, blank=True, db_index=True, verbose_name='ID')),
-                ('password', models.CharField(max_length=128)),
-                ('last_login', models.DateTimeField(blank=True, null=True)),
-                ('is_superuser', models.BooleanField(default=False, verbose_name='Globální administrátor')),
-                ('ident_cely', models.CharField(db_index=True, max_length=150)),
-                ('first_name', models.CharField(max_length=150, verbose_name='Jméno')),
-                ('last_name', models.CharField(max_length=150, verbose_name='Příjmení')),
-                ('email', models.CharField(db_index=True, max_length=254)),
-                ('is_staff', models.BooleanField(default=False, verbose_name='Přístup do admin. rozhraní')),
-                ('is_active', models.BooleanField(default=False, verbose_name='Aktivní')),
-                ('date_joined', models.DateTimeField(default=django.utils.timezone.now)),
-                ('jazyk', models.CharField(choices=[('cs', 'Česky'), ('en', 'Anglicky')], default='cs', max_length=15)),
-                ('sha_1', models.TextField(blank=True, null=True)),
-                ('telefon', models.CharField(blank=True, max_length=100, null=True, validators=[core.validators.validate_phone_number])),
-                ('history_id', models.AutoField(primary_key=True, serialize=False)),
-                ('history_date', models.DateTimeField()),
-                ('history_change_reason', models.CharField(max_length=100, null=True)),
-                ('history_type', models.CharField(choices=[('+', 'Created'), ('~', 'Changed'), ('-', 'Deleted')], max_length=1)),
-            ],
-            options={
-                'verbose_name': 'historical Uživatel',
-                'ordering': ('-history_date', '-history_id'),
-                'get_latest_by': 'history_date',
-            },
-            bases=(simple_history.models.HistoricalChanges, models.Model),
         ),
         migrations.CreateModel(
             name='NotificationsLog',
@@ -170,26 +140,6 @@ class Migration(migrations.Migration):
             model_name='notificationslog',
             name='notification_type',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='uzivatel.usernotificationtype'),
-        ),
-        migrations.AddField(
-            model_name='historicaluser',
-            name='history_user',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AddField(
-            model_name='historicaluser',
-            name='history_vazba',
-            field=models.ForeignKey(blank=True, db_column='historie', db_constraint=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to='historie.historievazby'),
-        ),
-        migrations.AddField(
-            model_name='historicaluser',
-            name='organizace',
-            field=models.ForeignKey(blank=True, db_column='organizace', db_constraint=False, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='uzivatel.organizace'),
-        ),
-        migrations.AddField(
-            model_name='historicaluser',
-            name='osoba',
-            field=models.ForeignKey(blank=True, db_column='osoba', db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='uzivatel.osoba'),
         ),
         migrations.AddField(
             model_name='user',

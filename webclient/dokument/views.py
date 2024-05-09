@@ -1,7 +1,6 @@
 import logging
-import os
+from cacheops import invalidate_model
 from typing import Any
-from django import http
 import simplejson as json
 
 from django.db.models.signals import post_save
@@ -91,6 +90,8 @@ from dokument.models import (
     DokumentAutor,
     DokumentCast,
     DokumentExtraData,
+    DokumentJazyk,
+    DokumentPosudek,
     Let,
     Tvar,
 )
@@ -112,6 +113,7 @@ from heslar.hesla import (
 from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
+    MODEL_3D_DOKUMENT_TYPES,
     PRISTUPNOST_BADATEL_ID,
     TYP_PROJEKTU_PRUZKUM_ID,
 )
@@ -169,6 +171,7 @@ def detail_model_3D(request, ident_cely):
             "typ_dokumentu",
         ),
         ident_cely=ident_cely,
+        typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES
     )
     casti = dokument.casti.all()
     if casti.count() != 1:
@@ -434,14 +437,14 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context["warnings"] = self.request.session.pop("temp_data", None)
         dokument = get_object_or_404(
-            Dokument.objects.select_related(
+            Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES).select_related(
                 "soubory",
                 "organizace",
                 "material_originalu",
                 "typ_dokumentu",
                 "rada",
             ),
-            ident_cely=self.kwargs["ident_cely"],
+            ident_cely=self.kwargs["ident_cely"]
         )
         if not dokument.has_extra_data():
             extra_data = DokumentExtraData(dokument=dokument)
@@ -702,7 +705,7 @@ class TvarEditView(LoginRequiredMixin, View):
     Třida pohledu pro uložení zmeny tvaru z formuláře.
     """
     def post(self, request, *args, **kwargs):
-        dokument = get_object_or_404(Dokument, ident_cely=self.kwargs["ident_cely"])
+        dokument: Dokument = get_object_or_404(Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES), ident_cely=self.kwargs["ident_cely"])
         TvarFormset = inlineformset_factory(
             Dokument,
             Tvar,
@@ -716,6 +719,7 @@ class TvarEditView(LoginRequiredMixin, View):
             logger.debug("dokument.views.TvarEditView.form_valid")
             formset.save()
             if formset.has_changed():
+                dokument.save_metadata(FedoraTransaction(), close_transaction=True)
                 logger.debug("dokument.views.TvarEditView.form_data_changed")
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
@@ -765,6 +769,8 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         zaznam = self.get_zaznam()
+        zaznam.active_transaction = FedoraTransaction()
+        zaznam.close_active_transaction_when_finished = True
         dokument = zaznam.dokument
         zaznam.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
@@ -782,7 +788,7 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
     def get_zaznam(self) -> Dokument:
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
-            Dokument,
+            Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES),
             ident_cely=ident_cely,
         )
 
@@ -967,6 +973,8 @@ class DokumentCastPripojitProjektView(TransakceView):
         form = PripojitProjektForm(data=request.POST, dok=True)
         if form.is_valid():
             projekt = form.cleaned_data["projekt"]
+            cast.active_transaction = FedoraTransaction()
+            cast.close_active_transaction_when_finished = True
             cast.archeologicky_zaznam = None
             cast.projekt = Projekt.objects.get(id=projekt)
             cast.save()
@@ -1005,6 +1013,8 @@ class DokumentCastOdpojitView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         cast = self.get_zaznam()
+        cast.active_transaction = FedoraTransaction()
+        cast.close_active_transaction_when_finished = True
         cast.archeologicky_zaznam = None
         cast.projekt = None
         cast.save()
@@ -1024,15 +1034,15 @@ class DokumentCastSmazatView(TransakceView):
         self.success_message = DOKUMENT_CAST_USPESNE_SMAZANA
 
     def post(self, request, *args, **kwargs):
+        fedora_transaction = FedoraTransaction()
         cast = self.get_zaznam()
+        cast.active_transaction = fedora_transaction
         dokument = cast.dokument
         if cast.komponenty:
             komps = cast.komponenty
             cast.komponenty = None
             cast.save()
             komps.delete()
-        fedora_transaction = FedoraTransaction()
-        cast.active_transaction = fedora_transaction
         cast.close_active_transaction_when_finished = True
         cast.delete()
         messages.add_message(request, messages.SUCCESS, self.success_message)
@@ -1071,7 +1081,7 @@ def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci dokumentu.
     """
-    dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    dokument = get_object_or_404(Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES), ident_cely=ident_cely)
     if dokument.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if not dokument.has_extra_data():
@@ -1125,6 +1135,9 @@ def edit(request, ident_cely):
             dokument_extra.save()
             instance_d.close_active_transaction_when_finished = True
             instance_d.save()
+            form_d.save_m2m()
+            invalidate_model(DokumentJazyk)
+            invalidate_model(DokumentPosudek)
             if form_d.has_changed() or form_extra.has_changed():
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
@@ -1165,7 +1178,7 @@ def edit_model_3D(request, ident_cely):
     """
     Funkce pohledu pro editaci modelu 3D.
     """
-    dokument: Dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    dokument: Dokument = get_object_or_404(Dokument, ident_cely=ident_cely, typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
     if dokument.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
@@ -1474,12 +1487,28 @@ def odeslat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = FedoraTransaction()
         dokument.active_transaction = fedora_transaction
-        dokument.set_odeslany(request.user)
+        old_ident = dokument.ident_cely
+        # Nastav identifikator na permanentny
+        if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
+            rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
+            try:
+                dokument.set_permanent_ident_cely(dokument.ident_cely[2], rada)
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+                fedora_transaction.rollback_transaction()
+                dokument.close_active_transaction_when_finished = True
+                return JsonResponse(
+                    {"redirect": get_detail_json_view(ident_cely)}, status=403
+                )
+            else:
+                dokument.save()
+                logger.debug("dokument.views.odeslat.permanent", extra={"ident_cely": dokument.ident_cely})
+        dokument.set_odeslany(request.user, old_ident)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
         logger.debug("dokument.views.odeslat.sucess")
         dokument.close_active_transaction_when_finished = True
         dokument.save()
-        return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
+        return JsonResponse({"redirect": get_detail_json_view(dokument.ident_cely)})
     else:
         warnings = dokument.check_pred_odeslanim()
         if warnings:
@@ -1531,15 +1560,6 @@ def archivovat(request, ident_cely):
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
                 fedora_transaction.rollback_transaction()
                 dokument.close_active_transaction_when_finished = True
-                return JsonResponse(
-                    {"redirect": get_detail_json_view(ident_cely)}, status=403
-                )
-            except FileNotFoundError as e:
-                messages.add_message(
-                    request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT_CHYBY_SOUBOR
-                )
-                # dokument.close_active_transaction_when_finished = True
-                dokument.save()
                 return JsonResponse(
                     {"redirect": get_detail_json_view(ident_cely)}, status=403
                 )
@@ -1630,6 +1650,11 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = FedoraTransaction()
         dokument.active_transaction = fedora_transaction
+        dokument.record_deletion()
+        for item in dokument.casti.all():
+            item: DokumentCast
+            item.active_transaction = fedora_transaction
+            item.delete()
         resp1 = dokument.delete()
         if resp1:
             logger.debug("dokument.views.smazat.deleted", extra={"resp1": resp1})
@@ -1664,7 +1689,7 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
-        qs = Dokument.objects.exclude(ident_cely__contains=Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D).zkratka)
+        qs = Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
         return self.check_filter_permission(qs)
@@ -1886,6 +1911,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
         logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
         if remove_orphan:
             orphan_dokument.active_transaction = fedora_transaction
+            orphan_dokument.record_deletion()
             orphan_dokument.delete()
             logger.debug("dokument.views.odpojit.deleted")
         fedora_transaction.mark_transaction_as_closed()

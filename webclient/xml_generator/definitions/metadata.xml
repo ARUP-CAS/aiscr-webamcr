@@ -323,7 +323,6 @@
     <amcr:ident_cely>BIB-123456</amcr:ident_cely>
     <amcr:stav>1</amcr:stav>
     <amcr:typ id="HES-123456" xml:lang="cs">kniha</amcr:typ>
-    <amcr:sysno>9874-1</amcr:sysno>
     <amcr:autor id="OS-123456" poradi="1">Novák, Jan</amcr:autor>
     <amcr:nazev>Knížka</amcr:nazev>
     <amcr:edice_rada>To nejlepší z archeologie</amcr:edice_rada>
@@ -506,7 +505,6 @@
     <amcr:popis xml:lang="cs">sídlištní aktivita</amcr:popis>
     <amcr:popis_en xml:lang="en">settlement activity</amcr:popis_en>
     <amcr:zkratka xml:lang="cs">síd</amcr:zkratka>
-    <amcr:zkratka_en xml:lang="en">set</amcr:zkratka_en>
     <amcr:razeni>1</amcr:razeni>
     <amcr:hierarchie_vyse>
       <amcr:id>hier-1</amcr:id>

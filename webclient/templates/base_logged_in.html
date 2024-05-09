@@ -332,11 +332,16 @@
             <span>{% trans "templates.baseLogedIn.navbar.uzivatel" %}</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'logout' %}" rel="tooltip" data-placement="top" title="{% trans 'templates.baseLogedIn.navbar.odhlasit.title' %}">
-            <span class="material-icons">logout</span>
-            {% trans "templates.baseLogedIn.navbar.odhlasit" %}
-          </a>
+        <li class="nav-item app-logout">
+          <form action="{% url 'logout' %}" id="logout-form" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="logout_type" id="logout_type"  value="" />
+            <input type="hidden" name="next" id="next" value="" />
+            <button type="submit" class="nav-link">
+              <span class="material-icons">logout</span>
+               {% trans "templates.baseLogedIn.navbar.odhlasit" %} 
+            </button>
+          </form>
         </li>
         <li class="nav-item app-pipe"></li>
         <li class="nav-item app-flags">
@@ -534,10 +539,32 @@
         };
       };
     });
+  function logoutFunction(param) {
+    for (const key in param) {
+      if (param.hasOwnProperty(key)) {
+        if (key == 'next' || key == 'logout_type'){
+          document.getElementById(key).value = param[key]
+        }
+      }
+    }
+    document.getElementById('logout-form').submit();
+  }
+    
+    function showTimeToExpire(param){
+      $('#time').html(param["text"])
+    }
+
+    function callDynamicFunction(functionName, param) {
+        if (typeof window[functionName] === 'function') {
+            window[functionName](param);  // Call the function with a parameter
+        } else {
+            console.log("Function not found: " + functionName);
+        }
+    }
 
     {% if redirect_to_login_immediately %}
       timer.addEventListener('targetAchieved', function (e) {
-        {{redirect_to_login_immediately}}
+        callDynamicFunction("{{redirect_to_login_immediately}}", {{extra_param}})
       });
     {% endif %}
     if (maintenance !== "true"){

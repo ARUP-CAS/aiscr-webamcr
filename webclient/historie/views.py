@@ -5,7 +5,6 @@ from django.db.models import Value, CharField, F
 from django.db.models.functions import Concat
 from django.views.generic import ListView
 from django_tables2 import SingleTableMixin
-from simple_history.models import HistoricalRecords
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
 from dokument.models import Dokument
