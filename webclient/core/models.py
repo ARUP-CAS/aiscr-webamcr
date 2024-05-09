@@ -153,12 +153,12 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         """
         Metóda pro vytvoření vazby na historii.
         """
-        logger.debug(_("core.models.Soubor.create_soubor_vazby.start"))
+        logger.debug("core.models.Soubor.create_soubor_vazby.start")
         hv = HistorieVazby(typ_vazby=SOUBOR_RELATION_TYPE)
         hv.save()
         self.historie = hv
         self.save()
-        logger.debug(_("core.models.soubor.create_soubor_vazby.finished"), extra={"historie": hv})
+        logger.debug("core.models.soubor.create_soubor_vazby.finished", extra={"historie": hv})
 
     @property
     def vytvoreno(self):
@@ -166,7 +166,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
         else:
             self.create_soubor_vazby()
-            logger.warning(_("core.models.soubor.vytvoreno.error"), extra={"pk": self.pk})
+            logger.warning("core.models.soubor.vytvoreno.error", extra={"pk": self.pk})
             return None
 
     def get_repository_content(self, ident_cely_old=None, thumb_small=False, thumb_large=False) \
@@ -175,12 +175,12 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
         record = self.vazba.navazany_objekt
         if record is not None and self.repository_uuid is not None:
-            logger.debug(_("core.models.Soubor.get_repository_content"),
+            logger.debug("core.models.Soubor.get_repository_content",
                          extra={"record_ident_cely": record.ident_cely, "repository_uuid": self.repository_uuid})
             conector = FedoraRepositoryConnector(record)
             rep_bin_file = conector.get_binary_file(self.repository_uuid, ident_cely_old, thumb_small, thumb_large)
             return rep_bin_file
-        logger.debug(_("core.models.Soubor.get_repository_content.not_found"),
+        logger.debug("core.models.Soubor.get_repository_content.not_found",
                      extra={"record_ident_cely": record, "repository_uuid": self.repository_uuid, "soubor_pk": self.pk})
         return None
 
@@ -195,7 +195,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             poznamka=file_name if file_name else self.nazev,
             vazba=self.historie,
         ).save()
-        logger.debug(_("core.models.soubor.zaznamenej_nahrani.finished"), extra={"historie": hist})
+        logger.debug("core.models.soubor.zaznamenej_nahrani.finished", extra={"historie": hist})
 
     def zaznamenej_nahrani_nove_verze(self, user, nazev=None):
         """
@@ -211,7 +211,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             poznamka=nazev,
             vazba=self.historie,
         ).save()
-        logger.debug(_("core.models.soubor.zaznamenej_nahrani_nove_verze.finished"), extra={"historie": hist})
+        logger.debug("core.models.soubor.zaznamenej_nahrani_nove_verze.finished", extra={"historie": hist})
 
     @classmethod
     def get_file_extension_by_mime(cls, file):
