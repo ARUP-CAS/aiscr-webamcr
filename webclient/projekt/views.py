@@ -762,8 +762,13 @@ def prihlasit(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
+    archivar = not request.user.is_archiver_or_more
     if request.method == "POST":
-        form = PrihlaseniProjektForm(request.POST, instance=projekt)
+        if archivar:
+            form = PrihlaseniProjektForm(request.POST, instance=projekt,initial={"organizace": request.user.organizace},
+                archivar=archivar)
+        else:
+            form = PrihlaseniProjektForm(request.POST, instance=projekt)
         if form.is_valid():
             projekt = form.save(commit=False)
             fedora_transaction = FedoraTransaction()
@@ -786,7 +791,6 @@ def prihlasit(request, ident_cely):
         else:
             logger.debug("projekt.views.prihlasit.form_not_valid", extra={"errors": form.errors})
     else:
-        archivar = not request.user.is_archiver_or_more
         form = PrihlaseniProjektForm(
             instance=projekt,
             initial={"organizace": request.user.organizace, "old_stav": projekt.stav},
