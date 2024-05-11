@@ -1,13 +1,9 @@
 #!/bin/bash
 ###########
-#### SCRIPT: DEPLOYMENT from DOCKERHUB into SWARM
+#### SCRIPT: DEPLOYMENT from local repository into SWARM for testing
 #### PARAMS: see -h
 ###########
-#USAGE: deployment based on release on GITHUB, i.e. GitHub actions published docker images on Docker Hub
-
-# ------ !!!! ----------
-SKIP_ALL_CHECKS=1 #IF CHANGED TO 1 then all MANUAL CHECKS, ie questions during script runtime are disabled!
-# ------ !!!! ----------
+#USAGE: deployment based on local repository
 
 ask_continue () {
     while true; do
@@ -64,47 +60,55 @@ check_stack_exists ()
     return ${stack_status}
 }
 
+actualize_repo ()
+{
+
+    valid_ans=false
+
+    while [ "$valid_ans" = false ]; do
+        
+        echo "Do you want to update the local repository to origin/dev first before creating a docker image? (y/n)"   
+        read ans
+
+        if [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
+            echo "Update repository..."
+            git reset --hard origin/dev
+            valid_ans=true
+        elif [ "$ans" = "n" ] || [ "$ans" = "N" ]; then
+            echo "Continue without update."
+            valid_ans=true
+        else
+            echo "Invalid answer, enter 'y' for yes or 'n' for no."
+        fi
+    done    
+}
+
 run_default ()
 {  
+    
    in_args="${1}"
    echo_dec "${msg_default_case}"
-   
-   #DISCLAIMER about DEFAULT CASE triggering
-   if [ ${SKIP_ALL_CHECKS} -eq 0 ] && [ "${in_args}" == "" ]; then
-    ask_continue "Do you want to continue with DEFAULT CASE? "
-   fi
-   echo_dec "DEPLOY  all services."
-   
-   #RAISE questions about conditions for deployemnt
-   do_manual_checks
 
+   actualize_repo
+   
    # Check network exists
    check_create_network
 
    #Update images
-   er "${cmd_pull_images}"
-   if [ $? -gt 0 ]; then
-	echo_dec "${msg_pull_fail} with TAG: ${IMAGE_TAG} => EXITING"
-	exit
-   fi
+   echo_dec "create image"
+   er "${cmd_create_images}"  
+   
+    er "${cmd_deploy_base} ${compose_test} ${stack_name}" && \
+    echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
+    
 
-   if [ ${include_db} -eq 1 ]; then
-      er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
-      ${cmd_deploy_base} ${compose_prod} ${stack_name} && \
-      ${cmd_deploy_base} ${compose_db} ${stack_name}" && \
-      echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
-   else
-      er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
-      ${cmd_deploy_base} ${compose_prod} ${stack_name}" && \
-      echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
-   fi
 }
 
 Help ()
 {
     cat <<EOF
     !!!MUST BE RUN from REPOSIOTRY root like =>
-    usage: ./scrips/${script_name} [-x|b|u|t <tag_name>], 
+    usage: ./scrips/${script_name} [-x|b|h], 
     ---
        PURPOSE: manage deployment/run of production docker images build from GIT repository for AIS CR project in SWARM mode
     ----
@@ -120,79 +124,32 @@ Help ()
     ---
     2) Deploy or redeploy all services in swarm mode
        
-       $./scripts/${script_name} -b
-    
-    3) Update all services with new images
-       
-       $./scripts/${script_name} -u
+       $./scripts/${script_name} -b   
 
-    4) Provide docker image tag (insted of default "latest")
-       
-       $./scripts/${script_name} -t <tag_name>
-
-    5) Deploy stack with database
-
-       $./scripts/${script_name} -d
 
     -----
     Summnary:
     -h help
     -x remove docker stack (all services)
     -b (re)deploy all services in swarm mode (DEFAULT CASE)
-    -u update all services using rolling approach 
-    -t provide docker image tag name <tag_name>
-    -d deploy stack with database
+  
 EOF
 }
 
-do_manual_checks ()
-{
-    # DO SOME MANUAL CHECKS of deployment steps by ASKING questions (can be skipped by providing arbitrary command-line argument to the script)
-    if [ ${SKIP_ALL_CHECKS} -eq 1 ]; then
-        echo_dec "DEPLOYMENT QUESTIONS SKIPPED due to CONSTANT SKIP_ALL_CHECKS set ${SKIP_ALL_CHECKS}"
-    else
-        # DO SOME MANUAL CHECKS of deployment steps by ASKING questions (can be skipped)
-        ask_continue "1.Did you APPLY MANUAL migrations to DB (if relevant)?"
-        ask_continue "2.Did you MAKE release on GitHUB and waited to for end Github Action for publishing Docker images ?"
-        ask_continue "3.Did you CONFIGURE secrets to point to desired DB location (using docker secrets db_conf, i.e swarm secrets MUST be already existing) ?"
-    fi
-}
-
-
 script_name=$(basename ${0})
 passed_args="$@"
-export IMAGE_TAG="latest"
 
-while getopts ":t:" option; do
-    
-   case ${option} in
-        t)  #Overriding of default latest image by providing specific tag
-            export IMAGE_TAG="${OPTARG}"
-            tag_passed="yes"
-            echo "OPTION: -t with ${IMAGE_TAG}"
-            ;;
-	 *)
-            ;;
-    esac
-done
-
-echo "IMAGE TAG FOR DOCKER IMAGES IS >>>> ${IMAGE_TAG}"
 
 #INPUTS
-dockerhub_account="aiscr"
-prod_image_name="${dockerhub_account}/webamcr:${IMAGE_TAG}"
-proxy_image_name="${dockerhub_account}/webamcr-proxy:${IMAGE_TAG}"
 
 stack_name="swarm_webamcr"
 network_name="prod-net" #MUST MATCH WITH COMPOSE FILES!!!
 
-compose_proxy="docker-compose-production-proxy.yml"
-compose_prod="docker-compose-production.yml"
-compose_db="docker-compose-production-database.yml"
+compose_test="docker-compose-test.yml"
 
 msg_fail_build="!! DEPLOYMENT not successfull"
-msg_pull_fail="!! PULL not successfull"
-msg_pull_success="PULL success"
+
+
 msg_success="DEPLOYED in SWARM MODE ---> APPLICATION ACCESSIBLE on: port 8080"
 msg_default_case="DISCLAIMER: DEFAULT CASE will RE-DEPLOY ALL services again."
 
@@ -201,16 +158,16 @@ tr_path="$HOME/translations_backup"
 mkdir -p ${tr_path}
 
 #LOGGING
-log_dir="logs/prod_deploy"
+log_dir="logs/test_deploy"
 start_time=$(date +%Y%m%dT%H%M%S)
-log_file="${start_time}_prod-deployment_${passed_args}.log"
+log_file="${start_time}_test-deployment_${passed_args}.log"
 mkdir -p ${log_dir}
 
 OPTIND=1
 
 #REDIRECT to log
 exec > >(tee "${log_dir}/${log_file}" )
-exec 2>&1
+#exec 2>&1
 
 echo_dec "# DEPLOYMENT in SWARM MODE (i.e. host has to be joined or initiated as SWARM NODE) @${start_time}"
 
@@ -225,7 +182,7 @@ fi
 
 #Build commands
 cmd_stack_rm="docker stack rm ${stack_name}"
-cmd_pull_images="docker pull ${proxy_image_name} && docker pull ${prod_image_name}"
+cmd_create_images="docker build -t test_prod -f Dockerfile-production --build-arg VERSION_APP=\"$(git rev-parse --short HEAD | head -c 8)\" --build-arg TAG_APP=local_build  ."
 cmd_deploy_base="docker stack deploy --compose-file"
 
 #Cleaning old images
@@ -254,25 +211,6 @@ while getopts "hxbut:d" option; do
         echo "OPTION: -b"
         run_default b
         ;;
-      u) #update services
-        echo "OPTION: -u"
-        echo_dec "Update services with new images!"
-        if check_stack_exists ; then
-            do_manual_checks
-            docker service update --force --image ${prod_image_name} ${stack_name}_web && \
-            docker service update --force --image ${proxy_image_name} ${stack_name}_proxy && \
-            echo_dec "$msg_success" || echo_dec "$msg_fail_build"
-        else
-            echo_dec "SERVICE CANNOT BE UPDATED because stack doesn't exist !!!"
-        fi
-        ;;
-      t)
-	      ;;
-      d)  # Include database compose file in deployment
-          echo "OPTION: -d"
-          include_db=1
-          run_default
-          ;;
      \?) # Invalid option
          echo_dec "OPTION: INVALID"
          echo "Error: Invalid option ${option}"

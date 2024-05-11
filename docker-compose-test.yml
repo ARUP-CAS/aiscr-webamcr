@@ -1,0 +1,284 @@
+version: "3.8"
+
+services:
+  web:
+    image: docker.io/library/test_prod
+    secrets:
+      - db_conf
+      - mail_conf
+      - redis_pass
+    volumes:
+      - static_data:/vol/web
+      - locale_data:/vol/web/locale
+      - nginx_data:/vol/web/nginx/data
+      - /opt/selenium_test:/vol/web/selenium_test
+    environment:
+      - TEST_ENV_SETTING
+      - IMAGE_TAG=${IMAGE_TAG}
+    networks:
+      - prod-net
+    ports:
+      - "2525:2525"
+    healthcheck:
+      test: ["CMD-SHELL", "bash /scripts/run-healthcheck.sh"]
+      interval: 60s
+      timeout: 10s
+      retries: 10
+      start_period: 1s
+    depends_on:
+      - redis
+      - celery_worker
+      - celery_beat
+
+
+  proxy:
+    image: aiscr/webamcr-proxy:latest
+    volumes:
+      - static_data:/vol/static
+      - nginx_data:/vol/nginx/data
+    ports:
+      - "8080:8080"
+    networks:
+      - prod-net
+    healthcheck:
+      test: ["CMD-SHELL", 'sh /scripts/run-healthcheck_proxy.sh']
+      interval: 2m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+  sidecar:
+    image: eeacms/rsync:latest
+    environment:
+      - CRON_TASK_1=*/1 * * * * rsync -a /vol/web/locale/* /backup/
+    volumes:
+      - $HOME/translations_backup:/backup
+      - locale_data:/vol/web/locale
+    command:  
+      - client
+
+  redis:
+    image: aiscr/webamcr-redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    secrets:
+      - redis_pass
+    command: sh -c 'redis-server /home/redis/redis.conf'
+    networks:
+      - prod-net
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", 'bash /scripts/run-healthcheck_redis.sh']
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+  celery_worker:
+    image: docker.io/library/test_prod
+    command: celery -A webclient worker -l INFO -n worker1@amcr
+    environment:
+      - IMAGE_TAG=${IMAGE_TAG}
+    secrets:
+      - db_conf
+      - mail_conf
+      - redis_pass
+    volumes:
+      - static_data:/vol/web
+      - locale_data:/vol/web/locale
+      - nginx_data:/vol/web/nginx/data
+    networks:
+      - prod-net
+    healthcheck:
+      test: ["CMD-SHELL", "bash /scripts/run-healthcheck_celery.sh"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - redis
+
+  celery_beat:
+    image: docker.io/library/test_prod
+    command: celery -A webclient beat -l INFO
+    environment:
+      - IMAGE_TAG=${IMAGE_TAG}
+    secrets:
+      - db_conf
+      - mail_conf
+      - redis_pass
+    volumes:
+      - static_data:/vol/web
+      - locale_data:/vol/web/locale
+      - nginx_data:/vol/web/nginx/data
+    networks:
+      - prod-net
+    healthcheck:
+      test: ["CMD-SHELL", "bash /scripts/run-healthcheck_celery.sh"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - redis
+
+  grafana:
+    image: grafana/grafana-enterprise:8.2.0
+    restart: always
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_admin_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+    secrets:
+      - grafana_admin_password
+    ports:
+      - "3000:3000"
+    networks:
+      - prod-net
+
+  prometheus:
+    image: prom/prometheus
+    restart: always
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    networks:
+      - prod-net
+    ports:
+      - "9090:9090"
+    secrets:
+      - prometheus_config
+    command:
+      - "--config.file=/run/secrets/prometheus_config"
+      - "--storage.tsdb.retention.time=30d"
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.7.0
+    restart: always
+    environment:
+      - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
+      - ELASTIC_HOSTS=logstash_elastic_host
+    volumes:
+      - logs_volume:/logs
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    networks:
+      - prod-net
+    secrets:
+      - logstash_elastic_pass
+      - logstash_elastic_host
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    hostname: elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+      - http.host=0.0.0.0
+      - xpack.security.enabled=true
+      - XPACK_MONITORING_ENABLED=false
+      - ELASTIC_PASSWORD=elastic_pass
+    volumes:
+      - elasticsearch_volume:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - prod-net
+    secrets:
+      - elastic_pass
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "2G"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.7.0
+    restart: always
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    networks:
+      - prod-net
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+
+  selenium:
+    image: selenium/standalone-firefox
+    ports:
+      - 4444:4444
+      - 7900:7900
+    shm_size: '1gb'
+    networks:
+      - prod-net
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker"
+      - "/dev/disk/:/dev/disk"
+    ports:
+      - "8088:8080"
+    restart: always
+
+  postgresql_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter
+    restart: always
+    environment:
+      - DATA_SOURCE_URI_FILE=/run/secrets/postgresql_exporter_uri
+      - DATA_SOURCE_USER=postgres
+      - DATA_SOURCE_PASS_FILE=/run/secrets/postgresql_exporter
+    networks:
+      - prod-net
+    ports:
+      - "9187:9187"
+    secrets:
+      - postgresql_exporter
+      - postgresql_exporter_uri
+
+volumes:
+  static_data:
+  locale_data:
+  nginx_data:
+  logs_volume:
+  elasticsearch_volume:
+  grafana_data:
+  redis_data:
+  prometheus_data:
+
+networks:
+  prod-net:
+    external: true
+
+secrets:
+  db_conf:
+   external: true
+  mail_conf:
+   external: true
+  redis_pass:
+    external: true
+  grafana_admin_password:
+    external: true
+  elastic_pass:
+    external: true
+  logstash_elastic_pass:
+    external: true
+  prometheus_config:
+    external: true
+  postgresql_exporter:
+    external: true
+  postgresql_exporter_uri:
+    external: true
+  logstash_elastic_host:
+    external: true

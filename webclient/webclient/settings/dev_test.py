@@ -24,3 +24,14 @@ EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH = "/vol/web/selenium_test"  
 LOGGING["handlers"]["console"]["level"]="ERROR"
 SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']
+
+DATABASES["test_db"] = {   
+        "ENGINE": "django_prometheus.db.backends.postgis",
+        "NAME": TEST_DATABASE_NAME,
+        "USER": get_secret("DB_USER"),
+        "PASSWORD": get_secret("DB_PASS"),
+        "HOST": get_secret("DB_HOST"),
+        "PORT": get_secret("DB_PORT"),
+        "ATOMIC_REQUESTS": True,
+        "DISABLE_SERVER_SIDE_CURSORS": True,   
+}

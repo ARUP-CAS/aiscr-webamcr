@@ -59,6 +59,8 @@ def reader(pipe):
             break
     
 logger.info("amcr_test_runner.start_test", extra={"test": f"{' '.join(test_list)}"})
+subprocess.run(f"python3 manage.py migrate --database test_db --settings={SETTINGS}", text=True, shell=True )
+
 process = subprocess.Popen(f"python3 manage.py test {' '.join(test_list)} --settings={SETTINGS} --noinput --verbosity=2", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True )
 
 t1=Thread(target=reader, args=[process.stdout]).start()
