@@ -2,6 +2,7 @@ import time
 import datetime
 import logging
 import unittest
+import base64
 
 from django.conf import settings
 from selenium.webdriver import ActionChains
@@ -15,9 +16,11 @@ from arch_z.models import Akce,ExterniOdkaz
 from dokument.models import DokumentCast
 from dj.models import DokumentacniJednotka
 from komponenta.models import Komponenta
+from pian.models import Pian
 from nalez.models import NalezObjekt, NalezPredmet
 from django.utils.translation import gettext as _
 from selenium.common.exceptions import *
+from pas.tests.test_selenium import addFileToDropzone
 logger = logging.getLogger("tests")
 
 
@@ -906,8 +909,8 @@ class AkceSamostatneAkce(BaseSeleniumTestClass):
         self.login("archeolog")       
        
         count_old=ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="C-202301164A").count()
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-projekt > .card-body")
-        self.ElementClick(By.LINK_TEXT, self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")))
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202301164")
@@ -969,5 +972,275 @@ class AkceSamostatneAkce(BaseSeleniumTestClass):
         count_new =ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000003A").count()
         self.assertEqual(count_old+2, count_new)
         logger.info("AkceSamostatneAkce.test_pripojeni_externiho_zdroje_projektove_akci_p_001.end")
+    
+    
+    def test_vytvoreni_PIAN_projektove_akce_p_001(self):
+        #Scenar_86 Vytvoření PIAN u samostatné akce (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_vytvoreni_PIAN_projektove_akce_p_001.start")
+        self.test_number=86
+        self.login("archeolog")       
+        pian_old=DokumentacniJednotka.objects.filter(ident_cely='C-202401980A-D01')[0].pian
+        self.assertEqual(pian_old, None)
+        
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401980")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "C-202401980")
+        self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
+        self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401980A_D01 > strong")
+        self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_C-202401980A-D01 .btn-group:nth-child(1) .material-icons")
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "show_menu_pian_new_id")
+        self.wait(1)
+        self.driver.execute_script('''map.setZoom(16); return map.getZoom();''')
+        self.wait(2)  
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditAddPolygon"))
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),0,0)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),0,20)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),20,20)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),20,0)
+        self.wait(0.2) 
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditFinishText"))
+        self.wait(0.2) 
+        self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "createPianSubmitButton")
        
+        pian_new =DokumentacniJednotka.objects.filter(ident_cely='C-202401980A-D01')[0].pian
+
+        self.assertNotEqual(pian_new, None)
+        logger.info("AkceSamostatneAkce.test_vytvoreni_PIAN_projektove_akce_p_001.end")
+        
+    def test_editace_PIAN_projektove_akce_p_001(self):
+        #Scenar_87 Editace PIAN u projektové akce (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_editace_PIAN_projektove_akce_p_001.start")
+        self.test_number=87
+        self.login("archeolog")       
+        pian_old=str(DokumentacniJednotka.objects.filter(ident_cely='C-202401981A-D01')[0].pian.geom)        
+
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401981")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "C-202401981")
+        self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
+        self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401981A_D01 > strong")
+        self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
+        
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "pian-upravit-N-1212-000000002")
+        self.wait(1)
+        self.driver.execute_script('''map.setZoom(16); return map.getZoom();''')
+        self.wait(2)  
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditAddPolygon"))
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),0,0)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),0,20)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),20,20)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),20,0)
+        self.wait(0.2) 
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditFinishText"))
+        self.wait(0.2) 
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "editPianButton")
+       
+        pian_new =str(DokumentacniJednotka.objects.filter(ident_cely='C-202401981A-D01')[0].pian.geom)
+
+        self.assertNotEqual(pian_new, pian_old)
+        logger.info("AkceSamostatneAkce.test_editace_PIAN_projektove_akce_p_001.end")
+        
+        
+    def test_smazani_PIAN_projektove_akce_p_001(self):
+        #Scenar_88 Smazání PIAN u projektové akce (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_editace_PIAN_projektove_akce_p_001.start")
+        self.test_number=88
+        self.login("archeolog")       
+        pian =DokumentacniJednotka.objects.filter(ident_cely='C-202401981A-D01')[0].pian
+        self.assertNotEqual(pian, None)      
+
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401981")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+
+        self.ElementClick(By.LINK_TEXT, "C-202401981")
+        self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
+        self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401981A_D01 > strong")
+        self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
+        self.ElementClick(By.ID, "pian-odpojit-N-1212-000000002")
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "submit-btn") 
+ 
+        pian=DokumentacniJednotka.objects.filter(ident_cely='C-202401981A-D01')[0].pian
+        self.assertEqual(pian, None)
+        logger.info("AkceSamostatneAkce.test_editace_PIAN_projektove_akce_p_001.end")
+        
+        
+    def test_pripojeni_PIAN_projektove_akce_p_001(self):
+        #Scenar_89 Připojení PIAN z mapy u projektové akce (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_pripojeni_PIAN_projektove_akce_p_001.start")
+        self.test_number=89
+        self.login("archeolog")       
+        pian_old=DokumentacniJednotka.objects.filter(ident_cely='C-202401980A-D01')[0].pian
+        self.assertEqual(pian_old, None)
+        
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401980")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "C-202401980")
+        self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
+        self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401980A_D01 > strong")
+        self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_C-202401980A-D01 .btn-group:nth-child(1) .material-icons")
+        self.ElementClick(By.ID, "show_menu_pian_from_map_id")
+        self.wait(0.5)
+        self.driver.execute_script('''map.setView([50.357377039,  13.795522698],19)''')
+        self.wait(2)  
+        self.driver.execute_script('''Object.values(poi_pian._layers)[0].fire("click");''')     
+        self.wait(0.5)
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "editDjSubmitButton")
+       
+        pian_new =DokumentacniJednotka.objects.filter(ident_cely='C-202401980A-D01')[0].pian
+
+        self.assertNotEqual(pian_new, None)
+        logger.info("AkceSamostatneAkce.test_pripojeni_PIAN_projektove_akce_p_001.end")
+        
+       
+    def test_vytvoreni_PIAN_samostatne_akce_p_001(self):
+        #Scenar_96 Vytvoření PIAN u samostatné akce (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_vytvoreni_PIAN_samostatne_akce_p_001.start")
+        self.test_number=96
+        self.login("badatel")       
+        pian_old=DokumentacniJednotka.objects.filter(ident_cely='X-C-9000000002A-D01')[0].pian
+        self.assertEqual(pian_old, None)
+
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "X-C-9000000002A")
+        self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
+        self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_X-C-9000000002A-D01 .btn-group:nth-child(1) .material-icons")
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "show_menu_pian_new_id")
+        self.wait(1)
+        self.driver.execute_script('''map.setZoom(16); return map.getZoom();''')
+        self.wait(2)  
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditAddPolygon"))
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),0,0)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),0,20)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),20,20)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),20,0)
+        self.wait(0.2) 
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditFinishText"))
+        self.wait(0.2) 
+        self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "createPianSubmitButton")
+       
+        pian_new =DokumentacniJednotka.objects.filter(ident_cely='X-C-9000000002A-D01')[0].pian
+
+        self.assertNotEqual(pian_new, None)
+        logger.info("AkceSamostatneAkce.test_vytvoreni_PIAN_samostatne_akce_p_001.end")
+
+
+    def test_editace_PIAN_samostatne_akce_p_001(self):
+        #Scenar_97 Editace PIAN u samostatné akce (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_vytvoreni_PIAN_samostatne_akce_p_001.start")
+        self.test_number=97
+        self.login("badatel")       
+        pian_old=str(DokumentacniJednotka.objects.filter(ident_cely='X-C-9000000006A-D01')[0].pian.geom)        
+
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")      
+        
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000006A")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "X-C-9000000006A")
+        self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000006A_D01 > strong")
+        self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
+        
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "pian-upravit-N-1212-000000001")
+        self.wait(1)
+        self.driver.execute_script('''map.setZoom(16); return map.getZoom();''')
+        self.wait(2)  
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditAddPolygon"))
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),0,0)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),0,20)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),20,20)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),20,0)
+        self.wait(0.2) 
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditFinishText"))
+        self.wait(0.2) 
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "editPianButton")
+       
+        pian_new =str(DokumentacniJednotka.objects.filter(ident_cely='X-C-9000000006A-D01')[0].pian.geom)
+
+        self.assertNotEqual(pian_new, pian_old)
+        logger.info("AkceSamostatneAkce.test_vytvoreni_PIAN_samostatne_akce_p_001.end")
+        
+    def test_editace_PIAN_samostatne_akce_importem_p_001(self):
+        #Scenar_98 Editace PIAN k samostatné akci importem (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_vytvoreni_PIAN_samostatne_akce_p_001.start")
+        self.test_number=98
+        self.login("badatel")       
+        pian_old=str(DokumentacniJednotka.objects.filter(ident_cely='X-C-9000000006A-D01')[0].pian.geom)        
+
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")     
+        
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000006A")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "X-C-9000000006A")
+        self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000006A_D01 > strong")
+        self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")       
+
+        self.ElementClick(By.CSS_SELECTOR, ".show > .dropdown-item:nth-child(2)")
+        
+        with open("arch_z/tests/resources/geom.csv", "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+
+        addFileToDropzone(self.driver,"#my-awesome-dropzone",'geom.csv',encoded_string)
+        self.wait(1) 
+        with Wait_for_page_load(self.driver):    
+            self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "editPianButton") 
+       
+        pian_new =str(DokumentacniJednotka.objects.filter(ident_cely='X-C-9000000006A-D01')[0].pian.geom)
+
+        self.assertNotEqual(pian_new, pian_old)
+        logger.info("AkceSamostatneAkce.test_vytvoreni_PIAN_samostatne_akce_p_001.end")
         

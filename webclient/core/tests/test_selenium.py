@@ -142,8 +142,7 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.clone_Database")
         prod_conn = None
         prod_cursor = None
-        try:
-                       
+        try:                       
             prod_conn = psycopg2.connect(
                 host=get_secret("DB_HOST"),
                 database=get_secret("DB_NAME"),
@@ -196,19 +195,6 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
             result = self._outcome.result
         ok = all(test != self for test, text in result.errors + result.failures)
 
-        '''
-        if ok:
-            logger.info('%s OK' % (self.id(),))         
-        else:
-            logger.info('%s FAIL' % (self.id(),))  
-        for typ, errors in (('ERROR', result.errors), ('FAIL', result.failures)):
-            for test, text in errors:
-                if test is self:
-                    #  the full traceback is in the variable `text`
-                    msg = [x for x in text.split('\n')[1:]
-                           if not x.startswith(' ')][0]
-                    logger.info("%s: %s\n     %s" % (typ, self.id(), msg))
-        '''
         if os.path.isfile(f'{settings.TEST_SCREENSHOT_PATH}results.xlsx'):
             data= pandas.read_excel(f'{settings.TEST_SCREENSHOT_PATH}results.xlsx')
             d= data.values.tolist()
@@ -245,6 +231,7 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
     
     def wait(self,interval):
         time.sleep(interval) 
+        
     
     def wait_for(self,condition_function,by,value):
         start_time = time.time()
@@ -255,14 +242,18 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
                 time.sleep(0.5)
         return False
     
+    
     def findElement(self,by,value):
         elements=self.driver.find_elements(by,value)
         if  len(elements)>0: return True
         return False
+    
+    
     def ElementIsClickable(self,by,value):
         element=self.driver.find_element(by,value)
         if  element.is_displayed() and element.is_enabled()  : return True
         return False
+    
     
     def ElementClick(self,by=By.ID, value: Optional[str] = None):       
         res=self.wait_for(self.findElement,by,value)
