@@ -928,7 +928,8 @@ def zapsat(request, projekt_ident_cely=None):
             except MaximalEventCount:
                 messages.add_message(request, messages.ERROR, MAXIMUM_AKCII_DOSAZENO)
             else:
-                if True:
+                if FedoraRepositoryConnector.check_container_deleted_or_not_exists(az.ident_cely,
+                                                                                   "archeologicky_zaznam"):
                     az.save()
                     form_az.save_m2m()
                     # This must be called to save many to many (katastry)
