@@ -1,5 +1,6 @@
 import logging
 
+from cacheops import invalidate_model
 from django.contrib.auth import user_logged_in
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -68,15 +69,12 @@ def create_ident_cely(sender, instance: User, **kwargs):
 
 @receiver(post_save, sender=User)
 def user_post_save_method(sender, instance: User, created: bool, **kwargs):
+    invalidate_model(User)
     fedora_transaction = instance.active_transaction
     logger.debug("uzivatel.signals.user_post_save_method.start",
                  extra={"user": instance.ident_cely, "suppress_signal": instance.suppress_signal,
                         "transaction": getattr(fedora_transaction, "uid", None)})
     if not instance.suppress_signal:
-        if instance.close_active_transaction_when_finished:
-            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
-        else:
-            instance.save_metadata(fedora_transaction)
         send_deactivation_email(sender, instance, **kwargs)
         send_account_confirmed_email(sender, instance, created)
         # Create or change token when user changed.
@@ -87,6 +85,10 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
         else:
             old_token.delete()
             Token.objects.create(user=instance)
+        if instance.close_active_transaction_when_finished:
+            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
+        else:
+            instance.save_metadata(fedora_transaction)
         logger.debug("uzivatel.signals.user_post_save_method.end",
                      extra={"user": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)})
 
@@ -110,7 +112,9 @@ def send_account_confirmed_email(sender, instance: User, created):
     """
     signál pro zaslání emailu uživately o jeho konfirmaci.
     """
-    logger.debug("uzivatel.signals.send_account_confirmed_email.start", extra={"user": instance.ident_cely,"user_created": created,"created_from_admin_panel": instance.created_from_admin_panel})
+    logger.debug("uzivatel.signals.send_account_confirmed_email.start",
+                 extra={"user": instance.ident_cely,"user_created": created,
+                        "created_from_admin_panel": instance.created_from_admin_panel})
     if created is True and instance.created_from_admin_panel is True:
         Mailer.send_eu02(user=instance)
     logger.debug("uzivatel.signals.send_account_confirmed_email.end", extra={"user": instance.ident_cely})

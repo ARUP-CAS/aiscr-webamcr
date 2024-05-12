@@ -650,6 +650,7 @@ def odeslat(request, ident_cely):
     Po post volání se volá metóda na modelu pro posun stavu do odeslaná.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    az: ArcheologickyZaznam
     if az.stav != AZ_STAV_ZAPSANY:
         logger.debug("arch_z.views.odeslat permission denied")
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)

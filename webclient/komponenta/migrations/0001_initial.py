@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             name='KomponentaVazby',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('typ_vazby', models.TextField(choices=[('dokumentacni_jednotka', 'Dokumentacni jednotka'), ('dokument_cest', 'Dokument cast')], max_length=24)),
+                ('typ_vazby', models.TextField(choices=[('dokumentacni_jednotka', 'Dokumentacni jednotka'), ('dokument_cast', 'Dokument cast')], max_length=24)),
             ],
             options={
                 'db_table': 'komponenta_vazby',

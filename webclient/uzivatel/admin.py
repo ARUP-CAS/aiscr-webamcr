@@ -274,8 +274,8 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         logger.debug("uzivatel.admin.save_model.manage_user_groups",
                      extra={"max_id": max_id, "hlavni_role_pk": obj.hlavni_role.pk,
                             "transaction": fedora_transaction.uid})
+        obj.close_active_transaction_when_finished = True
         obj.save()
-        fedora_transaction.mark_transaction_as_closed()
 
     def user_change_password(self, request, id, form_url=""):
         if request.method == "POST":

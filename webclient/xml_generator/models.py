@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.db import models, transaction
 from celery import Celery
 
 
@@ -184,8 +184,9 @@ class ModelWithMetadata(models.Model):
                     try:
                         inner_item.adb.save_metadata(fedora_transaction)
                     except ObjectDoesNotExist as err:
-                        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.process_arch_z.no_adb",
-                                     extra={"err": err})
+                        logger.debug(
+                            "xml_generator.models.ModelWithMetadata.record_ident_change.process_arch_z.no_adb",
+                            extra={"err": err})
                 for inner_item in record.casti_dokumentu.all():
                     inner_item: DokumentCast
                     inner_item.dokument.save_metadata(fedora_transaction)
@@ -194,37 +195,60 @@ class ModelWithMetadata(models.Model):
                     inner_item.externi_zdroj.save_metadata(fedora_transaction)
 
             if isinstance(self, ArcheologickyZaznam):
-                process_arch_z(self)
+                self: ArcheologickyZaznam
+                transaction.on_commit(lambda: process_arch_z(self))
             elif isinstance(self, Dokument):
-                for item in self.casti.all():
-                    item: DokumentCast
-                    if item.archeologicky_zaznam:
-                        item.archeologicky_zaznam.save_metadata(fedora_transaction)
-                    if item.projekt:
-                        item.projekt.save_metadata(fedora_transaction)
-                if self.let:
-                    self.let.save_metadata(fedora_transaction)
+                def save_metadata(record: Dokument):
+                    for item in record.casti.all():
+                        item: DokumentCast
+                        if item.archeologicky_zaznam:
+                            item.archeologicky_zaznam.save_metadata(fedora_transaction)
+                        if item.projekt:
+                            item.projekt.save_metadata(fedora_transaction)
+                    if record.let:
+                        record.let.save_metadata(fedora_transaction)
+                self: Dokument
+                transaction.on_commit(lambda: save_metadata(self))
             elif isinstance(self, ExterniZdroj):
-                for item in self.externi_odkazy_zdroje.all():
-                    item: ExterniOdkaz
-                    item.archeologicky_zaznam.save_metadata(fedora_transaction)
+                def save_metadata(record: ExterniZdroj):
+                    for item in record.externi_odkazy_zdroje.all():
+                        item: ExterniOdkaz
+                        item.archeologicky_zaznam.save_metadata(fedora_transaction)
+                self: ExterniZdroj
+                transaction.on_commit(lambda: save_metadata(self))
             elif isinstance(self, Projekt):
-                for item in self.casti_dokumentu.all():
-                    item: DokumentCast
-                    item.dokument.save_metadata(fedora_transaction)
-                for item in self.samostatne_nalezy.all():
-                    item: SamostatnyNalez
-                    item.save_metadata(fedora_transaction)
+                def save_metadata(record: Projekt):
+                    for item in record.casti_dokumentu.all():
+                        item: DokumentCast
+                        item.dokument.save_metadata(fedora_transaction)
+                    for item in record.samostatne_nalezy.all():
+                        item: SamostatnyNalez
+                        item.save_metadata(fedora_transaction)
+
+                self: Projekt
+                transaction.on_commit(lambda: save_metadata(self))
             elif isinstance(self, Lokalita):
-                archeologicky_zaznam: ArcheologickyZaznam = self.archeologicky_zaznam
-                process_arch_z(archeologicky_zaznam)
+                def save_metadata(record: Lokalita):
+                    archeologicky_zaznam: ArcheologickyZaznam = record.archeologicky_zaznam
+                    process_arch_z(archeologicky_zaznam)
+
+                self: Lokalita
+                transaction.on_commit(lambda: save_metadata(self))
             elif isinstance(self, SamostatnyNalez):
-                if self.projekt:
-                    self.projekt.save_metadata(fedora_transaction)
+                def save_metadata(record: SamostatnyNalez):
+                    if record.projekt:
+                        record.projekt.save_metadata(fedora_transaction)
+
+                self: SamostatnyNalez
+                transaction.on_commit(lambda: save_metadata(self))
             elif isinstance(self, Pian):
-                for item in self.dokumentacni_jednotky_pianu.all():
-                    item: DokumentacniJednotka
-                    item.archeologicky_zaznam.save_metadata(fedora_transaction)
+                def save_metadata(record: Pian):
+                    for item in record.dokumentacni_jednotky_pianu.all():
+                        item: DokumentacniJednotka
+                        item.archeologicky_zaznam.save_metadata(fedora_transaction)
+
+                self: Pian
+                transaction.on_commit(lambda: save_metadata(self))
         logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end",
                      extra={"transaction": fedora_transaction.uid, "old_ident_cely": old_ident_cely,
                             "new_ident_cely": new_ident_cely})

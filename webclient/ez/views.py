@@ -333,6 +333,8 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
+        zaznam.active_transaction = FedoraTransaction()
+        zaznam.close_active_transaction_when_finished = True
         getattr(ExterniZdroj, self.action)(zaznam, request.user)
         messages.add_message(request, messages.SUCCESS, self.success_message)
 
@@ -424,6 +426,8 @@ class ExterniZdrojVratitView(TransakceView):
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
+        zaznam.active_transaction = FedoraTransaction()
+        zaznam.close_active_transaction_when_finished = True
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
@@ -657,6 +661,8 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         self.active_transaction = FedoraTransaction()
         az = self.get_zaznam()
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
+        eo.active_transaction = self.active_transaction
+        eo.close_active_transaction_when_finished = True
         eo.delete()
         messages.add_message(
             request, messages.SUCCESS, get_message(az, "EO_USPESNE_ODPOJEN")
@@ -745,6 +751,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
             )
             eo: ExterniOdkaz
             eo.active_transaction = self.active_transaction
+            eo.close_active_transaction_when_finished = True
             eo.save()
             messages.add_message(
                 request, messages.SUCCESS, get_message(az, "EO_USPESNE_PRIPOJEN")

@@ -1119,6 +1119,8 @@ def edit(request, ident_cely):
             instance_d.osoby.set(form_extra.cleaned_data["dokument_osoba"])
             if form_extra.cleaned_data["let"]:
                 instance_d.let = Let.objects.get(id=form_extra.cleaned_data["let"])
+            else:
+                instance_d.let = None
             instance_d.autori.clear()
             i = 1
             for autor in form_d.cleaned_data["autori"]:

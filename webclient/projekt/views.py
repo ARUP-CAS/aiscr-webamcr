@@ -937,12 +937,14 @@ def uzavrit(request, ident_cely):
         akce_query = Akce.objects.filter(projekt=projekt)
         for akce in akce_query:
             if akce.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
-                logger.debug("projekt.views.uzavrit.set_a2", extra={"ident_cely": ident_cely})
-                akce.archeologicky_zaznam.set_odeslany(request.user)
+                logger.debug("projekt.views.uzavrit.set_a2", extra={"ident_cely": ident_cely,
+                                                                    "transaction": fedora_transaction.uid})
                 akce.archeologicky_zaznam.active_transaction = fedora_transaction
+                akce.archeologicky_zaznam.set_odeslany(request.user)
             for dokument_cast in akce.archeologicky_zaznam.casti_dokumentu.all():
                 if dokument_cast.dokument.stav == D_STAV_ZAPSANY:
-                    logger.debug("projekt.views.uzavrit.set_d2", extra={"ident_cely": ident_cely})
+                    logger.debug("projekt.views.uzavrit.set_d2", extra={"ident_cely": ident_cely,
+                                                                        "transaction": fedora_transaction.uid})
                     dokument_cast.dokument.active_transaction = fedora_transaction
                     dokument_cast.dokument.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
