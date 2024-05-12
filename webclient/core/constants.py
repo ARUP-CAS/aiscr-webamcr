@@ -117,7 +117,10 @@ OBLAST_CHOICES = (
 
 CESKY = "cs"
 ANGLICKY = "en"
-JAZYKY = ((CESKY, _("core.constants.cs.text")), (ANGLICKY, _("core.constants.cs.text")))
+JAZYKY = (
+    (CESKY, _("core.constants.cs.text")),
+    (ANGLICKY, _("core.constants.en.text"))
+)
 
 # Typy vazeb
 PROJEKT_RELATION_TYPE: Final = "projekt"
@@ -177,3 +180,6 @@ PERMISSIONS_SHEET_PRISTUPNOST_NAME = "Přístupnost"
 PERMISSIONS_SHEET_APP_NAME = "app"
 PERMISSIONS_SHEET_URL_NAME = "URL"
 PERMISSIONS_SHEET_ACTION_NAME = "action"
+
+UDAJ_ODSTRANEN = "údaj odstraněn"
+STARY_PROJEKT_ZRUSEN = "Automatické zrušení projektů starších tří let, u kterých již nelze očekávat zahájení."

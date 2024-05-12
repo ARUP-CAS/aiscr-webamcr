@@ -5,7 +5,7 @@
     <div class="app-{{ app.app_label }} module{% if app.app_url in request.path|urlencode %} current-app{% endif %}">
       <table>
         <caption>
-          <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">{{ app.name }}</a>
+          <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}core.templates.admin.appList.models{% endblocktranslate %}">{{ app.name }}</a> <!-- Models in the {{ name }} application -->
         </caption>
         {% for model in app.models %}
           <tr class="model-{{ model.object_name|lower }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
@@ -16,16 +16,16 @@
             {% endif %}
 
             {% if model.add_url %}
-              <td><a href="{{ model.add_url }}" class="addlink">{% translate 'Add' %}</a></td>
+              <td><a href="{{ model.add_url }}" class="addlink">{% translate 'core.templates.admin.appList.add' %}</a></td>
             {% else %}
               <td></td>
             {% endif %}
 
             {% if model.admin_url and show_changelinks %}
               {% if model.view_only %}
-                <td><a href="{{ model.admin_url }}" class="viewlink">{% translate 'View' %}</a></td>
+                <td><a href="{{ model.admin_url }}" class="viewlink">{% translate 'core.templates.admin.appList.view' %}</a></td>
               {% else %}
-                <td><a href="{{ model.admin_url }}" class="changelink">{% translate 'Change' %}</a></td>
+                <td><a href="{{ model.admin_url }}" class="changelink">{% translate 'core.templates.admin.appList.change' %}</a></td>
               {% endif %}
             {% elif show_changelinks %}
               <td></td>
@@ -42,12 +42,12 @@
             <a class="section" href="{% url 'rosetta-file-list' po_filter='project' %}">Rosetta</a>
         </caption>
             <tbody><tr>
-                <th scope="row"><a href="{% url 'rosetta-file-list' po_filter='project' %}">{% trans "Translations" %}</a></th>
-                <td colspan="2"><a href="{% url 'rosetta-file-list' po_filter='project' %}" class="changelink">{% trans "Change" %}</a></td>
+                <th scope="row"><a href="{% url 'rosetta-file-list' po_filter='project' %}">{% trans "core.templates.admin.appList.translations" %}</a></th>
+                <td colspan="2"><a href="{% url 'rosetta-file-list' po_filter='project' %}" class="changelink">{% trans "core.templates.admin.appList.change" %}</a></td>
             </tr>
         </tbody></table>
     </div>
 {% endif %}
 {% else %}
-  <p>{% translate 'You don’t have permission to view or edit anything.' %}</p>
+  <p>{% translate 'core.templates.admin.appList.noPermissions' %}</p>  <!-- You don’t have permission to view or edit anything. -->
 {% endif %}

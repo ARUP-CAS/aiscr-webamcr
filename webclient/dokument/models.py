@@ -433,8 +433,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             return self.soubory.soubory.first().pk
 
     def set_snapshots(self):
-        self.autori_snapshot = "; ".join([x.autor.vypis_cely for x in self.dokumentautor_set.order_by("poradi").all()])
-        self.osoby_snapshot = "; ".join([x.osoba.vypis_cely for x in self.dokumentosoba_set.order_by("osoba__vypis_cely").all()])
+        if not self.dokumentautor_set.all():
+            self.autori_snapshot = None
+        else:
+            self.autori_snapshot = "; ".join([x.autor.vypis_cely for x in self.dokumentautor_set.order_by("poradi").all()])
+        if not self.dokumentosoba_set.all():
+            self.osoby_snapshot = None
+        else:
+            self.osoby_snapshot = "; ".join([x.osoba.vypis_cely for x in self.dokumentosoba_set.order_by("osoba__vypis_cely").all()])
 
     @property
     def redis_snapshot_id(self):

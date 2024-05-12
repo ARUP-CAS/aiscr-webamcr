@@ -176,9 +176,15 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             return ()
 
     def set_snapshots(self):
-        self.autori_snapshot = "; ".join([x.autor.vypis_cely
+        if not self.externizdrojautor_set.all():
+            self.autori_snapshot = None
+        else:
+            self.autori_snapshot = "; ".join([x.autor.vypis_cely
                                           for x in self.externizdrojautor_set.order_by("poradi").all()])
-        self.editori_snapshot = "; ".join([x.editor.vypis_cely
+        if not self.externizdrojeditor_set.all():
+            self.editori_snapshot = None
+        else:
+            self.editori_snapshot = "; ".join([x.editor.vypis_cely
                                           for x in self.externizdrojeditor_set.order_by("poradi").all()])
 
     @property

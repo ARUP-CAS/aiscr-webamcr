@@ -992,15 +992,17 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
             try:
                 skryte_sloupce.remove(sloupec)
                 request.session.modified = True
-                return HttpResponse("Odebrano ze skrytych %s" % sloupec)
+                help_translation = _('core.views.SearchListChangeColumnsView.show')  # Odebrano ze skrytych
+                return HttpResponse(f"{help_translation} {sloupec}")
             except ValueError:
-                logger.error("core.SearchListChangeColumnsView.post..odebrat_sloupec_z_vychozich.error",
-                             extra={"sloupec": sloupec})
-                HttpResponse(f"Nelze odebrat sloupec {sloupec}", status=400)
+                logger.error("core.SearchListChangeColumnsView.post.odebrat_sloupec_z_vychozich.error",
+                             extra={"sloupec": sloupec})  # Nelze odebrat sloupec
+                help_translation = _('core.views.SearchListChangeColumnsView.failed')
+                HttpResponse(f"{help_translation} {sloupec}", status=400)
         else:
             skryte_sloupce.append(sloupec)
             request.session.modified = True
-        help_translation = _('core.views.SearchListChangeColumnsView.response')
+        help_translation = _('core.views.SearchListChangeColumnsView.hide')
         return HttpResponse(f"{help_translation} {sloupec}")
 
 

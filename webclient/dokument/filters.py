@@ -1186,7 +1186,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(komponenta_divider),
-                    HTML(_('<hr class="mt-0" />')),
+                    HTML('<hr class="mt-0" />'),
                     data_toggle="collapse",
                     href="#komponentaCollapse",
                     role="button",
@@ -1214,7 +1214,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(neident_akce_divider),
-                    HTML(_('<hr class="mt-0" />')),
+                    HTML('<hr class="mt-0" />'),
                     data_toggle="collapse",
                     href="#neidentAkceCollapse",
                     role="button",
@@ -1233,7 +1233,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(lety_tvary_divider),
-                    HTML(_('<hr class="mt-0" />')),
+                    HTML('<hr class="mt-0" />'),
                     data_toggle="collapse",
                     href="#letyTvaryCollapse",
                     role="button",
@@ -1260,7 +1260,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(soubory_divider),
-                    HTML(_('<hr class="mt-0" />')),
+                    HTML('<hr class="mt-0" />'),
                     data_toggle="collapse",
                     href="#souboryCollapse",
                     role="button",
@@ -1280,7 +1280,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(vazby_divider),
-                    HTML(_('<hr class="mt-0" />')),
+                    HTML('<hr class="mt-0" />'),
                     data_toggle="collapse",
                     href="#vazbyCollapse",
                     role="button",
