@@ -1038,9 +1038,6 @@ def smazat(request, ident_cely):
             {"redirect": az.get_absolute_url()},
             status=403,
         )
-    if az.container_creation_queued():
-        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
-        return JsonResponse({"redirect": az.get_absolute_url()}, status=403)
     if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
         projekt = az.akce.projekt
     else:
@@ -1055,9 +1052,11 @@ def smazat(request, ident_cely):
             for dj in az.dokumentacni_jednotky_akce.all():
                 dj: DokumentacniJednotka
                 dj.active_transaction = fedora_transaction
+                dj.suppress_signal_arch_z = True
                 dj.delete()
             az.delete()
-            logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely})
+            logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely,
+                                                               "transaction": fedora_transaction})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         except RestrictedError as err:
             logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "err": err})

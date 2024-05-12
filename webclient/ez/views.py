@@ -387,9 +387,6 @@ class ExterniZdrojSmazatView(TransakceView):
         zaznam.deleted_by_user = request.user
         zaznam.active_transaction = FedoraTransaction()
         zaznam.close_active_transaction_when_finished = True
-        if hasattr(zaznam, "container_creation_queued") and zaznam.container_creation_queued():
-            messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
-            return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=403)
         try:
             zaznam.delete()
         except RestrictedError as err:

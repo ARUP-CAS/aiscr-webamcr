@@ -51,6 +51,7 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
     active_transaction = None
     close_active_transaction_when_finished = False
     suppress_signal = False
+    suppress_signal_arch_z = False
 
     class Meta:
         db_table = "dokumentacni_jednotka"

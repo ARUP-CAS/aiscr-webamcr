@@ -94,6 +94,10 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
 @receiver(post_delete, sender=DokumentacniJednotka)
 def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
     logger.debug("dj.signals.delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
+    if instance.suppress_signal:
+        logger.debug("dj.signals.delete_dokumentacni_jednotka.suppress_signal",
+                     extra={"ident_cely": instance.ident_cely})
+        return
     fedora_transaction = instance.active_transaction
     pian: Pian = instance.pian
     save_pian_metadata = False
@@ -132,14 +136,16 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
         instance.komponenty.delete()
     if instance.close_active_transaction_when_finished:
         def save_metadata():
-            instance.archeologicky_zaznam.save_metadata(fedora_transaction)
+            if not instance.suppress_signal_arch_z:
+                instance.archeologicky_zaznam.save_metadata(fedora_transaction)
             if save_pian_metadata:
                 pian.save_metadata(fedora_transaction)
             fedora_transaction.mark_transaction_as_closed()
 
         transaction.on_commit(save_metadata)
     else:
-        instance.archeologicky_zaznam.save_metadata(fedora_transaction)
+        if not instance.suppress_signal_arch_z:
+            instance.archeologicky_zaznam.save_metadata(fedora_transaction)
         if save_pian_metadata:
             pian.save_metadata(fedora_transaction)
     logger.debug("dj.signals.delete_dokumentacni_jednotka.end", extra={"ident_cely": instance.ident_cely,

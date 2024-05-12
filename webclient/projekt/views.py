@@ -548,9 +548,6 @@ def smazat(request, ident_cely):
         projekt.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         return JsonResponse({"redirect": reverse("projekt:list")})
-    elif projekt.container_creation_queued():
-        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
-        return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}, status=403)
     else:
         warnings = projekt.check_pred_smazanim()
         if warnings:

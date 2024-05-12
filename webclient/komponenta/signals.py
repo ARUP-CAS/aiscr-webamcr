@@ -2,7 +2,7 @@ import logging
 
 from cacheops import invalidate_model
 from django.db import transaction
-from django.db.models.signals import pre_delete, post_save
+from django.db.models.signals import pre_delete, post_save, post_delete
 from django.dispatch import receiver
 
 from arch_z.models import ArcheologickyZaznam
@@ -21,13 +21,20 @@ def delete_komponenta_vazby(sender, instance: KomponentaVazby, **kwargs):
     Náhrada triggeru delete_connected_komponenta_vazby_relations.
     """
     logger.debug("komponenta.signals.delete_komponenta_vazby.start")
-    Komponenta.objects.filter(komponenta_vazby=instance.id).delete()
+    for item in Komponenta.objects.filter(komponenta_vazby=instance.id):
+        item: Komponenta
+        if instance.suppress_komponenta_signal:
+            item.suppress_signal = True
+        item.delete()
     logger.debug("komponenta.signals.delete_komponenta_vazby.end")
 
 
 @receiver(post_save, sender=Komponenta)
 def komponenta_save(sender, instance: Komponenta, **kwargs):
     logger.debug("komponenta.signals.komponenta_save.start", extra={"pk": instance.pk})
+    if instance.suppress_signal:
+        logger.debug("komponenta.signals.komponenta_save.suppress_signal", extra={"pk": instance.pk})
+        return
     if instance.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
         invalidate_model(ArcheologickyZaznam)
     elif instance.komponenta_vazby.typ_vazby == DOKUMENT_CAST_RELATION_TYPE:
@@ -44,9 +51,12 @@ def komponenta_save(sender, instance: Komponenta, **kwargs):
                  extra={"transaction": getattr(fedora_transaction, "uid", None), "pk": instance.pk})
 
 
-@receiver(pre_delete, sender=Komponenta)
+@receiver(post_delete, sender=Komponenta)
 def komponenta_delete(sender, instance: Komponenta, **kwargs):
     logger.debug("komponenta.signals.komponenta_delete.start", extra={"pk": instance.pk})
+    if instance.suppress_signal:
+        logger.debug("komponenta.signals.komponenta_delete.suppress_signal", extra={"pk": instance.pk})
+        return
     if instance.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
         invalidate_model(ArcheologickyZaznam)
     elif instance.komponenta_vazby.typ_vazby == DOKUMENT_CAST_RELATION_TYPE:

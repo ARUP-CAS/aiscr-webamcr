@@ -35,6 +35,7 @@ class ModelWithMetadata(models.Model):
     deleted_by_user = None
     active_transaction = None
     close_active_transaction_when_finished = False
+    deletion_record_saved = False
 
     @property
     def metadata(self):
@@ -42,27 +43,12 @@ class ModelWithMetadata(models.Model):
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
 
-    def container_creation_queued(self):
-        from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(self)
-        if not connector.container_exists() and self.update_queued(self.__class__.__name__, self.pk):
-            return True
-        return False
-
-    @staticmethod
-    def update_queued(class_name, pk):
-        return check_if_task_queued(class_name, pk, "save_record_metadata")
-
-    def save_metadata(self, fedora_transaction=None, include_files=False, close_transaction=False):
+    def save_metadata(self, fedora_transaction=None, include_files=False, close_transaction=False,
+                      check_container=False):
         from core.repository_connector import FedoraTransaction
         stack = inspect.stack()
         caller = stack[1]
-        if fedora_transaction is None and self.active_transaction is not None:
-            fedora_transaction = self.active_transaction
-        elif fedora_transaction is None and self.active_transaction is None:
-            raise ValueError("No Fedora transaction")
-        if not isinstance(fedora_transaction, FedoraTransaction):
-            raise ValueError("fedora_transaction must be a FedoraTransaction class object")
+        fedora_transaction = self._get_fedora_transaction(fedora_transaction)
         if not self.ident_cely:
             logger.warning("xml_generator.models.ModelWithMetadata.save_metadata.no_ident",
                            extra={"ident_cely": self.ident_cely, "record_pk": self.pk,
@@ -94,8 +80,9 @@ class ModelWithMetadata(models.Model):
                      extra={"transaction": getattr(fedora_transaction, "uid", ""),
                             "transaction_mark_closed": self.close_active_transaction_when_finished})
 
-    def record_deletion(self, fedora_transaction=None, close_transaction=False):
-        logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.start")
+    def save_record_deletion_record(self, fedora_transaction, deleted_by_user=None):
+        fedora_transaction = self._get_fedora_transaction(fedora_transaction)
+
         from arch_z.models import ArcheologickyZaznam
         from dokument.models import Dokument
         from ez.models import ExterniZdroj
@@ -103,7 +90,18 @@ class ModelWithMetadata(models.Model):
         from projekt.models import Projekt
         from pas.models import SamostatnyNalez
 
-        from core.repository_connector import FedoraRepositoryConnector
+        if deleted_by_user:
+            self.deleted_by_user = deleted_by_user
+
+        if (isinstance(self, ArcheologickyZaznam) or isinstance(self, Dokument) or isinstance(self, ExterniZdroj)\
+                or isinstance(self, Pian) or isinstance(self, Projekt) or isinstance(self, SamostatnyNalez))\
+                and self.deletion_record_saved is not True:
+            from historie.models import Historie
+            Historie.save_record_deletion_record(record=self)
+            self.save_metadata(fedora_transaction, check_container=False)
+            self.deletion_record_saved = True
+
+    def _get_fedora_transaction(self, fedora_transaction):
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
         elif fedora_transaction is None and self.active_transaction is None:
@@ -111,13 +109,16 @@ class ModelWithMetadata(models.Model):
         from core.repository_connector import FedoraTransaction
         if not isinstance(fedora_transaction, FedoraTransaction):
             raise ValueError("fedora_transaction must be a FedoraTransaction class object")
+        return fedora_transaction
 
-        if isinstance(self, ArcheologickyZaznam) or isinstance(self, Dokument) or isinstance(self, ExterniZdroj)\
-                or isinstance(self, Pian) or isinstance(self, Projekt) or isinstance(self, SamostatnyNalez):
-            from historie.models import Historie
-            Historie.save_record_deletion_record(record=self)
-            self.save_metadata(fedora_transaction)
+    def record_deletion(self, fedora_transaction=None, close_transaction=False):
+        logger.debug("xml_generator.models.ModelWithMetadata.record_deletion.start")
+
+        fedora_transaction = self._get_fedora_transaction(fedora_transaction)
+        from core.repository_connector import FedoraRepositoryConnector
         connector = FedoraRepositoryConnector(self, fedora_transaction)
+        if not self.deletion_record_saved:
+            self.save_record_deletion_record(fedora_transaction)
         try:
             from core.models import SouborVazby
             if hasattr(self, "soubory") and self.soubory is not None and isinstance(self.soubory, SouborVazby)\
@@ -126,7 +127,7 @@ class ModelWithMetadata(models.Model):
                     from core.models import Soubor
                     soubor: Soubor
                     connector.delete_binary_file(soubor)
-            logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.end")
+            logger.debug("xml_generator.models.ModelWithMetadata.record_deletion.end")
             from dokument.models import Dokument
             from pas.models import SamostatnyNalez
             if isinstance(self, Dokument):
@@ -136,7 +137,7 @@ class ModelWithMetadata(models.Model):
                 if self.soubory.pk is not None:
                     self.soubory.delete()
         except ObjectDoesNotExist as err:
-            logger.debug("xml_generator.models.ModelWithMetadata.no_files_to_delete.end", extra={"err": err})
+            logger.debug("xml_generator.models.ModelWithMetadata.record_deletion.end", extra={"err": err})
         connector.record_deletion()
         if close_transaction is True:
             logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.mark_transaction_as_closed",
