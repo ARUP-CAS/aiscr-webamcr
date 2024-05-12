@@ -1,12 +1,13 @@
 import logging
 
 from cacheops import invalidate_model
+from django.db import transaction
 
 from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
 from core.models import SouborVazby
 from core.repository_connector import FedoraTransaction
 from cron.tasks import update_single_redis_snapshot
-from django.db.models.signals import pre_save, post_save, pre_delete
+from django.db.models.signals import pre_save, post_save, pre_delete, post_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
@@ -68,22 +69,26 @@ def create_projekt_vazby(sender, instance, **kwargs):
         instance.soubory = sv
 
 
-@receiver(pre_delete, sender=Projekt)
+@receiver(post_delete, sender=Projekt)
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     logger.debug("projekt.signals.projekt_pre_delete.start", extra={"ident_cely": instance.ident_cely})
     if instance.soubory and instance.soubory.soubory.exists():
         raise Exception(_("projekt.signals.projekt_pre_delete.cannot_delete"))
     fedora_transaction = instance.active_transaction
     invalidate_model(Projekt)
-    if instance.historie and instance.historie.pk:
-        instance.historie.delete()
-    if instance.soubory and instance.soubory.pk:
-        instance.soubory.delete()
-    if instance.casti_dokumentu:
-        for item in instance.casti_dokumentu.all():
-            item: DokumentCast
-            item.dokument.save_metadata(fedora_transaction)
-    instance.record_deletion(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
+    if not instance.suppress_signal:
+        def save_metadata(close_transaction=False):
+            if instance.soubory and instance.soubory.pk:
+                instance.soubory.delete()
+            if instance.casti_dokumentu:
+                for item in instance.casti_dokumentu.all():
+                    item: DokumentCast
+                    item.dokument.save_metadata(fedora_transaction)
+            instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
+        if instance.close_active_transaction_when_finished:
+            transaction.on_commit(lambda: save_metadata(True))
+        else:
+            save_metadata()
     logger.debug("projekt.signals.projekt_pre_delete.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)})
 

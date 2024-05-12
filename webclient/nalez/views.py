@@ -2,6 +2,7 @@ import logging
 from typing import Union
 
 from arch_z.models import ArcheologickyZaznam
+from core.constants import DOKUMENT_CAST_RELATION_TYPE
 from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
@@ -36,6 +37,7 @@ from heslar.views import heslar_12
 from komponenta.models import Komponenta
 from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +100,7 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
     """
     Funkce pohledu pro zapsání editace nálezu předmětu a objektu.
     """
-    komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
+    komponenta: Komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
     specifikace_objekt_choices = heslar_12(
         HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
@@ -131,10 +133,19 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
         request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p"
     )
     if formset_objekt.is_valid() and formset_predmet.is_valid():
-        logger.debug("nalez.views.edit_nalez.form_valid")
+        logger.debug("nalez.views.edit_nalez.form_valid",
+                     extra={"typ_vazby": komponenta.komponenta_vazby.typ_vazby})
         formset_predmet.save()
         formset_objekt.save()
         if formset_objekt.has_changed() or formset_predmet.has_changed():
+            if komponenta.komponenta_vazby.typ_vazby == DOKUMENT_CAST_RELATION_TYPE:
+                navazany_objekt: Dokument = komponenta.komponenta_vazby.casti_dokumentu
+                navazany_objekt.active_transaction = FedoraTransaction()
+                logger.debug("nalez.views.edit_nalez.form_valid.save_metadata_dokument",
+                             extra={"ident_cely": navazany_objekt.ident_cely,
+                                    "fedora_transaction": navazany_objekt.active_transaction.uid})
+                navazany_objekt.close_active_transaction_when_finished = True
+                navazany_objekt.save()
             logger.debug("Form data was changed")
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:

@@ -471,8 +471,12 @@ class FedoraRepositoryConnector:
         return response.content
 
     def save_metadata(self, update=True):
+        stack = inspect.stack()
+        caller = [x for x in stack]
+
         logger.debug("core_repository_connector.save_metadata.start",
-                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid,
+                            "caller": caller})
         self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_METADATA)
         result = self._send_request(url, FedoraRequestType.GET_METADATA)

@@ -1119,6 +1119,8 @@ def edit(request, ident_cely):
             instance_d.osoby.set(form_extra.cleaned_data["dokument_osoba"])
             if form_extra.cleaned_data["let"]:
                 instance_d.let = Let.objects.get(id=form_extra.cleaned_data["let"])
+            else:
+                instance_d.let = None
             instance_d.autori.clear()
             i = 1
             for autor in form_d.cleaned_data["autori"]:
@@ -1644,15 +1646,13 @@ def smazat(request, ident_cely):
     dokument.deleted_by_user = request.user
     if check_stav_changed(request, dokument):
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
-    if dokument.container_creation_queued():
-        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
-        return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
         fedora_transaction = FedoraTransaction()
         dokument.active_transaction = fedora_transaction
-        dokument.record_deletion()
+        dokument.save_record_deletion_record(fedora_transaction, request.user)
         for item in dokument.casti.all():
             item: DokumentCast
+            item.suppress_dokument_signal = True
             item.active_transaction = fedora_transaction
             item.delete()
         resp1 = dokument.delete()

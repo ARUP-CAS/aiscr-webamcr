@@ -1,5 +1,6 @@
 import logging
 
+from django.db import transaction
 from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
@@ -13,16 +14,18 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=NeidentAkce)
 def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
     if instance.dokument_cast and instance.dokument_cast.dokument:
-        transaction = FedoraTransaction()
-        instance.dokument_cast.dokument.save_metadata(transaction, close_transaction=True)
+        fedora_transaction = FedoraTransaction()
+        transaction.on_commit(lambda:
+                              instance.dokument_cast.dokument.save_metadata(fedora_transaction, close_transaction=True))
         logger.debug("neidentakce.signals.neident_akce_post_save.save_metadata.end",
-                     extra={"transaction": getattr(transaction, "uid", None)})
+                     extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(pre_delete, sender=NeidentAkce)
+@receiver(post_delete, sender=NeidentAkce)
 def neident_akce_post_delete(sender, instance: NeidentAkce, **kwargs):
     if instance.dokument_cast and instance.dokument_cast.dokument:
-        transaction = FedoraTransaction()
-        instance.dokument_cast.dokument.save_metadata(transaction, close_transaction=True)
+        fedora_transaction = FedoraTransaction()
+        transaction.on_commit(lambda:
+                              instance.dokument_cast.dokument.save_metadata(fedora_transaction, close_transaction=True))
         logger.debug("neidentakce.signals.neident_akce_post_delete.save_metadata.end",
-                     extra={"transaction": getattr(transaction, "uid", None)})
+                     extra={"transaction": getattr(fedora_transaction, "uid", None)})

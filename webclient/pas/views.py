@@ -675,9 +675,6 @@ def smazat(request, ident_cely):
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    if nalez.container_creation_queued():
-        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
-        return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}, status=403)
     if request.method == "POST":
         nalez.deleted_by_user = request.user
         nalez.active_transaction = FedoraTransaction()

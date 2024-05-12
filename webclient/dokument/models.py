@@ -501,6 +501,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     active_transaction = None
     close_active_transaction_when_finished = False
     suppress_signal = False
+    suppress_dokument_signal = False
 
     class Meta:
         db_table = "dokument_cast"

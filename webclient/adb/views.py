@@ -84,9 +84,6 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         dj: DokumentacniJednotka = adb.dokumentacni_jednotka
         dj_ident_cely = dj.ident_cely
-        if adb.container_creation_queued():
-            messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
-            return JsonResponse({"redirect": dj.get_absolute_url()}, status=403)
         fedora_transaction = FedoraTransaction()
         adb.active_transaction = fedora_transaction
         adb.close_active_transaction_when_finished = True
