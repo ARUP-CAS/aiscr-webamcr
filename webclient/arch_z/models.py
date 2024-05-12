@@ -566,7 +566,10 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         return ', '.join([str(x.vedouci) for x in self.akcevedouci_set.all()])
 
     def set_snapshots(self):
-        self.vedouci_snapshot = "; ".join([x.vedouci.vypis_cely for x in self.akcevedouci_set
+        if not self.akcevedouci_set.all():
+            self.vedouci_snapshot = None
+        else:
+            self.vedouci_snapshot = "; ".join([x.vedouci.vypis_cely for x in self.akcevedouci_set
                                           .order_by("vedouci__prijmeni", "vedouci__jmeno").all()])
         self.suppress_signal = True
         self.save()
