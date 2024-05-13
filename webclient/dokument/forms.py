@@ -501,7 +501,7 @@ class EditDokumentForm(forms.ModelForm):
         if not can_edit_datum_zverejneni:
             self.fields["datum_zverejneni"].disabled = True
         self.fields["autori"].widget.choices = list(Osoba.objects.filter(
-            dokumentautor__dokument=self.instance
+            dokumentautor__dokument__pk=self.instance.pk
         ).order_by("dokumentautor__poradi").values_list("id","vypis_cely"))
         if region_not_required is True:
             self.fields["region"].required = False
@@ -626,7 +626,7 @@ class CreateModelDokumentForm(forms.ModelForm):
                         "required-next" if key in required_next else ""
                     )
         self.fields["autori"].widget.choices = list(Osoba.objects.filter(
-            dokumentautor__dokument=self.instance
+            dokumentautor__dokument__pk=self.instance.pk
         ).order_by("dokumentautor__poradi").values_list("id","vypis_cely"))
 
 
