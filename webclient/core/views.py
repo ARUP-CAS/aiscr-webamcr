@@ -795,7 +795,6 @@ class PermissionFilterMixin():
                 qs = new_qs | qs.filter(**filterdoc)
             else:
                 qs = new_qs
-        qs = qs.cache()
         return qs
     
     def filter_by_permission(self, qs, permission):
