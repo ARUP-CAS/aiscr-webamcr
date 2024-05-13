@@ -43,7 +43,7 @@ def validate_uzivatel_email(email):
     ):
         logger.debug(
             "validate_uzivatel_email.ValidationError",
-            extra={"email": email, "hlavni_role_id": user[0].hlavni_role.pk},
+            extra={"email": email, "hlavni_role": user[0].hlavni_role},
         )
         raise ValidationError(
             _("pas.forms.te_uzivatel_email.error.wrongGroup.part1") + email + _("pas.forms.te_uzivatel_email.error.wrongGroup.part2"),
