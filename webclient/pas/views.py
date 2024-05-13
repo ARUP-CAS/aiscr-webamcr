@@ -910,7 +910,7 @@ class AktivaceEmailView(LoginRequiredMixin, DetailView):
         obj: UzivatelSpoluprace = self.get_object()
         if not obj.aktivni:
             obj.set_aktivni(request.user)
-        return redirect(reverse("pas:spoluprace_aktivace", kwargs={"pk": obj.pk}))
+        return redirect(reverse("pas:spoluprace_list")+"?sort=organizace_vedouci&sort=spolupracovnik")
 
 
 @login_required
