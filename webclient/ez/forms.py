@@ -182,10 +182,10 @@ class ExterniZdrojForm(forms.ModelForm):
         )
         self.helper.form_tag = False
         self.fields["autori"].widget.choices = list(Osoba.objects.filter(
-            externizdrojautor__externi_zdroj=self.instance
+            externizdrojautor__externi_zdroj__pk=self.instance.pk
         ).order_by("externizdrojautor__poradi").values_list("id", "vypis_cely"))
         self.fields["editori"].widget.choices = list(Osoba.objects.filter(
-            externizdrojeditor__externi_zdroj=self.instance
+            externizdrojeditor__externi_zdroj__pk=self.instance.pk
         ).order_by("externizdrojeditor__poradi").values_list("id", "vypis_cely"))
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
