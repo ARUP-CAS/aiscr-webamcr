@@ -141,7 +141,7 @@
                   if (response.ok) {
                       return response.json();
                   }
-                  throw new Error({% trans "base.authentication_check.network_error" %});
+                  throw new Error("{% trans "base.authentication_check.network_error" %}");
               })
               .then(data => {
                   console.log(data);
