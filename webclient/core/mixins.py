@@ -30,7 +30,7 @@ class ManyToManyRestrictedClassMixin:
 
 class IPWhitelistMixin:
     def dispatch(self, request, *args, **kwargs):
-        ALLOWED_IPS = settings.ALLOWED_HOSTS + ["127.0.0.1"]
+        ALLOWED_IPS = settings.ALLOWED_HOSTS + ["127.0.0.1","10.0.0.2"]
         client_ip = request.META.get('REMOTE_ADDR', '')  # Get client IP
         if client_ip not in ALLOWED_IPS and "*" not in ALLOWED_IPS:  # Check if IP is allowed
             logger.error("healthcheck.views.IPWhitelistMixin",
