@@ -293,7 +293,6 @@ LOGGING = {
     },
     "handlers": {
         'logstash': {
-            'level': 'DEBUG',
             'class': 'logstash.TCPLogstashHandler',
             'host': 'logstash',
             'port': 5959,
