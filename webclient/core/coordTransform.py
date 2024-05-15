@@ -20,7 +20,7 @@ readCoef(CORRTABLE)
 def convertToJTSK(longitude, latitude, height=0):
     if latitude < 40 or latitude > 60 or longitude < 5 or longitude > 25:
         #return x,y
-        return  [0, 0]
+        raise Exception(f"convertToJTSK coordinates are out of range: longitude {longitude} latitude {latitude} ")        
     else:
         [latitude, longitude] = wgs84_to_bessel(latitude, longitude, height)
         [X05,Y05]= bessel_to_jtsk(latitude, longitude)
@@ -29,10 +29,12 @@ def convertToJTSK(longitude, latitude, height=0):
     
 # Conversion from JTSK to WGS-84
 def convertToWGS84( minusY, minusX, height=0):
-        [X05,Y05] = jtsk_to_jtsk05(-minusX,-minusY)
-        [latitude, longitude]= jtsk_to_bessel(X05,Y05)
-        [latitude, longitude] = bessel_to_wgs84(latitude, longitude, height)      
-        return [longitude, latitude]
+    if(minusY<-905000 or minusY>-400000 or minusX<-1230000 or minusX>-930000):
+        raise Exception(f"convertToWGS84 coordinates are out of range: X {minusY} Y {minusX}")     
+    [X05,Y05] = jtsk_to_jtsk05(-minusX,-minusY)
+    [latitude, longitude]= jtsk_to_bessel(X05,Y05)
+    [latitude, longitude] = bessel_to_wgs84(latitude, longitude, height)      
+    return [longitude, latitude]
     
 
 

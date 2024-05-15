@@ -242,8 +242,8 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             cleaned_data = self.cleaned_data
             has_initial_values = False
             if pian:
-                [x, y] = convertToJTSK(pian.geom.centroid.y, pian.geom.centroid.x)
-                has_initial_values = cleaned_data.get("northing", None) == -1 * round(x, 2) and cleaned_data.get("easting", None) == -1 * round(y, 2)
+                [x, y] = convertToJTSK(pian.geom.centroid.x, pian.geom.centroid.y)
+                has_initial_values = cleaned_data.get("northing", None) == round(x, 2) and cleaned_data.get("easting", None) == round(y, 2)
                 logger.debug("adb.forms.create_vyskovy_bod_form.pian",
                              extra={"cleaned_data": cleaned_data, "x": x, "y": y,
                                       "has_initial_values": has_initial_values})
@@ -288,9 +288,9 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
                 self.fields["northing"].initial = self.instance.northing
                 self.fields["easting"].initial = self.instance.easting
             elif pian:
-                [x, y] = convertToJTSK(pian.geom.centroid.y, pian.geom.centroid.x)
-                self.fields["northing"].initial = -1 * round(x, 2)
-                self.fields["easting"].initial = -1 * round(y, 2)
+                [x, y] = convertToJTSK(pian.geom.centroid.x, pian.geom.centroid.y)
+                self.fields["northing"].initial = round(x, 2)
+                self.fields["easting"].initial = round(y, 2)
 
             if self.instance.niveleta is not None:
                 self.fields["niveleta"].initial = self.instance.niveleta
