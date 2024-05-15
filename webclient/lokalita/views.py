@@ -449,6 +449,8 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         context["k"] = get_komponenta_form_detail(
             komponenta, show, old_nalez_post, komp_ident_cely
         )
+        context["j"] = self.get_dokumentacni_jednotka()
+        context["active_komp_ident"] = komponenta.ident_cely
         return context
 
 
