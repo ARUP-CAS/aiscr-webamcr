@@ -52,7 +52,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.0.5
+     - 5.0.6
      - BSD License
      - https://www.djangoproject.com/
    * - PyRTF3
@@ -300,7 +300,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://sass.github.io/libsass-python/
    * - lxml
-     - 5.2.1
+     - 5.2.2
      - BSD License
      - https://lxml.de/
    * - multivolumefile
@@ -356,7 +356,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Historical Permission Notice and Disclaimer (HPND)
      - https://python-pillow.org
    * - platformdirs
-     - 4.2.1
+     - 4.2.2
      - MIT License
      - https://github.com/platformdirs/platformdirs
    * - polib
@@ -364,7 +364,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/izimobil/polib/
    * - pre-commit
-     - 3.7.0
+     - 3.7.1
      - MIT License
      - https://github.com/pre-commit/pre-commit
    * - prometheus_client
@@ -504,7 +504,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
-     - 0.25.0
+     - 0.25.1
      - Apache Software License; MIT License
      - https://github.com/python-trio/trio
    * - trio-websocket
@@ -532,7 +532,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.26.1
+     - 20.26.2
      - MIT License
      - https://github.com/pypa/virtualenv
    * - wrapt
