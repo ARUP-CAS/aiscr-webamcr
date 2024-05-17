@@ -2,6 +2,21 @@
 {% load i18n static %}
 {% load compress %}
 
+{% block header %}
+    {{block.super}}
+    <div id="user-tools" class="app-restart">
+            <form action="{% url 'core:application-restart' %}" id="app-restart-form" method="post">
+                {% csrf_token %}
+                <button type="submit" class="nav-link">
+                   {% trans "templates.rosetta.filelist.restart.text" %} 
+                </button>
+              </form>
+    </div>
+    <script type="text/javascript">
+    </script>
+
+{% endblock %}
+
 {% block pagetitle %}{{block.super}} - {% trans "Language selection" %}{% endblock %}
 
 {% block extra_styles %}

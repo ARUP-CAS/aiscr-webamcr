@@ -1,0 +1,20 @@
+{% extends 'admin/change_list.html' %}
+
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}
+{{block.super}}
+<link type="text/css" href="{% static 'css/odstavka_extend.css' %}" rel="stylesheet" media="screen">
+{% endblock %}
+
+{% block object-tools-items %}
+  {{block.super}}
+  <li>
+    <form action="{% url 'core:application-restart' %}" id="app-restart-form" method="post">
+      {% csrf_token %}
+      <button type="submit" class="viewsitelink">
+         {% trans "templates.rosetta.filelist.restart.text" %} 
+      </button>
+    </form>
+  </li>
+{% endblock %}

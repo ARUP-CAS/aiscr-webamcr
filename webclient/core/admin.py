@@ -48,7 +48,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
     Třída admin panelu pro zobrazení odstávek systému.
     Pomocí ní se zobrazuje tabulka s odstávkami, detail a jednotlivé akce.
     """
-
+    change_list_template = 'core/odstavky_changelist.html'
     list_display = (
         "info_od",
         "datum_odstavky",
