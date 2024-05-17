@@ -164,6 +164,16 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         db_index=True,
     )
 
+    initial_casti_dokumentu = []
+
+    def __init__(self, *args, **kwargs):
+        super(Projekt, self).__init__(*args, **kwargs)
+        try:
+            self.initial_casti_dokumentu = self.casti_dokumentu.all().values_list("id", flat=True)
+        except ValueError as err:
+            pass
+
+
     def __str__(self):
         if self.ident_cely:
             return self.ident_cely

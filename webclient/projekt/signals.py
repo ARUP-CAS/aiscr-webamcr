@@ -13,6 +13,7 @@ from django.utils.translation import gettext as _
 
 from dokument.models import DokumentCast
 from historie.models import HistorieVazby
+from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
@@ -69,7 +70,7 @@ def create_projekt_vazby(sender, instance, **kwargs):
         instance.soubory = sv
 
 
-@receiver(post_delete, sender=Projekt)
+@receiver(pre_delete, sender=Projekt)
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     logger.debug("projekt.signals.projekt_pre_delete.start", extra={"ident_cely": instance.ident_cely})
     if instance.soubory and instance.soubory.soubory.exists():
@@ -81,9 +82,10 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
             if instance.soubory and instance.soubory.pk:
                 instance.soubory.delete()
             if instance.casti_dokumentu:
-                for item in instance.casti_dokumentu.all():
-                    item: DokumentCast
-                    item.dokument.save_metadata(fedora_transaction)
+                for item in instance.initial_casti_dokumentu:
+                    item: int
+                    dokument = DokumentCast.objects.get(pk=item).dokument
+                    dokument.save_metadata(fedora_transaction)
             instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
         if instance.close_active_transaction_when_finished:
             transaction.on_commit(lambda: save_metadata(True))
