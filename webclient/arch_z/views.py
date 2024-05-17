@@ -1054,6 +1054,11 @@ def smazat(request, ident_cely):
                 dj.active_transaction = fedora_transaction
                 dj.suppress_signal_arch_z = True
                 dj.delete()
+            if az.externi_odkazy:
+                for eo in az.externi_odkazy.all():
+                    eo.suppress_signal_arch_z = True
+                    eo.active_transaction = az.active_transaction
+                    eo.delete()
             invalidate_all()
             az.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely,

@@ -143,10 +143,6 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
             item.delete()
         komponenta_vazba.suppress_komponenta_signal = True
         komponenta_vazba.delete()
-    if instance.externi_odkazy:
-        for eo in instance.externi_odkazy.all():
-            eo.suppress_signal_arch_z = True
-            eo.delete()
     logger.debug("arch_z.signals.delete_arch_z_repository_container_and_connections.end",
                  extra={"record_ident_cely": instance.ident_cely})
 
@@ -158,6 +154,7 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
     fedora_transaction: FedoraTransaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
+        invalidate_all()
         for item in instance.initial_casti_dokumentu:
             item: DokumentCast
             item.dokument.save_metadata(fedora_transaction)
