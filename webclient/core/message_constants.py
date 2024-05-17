@@ -155,3 +155,7 @@ TRANSLATION_DELETE_SUCCESS: Final = _("core.message_constants.translationDeleteS
 TRANSLATION_DELETE_ERROR: Final = _("core.message_constants.translationDeleteError.text")
 TRANSLATION_FILE_TOOSMALL: Final = _("core.message_constants.translationFileTooSmall.text")
 TRANSLATION_FILE_WRONG_FORMAT: Final = _("core.message_constants.translationFileWrongFormat.text")
+
+#restart aplikace
+APPLICATION_RESTART_ERROR: Final = _("core.message_constants.applicationRestartError.text")
+APPLICATION_RESTART_SUCCESS: Final = _("core.message_constants.applicationRestartSuccess.text")

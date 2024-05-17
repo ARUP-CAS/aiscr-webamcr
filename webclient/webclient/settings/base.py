@@ -254,8 +254,8 @@ USE_TZ = True
 LOCALE_PATHS = ["/vol/web/locale"]
 
 ROSETTA_SHOW_AT_ADMIN_PANEL = False
-ROSETTA_WSGI_AUTO_RELOAD = True
-ROSETTA_UWSGI_AUTO_RELOAD = True
+ROSETTA_WSGI_AUTO_RELOAD = False
+ROSETTA_UWSGI_AUTO_RELOAD = False
 
 
 def rosetta_translation_rights(user):

@@ -23,6 +23,8 @@ from django_tables2 import SingleTableMixin
 from django_filters.views import FilterView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.functional import cached_property
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 from django.views import View
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
@@ -32,9 +34,10 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.db.models.functions import AsWKT
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.validators import URLValidator
 from django.db.models import Q, FilteredRelation, Value, F, OuterRef, Subquery
-from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse, FileResponse, HttpResponseRedirect
+from django.http import Http404, HttpRequest, HttpResponse, JsonResponse, StreamingHttpResponse, FileResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -58,6 +61,8 @@ from core.constants import (
 )
 from core.forms import CheckStavNotChangedForm, TransaltionImportForm
 from core.message_constants import (
+    APPLICATION_RESTART_ERROR,
+    APPLICATION_RESTART_SUCCESS,
     DOKUMENT_NEKDO_ZMENIL_STAV,
     PROJEKT_NEKDO_ZMENIL_STAV,
     SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
@@ -1184,6 +1189,9 @@ class ResetTempValueView(View):
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
         
 class RosettaFileLevelMixinWithBackup(RosettaFileLevelMixin):
+    """
+    Třída podledu pro práci s prekladmi doplnena o backup osubory.
+    """
     @cached_property
     def po_file_path(self):
         """Based on the url kwargs, infer and return the path to the .po file to
@@ -1214,6 +1222,9 @@ class RosettaFileLevelMixinWithBackup(RosettaFileLevelMixin):
         return path
 
 class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
+    """
+    Třída pohledu pro import prekladových souboru.
+    """
     template_name = "rosetta/import_form.html"
     form_class = TransaltionImportForm
 
@@ -1251,6 +1262,9 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
                 destination.write(chunk)
 
 class TranslationFileListWithBackupView(TranslationFileListView):
+    """
+    Třída pohledu pro zobrazení prekladových souboru s backup souborami.
+    """
     def get_context_data(self, **kwargs):
         context = super(TranslationFileListView, self).get_context_data(**kwargs)
 
@@ -1285,6 +1299,9 @@ class TranslationFileListWithBackupView(TranslationFileListView):
         return context
     
 class TranslationFormWithBackupView(RosettaFileLevelMixinWithBackup, LoginRequiredMixin, TranslationFormView):
+    """
+    Třída pohledu pro zobrazení formulaře s prekladmi i pro backup soubory
+    """
     def get_context_data(self, **kwargs):
         context = super(TranslationFormWithBackupView, self).get_context_data(**kwargs)
         po_filename = self.po_file_path.split("/")[-1]
@@ -1293,6 +1310,9 @@ class TranslationFormWithBackupView(RosettaFileLevelMixinWithBackup, LoginRequir
         return context
     
 class TranslationFileDownloadBackup(RosettaFileLevelMixinWithBackup, LoginRequiredMixin, TranslationFileDownload):
+    """
+    Třída pohledu pro stahování prekladových souboru is backup souborami.
+    """
     def get(self, request, *args, **kwargs):
         try:
             if len(self.po_file_path.split('/')) >= 5:
@@ -1321,9 +1341,12 @@ class TranslationFileDownloadBackup(RosettaFileLevelMixinWithBackup, LoginRequir
             )
 
 class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequiredMixin, TemplateView):
+    """
+    Třída pohledu pro smazání backup prekladových souboru.
+    """
     template_name = "core/transakce_modal.html"
-    
-    
+
+
     def get(self, request, *args, **kwargs):
         context = {
             "object_identification": self.po_file_path.split('/')[-1],
@@ -1332,7 +1355,7 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
             "button": _("core.views.translationFileSmazatbackup.submitButton.text"),
         }
         return self.render_to_response(context)
-    
+
     def post(self, request, *args, **kwargs):
         if self.po_file_path.split('/')[-1] == "django.po":
             messages.add_message(
@@ -1350,8 +1373,47 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
                             self.request, messages.ERROR, TRANSLATION_DELETE_ERROR
                         )
         return JsonResponse({"redirect": reverse('rosetta-file-list', kwargs={'po_filter': 'project'})})
-    
-    
+
 class PrometheusMetricsView(IPWhitelistMixin, View):
+    """
+    Třída pohledu pro zobrazení prometheus metrík doplňena o mixin pro filtrování IP adres.
+    """
     def get(self, request, *args, **kwargs):
         return ExportToDjangoView(request)
+
+class ApplicationRestartView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro restartovani uwsgi aplikace.
+    """
+    http_method_names = ["post"]
+
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        if request.user.hlavni_role.id != ROLE_ADMIN_ID:
+            raise PermissionDenied
+        try:
+            import uwsgi
+            uwsgi.reload()  # pretty easy right?
+            messages.add_message(
+                            self.request, messages.SUCCESS, APPLICATION_RESTART_SUCCESS
+                        )
+        except Exception as e:
+            logger.debug(
+                "core.views.ApplicationRestartView.exception", extra={"exception": e}
+            )
+            messages.add_message(
+                            self.request, messages.ERROR, APPLICATION_RESTART_ERROR
+                        )
+        referer = request.META.get('HTTP_REFERER')
+        fallback_url = '/admin'
+        if referer:
+            # Validate referer URL
+            try:
+                validator = URLValidator()
+                validator(referer)
+            except ValidationError:
+                referer = fallback_url
+        else:
+            referer = fallback_url
+        # Redirect to referer or fallback URL
+        return redirect(referer)
