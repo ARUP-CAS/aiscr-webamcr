@@ -89,6 +89,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     )
     initial_stav = None
     initial_pristupnost = None
+    initial_casti_dokumentu = []
 
     class Meta:
         db_table = "archeologicky_zaznam"
@@ -436,6 +437,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             except ObjectDoesNotExist:
                 self.initial_pristupnost = None
         self.initial_stav = self.stav
+        try:
+            self.initial_casti_dokumentu = self.casti_dokumentu.all().values_list("id", flat=True)
+        except ValueError as err:
+            pass
 
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):

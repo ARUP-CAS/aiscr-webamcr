@@ -1,6 +1,6 @@
 import logging
 
-from cacheops import invalidate_model
+from cacheops import invalidate_model, invalidate_all
 from django.db import transaction
 
 from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
@@ -13,6 +13,7 @@ from django.utils.translation import gettext as _
 
 from dokument.models import DokumentCast
 from historie.models import HistorieVazby
+from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
@@ -75,15 +76,16 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     if instance.soubory and instance.soubory.soubory.exists():
         raise Exception(_("projekt.signals.projekt_pre_delete.cannot_delete"))
     fedora_transaction = instance.active_transaction
-    invalidate_model(Projekt)
+    invalidate_all()
     if not instance.suppress_signal:
         def save_metadata(close_transaction=False):
             if instance.soubory and instance.soubory.pk:
                 instance.soubory.delete()
             if instance.casti_dokumentu:
-                for item in instance.casti_dokumentu.all():
-                    item: DokumentCast
-                    item.dokument.save_metadata(fedora_transaction)
+                for item in instance.initial_casti_dokumentu:
+                    item: int
+                    dokument = DokumentCast.objects.get(pk=item).dokument
+                    dokument.save_metadata(fedora_transaction)
             instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
         if instance.close_active_transaction_when_finished:
             transaction.on_commit(lambda: save_metadata(True))
@@ -100,7 +102,7 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
     # When projekt is created using the "oznameni" page, the metadata are saved directly without celery
     logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})
-    invalidate_model(Projekt)
+    invalidate_all()
     fedora_transaction = instance.active_transaction
     if getattr(instance, "suppress_signal", False) is not True:
         instance.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)

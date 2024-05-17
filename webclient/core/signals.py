@@ -65,8 +65,10 @@ def soubor_delete_connections(sender, instance: Soubor, **kwargs):
 @receiver(post_delete, sender=Soubor)
 def soubor_delete_update_metadata(sender, instance: Soubor, **kwargs):
     logger.debug("cron.signals.soubor_delete_update_metadata.start", extra={"instance": instance.pk})
-    if instance.vazba is not None and isinstance(instance.vazba.navazany_objekt, ModelWithMetadata) \
-            and instance.suppress_signal is False:
+    if instance.suppress_signal is True:
+        logger.debug("cron.signals.soubor_delete_update_metadata.suppress_signal", extra={"instance": instance.pk})
+        return
+    if instance.vazba is not None and isinstance(instance.vazba.navazany_objekt, ModelWithMetadata):
         fedora_transaction = instance.active_transaction
         instance.vazba.navazany_objekt.save_metadata(fedora_transaction,
                                                      close_transaction=instance.close_active_transaction_when_finished)

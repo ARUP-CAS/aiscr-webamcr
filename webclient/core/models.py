@@ -77,6 +77,7 @@ class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
     )
 
     typ_vazby = models.TextField(max_length=24, choices=CHOICES)
+    suppress_signal = False
 
     class Meta:
         db_table = "soubor_vazby"

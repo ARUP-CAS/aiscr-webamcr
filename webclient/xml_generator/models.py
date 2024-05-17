@@ -132,9 +132,15 @@ class ModelWithMetadata(models.Model):
             from pas.models import SamostatnyNalez
             if isinstance(self, Dokument):
                 if self.soubory.pk is not None:
+                    for item in self.soubory.soubory.all():
+                        item.suppress_signal = True
+                        item.delete()
                     self.soubory.delete()
             elif isinstance(self, SamostatnyNalez):
                 if self.soubory.pk is not None:
+                    for item in self.soubory.soubory.all():
+                        item.suppress_signal = True
+                        item.delete()
                     self.soubory.delete()
         except ObjectDoesNotExist as err:
             logger.debug("xml_generator.models.ModelWithMetadata.record_deletion.end", extra={"err": err})

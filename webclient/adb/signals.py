@@ -1,6 +1,7 @@
 import logging
 
-from cacheops import invalidate_model
+from cacheops import invalidate_model, invalidate_all
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models.signals import post_save, post_delete, pre_delete
 from django.dispatch import receiver
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 def adb_save_metadata(sender, instance: Adb, created, **kwargs):
     logger.debug("adb.signals.adb_save_metadata.start",
                  extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal})
-    invalidate_model(ArcheologickyZaznam)
+    invalidate_all()
     if not instance.suppress_signal:
         fedora_transaction: FedoraTransaction = instance.active_transaction
         if instance.tracker.changed():
@@ -46,15 +47,20 @@ def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
 @receiver(post_delete, sender=Adb)
 def adb_delete_repository_container(sender, instance: Adb, **kwargs):
     logger.debug("adb.signals.adb_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
-    invalidate_model(ArcheologickyZaznam)
+    invalidate_all()
     fedora_transaction = instance.active_transaction
     if instance.close_active_transaction_when_finished:
         def save_metadata():
-            instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
+            try:
+                instance.initial_dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
+            except ObjectDoesNotExist as err:
+                logger.debug("adb.signals.adb_delete_repository_container.not_exists",
+                             extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid,
+                                    "err": err})
             instance.record_deletion(fedora_transaction, close_transaction=True)
         transaction.on_commit(save_metadata)
     else:
-        instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
+        instance.initial_dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
         instance.record_deletion(fedora_transaction)
     logger.debug("adb.signals.adb_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid})

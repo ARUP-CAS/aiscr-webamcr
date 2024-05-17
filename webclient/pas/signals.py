@@ -1,6 +1,6 @@
 import logging
 
-from cacheops import invalidate_model
+from cacheops import invalidate_model, invalidate_all
 from django.db import transaction
 
 from core.constants import SAMOSTATNY_NALEZ_RELATION_TYPE
@@ -36,7 +36,7 @@ def create_dokument_vazby(sender, instance, **kwargs):
 @receiver(post_save, sender=SamostatnyNalez)
 def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, **kwargs):
     logger.debug("pas.signals.save_metadata_samostatny_nalez.start", extra={"ident_cely": instance.ident_cely})
-    invalidate_model(SamostatnyNalez)
+    invalidate_all()
     fedora_transaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
@@ -54,11 +54,11 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
                                                                           "transaction": fedora_transaction})
 
 
-@receiver(post_delete, sender=SamostatnyNalez)
+@receiver(pre_delete, sender=SamostatnyNalez)
 def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **kwargs):
     logger.debug("pas.signals.dokument_delete_container_soubor_vazby.start",
                  extra={"ident_cely": instance.ident_cely})
-    invalidate_model(SamostatnyNalez)
+    invalidate_all()
     fedora_transaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
@@ -70,6 +70,9 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
     else:
         save_metadata(False)
     if instance.soubory and instance.soubory.pk:
+        for item in instance.soubory.soubory.all():
+            item.suppress_signal = True
+            item.delete()
         instance.soubory.delete()
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
@@ -80,7 +83,7 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
 @receiver(post_save, sender=UzivatelSpoluprace)
 def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.save_uzivatel_spoluprce.start", extra={"pk": instance.pk})
-    invalidate_model(UzivatelSpoluprace)
+    invalidate_all()
     fedora_transaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
@@ -97,7 +100,7 @@ def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
 @receiver(post_delete, sender=UzivatelSpoluprace)
 def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.start", extra={"pk": instance.pk})
-    invalidate_model(UzivatelSpoluprace)
+    invalidate_all()
     fedora_transaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):

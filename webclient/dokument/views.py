@@ -1,5 +1,5 @@
 import logging
-from cacheops import invalidate_model
+from cacheops import invalidate_model, invalidate_all
 from typing import Any
 import simplejson as json
 
@@ -1138,8 +1138,7 @@ def edit(request, ident_cely):
             instance_d.close_active_transaction_when_finished = True
             instance_d.save()
             form_d.save_m2m()
-            invalidate_model(DokumentJazyk)
-            invalidate_model(DokumentPosudek)
+            invalidate_all()
             if form_d.has_changed() or form_extra.has_changed():
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
