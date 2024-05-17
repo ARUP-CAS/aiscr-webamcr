@@ -648,15 +648,14 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
         qs = qs.distinct("pk", *sort_params)
-        qs = qs.select_related(
-            "obdobi",
-            "specifikace",
-            "nalezce",
-            "druh_nalezu",
+        qs = qs.select_related(            
+            "nalezce",           
             "predano_organizace",
             "katastr",
             "katastr__okres",
-        )
+            "soubory"
+        ).prefetch_related( "specifikace","okolnosti","pristupnost","soubory__soubory","obdobi","druh_nalezu",)
+        
         return self.check_filter_permission(qs)
     
     
