@@ -1,6 +1,7 @@
 import logging
 from math import fabs
 
+from django.core.exceptions import ObjectDoesNotExist
 from model_utils import FieldTracker
 
 from core.exceptions import MaximalIdentNumberError
@@ -89,6 +90,7 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
     close_active_transaction_when_finished = False
     active_transaction = None
     suppress_signal = False
+    initial_dokumentacni_jednotka = None
 
     class Meta:
         db_table = "adb"
@@ -98,7 +100,13 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
     
     def get_permission_object(self):
         return self.dokumentacni_jednotka.get_permission_object()
-    
+
+    def __init__(self, *args, **kwargs):
+        super(Adb, self).__init__(*args, **kwargs)
+        try:
+            self.initial_dokumentacni_jednotka = self.dokumentacni_jednotka
+        except ObjectDoesNotExist as err:
+            pass
 
 
 def get_vyskovy_bod(adb: Adb, offset=1) -> str:

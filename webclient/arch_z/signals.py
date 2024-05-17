@@ -89,8 +89,8 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
 @receiver(post_save, sender=Akce)
 def update_akce_snapshot(sender, instance: Akce, **kwargs):
     logger.debug("arch_z.signals.update_akce_snapshot.start", extra={"record_pk": instance.pk})
-    if not check_if_task_queued("Akce", instance.pk, "update_single_redis_snapshot"):
-        update_single_redis_snapshot.apply_async(["Akce", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
+    # if not check_if_task_queued("Akce", instance.pk, "update_single_redis_snapshot"):
+    #     update_single_redis_snapshot.apply_async(["Akce", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
     fedora_transaction: Optional[FedoraTransaction, None] = instance.active_transaction
     if instance.projekt is not None and instance.initial_projekt is None:
         instance.projekt.save_metadata(fedora_transaction)
