@@ -1530,9 +1530,7 @@ class AkceListView(SearchListView):
                 "archeologicky_zaznam__hlavni_katastr__okres",
                 "organizace",
                 "hlavni_vedouci",  
-                "archeologicky_zaznam__pristupnost",
-                "archeologicky_zaznam",
-            ).prefetch_related("archeologicky_zaznam__katastry", "archeologicky_zaznam__katastry__okres")
+           ).prefetch_related("archeologicky_zaznam__pristupnost","archeologicky_zaznam__katastry","archeologicky_zaznam__katastry__okres","specifikace_data","hlavni_typ","vedlejsi_typ","akcevedouci_set__organizace")
         )
         return self.check_filter_permission(qs)
 

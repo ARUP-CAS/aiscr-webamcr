@@ -88,7 +88,6 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         db_index=True
     )
     initial_stav = None
-    initial_pristupnost = None
     initial_casti_dokumentu = []
 
     class Meta:
@@ -435,16 +434,23 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def __init__(self, *args, **kwargs):
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
-        if self.initial_pristupnost is None:
-            try:
-                self.initial_pristupnost = self.pristupnost
-            except ObjectDoesNotExist:
-                self.initial_pristupnost = None
         self.initial_stav = self.stav
         try:
             self.initial_casti_dokumentu = self.casti_dokumentu.all().values_list("id", flat=True)
         except ValueError as err:
             pass
+    
+    @property
+    def initial_pristupnost(self):
+        if hasattr(self, "_initial_pristupnost"): return self._initial_pristupnost  
+        if hasattr(self, "pristupnost"):       
+            self._initial_pristupnost = self.pristupnost
+        else: self._initial_pristupnost= None
+        return  self._initial_pristupnost  
+    
+    @initial_pristupnost.setter
+    def initial_pristupnost(self, value):
+        self._initial_pristupnost=value
 
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):
