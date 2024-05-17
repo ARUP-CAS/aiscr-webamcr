@@ -1,0 +1,35 @@
+.object-tools button {
+    border-radius: 15px;
+    border: 0;
+    line-height: 1.25rem;
+}
+
+.object-tools button, .object-tools button:visited {
+    display: block;
+    float: left;
+    padding: 3px 12px;
+    background: var(--object-tools-bg);
+    color: var(--object-tools-fg);
+    font-weight: 400;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.object-tools button:focus, .object-tools button:hover {
+    background-color: var(--object-tools-hover-bg);
+}
+
+.object-tools button:focus{
+    text-decoration: none;
+}
+
+.object-tools button.viewsitelink, .object-tools button.addlink {
+    background-repeat: no-repeat;
+    background-position: right 7px center;
+    padding-right: 26px;
+}
+
+.object-tools button.viewsitelink {
+    background-image: url(../img/tooltag-arrowright.svg);
+}
