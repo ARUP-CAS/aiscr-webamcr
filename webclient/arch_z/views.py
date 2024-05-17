@@ -1505,6 +1505,7 @@ class AkceListView(SearchListView):
             "organizace": "organizace__nazev_zkraceny",
             "vedouci_organizace": "vedouci_organizace",
             "vedouci": "vedouci_snapshot",
+            "hlavni_vedouci": "hlavni_vedouci__vypis_cely",
             "uzivatelske_oznaceni": "archeologicky_zaznam__uzivatelske_oznaceni",
         }.get(field, field)
 
