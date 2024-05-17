@@ -44,7 +44,7 @@ def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
                  extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal})
 
 
-@receiver(pre_delete, sender=Adb)
+@receiver(post_delete, sender=Adb)
 def adb_delete_repository_container(sender, instance: Adb, **kwargs):
     logger.debug("adb.signals.adb_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     invalidate_all()
@@ -66,7 +66,7 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
                  extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid})
 
 
-@receiver(pre_delete, sender=VyskovyBod)
+@receiver(post_delete, sender=VyskovyBod)
 def vyskovy_bod_delete_repository_container(sender, instance: VyskovyBod, **kwargs):
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})

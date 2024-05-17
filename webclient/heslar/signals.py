@@ -143,20 +143,19 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
     """
     logger.debug("heslo.signals.save_metadata_heslar_odkaz.start")
 
-    if instance.initial_heslo != instance.heslo:
-        def save_metadata():
-            fedora_transaction = FedoraTransaction()
-            if instance.initial_heslo:
-                heslo = Heslar.objects.get(pk=instance.initial_heslo.pk)
-                heslo.save_metadata(fedora_transaction)
-            heslo = Heslar.objects.get(pk=instance.heslo.pk)
+    def save_metadata():
+        fedora_transaction = FedoraTransaction()
+        if instance.initial_heslo and instance.initial_heslo != instance.heslo:
+            heslo = Heslar.objects.get(pk=instance.initial_heslo.pk)
             heslo.save_metadata(fedora_transaction)
-            fedora_transaction.mark_transaction_as_closed()
-            logger.debug("heslo.signals.save_metadata_heslar_odkaz.save_medata",
-                         extra={"transaction": getattr(fedora_transaction, "uid", None),
-                                "initial_heslo": getattr(instance.initial_heslo, "ident_cely", None),
-                                "heslo": getattr(instance.initial_heslo, "ident_cely", None)})
-        transaction.on_commit(save_metadata)
+        heslo = Heslar.objects.get(pk=instance.heslo.pk)
+        heslo.save_metadata(fedora_transaction)
+        fedora_transaction.mark_transaction_as_closed()
+        logger.debug("heslo.signals.save_metadata_heslar_odkaz.save_medata",
+                     extra={"transaction": getattr(fedora_transaction, "uid", None),
+                            "initial_heslo": getattr(instance.initial_heslo, "ident_cely", None),
+                            "heslo": getattr(instance.initial_heslo, "ident_cely", None)})
+    transaction.on_commit(save_metadata)
     logger.debug("heslo.signals.save_metadata_heslar_odkaz.end")
 
 

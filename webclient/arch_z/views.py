@@ -4,7 +4,7 @@ from io import BytesIO
 import pandas
 import redis
 import simplejson as json
-from cacheops import cache, CacheMiss
+from cacheops import cache, CacheMiss, invalidate_all
 from django.db.models import RestrictedError
 from django_tables2.export import TableExport
 
@@ -1054,6 +1054,7 @@ def smazat(request, ident_cely):
                 dj.active_transaction = fedora_transaction
                 dj.suppress_signal_arch_z = True
                 dj.delete()
+            invalidate_all()
             az.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely,
                                                                "transaction": fedora_transaction})

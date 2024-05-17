@@ -1,6 +1,6 @@
 import logging
 
-from cacheops import invalidate_model
+from cacheops import invalidate_model, invalidate_all
 
 from .models import ExterniZdroj
 from core.constants import EXTERNI_ZDROJ_RELATION_TYPE
@@ -35,7 +35,7 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
 @receiver(post_save, sender=ExterniZdroj)
 def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
     logger.debug("ez.signals.externi_zdroj_save_metadata.start", extra={"ident_cely": instance.ident_cely})
-    invalidate_model(ExterniZdroj)
+    invalidate_all()
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
         instance.save_metadata(close_transaction=instance.close_active_transaction_when_finished)
@@ -49,7 +49,7 @@ def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **
     logger.debug("ez.signals.delete_externi_zdroj_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
-    invalidate_model(ExterniZdroj)
+    invalidate_all()
     instance.record_deletion(close_transaction=instance.close_active_transaction_when_finished)
     if instance.externi_odkazy_zdroje:
         for eo in instance.externi_odkazy_zdroje.all():

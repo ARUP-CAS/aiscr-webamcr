@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import logging
 from django.views import View
-from cacheops import invalidate_model
+from cacheops import invalidate_model, invalidate_all
 
 import simplejson as json
 
@@ -502,7 +502,7 @@ def edit(request, ident_cely):
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             form.save_m2m()
-            invalidate_model(ProjektKatastr)
+            invalidate_all()
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
             logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"form_errors": form.errors})

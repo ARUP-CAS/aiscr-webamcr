@@ -1,6 +1,6 @@
 import logging
 
-from cacheops import invalidate_model
+from cacheops import invalidate_model, invalidate_all
 from django.db import transaction
 
 from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
@@ -70,13 +70,13 @@ def create_projekt_vazby(sender, instance, **kwargs):
         instance.soubory = sv
 
 
-@receiver(pre_delete, sender=Projekt)
+@receiver(post_delete, sender=Projekt)
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     logger.debug("projekt.signals.projekt_pre_delete.start", extra={"ident_cely": instance.ident_cely})
     if instance.soubory and instance.soubory.soubory.exists():
         raise Exception(_("projekt.signals.projekt_pre_delete.cannot_delete"))
     fedora_transaction = instance.active_transaction
-    invalidate_model(Projekt)
+    invalidate_all()
     if not instance.suppress_signal:
         def save_metadata(close_transaction=False):
             if instance.soubory and instance.soubory.pk:
@@ -102,7 +102,7 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
     # When projekt is created using the "oznameni" page, the metadata are saved directly without celery
     logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})
-    invalidate_model(Projekt)
+    invalidate_all()
     fedora_transaction = instance.active_transaction
     if getattr(instance, "suppress_signal", False) is not True:
         instance.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)

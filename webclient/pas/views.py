@@ -679,6 +679,7 @@ def smazat(request, ident_cely):
         nalez.deleted_by_user = request.user
         nalez.active_transaction = FedoraTransaction()
         nalez.close_active_transaction_when_finished = True
+        nalez.record_deletion(nalez.active_transaction)
         resp1 = nalez.delete()
         if resp1:
             logger.info(

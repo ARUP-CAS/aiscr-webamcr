@@ -1,6 +1,6 @@
 import logging
 
-from cacheops import invalidate_model
+from cacheops import invalidate_model, invalidate_all
 
 from cron.tasks import update_single_redis_snapshot
 from django.db.models.signals import post_save, pre_save, pre_delete
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
     logger.debug("lokalita.signals.save_lokalita_snapshot.start",
                  extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})
-    invalidate_model(Lokalita)
+    invalidate_all()
     try:
         instance.set_snapshots()
     except ValueError as err:
@@ -41,6 +41,6 @@ def save_lokalita_redis_snapshot(sender, instance: Lokalita, **kwargs):
 def delete_lokalita(sender, instance: Lokalita, **kwargs):
     logger.debug("lokalita.signals.delete_lokalita.start",
                  extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})
-    invalidate_model(Lokalita)
+    invalidate_all()
     logger.debug("lokalita.signals.delete_lokalita.end",
                  extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})

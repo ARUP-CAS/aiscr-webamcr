@@ -1,5 +1,5 @@
 import logging
-from cacheops import invalidate_model
+from cacheops import invalidate_model, invalidate_all
 
 from arch_z.models import ArcheologickyZaznam
 from core.exceptions import MaximalIdentNumberError
@@ -73,7 +73,7 @@ def detail(request, typ_vazby, ident_cely):
         komponenta.active_transaction = fedora_transcation
         komponenta.save()
         form.save_m2m()
-        invalidate_model(KomponentaAktivita)
+        invalidate_all()
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
