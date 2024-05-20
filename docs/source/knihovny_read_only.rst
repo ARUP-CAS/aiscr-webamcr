@@ -432,7 +432,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://pythonhosted.org/pytz
    * - pyzstd
-     - 0.15.10
+     - 0.16.0
      - BSD License
      - https://github.com/Rogdham/pyzstd
    * - rarfile
@@ -452,7 +452,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://www.reportlab.com/
    * - requests
-     - 2.31.0
+     - 2.32.0
      - Apache Software License
      - https://requests.readthedocs.io
    * - rjsmin
