@@ -1084,10 +1084,7 @@ def post_ajax_get_pas_and_pian_limit(request):
             return JsonResponse({"points": back, "algorithm": "detail","count":num}, status=200)
         else:
             return JsonResponse({"points": [], "algorithm": "detail","count":0}, status=200)
-    else:
-        density = get_heatmap_pas_density(*params)
-        logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.density", extra={"density": density})
-
+    else:        
         heats = []
         if req_pas:
             heats=heats+get_heatmap_pas(*params)
@@ -1100,8 +1097,7 @@ def post_ajax_get_pas_and_pian_limit(request):
             back.append(
                 {
                     "id": str(cid),
-                    "pocet": heat["count"],
-                    "density": 0,
+                    "pocet": heat["count"],                    
                     "geom": heat["geometry"].replace(", ", ","),
                 }
             )
