@@ -556,6 +556,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             logger.debug("projekt.models.projekt.set_permanent_ident_cely.update_repository",
                          extra={"ident_cely_old": old_ident, "ident_cely_new": self.ident_cely,
                                 "fedora_transaction": self.active_transaction.uid})
+            self.save_metadata()
             self.record_ident_change(old_ident)
         self.save()
         logger.debug("projekt.models.projekt.set_permanent_ident_cely.end",

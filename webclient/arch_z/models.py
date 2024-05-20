@@ -326,7 +326,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         self.ident_cely = (
             sequence.region + "-" + str(sequence.typ.zkratka) + f"{sequence.sekvence:07}"
         )
+        self.suppress_signal = False
         self._set_connected_records_ident(self.ident_cely)
+        self.save_metadata()
         self.record_ident_change(old_ident, self.active_transaction)
         self.save()
 
@@ -421,10 +423,12 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 poznamka_historie = f"{old_ident} -> {self.ident_cely}"
             else:
                 old_ident = self.ident_cely
+
                 self.set_lokalita_permanent_ident_cely()
                 ident_change_recorded = True
                 poznamka_historie = f"{old_ident} -> {self.ident_cely}"
         self.suppress_signal = False
+        self.save_metadata()
         if old_ident is not None and not ident_change_recorded:
             self.record_ident_change(old_ident, self.active_transaction)
         return poznamka_historie
