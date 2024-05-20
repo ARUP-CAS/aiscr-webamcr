@@ -725,7 +725,7 @@ def get_num_pian_from_envelope(left, bottom, right, top, request):
         return None
 
 
-def get_pian_from_envelope(left, bottom, right, top, request):
+def get_pian_from_envelope(left, bottom, right, top,zoom, request):
     """
     Funkce pro získaní pianů ze čtverce.
     @janhnat zohlednit pristupnost - done
@@ -756,7 +756,7 @@ def get_pian_from_envelope(left, bottom, right, top, request):
             cursor.execute(querysum)
             result = cursor.fetchone() 
             count = int(result[0]) if result[0] is not None else 0            
-            if count<5000:
+            if count<5000 or zoom>13:
                 cursor.execute(query)
                 pians = dictfetchall(cursor)
                 count=len(pians)

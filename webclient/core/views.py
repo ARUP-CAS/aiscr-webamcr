@@ -1065,7 +1065,7 @@ def post_ajax_get_pas_and_pian_limit(request):
         num = num+pases.count()
 
     if req_pian:        
-        pians,count = get_pian_from_envelope(*params[0:4],request)
+        pians,count = get_pian_from_envelope(*params[0:5],request)
         num = num + count
 
     logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"num": num})
