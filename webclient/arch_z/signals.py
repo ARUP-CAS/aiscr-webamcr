@@ -155,9 +155,6 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
 
     def save_metadata(close_transaction=False):
         invalidate_all()
-        for item in instance.initial_casti_dokumentu:
-            item: DokumentCast
-            item.dokument.save_metadata(fedora_transaction)
         try:
             if instance.akce and instance.akce.projekt is not None:
                 instance.akce.projekt.save_metadata(fedora_transaction)

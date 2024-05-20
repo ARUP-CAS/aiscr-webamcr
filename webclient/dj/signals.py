@@ -134,19 +134,21 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
             komponenta.active_transaction = fedora_transaction
             komponenta.delete()
         instance.komponenty.delete()
-    if instance.close_active_transaction_when_finished:
-        def save_metadata():
+    if fedora_transaction:
+        if instance.close_active_transaction_when_finished:
+            def save_metadata():
+                if not instance.suppress_signal_arch_z:
+                    instance.archeologicky_zaznam.save_metadata(fedora_transaction)
+                if save_pian_metadata:
+                    pian.save_metadata(fedora_transaction)
+                fedora_transaction.mark_transaction_as_closed()
+
+            transaction.on_commit(save_metadata)
+        else:
             if not instance.suppress_signal_arch_z:
                 instance.archeologicky_zaznam.save_metadata(fedora_transaction)
             if save_pian_metadata:
                 pian.save_metadata(fedora_transaction)
-            fedora_transaction.mark_transaction_as_closed()
-
-        transaction.on_commit(save_metadata)
-    else:
-        if not instance.suppress_signal_arch_z:
-            instance.archeologicky_zaznam.save_metadata(fedora_transaction)
-        if save_pian_metadata:
-            pian.save_metadata(fedora_transaction)
     logger.debug("dj.signals.delete_dokumentacni_jednotka.end", extra={"ident_cely": instance.ident_cely,
-                                                                       "transaction": fedora_transaction.uid})
+                                                                       "transaction": getattr(fedora_transaction,
+                                                                                              "uid", None)})

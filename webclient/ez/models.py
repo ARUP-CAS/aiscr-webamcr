@@ -205,6 +205,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             old_ident = self.ident_cely
             self.ident_cely = get_perm_ez_ident()
             historie_poznamka = f"{old_ident} -> {self.ident_cely}"
+            self.save_metadata()
             self.record_ident_change(old_ident)
         return historie_poznamka
 

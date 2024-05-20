@@ -188,6 +188,7 @@ def dokument_cast_save_metadata(sender, instance: DokumentCast, created, **kwarg
 def dokument_cast_save_metadata(sender, instance: DokumentCast, **kwargs):
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra={"pk": instance.pk})
     fedora_transaction: FedoraTransaction = instance.active_transaction
+    invalidate_all()
 
     def save_metadata(close_transaction=False):
         if instance.initial_archeologicky_zaznam is not None:

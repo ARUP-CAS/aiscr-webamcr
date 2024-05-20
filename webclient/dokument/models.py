@@ -378,6 +378,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         )
         old_ident_cely = self.ident_cely
         self.ident_cely = perm_ident_cely
+        self.save_metadata()
         self.record_ident_change(old_ident_cely, self.active_transaction, perm_ident_cely)
         self.save()
         self.save_metadata()

@@ -1059,6 +1059,10 @@ def smazat(request, ident_cely):
                     eo.suppress_signal_arch_z = True
                     eo.active_transaction = az.active_transaction
                     eo.delete()
+            for pk in az.initial_casti_dokumentu:
+                item = DokumentCast.objects.get(pk=pk)
+                item.active_transaction = fedora_transaction
+                item.delete()
             invalidate_all()
             az.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely,
