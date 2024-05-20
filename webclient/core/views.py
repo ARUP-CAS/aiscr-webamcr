@@ -975,7 +975,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["toolbar_name"] = self.toolbar_name
         context["toolbar_label"] = self.toolbar_label
         context["sort_params"] = self._get_sort_params()
-        logger.debug(context["object_list"])
+        #logger.debug(context["object_list"])
         return context
     
 
