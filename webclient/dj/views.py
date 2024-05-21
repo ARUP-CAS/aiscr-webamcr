@@ -115,17 +115,12 @@ def detail(request, typ_vazby, ident_cely):
                 dokumentacni_jednotka.save()
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely, fedora_transaction)
         elif dj.typ == Heslar.objects.get(id=TYP_DJ_KATASTR):
-            logger.debug("dj.views.detail.katastr", extra={"ident_cely": dj.ident_cely})
-            new_ku = form.cleaned_data["ku_change"]
+            logger.debug("dj.views.detail.katastr", extra={"ident_cely": dj.ident_cely})            
             if dj.archeologicky_zaznam.hlavni_katastr.pian:
                 dj.pian = dj.archeologicky_zaznam.hlavni_katastr.pian
             else:
                 dj.pian = vytvor_pian(dj.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
-            dj.save()
-            if len(new_ku) > 3:
-                new_ku_nazev, new_ku_okres_nazev = [x.strip(")").strip() for x in new_ku.split("(")]
-                new_ku = RuianKatastr.objects.get(nazev__iexact=new_ku_nazev, okres__nazev__iexact=new_ku_okres_nazev)
-                update_main_katastr_within_ku(dj.ident_cely, new_ku)
+            dj.save()            
         if dj.pian is not None and (pian_db is None or pian_db.pk != dj.pian.pk):
             logger.debug("dj.views.detail.update_pian_metadata",
                          extra={"pian_db": pian_db.ident_cely if pian_db else "None",
