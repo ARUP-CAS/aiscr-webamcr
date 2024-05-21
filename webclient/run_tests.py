@@ -8,7 +8,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-f','--fail', help='provede neúspěšné testy', action='store_true')
 parser.add_argument('-a','--all', help='provede všechny testy', action='store_true')
-
+parser.add_argument('-t','--test',type=int, help='provede test daného čísla')
 args = parser.parse_args()
 
 SETTINGS = "webclient.settings.dev_test"
@@ -39,7 +39,20 @@ if args.fail==True:
     else:
         print("Nenalezn soubor s výsledky")
         exit()
-    
+elif args.test != None:
+    from webclient.settings.dev_test import TEST_SCREENSHOT_PATH
+    import pandas
+    if os.path.isfile(f'{TEST_SCREENSHOT_PATH}results.xlsx'):
+            data= pandas.read_excel(f'{TEST_SCREENSHOT_PATH}results.xlsx')
+            d= data.values.tolist()
+            test_list = []
+            for line in d:
+                if(line[0]==args.test ):
+                    test_list.append(line[2])
+                    break
+            if len(test_list)==0:
+                print(f"Test {args.test} nenalezen.")
+                exit()    
 else:    
     test_list = [
     "core.tests.test_selenium",
