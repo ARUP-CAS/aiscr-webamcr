@@ -1,0 +1,521 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:oai_amcr="https://api.aiscr.cz/schema/oai_amcr"
+    targetNamespace="https://api.aiscr.cz/schema/oai_amcr"
+    elementFormDefault="unqualified">
+
+  <xsd:annotation>
+    <xsd:documentation>
+      XML Schema for internal xml export from AMCR database.
+    </xsd:documentation>
+  </xsd:annotation>
+
+  <xsd:element name="amcr">
+    <xsd:complexType>
+      <xsd:choice>
+        <xsd:element name="projekt" type="oai_amcr:ProjectType"/>
+        <xsd:element name="akce" type="oai_amcr:EventType"/>
+        <xsd:element name="lokalita" type="oai_amcr:SiteType"/>
+        <xsd:element name="let" type="oai_amcr:FlightType"/>
+        <xsd:element name="dok_jednotka" type="oai_amcr:DocumentationUnitType"/>
+        <xsd:element name="dokument" type="oai_amcr:DocumentType"/>
+        <xsd:element name="soubor" type="oai_amcr:FileType"/>
+        <xsd:element name="ext_zdroj" type="oai_amcr:ExternalSourceType"/>
+        <xsd:element name="pian" type="oai_amcr:PianType"/>
+        <xsd:element name="adb" type="oai_amcr:AdbType"/>
+        <xsd:element name="samostatny_nalez" type="oai_amcr:IndividualFindType"/>
+      </xsd:choice>
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:complexType name="ProjectType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="stav" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="typ_projektu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datetime_born" minOccurs="0" maxOccurs="1" type="xsd:string"/> <!-- not dateTime: uses space instead of T... -->
+      <xsd:element name="okres" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="katastr" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="dalsi_katastry" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="podnet" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="lokalita" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="parcelni_cislo" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="planovane_zahajeni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="objednatel" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="odpovedna_osoba" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="adresa" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="telefon" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="email" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vedouci_projektu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="organizace_zapisu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="organizace_prihlaseni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="uzivatelske_oznaceni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="kulturni_pamatka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="nkp_cislo" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="nkp_popis" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_zahajeni" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="datum_ukonceni" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="datum_zapisu" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_zapisu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_prihlaseni" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_prihlaseni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_zapisu_zahajeni" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_zahajeni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_zapisu_ukonceni" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_ukonceni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_navrhu_archivace" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_navrhu_archivace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_archivace" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_archivace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="termin_odevzdani_nz" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="geometry_e" minOccurs="0" maxOccurs="1" type="xsd:float"/>
+      <xsd:element name="geometry_n" minOccurs="0" maxOccurs="1" type="xsd:float"/>
+      <xsd:element name="child_akce" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+      <xsd:element name="child_samostatny_nalez" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="EventType">
+    <xsd:sequence>
+      <xsd:element name="vazba_projekt_akce" minOccurs="0" maxOccurs="1">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="id_projekt" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="typ" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="stav" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="je_nz" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="okres" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="katastr" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="dalsi_katastry" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vedouci_akce" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="organizace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vedouci_akce_ostatni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="organizace_ostatni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="uzivatelske_oznaceni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="specifikace_data" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_zahajeni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_zahajeni_v" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="datum_ukonceni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_ukonceni_v" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="hlavni_typ" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vedlejsi_typ" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="lokalizace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="poznamka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="ulozeni_nalezu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="pristupnost" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_zapisu" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_zapisu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_autorizace" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_autorizace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_archivace_zaa" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_archivace_zaa" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_odlozeni_nz" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_odlozeni_nz" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_vraceni_zaa" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_vraceni_zaa" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_podani_nz" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_podani_nz" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_archivace" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_archivace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_zamitnuti" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_zamitnuti" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="child_dok_jednotka" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+      <xsd:element name="child_dokument" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+      <xsd:element name="child_ext_zdroj" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="SiteType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="stav" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="okres" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="katastr" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="dalsi_katastry" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="typ_lokality" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="druh" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="nazev" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="popis" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="poznamka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="uzivatelske_oznaceni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="pristupnost" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_zapisu" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_zapisu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_archivace" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_archivace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="child_dok_jednotka" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+      <xsd:element name="child_dokument" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+      <xsd:element name="child_ext_zdroj" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="FlightType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="hodina_zacatek" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="hodina_konec" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="pozorovatel" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="organizace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="fotoaparat" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="pilot" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="typ_letounu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="ucel_letu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="letiste_start" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="letiste_cil" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="pocasi" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="dohlednost" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="uzivatelske_oznaceni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="child_dokument" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="DocumentationUnitType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="parent_akce" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="parent_lokalita" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="akce_stav" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="lokalita_stav" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="pristupnost" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="pian" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="typ" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="negativni_jednotka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="nazev" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="child_adb" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="komponenta" minOccurs="0" maxOccurs="unbounded" type="oai_amcr:ComponentType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="ComponentType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="parent" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="obdobi" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="jistota" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="presna_datace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="areal" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="aktivita_sidlistni" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_pohrebni" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_vyrobni" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_tezebni" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_kultovni" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_komunikace" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_deponovani" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_intruze" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_boj" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_jina" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="poznamka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="nalez" minOccurs="0" maxOccurs="unbounded" type="oai_amcr:FindType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="FindType">
+    <xsd:sequence>
+      <xsd:element name="pom_id" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="komponenta" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="typ_nalezu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="kategorie" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="druh_nalezu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="specifikace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="pocet" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="poznamka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="AdbType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="parent" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="pristupnost" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="akce_stav" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="typ_sondy" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="trat" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="cislo_popisne" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="parcelni_cislo" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="podnet" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="stratigraficke_jednotky" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="autor_popisu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="rok_popisu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="autor_revize" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="rok_revize" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="poznamka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vyskovy_bod" minOccurs="0" maxOccurs="unbounded" type="oai_amcr:ElevationPointType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="ElevationPointType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="parent" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="typ" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="niveleta" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="easting" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="northing" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="DocumentType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="let" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="stav" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="typ_dokumentu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="material_originalu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="rada" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="typ_dokumentu_posudek" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="autor" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="rok_vzniku" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="organizace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="pristupnost" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_zverejneni" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="jazyk_dokumentu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="ulozeni_originalu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="oznaceni_originalu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="popis" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="poznamka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_vlozeni" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_vlozeni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_archivace" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_archivace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="extra_data" minOccurs="0" maxOccurs="unbounded" type="oai_amcr:ExtraDataType"/>
+      <xsd:element name="tvar" minOccurs="0" maxOccurs="unbounded" type="oai_amcr:ShapeType"/>
+      <xsd:element name="jednotka_dokumentu" minOccurs="0" maxOccurs="unbounded" type="oai_amcr:DocumentUnitType"/>
+      <xsd:element name="child_soubor" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+      <xsd:element name="odkaz" minOccurs="0" maxOccurs="unbounded">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="vazba_akce" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="vazba_lokalita" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="ExtraDataType">
+    <xsd:sequence>
+      <xsd:element name="cislo_objektu" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="format" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="meritko" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vyska" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="sirka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="zachovalost" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="nahrada" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="pocet_variant_originalu" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="index" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="odkaz" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_vzniku" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="pas" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="easting" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="northing" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="udalost_typ" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="udalost" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="zeme" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="region" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="rok_od" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="rok_do" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="osoby" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="ShapeType">
+    <xsd:sequence>
+      <xsd:element name="pom_id" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="dokument" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="tvar" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="poznamka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="DocumentUnitType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="dokument" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vazba_akce" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vazba_lokalita" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vazba_druha_akce" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vazba_druha_lokalita" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="poznamka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="komponenta_dokument" minOccurs="0" maxOccurs="unbounded" type="oai_amcr:DocumentComponentType"/>
+      <xsd:element name="neident_akce" minOccurs="0" maxOccurs="unbounded" type="oai_amcr:UnidentifiedEventType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="DocumentComponentType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="parent" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="obdobi" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="jistota" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="presna_datace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="areal" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="aktivita_sidlistni" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_pohrebni" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_vyrobni" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_tezebni" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_kultovni" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_komunikace" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_deponovani" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_intruze" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_boj" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="aktivita_jina" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="poznamka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="nalez_dokumentu" minOccurs="0" maxOccurs="unbounded" type="oai_amcr:DocumentFindType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="DocumentFindType">
+    <xsd:sequence>
+      <xsd:element name="pom_id" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="komponenta_dokument" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="typ_nalezu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="kategorie" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="druh_nalezu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="specifikace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="pocet" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="poznamka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="UnidentifiedEventType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="okres" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="katastr" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vedouci" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="rok_zahajeni" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="rok_ukonceni" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="lokalizace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="popis" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="poznamka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="pian" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="FileType">
+    <xsd:sequence>
+      <xsd:element name="filepath" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="dokument" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="projekt" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="nazev" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="uzivatelske_oznaceni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="stav" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="mimetype" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="rozsah" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="size_bytes" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="vytvoreno" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="ExternalSourceType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="stav" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="typ" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="sysno" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="autori" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="nazev" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="podnazev" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="edice_rada" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="rok_vydani_vzniku" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="isbn" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="issn" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vydavatel" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="sbornik_editor" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="sbornik_nazev" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="misto" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="casopis_denik_nazev" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="casopis_rocnik" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_rd" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="paginace_titulu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="link" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="typ_dokumentu" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="organizace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="oznaceni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="poznamka" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_vlozeni" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="odpovedny_pracovnik_vlozeni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="ext_odkaz" minOccurs="0" maxOccurs="unbounded" type="oai_amcr:ExternalReferenceType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="ExternalReferenceType">
+    <xsd:sequence>
+      <xsd:element name="pom_id" minOccurs="1" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="externi_zdroj" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vazba_akce" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vazba_lokalita" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="paginace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="PianType">
+    <xsd:sequence>
+      <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="typ" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="presnost" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+      <xsd:element name="pristupnost" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="zm10" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="vymezil" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_vymezeni" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="potvrdil" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="datum_potvrzeni" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+      <xsd:element name="geom_gml" minOccurs="0" maxOccurs="1">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:any namespace="http://www.opengis.net/gml/3.2" processContents="skip"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="geom_wkt" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="centroid_e" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="centroid_n" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      <xsd:element name="child_dok_jednotka" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="IndividualFindType">
+    <xsd:sequence>
+     <xsd:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xsd:string"/>  
+     <xsd:element name="inv_cislo" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="projekt_id" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="okres" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="katastr" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="lokalizace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="centroid_e" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="centroid_n" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="geom_gml" minOccurs="0" maxOccurs="1">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:any namespace="http://www.opengis.net/gml/3.2" processContents="skip"/>
+          </xsd:sequence>
+        </xsd:complexType>
+     </xsd:element>
+     <xsd:element name="hloubka" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+     <xsd:element name="pristupnost" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="obdobi" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="presna_datace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="typ" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="druh" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="specifikace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="pocet" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="nalezce" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="datum_nalezu" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+     <xsd:element name="stav" minOccurs="0" maxOccurs="1" type="xsd:integer"/>
+     <xsd:element name="predano" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="predano_organizace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="odpovedny_pracovnik_vlozeni" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="datum_vlozeni" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+     <xsd:element name="odpovedny_pracovnik_archivace" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+     <xsd:element name="datum_archivace" minOccurs="0" maxOccurs="1" type="xsd:date"/>
+     <xsd:element name="child_soubor" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>
