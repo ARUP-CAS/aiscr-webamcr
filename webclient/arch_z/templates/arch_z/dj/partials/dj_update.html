@@ -70,13 +70,7 @@
                     name="button" href="{% url 'dj:zmenit-katastr' j.ident_cely %}" )>
               {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.zmenitKatastr.label' %}
             </button>
-          {% endif %}
-          {% if j.show_add_pian %}
-            <a id="show_menu_ku_from_map_id" class="dropdown-item" href="#"
-               onclick="show_grap_geom_from_map('ku')">
-              {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.nastavKatastrZMapy.label' %}
-            </a>
-          {% endif %}
+          {% endif %}          
           {% if j.show_remove_pian %}
             <button id="pian-odpojit-{{ j.pian_ident_cely }}" class="dropdown-item pian-odpojit-btn" type="button"
                     name="button" href="{% url 'pian:odpojit' j.ident_cely %}">

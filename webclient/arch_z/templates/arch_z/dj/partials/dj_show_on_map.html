@@ -4,10 +4,6 @@
     });
 </script>
 <script>
-    /*const show_grap_geom_from_map = (dj) => {
-        global_map_can_grab_geom_from_map = dj;
-        map_show_edit(false)
-    }*/
     const getFiltrType = () => {
         return document.forms[0].querySelector('[data-id="dj_typ_id"]').title
     }
@@ -31,7 +27,7 @@
                 }
             });
 
-        ["show_menu_ku_from_map_id", "zmenit-katastr" + "{{j.ident_cely}}"]
+        ["zmenit-katastr" + "{{j.ident_cely}}"]
             .forEach(element => {
                 if (document.getElementById(element) != null) {
                     document.getElementById(element).style.display = negative;
