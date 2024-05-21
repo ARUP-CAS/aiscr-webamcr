@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.0/" targetNamespace="https://api.aiscr.cz/schema/amcr/2.0/" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.0.0">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.0/" targetNamespace="https://api.aiscr.cz/schema/amcr/2.0/" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.0">
 
   <xs:annotation>
-    <xs:documentation>XML Schema for native export of the AMCR database (version 2.0.0). Related API: https://api.aiscr.cz/</xs:documentation>
+    <xs:documentation>XML Schema for native export of the AMCR database (version 2.0). Related API: https://api.aiscr.cz/</xs:documentation>
   </xs:annotation>
 
   <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/03/xml.xsd"/>
