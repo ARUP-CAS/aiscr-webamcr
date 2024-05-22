@@ -348,7 +348,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.36
+     - 8.13.37
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -412,7 +412,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://pyppmd.readthedocs.io/
    * - python-crontab
-     - 3.0.0
+     - 3.1.0
      - GNU Lesser General Public License v3 or later (LGPLv3+)
      - https://gitlab.com/doctormo/python-crontab/
    * - python-dateutil
@@ -452,7 +452,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://www.reportlab.com/
    * - requests
-     - 2.32.0
+     - 2.32.2
      - Apache Software License
      - https://requests.readthedocs.io
    * - rjsmin
@@ -460,7 +460,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
-     - 4.20.0
+     - 4.21.0
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
