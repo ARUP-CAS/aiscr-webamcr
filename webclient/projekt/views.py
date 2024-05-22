@@ -514,11 +514,11 @@ def edit(request, ident_cely):
             required_next=required_fields_next,
             edit_fields = edit_fields
         )
-        if projekt.geom is not None:
+        if projekt.geom is not None and len(projekt.geom)>0:
             form.fields["coordinate_x1"].initial = projekt.geom.coords[0]
             form.fields["coordinate_x2"].initial = projekt.geom.coords[1]
         else:
-            logger.warning("projekt.views.edit.empty")
+            logger.debug("projekt.views.edit.empty")
     return render(
         request,
         "projekt/edit.html",
