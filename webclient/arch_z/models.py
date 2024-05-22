@@ -430,6 +430,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         self.save_metadata()
         if old_ident is not None and not ident_change_recorded:
             self.record_ident_change(old_ident, self.active_transaction)
+        else:
+            self.save()
         return poznamka_historie
 
     def __init__(self, *args, **kwargs):
