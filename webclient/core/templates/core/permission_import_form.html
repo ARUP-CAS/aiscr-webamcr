@@ -37,7 +37,7 @@
 <div>
 {% if errors %}
     <p class="errornote">
-    {% blocktranslate count counter=errors|length %}core.admin.templates.permissionImportForm.correct.singular{% plural %}core.admin.templates.permissionImportForm.correct.plural{% endblocktranslate %}  <!-- Please correct the error below. / Please correct the errors below. -->
+    {% translate 'core.admin.templates.permissionImportForm.correct' %}  <!-- Please correct the error below. / Please correct the errors below. -->
     </p>
     {{ adminform.form.non_field_errors }}
 {% endif %}
