@@ -312,8 +312,9 @@ class Model3DListView(SearchListView):
                 "autori",
                 queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
                 to_attr="ordered_autors",
-            )
+            ),"extra_data__zeme","soubory__soubory"
         )
+               
         return self.check_filter_permission(qs)
 
 
@@ -372,15 +373,11 @@ class DokumentListView(SearchListView):
             Soubor.objects.filter(vazba=OuterRef("vazba")).values_list("id", flat=True)[:1]
         )
         qs = qs.exclude(ident_cely__contains="3D")
-        qs = qs.select_related(
-            "typ_dokumentu",
+        qs = qs.select_related(           
             "extra_data",
             "organizace",
             "extra_data__format",
-            "soubory",
-            "let",
-            "rada",
-            "pristupnost",
+            "soubory",            
             "material_originalu",
             "ulozeni_originalu",
         ).prefetch_related(
@@ -393,7 +390,7 @@ class DokumentListView(SearchListView):
                 "autori",
                 queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
                 to_attr="ordered_autors",
-            )
+            ), "typ_dokumentu", "let", "rada","pristupnost",
         )
         return self.check_filter_permission(qs)
 

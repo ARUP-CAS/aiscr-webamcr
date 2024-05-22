@@ -1154,7 +1154,7 @@ switchMap = function (overview = false) {
                                         if (count<500) {
                                             addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost)
                                         } else {
-                                            addPointToPoiLayer(i.geom, poi_pian_dp, i.ident_cely, true,i.presnost)
+                                            addPointToPoiLayer(i.centroid, poi_pian_dp, i.ident_cely, true,i.presnost)
                                         }
                                     }
                                 }catch(e){

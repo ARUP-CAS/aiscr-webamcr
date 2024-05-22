@@ -151,14 +151,18 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     )
     geom_updated_at = models.DateTimeField(null=True, blank=True)
     geom_sjtsk_updated_at = models.DateTimeField(null=True, blank=True)
-    initial_pristupnost = None
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        try:
-            self.initial_pristupnost = self.pristupnost
-        except ObjectDoesNotExist:
-            self.initial_pristupnost = None
+  
+    @property
+    def initial_pristupnost(self):
+        if hasattr(self, "_initial_pristupnost"): return self._initial_pristupnost  
+        if hasattr(self, "pristupnost"):       
+            self._initial_pristupnost = self.pristupnost
+        else: self._initial_pristupnost= None
+        return  self._initial_pristupnost       
+    
+    @initial_pristupnost.setter
+    def initial_pristupnost(self, value):
+        self._initial_pristupnost=value
 
     def set_zapsany(self, user):
         """

@@ -86,6 +86,7 @@ CACHEOPS = {
     "pas.SamostatnyNalez": {"ops": (), "timeout": 60},
     "core.Permissions": {"ops": (), "timeout": 60*60},
     "pian.Pian": {"ops": (), "timeout": 60},
+    "lokalita.Lokalita": {"ops": (), "timeout": 60},
 }
 
 SECRET_KEY = get_secret("SECRET_KEY")

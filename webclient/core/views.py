@@ -975,7 +975,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["toolbar_name"] = self.toolbar_name
         context["toolbar_label"] = self.toolbar_label
         context["sort_params"] = self._get_sort_params()
-        logger.debug(context["object_list"])
+        #logger.debug(context["object_list"])
         return context
     
 
@@ -1064,67 +1064,27 @@ def post_ajax_get_pas_and_pian_limit(request):
         pases =  get_pas_from_envelope(*params[0:4],request).distinct()
         num = num+pases.count()
 
-    if req_pian:
-        pians = get_pian_from_envelope(*params[0:4],request).distinct()
-        num = num + pians.count()
+    if req_pian:        
+        pians,count = get_pian_from_envelope(*params[0:5],request)
+        num = num + count
 
     logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"num": num})
-    if num< 5000:
+    if (num< 5000 and not req_pian) or (num< 5000 and req_pian  and pians is not None):
         back = []
 
-        if req_pas:
-            #pases = get_pas_from_envelope(*params[0:4],request)
-            back=list(pases.values("id","ident_cely",type=Value("pas")).annotate(geom=AsWKT("geom")))
-            # for pas in pases:
-            #     if pas.id not in remove_duplicity:
-            #         remove_duplicity.append(pas.id)
-            #         back.append(
-            #             {
-            #                 "id": pas.id,
-            #                 "ident_cely": pas.ident_cely,
-            #                 "geom": pas.geom.wkt.replace(", ", ","),
-            #                 "type": "pas"
-            #             }
-            #         )
+        if req_pas:            
+            back=list(pases.values("id","ident_cely",type=Value("pas")).annotate(geom=AsWKT("geom")))         
 
         if req_pian:  
             logger.debug("Start getting pians")  
-            dok_jed = DokumentacniJednotka.objects.filter(
-                pian=OuterRef('pk')
-            ).order_by('-pk').values('ident_cely')
-            if num < 500:
-                back=list(pians.values("id","ident_cely",type=Value("pian")).annotate(geom=AsWKT("geom"),presnost=F("presnost__zkratka"),dj=Subquery(dok_jed[:1])))
-            else:
-                back=list(pians.values("id","ident_cely",type=Value("pian")).annotate(geom=AsWKT("centroid"),presnost=F("presnost__zkratka"),dj=Subquery(dok_jed[:1])))
-            # pians = get_pian_from_envelope(*params[0:4],request)    
-            # logger.debug("End getting pians")  
-            # logger.debug("Start building pians")  
-            # for pian in pians:
-            #     if pian["pian__id"] not in remove_duplicity:
-            #         remove_duplicity.append(pian["pian__id"])
-            #         back.append(
-                        
-            #             {
-            #                 "id": pian["pian__id"],
-            #                 "ident_cely": pian["pian__ident_cely"],
-            #                 "geom": pian["pian__geom"].wkt.replace(", ", ",")
-            #                 if num<500
-            #                 else pian["pian__centroid"].wkt.replace(", ", ","),
-            #                 "dj": pian["ident_cely"],
-            #                 "presnost": pian["pian__presnost__zkratka"],
-            #                 "type": "pian"
-                        
-            #             }
-            #         )
+            back+=pians
+           
             logger.debug("End building pians")  
         if num > 0:
             return JsonResponse({"points": back, "algorithm": "detail","count":num}, status=200)
         else:
             return JsonResponse({"points": [], "algorithm": "detail","count":0}, status=200)
-    else:
-        density = get_heatmap_pas_density(*params)
-        logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.density", extra={"density": density})
-
+    else:        
         heats = []
         if req_pas:
             heats=heats+get_heatmap_pas(*params)
@@ -1137,8 +1097,7 @@ def post_ajax_get_pas_and_pian_limit(request):
             back.append(
                 {
                     "id": str(cid),
-                    "pocet": heat["count"],
-                    "density": 0,
+                    "pocet": heat["count"],                    
                     "geom": heat["geometry"].replace(", ", ","),
                 }
             )

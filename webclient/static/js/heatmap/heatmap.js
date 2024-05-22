@@ -340,7 +340,7 @@ var Canvas2dRenderer = (function Canvas2dRendererClosure() {
     this._width = canvas.width = shadowCanvas.width = config.width || +(computed.width.replace(/px/,''));
     this._height = canvas.height = shadowCanvas.height = config.height || +(computed.height.replace(/px/,''));
 
-    this.shadowCtx = shadowCanvas.getContext('2d');
+    this.shadowCtx = shadowCanvas.getContext('2d',{  willReadFrequently: true });
     this.ctx = canvas.getContext('2d');
 
     // @TODO:
@@ -422,6 +422,7 @@ var Canvas2dRenderer = (function Canvas2dRendererClosure() {
         var x = point.x;
         var y = point.y;
         var radius = point.radius;
+        if (radius>5000) radius=5000
         // if value is bigger than max
         // use max as value
         var value = Math.min(point.value, max);

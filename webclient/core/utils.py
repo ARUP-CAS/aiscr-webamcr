@@ -725,35 +725,44 @@ def get_num_pian_from_envelope(left, bottom, right, top, request):
         return None
 
 
-def get_pian_from_envelope(left, bottom, right, top, request):
+def get_pian_from_envelope(left, bottom, right, top,zoom, request):
     """
     Funkce pro získaní pianů ze čtverce.
     @janhnat zohlednit pristupnost - done
     musi zohlednit pristupnost [mapa_pian]
     """
-    from dj.models import DokumentacniJednotka
-    from django.contrib.gis.geos import Polygon
-    from django.db.models import Q
-    from pian.views import PianPermissionFilterMixin
-    from core.models import Permissions as p
 
-    pian_queryset = Pian.objects.filter(
-        Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
-        | Q(geom__intersects=Polygon.from_bbox([right, top, left, bottom]))
-    )
-    perm_object = PianPermissionFilterMixin()
-    perm_object.request = request
+    from django.contrib.gis.geos import Polygon      
+    from core.constants import  ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID, PIAN_POTVRZEN      
+    from heslar.hesla import HESLAR_PIAN_PRESNOST   
+    from heslar.models import Heslar
+    from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ANONYM_ID
+    from django.db import connection
+    bbox=Polygon.from_bbox([right, top, left, bottom])    
+    presnost=Heslar.objects.filter(nazev_heslare__id=HESLAR_PIAN_PRESNOST).first().id-1    
+    
+    querysum = f'''select sum(p.count) from amcr_heat_pian_l2 p where "p"."st_centroid" &&	ST_MakeEnvelope({left},{bottom},{right}, {top} ,4326)'''
+   
+    query=f'''select  p.ident_cely as "ident_cely",	p.presnost-{presnost} as "presnost",'pian' as "type", ST_AsText(p.geom) as "geom",ST_AsText(ST_PointOnSurface(p.geom)) as "centroid" from pian p where ST_Intersects("p"."geom",ST_GeomFromText('{bbox}', 4326)) '''
+    if request.user.hlavni_role.id==ROLE_BADATEL_ID:
+        query1=f''' and ( exists ( select 1 from historie h where h.vazba = p.historie and h.uzivatel = {request.user.id} and h.typ_zmeny = 'PI01' ) or exists ( select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists ( select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists ( select 1 from historie h2 where h2.vazba = az.historie and h2.uzivatel = {request.user.id} and h2.typ_zmeny = 'AZ01') ) ) or (exists ( select 1 from dokumentacni_jednotka dj1 where dj1.pian = p.id and exists ( select 1 from archeologicky_zaznam az where az.id = dj1.archeologicky_zaznam and az.pristupnost in ({PRISTUPNOST_ANONYM_ID}, {PRISTUPNOST_BADATEL_ID}) ) ) and p.stav ={PIAN_POTVRZEN} ))  '''
+        query+=query1       
+    elif request.user.hlavni_role.id==ROLE_ARCHEOLOG_ID:
+        query2=f''' and ( exists (  select 1 from historie h where h.vazba = p.historie and h.organizace_snapshot_id = {request.user.organizace_id} and h.typ_zmeny = 'PI01' ) or exists (  select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists ( select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists ( select 1 from historie h2 where h2.vazba = az.historie and h2.organizace_snapshot_id = {request.user.organizace_id} and h2.typ_zmeny = 'AZ01' ) ) ) or exists (  select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists ( select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists ( select 1 from akce a1 where a1.archeologicky_zaznam = az.id and exists ( select 1 from projekt p1 where p1.id = a1.projekt and p1.organizace = {request.user.organizace_id} ) ) ) ) or (exists (  select 1 from dokumentacni_jednotka dj1 where dj1.pian = p.id and exists ( select 1 from archeologicky_zaznam az where az.id = dj1.archeologicky_zaznam and az.pristupnost in ({PRISTUPNOST_ANONYM_ID}, {PRISTUPNOST_BADATEL_ID}, {PRISTUPNOST_ARCHEOLOG_ID}) ) ) and p.stav = {PIAN_POTVRZEN}  )) '''
+        query+=query2              
 
-    pian_filtered = perm_object.check_filter_permission(pian_queryset, p.actionChoices.mapa_pian)
-    #logger.debug(pian_filtered)
-    try:
-        return pian_filtered.annotate(centroid=Centroid("geom"))
-    except IndexError:
-        logger.debug(
-            "core.utils.get_pian_from_envelope.no_points",
-            extra={"left": left, "bottom": bottom, "right": right, "top": top},
-        )
-        return None
+    pians=None
+    with connection.cursor() as cursor:
+            cursor.execute(querysum)
+            result = cursor.fetchone() 
+            count = int(result[0]) if result[0] is not None else 0            
+            if count<5000 or zoom>13:
+                cursor.execute(query)
+                pians = dictfetchall(cursor)
+                count=len(pians)
+    
+    return pians,count 
+    
 
 def get_dj_akce_for_pian(pian_ident_cely,request):
     """
