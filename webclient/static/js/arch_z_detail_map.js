@@ -643,35 +643,7 @@ function onMarkerClick(ident_cely,e) {
 
 var clickOnMap=(e)=>{
     addLogText("arch_z_detail_map.clickOnMap")
-    if(global_map_can_grab_geom_from_map.length
-        && global_map_can_grab_geom_from_map.includes('ku:')){
-        if(getFiltrTypeIsKuSafe()){
-            addLogText("Your zoom is: "+map.getZoom())
-
-            var [x1, x2] = amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
-
-            let xhr = new XMLHttpRequest();
-            xhr.open('POST', '/pas/mapa-zjisti-katastr-geom');
-            xhr.setRequestHeader('Content-type', 'application/json');
-            if (typeof global_csrftoken !== 'undefined') {
-                xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
-            } else {
-                addLogText("neni X-CSRFToken token")
-            }
-            xhr.onload = function () {
-                rs = JSON.parse(this.responseText)
-                if (rs.katastr_name) {
-                    document.getElementById("main_cadastre_id").value = rs.katastr_name
-                    document.getElementById(global_map_can_grab_geom_from_map.replace("ku:","id_")+"-ku_change").value = rs.katastr_name
-                }
-            };
-            xhr.send(JSON.stringify(
-                {
-                    'x1': parseFloat(x1),
-                    'x2': parseFloat(x2),
-                }))
-        }
-    } else if(!global_map_can_grab_geom_from_map){
+     if(!global_map_can_grab_geom_from_map){
         try{
             if(global_unwanted_popup){
                 global_unwanted_popup.unbindPopup()
@@ -721,7 +693,8 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
             if(global_measuring_toolbox._measuring){
                 global_measuring_toolbox._stopMeasuring()
             }
-            if(global_map_can_grab_geom_from_map!==false && !global_map_can_edit && global_map_can_grab_geom_from_map!=="ku"){
+            //pian připnout z mapy
+            if(global_map_can_grab_geom_from_map!==false && !global_map_can_edit ){
                 map.spin(false);
                 map.spin(true);
                 $.ajax({

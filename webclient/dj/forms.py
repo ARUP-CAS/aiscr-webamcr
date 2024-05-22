@@ -25,9 +25,6 @@ class CreateDJForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení dokumentační jednotky.
     """
-    ku_change = forms.CharField(
-        max_length=50, required=False, widget=forms.HiddenInput()
-    )
     pian_text = forms.CharField(
         max_length=100,
         required=False,
@@ -181,7 +178,6 @@ class CreateDJForm(forms.ModelForm):
                 Div("pian_text", css_class="col-sm-2", id="pian_text"),
                 Div("nazev", css_class="col-sm-4"),
                 Div("negativni_jednotka", css_class="col-sm-2"),
-                Div("ku_change", id="id_ku_change", css_class="hidden"),
                 css_class="row",
             ),
         )

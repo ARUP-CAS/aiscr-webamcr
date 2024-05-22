@@ -67,13 +67,7 @@
               <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian" data-action-id="change">
                 {% trans "lokalita.templates.lokalita.dj.partials.dj_update.editButtons.importovatPianChange.label" %}
               </button>
-            {% endif %}
-            {% if j.show_add_pian %}
-              <a id="show_menu_ku_from_map_id" class="dropdown-item" href="#"
-                 onclick="show_grap_geom_from_map('ku:{{ j.ident_cely }}')">
-                {% trans 'lokalita.templates.dj.djUpdate.moreActions.nastavKatastralniUzemiZMapy.label' %}
-              </a>
-            {% endif %}
+            {% endif %}            
             {% if j.show_change_katastr %}
               <button id="zmenit-katastr-{{ j.ident_cely }}" class="dropdown-item zmenit-katastr-btn" type="button"
                       name="button" href="{% url 'dj:zmenit-katastr' j.ident_cely %}" )>
@@ -135,31 +129,7 @@
         {% endif %}
       </form>
     {% endif %}
-
-    {% if j.adb_form %}
-      <form class="mb-3" method="POST" action="{% url 'dj:detail' 'lokalita_dj_zakladni' j.ident_cely %}"
-            onsubmit="editDjSubmitButton.disabled = true; return true;">
-      {% crispy j.form %}
-      <div class="card app-card-form app-card-inner">
-        <div class="card-header">
-          <div class="app-fx app-left">
-            {% trans "lokalita.templates.dj.djUpdate.cardheader.Adb" %} {{ j.adb_ident_cely }}
-          </div>
-        </div>
-        <div class="card-body formset-table">
-          <input type="hidden" name="adb_detail" value="{{ j.adb_ident_cely }}"/>
-          {% crispy j.adb_form %}
-          <h5>{% trans "lokalita.templates.dj.djUpdate.Adb.VyskoveBody.label" %}</h5>
-          <input type="hidden" name="adb_zapsat_vyskove_body" value="{{ j.adb_ident_cely }}"/>
-          {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
-        </div>
-      </div>
-      {% if show.editovat %}
-        <button type="submit" id="editDjSubmitButton"
-                class="btn btn-primary">{% trans "lokalita.templates.dj.djUpdate.Adb.submitButton" %}
-        </button>
-      {% endif %}
-    {% endif %}
+    
     </form>
   </div>
 
@@ -211,13 +181,7 @@
                       document.getElementById(element).style.display = positive;
                   }
               });
-
-          ["show_menu_ku_from_map_id"]
-              .forEach(element => {
-                  if (document.getElementById(element) != null) {
-                      document.getElementById(element).style.display = negative;
-                  }
-              });
+          
       }
   </script>
   <script>
