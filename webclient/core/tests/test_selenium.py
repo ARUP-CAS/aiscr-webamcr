@@ -184,7 +184,7 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
   
         
     def tearDown(self):
-        self.driver.save_screenshot(f'{settings.TEST_SCREENSHOT_PATH}{self._testMethodName}.png')
+        self.driver.save_screenshot(f'{settings.TEST_SCREENSHOT_PATH}{self.test_number:03}_{self._testMethodName}.png')
         self.driver.quit()
         if hasattr(self._outcome, 'errors'):
             # Python 3.4 - 3.10  (These two methods have no side effects)
