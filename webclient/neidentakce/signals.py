@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=NeidentAkce)
 def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
-    if instance.dokument_cast and instance.dokument_cast.dokument:
+    if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
         transaction.on_commit(lambda:
                               instance.dokument_cast.dokument.save_metadata(fedora_transaction, close_transaction=True))
@@ -23,7 +23,7 @@ def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
 
 @receiver(post_delete, sender=NeidentAkce)
 def neident_akce_post_delete(sender, instance: NeidentAkce, **kwargs):
-    if instance.dokument_cast and instance.dokument_cast.dokument:
+    if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
         transaction.on_commit(lambda:
                               instance.dokument_cast.dokument.save_metadata(fedora_transaction, close_transaction=True))

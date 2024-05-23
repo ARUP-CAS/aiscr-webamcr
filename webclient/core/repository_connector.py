@@ -317,7 +317,8 @@ class FedoraRepositoryConnector:
             response = requests.patch(url, auth=auth, headers=headers, data=data)
         extra["status_code"] = response.status_code
 
-        if request_type == FedoraRequestType.CONNECT_DELETED_RECORD_4:
+        if request_type in (FedoraRequestType.CONNECT_DELETED_RECORD_4,
+                            FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5):
             extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
                      "transaction": self.transaction_uid, "url": url}
             if str(response.status_code)[0] == "2":
