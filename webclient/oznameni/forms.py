@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 
 from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Invisible
@@ -41,11 +42,14 @@ class DateRangeWidget(forms.TextInput):
             return None
         if isinstance(value, DateRange):
             if value.lower and value.upper:
+                format_str="%-d.%-m.%Y"
+                if os.name == 'nt':
+                    format_str="%#d.%#m.%Y"
                 return (
-                    value.lower.strftime("%-d.%-m.%Y")
+                    value.lower.strftime(format_str)
                     + " - "
                     + (value.upper - datetime.timedelta(days=1)).strftime(
-                        "%-d.%-m.%Y"
+                        format_str
                     )  # Now I must substract one day
                 )
 
