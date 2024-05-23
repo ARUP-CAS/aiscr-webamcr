@@ -1801,10 +1801,10 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         show_add_komponenta = not jednotka.negativni_jednotka and check_permissions(p.actionChoices.lokalita_komponenta_zapsat, user, jednotka.ident_cely)
         show_pripojit_pian_mapa = show_add_pian and check_permissions(p.actionChoices.lokalita_pripojit_pian_mapa, user, jednotka.ident_cely)
         show_pripojit_pian_id = show_add_pian and check_permissions(p.actionChoices.lokalita_pripojit_pian_id, user, jednotka.ident_cely)
-    show_import_pian_change_user = jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and \
-        jednotka.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY if \
-            user.hlavni_role.pk in (ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID) else \
-                jednotka.archeologicky_zaznam.stav < AZ_STAV_ARCHIVOVANY
+    if user.hlavni_role.pk in (ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID):
+        show_import_pian_change_user = jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and jednotka.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
+    else:
+        show_import_pian_change_user = jednotka.archeologicky_zaznam.stav < AZ_STAV_ARCHIVOVANY
     dj_form_detail = {
         "ident_cely": jednotka.ident_cely,
         "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
