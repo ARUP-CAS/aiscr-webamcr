@@ -70,7 +70,6 @@ class Wait_for_page_load(object):
 class BaseSeleniumTestClass(StaticLiveServerTestCase):   
     #port = 5678   
     host = '0.0.0.0'
-    test_number = 1
 
 
     @classmethod
@@ -185,7 +184,7 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
   
         
     def tearDown(self):
-        self.driver.save_screenshot(f'{settings.TEST_SCREENSHOT_PATH}{self.test_number:03}_{self._testMethodName}.png')
+        self.driver.save_screenshot(f'{settings.TEST_SCREENSHOT_PATH}{self._testMethodName}.png')
         self.driver.quit()
         if hasattr(self._outcome, 'errors'):
             # Python 3.4 - 3.10  (These two methods have no side effects)
@@ -202,7 +201,7 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
         else:
             d=[]
 
-        index=self.test_number
+        index=int(self._testMethodName.split("_")[1])
         if len(d)<index:
             for i in range(len(d)+1, index+1):
                 d.append([i,"","",""])
@@ -349,10 +348,9 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
 
 
 class CoreSeleniumTest(BaseSeleniumTestClass):
-    def test_core_001(self):
+    def test_001_core_001(self):
         #Scenar_1 Přihlášení do AMČR (pozitivní scénář 1)
         logger.info("CoreSeleniumTest.test_core_001.start")
-        self.test_number=1
         self.login()
         self.assertEqual(self.driver.title, "AMČR Homepage")
         logger.info("CoreSeleniumTest.test_core_001.end")

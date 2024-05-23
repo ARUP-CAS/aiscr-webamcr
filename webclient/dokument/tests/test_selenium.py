@@ -29,10 +29,9 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.dokumenty.vybrat"))
 
     
-    def test_zapsani_dokumentu_p_001(self):
+    def test_064_zapsani_dokumentu_p_001(self):
         #Scenar_64 Zapsání dokumentu (pozitivní scénář 1)
-        logger.info("AkceDokumenty.test_zapsani_dokumentu_p_001.start")
-        self.test_number=64
+        logger.info("AkceDokumenty.test_064_zapsani_dokumentu_p_001.start")
         self.login("archivar")
         self.go_to_form_zapsat()
         
@@ -71,13 +70,12 @@ class AkceDokumenty(BaseSeleniumTestClass):
         count_new=Dokument.objects.count()     
 
         self.assertEqual(count_old + 1, count_new)
-        logger.info("AkceDokumenty.test_zapsani_dokumentu_p_001.end")
+        logger.info("AkceDokumenty.test_064_zapsani_dokumentu_p_001.end")
         
         
-    def test_zapsani_dokumentu_n_001(self):
+    def test_065_zapsani_dokumentu_n_001(self):
         #Scenar_65 Zapsání dokumentu (negativní scénář 1)
-        logger.info("AkceDokumenty.test_zapsani_dokumentu_n_001.start")
-        self.test_number=65
+        logger.info("AkceDokumenty.test_065_zapsani_dokumentu_n_001.start")
         self.login("archivar")
         self.go_to_form_zapsat()
         
@@ -117,13 +115,12 @@ class AkceDokumenty(BaseSeleniumTestClass):
         count_new=Dokument.objects.count()     
 
         self.assertEqual(count_old, count_new)
-        logger.info("AkceDokumenty.test_zapsani_dokumentu_n_001.end")
+        logger.info("AkceDokumenty.test_065_zapsani_dokumentu_n_001.end")
         
 
-    def test_odeslani_dokumentu_p_001(self):
+    def test_066_odeslani_dokumentu_p_001(self):
         #Scenar_66 Odeslání dokumentu (pozitivní scénář 1)
-        logger.info("AkceDokumenty.test_odeslani_dokumentu_p_001.start")
-        self.test_number=66
+        logger.info("AkceDokumenty.test_066_odeslani_dokumentu_p_001.start")
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -140,13 +137,12 @@ class AkceDokumenty(BaseSeleniumTestClass):
    
         self.assertEqual(Dokument.objects.filter(ident_cely='X-C-TX-202413000').first().stav , D_STAV_ODESLANY)  
 
-        logger.info("AkceDokumenty.test_odeslani_dokumentu_p_001.end")
+        logger.info("AkceDokumenty.test_066_odeslani_dokumentu_p_001.end")
         
         
-    def test_odeslani_dokumentu_n_001(self):
+    def test_067_odeslani_dokumentu_n_001(self):
         #Scenar_67 Odeslání dokumentu (negativní scénář 1)
-        logger.info("AkceDokumenty.test_odeslani_dokumentu_n_001.start")
-        self.test_number=67
+        logger.info("AkceDokumenty.test_067_odeslani_dokumentu_n_001.start")
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -165,14 +161,13 @@ class AkceDokumenty(BaseSeleniumTestClass):
             pass    
    
         self.assertEqual(Dokument.objects.filter(ident_cely='X-C-TX-202413001').first().stav , D_STAV_ZAPSANY)   
-        logger.info("AkceDokumenty.test_odeslani_dokumentu_n_001.end")
+        logger.info("AkceDokumenty.test_067_odeslani_dokumentu_n_001.end")
         
         
     @unittest.skip    
-    def test_archivace_dokumentu_p_001(self):
+    def test_068_archivace_dokumentu_p_001(self):
         #Scenar_68 Archivace dokumentu (pozitivní scénář 1)
-        logger.info("AkceDokumenty.test_archivace_dokumentu_p_001.start")
-        self.test_number=68
+        logger.info("AkceDokumenty.test_068_archivace_dokumentu_p_001.start")
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -188,13 +183,12 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         #self.wait(self.wait_interval+10)
         self.assertEqual(Dokument.objects.filter(id=id).first().stav , D_STAV_ARCHIVOVANY)   
-        logger.info("AkceDokumenty.test_archivace_dokumentu_p_001.end")
+        logger.info("AkceDokumenty.test_068_archivace_dokumentu_p_001.end")
         
         
-    def test_archivace_dokumentu_n_001(self):
+    def test_069_archivace_dokumentu_n_001(self):
         #Scenar_69 Archivace dokumentu (negativní scénář 1)
-        logger.info("AkceDokumenty.test_archivace_dokumentu_n_001.start")
-        self.test_number=69
+        logger.info("AkceDokumenty.test_069_archivace_dokumentu_n_001.start")
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -213,13 +207,12 @@ class AkceDokumenty(BaseSeleniumTestClass):
             pass
         
         self.assertEqual(Dokument.objects.filter(id=id).first().stav , D_STAV_ODESLANY)   
-        logger.info("AkceDokumenty.test_archivace_dokumentu_n_001.end")
+        logger.info("AkceDokumenty.test_069_archivace_dokumentu_n_001.end")
         
     
-    def test_vraceni_odeslaneho_dokumentu_p_001(self):
+    def test_070_vraceni_odeslaneho_dokumentu_p_001(self):
         #Scenar_70 Vrácení odeslaného dokumentu (pozitivní scénář 1)
-        logger.info("AkceDokumenty.test_vraceni_odeslaneho_dokumentu_p_001.start")
-        self.test_number=70
+        logger.info("AkceDokumenty.test_070_vraceni_odeslaneho_dokumentu_p_001.start")
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -237,13 +230,12 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
 
         self.assertEqual(Dokument.objects.filter(ident_cely='M-TX-201604272').first().stav , D_STAV_ZAPSANY)   
-        logger.info("AkceDokumenty.test_vraceni_odeslaneho_dokumentu_p_001.end")    
+        logger.info("AkceDokumenty.test_070_vraceni_odeslaneho_dokumentu_p_001.end")    
         
         
-    def test_vraceni_odeslaneho_dokumentu_n_001(self):
+    def test_071_vraceni_odeslaneho_dokumentu_n_001(self):
         #Scenar_71 Vrácení odeslaného dokumentu (negativní scénář 1)
-        logger.info("AkceDokumenty.test_vraceni_odeslaneho_dokumentu_n_001.start")
-        self.test_number=71
+        logger.info("AkceDokumenty.test_071_vraceni_odeslaneho_dokumentu_n_001.start")
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -262,13 +254,12 @@ class AkceDokumenty(BaseSeleniumTestClass):
         except Exception as e:
             pass
         self.assertEqual(Dokument.objects.filter(ident_cely='M-TX-201604272').first().stav , D_STAV_ODESLANY)   
-        logger.info("AkceDokumenty.test_vraceni_odeslaneho_dokumentu_n_001.end")    
+        logger.info("AkceDokumenty.test_071_vraceni_odeslaneho_dokumentu_n_001.end")    
         
         
-    def test_vraceni_archivovaneho_dokumentu_p_001(self):
+    def test_072_vraceni_archivovaneho_dokumentu_p_001(self):
         #Scenar_72 Vrácení archivovaného dokumentu (pozitivní scénář 1)
-        logger.info("AkceDokumenty.test_vraceni_archivovaneho_dokumentu_p_001.start")
-        self.test_number=72
+        logger.info("AkceDokumenty.test_072_vraceni_archivovaneho_dokumentu_p_001.start")
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -286,13 +277,12 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")        
 
         self.assertEqual(Dokument.objects.filter(ident_cely='C-TX-202400071').first().stav , D_STAV_ODESLANY)   
-        logger.info("AkceDokumenty.test_vraceni_archivovaneho_dokumentu_p_001.end") 
+        logger.info("AkceDokumenty.test_072_vraceni_archivovaneho_dokumentu_p_001.end") 
         
         
-    def test_vraceni_archivovaneho_dokumentu_n_001(self):
+    def test_073_vraceni_archivovaneho_dokumentu_n_001(self):
         #Scenar_73 Vrácení archivovaného dokumentu (negativní scénář 1)
-        logger.info("AkceDokumenty.test_vraceni_archivovaneho_dokumentu_n_001.start")
-        self.test_number=73
+        logger.info("AkceDokumenty.test_073_vraceni_archivovaneho_dokumentu_n_001.start")
         self.login("archivar")
         self.go_to_form_vybrat()
       
@@ -312,7 +302,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             pass
         self.assertEqual(Dokument.objects.filter(ident_cely='C-TX-202400071').first().stav , D_STAV_ARCHIVOVANY)   
 
-        logger.info("AkceDokumenty.test_vraceni_archivovaneho_dokumentu_n_001.end") 
+        logger.info("AkceDokumenty.test_073_vraceni_archivovaneho_dokumentu_n_001.end") 
         
 
         

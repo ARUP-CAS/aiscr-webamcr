@@ -35,10 +35,9 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.lokality.vybrat"))
  
         
-    def test_zapsani_lokality_p_001(self):
+    def test_051_zapsani_lokality_p_001(self):
         #Scenar_51 Zapsání lokality (pozitivní scénář 1)
-        logger.info("AkceLokality.test_zapsani_lokality_p_001.start")
-        self.test_number=51
+        logger.info("AkceLokality.test_051_zapsani_lokality_p_001.start")
         self.login("archeolog")       
         self.go_to_form_zapsat()
         count_old=Lokalita.objects.count()       
@@ -62,13 +61,12 @@ class AkceLokality(BaseSeleniumTestClass):
        
         count_new = Lokalita.objects.count()
         self.assertEqual(count_old + 1, count_new)
-        logger.info("AkceLokality.test_zapsani_lokality_p_001.end")
+        logger.info("AkceLokality.test_051_zapsani_lokality_p_001.end")
         
         
-    def test_zapsani_lokality_n_001(self):
+    def test_052_zapsani_lokality_n_001(self):
         #Scenar_52 Zapsání lokality (negativní scénář 1)
-        logger.info("AkceLokality.test_zapsani_lokality_n_001.start")
-        self.test_number=52
+        logger.info("AkceLokality.test_052_zapsani_lokality_n_001.start")
         self.login("archeolog")       
         self.go_to_form_zapsat()
         count_old=Lokalita.objects.count()       
@@ -93,13 +91,12 @@ class AkceLokality(BaseSeleniumTestClass):
        
         count_new = Lokalita.objects.count()
         self.assertEqual(count_old , count_new)
-        logger.info("AkceLokality.test_zapsani_lokality_n_001.end")
+        logger.info("AkceLokality.test_052_zapsani_lokality_n_001.end")
         
         
-    def test_pridani_DJ_lokality_p_001(self):
+    def test_053_pridani_DJ_lokality_p_001(self):
         #Scenar_53 Přidání dokumentační jednotky lokalita (pozitivní scénář 1)
-        logger.info("AkceLokality.test_pridani_DJ_lokality_p_001.start")
-        self.test_number=53
+        logger.info("AkceLokality.test_053_pridani_DJ_lokality_p_001.start")
         self.login("archeolog")       
         self.go_to_form_vybrat()
         count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-L000000001").count()     
@@ -121,13 +118,12 @@ class AkceLokality(BaseSeleniumTestClass):
        
         count_new = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-L000000001").count()     
         self.assertEqual(count_old + 1, count_new)
-        logger.info("AkceLokality.test_pridani_DJ_lokality_p_001.end")
+        logger.info("AkceLokality.test_053_pridani_DJ_lokality_p_001.end")
         
         
-    def test_pridani_DJ_lokality_n_001(self):
+    def test_054_pridani_DJ_lokality_n_001(self):
         #Scenar_54 Přidání dokumentační jednotky lokalita (negativní scénář 1)
-        logger.info("AkceLokality.test_pridani_DJ_lokality_n_001.start")
-        self.test_number=54
+        logger.info("AkceLokality.test_054_pridani_DJ_lokality_n_001.start")
         self.login("archeolog")       
         self.go_to_form_vybrat()
         count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-L000000001").count()     
@@ -152,13 +148,12 @@ class AkceLokality(BaseSeleniumTestClass):
        
         count_new = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-L000000001").count()     
         self.assertEqual(count_old , count_new)
-        logger.info("AkceLokality.test_pridani_DJ_lokality_n_001.end")
+        logger.info("AkceLokality.test_054_pridani_DJ_lokality_n_001.end")
         
         
-    def test_pridani_komponenty_DJ_lokality_p_001(self):
+    def test_055_pridani_komponenty_DJ_lokality_p_001(self):
         #Scenar_55 Přidání komponenty k dokumentační jednotce lokalita (pozitivní scénář 1)
-        logger.info("AkceLokality.test_pridani_komponenty_DJ_lokality_p_001.start")
-        self.test_number=55
+        logger.info("AkceLokality.test_055_pridani_komponenty_DJ_lokality_p_001.start")
         self.login("archeolog")       
         self.go_to_form_vybrat()
         count_old=Komponenta.objects.filter(komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-L000000002-D01").count()
@@ -185,13 +180,12 @@ class AkceLokality(BaseSeleniumTestClass):
     
         count_new = Komponenta.objects.filter(komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-L000000002-D01").count()
         self.assertEqual(count_old + 1, count_new)
-        logger.info("AkceLokality.test_pridani_komponenty_DJ_lokality_p_001.end")
+        logger.info("AkceLokality.test_055_pridani_komponenty_DJ_lokality_p_001.end")
         
 
-    def test_odeslani_lokality_p_001(self):
+    def test_056_odeslani_lokality_p_001(self):
         #Scenar_56 Odeslání lokality (pozitivní scénář 1)
-        logger.info("AkceLokality.test_odeslani_lokality_p_001.start")
-        self.test_number=56
+        logger.info("AkceLokality.test_056_odeslani_lokality_p_001.start")
         self.login("archeolog")       
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N9000579').first().stav , AZ_STAV_ZAPSANY)   
@@ -209,13 +203,12 @@ class AkceLokality(BaseSeleniumTestClass):
   
     
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N9000579').first().stav , AZ_STAV_ODESLANY)   
-        logger.info("AkceLokality.test_odeslani_lokality_p_001.end")
+        logger.info("AkceLokality.test_056_odeslani_lokality_p_001.end")
         
         
-    def test_odeslani_lokality_n_001(self):
+    def test_057_odeslani_lokality_n_001(self):
         #Scenar_57 Odeslání lokality (negativní scénář 1)
-        self.test_number=57
-        logger.info("AkceLokality.test_odeslani_lokality_n_001.start")
+        logger.info("AkceLokality.test_057_odeslani_lokality_n_001.start")
 
         self.login("archeolog")       
         self.go_to_form_vybrat()
@@ -235,13 +228,12 @@ class AkceLokality(BaseSeleniumTestClass):
             pass    
     
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N9000145').first().stav , AZ_STAV_ZAPSANY) 
-        logger.info("AkceLokality.test_odeslani_lokality_n_001.end")
+        logger.info("AkceLokality.test_057_odeslani_lokality_n_001.end")
         
         
-    def test_archivace_lokality_p_001(self):
+    def test_058_archivace_lokality_p_001(self):
         #Scenar_58 Archivace lokality (pozitivní scénář 1)
-        logger.info("AkceLokality.test_archivace_lokality_p_001.start")
-        self.test_number=58
+        logger.info("AkceLokality.test_058_archivace_lokality_p_001.start")
         self.login("archivar")       
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N1000003').first().stav , AZ_STAV_ODESLANY)   
@@ -256,13 +248,12 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")  
     
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N1000003').first().stav , AZ_STAV_ARCHIVOVANY)   
-        logger.info("AkceLokality.test_archivace_lokality_p_001.end")
+        logger.info("AkceLokality.test_058_archivace_lokality_p_001.end")
         
         
-    def test_archivace_lokality_n_001(self):
+    def test_059_archivace_lokality_n_001(self):
         #Scenar_59 Archivace lokality (negativní scénář 1)
-        logger.info("AkceLokality.test_archivace_lokality_n_001.start")
-        self.test_number=59
+        logger.info("AkceLokality.test_059_archivace_lokality_n_001.start")
         self.login("archivar")       
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N1000109').first().stav , AZ_STAV_ODESLANY)   
@@ -279,13 +270,12 @@ class AkceLokality(BaseSeleniumTestClass):
             pass
             
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N1000109').first().stav , AZ_STAV_ODESLANY)   
-        logger.info("AkceLokality.test_archivace_lokality_n_001.end")
+        logger.info("AkceLokality.test_059_archivace_lokality_n_001.end")
         
         
-    def test_vraceni_odeslane_lokality_p_001(self):
+    def test_060_vraceni_odeslane_lokality_p_001(self):
         #Scenar_60 Vrácení odeslané lokality (pozitivní scénář 1)
-        logger.info("AkceLokality.test_vraceni_odeslane_lokality_p_001.start")
-        self.test_number=60
+        logger.info("AkceLokality.test_060_vraceni_odeslane_lokality_p_001.start")
         self.login("archivar")       
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N1000003').first().stav , AZ_STAV_ODESLANY)   
@@ -303,13 +293,12 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
                     
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N1000003').first().stav , AZ_STAV_ZAPSANY)   
-        logger.info("AkceLokality.test_vraceni_odeslane_lokality_p_001.end")
+        logger.info("AkceLokality.test_060_vraceni_odeslane_lokality_p_001.end")
         
         
-    def test_vraceni_odeslane_lokality_n_001(self):
+    def test_061_vraceni_odeslane_lokality_n_001(self):
         #Scenar_61 Vrácení odeslané lokality (negativní scénář 1)
-        logger.info("AkceLokality.test_vraceni_odeslane_lokality_n_001.start")
-        self.test_number=61
+        logger.info("AkceLokality.test_061_vraceni_odeslane_lokality_n_001.start")
         self.login("archivar")       
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N1000003').first().stav , AZ_STAV_ODESLANY)   
@@ -328,13 +317,12 @@ class AkceLokality(BaseSeleniumTestClass):
         except Exception as e:
             pass            
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N1000003').first().stav , AZ_STAV_ODESLANY)   
-        logger.info("AkceLokality.test_vraceni_odeslane_lokality_n_001.end")
+        logger.info("AkceLokality.test_061_vraceni_odeslane_lokality_n_001.end")
     
         
-    def test_vraceni_archivovane_lokality_p_001(self):
+    def test_062_vraceni_archivovane_lokality_p_001(self):
         #Scenar_62 Vrácení archivované lokality (pozitivní scénář 1)
-        self.test_number=62
-        logger.info("AkceLokality.test_vraceni_archivovane_lokality_p_001.start")
+        logger.info("AkceLokality.test_062_vraceni_archivovane_lokality_p_001.start")
 
         self.login("archivar")       
         self.go_to_form_vybrat()
@@ -353,13 +341,12 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
                     
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N9000593').first().stav , AZ_STAV_ODESLANY)   
-        logger.info("AkceLokality.test_vraceni_archivovane_lokality_p_001.end")
+        logger.info("AkceLokality.test_062_vraceni_archivovane_lokality_p_001.end")
         
         
-    def test_vraceni_archivovane_lokality_n_001(self):
+    def test_063_vraceni_archivovane_lokality_n_001(self):
         #Scenar_63 Vrácení archivované lokality (negativní scénář 1)
-        self.test_number=63
-        logger.info("AkceLokality.test_vraceni_archivovane_lokality_n_001.start")
+        logger.info("AkceLokality.test_063_vraceni_archivovane_lokality_n_001.start")
 
         self.login("archivar")       
         self.go_to_form_vybrat()
@@ -379,5 +366,5 @@ class AkceLokality(BaseSeleniumTestClass):
         except Exception as e:
             pass                        
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N9000593').first().stav , AZ_STAV_ARCHIVOVANY)  
-        logger.info("AkceLokality.test_vraceni_archivovane_lokality_n_001.end")
+        logger.info("AkceLokality.test_063_vraceni_archivovane_lokality_n_001.end")
   

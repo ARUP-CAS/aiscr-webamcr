@@ -59,10 +59,9 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.zapsat"))
 
 
-    def test_zapsani_samostatneho_nalezu_p_001(self):
+    def test_025_zapsani_samostatneho_nalezu_p_001(self):
         #Scenar_25 Zapsání samostatného nálezu (pozitivní scénář 1)
-        logger.info("AkceSamostatneNalezy.test_zapsani_samostatneho_nalezu_p_001.start")
-        self.test_number=25
+        logger.info("AkceSamostatneNalezy.test_025_zapsani_samostatneho_nalezu_p_001.start")
         self.login("badatel1")
         self.go_to_form()
         SN_count_old = SamostatnyNalez.objects.count()
@@ -105,13 +104,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
         SN_count_new = SamostatnyNalez.objects.count()
         self.assertEqual(SN_count_old + 1, SN_count_new) 
-        logger.info("AkceSamostatneNalezy.test_zapsani_samostatneho_nalezu_p_001.end")
+        logger.info("AkceSamostatneNalezy.test_025_zapsani_samostatneho_nalezu_p_001.end")
         
         
-    def test_zapsani_samostatneho_nalezu_n_001(self):
+    def test_026_zapsani_samostatneho_nalezu_n_001(self):
         #Scenar_26 Zapsání samostatného nálezu (negativní scénář 1)
-        logger.info("AkceSamostatneNalezy.test_zapsani_samostatneho_nalezu_n_001.start")
-        self.test_number=26
+        logger.info("AkceSamostatneNalezy.test_026_zapsani_samostatneho_nalezu_n_001.start")
         self.login("badatel1")
         self.go_to_form()
         SN_count_old = SamostatnyNalez.objects.count()
@@ -155,13 +153,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
         SN_count_new = SamostatnyNalez.objects.count()
         self.assertEqual(SN_count_old , SN_count_new)   
-        logger.info("AkceSamostatneNalezy.test_zapsani_samostatneho_nalezu_n_001.end")
+        logger.info("AkceSamostatneNalezy.test_026_zapsani_samostatneho_nalezu_n_001.end")
         
         
-    def test_odeslani_samostatneho_nalezu_p_001(self):
+    def test_028_odeslani_samostatneho_nalezu_p_001(self):
         #Scenar_28 Odeslání samostatného nálezu (pozitivní scénář 1)        
-        logger.info("AkceSamostatneNalezy.test_odeslani_samostatneho_nalezu_p_001.start")
-        self.test_number=28
+        logger.info("AkceSamostatneNalezy.test_028_odeslani_samostatneho_nalezu_p_001.start")
         self.login("badatel1")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202105907-N00091').first().stav , SN_ZAPSANY)         
         
@@ -186,12 +183,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202105907-N00091').first().stav , SN_ODESLANY)        
-        logger.info("AkceSamostatneNalezy.test_odeslani_samostatneho_nalezu_p_001.end")
+        logger.info("AkceSamostatneNalezy.test_028_odeslani_samostatneho_nalezu_p_001.end")
         
-    def test_odeslani_samostatneho_nalezu_n_001(self):
+    def test_029_odeslani_samostatneho_nalezu_n_001(self):
         #Scenar_29 Odeslání samostatného nálezu (negativní scénář 1)     
-        logger.info("AkceSamostatneNalezy.test_odeslani_samostatneho_nalezu_n_001.start")
-        self.test_number=29
+        logger.info("AkceSamostatneNalezy.test_029_odeslani_samostatneho_nalezu_n_001.start")
         self.login("badatel1")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202105907-N00091').first().stav , SN_ZAPSANY)          
         
@@ -218,13 +214,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             pass
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202105907-N00091').first().stav , SN_ZAPSANY)  
-        logger.info("AkceSamostatneNalezy.test_odeslani_samostatneho_nalezu_n_001.end")
+        logger.info("AkceSamostatneNalezy.test_029_odeslani_samostatneho_nalezu_n_001.end")
         
         
-    def test_potvrzeni_samostatneho_nalezu_p_001(self):
+    def test_030_potvrzeni_samostatneho_nalezu_p_001(self):
         #Scenar_30 Potvrzení samostatného nálezu (pozitivní scénář 1)     
-        logger.info("AkceSamostatneNalezy.test_potvrzeni_samostatneho_nalezu_p_001.start")
-        self.test_number=30
+        logger.info("AkceSamostatneNalezy.test_030_potvrzeni_samostatneho_nalezu_p_001.start")
         self.login("archeolog")        
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)   
        
@@ -250,13 +245,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_POTVRZENY)  
-        logger.info("AkceSamostatneNalezy.test_potvrzeni_samostatneho_nalezu_p_001.end")
+        logger.info("AkceSamostatneNalezy.test_030_potvrzeni_samostatneho_nalezu_p_001.end")
         
         
-    def test_potvrzeni_samostatneho_nalezu_n_001(self):
+    def test_031_potvrzeni_samostatneho_nalezu_n_001(self):
         #Scenar_31 Potvrzení samostatného nálezu (negativní scénář 1)   
-        logger.info("AkceSamostatneNalezy.test_potvrzeni_samostatneho_nalezu_n_001.start")
-        self.test_number=31
+        logger.info("AkceSamostatneNalezy.test_031_potvrzeni_samostatneho_nalezu_n_001.start")
         self.login("archeolog")
         
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)   
@@ -286,13 +280,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             pass
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)  
-        logger.info("AkceSamostatneNalezy.test_potvrzeni_samostatneho_nalezu_n_001.end")
+        logger.info("AkceSamostatneNalezy.test_031_potvrzeni_samostatneho_nalezu_n_001.end")
         
         
-    def test_potvrzeni_samostatneho_nalezu_n_002(self):
+    def test_032_potvrzeni_samostatneho_nalezu_n_002(self):
         #Scenar_32 Potvrzení samostatného nálezu (negativní scénář 2)
-        logger.info("AkceSamostatneNalezy.test_potvrzeni_samostatneho_nalezu_n_002.start")
-        self.test_number=32
+        logger.info("AkceSamostatneNalezy.test_032_potvrzeni_samostatneho_nalezu_n_002.start")
         self.login("archeolog")
         
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)   
@@ -322,13 +315,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             pass
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)  
-        logger.info("AkceSamostatneNalezy.test_potvrzeni_samostatneho_nalezu_n_002.end")
+        logger.info("AkceSamostatneNalezy.test_032_potvrzeni_samostatneho_nalezu_n_002.end")
         
         
-    def test_archivace_samostatneho_nalezu_p_001(self):
+    def test_038_archivace_samostatneho_nalezu_p_001(self):
         #Scenar_38 Archivace samostatného nálezu (pozitivní scénář 1)
-        logger.info("AkceSamostatneNalezy.test_archivace_samostatneho_nalezu_p_001.start")
-        self.test_number=38
+        logger.info("AkceSamostatneNalezy.test_038_archivace_samostatneho_nalezu_p_001.start")
         self.login("archivar")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_POTVRZENY) 
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
@@ -348,12 +340,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_ARCHIVOVANY)            
 
-        logger.info("AkceSamostatneNalezy.test_archivace_samostatneho_nalezu_p_001.end")
+        logger.info("AkceSamostatneNalezy.test_038_archivace_samostatneho_nalezu_p_001.end")
     
-    def test_archivace_samostatneho_nalezu_n_001(self):
+    def test_039_archivace_samostatneho_nalezu_n_001(self):
         #Scenar_39 Archivace samostatného nálezu (negativní scénář 1)
-        logger.info("AkceSamostatneNalezy.test_archivace_samostatneho_nalezu_n_001.start")
-        self.test_number=39
+        logger.info("AkceSamostatneNalezy.test_039_archivace_samostatneho_nalezu_n_001.start")
         self.login("archivar")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_POTVRZENY) 
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
@@ -377,13 +368,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             pass
         self.wait(1)
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_POTVRZENY)  
-        logger.info("AkceSamostatneNalezy.test_archivace_samostatneho_nalezu_n_001.end")
+        logger.info("AkceSamostatneNalezy.test_039_archivace_samostatneho_nalezu_n_001.end")
     
 
-    def test_vraceni_samostatneho_nalezu_p_001(self):
+    def test_045_vraceni_samostatneho_nalezu_p_001(self):
         #Scenar_45 Vrácení samostatného nálezu (pozitivní scénář 1)
-        logger.info("AkceSamostatneNalezy.test_vraceni_samostatneho_nalezu_p_001.start")
-        self.test_number=45
+        logger.info("AkceSamostatneNalezy.test_045_vraceni_samostatneho_nalezu_p_001.start")
         self.login("archivar")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202301371-N00015').first().stav , SN_POTVRZENY) 
         
@@ -402,4 +392,4 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")        
         
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202301371-N00015').first().stav , SN_ODESLANY)  
-        logger.info("AkceSamostatneNalezy.test_vraceni_samostatneho_nalezu_p_001.end")
+        logger.info("AkceSamostatneNalezy.test_045_vraceni_samostatneho_nalezu_p_001.end")

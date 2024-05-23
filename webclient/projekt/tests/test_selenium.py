@@ -47,10 +47,9 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.assertIn(column_header_text, columns)
         
 
-    def test_projekt_001(self):
+    def test_002_projekt_001(self):
         #Scenar_2 Otevření tabulky projekty
         #test 2.1
-        self.test_number=2
         self.login()
         # Go to projects
         self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
@@ -187,49 +186,45 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zapsat"))
 
 
-    def test_projekt_zapsat_p_001(self):
+    def test_003_projekt_zapsat_p_001(self):
         #Scenar_3 Zapsání projektu (pozitivní scénář 1)
         #test 2.2
-        self.test_number=3
-        logger.info("CoreSeleniumTest.test_projekt_zapsat_p_001.start")
+        logger.info("CoreSeleniumTest.test_003_projekt_zapsat_p_001.start")
         [project_count_old , project_count_new]=self.ProjektZapsat()        
         self.assertEqual(project_count_old + 1, project_count_new)
-        logger.info("CoreSeleniumTest.test_projekt_zapsat_p_001.end")
+        logger.info("CoreSeleniumTest.test_003_projekt_zapsat_p_001.end")
         
     @unittest.skip  #teststuje se pravidlo, které v programu není
-    def test_projekt_zapsat_n_001(self):
+    def test_004_projekt_zapsat_n_001(self):
         #Scenar_4 Zapsání projektu (negativní scénář 1)
         #test 2.3
-        self.test_number=4
-        logger.info("CoreSeleniumTest.test_projekt_zapsat_n_001.start") 
+        logger.info("CoreSeleniumTest.test_004_projekt_zapsat_n_001.start") 
         [project_count_old , project_count_new]=self.ProjektZapsat(date_from=-9,date_to=-5,css_selector=".nav-link > span:nth-child(2)")
                
         self.assertEqual(project_count_old, project_count_new)
-        logger.info("CoreSeleniumTest.test_projekt_zapsat_n_001.end")
+        logger.info("CoreSeleniumTest.test_004_projekt_zapsat_n_001.end")
         
 
-    def test_projekt_zapsat_n_002(self):
+    def test_005_projekt_zapsat_n_002(self):
         #Scenar_5 Zapsání projektu (negativní scénář 2)
         #test 2.4
-        logger.info("CoreSeleniumTest.test_projekt_zapsat_n_002.start") 
-        self.test_number=5        
+        logger.info("CoreSeleniumTest.test_005_projekt_zapsat_n_002.start") 
         [project_count_old , project_count_new]=self.ProjektZapsat(telefon="xxx",css_selector=".nav-link > span:nth-child(2)")
        
         self.assertEqual(project_count_old, project_count_new)
-        logger.info("CoreSeleniumTest.test_projekt_zapsat_n_002.end")
+        logger.info("CoreSeleniumTest.test_005_projekt_zapsat_n_002.end")
         
     
     @unittest.skip #teststuje se pravidlo, které v programu není
-    def test_projekt_zapsat_n_003(self):
+    def test_006_projekt_zapsat_n_003(self):
         #Scenar_6 Zapsání projektu (negativní scénář 3)
         #test 2.5
-        logger.info("CoreSeleniumTest.test_projekt_zapsat_n_003.start")
-        self.test_number=6
+        logger.info("CoreSeleniumTest.test_006_projekt_zapsat_n_003.start")
         
         [project_count_old , project_count_new]=self.ProjektZapsat(date_from=600,date_to=620,css_selector=".nav-link > span:nth-child(2)")        
        
         self.assertEqual(project_count_old, project_count_new)
-        logger.info("CoreSeleniumTest.test_projekt_zapsat_n_003.end")
+        logger.info("CoreSeleniumTest.test_006_projekt_zapsat_n_003.end")
         
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
@@ -243,11 +238,10 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zahajitVyzkum"))
           
 
-    def test_projekt_zahajit_vyzkum_p_001(self):
+    def test_007_projekt_zahajit_vyzkum_p_001(self):
         #Scenar_7 Zahájení výzkumu (pozitivní scénář 1)
         #test 2.6 
-        logger.info("ProjektZahajitVyzkumSeleniumTest.test_projekt_zahajit_vyzkum_p_001.start")
-        self.test_number=7
+        logger.info("ProjektZahajitVyzkumSeleniumTest.test_007_projekt_zahajit_vyzkum_p_001.start")
         self.login()
         self.go_to_form()
 
@@ -268,7 +262,7 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ZAHAJENY_V_TERENU)
        
         self.assertEqual(datetime.datetime.strptime(datum_input, '%d.%m.%Y') , datetime.datetime.strptime(datum, '%d.%m.%Y'))
-        logger.info("ProjektZahajitVyzkumSeleniumTest.test_projekt_zahajit_vyzkum_p_001.end")
+        logger.info("ProjektZahajitVyzkumSeleniumTest.test_007_projekt_zahajit_vyzkum_p_001.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
@@ -281,11 +275,10 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.ukoncitTeren"))
            
 
-    def test_projekt_ukoncit_vyzkum_p_001(self):
+    def test_008_projekt_ukoncit_vyzkum_p_001(self):
         #Scenar_8 Ukončení výzkumu (pozitivní scénář 1)
         #test 2.7 
-        logger.info("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_p_001.start")
-        self.test_number=8
+        logger.info("ProjektUkoncitVyzkumSeleniumTest.test_008_projekt_ukoncit_vyzkum_p_001.start")
         self.login()
         self.go_to_form()
         
@@ -302,14 +295,13 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
 
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_UKONCENY_V_TERENU)
 
-        logger.info("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_p_001.end")
+        logger.info("ProjektUkoncitVyzkumSeleniumTest.test_008_projekt_ukoncit_vyzkum_p_001.end")
 
 
-    def test_projekt_ukoncit_vyzkum_n_001(self):
+    def test_009_projekt_ukoncit_vyzkum_n_001(self):
         #Scenar_9 Ukončení výzkumu (negativní scénář 1)
         #test 2.8 
-        logger.info("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_n_001.start")
-        self.test_number=9
+        logger.info("ProjektUkoncitVyzkumSeleniumTest.test_009_projekt_ukoncit_vyzkum_n_001.start")
         self.login()
         self.go_to_form()
         
@@ -331,7 +323,7 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
         self.assertIn(_("arch_z.validators.maxDatum.error"), self.driver.find_element(By.ID, "div_id_datum_ukonceni").text)
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ZAHAJENY_V_TERENU)
 
-        logger.info("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_n_001.end")
+        logger.info("ProjektUkoncitVyzkumSeleniumTest.test_009_projekt_ukoncit_vyzkum_n_001.end")
         
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
@@ -345,11 +337,10 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.UzavritProjekt"))
 
 
-    def test_projekt_uzavrit_p_001(self):
+    def test_010_projekt_uzavrit_p_001(self):
         #Scenar_10 Uzavření projektu (pozitivní scénář 1)
         #test 2.9 
-        logger.info("ProjektUzavritSeleniumTest.test_projekt_uzavrit_p_001.start")
-        self.test_number=10
+        logger.info("ProjektUzavritSeleniumTest.test_010_projekt_uzavrit_p_001.start")
         self.login()
         self.go_to_form()
 
@@ -362,14 +353,13 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
         self.wait(1)
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_UZAVRENY)
-        logger.info("ProjektUzavritSeleniumTest.test_projekt_uzavrit_p_001.end")
+        logger.info("ProjektUzavritSeleniumTest.test_010_projekt_uzavrit_p_001.end")
         
 
-    def test_projekt_uzavrit_n_001(self):
+    def test_011_projekt_uzavrit_n_001(self):
         #Scenar_11 Uzavření projektu (negativní scénář 1)
         #2.10 
-        logger.info("ProjektUzavritSeleniumTest.test_projekt_uzavrit_n_001.start")
-        self.test_number=11
+        logger.info("ProjektUzavritSeleniumTest.test_011_projekt_uzavrit_n_001.start")
         self.login()
         self.go_to_form()
         self.ElementClick(By.LINK_TEXT, "C-201230310")
@@ -382,7 +372,7 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
             pass
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_UKONCENY_V_TERENU)
-        logger.info("ProjektUzavritSeleniumTest.test_projekt_uzavrit_n_001.end")
+        logger.info("ProjektUzavritSeleniumTest.test_011_projekt_uzavrit_n_001.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
@@ -398,11 +388,10 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.archivovatProjekty"))
 
 
-    def test_projekt_archivovat_p_001(self):
+    def test_012_projekt_archivovat_p_001(self):
         #Scenar_12 Archivace projektu (pozitivní scénář 1)
         #2.11  C-201231446 projekt/detail/C-201231446
-        logger.info("ProjektArchivovatSeleniumTest.test_projekt_archivovat_p_001.start")
-        self.test_number=12
+        logger.info("ProjektArchivovatSeleniumTest.test_012_projekt_archivovat_p_001.start")
         self.login("archivar")
         self.go_to_form()
         
@@ -415,13 +404,12 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ARCHIVOVANY)
 
-        logger.info("ProjektArchivovatSeleniumTest.test_projekt_uzavrit_p_001.end")
+        logger.info("ProjektArchivovatSeleniumTest.test_012_projekt_archivovat_p_001.end")
 
-    def test_projekt_uzavrit_n_001(self):
+    def test_013_projekt_uzavrit_n_001(self):
         #Scenar_13 Archivace projektu (negativní scénář 1)
         #2.12 
-        logger.info("ProjektArchivovatSeleniumTest.test_projekt_archivovat_p_001.start")
-        self.test_number=13
+        logger.info("ProjektArchivovatSeleniumTest.test_013_projekt_uzavrit_n_001.start")
         self.login("archivar")
         self.go_to_form()
         
@@ -438,7 +426,7 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         
         alert_info = self.driver.find_element(By.CLASS_NAME, "alert-info")
         self.assertIn(_("projekt.models.projekt.checkPredArchivaci.akce.text"), alert_info.text)
-        logger.info("ProjektArchivovatSeleniumTest.test_projekt_uzavrit_n_001.end")
+        logger.info("ProjektArchivovatSeleniumTest.test_013_projekt_uzavrit_n_001.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
@@ -448,11 +436,10 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
         
         
-    def test_projekt_vratit_p_001(self):
+    def test_014_projekt_vratit_p_001(self):
         #Scenar_14 Vrácení stavu u archivovaného projektu (pozitivní scénář 1)
         #2.13 
-        logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_001.start")
-        self.test_number=14
+        logger.info("ProjektVratitSeleniumTest.test_014_projekt_vratit_p_001.start")
         self.login("archivar")
         self.go_to_form()        
 
@@ -472,14 +459,13 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_UZAVRENY)
-        logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_001.end")
+        logger.info("ProjektVratitSeleniumTest.test_014_projekt_vratit_p_001.end")
         
     
-    def test_projekt_vratit_p_002(self):
+    def test_015_projekt_vratit_p_002(self):
         #Scenar_15 Vrácení stavu u uzavřeného projektu (pozitivní scénář 1)
         #2.14 
-        logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_002.start")
-        self.test_number=15
+        logger.info("ProjektVratitSeleniumTest.test_015_projekt_vratit_p_002.start")
         self.login("archivar")
         self.go_to_form() 
 
@@ -499,14 +485,13 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_UKONCENY_V_TERENU)
-        logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_002.end")
+        logger.info("ProjektVratitSeleniumTest.test_015_projekt_vratit_p_002.end")
     
     
-    def test_projekt_vratit_p_003(self):
+    def test_016_projekt_vratit_p_003(self):
         #Scenar_16 Vrácení stavu u ukončeného projektu (pozitivní scénář 1)
         #2.15 
         logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_003.start")
-        self.test_number=16
         self.login("archivar")
         self.go_to_form() 
 
@@ -526,14 +511,13 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ZAHAJENY_V_TERENU)
-        logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_003.end")
+        logger.info("ProjektVratitSeleniumTest.test_016_projekt_vratit_p_003.end")
         
         
-    def test_projekt_vratit_p_004(self):
+    def test_017_projekt_vratit_p_004(self):
         #Scenar_17 Vrácení stavu u zahájeného projektu (pozitivní scénář 1)
         #2.16 
-        logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_004.start")
-        self.test_number=17
+        logger.info("ProjektVratitSeleniumTest.test_017_projekt_vratit_p_004.start")
         self.login("archivar")
         self.go_to_form() 
 
@@ -553,14 +537,13 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_PRIHLASENY)
-        logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_004.end")
+        logger.info("ProjektVratitSeleniumTest.test_017_projekt_vratit_p_004.end")
         
         
-    def test_projekt_vratit_p_005(self):
+    def test_018_projekt_vratit_p_005(self):
         #Scenar_18 Vrácení stavu u přihlášeného projektu (pozitivní scénář 1)
         #2.17 
-        logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_005.start")
-        self.test_number=18
+        logger.info("ProjektVratitSeleniumTest.test_018_projekt_vratit_p_005.start")
         self.login("archivar")
         self.go_to_form() 
 
@@ -581,7 +564,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ZAPSANY)
 
-        logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_005.end")
+        logger.info("ProjektVratitSeleniumTest.test_018_projekt_vratit_p_005.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
@@ -592,11 +575,10 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
           
 
-    def test_projekt_zrusit_p_001(self):
+    def test_019_projekt_zrusit_p_001(self):
         #Scenar_19 Navržení zrušení projektu (pozitivní scénář 1)
         #2.18 
-        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_001.start")
-        self.test_number=19
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_019_projekt_zrusit_p_001.start")
         self.login("archivar")
         self.go_to_form()
         
@@ -609,14 +591,13 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI)
-        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_001.end")
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_019_projekt_zrusit_p_001.end")
         
 
-    def test_projekt_zrusit_p_002(self):
+    def test_020_projekt_zrusit_p_002(self):
         #Scenar_20 Navržení zrušení projektu (pozitivní scénář 2)
         #2.19 
-        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_002.start")
-        self.test_number=20
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_020_projekt_zrusit_p_002.start")
         self.login("archivar")
         self.go_to_form()
         with Wait_for_page_load(self.driver):  
@@ -632,14 +613,13 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI)
-        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_002.end")
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_020_projekt_zrusit_p_002.end")
 
 
-    def test_projekt_zrusit_n_001(self):
+    def test_021_projekt_zrusit_n_001(self):
         #Scenar_21 Navržení zrušení projektu (negativní scénář 1)
         #2.20 
-        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_n_001.start")
-        self.test_number=21       
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_021_projekt_zrusit_n_001.start")
         self.login("archivar")
         self.go_to_form()
         
@@ -659,7 +639,7 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_UZAVRENY)
-        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_n_001.end")
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_021_projekt_zrusit_n_001.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
@@ -669,11 +649,10 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")) 
     
 
-    def test_projekt_zrusit_p_001(self):
+    def test_022_projekt_zrusit_p_001(self):
         #Scenar_22 Zrušení projektu (pozitivní scénář 1)
         #2.21
-        logger.info("ProjektZrusitSeleniumTest.test_projekt_zrusit_p_001.start")
-        self.test_number=22
+        logger.info("ProjektZrusitSeleniumTest.test_022_projekt_zrusit_p_001.start")
         self.login("archivar")
         self.go_to_form()
         
@@ -693,7 +672,7 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ZRUSENY)
 
-        logger.info("ProjektZrusitSeleniumTest.test_projekt_zrusit_p_001.end")
+        logger.info("ProjektZrusitSeleniumTest.test_022_projekt_zrusit_p_001.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
@@ -703,10 +682,9 @@ class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")) 
 
     
-    def test_projekt_vytvori_akci_p_001(self):
+    def test_023_projekt_vytvori_akci_p_001(self):
         #Scenar_23 Vytvoření projektové akce (pozitivní scénář 1)
-        logger.info("ProjektVytvoreniProjektoveAkce.test_projekt_vytvori_akci_p_001.start")
-        self.test_number=23
+        logger.info("ProjektVytvoreniProjektoveAkce.test_023_projekt_vytvori_akci_p_001.start")
         self.login()
         self.go_to_form()
         arch_z_count_old = Akce.objects.count()
@@ -723,15 +701,14 @@ class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
 
         arch_z_count_new = Akce.objects.count()
         self.assertEqual(arch_z_count_old + 1, arch_z_count_new)
-        logger.info("ProjektVytvoreniProjektoveAkce.test_projekt_vytvori_akci_p_001.end")
+        logger.info("ProjektVytvoreniProjektoveAkce.test_023_projekt_vytvori_akci_p_001.end")
         
-    
-    def test_projekt_vytvori_akci_n_001(self):
+    @unittest.skip
+    def test_033_projekt_vytvori_akci_n_001(self):
         #Scenar_33 Vytvoření projektové akce (negativní scénář 1) 
         #v poslední verzi už bylo pole vyplněné automaticky - scénář ztratil smysl
-        logger.info("ProjektVytvoreniProjektoveAkce.test_projekt_vytvori_akci_n_001.start")
-        self.test_number=33
+        logger.info("ProjektVytvoreniProjektoveAkce.test_033_projekt_vytvori_akci_n_001.start")
 
         
-        logger.info("ProjektVytvoreniProjektoveAkce.test_projekt_vytvori_akci_n_001.end")
+        logger.info("ProjektVytvoreniProjektoveAkce.test_033_projekt_vytvori_akci_n_001.end")
 
