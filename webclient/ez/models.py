@@ -116,6 +116,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             vazba=self.historie,
             poznamka = historie_poznamka,
         ).save()
+        self.close_active_transaction_when_finished = True
         self.save()
 
     def set_vraceny(self, user, new_state, poznamka):
@@ -144,6 +145,8 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             vazba=self.historie,
             poznamka = historie_poznamka,
         ).save()
+        self.save()
+        self.close_active_transaction_when_finished = True
         self.save()
 
     def set_zapsany(self, user):
