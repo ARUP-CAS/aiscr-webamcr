@@ -66,6 +66,7 @@ class Wait_for_page_load(object):
 
 
 #@unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
+@override_settings(DEBUG=True)
 class BaseSeleniumTestClass(StaticLiveServerTestCase):   
     #port = 5678   
     host = '0.0.0.0'
