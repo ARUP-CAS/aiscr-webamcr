@@ -195,14 +195,17 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
         northing = forms.FloatField(
             label=_("adb.forms.createVyskovyBodForm.label.northing"),
             help_text=_("adb.forms.createVyskovyBodForm.tooltip.northing"),
+            min_value=-905000.0, max_value=-400000.0,
         )
         easting = forms.FloatField(
             label=_("adb.forms.createVyskovyBodForm.label.easting"),
             help_text=_("adb.forms.createVyskovyBodForm.tooltip.easting"),
+             min_value=-1230000.0, max_value=-930000.0,
         )
         niveleta = forms.FloatField(
             label=_("adb.forms.createVyskovyBodForm.label.niveleta"),
             help_text=_("adb.forms.createVyskovyBodForm.tooltip.niveleta"),
+            min_value=100.0, max_value=1610.0,
         )
 
         class Meta:
