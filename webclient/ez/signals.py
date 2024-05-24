@@ -1,6 +1,7 @@
 import logging
 
 from cacheops import invalidate_model, invalidate_all
+from django.db import transaction
 
 from .models import ExterniZdroj
 from core.constants import EXTERNI_ZDROJ_RELATION_TYPE
@@ -38,7 +39,10 @@ def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
     invalidate_all()
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
-        instance.save_metadata(close_transaction=instance.close_active_transaction_when_finished)
+        if instance.close_active_transaction_when_finished:
+            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
+        else:
+            instance.save_metadata(fedora_transaction)
         logger.debug("ez.signals.externi_zdroj_save_metadata.save_medata",
                      extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)})
     logger.debug("ez.signals.externi_zdroj_save_metadata.end", extra={"ident_cely": instance.ident_cely})

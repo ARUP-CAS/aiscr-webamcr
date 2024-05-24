@@ -11,7 +11,7 @@ from django.db.models.signals import pre_save, post_save, pre_delete, post_delet
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
-from dokument.models import DokumentCast
+from dokument.models import Dokument
 from historie.models import HistorieVazby
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
@@ -72,7 +72,8 @@ def create_projekt_vazby(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Projekt)
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
-    logger.debug("projekt.signals.projekt_pre_delete.start", extra={"ident_cely": instance.ident_cely})
+    logger.debug("projekt.signals.projekt_pre_delete.start",
+                 extra={"ident_cely": instance.ident_cely, "initial_dokumenty": instance.initial_dokumenty})
     if instance.soubory and instance.soubory.soubory.exists():
         raise Exception(_("projekt.signals.projekt_pre_delete.cannot_delete"))
     fedora_transaction = instance.active_transaction
@@ -81,11 +82,9 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
         def save_metadata(close_transaction=False):
             if instance.soubory and instance.soubory.pk:
                 instance.soubory.delete()
-            if instance.casti_dokumentu:
-                for item in instance.initial_casti_dokumentu:
-                    item: int
-                    dokument = DokumentCast.objects.get(pk=item).dokument
-                    dokument.save_metadata(fedora_transaction)
+            for dokument_pk in instance.initial_dokumenty:
+                dokument: Dokument = Dokument.objects.get(pk=dokument_pk)
+                dokument.save_metadata(fedora_transaction)
             instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
         if instance.close_active_transaction_when_finished:
             transaction.on_commit(lambda: save_metadata(True))

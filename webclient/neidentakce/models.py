@@ -31,6 +31,7 @@ class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
         related_name="neident_akce_vedouci",
         blank=True,
     )
+    suppress_signal = False
 
     class Meta:
         db_table = "neident_akce"

@@ -1,6 +1,6 @@
 import datetime
 import logging
-
+import os
 
 from django import template
 from psycopg2._range import DateRange
@@ -56,10 +56,13 @@ def render_daterange(value):
         return None
     if isinstance(value, DateRange):
         if value.lower and value.upper:
+            format_str="%-d.%-m.%Y"
+            if os.name == 'nt':
+                format_str="%#d.%#m.%Y"
             return (
-                value.lower.strftime("%-d.%-m.%Y")
+                value.lower.strftime(format_str)
                 + " - "
-                + (value.upper - datetime.timedelta(days=1)).strftime("%-d.%-m.%Y")
+                + (value.upper - datetime.timedelta(days=1)).strftime(format_str)
             )
     return str(value)
 

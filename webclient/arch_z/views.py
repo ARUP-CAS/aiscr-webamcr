@@ -738,7 +738,8 @@ def archivovat(request, ident_cely):
             request, messages.SUCCESS, get_message(az, "USPESNE_ARCHIVOVANA")
         )
         Mailer.send_ea02(arch_z=az)
-        fedora_trasnaction.mark_transaction_as_closed()
+        az.close_active_transaction_when_finished = True
+        az.save()
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_archivaci()

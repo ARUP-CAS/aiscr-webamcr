@@ -1040,6 +1040,11 @@ class DokumentCastSmazatView(TransakceView):
             cast.komponenty = None
             cast.save()
             komps.delete()
+        if cast.neident_akce:
+            neident_akce = cast.neident_akce
+            neident_akce: NeidentAkce
+            neident_akce.suppress_signal = True
+            neident_akce.delete()
         cast.close_active_transaction_when_finished = True
         cast.delete()
         messages.add_message(request, messages.SUCCESS, self.success_message)
@@ -1647,6 +1652,11 @@ def smazat(request, ident_cely):
         dokument.active_transaction = fedora_transaction
         dokument.save_record_deletion_record(fedora_transaction, request.user)
         for item in dokument.casti.all():
+            if hasattr(item, "neident_akce"):
+                neident_akce = item.neident_akce
+                neident_akce: NeidentAkce
+                neident_akce.suppress_signal = True
+                neident_akce.delete()
             item: DokumentCast
             item.suppress_dokument_signal = True
             item.active_transaction = fedora_transaction
