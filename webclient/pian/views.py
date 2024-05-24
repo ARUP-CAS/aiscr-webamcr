@@ -162,9 +162,14 @@ def odpojit(request, dj_ident_cely):
                                                           "transaction": fedora_transaction.uid})
         if delete_pian:
             pian.active_transaction = fedora_transaction
-            pian.delete()
-            logger.debug("pian.views.odpojit.smazan", extra={"pian_ident_cely": pian.ident_cely,
-                                                             "transaction": fedora_transaction.uid})
+            try:
+                pian.delete()
+                logger.debug("pian.views.odpojit.smazan", extra={"pian_ident_cely": pian.ident_cely,
+                                                                 "transaction": fedora_transaction.uid})
+            except ValueError as err:
+                logger.debug("pian.views.odpojit.error", extra={"pian_ident_cely": pian.ident_cely,
+                                                                "transaction": fedora_transaction.uid, "err": err})
+
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_SMAZAN)
         else:
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_ODPOJEN)

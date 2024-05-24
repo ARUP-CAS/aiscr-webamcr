@@ -68,12 +68,16 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
                 logger.debug("dj.signals.save_dokumentacni_jednotka.initial_pian_not_exists",
                              extra={"transaction": fedora_transaction.uid})
         initial_pian: Pian = instance.initial_pian
-        pian_djs = DokumentacniJednotka.objects.filter(pian=initial_pian)
-        if pian_djs.count() < 2 and initial_pian.stav == PIAN_NEPOTVRZEN:
-            logger.debug("dj.signals.save_dokumentacni_jednotka.delete_initial_pian",
-                         extra={"transaction": fedora_transaction.uid, "pian": instance.pian.ident_cely})
-            initial_pian.active_transaction = fedora_transaction
-            initial_pian.delete()
+        try:
+            pian_djs = DokumentacniJednotka.objects.filter(pian=initial_pian)
+            if pian_djs.count() < 2 and initial_pian.stav == PIAN_NEPOTVRZEN:
+                logger.debug("dj.signals.save_dokumentacni_jednotka.delete_initial_pian",
+                             extra={"transaction": fedora_transaction.uid, "pian": initial_pian.ident_cely})
+                initial_pian.active_transaction = fedora_transaction
+                initial_pian.delete()
+        except ValueError as err:
+            logger.debug("dj.signals.save_dokumentacni_jednotka.deleted",
+                         extra={"transaction": fedora_transaction.uid, "err": err, "ident_cely": instance.ident_cely})
 
     def arch_z_save_metadata(inner_close_transaction=False):
         instance.archeologicky_zaznam.save_metadata(fedora_transaction)
