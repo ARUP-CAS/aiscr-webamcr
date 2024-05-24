@@ -27,6 +27,7 @@ Dokumentace je delená na část popisující nasazování, adresarovou struktur
    knihovny_read_only
    chybove_stranky
    preklady
+   migrace_souboru
 
 
 
