@@ -1571,7 +1571,8 @@ def archivovat(request, ident_cely):
                 logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": dokument.ident_cely})
         dokument.set_archivovany(request.user, old_ident)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
-        Mailer.send_ek01(document=dokument)
+        if dokument.rada == Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D):
+            Mailer.send_ek01(document=dokument)
         dokument.close_active_transaction_when_finished = True
         dokument.save()
         return JsonResponse({"redirect": get_detail_json_view(dokument.ident_cely)})

@@ -185,6 +185,12 @@ class UserRegistrationView(RegistrationView):
     form_class = AuthUserCreationForm
     success_url = reverse_lazy("django_registration_complete")
 
+    def send_activation_email(self, user):
+        super().send_activation_email(user)
+        notification_type = UserNotificationType.objects.get(ident_cely='E-U-01')
+        Mailer._log_notification(notification_type, user, user.email, 'OK', None)
+
+
 
 @method_decorator(odstavka_in_progress, name='dispatch')
 class UserLoginView(LoginView):
@@ -332,6 +338,11 @@ class UserActivationView(ActivationView):
         username = self.validate_key(kwargs.get("activation_key"))
         user = self.get_user(username)
         user.save()
+        for notification in UserNotificationType.objects.filter(
+            Q(ident_cely__icontains='S-E-')
+            |Q(ident_cely='E-U-04')
+        ):
+            user.notification_types.add(notification)
         Mailer.send_eu02(user=user)
         Mailer.send_eu04(user=user)
         return user
