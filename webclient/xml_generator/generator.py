@@ -108,6 +108,7 @@ class DocumentGenerator:
                 from core.repository_connector import FedoraTransaction
                 obj: Union[ModelWithMetadata, User]
                 fedora_transaction = FedoraTransaction()
+                obj.active_transaction = fedora_transaction
                 obj.save_metadata(fedora_transaction, close_transaction=True)
             logger.debug("xml_generator.generator.generate_metadata.loop.end",
                          extra={"model_class": model_class, "limit": limit})

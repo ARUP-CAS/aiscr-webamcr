@@ -80,7 +80,8 @@ class ErrorMiddleware:
         from core.repository_connector import FedoraError
         if isinstance(exception, FedoraError):
             context = {"exception": exception}
-            return render(request, 'fedora_error.html', context)
+            return render(request, 'fedora_error.html', context, status=500)
+
 
 class TestEnvPopupMiddleware:
     def __init__(self, get_response):
