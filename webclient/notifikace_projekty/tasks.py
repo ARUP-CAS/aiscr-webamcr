@@ -23,45 +23,42 @@ def check_hlidaci_pes(projekt_id):
     logger.debug("cron.Notifications.collect_watchdogs.start")
     notification_type = UserNotificationType.objects.get(ident_cely='E-P-02')
     # to wait for save in DB
-    time.sleep(2)
-    try:
-        projekt = Projekt.objects.get(pk=projekt_id)
-        projekt.refresh_from_db()
-    except ObjectDoesNotExist as e:
-        logger.error(e)
-        return
+    projekts = Projekt.objects.filter(pk=projekt_id)
+    while projekts.count() < 1:
+        time.sleep(0.5)
+        projekts = Projekt.objects.filter(pk=projekt_id)
+    projekt = projekts.first()
+    users_to_notify = Pes.objects.none()
+    all_katastre = RuianKatastr.objects.filter(Q(pk=projekt.hlavni_katastr.id)|Q(pk__in=projekt.katastry.values_list("id")))
+    if notification_type.zasilat_neaktivnim:
+        users_to_notify |= Pes.objects.filter(
+            content_type=ContentType.objects.get_for_model(RuianKraj),
+            object_id__in=all_katastre.values_list('okres__kraj__id'),
+        )
+        users_to_notify |= Pes.objects.filter(
+            content_type=ContentType.objects.get_for_model(RuianOkres),
+            object_id__in=all_katastre.values_list('okres__id'),
+        )
+        users_to_notify |= Pes.objects.filter(
+            content_type=ContentType.objects.get_for_model(RuianKatastr),
+            object_id__in=all_katastre.values_list('id'),
+        )
     else:
-        users_to_notify = Pes.objects.none()
-        all_katastre = RuianKatastr.objects.filter(Q(pk=projekt.hlavni_katastr.id)|Q(pk__in=projekt.katastry.values_list("id")))
-        if notification_type.zasilat_neaktivnim:
-            users_to_notify |= Pes.objects.filter(
-                content_type=ContentType.objects.get_for_model(RuianKraj),
-                object_id__in=all_katastre.values_list('okres__kraj__id'),
-            )
-            users_to_notify |= Pes.objects.filter(
-                content_type=ContentType.objects.get_for_model(RuianOkres),
-                object_id__in=all_katastre.values_list('okres__id'),
-            )
-            users_to_notify |= Pes.objects.filter(
-                content_type=ContentType.objects.get_for_model(RuianKatastr),
-                object_id__in=all_katastre.values_list('id'),
-            )
-        else:
-            users_to_notify |= Pes.objects.filter(
-                content_type=ContentType.objects.get_for_model(RuianKraj),
-                object_id__in=all_katastre.values_list('okres__kraj__id'),
-                user__is_active=True,
-            )
-            users_to_notify |= Pes.objects.filter(
-                content_type=ContentType.objects.get_for_model(RuianOkres),
-                object_id__in=all_katastre.values_list('okres__id'),
-                user__is_active=True,
-            )
-            users_to_notify |= Pes.objects.filter(
-                content_type=ContentType.objects.get_for_model(RuianKatastr),
-                object_id__in=all_katastre.values_list('id'),
-                user__is_active=True,
-            )
-        logger.debug("cron.Notifications.collect_watchdogs.watchdog_list", extra={"users_to_notify": users_to_notify})
+        users_to_notify |= Pes.objects.filter(
+            content_type=ContentType.objects.get_for_model(RuianKraj),
+            object_id__in=all_katastre.values_list('okres__kraj__id'),
+            user__is_active=True,
+        )
+        users_to_notify |= Pes.objects.filter(
+            content_type=ContentType.objects.get_for_model(RuianOkres),
+            object_id__in=all_katastre.values_list('okres__id'),
+            user__is_active=True,
+        )
+        users_to_notify |= Pes.objects.filter(
+            content_type=ContentType.objects.get_for_model(RuianKatastr),
+            object_id__in=all_katastre.values_list('id'),
+            user__is_active=True,
+        )
+        logger.debug("cron.Notifications.collect_watchdogs.watchdog_list", extra={"users_to_notify": users_to_notify.values_list("user")})
         logger.debug("cron.Notifications.collect_watchdogs.end")
     return Mailer.send_ep02(users_to_notify.distinct("user"), projekt)

@@ -1,5 +1,6 @@
 import datetime
 import logging
+import time
 from typing import Union
 
 
@@ -396,6 +397,9 @@ class Mailer:
     @classmethod
     def send_ep02(cls, psi, project):
         IDENT_CELY = 'E-P-02'
+        while project.ident_cely.startswith("X-"):
+            project.refresh_from_db()
+            time.sleep(0.5)
         logger.debug("services.mailer.send_ep02.start", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         for pes in psi:

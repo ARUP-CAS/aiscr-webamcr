@@ -907,6 +907,7 @@ class AktivaceEmailView(LoginRequiredMixin, DetailView):
         obj: UzivatelSpoluprace = self.get_object()
         if not obj.aktivni:
             obj.set_aktivni(request.user)
+            Mailer.send_en06(cooperation=obj)
         return redirect(reverse("pas:spoluprace_list")+"?sort=organizace_vedouci&sort=spolupracovnik")
 
 

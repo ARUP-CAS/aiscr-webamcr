@@ -166,7 +166,7 @@ def index(request, test_run=False):
                 projekt = projekty[0]
                 form_ozn = OznamovatelForm(instance=projekt.oznamovatel)
                 form_projekt = ProjektOznameniForm(instance=projekt, change=True)
-                form_captcha = FormWithCaptcha()
+                form_captcha = FormWithCaptcha() if not settings.SKIP_RECAPTCHA else None
                 logger.debug(f"oznameni.views.index.get.projekt",
                              extra={"ident_cely": ident, "cookie_project": cookie_project,
                                     "hash_from_ident": hash_from_ident, "projekt": projekt.ident_cely})
@@ -178,7 +178,7 @@ def index(request, test_run=False):
     else:
         form_ozn = OznamovatelForm()
         form_projekt = ProjektOznameniForm()
-        form_captcha = FormWithCaptcha()
+        form_captcha = FormWithCaptcha() if not settings.SKIP_RECAPTCHA else None
 
     return render(
         request,
