@@ -152,7 +152,7 @@ window.onload = function () {
         dictCancelUploadConfirmation: [dz_trans["cancelUploadConfirm"]],
         dictMaxFilesExceeded:  [dz_trans["maxFilesExceeded"]],
         dictRemoveFile: [dz_trans["removeFile"]],
-        maxFilesize: 0.0000001, // MB
+        maxFilesize: 100, // MB
         maxFiles: maxFiles,
         addRemoveLinks: addRemoveLinks,
         parallelUploads: 1,
