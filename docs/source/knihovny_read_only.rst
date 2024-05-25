@@ -512,7 +512,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-trio/trio-websocket
    * - typing_extensions
-     - 4.11.0
+     - 4.12.0
      - Python Software Foundation License
      - https://github.com/python/typing_extensions
    * - tzdata
