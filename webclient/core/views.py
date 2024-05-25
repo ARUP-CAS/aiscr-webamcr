@@ -55,8 +55,8 @@ from core.constants import (
     ROLE_ADMIN_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     SN_ARCHIVOVANY,
-    ROLE_BADATEL_ID, 
-    ROLE_ARCHEOLOG_ID, 
+    ROLE_BADATEL_ID,
+    ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID
 )
 from core.forms import CheckStavNotChangedForm, TransaltionImportForm
@@ -82,7 +82,7 @@ from core.utils import (
     get_mime_type,
     get_multi_transform_towgs84,
     get_transform_towgs84,
-    get_message,
+    get_message, replace_last,
 )
 from dokument.models import Dokument, get_dokument_soubor_name
 from ez.models import ExterniZdroj
@@ -193,7 +193,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
     else:
         context = {
             "object": soubor,
-            "title": _("core.views.delete_file.title.text"),
+            "title": _("core.views.delete_file.title.text") + f" {soubor.nazev}",
             "id_tag": "smazat-soubor-form",
             "button": _("core.views.smazat.submitButton.text"),
         }
@@ -303,8 +303,8 @@ def update_file(request, typ_vazby, ident_cely, file_id):
         messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_SOUBOR_VAZBA
                     )
-        return redirect(request.GET.get("next","core:home"))
-        
+        return redirect(request.GET.get("next", "core:home"))
+
     ident_cely = ""
     back_url = request.GET.get("next","core:home")
     return render(
@@ -392,8 +392,8 @@ def post_upload(request):
             fedora_transaction.rollback_transaction()
             return JsonResponse(
                 {
-                    "error": "Nelze pripojit soubor k neexistujicimu objektu "
-                    + request.POST["objectID"]
+                    "error": _('core.views.post_upload.error.object_does_not_exist')
+                    + " " + request.POST["objectID"]
                 },
                 status=500,
             )
@@ -401,7 +401,9 @@ def post_upload(request):
             fedora_transaction.rollback_transaction()
             return JsonResponse(
                 {
-                    "error": f"Nelze pripojit soubor k objektu {request.POST['objectID']}. Objekt ma prilozen soubor s nejvetsim moznym nazvem"
+                    "error": (_('core.views.post_upload.error.maximal_file_name_exceeded_part_1')
+                              + f" {request.POST['objectID']} " +
+                              _('core.views.post_upload.error.maximal_file_name_exceeded_part_2'))
                 },
                 status=500,
             )
@@ -483,7 +485,9 @@ def post_upload(request):
             if renamed:
                 help_translation = _('core.views.post_upload.renamed.text1')
                 help_translation2 = _('core.views.post_upload.renamed.text2')
-                response_data["file_renamed"] = (f"{help_translation} {new_name}. {help_translation2}",)
+                help_translation3 = _('core.views.post_upload.renamed.text3')
+                response_data["file_renamed"] = (f"{help_translation} {original_filename} {help_translation2} "
+                                                 f"{new_name} {help_translation3}",)
             logger.debug("core.views.post_upload.end", extra={"file_id": soubor_instance.pk})
             response_data["id"] = soubor_instance.pk
             soubor_instance.close_active_transaction_when_finished = True
@@ -494,13 +498,13 @@ def post_upload(request):
             if soubor_instance is None:
                 fedora_transaction.rollback_transaction()
                 return JsonResponse(
-                    {"error": f"Chyba při zpracování souboru"},
+                    {"error": _('core.views.post_upload.error.error_processing')},
                     status=500,
                 )
             if soubor_instance.vazba.typ_vazby is None:
                 fedora_transaction.rollback_transaction()
                 return JsonResponse(
-                    {"error": f"Chybí vazba souboru"},
+                    {"error": _('core.views.post_upload.error.no_vazba')},
                     status=500,
                 )
             conn = FedoraRepositoryConnector(objekt, fedora_transaction)
@@ -549,7 +553,9 @@ def post_upload(request):
                 if renamed:
                     help_translation = _('core.views.post_upload.renamed.text1')
                     help_translation2 = _('core.views.post_upload.renamed.text2')
-                    response_data["file_renamed"] = (f"{help_translation} {new_name}. {help_translation2}",)
+                    help_translation3 = _('core.views.post_upload.renamed.text3')
+                    response_data["file_renamed"] = (f"{help_translation} {original_filename} {help_translation2} "
+                                                     f"{new_name} {help_translation3}",)
                 response_data["id"] = soubor_instance.pk
                 soubor_instance.close_active_transaction_when_finished = True
                 soubor_instance.save()
@@ -558,12 +564,12 @@ def post_upload(request):
                 logger.warning("core.views.post_upload.rep_bin_file_is_none")
                 soubor_instance.close_active_transaction_when_finished = True
                 soubor_instance.save()
-                return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
+                return JsonResponse({"error": "core.views.post_upload.unknown_error"}, status=500)
     else:
         logger.warning("core.views.post_upload.no_file")
     soubor_instance.close_active_transaction_when_finished = True
     soubor_instance.save()
-    return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
+    return JsonResponse({"error": "core.views.post_upload.unknown_error"}, status=500)
 
 
 def get_finds_soubor_name(find, filename, add_to_index=1):

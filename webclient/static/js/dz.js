@@ -56,7 +56,7 @@ const show_upload_successful_message = (file, result = UploadResultsEnum.success
             alert_element.setAttribute("class", `${alert_status_class} ${alert_common_classes} ${floating_class} ${sidebar_affected_class}`);
         } else if (result === UploadResultsEnum.reject || result === UploadResultsEnum.error) {
             const alert_status_class = "alert-danger";
-            alert_element.setAttribute("class", `${alert_status_class} ${alert_common_classes} ${floating_class} ${sidebar_affected_class}`);
+            alert_element.setAttribute("class", `${alert_status_class} ${alert_common_classes} ${floating_class} ${sidebar_affected_class} ${message}`);
         }
         alert_element.setAttribute("role", "alert");
         if (result === UploadResultsEnum.success) {
@@ -104,7 +104,7 @@ window.onload = function () {
     let RejectedFileMessage = null;
     if (currentLocation.includes("soubor/nahrat/pas/")) {
         acceptFile = "image/*"
-        RejectedFileMessage = reject_dict["rejected_pas"] //pridat do message constants po merge AMCR-1 a otestovat
+        RejectedFileMessage = reject_dict["rejected_pas"]
     } else if (currentLocation.includes("soubor/nahrat/dokument/")) {
         acceptFile = ".jpeg, " +
             ".JPEG, " +
@@ -148,9 +148,11 @@ window.onload = function () {
         acceptedFiles: acceptFile,
         dictInvalidFileType: RejectedFileMessage,
         dictCancelUpload: [dz_trans["cancelUpload"]],
+        dictFileTooBig: dz_trans["fileTooBig"],
         dictCancelUploadConfirmation: [dz_trans["cancelUploadConfirm"]],
+        dictMaxFilesExceeded:  [dz_trans["maxFilesExceeded"]],
         dictRemoveFile: [dz_trans["removeFile"]],
-        maxFilesize: 100, // MB
+        maxFilesize: 0.0000001, // MB
         maxFiles: maxFiles,
         addRemoveLinks: addRemoveLinks,
         parallelUploads: 1,
@@ -201,7 +203,7 @@ window.onload = function () {
             else if (response.hasOwnProperty("error")) {
                 show_upload_successful_message(file, UploadResultsEnum.error, response.error);
             } else {
-                show_upload_successful_message(file, UploadResultsEnum.error);
+                show_upload_successful_message(file, UploadResultsEnum.error, response);
             }
 
             this.removeFile(file);
