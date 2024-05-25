@@ -170,7 +170,8 @@ class FedoraRepositoryConnector:
         elif request_type in (FedoraRequestType.CREATE_LINK, ):
             return f"{base_url}/model/{self._get_model_name()}/member"
         elif request_type in (FedoraRequestType.GET_LINK, FedoraRequestType.DELETE_LINK_CONTAINER):
-            return f"{base_url}/model/{self._get_model_name()}/member/{self.record.ident_cely}"
+            return (f"{base_url}/model/{self._get_model_name()}/member/"
+                    f"{ident_cely if ident_cely else self.record.ident_cely}")
         elif request_type in (FedoraRequestType.UPDATE_METADATA, FedoraRequestType.GET_METADATA):
             return f"{base_url}/record/{self.record.ident_cely}/metadata"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE):
@@ -193,7 +194,8 @@ class FedoraRepositoryConnector:
         elif request_type == FedoraRequestType.DELETE_TOMBSTONE:
             return f"{base_url}/record/{self.record.ident_cely}/fcr:tombstone"
         elif request_type == FedoraRequestType.DELETE_LINK_TOMBSTONE:
-            return f"{base_url}/model/{self._get_model_name()}/member/{self.record.ident_cely}/fcr:tombstone"
+            return (f"{base_url}/model/{self._get_model_name()}/member/"
+                    f"{ident_cely if ident_cely else self.record.ident_cely}/fcr:tombstone")
         elif request_type in (FedoraRequestType.RECORD_DELETION_ADD_MARK,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4):
             return f"{base_url}/model/deleted/member"
@@ -357,7 +359,7 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector._create_container.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
-    def _create_link(self):
+    def _create_link(self, ident_cely_proxy=None):
         logger.debug("core_repository_connector._create_link.start", extra={"ident_cely": self.record.ident_cely,
                                                                             "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.CREATE_LINK)
@@ -365,8 +367,9 @@ class FedoraRepositoryConnector:
             'Slug': self.record.ident_cely,
             'Content-Type': 'text/turtle'
         }
-        data = "@prefix ore: <http://www.openarchives.org/ore/terms/> " \
-               f". <> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}>"
+        data = ("@prefix ore: <http://www.openarchives.org/ore/terms/> "
+                f". <> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/"
+                f"{ident_cely_proxy if ident_cely_proxy else self.record.ident_cely}>")
         self._send_request(url, FedoraRequestType.CREATE_LINK, headers=headers, data=data)
         logger.debug("core_repository_connector._create_link.end", extra={"ident_cely": self.record.ident_cely,
                                                                           "transaction": self.transaction_uid})
@@ -753,12 +756,12 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector.delete_container.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
-    def _delete_link(self):
+    def _delete_link(self, ident_cely=None):
         logger.debug("core_repository_connector.delete_link.start",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
-        url = self._get_request_url(FedoraRequestType.DELETE_LINK_CONTAINER)
+        url = self._get_request_url(FedoraRequestType.DELETE_LINK_CONTAINER, ident_cely=ident_cely)
         self._send_request(url, FedoraRequestType.DELETE_LINK_CONTAINER)
-        url = self._get_request_url(FedoraRequestType.DELETE_LINK_TOMBSTONE)
+        url = self._get_request_url(FedoraRequestType.DELETE_LINK_TOMBSTONE, ident_cely=ident_cely)
         self._send_request(url, FedoraRequestType.DELETE_LINK_TOMBSTONE)
         logger.debug("core_repository_connector.delete_link.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
@@ -819,6 +822,9 @@ class FedoraRepositoryConnector:
 
         url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5, ident_cely=ident_cely_old)
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5)
+
+        self._delete_link(ident_cely_old)
+        self._create_link(ident_cely_proxy=ident_cely_new)
 
         logger.debug("core_repository_connector.record_ident_change.end", extra={"ident_cely": self.record.ident_cely,
                                                                                  "ident_cely_old": ident_cely_old,
