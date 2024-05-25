@@ -573,9 +573,9 @@ class FedoraRepositoryConnector:
             file.seek(0)
             data = self.__generate_thumb(file_name, file, large)
             if not data:
-                logger.error("core_repository_connector._save_thumb.error",
-                             extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large,
-                                    "update": update, "uuid": uuid, "transaction": self.transaction_uid})
+                logger.info("core_repository_connector._save_thumb.error",
+                            extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "large": large,
+                                   "update": update, "uuid": uuid, "transaction": self.transaction_uid})
                 continue
             data = data.read()
             file_sha_512 = hashlib.sha512(data).hexdigest()
