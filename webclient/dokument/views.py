@@ -120,7 +120,7 @@ from heslar.hesla_dynamicka import (
 from heslar.models import Heslar, HeslarHierarchie
 from heslar.views import heslar_12
 from komponenta.forms import CreateKomponentaForm
-from komponenta.models import Komponenta, KomponentaVazby
+from komponenta.models import Komponenta, KomponentaAktivita, KomponentaVazby
 from lokalita.models import Lokalita
 from nalez.forms import (
     NalezFormSetHelper,
@@ -1243,6 +1243,8 @@ def edit_model_3D(request, ident_cely):
             komponenta = form_komponenta.save(commit=False)
             komponenta.active_transaction = fedora_transaction
             komponenta.save()
+            form_komponenta.save_m2m()
+            invalidate_model(KomponentaAktivita)
             if (
                 form_d.changed_data
                 or form_extra.changed_data
