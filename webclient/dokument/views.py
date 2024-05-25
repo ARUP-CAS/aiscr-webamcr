@@ -1040,11 +1040,15 @@ class DokumentCastSmazatView(TransakceView):
             cast.komponenty = None
             cast.save()
             komps.delete()
-        if cast.neident_akce:
-            neident_akce = cast.neident_akce
-            neident_akce: NeidentAkce
-            neident_akce.suppress_signal = True
-            neident_akce.delete()
+        try:
+            if cast.neident_akce:
+                neident_akce = cast.neident_akce
+                neident_akce: NeidentAkce
+                neident_akce.suppress_signal = True
+                neident_akce.delete()
+        except ObjectDoesNotExist as err:
+            logger.debug("dokument.views.DokumentCastSmazatView.post.neident_akce_not_exists",
+                         extra={"ident:cely": cast.ident_cely})
         cast.close_active_transaction_when_finished = True
         cast.delete()
         messages.add_message(request, messages.SUCCESS, self.success_message)
