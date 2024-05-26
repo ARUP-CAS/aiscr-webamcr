@@ -22,6 +22,9 @@
     <link type="text/x-scss" href="{% static '_app-sidebar.scss' %}" rel="stylesheet" media="screen">
   {% endcompress %} -->
   <div id="app-sidebar-wrapper">
+  <div class="sidebar-toggle-2-container">
+    <button class="btn btn-dark ml-2" id="sidebar-toggle-2"><span class="material-icons" style="color: white">menu_open</span></button>
+  </div>
     <div class="app-sidebar-heading">
       <a href="/" title="{% trans 'templates.baseLogedIn.sidebar.home' %}">
         <img src="{% static 'logo-am-cs.png' %}" alt="{% trans 'templates.baseLogedIn.sidebar.logo.alt' %}" />
@@ -390,18 +393,20 @@
 
 {% block script_sidebar %}
   <script>
-    $("#sidebar-toggle").click(function (e) {
+    const sidebar_toggle_func = (e) => {
       if (typeof map !== 'undefined') {
-          try {
-              setTimeout(function () {
-                  map.invalidateSize()
-              }, 400);
-          } catch (error) {/*No need for console.log()*/
-          }
+        try {
+            setTimeout(function () {
+                map.invalidateSize()
+            }, 400);
+        } catch (error) {/*No need for console.log()*/
+        }
       }
       e.preventDefault();
       $("#app-wrapper").toggleClass("toggled");
-    });
+    }
+    $("#sidebar-toggle").click(sidebar_toggle_func);
+    $("#sidebar-toggle-2").click(sidebar_toggle_func);
     $('[rel="tooltip"]').tooltip({
       container : '#app-page-wrapper',
       html : true,

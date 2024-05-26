@@ -19,6 +19,15 @@
   background-color: $app-sidebar-bg;
   width: $app-sidebar-width;
 
+  .sidebar-toggle-2-container {
+    @media (max-width: 380px) {
+      display: block;
+    }
+    @media (min-width: 380px) {
+      display: none;
+    }
+  }
+
   .app-sidebar-heading {
     @extend .d-flex, .align-items-center;
     padding: 0.875rem 1.25rem;
