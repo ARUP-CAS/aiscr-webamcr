@@ -4,10 +4,19 @@
     background-image: none !important;
 }
 
+@media (pointer: fine) {
+    .app-card-collapse-text {
+        display: none;
+        transition: all 0.4s ease;
+    }
+}
+
 .app-entity-cards {
   .col {
     @extend .pr-0;
     max-width: 220px;
+    min-width: 220px;
+    margin-bottom: 1rem;
 
     .app-card-entity {
       @include setEntityColor("card");

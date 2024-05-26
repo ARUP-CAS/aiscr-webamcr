@@ -13,7 +13,6 @@
         <a href="{% url 'pas:spoluprace_list' %}?sort=organizace_vedouci&sort=spolupracovnik" class="card app-card-entity app-card-spoluprace">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardSpoluprace.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardSpoluprace.label" %}
@@ -24,7 +23,6 @@
         <a href="{% url 'pas:create' %}" class="card app-card-entity app-card-zapsat-nalez">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardZapsatNalez.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardZapsatNalez.label" %}
@@ -35,7 +33,6 @@
         <a href="{% url 'pas:list' %}?sort=katastr&sort=ident_cely" class="card app-card-entity app-card-vybrat">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardVybrat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardVybrat.label" %}
@@ -46,7 +43,6 @@
         <a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-nalezy">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardMojeNalezy.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "pas.templates.index.cardMojeNalezy.label" %}
@@ -58,7 +54,6 @@
           <a href="{% url 'pas:list' %}?projekt_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-nalezy">
             <div class="card-body card-body-background">
               <img src="{% static 'logo-am-mark.png' %}" />
-              <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardNaseNalezy.text" %}</div>
             </div>
             <div class="card-footer">
               {% trans "pas.templates.index.cardNaseNalezy.label" %}
@@ -71,7 +66,6 @@
           <a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" class="card app-card-entity app-card-potvrdit">
             <div class="card-body card-body-background">
               <img src="{% static 'logo-am-mark.png' %}" />
-              <div class="card-body-hint" style="display: none">{% trans "pas.templates.index.cardPotvrdit.text" %}</div>
             </div>
             <div class="card-footer">
               {% trans "pas.templates.index.cardPotvrdit.label" %}
@@ -83,14 +77,14 @@
   </div>
 
   <div class="app-card-desc-wrapper">
-    <div class="app-collapse-zapsat-nalez collapse">
+    <div class="app-collapse-zapsat-nalez app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "pas.templates.index.cardZapsatNalez.title" %}</h4>
         <hr />
         {% trans "pas.templates.index.cardZapsatNalez.text" %}
       </div>
     </div>
-    <div class="app-collapse-moje-nalezy collapse">
+    <div class="app-collapse-moje-nalezy app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "pas.templates.index.cardMojeNalezy.title" %}</h4>
         <hr />
@@ -98,7 +92,7 @@
       </div>
     </div>
     {% if show_pas_nase %}
-      <div class="app-collapse-nase-nalezy collapse">
+      <div class="app-collapse-nase-nalezy app-card-collapse-text">
         <div class="p-3">
           <h4>{% trans "pas.templates.index.cardNaseNalezy.title" %}</h4>
           <hr />
@@ -106,14 +100,14 @@
         </div>
       </div>
     {% endif %}
-    <div class="app-collapse-vybrat collapse">
+    <div class="app-collapse-vybrat app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "pas.templates.index.cardVybrat.title" %}</h4>
         <hr />
         {% trans "pas.templates.index.cardVybrat.text" %}
       </div>
     </div>
-  <div class="app-collapse-spoluprace collapse">
+  <div class="app-collapse-spoluprace app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "pas.templates.index.cardSpolupraceNalez.title" %}</h4>
         <hr />
@@ -121,7 +115,7 @@
       </div>
     </div>
     {% if show_pas_potvrdit %}
-  <div class="app-collapse-potvrdit collapse">
+  <div class="app-collapse-potvrdit app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "pas.templates.index.cardPotvrdit.title" %}</h4>
         <hr />

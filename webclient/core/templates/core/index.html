@@ -11,7 +11,6 @@
       <a href="{% url 'projekt:index' %}" class="card app-card-entity app-entity-projekt">
         <div class="card-body card-body-background">
           <img src="{% static 'logo-am-mark.png' %}" />
-          <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardProjekt.text" %}</div>
         </div>
         <div class="card-footer">
           {% trans "core.templates.index.cardProjekt.label" %}
@@ -23,7 +22,6 @@
       <a href="{% url 'arch_z:index' %}" class="card app-card-entity app-entity-akce">
         <div class="card-body card-body-background">
           <img src="{% static 'logo-am-mark.png' %}" />
-          <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardSamostatneAkce.text" %}</div>
         </div>
         <div class="card-footer">
           {% trans "core.templates.index.cardSamostatneAkce.label" %}
@@ -34,7 +32,6 @@
       <a href="{% url 'lokalita:index' %}" class="card app-card-entity app-entity-lokalita">
         <div class="card-body card-body-background">
           <img src="{% static 'logo-am-mark.png' %}" />
-          <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardLokality.text" %}</div>
         </div>
         <div class="card-footer">
           {% trans "core.templates.index.cardLokality.label" %}
@@ -45,7 +42,6 @@
       <a href="{% url 'pas:index' %}" class="card app-card-entity app-entity-samostatny_nalez">
         <div class="card-body card-body-background">
           <img src="{% static 'logo-am-mark.png' %}" />
-          <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardSamostatneNalezy.text" %}</div>
         </div>
         <div class="card-footer">
           {% trans "core.templates.index.cardSamostatneNalezy.label" %}
@@ -56,7 +52,6 @@
     <a href="{% url 'dokument:index-model-3D' %}" class="card app-card-entity app-entity-knihovna_3d">
       <div class="card-body card-body-background">
         <img src="{% static 'logo-am-mark.png' %}" />
-        <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardKnihovna3D.text" %}</div>
       </div>
       <div class="card-footer">
         {% trans "core.templates.index.cardKnihovna3D.label" %}
@@ -67,7 +62,6 @@
     <a href="{% url 'dokument:index' %}" class="card app-card-entity app-entity-dokument">
       <div class="card-body card-body-background">
         <img src="{% static 'logo-am-mark.png' %}" />
-        <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardDokumenty.text" %}</div>
       </div>
       <div class="card-footer">
         {% trans "core.templates.index.cardDokumenty.label" %}
@@ -78,7 +72,6 @@
     <a href="{% url 'ez:index' %}" class="card app-card-entity app-entity-ext_zdroj">
       <div class="card-body card-body-background">
         <img src="{% static 'logo-am-mark.png' %}" />
-        <div class="card-body-hint" style="display: none">{% trans "core.templates.index.cardExterniZdroje.text" %}</div>
       </div>
       <div class="card-footer">
         {% trans "core.templates.index.cardExterniZdroje.label" %}
@@ -89,7 +82,7 @@
 
   <div class="app-card-desc-wrapper">
     {% if show_projekt %}
-    <div class="app-collapse-projekt collapse">
+    <div class="app-collapse-projekt app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "core.templates.index.cardProjekt.text.title" %}</h4>
         <hr />
@@ -98,7 +91,7 @@
     </div>
     {% endif %}
     
-    <div class="app-collapse-akce collapse">
+    <div class="app-collapse-akce app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "core.templates.index.cardSamostatnaAkce.text.title" %}</h4>
         <hr />
@@ -106,7 +99,7 @@
       </div>
     </div>
     
-    <div class="app-collapse-lokalita collapse">
+    <div class="app-collapse-lokalita app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "core.templates.index.cardLokalita.text.title" %}</h4>
         <hr />
@@ -114,7 +107,7 @@
       </div>
     </div>
 
-    <div class="app-collapse-knihovna_3d collapse">
+    <div class="app-collapse-knihovna_3d app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "core.templates.index.cardKnihovna3D.text.title" %}</h4>
         <hr />
@@ -122,7 +115,7 @@
       </div>
     </div>
     
-    <div class="app-collapse-dokument collapse">
+    <div class="app-collapse-dokument app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "core.templates.index.cardDokument.text.title" %}</h4>
         <hr />
@@ -130,7 +123,7 @@
       </div>
     </div>
     
-    <div class="app-collapse-ext-zdroj collapse">
+    <div class="app-collapse-ext-zdroj app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "core.templates.index.cardExtZdroj.text.title" %}</h4>
         <hr />
@@ -138,7 +131,7 @@
       </div>
     </div>
 
-    <div class="app-collapse-samostatny_nalez collapse">
+    <div class="app-collapse-samostatny_nalez app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "core.templates.index.cardSamostatneNalezy.text.title" %}</h4>
         <hr />

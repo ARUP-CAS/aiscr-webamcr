@@ -12,7 +12,6 @@
         <a href="{% url 'ez:create' %}" class="card app-card-entity app-card-zapsat-ez">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "ez.templates.index.zapsatEZ.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "ez.templates.index.zapsatEZ.label" %}
@@ -23,7 +22,6 @@
         <a href="{% url 'ez:list' %}?sort=autori&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-vybrat">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "ez.templates.index.vybratEZ.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "ez.templates.index.vybratEZ.label" %}
@@ -34,7 +32,6 @@
         <a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}&sort=autori&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-moje-ez">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "ez.templates.index.mojeEZ.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "ez.templates.index.mojeEZ.label" %}
@@ -46,7 +43,6 @@
           <a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=autori&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-nase-ez">
             <div class="card-body card-body-background">
               <img src="{% static 'logo-am-mark.png' %}" />
-              <div class="card-body-hint" style="display: none">{% trans "ez.templates.index.naseEZ.text" %}</div>
             </div>
             <div class="card-footer">
               {% trans "ez.templates.index.naseEZ.label" %}
@@ -58,14 +54,14 @@
   </div>
 
   <div class="app-card-desc-wrapper">
-    <div class="app-collapse-zapsat-ez collapse">
+    <div class="app-collapse-zapsat-ez app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "ez.templates.index.zapsatEZ.text.title" %}</h4>
         <hr />
         {% trans "ez.templates.index.zapsatEZ.text" %}
       </div>
     </div>
-    <div class="app-collapse-moje-ez collapse">
+    <div class="app-collapse-moje-ez app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "ez.template.index.mojeEZ.text.title" %}</h4>
         <hr />
@@ -73,7 +69,7 @@
       </div>
     </div>
     {% if user.can_see_ours_item %}
-      <div class="app-collapse-nase-ez collapse">
+      <div class="app-collapse-nase-ez app-card-collapse-text">
         <div class="p-3">
           <h4>{% trans "ez.template.index.naseEZ.text.title" %}</h4>
           <hr />
@@ -81,7 +77,7 @@
         </div>
       </div>
     {% endif %}
-    <div class="app-collapse-vybrat collapse">
+    <div class="app-collapse-vybrat app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "ez.template.index.vybratEZ.text.title" %}</h4>
         <hr />
