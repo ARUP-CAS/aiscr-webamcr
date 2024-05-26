@@ -20,7 +20,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
 
 # Install dependencies
 RUN  apt-get -qq -y install cron && apt-get -y -qq install sudo
-RUN apt-get install -y python3-pip libgdal-dev locales gettext poppler-utils unrar jq postgresql-client curl
+RUN apt-get install -y python3-pip libgdal-dev locales gettext poppler-utils unrar jq postgresql-client curl redis-tools
 
 # Ensure locales configured correctly
 RUN locale-gen cs_CZ.utf8

@@ -401,73 +401,6 @@ def nalez_to_wsg84():
         logger.error("cron.nalez_to_wsg84.do.error", extra={"error": err})
 
 
-def get_record(class_name, record_pk):
-    if class_name == "Projekt":
-        record = Projekt.objects.get(pk=record_pk)
-    elif class_name == "SamostatnyNalez":
-        record = SamostatnyNalez.objects.get(pk=record_pk)
-    elif class_name == "Heslar":
-        record = Heslar.objects.get(pk=record_pk)
-    elif class_name == "RuianKatastr":
-        record = RuianKatastr.objects.get(pk=record_pk)
-    elif class_name == "RuianKraj":
-        record = RuianKraj.objects.get(pk=record_pk)
-    elif class_name == "RuianOkres":
-        record = RuianOkres.objects.get(pk=record_pk)
-    elif class_name == "ArcheologickyZaznam":
-        record = ArcheologickyZaznam.objects.get(pk=record_pk)
-    elif class_name == "ExterniZdroj":
-        record = ExterniZdroj.objects.get(pk=record_pk)
-    elif class_name == "Adb":
-        record = Adb.objects.get(pk=record_pk)
-    elif class_name == "Pian":
-        record = Pian.objects.get(pk=record_pk)
-    elif class_name == "Dokument":
-        record = Dokument.objects.get(pk=record_pk)
-    elif class_name == "Let":
-        record = Let.objects.get(pk=record_pk)
-    elif class_name == "Organizace":
-        record = Organizace.objects.get(pk=record_pk)
-    elif class_name == "Osoba":
-        record = Osoba.objects.get(pk=record_pk)
-    elif class_name == "User":
-        record = User.objects.get(pk=record_pk)
-    else:
-        logger.debug("cron.tasks.get_record.error.unknown_class",
-                     extra={"class_name": class_name, "record_pk": record_pk})
-        record = None
-    return record
-
-
-@shared_task
-def save_record_metadata(class_name, record_pk, transaction_id):
-    logger.debug("cron.save_record_metadata.do.start",
-                 extra={"class_name": class_name, "record_pk": record_pk, "transaction_id": transaction_id})
-    from xml_generator.models import ModelWithMetadata
-    record = get_record(class_name, record_pk)
-    if record is not None:
-        record: ModelWithMetadata
-        from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(record, transaction_id)
-        connector.save_metadata(True)
-    else:
-        ident_cely = record.ident_cely if hasattr(record, "ident_cely") else "no_ident"
-        logger.warning("cron.save_record_metadata.do.is_null",
-                       extra={"class_name": class_name, "record_pk": record_pk, "ident_cely": ident_cely,
-                              "transaction_id": transaction_id})
-    logger.debug("cron.save_record_metadata.do.end", extra={"class_name": class_name, "record_pk": record_pk,
-                                                            "transaction_id": transaction_id})
-
-
-@shared_task
-def record_ident_change(class_name: str, record_pk: int, old_ident: str, transaction_uid: str,
-                        new_ident_cely: str = None):
-    from core.repository_connector import FedoraTransaction
-    logger.debug("cron.record_ident_change.do.start", extra={"class_name": class_name, "record_pk": record_pk,
-                                                             "old_ident": old_ident})
-    from core.repository_connector import FedoraRepositoryConnector
-
-
 @shared_task
 def delete_personal_data_canceled_projects():
     """
@@ -699,4 +632,11 @@ def update_materialized_views():
     cursor = connection.cursor()
     cursor.execute(query)   
     logger.debug("cron.tasks.update_materialized_views.end")
-    
+
+
+@shared_task
+def write_value_to_redis(key, value):
+    r = RedisConnector()
+    redis_connection = r.get_connection()
+    redis_connection.set(key, value)
+    return key, value

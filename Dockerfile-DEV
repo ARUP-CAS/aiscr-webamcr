@@ -23,7 +23,7 @@ RUN apt-get -qq update --fix-missing
 RUN apt-get -qq -y install cron
 RUN apt-get -y -qq install nano && apt-get -y -qq install sudo
 RUN apt-get update
-RUN apt-get install -y python3-pip libgdal-dev locales gettext poppler-utils unrar
+RUN apt-get install -y python3-pip libgdal-dev locales gettext poppler-utils unrar redis-tools
 
 # Ensure locales configured correctly
 RUN locale-gen cs_CZ.utf8

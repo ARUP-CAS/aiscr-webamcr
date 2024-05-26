@@ -83,5 +83,5 @@ urlpatterns = [
         name="rosetta-smazat-file",
     ),
     path("metrics", views.PrometheusMetricsView.as_view(), name="prometheus-django-metrics"),
-    path("application-restart",views.ApplicationRestartView.as_view(), name="application-restart",)
+    path("application-restart", views.ApplicationRestartView.as_view(), name="application-restart",)
 ]
