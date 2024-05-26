@@ -12,7 +12,6 @@
         <a href="{% url 'arch_z:zapsat-akci' %}" class="card app-card-entity app-card-zapsat-akce">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "arch_z.templates.arch_z.index.cardZapsatSamostatnouAkci.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "arch_z.templates.arch_z.index.cardZapsatSamostatnouAkci.label" %}
@@ -23,7 +22,6 @@
         <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&sort=hlavni_katastr&sort=ident_cely" class="card app-card-entity app-card-vybrat">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "arch_z.templates.arch_z.index.cardVybrat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "arch_z.templates.arch_z.index.cardVybrat.label" %}
@@ -34,7 +32,6 @@
         <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-akce">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "arch_z.templates.arch_z.index.cardMojeAkce.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "arch_z.templates.arch_z.index.cardMojeAkce.label" %}
@@ -46,7 +43,6 @@
           <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-akce">
             <div class="card-body card-body-background">
               <img src="{% static 'logo-am-mark.png' %}" />
-              <div class="card-body-hint" style="display: none">{% trans "arch_z.templates.arch_z.index.cardNaseAkce.text" %}</div>
             </div>
             <div class="card-footer">
               {% trans "arch_z.templates.arch_z.index.cardNaseAkce.label" %}
@@ -58,14 +54,14 @@
   </div>
 
   <div class="app-card-desc-wrapper">
-    <div class="app-collapse-zapsat-akce collapse">
+    <div class="app-collapse-zapsat-akce app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "arch_z.templates.arch_z.index.cardZapsatSamostatnouAkci.text.title" %}</h4>
         <hr />
         {% trans "arch_z.templates.arch_z.index.cardZapsatSamostatnouAkci.text" %}
       </div>
     </div>
-    <div class="app-collapse-moje-akce collapse">
+    <div class="app-collapse-moje-akce app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "arch_z.templates.arch_z.index.cardMojeAkce.text.title" %}</h4>
         <hr />
@@ -73,7 +69,7 @@
       </div>
     </div>
     {% if user.can_see_ours_item %}
-      <div class="app-collapse-nase-akce collapse">
+      <div class="app-collapse-nase-akce app-card-collapse-text">
         <div class="p-3">
           <h4>{% trans "arch_z.templates.arch_z.index.cardNaseAkce.text.title" %}</h4>
           <hr />
@@ -81,7 +77,7 @@
         </div>
       </div>
     {% endif %}
-    <div class="app-collapse-vybrat collapse">
+    <div class="app-collapse-vybrat app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "arch_z.templates.arch_z.index.cardVybrat.text.title" %}</h4>
         <hr />

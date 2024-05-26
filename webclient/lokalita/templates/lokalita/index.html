@@ -12,7 +12,6 @@
         <a href="{% url 'lokalita:create' %}" class="card app-card-entity app-card-zapsat-lokalita">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "lokalita.templates.index.cardZapsat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "lokalita.templates.index.cardZapsat.label" %}
@@ -23,7 +22,6 @@
         <a href="{% url 'lokalita:list' %}?sort=nazev" class="card app-card-entity app-card-vybrat">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "lokalita.templates.index.cardVybrat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "lokalita.templates.index.cardVybrat.label" %}
@@ -34,7 +32,6 @@
         <a href="{% url 'lokalita:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-lokality">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "lokalita.templates.index.cardMojeLokality.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "lokalita.templates.index.cardMojeLokality.label" %}
@@ -46,7 +43,6 @@
           <a href="{% url 'lokalita:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-lokality">
             <div class="card-body card-body-background">
               <img src="{% static 'logo-am-mark.png' %}" />
-              <div class="card-body-hint" style="display: none">{% trans "lokalita.templates.index.cardNaseLokality.text" %}</div>
             </div>
             <div class="card-footer">
               {% trans "lokalita.templates.index.cardNaseLokality.label" %}
@@ -58,14 +54,14 @@
   </div>
 
   <div class="app-card-desc-wrapper">
-    <div class="app-collapse-zapsat-lokalita collapse">
+    <div class="app-collapse-zapsat-lokalita app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "lokalita.templates.index.cardZapsat.title" %}</h4>
         <hr />
         {% trans "lokalita.templates.index.cardZapsat.text" %}
       </div>
     </div>
-    <div class="app-collapse-moje-lokality collapse">
+    <div class="app-collapse-moje-lokality app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "lokalita.templates.index.cardMojeLokality.title" %}</h4>
         <hr />
@@ -73,7 +69,7 @@
       </div>
     </div>
     {% if user.can_see_ours_item %}
-      <div class="app-collapse-nase-lokality collapse">
+      <div class="app-collapse-nase-lokality app-card-collapse-text">
         <div class="p-3">
           <h4>{% trans "lokalita.templates.index.cardNaseLokality.title" %}</h4>
           <hr />
@@ -81,7 +77,7 @@
         </div>
       </div>
     {% endif %}
-    <div class="app-collapse-vybrat collapse">
+    <div class="app-collapse-vybrat app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "lokalita.templates.index.cardVybrat.title" %}</h4>
         <hr />

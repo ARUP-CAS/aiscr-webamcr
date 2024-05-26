@@ -675,31 +675,6 @@
       })
     })
 
-    const app_entity_cards_query = document.querySelectorAll(".app-card-entity");
-    for (const item of app_entity_cards_query) {
-      const card_body_background = item.querySelectorAll(".card-body-background");
-      if (card_body_background.length > 0) {
-        const current_item = card_body_background[0];
-        current_item.onclick = (e) => {
-          if (window.innerWidth < 576) {
-            e.preventDefault();
-            const card_body_hint = current_item.querySelector(".card-body-hint");
-            if (card_body_hint && card_body_hint.style.display === "none") {
-              card_body_hint.style.display = "";
-              current_item.classList.remove("card-body-background");
-            } else {
-                card_body_hint.style.display = "none";
-                current_item.classList.add("card-body-background");
-            }
-            const img_tag = current_item.querySelector("img");
-            if (img_tag) {
-              current_item.removeChild(img_tag);
-            }
-          }
-        }
-      }
-    }
-
   $('.selectpicker.form-control').on('show.bs.select', function () {
       const closestDiv = $(this).closest('.content-with-table-responsive');
       if (closestDiv.length) {

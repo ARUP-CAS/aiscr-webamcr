@@ -12,7 +12,6 @@
         <a href="{% url 'dokument:create-model-3D' %}" class="card app-card-entity app-card-zapsat-model">
           <div class="card-body card-body-background" id="app-card-zapsat-model-body">
             <img class="card-body-image" src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "dokument.templates.indexModel3D.cardZapsat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "dokument.templates.indexModel3D.cardZapsat.label" %}
@@ -23,7 +22,6 @@
         <a href="{% url 'dokument:list-model-3D' %}?sort=organizace__nazev_zkraceny&sort=autori&sort=ident_cely" class="card app-card-entity app-card-vybrat">
           <div class="card-body card-body-background">
             <img class="card-body-image" src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "dokument.templates.indexModel3D.cardVybrat.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "dokument.templates.indexModel3D.cardVybrat.label" %}
@@ -34,7 +32,6 @@
         <a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-modely">
           <div class="card-body card-body-background">
             <img class="card-body-image" src="{% static 'logo-am-mark.png' %}" />
-            <div class="card-body-hint" style="display: none">{% trans "dokument.templates.indexModel3D.cardMojeModely.text" %}</div>
           </div>
           <div class="card-footer">
             {% trans "dokument.templates.indexModel3D.cardMojeModely.label" %}
@@ -46,7 +43,6 @@
           <a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-modely">
             <div class="card-body card-body-background">
               <img class="card-body-image" src="{% static 'logo-am-mark.png' %}" />
-              <div class="card-body-hint" style="display: none">{% trans "dokument.templates.indexModel3D.cardNaseModely.text" %}</div>
             </div>
             <div class="card-footer">
               {% trans "dokument.templates.indexModel3D.cardNaseModely.label" %}
@@ -58,21 +54,21 @@
   </div>
 
   <div class="app-card-desc-wrapper">
-    <div class="app-collapse-zapsat-model collapse">
+    <div class="app-collapse-zapsat-model app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "dokument.templates.indexModel3D.cardZapsat.text.title" %}</h4>
         <hr />
         {% trans "dokument.templates.indexModel3D.cardZapsat.text" %}
       </div>
     </div>
-    <div class="app-collapse-moje-modely collapse">
+    <div class="app-collapse-moje-modely app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "dokument.templates.indexModel3D.cardMojeModely.text.title" %}</h4>
         <hr />
         {% trans "dokument.templates.indexModel3D.cardMojeModely.text" %}
       </div>
     </div>
-    <div class="app-collapse-nase-modely collapse">
+    <div class="app-collapse-nase-modely app-card-collapse-text">
       <div class="p-3">
         <h4>{% trans "dokument.templates.indexModel3D.cardNaseModely.text.title" %}</h4>
         <hr />
@@ -80,7 +76,7 @@
       </div>
     </div>
     {% if user.can_see_ours_item %}
-      <div class="app-collapse-vybrat collapse">
+      <div class="app-collapse-vybrat app-card-collapse-text">
         <div class="p-3">
           <h4>{% trans "dokument.templates.indexModel3D.cardVybrat.text.title" %}</h4>
           <hr />
