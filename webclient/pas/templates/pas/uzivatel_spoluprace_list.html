@@ -39,7 +39,23 @@
         item.attr('data-original-title' , item.children().text());
         var item_smazani = $(this).find(".smazani.spoluprace ");
         item_smazani.attr('data-original-title' , item_smazani.children().text());
-      }); 
+      });
+
+      const add_tooltips = (element_selector, tooltip_list) => {
+        const elements = document.querySelectorAll(element_selector);
+        elements.forEach((td) => {
+          const originalTitle = td.getAttribute('data-original-title');
+          if (originalTitle) {
+            tooltip_list.forEach((item) => {
+              if (originalTitle.includes(item)) {
+                td.setAttribute('data-original-title', item + " " + originalTitle);
+              }
+            })
+          }
+        });
+      }
+      add_tooltips("td.aktivace", ["{{ trans_deaktivovat }}", "{{ trans_aktivovat }}"]);
+      add_tooltips("td.smazani", ["{{ trans_smazat }}"]);
   });
   </script>
 {% endblock %}

@@ -849,6 +849,9 @@ class UzivatelSpolupraceListView(SearchListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["show_zadost"] = check_permissions(p.actionChoices.spoluprace_zadost, self.request.user)
+        context["trans_deaktivovat"] = _("pas.templates.aktivace_deaktivace_cell.deaktivovat")
+        context["trans_aktivovat"] = _("pas.templates.aktivace_deaktivace_cell.aktivovat")
+        context["trans_smazat"] = _("pas.templates.smazat_cell.Smazat")
         return context
     
     def get_table_kwargs(self):
