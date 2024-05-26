@@ -11,7 +11,7 @@ STRING2=$(generate_random_string 10)
 REDIS_PASSWORD=$(cat /run/secrets/redis_pass)
 
 # Run the Django management command with the generated strings as arguments
-python3 manage.py write_value_to_redis "$STRING1" "$STRING2"
+python3 manage.py write_value_to_redis "$STRING1" "$STRING2" --settings=webclient.settings.production
 
 read_value_from_redis() {
     local key=$1
