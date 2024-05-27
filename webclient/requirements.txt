@@ -12,7 +12,6 @@ django-compressor==4.4
 django-libsass==0.9 
 django-autocomplete-light==3.11.0
 django-widget-tweaks==1.5.0
-tablib[all]==3.6.1
 distlib==0.3.8
 django-rosetta==0.10.0
 django-auto-logout==0.5.1
@@ -51,12 +50,6 @@ django-debug-toolbar-template-profiler==2.1.0
 psycopg2==2.9.9
 django-object-actions==4.2.0
 
-pre-commit==3.7.1
-isort==5.13.2
-coverage==7.5.1
-django-debug-toolbar==4.3.0
-black==24.4.2
-django-livereload-server==0.5.1
-django-debug-toolbar-template-profiler==2.1.0
+
 
 uWSGI==2.0.25.1
