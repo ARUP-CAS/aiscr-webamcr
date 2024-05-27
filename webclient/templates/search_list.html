@@ -149,7 +149,7 @@
     });
     // don't show tooltip
     $('table [rel="tooltip"]').on('click', function () {
-      if (window.innerWidth > 960) {
+      if (matchMedia('(pointer:fine)').matches) {
         $(this).tooltip('hide')
       }
     });
