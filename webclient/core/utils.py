@@ -598,7 +598,6 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
         if d:
             pians.extend(d)
     try:  
-        logger.debug(pians)
         return Pian.objects.filter(pk__in=pians)
     except IndexError:
         logger.debug(

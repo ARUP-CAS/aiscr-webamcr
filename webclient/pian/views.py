@@ -414,9 +414,8 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
         filtered_pian_history = Historie.objects.filter(uzivatel=self.request.user)
         filtered_az_history = Historie.objects.filter(uzivatel=self.request.user)
         if ownership == Permissions.ownershipChoices.our:
-            filtered_pian_history_our = Historie.objects.filter(uzivatel__organizace=self.request.user.organizace)
-            filtered_az_history_our = Historie.objects.filter(uzivatel__organizace=self.request.user.organizace)
-            return Q(**{"historie_zapsat_pian__in":filtered_pian_history}) | Q(**{"historie_zapsat_az__in":filtered_az_history}) | Q(**{"historie_zapsat_pian__in":filtered_pian_history_our}) | Q(**{"historie_zapsat_az__in":filtered_az_history_our}) | Q(**{"dokumentacni_jednotky_pianu__archeologicky_zaznam__akce__projekt__organizace":self.request.user.organizace})
+            filtered_pian_history_our = Historie.objects.filter(uzivatel__organizace=self.request.user.organizace)            
+            return Q(**{"historie_zapsat_pian__in":filtered_pian_history_our}) |  (Q(dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__typ_zmeny=ZAPSANI_AZ) & Q(dokumentacni_jednotky_pianu__archeologicky_zaznam__historie__historie__organizace_snapshot=self.request.user.organizace) ) | Q(**{"dokumentacni_jednotky_pianu__archeologicky_zaznam__akce__projekt__organizace":self.request.user.organizace})
         else:
             return Q(**{"historie_zapsat_pian__in":filtered_pian_history}) | Q(**{"historie_zapsat_az__in":filtered_az_history})
 
