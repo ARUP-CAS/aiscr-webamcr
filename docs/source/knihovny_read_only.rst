@@ -259,10 +259,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 2.0.0
      - BSD License
      - https://github.com/jpadilla/django-rest-framework-xml
-   * - et-xmlfile
-     - 1.1.0
-     - MIT License
-     - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
      - 3.14.0
      - The Unlicense (Unlicense)
@@ -315,18 +311,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.8.0
      - BSD License
      - https://github.com/ekalinin/nodeenv
-   * - numpy
-     - 1.26.4
-     - BSD License
-     - https://numpy.org
-   * - odfpy
-     - 1.4.1
-     - Apache Software License; GNU General Public License (GPL); GNU Library or Lesser General Public License (LGPL)
-     - https://github.com/eea/odfpy
-   * - openpyxl
-     - 3.1.2
-     - MIT License
-     - https://openpyxl.readthedocs.io
    * - outcome
      - 1.3.0.post0
      - Apache Software License; MIT License
@@ -335,10 +319,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 24.0
      - Apache Software License; BSD License
      - https://github.com/pypa/packaging
-   * - pandas
-     - 2.2.2
-     - BSD License
-     - https://pandas.pydata.org
    * - pathspec
      - 0.12.1
      - Mozilla Public License 2.0 (MPL 2.0)
@@ -427,10 +407,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.4.27
      - MIT License
      - http://github.com/ahupp/python-magic
-   * - pytz
-     - 2024.1
-     - MIT License
-     - http://pythonhosted.org/pytz
    * - pyzstd
      - 0.16.0
      - BSD License
@@ -487,14 +463,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.5.0
      - BSD License
      - https://github.com/andialbrecht/sqlparse
-   * - tablib
-     - 3.6.1
-     - MIT License
-     - https://tablib.readthedocs.io
-   * - tabulate
-     - 0.9.0
-     - MIT License
-     - https://github.com/astanin/python-tabulate
    * - texttable
      - 1.7.0
      - MIT License
@@ -543,14 +511,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.2.0
      - MIT License
      - https://github.com/python-hyper/wsproto/
-   * - xlrd
-     - 2.0.1
-     - BSD License
-     - http://www.python-excel.org/
-   * - xlwt
-     - 1.3.0
-     - BSD License
-     - http://www.python-excel.org/
 
 
 Knihovny vkládané jako statické soubory
