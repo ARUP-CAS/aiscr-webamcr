@@ -299,14 +299,14 @@ class PermissionAdmin(admin.ModelAdmin):
         Metóda pro kontrolu řádku excelu.
         """
         number_to_role = ["B", "C", "D", "E"]
-        if row[1]=="/":
-            row[1] = ""
+        if row.iloc[1]=="/":
+            row.iloc[1] = ""
         with io.StringIO() as out:
             call_command("show_urls", "--format", "json", stdout=out)
-            url_list = pd.read_json(out.getvalue())
-        url = "/" + str(row[0]) + "/" + str(row[1]) if row[0]!="core" else "/" + str(row[1])
+            url_list = pd.read_json(io.StringIO(out.getvalue()))
+        url = "/" + str(row.iloc[0]) + "/" + str(row.iloc[1]) if row.iloc[0]!="core" else "/" + str(row.iloc[1])
         if url_list["url"].eq(url).any():
-            if pd.isna(row[2]) or row[2] in Permissions.actionChoices.values:
+            if pd.isna(row.iloc[2]) or row.iloc[2] in Permissions.actionChoices.values:
                 i = 0
                 row_result = list()
                 while i < 4:
@@ -331,63 +331,63 @@ class PermissionAdmin(admin.ModelAdmin):
         """
         Metóda pro kontrolu a uložení jednotlivého oprávnení z řádku excelu.
         """
-        if row[0]!="core":
-            address = str(row[0]) + "/" + str(row[1])
+        if row.iloc[0]!="core":
+            address = str(row.iloc[0]) + "/" + str(row.iloc[1])
         else:
-            address =  str(row[1])
-        if row[4 + i] == "X":
+            address =  str(row.iloc[1])
+        if row.iloc[4 + i] == "X":
             Permissions.objects.create(
                 address_in_app=address,
                 base=False,
                 main_role=Group.objects.get(id=i + 1),
-                action=None if pd.isna(row[2]) else row[2]
+                action=None if pd.isna(row.iloc[2]) else row.iloc[2]
             )
             return True
-        elif row[4 + i] == "*":
+        elif row.iloc[4 + i] == "*":
             base = True
         else:
             return False
-        if "|" in row[8 + i]:
+        if "|" in row.iloc[8 + i]:
             n = 0
             results = list()
-            for n, value in enumerate(row[8 + i].split("|")):
+            for n, value in enumerate(row.iloc[8 + i].split("|")):
                 new_row = row.copy()
-                new_row[8 + i] = row[8 + i].split("|")[n].strip()
-                if len(row[12 + i].split("|")) > 1:
-                    new_row[12 + i] = row[12 + i].split("|")[n].strip()
+                new_row.iloc[8 + i] = row.iloc[8 + i].split("|")[n].strip()
+                if len(row.iloc[12 + i].split("|")) > 1:
+                    new_row.iloc[12 + i] = row.iloc[12 + i].split("|")[n].strip()
                 else:
-                    new_row[12 + i] = row[12 + i]
-                if len(row[16 + i].split("|")) > 1:
-                    new_row[16 + i] = row[16 + i].split("|")[n].strip()
+                    new_row.iloc[12 + i] = row.iloc[12 + i]
+                if len(row.iloc[16 + i].split("|")) > 1:
+                    new_row.iloc[16 + i] = row.iloc[16 + i].split("|")[n].strip()
                 else:
-                    new_row[16 + i] = row[16 + i]
+                    new_row.iloc[16 + i] = row.iloc[16 + i]
                 results.append(self.save_permission(new_row, i))
             if all(a == True for a in results):
                 return True
             else:
                 return False
         else:
-            if row[8 + i] == "*":
+            if row.iloc[8 + i] == "*":
                 status = None
-            elif self.check_status_regex(row[8 + i]):
-                status = row[8 + i]
+            elif self.check_status_regex(row.iloc[8 + i]):
+                status = row.iloc[8 + i]
             else:
                 logger.debug("core.admin.PermissionAdmin.status_NOK")
                 return False
-        if row[12 + i] == "*":
+        if row.iloc[12 + i] == "*":
             ownership = None
-        elif row[12 + i].endswith(".my"):
+        elif row.iloc[12 + i].endswith(".my"):
             ownership = Permissions.ownershipChoices.my
-        elif row[12 + i].endswith(".ours"):
+        elif row.iloc[12 + i].endswith(".ours"):
             ownership = Permissions.ownershipChoices.our
         else:
             logger.debug("core.admin.PermissionAdmin.ownership_NOK")
             return False
-        if row[16 + i] == "*":
+        if row.iloc[16 + i] == "*":
             accessibility = None
-        elif row[16 + i].endswith("(my)"):
+        elif row.iloc[16 + i].endswith("(my)"):
             accessibility = Permissions.ownershipChoices.my
-        elif row[16 + i].endswith("(ours)"):
+        elif row.iloc[16 + i].endswith("(ours)"):
             accessibility = Permissions.ownershipChoices.our
         else:
             logger.debug("core.admin.PermissionAdmin.accessibility_NOK")
@@ -405,7 +405,7 @@ class PermissionAdmin(admin.ModelAdmin):
                 status=status,
                 ownership=ownership,
                 accessibility=accessibility,
-                action=None if pd.isna(row[2]) else row[2]
+                action=None if pd.isna(row.iloc[2]) else row.iloc[2]
             )
         return True
 
@@ -555,8 +555,8 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     def check_save_row(self, row):
         try:
             PermissionsSkip.objects.create(
-                user=User.objects.get(ident_cely=row[0]),
-                ident_list=row[1],
+                user=User.objects.get(ident_cely=row.iloc[0]),
+                ident_list=row.iloc[1],
             )
             return "OK"
         except Exception as e:
