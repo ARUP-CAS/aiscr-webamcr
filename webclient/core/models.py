@@ -593,6 +593,7 @@ class Permissions(models.Model):
         projekt_zrusit = "projekt_zrusit", _("core.models.permissions.actionChoices.projekt_zrusit")
         projekt_autocomplete_archz = "projekt_autocomplete_archz", _("core.models.permissions.actionChoices.projekt_autocomplete_archz")
         projekt_autocomplete_dokument = "projekt_autocomplete_dokument", _("core.models.permissions.actionChoices.projekt_autocomplete_dokument")
+        projekt_pas_zobrazit = "projekt_pas_zobrazit", _("core.models.permissions.actionChoices.projekt_pas_zobrazit")
         soubor_nahrat_dokument = "soubor_nahrat_dokument", _("core.models.permissions.actionChoices.soubor_nahrat_dokument")
         soubor_nahrat_model3d = "soubor_nahrat_model3d", _("core.models.permissions.actionChoices.soubor_nahrat_model3d")
         soubor_nahrat_pas = "soubor_nahrat_pas", _("core.models.permissions.actionChoices.soubor_nahrat_pas")

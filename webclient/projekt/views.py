@@ -150,10 +150,15 @@ def detail(request, ident_cely):
     typ_projektu = projekt.typ_projektu
     if typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
         context["oznamovatel"] = projekt.oznamovatel
-    elif typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
-        context["samostatne_nalezy"] = projekt.samostatne_nalezy.select_related(
+    elif typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:     
+        qs = projekt.samostatne_nalezy.select_related(
             "obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr"
         ).all().order_by("ident_cely")
+        perm_object = PasPermissionFilterMixin()
+        perm_object.request = request
+        perm_object.typ_zmeny_lookup = ZAPSANI_SN   
+        qs=perm_object.check_filter_permission(qs,p.actionChoices.projekt_pas_zobrazit)
+        context["samostatne_nalezy"]=qs
 
     akce = Akce.objects.filter(projekt=projekt).select_related(
         "archeologicky_zaznam__pristupnost", "hlavni_typ"
