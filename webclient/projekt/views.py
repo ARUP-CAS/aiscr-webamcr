@@ -303,10 +303,8 @@ class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PasPermissionFilterMi
             body["southEast"]["lat"],
             body["projekt_ident_cely"],
         )
-        if pians.count() > 0:
-            logger.debug("Query before permission filter: %s", pians)
-            pians = self.check_filter_permission(pians)
-            logger.debug("Query after permission filter: %s", pians)
+        if pians.count() > 0:            
+            pians = self.check_filter_permission(pians)            
         back = []
         for pian in pians:
             back.append(
@@ -337,9 +335,7 @@ class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilter
             body["southEast"]["lat"],
             body["projekt_ident_cely"],
         )
-        logger.debug("Query before permission filter: %s", queries)
         queries = self.check_filter_permission(queries)
-        logger.debug("Query after permission filter: %s", queries)
         back = []
         back_ident_cely = []
         for pian in queries:

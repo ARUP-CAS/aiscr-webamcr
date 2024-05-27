@@ -47,7 +47,7 @@ var overlays = {
 if (global_map_layers) {
     global_map_layers.remove(map);//remove previous overlay
 }
-L.control.layers(baseLayers, overlays).addTo(map);
+var control = L.control.layers(baseLayers, overlays).addTo(map);
 
 L.easyButton('bi bi-skip-backward-fill', function () {
     poi_correct.clearLayers();
@@ -67,8 +67,10 @@ L.easyButton('bi bi-skip-backward-fill', function () {
 
         }
     } else {
-        document.getElementById('id_coordinate_x2').value = "";
-        document.getElementById('id_coordinate_x1').value = "";
+        if(document.getElementById('id_coordinate_x2')!=null && document.getElementById('id_coordinate_x1')!=null ){
+            document.getElementById('id_coordinate_x2').value = "";
+            document.getElementById('id_coordinate_x1').value = "";
+        }
         map.setView([50,15],7);
 
     }
@@ -300,17 +302,11 @@ switchMap = function (overview = false) {
         if (overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest) {
             console.log("Change: " + northWest + "  " + southEast + " " + zoom);
             boundsLock = bounds;
-            let xhr_proj = new XMLHttpRequest();
-            let xhr_pas = new XMLHttpRequest();
-            let xhr_pian = new XMLHttpRequest();
-            xhr_proj.open('POST', '/projekt/mapa-projekty');
-            xhr_pas.open('POST', '/projekt/mapa-pas');
-            xhr_pian.open('POST', '/projekt/mapa-pian');
+            let xhr_proj = new XMLHttpRequest();            
+            xhr_proj.open('POST', '/projekt/mapa-projekty');           
             xhr_proj.setRequestHeader('Content-type', 'application/json');
             if (typeof global_csrftoken !== 'undefined') {
                 xhr_proj.setRequestHeader('X-CSRFToken', global_csrftoken);
-                xhr_pas.setRequestHeader('X-CSRFToken', global_csrftoken);
-                xhr_pian.setRequestHeader('X-CSRFToken', global_csrftoken);
             }
             map.spin(false);
             map.spin(true);
@@ -324,20 +320,6 @@ switchMap = function (overview = false) {
                     'p3':map.hasLayer(poi_p3),
                     'p46':map.hasLayer(poi_p46),
                     'p78':map.hasLayer(poi_p78),
-                }));
-            xhr_pas.send(JSON.stringify(
-                    {
-                        'northWest': northWest,
-                        'southEast': southEast,
-                        'zoom': zoom,
-                        'projekt_ident_cely':PROJEKT_IDENT_CELY
-                    }));
-            xhr_pian.send(JSON.stringify(
-                {
-                    'northWest': northWest,
-                    'southEast': southEast,
-                    'zoom': zoom,
-                    'projekt_ident_cely':PROJEKT_IDENT_CELY
                 }));
             xhr_proj.onload = function () {
                 //poi_other.clearLayers();
@@ -405,31 +387,60 @@ switchMap = function (overview = false) {
                 map.spin(false);
                 //console.log("loaded")
             };
-            xhr_pas.onload = function () {
-                try{
-                    poi_sn.clearLayers();
-                    let resPoints = JSON.parse(this.responseText).points
-                    resPoints.forEach((i) => {
-                        let ge = i.geom.split("(")[1].split(")")[0];
-                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconGreenPin })
-                        .bindTooltip(i.ident_cely, { sticky: true })
-                        .bindPopup('<a href="/pas/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
-                        .addTo(poi_sn)
-                    })
-
-                    map.spin(false);
-                } catch(e){map.spin(false);}
-            };
-            xhr_pian.onload = function () {
-                try{
-                    poi_pian.clearLayers(poi_pian);
-                    let resPoints = JSON.parse(this.responseText).points
-                    resPoints.forEach((i) => {
-                        addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost)
-                    })
-                    map.spin(false);
-                } catch(e){map.spin(false);}
-            };
         }
     }
 }
+
+window.addEventListener("load", function(){
+    let xhr_pian = new XMLHttpRequest();
+    xhr_pian.open('POST', '/projekt/mapa-pian');
+    if (typeof global_csrftoken !== 'undefined') {       
+        xhr_pian.setRequestHeader('X-CSRFToken', global_csrftoken);
+    }
+    xhr_pian.send(JSON.stringify(
+        {
+            'northWest': {lat: 51.94436, lng: 6.745605},
+            'southEast': {lat: 48.35635, lng: 23.576660},
+            'zoom': 6,
+            'projekt_ident_cely':PROJEKT_IDENT_CELY
+        }));
+    xhr_pian.onload = function () {
+        try{
+            poi_pian.clearLayers(poi_pian);
+            let resPoints = JSON.parse(this.responseText).points
+            if(resPoints.length==0)control.removeLayer(poi_pian);
+            resPoints.forEach((i) => {
+                addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost)
+            })
+            map.spin(false);
+        } catch(e){map.spin(false);}
+    };
+
+    let xhr_pas = new XMLHttpRequest();
+    xhr_pas.open('POST', '/projekt/mapa-pas');
+    if (typeof global_csrftoken !== 'undefined') {        
+        xhr_pas.setRequestHeader('X-CSRFToken', global_csrftoken);            
+    }
+    xhr_pas.send(JSON.stringify(
+        {
+            'northWest': {lat: 51.94436, lng: 6.745605},
+            'southEast': {lat: 48.35635, lng: 23.576660},
+            'zoom': 6,
+            'projekt_ident_cely':PROJEKT_IDENT_CELY
+        }));
+    xhr_pas.onload = function () {
+        try{
+            poi_sn.clearLayers();
+            let resPoints = JSON.parse(this.responseText).points
+            if(resPoints.length==0)control.removeLayer(poi_sn);
+            resPoints.forEach((i) => {
+                let ge = i.geom.split("(")[1].split(")")[0];
+                L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconGreenPin })
+                .bindTooltip(i.ident_cely, { sticky: true })
+                .bindPopup('<a href="/pas/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
+                .addTo(poi_sn)
+            })
+            map.spin(false);
+        } catch(e){map.spin(false);}
+        };        
+});
