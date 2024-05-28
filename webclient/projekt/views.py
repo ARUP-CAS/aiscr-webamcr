@@ -97,6 +97,7 @@ from dokument.models import Dokument, DokumentCast
 from dokument.views import odpojit, pripojit
 from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_BADATEL_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
+from historie.models import Historie
 from oznameni.forms import OznamovatelForm
 from projekt.filters import ProjektFilter
 from projekt.forms import (
@@ -507,6 +508,7 @@ def edit(request, ident_cely):
             invalidate_model(Akce)
             invalidate_model(ArcheologickyZaznam)
             invalidate_model(SamostatnyNalez)
+            invalidate_model(Historie)
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
             logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"form_errors": form.errors})

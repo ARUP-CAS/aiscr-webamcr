@@ -11,7 +11,7 @@ from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
 from dokument.models import Dokument, DokumentCast, Let, Tvar
-from historie.models import HistorieVazby
+from historie.models import HistorieVazby, Historie
 from komponenta.models import KomponentaVazby, Komponenta
 from xml_generator.models import check_if_task_queued, UPDATE_REDIS_SNAPSHOT
 
@@ -30,6 +30,7 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
     invalidate_model(Dokument)
     invalidate_model(Akce)
     invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Historie)
     if instance.pk is None:
         logger.debug("dokument.signals.create_dokument_vazby.creating_history_for_dokument.create_history",
                      extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
@@ -60,6 +61,7 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
     invalidate_model(Dokument)
     invalidate_model(Akce)
     invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Historie)
     if instance.pk is None:
         logger.debug("Creating child komponenty for dokument cast" + str(instance))
         k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
@@ -76,6 +78,7 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
     invalidate_model(Dokument)
     invalidate_model(Akce)
     invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Historie)
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
 
@@ -197,6 +200,7 @@ def dokument_cast_save_metadata(sender, instance: DokumentCast, **kwargs):
     invalidate_model(Dokument)
     invalidate_model(Akce)
     invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Historie)
 
     def save_metadata(close_transaction=False):
         if instance.initial_archeologicky_zaznam is not None:

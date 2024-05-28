@@ -39,6 +39,7 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
     logger.debug("pas.signals.save_metadata_samostatny_nalez.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
     invalidate_model(Projekt)
+    invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
@@ -62,6 +63,7 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
                  extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
     invalidate_model(Projekt)
+    invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):

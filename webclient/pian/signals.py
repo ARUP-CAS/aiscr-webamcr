@@ -8,7 +8,7 @@ from django.db.models.signals import post_save, pre_save, post_delete, pre_delet
 from django.dispatch import receiver
 
 from dj.models import DokumentacniJednotka
-from historie.models import HistorieVazby
+from historie.models import HistorieVazby, Historie
 from pian.models import Pian
 from arch_z.models import Akce, ArcheologickyZaznam
 
@@ -41,6 +41,7 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
     invalidate_model(Pian)
     invalidate_model(Akce)
     invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Historie)
     if instance.update_all_azs:
         for dj in instance.dokumentacni_jednotky_pianu.all():
             dj: DokumentacniJednotka
@@ -60,6 +61,7 @@ def samostatny_nalez_okres_delete_repository_container(sender, instance: Pian, *
     invalidate_model(Pian)
     invalidate_model(Akce)
     invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Historie)
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
         instance.record_deletion(fedora_transaction)

@@ -1069,6 +1069,7 @@ def smazat(request, ident_cely):
             invalidate_model(Akce)
             invalidate_model(ArcheologickyZaznam)
             invalidate_model(Projekt)
+            invalidate_model(Historie)
             az.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely,
                                                                "transaction": fedora_transaction})

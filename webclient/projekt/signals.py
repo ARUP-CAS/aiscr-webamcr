@@ -12,7 +12,7 @@ from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
 from dokument.models import Dokument
-from historie.models import HistorieVazby
+from historie.models import HistorieVazby, Historie
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
@@ -82,6 +82,7 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     invalidate_model(Akce)
     invalidate_model(ArcheologickyZaznam)
     invalidate_model(SamostatnyNalez)
+    invalidate_model(Historie)
     if not instance.suppress_signal:
         def save_metadata(close_transaction=False):
             if instance.soubory and instance.soubory.pk:
@@ -109,6 +110,7 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     invalidate_model(Akce)
     invalidate_model(ArcheologickyZaznam)
     invalidate_model(SamostatnyNalez)
+    invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
     if getattr(instance, "suppress_signal", False) is not True:
         instance.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)

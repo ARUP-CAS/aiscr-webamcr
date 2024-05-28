@@ -183,6 +183,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         obj.created_from_admin_panel = True
         obj.active_transaction = fedora_transaction
         invalidate_model(User)
+        invalidate_model(Historie)
         logger.debug("uzivatel.admin.save_model.start",
                      extra={"user": user.pk, "obj_pk": obj.pk, "change": change, "form": form,
                             "transaction": fedora_transaction.uid})

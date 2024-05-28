@@ -15,7 +15,7 @@ from core.repository_connector import FedoraTransaction
 from cron.tasks import update_single_redis_snapshot
 from dj.models import DokumentacniJednotka
 from dokument.models import DokumentCast
-from historie.models import HistorieVazby
+from historie.models import HistorieVazby, Historie
 from komponenta.models import KomponentaVazby
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
@@ -48,6 +48,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
 
     invalidate_model(Akce)
     invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
     if not instance.suppress_signal:
         try:
@@ -157,6 +158,7 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
     def save_metadata(close_transaction=False):
         invalidate_model(Akce)
         invalidate_model(ArcheologickyZaznam)
+        invalidate_model(Historie)
         try:
             if instance.akce and instance.akce.projekt is not None:
                 instance.akce.projekt.save_metadata(fedora_transaction)
@@ -183,6 +185,7 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     fedora_transaction = instance.active_transaction
     invalidate_model(ExterniZdroj)
     invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Historie)
 
     def save_metadata(inner_close_transaction=False):
         if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:

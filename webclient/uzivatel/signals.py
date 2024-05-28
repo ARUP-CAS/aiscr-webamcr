@@ -70,6 +70,7 @@ def create_ident_cely(sender, instance: User, **kwargs):
 @receiver(post_save, sender=User)
 def user_post_save_method(sender, instance: User, created: bool, **kwargs):
     invalidate_model(User)
+    invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
     logger.debug("uzivatel.signals.user_post_save_method.start",
                  extra={"user": instance.ident_cely, "suppress_signal": instance.suppress_signal,

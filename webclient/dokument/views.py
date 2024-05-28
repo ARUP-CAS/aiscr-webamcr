@@ -119,6 +119,7 @@ from heslar.hesla_dynamicka import (
 )
 from heslar.models import Heslar, HeslarHierarchie
 from heslar.views import heslar_12
+from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta, KomponentaAktivita, KomponentaVazby
 from lokalita.models import Lokalita
@@ -1147,6 +1148,7 @@ def edit(request, ident_cely):
             invalidate_model(Dokument)
             invalidate_model(Akce)
             invalidate_model(ArcheologickyZaznam)
+            invalidate_model(Historie)
             if form_d.has_changed() or form_extra.has_changed():
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
@@ -1251,6 +1253,7 @@ def edit_model_3D(request, ident_cely):
             komponenta.save()
             form_komponenta.save_m2m()
             invalidate_model(KomponentaAktivita)
+            invalidate_model(Historie)
             if (
                 form_d.changed_data
                 or form_extra.changed_data

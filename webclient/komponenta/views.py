@@ -38,6 +38,7 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar
 from heslar.views import heslar_12
+from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta, KomponentaAktivita
 from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
@@ -76,6 +77,7 @@ def detail(request, typ_vazby, ident_cely):
         invalidate_model(Akce)
         invalidate_model(ArcheologickyZaznam)
         invalidate_model(Dokument)
+        invalidate_model(Historie)
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
