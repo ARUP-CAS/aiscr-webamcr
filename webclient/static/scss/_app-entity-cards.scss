@@ -4,6 +4,43 @@
     background-image: none !important;
 }
 
+@font-face {
+    font-family: 'museo';
+    src: url('/static/static/fonts/museo300-regular-webfont.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'museo';
+    src: url('/static/static/fonts/museo500-regular-webfont.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'museo';
+    src: url('/static/static/fonts/museo700-regular-webfont.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+/* Use the custom font in your styles */
+body {
+    font-family: 'Museo', sans-serif;
+}
+
+.light {
+    font-weight: 300;
+}
+
+.medium {
+    font-weight: 500;
+}
+
+.bold {
+    font-weight: 700;
+}
+
 @media (pointer: fine) {
     .app-card-collapse-text {
         display: none;
