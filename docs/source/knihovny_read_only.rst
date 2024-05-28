@@ -372,7 +372,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/prometheus/client_python
    * - prompt_toolkit
-     - 3.0.44
+     - 3.0.45
      - BSD License
      - https://github.com/prompt-toolkit/python-prompt-toolkit
    * - psutil
