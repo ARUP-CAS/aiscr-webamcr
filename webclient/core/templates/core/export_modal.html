@@ -57,7 +57,12 @@
 
       document.addEventListener('DOMContentLoaded', function (event) {
           document.getElementById('export-progress-modal-button').addEventListener('click', resetTempValue);
-          document.getElementById('export-progress-modal-button-cancel').addEventListener('click', resetTempValue);
+          try {
+            document.getElementById('export-progress-modal-button-cancel').addEventListener('click', resetTempValue);
+          }
+          catch {
+            console.log("no element export-progress-modal-button-cancel")
+          }
           document.getElementById('export-progress-modal-button-stop').addEventListener('click', () => {
               window.stop()
               enableCloseButton()

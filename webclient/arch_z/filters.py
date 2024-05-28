@@ -225,12 +225,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         distinct=True,
     )
 
-    vlastnik = ModelMultipleChoiceFilter(
-        queryset=User.objects.select_related("organizace").all(),
-        field_name="archeologicky_zaznam__historie__historie__uzivatel",
-        label=_("arch_z.filters.ArchZaznamFilter.vlastnik.label"),
-        widget=SelectMultipleSeparator(),
-    )
 
     def filtr_katastr(self, queryset, name, value):
         """

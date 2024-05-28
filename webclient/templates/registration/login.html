@@ -10,21 +10,6 @@
 {% block content %}
   <div class="app-login-wrapper">
     <div class="row">
-        {% get_maintenance_login as action %}
-        {% if action %}
-        <div class="col-lg-4">
-        </div>
-        <div class="col-lg-4">
-        <img alt="Archeologická mapa České republiky" class="mb-4" src="/static/static/logo-amcr-cs.svg"/>
-        </div>
-        </div>
-        <div class="row">
-        <div class="col-lg-2">
-        </div>
-        <div class="col-lg-8">
-        <h1>{% trans "base.odstavka.prohibitLogin.Text" %}</h1>
-        </div>
-      {% else %}
       <div class="col-lg-4">
         <img class="mb-4" src="{% static 'logo-amcr-cs.svg' %}" alt="{% trans 'templates.registration.login.logo.alt' %}" class="app-logo">
         <div class="card">
@@ -74,7 +59,6 @@
           </div>
         </div>
       </div>
-      {% endif %}
     </div>
   </div>
 {% endblock %}
