@@ -191,6 +191,7 @@ STATICFILES_DIRS = [
     BASE_DIR / "static" / "scss",
     BASE_DIR / "static" / "loga",
     BASE_DIR / "static" / "img",
+    BASE_DIR / "static" / "fonts",
 ]
 
 TEMPLATES = [
