@@ -132,7 +132,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.5.1
+     - 7.5.2
      - Apache Software License
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
@@ -188,7 +188,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/django-crispy-forms/django-crispy-forms
    * - django-debug-toolbar
-     - 4.3.0
+     - 4.4.2
      - BSD License
      - https://github.com/jazzband/django-debug-toolbar
    * - django-debug-toolbar-template-profiler
@@ -311,6 +311,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.8.0
      - BSD License
      - https://github.com/ekalinin/nodeenv
+   * - numpy
+     - 1.26.4
+     - BSD License
+     - https://numpy.org
    * - outcome
      - 1.3.0.post0
      - Apache Software License; MIT License
@@ -319,6 +323,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 24.0
      - Apache Software License; BSD License
      - https://github.com/pypa/packaging
+   * - pandas
+     - 2.2.2
+     - BSD License
+     - https://pandas.pydata.org
    * - pathspec
      - 0.12.1
      - Mozilla Public License 2.0 (MPL 2.0)
@@ -351,8 +359,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.20.0
      - Apache Software License
      - https://github.com/prometheus/client_python
-   * - prompt-toolkit
-     - 3.0.43
+   * - prompt_toolkit
+     - 3.0.44
      - BSD License
      - https://github.com/prompt-toolkit/python-prompt-toolkit
    * - psutil
@@ -407,6 +415,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.4.27
      - MIT License
      - http://github.com/ahupp/python-magic
+   * - pytz
+     - 2024.1
+     - MIT License
+     - http://pythonhosted.org/pytz
    * - pyzstd
      - 0.16.0
      - BSD License
