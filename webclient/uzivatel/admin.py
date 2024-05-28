@@ -1,7 +1,7 @@
 import logging
 from typing import Union
 
-from cacheops import invalidate_all
+from cacheops import invalidate_model
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
@@ -182,7 +182,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         user = request.user
         obj.created_from_admin_panel = True
         obj.active_transaction = fedora_transaction
-        invalidate_all()
+        invalidate_model(User)
         logger.debug("uzivatel.admin.save_model.start",
                      extra={"user": user.pk, "obj_pk": obj.pk, "change": change, "form": form,
                             "transaction": fedora_transaction.uid})

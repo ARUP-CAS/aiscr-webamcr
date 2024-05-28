@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import logging
 from django.views import View
-from cacheops import invalidate_model, invalidate_all
+from cacheops import invalidate_model
 
 import simplejson as json
 
@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from dal import autocomplete
 from django.views.generic import RedirectView
 
-from arch_z.models import Akce
+from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
     ARCHIVACE_PROJ,
     AZ_STAV_ZAPSANY,
@@ -503,7 +503,10 @@ def edit(request, ident_cely):
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             form.save_m2m()
-            invalidate_all()
+            invalidate_model(Projekt)
+            invalidate_model(Akce)
+            invalidate_model(ArcheologickyZaznam)
+            invalidate_model(SamostatnyNalez)
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
             logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"form_errors": form.errors})

@@ -9,7 +9,7 @@ import io
 from bs4 import BeautifulSoup
 from polib import pofile
 import csv
-from cacheops import invalidate_model, invalidate_all
+from cacheops import invalidate_model
 
 from django.contrib import admin
 from django.shortcuts import redirect
@@ -253,7 +253,7 @@ class PermissionAdmin(admin.ModelAdmin):
                 "opts": opts,
             }
         )
-        invalidate_all()
+        invalidate_model(Permissions)
         return TemplateResponse(
             request,
             "core/permission_import_form.html",

@@ -1,8 +1,8 @@
 import logging
 
-from cacheops import invalidate_model, invalidate_all
+from cacheops import invalidate_model
 
-from arch_z.models import ArcheologickyZaznam
+from arch_z.models import ArcheologickyZaznam, Akce
 from core.constants import DOKUMENT_CAST_RELATION_TYPE, DOKUMENT_RELATION_TYPE
 from core.models import SouborVazby
 from core.repository_connector import FedoraTransaction
@@ -27,7 +27,9 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
     fedora_transaction = instance.active_transaction
     logger.debug("dokument.signals.create_dokument_vazby.start",
                  extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
-    invalidate_all()
+    invalidate_model(Dokument)
+    invalidate_model(Akce)
+    invalidate_model(ArcheologickyZaznam)
     if instance.pk is None:
         logger.debug("dokument.signals.create_dokument_vazby.creating_history_for_dokument.create_history",
                      extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
@@ -55,7 +57,9 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
     Metóda se volá pred uložením dokument části.
     """
     logger.debug("dokument.signals.create_dokument_cast_vazby.start", extra={"record_pk": instance.pk})
-    invalidate_all()
+    invalidate_model(Dokument)
+    invalidate_model(Akce)
+    invalidate_model(ArcheologickyZaznam)
     if instance.pk is None:
         logger.debug("Creating child komponenty for dokument cast" + str(instance))
         k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
@@ -69,7 +73,9 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
     logger.debug("dokument.signals.dokument_save_metadata.startdokument.signals.dokument_save_metadata.start",
                  extra={"ident_cely": instance.ident_cely, "record_pk": instance.pk,
                         "close_active_transaction_when_finished": instance.close_active_transaction_when_finished})
-    invalidate_all()
+    invalidate_model(Dokument)
+    invalidate_model(Akce)
+    invalidate_model(ArcheologickyZaznam)
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
 
@@ -188,7 +194,9 @@ def dokument_cast_save_metadata(sender, instance: DokumentCast, created, **kwarg
 def dokument_cast_save_metadata(sender, instance: DokumentCast, **kwargs):
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra={"pk": instance.pk})
     fedora_transaction: FedoraTransaction = instance.active_transaction
-    invalidate_all()
+    invalidate_model(Dokument)
+    invalidate_model(Akce)
+    invalidate_model(ArcheologickyZaznam)
 
     def save_metadata(close_transaction=False):
         if instance.initial_archeologicky_zaznam is not None:

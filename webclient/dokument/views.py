@@ -1,5 +1,5 @@
 import logging
-from cacheops import invalidate_model, invalidate_all
+from cacheops import invalidate_model
 from typing import Any
 import simplejson as json
 
@@ -7,7 +7,7 @@ from django.db.models.signals import post_save
 from django.views import View
 
 
-from arch_z.models import ArcheologickyZaznam
+from arch_z.models import ArcheologickyZaznam, Akce
 from core.constants import (
     ARCHIVACE_DOK,
     D_STAV_ARCHIVOVANY,
@@ -1144,7 +1144,9 @@ def edit(request, ident_cely):
             instance_d.close_active_transaction_when_finished = True
             instance_d.save()
             form_d.save_m2m()
-            invalidate_all()
+            invalidate_model(Dokument)
+            invalidate_model(Akce)
+            invalidate_model(ArcheologickyZaznam)
             if form_d.has_changed() or form_extra.has_changed():
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
