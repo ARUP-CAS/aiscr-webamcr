@@ -180,12 +180,10 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_C-202309027A-D01 .btn-group:nth-child(1) .material-icons")
         self.ElementClick(By.LINK_TEXT, _("arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatKomponentu.label"))
         self.ElementClick(By.CSS_SELECTOR, "#div_id_obdobi .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-73 > .text")
-
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("ún")
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.ElementClick(By.CSS_SELECTOR, "#div_id_jistota .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control")
-        self.ElementClick(By.ID, "hint_id_presna_datace")
+        self.ElementClick(By.ID, "bs-select-2-0")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
         
@@ -217,12 +215,10 @@ class AkcePridaniDokumentacniJednotky(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_C-202309027A-D01 .btn-group:nth-child(1) .material-icons")
         self.ElementClick(By.LINK_TEXT, _("arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatKomponentu.label"))
         self.ElementClick(By.CSS_SELECTOR, "#div_id_obdobi .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-73 > .text")
-
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("ún")
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.ElementClick(By.CSS_SELECTOR, "#div_id_jistota .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control")
-        self.ElementClick(By.ID, "hint_id_presna_datace")
+        self.ElementClick(By.ID, "bs-select-2-0")
         #self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
         #self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
         
