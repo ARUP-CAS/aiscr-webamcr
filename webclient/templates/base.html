@@ -71,6 +71,25 @@
   <script src="{% static 'leaflet-search.js' %}"></script>
   <title>{% block title %}{% endblock %}</title>
   {% include "cookie_panel.html" %}
+  <style>
+    @font-face {
+      font-family: 'museo';
+      src: url('static/fonts/museo300-regular-webfont.ttf') format('truetype');
+      font-weight: 300;
+      font-style: normal;
+    }
+    @font-face {
+        font-family: 'museo';
+        src: url({% static "fonts/museo500-regular-webfont.ttf" %}) format('truetype');
+        font-style: normal;
+    }
+    @font-face {
+      font-family: 'museo';
+      src: url('/static/static/fonts/museo700-regular-webfont.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+    }
+  </style>
   {% block head %}{% endblock %}
 </head>
 <body class="{{ request.path|url_to_classes }}">
