@@ -120,7 +120,6 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         constraints = [
             CheckConstraint(
                 check=((Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
-                       | (Q(geom_system="5514*") & Q(geom_sjtsk__isnull=False))
                        | (Q(geom_system="4326") & Q(geom__isnull=False))
                        | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
                 name='pian_geom_check',
