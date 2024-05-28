@@ -62,6 +62,7 @@
           function setPageHeader() {
               const queryString = window.location.search;
               const urlParams = new URLSearchParams(queryString);
+              urlParams.delete('sort');
               const keys = Array.from(urlParams.keys());
               const values = Array.from(urlParams.values());
               if (!(hasOnlyVlastnik(keys, values) ||

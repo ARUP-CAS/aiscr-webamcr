@@ -705,9 +705,6 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
     id_tag = "pripojit-eo-doaz-form"
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
 
-    def init_translation(self):
-        self.title = _("ez.templates.ExterniOdkazPripojitDoAzView.title.text")
-        self.button = _("ez.templates.ExterniOdkazPripojitDoAzView.submitButton.text")
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
