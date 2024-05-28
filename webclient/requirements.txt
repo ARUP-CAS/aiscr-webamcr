@@ -40,6 +40,7 @@ rarfile==4.2
 django-cacheops==7.0.2
 django-model-utils==4.5.1
 pandas==2.2.2
+tablib[all]==3.6.1
 # DEV requirements
 pre-commit==3.7.1
 isort==5.13.2
