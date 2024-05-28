@@ -178,7 +178,6 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     class Meta:
         db_table = "dokument"
-        ordering = ["ident_cely"]
         indexes = [
             models.Index(fields=["stav", "ident_cely"]),
             models.Index(fields=["stav", "ident_cely", "historie"]),
