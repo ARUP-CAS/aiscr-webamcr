@@ -598,7 +598,6 @@
     }
 
     const increase_ul_height = (parent_element) => {
-        console.log("yes")
         console.log(parent_element)
         const li_elements = parent_element.querySelectorAll("li.select2-selection__choice");
         const select2_element = parent_element;
@@ -630,7 +629,8 @@
             select2_element_selection.style = `height: ${height}rem!important;`;
         }
         if (select2_element_selection_rendered) {
-            select2_element_selection_rendered.style = `height: ${height}rem!important;`;
+            rendered_height = height - 0.2
+            select2_element_selection_rendered.style = `height: ${rendered_height}rem!important;`;
         }
     }
 
