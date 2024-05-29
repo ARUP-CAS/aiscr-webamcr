@@ -312,7 +312,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python/mypy_extensions
    * - nodeenv
-     - 1.8.0
+     - 1.9.0
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
@@ -452,7 +452,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://www.reportlab.com/
    * - requests
-     - 2.32.2
+     - 2.32.3
      - Apache Software License
      - https://requests.readthedocs.io
    * - rjsmin
