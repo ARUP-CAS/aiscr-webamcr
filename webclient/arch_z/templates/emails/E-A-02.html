@@ -4,10 +4,10 @@
 {% block content %}
 <p>Dobrý den,</p>
 <p>
-    vámi odeslaná akce <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b> {{ katastr }} </b> byla převedena do stavu: <b>{{ state }}</b>.
+    vámi odeslaný záznam <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b> {{ katastr }} </b> byl převeden do stavu: <b>{{ state }}</b>.
 </p>
 <p>
-    Detaily o akci zjistíte po přihlášení do AMČR. Záznam bude během několika dní zveřejněn v Digitálním archivu AMČR.
+    Detaily o záznamu zjistíte po přihlášení do AMČR. Záznam bude během několika dní zveřejněn v Digitálním archivu AMČR.
 </p>
 {% endblock %}
 {% block content_en %}
