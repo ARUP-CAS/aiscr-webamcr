@@ -874,7 +874,12 @@ class FedoraRepositoryConnector:
             content = file.read()
             soubor_data.write(content)
 
+        soubor_data.seek(0)
         mimetype = Soubor.get_mime_types(soubor_data)
+        soubor_data.seek(0)
+        if Soubor.check_antivirus(soubor_data) is False:
+            return
+        soubor_data.seek(0)
         mime_extensions = Soubor.get_file_extension_by_mime(soubor_data)
         if len(mime_extensions) == 0:
             return
@@ -882,11 +887,15 @@ class FedoraRepositoryConnector:
         if file_name_extension not in mime_extensions:
             new_name = replace_last(record.nazev, record.nazev.split(".")[-1], mime_extensions[0])
             record.nazev = new_name
+        if isinstance(mimetype, set):
+            mimetype = list(mimetype)[0]
+        elif mimetype is False:
+            return
         record.mimetype = mimetype
         if record.repository_uuid:
-            rep_bin_file = conn.update_binary_file(record.nazev, "text/plain", soubor_data, record.repository_uuid)
+            rep_bin_file = conn.update_binary_file(record.nazev, mimetype, soubor_data, record.repository_uuid)
         else:
-            rep_bin_file = conn.save_binary_file(record.nazev, "text/plain", soubor_data)
+            rep_bin_file = conn.save_binary_file(record.nazev, mimetype, soubor_data)
             record.path = rep_bin_file.url_without_domain
         record.size_mb = rep_bin_file.size_mb
         record.sha_512 = rep_bin_file.sha_512
@@ -895,7 +904,10 @@ class FedoraRepositoryConnector:
 
     @classmethod
     def save_files_from_storage(cls, records: Union[list, range], storage_path: str) -> None:
-        for item in records:
+        records = list(records)
+        from core.models import Soubor
+        queryset = Soubor.objects.filter(pk__in=records)
+        for item in queryset:
             cls.save_single_file_from_storage(item, storage_path)
 
 
