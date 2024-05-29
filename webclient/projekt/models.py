@@ -1,7 +1,5 @@
 import datetime
-import io
 import logging
-import zlib
 
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
@@ -42,7 +40,6 @@ from core.constants import (
 from core.exceptions import MaximalIdentNumberError
 from core.models import ProjektSekvence, Soubor, SouborVazby
 from core.repository_connector import RepositoryBinaryFile, FedoraRepositoryConnector, FedoraTransaction
-from core.utils import get_mime_type
 from heslar.hesla import (
     HESLAR_PAMATKOVA_OCHRANA,
     HESLAR_PROJEKT_TYP,
@@ -283,42 +280,15 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def archive_project_documentation(self):
         # making txt file with deleted files
-        today = datetime.datetime.now()
-        soubory = self.soubory.soubory.exclude(
-            nazev__regex="^log_dokumentace_"
-        )
+        soubory = self.soubory.soubory.all()
         if soubory.count() > 0:
-            filename = (
-                    "log_dokumentace_" + today.strftime("%Y-%m-%d-%H-%M") + ".txt"
-            )
-            file_content = (
-                    "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
-                    % today.strftime("%d. %m. %Y")
-            )
-            file_content += "\n".join(soubory.values_list("nazev", flat=True))
-            prev = 0
-            prev = zlib.crc32(bytes(file_content, "utf-8"), prev)
-            new_filename = "%d_%s" % (prev & 0xFFFFFFFF, filename)
-            file = io.BytesIO()
-            file.write(file_content.encode("utf-8"))
-            file.seek(0)
             conn = FedoraRepositoryConnector(self)
-            mimetype = get_mime_type(new_filename)
-            rep_bin_file = conn.save_binary_file(new_filename, mimetype, file)
-            aktual_soubor = Soubor(
-                vazba=self.soubory,
-                nazev=new_filename,
-                mimetype=mimetype,
-                size_mb=rep_bin_file.size_mb,
-                path=rep_bin_file.url_without_domain,
-                sha_512=rep_bin_file.sha_512,
-            )
-            file_deleted_pk_list = [x.pk for x in soubory]
-            aktual_soubor.save()
+            file_deleted_pk_list = []
             for file in soubory:
                 if file.repository_uuid is not None:
                     conn.delete_binary_file(file)
                 file.delete()
+                file_deleted_pk_list.append(file.pk)
             logger.debug("projekt.models.Projekt.set_archivovany.files_deleted",
                          extra={"deleted": len(file_deleted_pk_list), "deleted_list": file_deleted_pk_list})
 
