@@ -468,6 +468,34 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         distinct=True,
     )
 
+    typ_akce = MultipleChoiceFilter(
+            choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
+            method="filter_akce_typ",
+            label=_("projekt.filters.projektFilter.akceTyp.label"),
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            distinct=True,
+        )
+    
+    oblast = MultipleChoiceFilter(
+            choices=OBLAST_CHOICES,
+            label=_("projekt.filters.projektFilter.oblast.label"),
+            method="filter_by_oblast",
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            distinct=True,
+        )
+
     def filter_queryset(self, queryset):
         logger.debug("projekt.filters.AkceFilter.filter_queryset.start")
         queryset = super(ProjektFilter, self).filter_queryset(queryset)
@@ -658,32 +686,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     def __init__(self, *args, **kwargs):
         super(ProjektFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
-        self.filters["typ_akce"] = MultipleChoiceFilter(
-            choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
-            method="filter_akce_typ",
-            label=_("projekt.filters.projektFilter.akceTyp.label"),
-            widget=SelectMultiple(
-                attrs={
-                    "class": "selectpicker",
-                    "data-multiple-separator": "; ",
-                    "data-live-search": "true",
-                }
-            ),
-            distinct=True,
-        )
-        self.filters["oblast"] = MultipleChoiceFilter(
-            choices=OBLAST_CHOICES,
-            label=_("projekt.filters.projektFilter.oblast.label"),
-            method="filter_by_oblast",
-            widget=SelectMultiple(
-                attrs={
-                    "class": "selectpicker",
-                    "data-multiple-separator": "; ",
-                    "data-live-search": "true",
-                }
-            ),
-            distinct=True,
-        )
+        self.filters["typ_akce"].extra["choices"] = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:]
+        self.filters["oblast"].extra["choices"] = OBLAST_CHOICES
+        
         self.helper = ProjektFilterFormHelper()
         self.set_filter_fields(user)
 

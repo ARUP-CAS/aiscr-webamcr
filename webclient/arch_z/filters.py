@@ -687,18 +687,7 @@ class AkceFilter(ArchZaznamFilter):
 
     def __init__(self, *args, **kwargs):
         super(AkceFilter, self).__init__(*args, **kwargs)
-        self.filters["typ"] = MultipleChoiceFilter(
-            method="filter_akce_typ",
-            label=_("arch_z.filters.AkceFilter.typ.label"),
-            choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
-            widget=SelectMultiple(
-                attrs={
-                    "class": "selectpicker",
-                    "data-multiple-separator": "; ",
-                    "data-live-search": "true",
-                }
-            ),
-        )
+        self.filters["typ"].extra["choices"] =heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:]
         self.filters["historie_uzivatel_organizace"] = HistorieOrganizaceMultipleChoiceFilter(
             label=_("arch_z.filters.ArchZaznamFilter.historie_uzivatel_organizace.label"),
             widget=SelectMultipleSeparator(),
