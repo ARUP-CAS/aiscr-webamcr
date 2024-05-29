@@ -231,7 +231,7 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(history_divider),
-                    HTML(_('<hr class="mt-0" />')),
+                    HTML('<hr class="mt-0" />'),
                     data_toggle="collapse",
                     href="#historieCollapse",
                     role="button",
@@ -252,7 +252,7 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div(
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(souvis_divider),
-                    HTML(_('<hr class="mt-0" />')),
+                    HTML('<hr class="mt-0" />'),
                     data_toggle="collapse",
                     href="#SouvisCollapse",
                     role="button",
