@@ -28,8 +28,8 @@ class Model3DTable(SearchTable):
     extra_data__format = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.extra_data__format.label"))
     extra_data__odkaz = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.extra_data__odkaz.label"))
     extra_data__duveryhodnost = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.extra_data__duveryhodnost.label"))
-    extra_data__zeme = tables.Column(linkify=True, verbose_name=_("dokument.tables.dokumentTable.extra_data__zeme.label"))
-    extra_data__region = tables.Column(linkify=True, verbose_name=_("dokument.tables.dokumentTable.extra_data__region.label"))
+    extra_data__zeme = tables.Column(verbose_name=_("dokument.tables.dokumentTable.extra_data__zeme.label"))
+    extra_data__region = tables.Column( verbose_name=_("dokument.tables.dokumentTable.extra_data__region.label"))
     autori = tables.Column(default="", accessor="autori_snapshot", verbose_name=_("dokument.tables.modelTable.autori.label"))
     stav = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.stav.label"))
     app = "knihovna_3d"
