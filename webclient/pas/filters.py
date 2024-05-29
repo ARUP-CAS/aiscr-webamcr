@@ -215,17 +215,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         distinct=True,
     )
 
-    class Meta:
-        model = SamostatnyNalez
-        fields = {
-            "predano": ["exact"],
-        }
-        form = PasFilterForm
-
-    def __init__(self, *args, **kwargs):
-        super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
-        user: User = kwargs.get("request").user
-        self.filters["obdobi"] = MultipleChoiceFilter(
+    obdobi = MultipleChoiceFilter(
             method="filter_obdobi",
             label=_("pas.filters.samostatnyNalezFilter.obdobi.label"),
             choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
@@ -237,19 +227,8 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
                 }
             ),
         )
-        self.filters["druh_nalezu"] = MultipleChoiceFilter(
-            method="filter_druh_nalezu",
-            label=_("pas.filters.samostatnyNalezFilter.druhNalezu.label"),
-            choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
-            widget=SelectMultiple(
-                attrs={
-                    "class": "selectpicker",
-                    "data-multiple-separator": "; ",
-                    "data-live-search": "true",
-                }
-            ),
-        )
-        self.filters["oblast"] = django_filters.ChoiceFilter(
+    
+    oblast = django_filters.ChoiceFilter(
             choices=OBLAST_CHOICES,
             label=_("pas.filters.samostatnyNalezFilter.oblast.label"),
             method="filter_by_oblast",
@@ -261,6 +240,36 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
                 }
             ),
         )
+    
+    druh_nalezu = MultipleChoiceFilter(
+            method="filter_druh_nalezu",
+            label=_("pas.filters.samostatnyNalezFilter.druhNalezu.label"),
+            choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+        )
+
+    class Meta:
+        model = SamostatnyNalez
+        fields = {
+            "predano": ["exact"],
+        }
+        form = PasFilterForm
+
+    def __init__(self, *args, **kwargs):
+        super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
+        user: User = kwargs.get("request").user
+        self.filters["obdobi"].extra["choices"]=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:]
+            
+        self.filters["druh_nalezu"].extra["choices"] =heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:]
+        
+        self.filters["oblast"].extra["choices"]= OBLAST_CHOICES
+
         self.set_filter_fields(user)
         self.helper = SamostatnyNalezFilterFormHelper()
 
