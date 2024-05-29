@@ -991,14 +991,23 @@ def uzavrit(request, ident_cely):
                 },
                 status=403,
             )
-
-        context = {
-            "object": projekt,
-            "title": _("projekt.views.uzavrit.title.text"),
-            "id_tag": "uzavrit-form",
-            "button": _("projekt.views.uzavrit.submitButton.text"),
-            "form_check": form_check,
-        }
+        if request.GET.get("from_arch") == "true":
+            context = {
+                "object": projekt,
+                "title": _("projekt.views.uzavrit.fromAkce.title.text"),
+                "text": _("projekt.views.uzavrit.fromAkce.text"),
+                "id_tag": "uzavrit-form",
+                "button": _("projekt.views.uzavrit.fromAkce.submitButton.text"),
+                "form_check": form_check,
+            }
+        else:
+            context = {
+                "object": projekt,
+                "title": _("projekt.views.uzavrit.title.text"),
+                "id_tag": "uzavrit-form",
+                "button": _("projekt.views.uzavrit.submitButton.text"),
+                "form_check": form_check,
+            }
 
         return render(request, "core/transakce_modal.html", context)
 

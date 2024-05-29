@@ -35,6 +35,7 @@ from core.constants import (
     ODESLANI_AZ,
     PIAN_NEPOTVRZEN,
     PROJEKT_STAV_ARCHIVOVANY,
+    PROJEKT_STAV_UKONCENY_V_TERENU,
     PROJEKT_STAV_UZAVRENY,
     PROJEKT_STAV_ZAPSANY,
     ROLE_ADMIN_ID,
@@ -312,6 +313,9 @@ class ArcheologickyZaznamDetailView(LoginRequiredMixin, AkceRelatedRecordUpdateV
         context["warnings"] = self.request.session.pop("temp_data", None)
         context["arch_projekt_link"] = (
             self.request.session.pop("arch_projekt_link", None),
+        )
+        context["arch_projekt_link_uzavrit"] = (
+            self.request.session.pop("arch_projekt_link_uzavrit", None),
         )
         return context
 
@@ -670,6 +674,12 @@ def odeslat(request, ident_cely):
         az.active_transaction = fedora_trasnaction
         az.set_odeslany(request.user)
         az.save()
+        if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            all_akce = Akce.objects.filter(projekt=az.akce.projekt).filter(
+                archeologicky_zaznam__stav=AZ_STAV_ZAPSANY
+            )
+            if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UKONCENY_V_TERENU:
+                request.session["arch_projekt_link_uzavrit"] = True
         messages.add_message(
             request, messages.SUCCESS, get_message(az, "USPESNE_ODESLANA")
         )
