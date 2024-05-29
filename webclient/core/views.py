@@ -193,7 +193,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
     else:
         context = {
             "object": soubor,
-            "title": _("core.views.delete_file.title.text") + f" {soubor.nazev}",
+            "title": _("core.views.delete_file.title.text") + f" {soubor.nazev}" + "?",
             "id_tag": "smazat-soubor-form",
             "button": _("core.views.smazat.submitButton.text"),
         }
@@ -485,9 +485,8 @@ def post_upload(request):
             if renamed:
                 help_translation = _('core.views.post_upload.renamed.text1')
                 help_translation2 = _('core.views.post_upload.renamed.text2')
-                help_translation3 = _('core.views.post_upload.renamed.text3')
                 response_data["file_renamed"] = (f"{help_translation} {original_filename} {help_translation2} "
-                                                 f"{new_name} {help_translation3}",)
+                                                 f"{new_name}",)
             logger.debug("core.views.post_upload.end", extra={"file_id": soubor_instance.pk})
             response_data["id"] = soubor_instance.pk
             soubor_instance.close_active_transaction_when_finished = True
@@ -553,9 +552,8 @@ def post_upload(request):
                 if renamed:
                     help_translation = _('core.views.post_upload.renamed.text1')
                     help_translation2 = _('core.views.post_upload.renamed.text2')
-                    help_translation3 = _('core.views.post_upload.renamed.text3')
                     response_data["file_renamed"] = (f"{help_translation} {original_filename} {help_translation2} "
-                                                     f"{new_name} {help_translation3}",)
+                                                     f"{new_name}",)
                 response_data["id"] = soubor_instance.pk
                 soubor_instance.close_active_transaction_when_finished = True
                 soubor_instance.save()
