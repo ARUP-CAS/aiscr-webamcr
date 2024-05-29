@@ -6,13 +6,13 @@
         Dobrý den,
     </p>
     <p>
-        vámi odeslaná akce <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b>{{ katastr }}</b> byla vrácena do stavu: <b>{{ state }}</b>.
+        vámi odeslaný záznam <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b>{{ katastr }}</b> byl vrácen do stavu: <b>{{ state }}</b>.
     </p>
     <p>
         <b>Zdůvodnění:</b> {{ reason }}
     </p>
     <p>
-        Detaily o akci zjistíte po přihlášení do AMČR.
+        Detaily o záznamu zjistíte po přihlášení do AMČR.
     </p>
 {% endblock %}
 {% block content_en %}
