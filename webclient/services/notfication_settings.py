@@ -69,7 +69,7 @@ notification_settings = {
     },
     "E-V-01": {
         "zasilat_neaktivnim": False,
-        "predmet": "AMČR: akce {ident_cely} - vrácena k doplnění | AMCR: fieldwork {ident_cely} - returned for completion",
+        "predmet": "AMČR: záznam {ident_cely} - vrácen k doplnění | AMCR: record {ident_cely} - returned for completion",
         "cesta_sablony": "emails/E-V-01.html"
     },
     "E-A-01": {
