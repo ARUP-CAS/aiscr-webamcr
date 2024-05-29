@@ -1,6 +1,6 @@
 import logging
 
-from cacheops import invalidate_model, invalidate_all
+from cacheops import invalidate_model
 from django.db import transaction
 
 from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
@@ -12,10 +12,11 @@ from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
 from dokument.models import Dokument
-from historie.models import HistorieVazby
+from historie.models import HistorieVazby, Historie
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
+from arch_z.models import Akce, ArcheologickyZaznam
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
 logger = logging.getLogger(__name__)
@@ -77,7 +78,11 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     if instance.soubory and instance.soubory.soubory.exists():
         raise Exception(_("projekt.signals.projekt_pre_delete.cannot_delete"))
     fedora_transaction = instance.active_transaction
-    invalidate_all()
+    invalidate_model(Projekt)
+    invalidate_model(Akce)
+    invalidate_model(ArcheologickyZaznam)
+    invalidate_model(SamostatnyNalez)
+    invalidate_model(Historie)
     if not instance.suppress_signal:
         def save_metadata(close_transaction=False):
             if instance.soubory and instance.soubory.pk:
@@ -101,7 +106,11 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
     # When projekt is created using the "oznameni" page, the metadata are saved directly without celery
     logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})
-    invalidate_all()
+    invalidate_model(Projekt)
+    invalidate_model(Akce)
+    invalidate_model(ArcheologickyZaznam)
+    invalidate_model(SamostatnyNalez)
+    invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
     if getattr(instance, "suppress_signal", False) is not True:
         instance.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)

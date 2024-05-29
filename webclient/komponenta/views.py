@@ -1,7 +1,7 @@
 import logging
-from cacheops import invalidate_model, invalidate_all
+from cacheops import invalidate_model
 
-from arch_z.models import ArcheologickyZaznam
+from arch_z.models import ArcheologickyZaznam, Akce
 from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_komponenta_ident
 from core.message_constants import (
@@ -38,12 +38,13 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar
 from heslar.views import heslar_12
+from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta, KomponentaAktivita
 from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
 from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
-from dokument.models import DokumentCast
+from dokument.models import DokumentCast, Dokument
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,10 @@ def detail(request, typ_vazby, ident_cely):
         komponenta.active_transaction = fedora_transcation
         komponenta.save()
         form.save_m2m()
-        invalidate_all()
+        invalidate_model(Akce)
+        invalidate_model(ArcheologickyZaznam)
+        invalidate_model(Dokument)
+        invalidate_model(Historie)
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:

@@ -2,20 +2,20 @@ import inspect
 import logging
 from typing import Optional
 
-from cacheops import invalidate_all
+from cacheops import invalidate_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
 from adb.models import Adb
-from arch_z.models import ArcheologickyZaznam, ExterniOdkaz, Akce
+from arch_z.models import ArcheologickyZaznam, ExterniOdkaz, Akce, ExterniZdroj
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 from core.repository_connector import FedoraTransaction
 from cron.tasks import update_single_redis_snapshot
 from dj.models import DokumentacniJednotka
 from dokument.models import DokumentCast
-from historie.models import HistorieVazby
+from historie.models import HistorieVazby, Historie
 from komponenta.models import KomponentaVazby
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
@@ -46,7 +46,9 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     """
     logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"record_pk": instance.pk})
 
-    invalidate_all()
+    invalidate_model(Akce)
+    invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
     if not instance.suppress_signal:
         try:
@@ -154,7 +156,9 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
     fedora_transaction: FedoraTransaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
-        invalidate_all()
+        invalidate_model(Akce)
+        invalidate_model(ArcheologickyZaznam)
+        invalidate_model(Historie)
         try:
             if instance.akce and instance.akce.projekt is not None:
                 instance.akce.projekt.save_metadata(fedora_transaction)
@@ -179,7 +183,9 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     logger.debug("arch_z.signals.delete_externi_odkaz_repository_container.start",
                  extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z})
     fedora_transaction = instance.active_transaction
-    invalidate_all()
+    invalidate_model(ExterniZdroj)
+    invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Historie)
 
     def save_metadata(inner_close_transaction=False):
         if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:

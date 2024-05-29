@@ -1,15 +1,16 @@
 import logging
 
-from cacheops import invalidate_model, invalidate_all
+from cacheops import invalidate_model
 from django.db import transaction
 from django.db.models.signals import pre_delete, post_save, post_delete
 from django.dispatch import receiver
 
-from arch_z.models import ArcheologickyZaznam
+from arch_z.models import ArcheologickyZaznam, Akce
 from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE, DOKUMENT_CAST_RELATION_TYPE
 from core.repository_connector import FedoraTransaction
 from dj.models import DokumentacniJednotka
 from dokument.models import DokumentCast, Dokument
+from historie.models import Historie
 from komponenta.models import KomponentaVazby, Komponenta
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,10 @@ def komponenta_save(sender, instance: Komponenta, **kwargs):
     if instance.suppress_signal:
         logger.debug("komponenta.signals.komponenta_save.suppress_signal", extra={"pk": instance.pk})
         return
-    invalidate_all()
+    invalidate_model(Akce)
+    invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Dokument)
+    invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
     close_transaction = instance.close_active_transaction_when_finished
     if instance.komponenta_vazby.navazany_objekt:
@@ -54,7 +58,10 @@ def komponenta_delete(sender, instance: Komponenta, **kwargs):
     if instance.suppress_signal:
         logger.debug("komponenta.signals.komponenta_delete.suppress_signal", extra={"pk": instance.pk})
         return
-    invalidate_all()
+    invalidate_model(Akce)
+    invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Dokument)
+    invalidate_model(Historie)
     fedora_transaction: FedoraTransaction = instance.active_transaction
     close_transaction = instance.close_active_transaction_when_finished
     if instance.komponenta_vazby.navazany_objekt:

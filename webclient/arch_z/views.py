@@ -4,7 +4,7 @@ from io import BytesIO
 import pandas
 import redis
 import simplejson as json
-from cacheops import cache, CacheMiss, invalidate_all
+from cacheops import invalidate_model
 from django.db.models import RestrictedError
 from django_tables2.export import TableExport
 
@@ -23,6 +23,7 @@ from arch_z.models import (
     ArcheologickyZaznam,
     ExterniOdkaz,
     get_akce_ident,
+    ExterniZdroj
 )
 from arch_z.tables import AkceTable
 from core.constants import (
@@ -1060,11 +1061,15 @@ def smazat(request, ident_cely):
                     eo.suppress_signal_arch_z = True
                     eo.active_transaction = az.active_transaction
                     eo.delete()
+                invalidate_model(ExterniZdroj)
             for pk in az.initial_casti_dokumentu:
                 item = DokumentCast.objects.get(pk=pk)
                 item.active_transaction = fedora_transaction
                 item.delete()
-            invalidate_all()
+            invalidate_model(Akce)
+            invalidate_model(ArcheologickyZaznam)
+            invalidate_model(Projekt)
+            invalidate_model(Historie)
             az.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely,
                                                                "transaction": fedora_transaction})
