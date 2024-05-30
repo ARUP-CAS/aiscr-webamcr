@@ -187,6 +187,10 @@
     <button id="archive_projekt" hidden class="dropdown-item archive_projekt" type="button" name="button">
     </button>
   {% endif %}
+  {% if arch_projekt_link_uzavrit %}
+    <button id="uzavri_projekt" hidden class="dropdown-item uzavri_projekt" type="button" name="button">
+    </button>
+  {% endif %}
 {% endblock %}
 
 {% block script_detail %}
@@ -219,6 +223,21 @@
           try {
             arch_projekt = new Modal(options, "archive_projekt");
             document.getElementById("archive_projekt").click();
+          } catch (e) {
+            console.log(e);
+          }
+        };
+      {% endif %}
+      {% if arch_projekt_link_uzavrit and arch_projekt_link_uzavrit.0 %}
+        if ("{{arch_projekt_link_uzavrit}}" !== "None"){
+          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+          formURL: "{% url 'projekt:projekt_uzavrit' zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true",
+          formID: "uzavrit-form",
+          modalFormID: "#uzavrit-form",
+          })
+          try {
+            arch_projekt = new Modal(options, "uzavri_projekt");
+            document.getElementById("uzavri_projekt").click();
           } catch (e) {
             console.log(e);
           }
