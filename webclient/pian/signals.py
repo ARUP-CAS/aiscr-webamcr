@@ -3,6 +3,7 @@ import logging
 from cacheops import invalidate_model
 from django.db import transaction
 
+from arch_z.signals import invalidate_arch_z_related_models
 from core.constants import PIAN_RELATION_TYPE
 from django.db.models.signals import post_save, pre_save, post_delete, pre_delete
 from django.dispatch import receiver
@@ -38,10 +39,7 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
     """
     logger.debug("pian.signals.pian_save_metadata.start", extra={"instance": instance.ident_cely})
     fedora_transaction = instance.active_transaction
-    invalidate_model(Pian)
-    invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
+    invalidate_arch_z_related_models()
     if instance.update_all_azs:
         for dj in instance.dokumentacni_jednotky_pianu.all():
             dj: DokumentacniJednotka
@@ -58,10 +56,7 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
 def samostatny_nalez_okres_delete_repository_container(sender, instance: Pian, **kwargs):
     logger.debug("pian.signals.samostatny_nalez_okres_delete_repository_container.start",
                  extra={"instance": instance.ident_cely})
-    invalidate_model(Pian)
-    invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
+    invalidate_arch_z_related_models()
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
         instance.record_deletion(fedora_transaction)

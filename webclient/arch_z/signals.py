@@ -16,10 +16,24 @@ from cron.tasks import update_single_redis_snapshot
 from dj.models import DokumentacniJednotka
 from dokument.models import DokumentCast
 from historie.models import HistorieVazby, Historie
-from komponenta.models import KomponentaVazby
+from komponenta.models import KomponentaVazby, Komponenta
+from nalez.models import NalezPredmet, NalezObjekt
+from pian.models import Pian
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
 logger = logging.getLogger(__name__)
+
+
+def invalidate_arch_z_related_models():
+    invalidate_model(Akce)
+    invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Historie)
+    invalidate_model(Adb)
+    invalidate_model(Pian)
+    invalidate_model(NalezPredmet)
+    invalidate_model(NalezObjekt)
+    invalidate_model(DokumentacniJednotka)
+    invalidate_model(Komponenta)
 
 
 @receiver(pre_save, sender=ArcheologickyZaznam)
@@ -46,9 +60,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     """
     logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"record_pk": instance.pk})
 
-    invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
+    invalidate_arch_z_related_models()
     fedora_transaction = instance.active_transaction
     if not instance.suppress_signal:
         try:
@@ -93,6 +105,7 @@ def update_akce_snapshot(sender, instance: Akce, **kwargs):
     logger.debug("arch_z.signals.update_akce_snapshot.start", extra={"record_pk": instance.pk})
     if not check_if_task_queued("Akce", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["Akce", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
+    invalidate_arch_z_related_models()
     fedora_transaction: Optional[FedoraTransaction, None] = instance.active_transaction
     if instance.projekt is not None and instance.initial_projekt is None:
         instance.projekt.save_metadata(fedora_transaction)
@@ -113,6 +126,7 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
         Funkce pro aktualizaci metadat externího odkazu.
     """
     logger.debug("arch_z.signals.create_externi_odkaz_metadata.start", extra={"record_pk": instance.pk})
+    invalidate_arch_z_related_models()
     fedora_transaction: FedoraTransaction = instance.active_transaction
     if instance.archeologicky_zaznam is not None:
         instance.archeologicky_zaznam.save_metadata(fedora_transaction)
@@ -156,9 +170,7 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
     fedora_transaction: FedoraTransaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
-        invalidate_model(Akce)
-        invalidate_model(ArcheologickyZaznam)
-        invalidate_model(Historie)
+        invalidate_arch_z_related_models()
         try:
             if instance.akce and instance.akce.projekt is not None:
                 instance.akce.projekt.save_metadata(fedora_transaction)
@@ -184,8 +196,7 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
                  extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z})
     fedora_transaction = instance.active_transaction
     invalidate_model(ExterniZdroj)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
+    invalidate_arch_z_related_models()
 
     def save_metadata(inner_close_transaction=False):
         if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:

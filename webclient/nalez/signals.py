@@ -1,9 +1,12 @@
 import logging
 
+from cacheops import invalidate_model
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
-from arch_z.models import ArcheologickyZaznam
+from adb.models import Adb
+from arch_z.models import ArcheologickyZaznam, Akce
+from arch_z.signals import invalidate_arch_z_related_models
 from core.repository_connector import FedoraTransaction
 from dj.models import DokumentacniJednotka
 from dokument.models import DokumentCast, Dokument
@@ -15,6 +18,7 @@ logger = logging.getLogger(__name__)
 @receiver(post_delete, sender=NalezObjekt)
 def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
     logger.debug("nalez.signals.delete_nalez_objekt.start", extra={"pk": instance.pk})
+    invalidate_arch_z_related_models()
     if instance.active_transaction:
         fedora_transaction: FedoraTransaction = instance.active_transaction
     elif instance.komponenta.active_transaction:
@@ -46,6 +50,7 @@ def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
 @receiver(post_delete, sender=NalezPredmet)
 def delete_nalez_predmet(sender, instance: NalezObjekt, **kwargs):
     logger.debug("nalez.signals.delete_nalez_predmet.start", extra={"pk": instance.pk})
+    invalidate_arch_z_related_models()
     if instance.active_transaction:
         fedora_transaction: FedoraTransaction = instance.active_transaction
     elif instance.komponenta.active_transaction:
