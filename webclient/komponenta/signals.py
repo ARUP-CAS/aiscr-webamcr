@@ -6,6 +6,7 @@ from django.db.models.signals import pre_delete, post_save, post_delete
 from django.dispatch import receiver
 
 from arch_z.models import ArcheologickyZaznam, Akce
+from arch_z.signals import invalidate_arch_z_related_models
 from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE, DOKUMENT_CAST_RELATION_TYPE
 from core.repository_connector import FedoraTransaction
 from dj.models import DokumentacniJednotka
@@ -36,10 +37,7 @@ def komponenta_save(sender, instance: Komponenta, **kwargs):
     if instance.suppress_signal:
         logger.debug("komponenta.signals.komponenta_save.suppress_signal", extra={"pk": instance.pk})
         return
-    invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Dokument)
-    invalidate_model(Historie)
+    invalidate_arch_z_related_models()
     fedora_transaction = instance.active_transaction
     close_transaction = instance.close_active_transaction_when_finished
     if instance.komponenta_vazby.navazany_objekt:
@@ -58,10 +56,7 @@ def komponenta_delete(sender, instance: Komponenta, **kwargs):
     if instance.suppress_signal:
         logger.debug("komponenta.signals.komponenta_delete.suppress_signal", extra={"pk": instance.pk})
         return
-    invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Dokument)
-    invalidate_model(Historie)
+    invalidate_arch_z_related_models()
     fedora_transaction: FedoraTransaction = instance.active_transaction
     close_transaction = instance.close_active_transaction_when_finished
     if instance.komponenta_vazby.navazany_objekt:
