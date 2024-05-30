@@ -30,6 +30,21 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")) 
 
+    def  draw_polygon(self):       
+        self.wait(1)
+        self.driver.execute_script('''map.setZoom(16); return map.getZoom();''')
+        self.wait(2)  
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditAddPolygon"))
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),0,0)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),0,20)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),20,20)
+        self.wait(0.2) 
+        self.clickAt(self.driver.find_element(By.ID, "djMap"),20,0)
+        self.wait(0.2) 
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditFinishText"))
+        self.wait(0.2) 
     
     def test_024_pridani_dokumentacni_jednotky_p_001(self):
         #Scenar_24 Přidání dokumentační jednotky celek akce (pozitivní scénář 1)
@@ -299,10 +314,11 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         #Scenar_43 Smazání objektu u projektové akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_043_smazani_objektu_komponente_p_001.start")
         self.login()
-        self.go_to_form()
-        count_old=NalezObjekt.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01").count()
 
-        self.go_to_form()
+        count_old=NalezObjekt.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01").count()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
+
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-91277520A")
@@ -327,7 +343,8 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 
         count_old=NalezPredmet.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01").count()
 
-        self.go_to_form()
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-91277520A")
@@ -769,24 +786,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         logger.info("AkceProjektoveAkce.test_095_smazani_DJ_projektove_akce_p_001.end")   
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
-class AkceSamostatneAkce(BaseSeleniumTestClass): 
-    def  draw_polygon(self):       
-        self.wait(1)
-        self.driver.execute_script('''map.setZoom(16); return map.getZoom();''')
-        self.wait(2)  
-        self.ElementClick(By.LINK_TEXT, _("mapa.EditAddPolygon"))
-        self.clickAt(self.driver.find_element(By.ID, "djMap"),0,0)
-        self.wait(0.2) 
-        self.clickAt(self.driver.find_element(By.ID, "djMap"),0,20)
-        self.wait(0.2) 
-        self.clickAt(self.driver.find_element(By.ID, "djMap"),20,20)
-        self.wait(0.2) 
-        self.clickAt(self.driver.find_element(By.ID, "djMap"),20,0)
-        self.wait(0.2) 
-        self.ElementClick(By.LINK_TEXT, _("mapa.EditFinishText"))
-        self.wait(0.2) 
- 
- 
+class AkceSamostatneAkce(AkceProjektoveAkce): 
     def go_to_form_zapsat(self):
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.zapsat")) 
@@ -1251,10 +1251,8 @@ class AkceSamostatneAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_X-C-9000000002A-D01 .btn-group:nth-child(1) .material-icons")
         with Wait_for_page_load(self.driver):
             self.ElementClick(By.ID, "show_menu_pian_new_id")
-        self.draw_polygon(self)
-        
-        self.ElementClick(By.LINK_TEXT, _("mapa.EditFinishText"))
-        self.wait(0.2) 
+        self.draw_polygon()
+
         self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
         with Wait_for_page_load(self.driver):
