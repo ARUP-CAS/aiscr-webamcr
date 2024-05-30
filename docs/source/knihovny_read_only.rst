@@ -324,7 +324,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; GNU General Public License (GPL); GNU Library or Lesser General Public License (LGPL)
      - https://github.com/eea/odfpy
    * - openpyxl
-     - 3.1.2
+     - 3.1.3
      - MIT License
      - https://openpyxl.readthedocs.io
    * - outcome
