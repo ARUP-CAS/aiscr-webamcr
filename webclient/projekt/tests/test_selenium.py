@@ -53,74 +53,54 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.login()
         # Go to projects
         self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
-        self.wait(self.wait_interval)
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
-        self.wait(self.wait_interval)
        # Test sorting by all table columns
-        self.ElementClick(By.LINK_TEXT, _("projekt.models.projekt.stav.label"))
-        self.wait(self.wait_interval)
+        with Wait_for_page_load(self.driver):  
+            self.ElementClick(By.LINK_TEXT, _("projekt.models.projekt.stav.label"))
         #WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "btnGroupDropTable")))
-        self.assertIn2("sort=stav","sort=-stav", self.driver)        
-        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.ident_cely.label"))
-        self.wait(self.wait_interval)
-        
+        self.assertIn2("sort=stav","sort=-stav", self.driver)     
+        with Wait_for_page_load(self.driver):   
+            self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.ident_cely.label"))        
         self.assertIn2("sort=ident_cely","sort=-ident_cely", self.driver)
-
-        self.ElementClick(By.LINK_TEXT, _("projekt.models.projekt.hlavniKatastr.label"))
-        self.wait(self.wait_interval)
-        
+        with Wait_for_page_load(self.driver):  
+            self.ElementClick(By.LINK_TEXT, _("projekt.models.projekt.hlavniKatastr.label"))        
         self.assertIn2("sort=hlavni_katastr","sort=-hlavni_katastr", self.driver)
-        self.ElementClick(By.LINK_TEXT, _("projekt.models.projekt.podnet.label"))
-        self.wait(self.wait_interval)
-        
+        with Wait_for_page_load(self.driver):          
+            self.ElementClick(By.LINK_TEXT, _("projekt.models.projekt.podnet.label"))        
         self.assertIn2("sort=podnet","sort=-podnet", self.driver)
-
         self.ElementClick(By.ID, "btnGroupDropTable")
         if self.driver.find_element(By.XPATH,"//*[@data-td-class='lokalizace']").get_attribute('data-state')!='on':
             self.ElementClick(By.XPATH,"//*[@data-td-class='lokalizace']")
         self.ElementClick(By.ID, "btnGroupDropTable")
-        self.wait(self.wait_interval)
-        
-        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.lokalizace.label"))
-        self.wait(self.wait_interval)
-        
+        with Wait_for_page_load(self.driver):  
+            self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.lokalizace.label"))        
         self.assertIn2("sort=lokalizace","sort=-lokalizace", self.driver)
-        
-        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.datum_zahajeni.label"))
-        self.wait(self.wait_interval)
-        
+        with Wait_for_page_load(self.driver):          
+            self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.datum_zahajeni.label"))        
         self.assertIn2("sort=datum_zahajeni","sort=-datum_zahajeni", self.driver)
-        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.datum_ukonceni.label"))
-        self.wait(self.wait_interval)
-        
+        with Wait_for_page_load(self.driver):          
+            self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.datum_ukonceni.label"))        
         self.assertIn2("sort=datum_ukonceni","sort=-datum_ukonceni", self.driver)
-        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.organizace.label"))
-        self.wait(self.wait_interval)
-        
+        with Wait_for_page_load(self.driver):          
+            self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.organizace.label"))        
         self.assertIn2("sort=organizace","sort=-organizace", self.driver)        
 
         self.ElementClick(By.ID, "btnGroupDropTable")
         if self.driver.find_element(By.XPATH,"//*[@data-td-class='vedouci_projektu']").get_attribute('data-state')!='on':
             self.ElementClick(By.XPATH,"//*[@data-td-class='vedouci_projektu']")
         self.ElementClick(By.ID, "btnGroupDropTable")
-        
-        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.vedouci_projektu.label"))
-        self.wait(self.wait_interval)
-        
-        self.assertIn2("sort=vedouci_projektu","sort=-vedouci_projektu", self.driver)
-        
+        with Wait_for_page_load(self.driver):          
+            self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.vedouci_projektu.label"))        
+        self.assertIn2("sort=vedouci_projektu","sort=-vedouci_projektu", self.driver)        
         self.ElementClick(By.ID, "btnGroupDropTable")
         if self.driver.find_element(By.XPATH,"//*[@data-td-class='uzivatelske_oznaceni']").get_attribute('data-state')!='on':
             self.ElementClick(By.XPATH,"//*[@data-td-class='uzivatelske_oznaceni']")
         self.ElementClick(By.ID, "btnGroupDropTable")
-
-        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.uzivatelske_oznaceni.label"))
-        self.wait(self.wait_interval)
-        
+        with Wait_for_page_load(self.driver):  
+            self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.uzivatelske_oznaceni.label"))        
         self.assertIn2("sort=uzivatelske_oznaceni","sort=-uzivatelske_oznaceni", self.driver)
-        self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.planovane_zahajeni.label"))
-        self.wait(self.wait_interval)
-        
+        with Wait_for_page_load(self.driver):  
+            self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.planovane_zahajeni.label"))        
         self.assertIn2("sort=planovane_zahajeni","sort=-planovane_zahajeni", self.driver)
         
         check_column_hiding_ids = (
@@ -247,15 +227,11 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
 
         self.ElementClick(By.CSS_SELECTOR, ".odd:nth-child(2) a")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-zahajit-v-terenu > .app-controls-button-text")
-        self.wait(1)
         self.ElementClick(By.ID, "id_datum_zahajeni")
         datum= (datetime.datetime.today() + datetime.timedelta(days=-5)).strftime('%d.%m.%Y') 
         self.driver.find_element(By.ID, "id_datum_zahajeni").send_keys(datum)
-        self.ElementClick(By.ID, "submit-btn")
-        #self.wait(5) 
-        wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
-        element = wait.until(EC.element_to_be_clickable((By.ID, "projekt-ukoncit-v-terenu")))
-        
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "submit-btn")          
         datum_input = self.driver.find_element(By.CSS_SELECTOR, ".col-md-3:nth-child(9) .form-control").get_attribute('value')
         ident_cely=self.driver.current_url.split('/')[-1]
 
@@ -284,13 +260,12 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
         
         self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(7) a")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-ukoncit-v-terenu > .app-controls-button-text")
-        self.wait(1)
         self.ElementClick(By.ID, "id_datum_ukonceni")
         datum= (datetime.datetime.today() + datetime.timedelta(days=-1)).strftime('%d.%m.%Y') 
         self.driver.find_element(By.ID, "id_datum_ukonceni").send_keys(datum)
-        self.ElementClick(By.ID, "submit-btn")
-        wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
-        element = wait.until(EC.element_to_be_clickable((By.ID, "projekt-uzavrit")))
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
         ident_cely=self.driver.current_url.split('/')[-1]
 
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_UKONCENY_V_TERENU)
@@ -307,17 +282,12 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
         
         self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(7) a")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-ukoncit-v-terenu > .app-controls-button-text")
-        self.wait(1)
         self.ElementClick(By.ID, "id_datum_ukonceni")
-        self.wait(1)
         datum= (datetime.datetime.today() + datetime.timedelta(days=90)).strftime('%d.%m.%Y') 
         self.driver.find_element(By.ID, "id_datum_ukonceni").send_keys(datum)
-        self.ElementClick(By.ID, "submit-btn")
-        try:
-            wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
-            element = wait.until(EC.element_to_be_clickable((By.ID, "projekt-uzavrit")))
-        except Exception as e:
-            pass
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
         ident_cely=self.driver.current_url.split('/')[-1]
 
         self.assertIn(_("arch_z.validators.maxDatum.error"), self.driver.find_element(By.ID, "div_id_datum_ukonceni").text)
@@ -345,12 +315,10 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
         self.go_to_form()
 
         self.ElementClick(By.LINK_TEXT, "C-201232899")
-
         self.ElementClick(By.CSS_SELECTOR, "#projekt-uzavrit > .app-controls-button-text")
-        self.wait(1)
         with Wait_for_page_load(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.wait(1)
+
         ident_cely=self.driver.current_url.split('/')[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_UZAVRENY)
         logger.info("ProjektUzavritSeleniumTest.test_010_projekt_uzavrit_p_001.end")
@@ -397,7 +365,6 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         
         self.ElementClick(By.LINK_TEXT, "C-201231446")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-archivovat > .app-controls-button-text")
-        self.wait(1)
         with Wait_for_page_load(self.driver):            
             self.ElementClick(By.ID, "submit-btn")       
 
@@ -450,7 +417,6 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         self.ElementClick(By.LINK_TEXT, "C-202205168")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
-        self.wait(1)
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
         
@@ -475,10 +441,8 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
-        self.wait(1)
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
-        self.ElementClick(By.ID, "submit-btn")
         
         with Wait_for_page_load(self.driver):  
             self.ElementClick(By.ID, "submit-btn")
@@ -501,10 +465,8 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
-        self.wait(1)
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
-        self.ElementClick(By.ID, "submit-btn")
         
         with Wait_for_page_load(self.driver):  
             self.ElementClick(By.ID, "submit-btn")
@@ -527,10 +489,8 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
-        self.wait(1)
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
-        self.ElementClick(By.ID, "submit-btn")
         
         with Wait_for_page_load(self.driver):  
             self.ElementClick(By.ID, "submit-btn")
@@ -553,11 +513,9 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
-        self.wait(1)
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
-        self.ElementClick(By.ID, "submit-btn")
-        
+       
         with Wait_for_page_load(self.driver):  
             self.ElementClick(By.ID, "submit-btn")
 
@@ -584,7 +542,6 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         
         self.ElementClick(By.LINK_TEXT, "C-201665792")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text")
-        self.wait(1)
         self.ElementClick(By.CSS_SELECTOR, ".custom-control:nth-child(2) > .custom-control-label")
         with Wait_for_page_load(self.driver):  
             self.ElementClick(By.CSS_SELECTOR, ".btn-primary:nth-child(2)")
@@ -603,9 +560,7 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         with Wait_for_page_load(self.driver):  
             self.ElementClick(By.LINK_TEXT, "C-201665792")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text")
-        self.wait(1)
         self.ElementClick(By.CSS_SELECTOR, ".custom-radio:nth-child(1) > .custom-control-label")
-        self.wait(1)
         self.ElementClick(By.ID, "id_projekt_id")
         self.driver.find_element(By.ID, "id_projekt_id").send_keys("test")
         with Wait_for_page_load(self.driver):  
@@ -663,7 +618,6 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
         
         self.ElementClick(By.CSS_SELECTOR, "#projekt-zrusit > .app-controls-button-text")
-        self.wait(1)
         self.ElementClick(By.ID, "id_reason_text")
         self.driver.find_element(By.ID, "id_reason_text").send_keys("test")
         with Wait_for_page_load(self.driver):  
