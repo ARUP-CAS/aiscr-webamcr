@@ -339,8 +339,7 @@ class UserActivationView(ActivationView):
         user = self.get_user(username)
         user.save()
         for notification in UserNotificationType.objects.filter(
-            Q(ident_cely__icontains='S-E-')
-            |Q(ident_cely='E-U-04')
+            ident_cely__icontains='S-E-'
         ):
             user.notification_types.add(notification)
         Mailer.send_eu02(user=user)
