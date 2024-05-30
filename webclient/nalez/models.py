@@ -20,6 +20,7 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
         on_delete=models.CASCADE,
         db_column="komponenta",
         related_name="objekty",
+        db_index=True,
     )
     druh = models.ForeignKey(
         Heslar,
@@ -28,6 +29,7 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_DRUH},
         verbose_name=_("nalez.models.nalezObjekt.druh.label"),
         related_name="objekty_druhu",
+        db_index=True,
     )
     specifikace = models.ForeignKey(
         Heslar,
@@ -38,8 +40,9 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
         related_name="objekty_specifikace",
         blank=True,
         null=True,
+        db_index=True,
     )
-    pocet = models.TextField(blank=True, null=True)
+    pocet = models.TextField(blank=True, null=True, db_index=True)
     poznamka = models.TextField(blank=True, null=True)
     close_active_transaction_when_finished = False
     active_transaction = None
@@ -64,6 +67,7 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
         on_delete=models.CASCADE,
         db_column="komponenta",
         related_name="predmety",
+        db_index=True,
     )
     druh = models.ForeignKey(
         Heslar,
@@ -72,6 +76,7 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_PREDMET_DRUH},
         verbose_name=_("nalez.models.nalezPredmet.druh.label"),
         related_name="predmety_druhu",
+        db_index=True,
     )
     specifikace = models.ForeignKey(
         Heslar,
@@ -82,8 +87,9 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
         related_name="predmety_specifikace",
         blank=True,
         null=True,
+        db_index=True,
     )
-    pocet = models.TextField(blank=True, null=True)
+    pocet = models.TextField(blank=True, null=True, db_index=True)
     poznamka = models.TextField(blank=True, null=True)
     close_active_transaction_when_finished = False
     active_transaction = None

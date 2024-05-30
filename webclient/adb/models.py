@@ -45,8 +45,9 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         db_column="dokumentacni_jednotka",
         primary_key=True,
         related_name="adb",
+        db_index=True,
     )
-    ident_cely = models.TextField(unique=True)
+    ident_cely = models.TextField(unique=True, db_index=True)
     typ_sondy = models.ForeignKey(
         Heslar,
         on_delete=models.RESTRICT,
@@ -54,6 +55,7 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         related_name="typy_sond_adb",
         limit_choices_to={"nazev_heslare": HESLAR_ADB_TYP},
         null=True,
+        db_index=True,
     )
     trat = models.TextField(null=True)
     parcelni_cislo = models.TextField(null=True)
@@ -73,17 +75,20 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         on_delete=models.RESTRICT,
         db_column="autor_popisu",
         related_name="adb_autori_popisu",
+        db_index=True,
     )
     rok_popisu = models.IntegerField(
         validators=[MinValueValidator(1900), MaxValueValidator(2050)],
+        db_index=True
     )
     autor_revize = models.ForeignKey(
-        Osoba, models.RESTRICT, db_column="autor_revize", blank=True, null=True
+        Osoba, models.RESTRICT, db_column="autor_revize", blank=True, null=True, db_index=True
     )
     rok_revize = models.IntegerField(
         blank=True,
         null=True,
         validators=[MinValueValidator(1900), MaxValueValidator(2050)],
+        db_index=True,
     )
     sm5 = models.ForeignKey(Kladysm5, models.RESTRICT, db_column="sm5")
     tracker = FieldTracker()

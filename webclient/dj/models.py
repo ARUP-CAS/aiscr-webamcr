@@ -22,9 +22,10 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         db_column="typ",
         related_name="dokumentacni_jednotka_typy",
         limit_choices_to={"nazev_heslare": HESLAR_DJ_TYP},
+        db_index=True
     )
     nazev = models.TextField(blank=True, null=True)
-    negativni_jednotka = models.BooleanField(default=False)
+    negativni_jednotka = models.BooleanField(default=False, db_index=True)
     ident_cely = models.TextField(unique=True)
     pian = models.ForeignKey(
         Pian,
@@ -33,19 +34,22 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         blank=True,
         null=True,
         related_name="dokumentacni_jednotky_pianu",
+        db_index=True,
     )
     komponenty = models.OneToOneField(
         KomponentaVazby,
         models.SET_NULL,
         db_column="komponenty",
         related_name="dokumentacni_jednotka",
-        null=True
+        null=True,
+        db_index=True,
     )
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
         on_delete=models.CASCADE,
         db_column="archeologicky_zaznam",
         related_name="dokumentacni_jednotky_akce",
+        db_index=True,
     )
     tracker = FieldTracker()
     active_transaction = None

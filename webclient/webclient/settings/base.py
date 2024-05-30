@@ -78,16 +78,18 @@ redis_url = os.getenv("REDIS_URL", "redis:6379")
 CACHEOPS_REDIS = "redis://"+get_redis_pass()+redis_url
 
 CACHEOPS = {
-    "arch_z.Akce": {"ops": (), "timeout": 60*10},
-    "arch_z.ArcheologickyZaznam": {"ops": (), "timeout": 60*10},
-    "projekt.Projekt": {"ops": (), "timeout": 60*10},
-    "ez.ExterniZdroj": {(): "all", "timeout": 60*10},
-    "dokument.Dokument": {"ops": (), "timeout": 60*10},
-    "historie.Historie": {"ops": ("all"), "timeout": 60*10},
-    "pas.SamostatnyNalez": {"ops": (), "timeout": 60*10},
-    "core.Permissions": {"ops": (), "timeout": 60*60},
-    "pian.Pian": {"ops": (), "timeout": 60*10},
-    "lokalita.Lokalita": {"ops": (), "timeout": 60*10},
+    "adb.Adb": {"ops": ("all", ), "timeout": 60*10},
+    "arch_z.Akce": {"ops": ("all", ), "timeout": 60*10},
+    "arch_z.ArcheologickyZaznam": {"ops": ("all", ), "timeout": 60*10},
+    "projekt.Projekt": {"ops": ("all", ), "timeout": 60*10},
+    "ez.ExterniZdroj": {"ops": ("all", ), "timeout": 60*10},
+    "dokument.Dokument": {"ops": ("all", ), "timeout": 60*10},
+    "historie.Historie": {"ops": ("all", ), "timeout": 60*10},
+    "pas.SamostatnyNalez": {"ops": ("all", ), "timeout": 60*10},
+    "core.Permissions": {"ops": ("all", ), "timeout": 60*60},
+    "pian.Pian": {"ops": ("all", ), "timeout": 60*10},
+    "nalez.*": {"ops": ("all", ), "timeout": 60*10},
+    "lokalita.Lokalita": {"ops": ("all", ), "timeout": 60*10},
 }
 
 SECRET_KEY = get_secret("SECRET_KEY")
