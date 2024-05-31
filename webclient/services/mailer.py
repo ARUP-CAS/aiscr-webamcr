@@ -287,10 +287,14 @@ class Mailer:
             state = obj.CHOICES[obj.stav][1]
             history_log = Historie.objects.filter(
                 vazba__projekt_historie__ident_cely=obj.ident_cely, typ_zmeny=UZAVRENI_PROJ).order_by('-datum_zmeny')
+            if history_log.count() == 0:
+                return
             user = history_log.first().uzivatel
         elif isinstance(obj, arch_z.models.ArcheologickyZaznam):
             history_log = Historie.objects.filter(
                 vazba__archeologickyzaznam__ident_cely=obj.ident_cely, typ_zmeny=ODESLANI_AZ).order_by('-datum_zmeny')
+            if history_log.count() == 0:
+                return
             user = history_log.first().uzivatel
             state = obj.STATES[obj.stav - 1][1]
         else:
