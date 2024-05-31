@@ -292,6 +292,8 @@ class Model3DListView(SearchListView):
         return {
             "typ_dokumentu": "typ_dokumentu__razeni",
             "autori": "autori_snapshot",
+            "extra_data__format": "extra_data__format__razeni",
+            "extra_data__zeme": "extra_data__zeme__razeni"
         }.get(field, field)
 
 
@@ -304,6 +306,7 @@ class Model3DListView(SearchListView):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
+        qs = qs.order_by(*sort_params)  
         qs = qs.distinct("pk", *sort_params)
         qs = qs.filter(ident_cely__contains="3D")
         qs = qs.select_related(
@@ -363,12 +366,24 @@ class DokumentListView(SearchListView):
         return {
             "typ_dokumentu": "typ_dokumentu__razeni",
             "autori": "autori_snapshot",
+            "pristupnost": "pristupnost__razeni",
+            "rada":"rada__razeni",
+            "material_originalu":"material_originalu__razeni",
+            "extra_data__format":"extra_data__format__razeni",
+            "ulozeni_originalu":"ulozeni_originalu__razeni",
+            "licence":"licence__razeni",
+            "extra_data__zachovalost":"extra_data__zachovalost__razeni",
+            "extra_data__nahrada":"extra_data__nahrada__razeni",
+             "extra_data__zeme":"extra_data__zeme__razeni",
+            "extra_data__udalost_typ": "extra_data__udalost_typ__razeni",
+            "osoby":"osoby_snapshot",
         }.get(field, field)
 
     def get_queryset(self):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
+        qs = qs.order_by(*sort_params) 
         qs = qs.distinct("pk", *sort_params)
         subqry = Subquery(
             Soubor.objects.filter(vazba=OuterRef("vazba")).values_list("id", flat=True)[:1]

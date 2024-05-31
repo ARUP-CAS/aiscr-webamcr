@@ -1524,21 +1524,25 @@ class AkceListView(SearchListView):
         field = field.replace("-", "")
         return {
             "ident_cely": "archeologicky_zaznam__ident_cely",
-            "pristupnost": "archeologicky_zaznam__pristupnost",
+            "pristupnost": "archeologicky_zaznam__pristupnost__razeni",
             "hlavni_katastr": "archeologicky_zaznam__hlavni_katastr__nazev",
-            "katastry": "archeologicky_zaznam__katastry",
+            "katastry": "archeologicky_zaznam__katastry__nazev",
             "stav": "archeologicky_zaznam__stav",
             "organizace": "organizace__nazev_zkraceny",
             "vedouci_organizace": "vedouci_organizace",
             "vedouci": "vedouci_snapshot",
             "hlavni_vedouci": "hlavni_vedouci__vypis_cely",
             "uzivatelske_oznaceni": "archeologicky_zaznam__uzivatelske_oznaceni",
+            "specifikace_data" :"specifikace_data__razeni",
+            "hlavni_typ":"hlavni_typ__razeni",
+            "vedlejsi_typ":"vedlejsi_typ__razeni",
         }.get(field, field)
 
     def get_queryset(self):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
+        qs = qs.order_by(*sort_params)            
         qs = qs.distinct("pk", *sort_params)
         qs = (
             qs.select_related(

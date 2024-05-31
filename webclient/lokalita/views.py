@@ -104,9 +104,9 @@ class LokalitaListView(SearchListView):
         field = field.replace("-", "")
         return {
             "ident_cely": "archeologicky_zaznam__ident_cely",
-            "pristupnost": "archeologicky_zaznam__pristupnost",
+            "pristupnost": "archeologicky_zaznam__pristupnost__razeni",
             "katastr": "archeologicky_zaznam__hlavni_katastr__nazev",
-            "katastry": "archeologicky_zaznam__katastry",
+            "dalsi_katastry": "dalsi_katastry_snapshot",
             "stav": "archeologicky_zaznam__stav",
             "organizace": "organizace__nazev_zkraceny",
             "vedouci_organizace": "vedouci_organizace",
@@ -122,6 +122,7 @@ class LokalitaListView(SearchListView):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
+        qs = qs.order_by(*sort_params) 
         qs = qs.distinct("pk", *sort_params)
         qs = qs.select_related(
             "druh",

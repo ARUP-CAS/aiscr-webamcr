@@ -110,13 +110,17 @@ class ExterniZdrojListView(SearchListView):
         field = field.replace("-", "")
         return {
             "autori": "autori_snapshot",
-            "editori": "editori_snapshot"
+            "editori": "editori_snapshot",
+            "typ": "typ__razeni",
+            "typ_dokumentu":"typ_dokumentu__razeni",
+            
         }.get(field, field)
 
     def get_queryset(self):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
+        qs = qs.order_by(*sort_params) 
         qs = qs.distinct("pk", *sort_params)
         qs = qs.select_related(
             "typ",
