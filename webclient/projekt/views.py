@@ -642,11 +642,11 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
         )
         context["hasNaseProjekty_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
         context["has_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
-        logger.debug(context["object_list"].count())
         return context
 
     def get_queryset(self):
         qs = super().get_queryset()
+        qs = qs.order_by(*self._get_sort_params()) 
         qs = (
             qs.filter(stav__gt=PROJEKT_STAV_VYTVORENY)
             .select_related(
