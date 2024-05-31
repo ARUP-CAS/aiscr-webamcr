@@ -47,7 +47,7 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         related_name="adb",
         db_index=True,
     )
-    ident_cely = models.TextField(unique=True, db_index=True)
+    ident_cely = models.TextField(unique=True)
     typ_sondy = models.ForeignKey(
         Heslar,
         on_delete=models.RESTRICT,
