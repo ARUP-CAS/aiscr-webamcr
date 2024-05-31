@@ -29,7 +29,7 @@ class Model3DTable(SearchTable):
     extra_data__odkaz = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.extra_data__odkaz.label"))
     extra_data__duveryhodnost = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.extra_data__duveryhodnost.label"))
     extra_data__zeme = tables.Column(verbose_name=_("dokument.tables.dokumentTable.extra_data__zeme.label"))
-    extra_data__region = tables.Column( verbose_name=_("dokument.tables.dokumentTable.extra_data__region.label"))
+    extra_data__region_extra = tables.Column( verbose_name=_("dokument.tables.dokumentTable.extra_data__region.label"))
     autori = tables.Column(default="", accessor="autori_snapshot", verbose_name=_("dokument.tables.modelTable.autori.label"))
     stav = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.stav.label"))
     app = "knihovna_3d"
@@ -45,7 +45,7 @@ class Model3DTable(SearchTable):
     )
     columns_to_hide = (
         "extra_data__zeme",
-        "extra_data__region",
+        "extra_data__region_extra",
     )
     class Meta:
         model = Dokument
@@ -60,7 +60,7 @@ class Model3DTable(SearchTable):
             "extra_data__odkaz",
             "extra_data__duveryhodnost",
             "extra_data__zeme",
-            "extra_data__region",
+            "extra_data__region_extra",
         )
         sequence = (
             "nahled",
@@ -75,7 +75,7 @@ class Model3DTable(SearchTable):
             "extra_data__odkaz",
             "extra_data__duveryhodnost",
             "extra_data__zeme",
-            "extra_data__region"
+            "extra_data__region_extra"
         )
 
     def __init__(self, *args, **kwargs):
@@ -141,7 +141,7 @@ class DokumentTable(SearchTable):
     extra_data__vyska = tables.Column(verbose_name=_("dokument.tables.dokumentTable.extra_data__vyska.label"))
     extra_data__sirka = tables.Column(verbose_name=_("dokument.tables.dokumentTable.extra_data__sirka.label"))
     extra_data__zeme = tables.Column(verbose_name=_("dokument.tables.dokumentTable.extra_data__zeme.label"))
-    extra_data__region = tables.Column(verbose_name=_("dokument.tables.dokumentTable.extra_data__region.label"))
+    extra_data__region_extra = tables.Column(verbose_name=_("dokument.tables.dokumentTable.extra_data__region.label"))
     extra_data__udalost_typ = tables.Column(verbose_name=_("dokument.tables.dokumentTable.extra_data__udalost_typ.label"))
     extra_data__udalost = tables.Column(verbose_name=_("dokument.tables.dokumentTable.extra_data__udalost.label"))
     extra_data__rok_od = tables.Column(verbose_name=_("dokument.tables.dokumentTable.extra_data__rok_od.label"))
@@ -168,7 +168,7 @@ class DokumentTable(SearchTable):
         "extra_data__vyska",
         "extra_data__sirka",
         "extra_data__zeme",
-        "extra_data__region",
+        "extra_data__region_extra",
         "extra_data__udalost_typ",
         "extra_data__udalost",
         "extra_data__rok_od",
@@ -228,7 +228,7 @@ class DokumentTable(SearchTable):
             "extra_data__vyska",
             "extra_data__sirka",
             "extra_data__zeme",
-            "extra_data__region",
+            "extra_data__region_extra",
             "extra_data__udalost_typ",
             "extra_data__udalost",
             "extra_data__rok_od",
@@ -264,7 +264,7 @@ class DokumentTable(SearchTable):
             "extra_data__vyska",
             "extra_data__sirka",
             "extra_data__zeme",
-            "extra_data__region",
+            "extra_data__region_extra",
             "extra_data__udalost_typ",
             "extra_data__udalost",
             "extra_data__rok_od",

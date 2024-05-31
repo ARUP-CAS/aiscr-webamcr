@@ -110,7 +110,10 @@ class ExterniZdrojListView(SearchListView):
         field = field.replace("-", "")
         return {
             "autori": "autori_snapshot",
-            "editori": "editori_snapshot"
+            "editori": "editori_snapshot",
+            "typ": "typ__razeni",
+            "typ_dokumentu":"typ_dokumentu__razeni",
+            
         }.get(field, field)
 
     def get_queryset(self):

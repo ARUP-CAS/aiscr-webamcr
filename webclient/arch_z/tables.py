@@ -45,7 +45,11 @@ class AkceTable(SearchTable):
     vedouci_organizace = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.vedouci_organizace.label"),
         default="",
-        accessor="vedouci_organizace",
+        accessor="vedouci_organizace", 
+        orderable=False,
+        attrs={
+            "th": {"class": "white"},
+        },
     )
     hlavni_vedouci = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.hlavni_vedouci.label"),

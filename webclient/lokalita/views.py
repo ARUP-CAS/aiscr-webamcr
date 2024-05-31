@@ -104,9 +104,9 @@ class LokalitaListView(SearchListView):
         field = field.replace("-", "")
         return {
             "ident_cely": "archeologicky_zaznam__ident_cely",
-            "pristupnost": "archeologicky_zaznam__pristupnost",
+            "pristupnost": "archeologicky_zaznam__pristupnost__razeni",
             "katastr": "archeologicky_zaznam__hlavni_katastr__nazev",
-            "katastry": "archeologicky_zaznam__katastry",
+            "dalsi_katastry": "dalsi_katastry_snapshot",
             "stav": "archeologicky_zaznam__stav",
             "organizace": "organizace__nazev_zkraceny",
             "vedouci_organizace": "vedouci_organizace",

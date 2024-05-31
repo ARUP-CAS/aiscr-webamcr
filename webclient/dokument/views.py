@@ -292,6 +292,8 @@ class Model3DListView(SearchListView):
         return {
             "typ_dokumentu": "typ_dokumentu__razeni",
             "autori": "autori_snapshot",
+            "extra_data__format": "extra_data__format__razeni",
+            "extra_data__zeme": "extra_data__zeme__razeni"
         }.get(field, field)
 
 
@@ -364,6 +366,17 @@ class DokumentListView(SearchListView):
         return {
             "typ_dokumentu": "typ_dokumentu__razeni",
             "autori": "autori_snapshot",
+            "pristupnost": "pristupnost__razeni",
+            "rada":"rada__razeni",
+            "material_originalu":"material_originalu__razeni",
+            "extra_data__format":"extra_data__format__razeni",
+            "ulozeni_originalu":"ulozeni_originalu__razeni",
+            "licence":"licence__razeni",
+            "extra_data__zachovalost":"extra_data__zachovalost__razeni",
+            "extra_data__nahrada":"extra_data__nahrada__razeni",
+             "extra_data__zeme":"extra_data__zeme__razeni",
+            "extra_data__udalost_typ": "extra_data__udalost_typ__razeni",
+            "osoby":"osoby_snapshot",
         }.get(field, field)
 
     def get_queryset(self):
