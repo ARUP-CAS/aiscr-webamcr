@@ -34,7 +34,7 @@ def merge_heslare(first, second):
     Pomocní funkce pro vytvoření dvoustupňového selectu.
     """
     data = [("", "")]
-    logger.debug(get_language())
+    #logger.debug(get_language())
     try:
         for k in first:
             druhy_kategorie = []

@@ -598,7 +598,7 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
         filter_historie = {"uzivatel":self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == p.ownershipChoices.our:
-            return Q(**{"historie_zapsat__in":filtered_my}) | Q(**{"projekt__organizace":self.request.user.organizace})
+            return Q(**{"projekt__organizace":self.request.user.organizace})
         else:
             return Q(**{"historie_zapsat__in":filtered_my})
 

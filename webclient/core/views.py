@@ -865,7 +865,7 @@ class PermissionFilterMixin():
         if ownership == Permissions.ownershipChoices.our:
             filter_historie = {"uzivatel__organizace":self.request.user.organizace}
             filtered_our = Historie.objects.filter(**filter_historie)
-            return Q(**{"historie_zapsat__in":filtered_my}) | Q(**{"historie_zapsat__in":filtered_our})
+            return Q(**{"historie_zapsat__in":filtered_our})
         else:
             return Q(**{"historie_zapsat__in":filtered_my})
 
@@ -980,7 +980,6 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["toolbar_name"] = self.toolbar_name
         context["toolbar_label"] = self.toolbar_label
         context["sort_params"] = self._get_sort_params()
-        #logger.debug(context["object_list"])
         return context
     
 
