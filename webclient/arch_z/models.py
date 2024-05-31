@@ -553,10 +553,12 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
                 name='akce_typ_check',
             ),
         ]
-        models.Index(fields=["archeologicky_zaznam", "datum_ukonceni"]),
-        models.Index(fields=["datum_zahajeni", "datum_ukonceni"]),
-        models.Index(fields=["datum_zahajeni", "datum_ukonceni", "projekt"]),
-        models.Index(fields=["archeologicky_zaznam", "datum_zahajeni", "datum_ukonceni"]),
+        indexes = [
+            models.Index(fields=["archeologicky_zaznam", "datum_ukonceni"]),
+            models.Index(fields=["datum_zahajeni", "datum_ukonceni"]),
+            models.Index(fields=["datum_zahajeni", "datum_ukonceni", "projekt"]),
+            models.Index(fields=["archeologicky_zaznam", "datum_zahajeni", "datum_ukonceni"]),
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -121,10 +121,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_ULOZENI},
         db_index=True,
     )
-    oznaceni_originalu = models.TextField(blank=True, null=True)
+    oznaceni_originalu = models.TextField(blank=True, null=True, db_index=True)
     stav = models.SmallIntegerField(choices=STATES, db_index=True)
     ident_cely = models.TextField(unique=True)
-    datum_zverejneni = models.DateField(blank=True, null=True)
+    datum_zverejneni = models.DateField(blank=True, null=True, db_index=True)
     soubory = models.OneToOneField(
         SouborVazby,
         models.SET_NULL,
@@ -511,6 +511,14 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
                 name='dokument_cast_vazba_check',
             ),
         ]
+        indexes = [
+            models.Index(fields=["archeologicky_zaznam", "dokument"]),
+            models.Index(fields=["projekt", "dokument"]),
+            models.Index(fields=["komponenty", "dokument"]),
+            models.Index(fields=["archeologicky_zaznam", "dokument", "ident_cely"]),
+            models.Index(fields=["projekt", "dokument", "ident_cely"]),
+            models.Index(fields=["komponenty", "dokument", "ident_cely"]),
+        ]
 
     def get_absolute_url(self):
         """
@@ -621,7 +629,7 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
     """
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
-    poradi = models.IntegerField()
+    poradi = models.IntegerField(db_index=True)
 
     class Meta:
         db_table = "dokument_autor"

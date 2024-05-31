@@ -1538,6 +1538,7 @@ class AkceListView(SearchListView):
                 "hlavni_vedouci",  
            ).prefetch_related("archeologicky_zaznam__pristupnost","archeologicky_zaznam__katastry","archeologicky_zaznam__katastry__okres","specifikace_data","hlavni_typ","vedlejsi_typ","akcevedouci_set__organizace")
         )
+        qs.cache()
         return self.check_filter_permission(qs)
 
 
