@@ -1518,20 +1518,9 @@ def odeslat(request, ident_cely):
         dokument.active_transaction = fedora_transaction
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
-        if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
-            rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
-            try:
-                dokument.set_permanent_ident_cely(dokument.ident_cely[2], rada)
-            except MaximalIdentNumberError:
-                messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
-                fedora_transaction.rollback_transaction()
-                dokument.close_active_transaction_when_finished = True
-                return JsonResponse(
-                    {"redirect": get_detail_json_view(ident_cely)}, status=403
-                )
-            else:
-                dokument.save()
-                logger.debug("dokument.views.odeslat.permanent", extra={"ident_cely": dokument.ident_cely})
+        returned_value = Dokument.set_permanent_identificator(dokument, request, messages, fedora_transaction)
+        if isinstance(returned_value, JsonResponse):
+            return returned_value
         dokument.set_odeslany(request.user, old_ident)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
         logger.debug("dokument.views.odeslat.sucess")

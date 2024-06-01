@@ -36,6 +36,7 @@ class ModelWithMetadata(models.Model):
     active_transaction = None
     close_active_transaction_when_finished = False
     deletion_record_saved = False
+    skip_container_check = False
 
     @property
     def metadata(self):
@@ -44,7 +45,7 @@ class ModelWithMetadata(models.Model):
         return connector.get_metadata()
 
     def save_metadata(self, fedora_transaction=None, include_files=False, close_transaction=False,
-                      check_container=False):
+                      skip_container_check=False):
         from core.repository_connector import FedoraTransaction
         stack = inspect.stack()
         caller = stack[1]
@@ -63,7 +64,9 @@ class ModelWithMetadata(models.Model):
                             "caller": caller})
         fedora_transaction: Optional[FedoraTransaction]
         from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(self, fedora_transaction)
+        if self.skip_container_check:
+            skip_container_check = True
+        connector = FedoraRepositoryConnector(self, fedora_transaction, skip_container_check=skip_container_check)
         if include_files:
             from core.models import SouborVazby
             if hasattr(self, "soubory") and isinstance(self.soubory, SouborVazby):
@@ -98,7 +101,7 @@ class ModelWithMetadata(models.Model):
                 and self.deletion_record_saved is not True:
             from historie.models import Historie
             Historie.save_record_deletion_record(record=self)
-            self.save_metadata(fedora_transaction, check_container=False)
+            self.save_metadata(fedora_transaction, skip_container_check=True)
             self.deletion_record_saved = True
 
     def _get_fedora_transaction(self, fedora_transaction):
@@ -116,7 +119,7 @@ class ModelWithMetadata(models.Model):
 
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
         from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(self, fedora_transaction)
+        connector = FedoraRepositoryConnector(self, fedora_transaction, skip_container_check=True)
         if not self.deletion_record_saved:
             self.save_record_deletion_record(fedora_transaction)
         try:

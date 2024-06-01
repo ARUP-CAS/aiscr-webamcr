@@ -116,7 +116,7 @@ class FedoraRequestType(Enum):
 
 
 class FedoraRepositoryConnector:
-    def __init__(self, record, transaction=None):
+    def __init__(self, record, transaction=None, skip_container_check=False):
         from core.models import ModelWithMetadata
 
         record: ModelWithMetadata
@@ -128,6 +128,7 @@ class FedoraRepositoryConnector:
         else:
             self.transaction_uid = None
         self.restored_container = False
+        self.skip_container_check = skip_container_check
         stack = inspect.stack()
         caller = stack[1]
         logger.debug("core_repository_connector.__init__.end",
@@ -330,7 +331,8 @@ class FedoraRepositoryConnector:
         elif request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
                                 FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
                                 FedoraRequestType.GET_LINK, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
-                                FedoraRequestType.GET_DELETED_LINK):
+                                FedoraRequestType.GET_DELETED_LINK, FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
+                                FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE):
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
             else:
@@ -446,7 +448,8 @@ class FedoraRepositoryConnector:
     def _check_binary_file_container(self):
         logger.debug("core_repository_connector._check_binary_file_container.start",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
-        self._check_container()
+        if not self.skip_container_check:
+            self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTAINER)
         if result.status_code == 404:
@@ -481,7 +484,8 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector.save_metadata.start",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid,
                             "caller": caller})
-        self._check_container()
+        if not self.skip_container_check:
+            self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_METADATA)
         result = self._send_request(url, FedoraRequestType.GET_METADATA)
 
