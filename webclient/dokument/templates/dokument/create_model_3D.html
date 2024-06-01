@@ -30,22 +30,22 @@
         </div>
         <div class="card-body">
           <div class="row">
-          <div class="form-group col-sm-2 input-osoba select2-input">
+          <div class="form-group col-sm-4 col-lg-2 input-osoba select2-input">
             {% crispy_addon formDokument.autori append='<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>' %}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-4 col-lg-2">
             {{ formDokument.rok_vzniku|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-4 col-lg-2">
             {{ formDokument.organizace|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-4 col-lg-2">
             {{ formDokument.typ_dokumentu|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-4 col-lg-2">
             {{ formExtraData.format|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-4 col-lg-2">
             {{ formDokument.oznaceni_originalu|as_crispy_field }}
           </div>
           <div class="form-group col-sm-12">
@@ -64,21 +64,21 @@
               <span class="app-divider-label">{% trans "dokument.templates.create_model_3D.komponentaDivider.text" %}</span>
               <hr class="mt-0" />
             </div>
-            <div class="form-group col-sm-2">
+            <div class="form-group col-sm-4 col-lg-2">
               {{ formKomponenta.obdobi|as_crispy_field }}
             </div>
-            <div class="form-group col-sm-2">
+            <div class="form-group col-sm-4 col-lg-2">
               {{ formKomponenta.presna_datace|as_crispy_field }}
             </div>
-            <div class="form-group col-sm-2">
+            <div class="form-group col-sm-4 col-lg-2">
               {{ formKomponenta.areal|as_crispy_field }}
             </div>
-            <div class="form-group col-sm-2">
+            <div class="form-group col-sm-4 col-lg-2">
               {{ formKomponenta.aktivity|as_crispy_field }}
             </div>
-            <div class="form-group col-sm-2">
+            <div class="form-group col-sm-4 col-lg-2">
             </div>
-            <div class="form-group col-sm-2">
+            <div class="form-group col-sm-4 col-lg-2">
               {{ formExtraData.duveryhodnost|as_crispy_field }}
             </div>
           </div>

@@ -587,17 +587,6 @@ class CreateModelDokumentForm(forms.ModelForm):
                 ),
                 css_class="col-sm-6 input-osoba select2-input",
             )
-        self.helper = FormHelper(self)
-        self.helper.layout = Layout(
-            Div("typ_dokumentu", css_class="col-sm-4"),
-            Div("organizace", css_class="col-sm-4"),
-            Div("rok_vzniku", css_class="col-sm-4"),
-            Div("oznaceni_originalu", css_class="col-sm-6"),
-            autori_div,
-            Div("popis", css_class="col-sm-12"),
-            Div("poznamka", css_class="col-sm-12"),
-        )
-        self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
@@ -702,20 +691,6 @@ class CreateModelExtraDataForm(forms.ModelForm):
             .filter(heslo__startswith="3D")
             .values_list("id", "heslo")
         )
-        self.helper = FormHelper(self)
-        self.helper.layout = Layout(
-            Div(
-                Div("format", css_class="col-sm-6"),
-                Div("duveryhodnost", css_class="col-sm-6"),
-                Div("odkaz", css_class="col-sm-12"),
-                Div("zeme", css_class="col-sm-3"),
-                Div("region_extra", css_class="col-sm-3"),
-                Div("vyska", css_class="col-sm-3"),
-                Div("sirka", css_class="col-sm-3"),
-                css_class="row",
-            ),
-        )
-        self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
