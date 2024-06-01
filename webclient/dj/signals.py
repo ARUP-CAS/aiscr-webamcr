@@ -145,9 +145,9 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
         if instance.close_active_transaction_when_finished:
             def save_metadata():
                 if not instance.suppress_signal_arch_z:
-                    instance.archeologicky_zaznam.save_metadata(fedora_transaction)
+                    instance.archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
                 if save_pian_metadata:
-                    pian.save_metadata(fedora_transaction)
+                    pian.save_metadata(fedora_transaction, skip_container_check=True)
                 fedora_transaction.mark_transaction_as_closed()
 
             transaction.on_commit(save_metadata)

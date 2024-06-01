@@ -119,7 +119,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         ).save()
         self.save()
 
-    def set_odeslany(self, user):
+    def set_odeslany(self, user, request, messages):
         """
         Metóda pro nastavení stavu odeslaný a uložení změny do historie.
         Dokumenty se taky posouvají do stavu odeslaný.
@@ -136,7 +136,12 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         ).save()
         for dc in self.casti_dokumentu.all():
             if dc.dokument.stav == D_STAV_ZAPSANY:
-                dc.dokument.set_odeslany(user)
+                from dokument.models import Dokument
+                dokument: Dokument = dc.dokument
+                old_ident = dokument.ident_cely
+                dokument.active_transaction = self.active_transaction
+                Dokument.set_permanent_identificator(dokument, request, messages, self.active_transaction)
+                dokument.set_odeslany(user, old_ident)
         # posun Zdroju do stavu ZAPSANY
         externi_zdroje = ExterniZdroj.objects.filter(
             stav=EZ_STAV_ZAPSANY, externi_odkazy_zdroje__archeologicky_zaznam=self

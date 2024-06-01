@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Pes)
 def pes_save(sender, instance: Pes, **kwargs):
-    if instance.user:
+    if instance.user and not getattr(instance, "suppress_signal", False):
         transaction = FedoraTransaction()
         instance.user.save_metadata(transaction, close_transaction=True)
         logger.debug("notifikace_projekty.signals.pes_save.save_metadata.end",
@@ -21,7 +21,7 @@ def pes_save(sender, instance: Pes, **kwargs):
 
 @receiver(pre_delete, sender=Pes)
 def pes_delete(sender, instance: Pes, **kwargs):
-    if instance.user:
+    if instance.user and not getattr(instance, "suppress_signal", False):
         transaction = FedoraTransaction()
         instance.user.save_metadata(transaction, close_transaction=True)
         logger.debug("notifikace_projekty.signals.pes_delete.save_metadata.end",

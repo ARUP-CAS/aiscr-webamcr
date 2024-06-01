@@ -160,7 +160,7 @@ def let_delete_repository_container(sender, instance: Let, **kwargs):
 
 
 @receiver(post_save, sender=DokumentCast)
-def dokument_cast_save_metadata(sender, instance: DokumentCast, created, **kwargs):
+def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **kwargs):
     extra = {"dokument_cast": instance.pk, "signal_created": created}
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra=extra)
     from core.repository_connector import FedoraTransaction
@@ -194,7 +194,7 @@ def dokument_cast_save_metadata(sender, instance: DokumentCast, created, **kwarg
 
 
 @receiver(post_delete, sender=DokumentCast)
-def dokument_cast_save_metadata(sender, instance: DokumentCast, **kwargs):
+def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs):
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra={"pk": instance.pk})
     fedora_transaction: FedoraTransaction = instance.active_transaction
     invalidate_model(Dokument)
@@ -204,11 +204,11 @@ def dokument_cast_save_metadata(sender, instance: DokumentCast, **kwargs):
 
     def save_metadata(close_transaction=False):
         if instance.initial_archeologicky_zaznam is not None:
-            instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction)
+            instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
         if instance.initial_projekt is not None:
-            instance.initial_projekt.save_metadata(fedora_transaction)
+            instance.initial_projekt.save_metadata(fedora_transaction, skip_container_check=True)
         if not instance.suppress_dokument_signal:
-            instance.dokument.save_metadata(fedora_transaction)
+            instance.dokument.save_metadata(fedora_transaction, skip_container_check=True)
         if close_transaction:
             fedora_transaction.mark_transaction_as_closed()
 

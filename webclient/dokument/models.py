@@ -4,12 +4,14 @@ import logging
 import math
 import os
 from string import ascii_uppercase as letters
+from typing import Optional
 
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
+from django.http import JsonResponse
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
@@ -24,7 +26,7 @@ from core.constants import (
     D_STAV_ZAPSANY,
     ODESLANI_DOK,
     VRACENI_DOK,
-    ZAPSANI_DOK, OBLAST_CECHY, OBLAST_MORAVA,
+    ZAPSANI_DOK, OBLAST_CECHY, OBLAST_MORAVA, IDENTIFIKATOR_DOCASNY_PREFIX,
 )
 from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
 from core.models import SouborVazby, ModelWithMetadata, Soubor
@@ -214,6 +216,28 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             vazba=self.historie,
         ).save()
         self.save()
+
+    @staticmethod
+    def set_permanent_identificator(dokument, request, messages, fedora_transaction) -> Optional[JsonResponse]:
+        from core.message_constants import MAXIMUM_IDENT_DOSAZEN
+        from dokument.views import get_detail_json_view
+        dokument: Dokument
+        ident_cely = dokument.ident_cely
+        if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
+            from core.ident_cely import get_dokument_rada
+            rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
+            try:
+                dokument.set_permanent_ident_cely(dokument.ident_cely[2], rada)
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+                fedora_transaction.rollback_transaction()
+                dokument.close_active_transaction_when_finished = True
+                return JsonResponse(
+                    {"redirect": get_detail_json_view(ident_cely)}, status=403
+                )
+            else:
+                dokument.save()
+                logger.debug("dokument.views.odeslat.permanent", extra={"ident_cely": dokument.ident_cely})
 
     def set_odeslany(self, user, old_ident):
         """
