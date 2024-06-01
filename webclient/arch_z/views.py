@@ -672,7 +672,7 @@ def odeslat(request, ident_cely):
     if request.method == "POST":
         fedora_trasnaction = FedoraTransaction()
         az.active_transaction = fedora_trasnaction
-        az.set_odeslany(request.user)
+        az.set_odeslany(request.user, request, messages)
         az.save()
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).filter(
@@ -1055,9 +1055,10 @@ def smazat(request, ident_cely):
     else:
         projekt = None
     if request.method == "POST":
+        fedora_transaction = FedoraTransaction()
         try:
-            fedora_transaction = FedoraTransaction()
             az.active_transaction = fedora_transaction
+            az.skip_container_check = True
             az.close_active_transaction_when_finished = True
             az.deleted_by_user = request.user
             az.record_deletion(fedora_transaction)
@@ -1076,10 +1077,8 @@ def smazat(request, ident_cely):
                 item = DokumentCast.objects.get(pk=pk)
                 item.active_transaction = fedora_transaction
                 item.delete()
-            invalidate_model(Akce)
-            invalidate_model(ArcheologickyZaznam)
-            invalidate_model(Projekt)
-            invalidate_model(Historie)
+            from arch_z.signals import invalidate_arch_z_related_models
+            invalidate_arch_z_related_models()
             az.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely,
                                                                "transaction": fedora_transaction})
@@ -1087,6 +1086,7 @@ def smazat(request, ident_cely):
         except RestrictedError as err:
             logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "err": err})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
+            fedora_transaction.rollback_transaction()
             return JsonResponse(
                 {"redirect": az.get_absolute_url()},
                 status=403,

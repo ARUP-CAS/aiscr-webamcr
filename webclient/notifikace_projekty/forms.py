@@ -23,6 +23,7 @@ def create_pes_form(not_readonly=True, model_typ=None):
     Funkce která vrací formulář hlídacího psa pro formset.
     """
     class PesForm(forms.ModelForm):
+        admin_app = False
         class Meta:
             model = Pes
             fields = ["object_id"]
@@ -102,6 +103,8 @@ def create_pes_form(not_readonly=True, model_typ=None):
 
         def save(self, commit=True):
             instance = super(PesForm, self).save(commit=False)
+            if self.admin_app:
+                instance.suppress_signal = True
             try:
                 instance.content_type
             except ContentType.DoesNotExist:

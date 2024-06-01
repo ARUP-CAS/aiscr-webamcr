@@ -67,6 +67,7 @@ class PesNotificationTypeInline(admin.TabularInline):
     model_type = None
     model = Pes
     form = create_pes_form(model_typ=model_type)
+    form.admin_app = True
 
     def get_queryset(self, request):
         queryset = super(PesNotificationTypeInline, self).get_queryset(request)
@@ -82,6 +83,7 @@ class PesKrajNotificationTypeInline(PesNotificationTypeInline):
     """
     model_type = KRAJ_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
+    form.admin_app = True
     verbose_name = _("uzivatel.admin.form.notifikace.kraj")
     verbose_name_plural = _("uzivatel.admin.form.notifikace.kraje")
 
@@ -92,6 +94,7 @@ class PesOkresNotificationTypeInline(PesNotificationTypeInline):
     """
     model_type = OKRES_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
+    form.admin_app = True
     verbose_name = _("uzivatel.admin.form.notifikace.okres")
     verbose_name_plural = _("uzivatel.admin.form.notifikace.okresy")
 
@@ -102,6 +105,7 @@ class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
     """
     model_type = KATASTR_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
+    form.admin_app = True
     verbose_name = _("uzivatel.admin.form.notifikace.katastr")
     verbose_name_plural = _("uzivatel.admin.form.notifikace.katastry")
 

@@ -275,7 +275,8 @@ class Mailer:
         })
         log_entry = zaznam.historie.historie_set.filter(typ_zmeny=f"AZ{AZ_STAV_ZAPSANY}{AZ_STAV_ODESLANY}")\
             .order_by("datum_zmeny").last()
-        if Mailer._notification_should_be_sent(notification_type=notification_type, user=log_entry.uzivatel):
+        if (log_entry and
+                Mailer._notification_should_be_sent(notification_type=notification_type, user=log_entry.uzivatel)):
             cls.__send(subject=subject, to=log_entry.uzivatel.email, html_content=html,
                        notification_type=notification_type, user=log_entry.uzivatel)
 
@@ -287,10 +288,14 @@ class Mailer:
             state = obj.CHOICES[obj.stav][1]
             history_log = Historie.objects.filter(
                 vazba__projekt_historie__ident_cely=obj.ident_cely, typ_zmeny=UZAVRENI_PROJ).order_by('-datum_zmeny')
+            if history_log.count() == 0:
+                return
             user = history_log.first().uzivatel
         elif isinstance(obj, arch_z.models.ArcheologickyZaznam):
             history_log = Historie.objects.filter(
                 vazba__archeologickyzaznam__ident_cely=obj.ident_cely, typ_zmeny=ODESLANI_AZ).order_by('-datum_zmeny')
+            if history_log.count() == 0:
+                return
             user = history_log.first().uzivatel
             state = obj.STATES[obj.stav - 1][1]
         else:
@@ -313,7 +318,8 @@ class Mailer:
         log_entry = project.historie.historie_set\
             .filter(typ_zmeny=UZAVRENI_PROJ) \
             .order_by("datum_zmeny").first()
-        cls._send_a(project, notification_type, log_entry.uzivatel)
+        if log_entry:
+            cls._send_a(project, notification_type, log_entry.uzivatel)
 
     @classmethod
     def send_ea02(cls, arch_z: 'arch_z.models.ArcheologickyZaznam'):
