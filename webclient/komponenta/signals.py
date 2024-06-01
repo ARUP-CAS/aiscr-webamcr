@@ -61,11 +61,12 @@ def komponenta_delete(sender, instance: Komponenta, **kwargs):
     close_transaction = instance.close_active_transaction_when_finished
     if instance.komponenta_vazby.navazany_objekt:
         navazany_objekt = instance.komponenta_vazby.navazany_objekt
+
         def save_metadata():
             if isinstance(navazany_objekt, DokumentCast):
-                navazany_objekt.dokument.save_metadata(fedora_transaction)
+                navazany_objekt.dokument.save_metadata(fedora_transaction, skip_container_check=True)
             elif isinstance(navazany_objekt, DokumentacniJednotka):
-                navazany_objekt.archeologicky_zaznam.save_metadata(fedora_transaction)
+                navazany_objekt.archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
             if close_transaction:
                 fedora_transaction.mark_transaction_as_closed()
 
