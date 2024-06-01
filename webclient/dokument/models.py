@@ -281,7 +281,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 result.append(_("dokument.models.formCheckOdeslani.missingFormat.text"))
             if not self.popis:
                 result.append(_("dokument.models.formCheckOdeslani.missingPopis.text"))
-            if not self.extra_data.duveryhodnost:
+            if self.extra_data.duveryhodnost is None:
                 result.append(_("dokument.models.formCheckOdeslani.missingDuveryhodnost.text"))
             if not self.casti.all()[0].komponenty.komponenty.all()[0].obdobi:
                 result.append(_("dokument.models.formCheckOdeslani.missingObdobi.text"))
