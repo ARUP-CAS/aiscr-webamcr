@@ -86,6 +86,8 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     """
     # Filters by historie
 
+    # http://localhost:8000/arch-z/akce/vyber?zahrnout_projektove=False&dj_zjisteni=True&predmet_druh=632&adb_ident_obsahuje=ADB&dokument_ident=C-&sort=hlavni_katastr&sort=ident_cely
+
     TYP_VAZBY = ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
     HISTORIE_TYP_ZMENY_STARTS_WITH = "AZ"
 

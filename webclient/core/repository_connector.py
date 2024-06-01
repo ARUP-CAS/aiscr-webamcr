@@ -355,11 +355,11 @@ class FedoraRepositoryConnector:
             'Link': '<http://fedora.info/definitions/v4/repository#ArchivalGroup>;rel="type"'
         }
         self._send_request(url, FedoraRequestType.CREATE_CONTAINER, headers=headers)
-        self._create_link()
+        self.create_link()
         logger.debug("core_repository_connector._create_container.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
-    def _create_link(self, ident_cely_proxy=None):
+    def create_link(self, ident_cely_proxy=None):
         logger.debug("core_repository_connector._create_link.start", extra={"ident_cely": self.record.ident_cely,
                                                                             "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.CREATE_LINK)
@@ -428,7 +428,7 @@ class FedoraRepositoryConnector:
         url = self._get_request_url(FedoraRequestType.GET_LINK)
         result = self._send_request(url, FedoraRequestType.GET_LINK)
         if result.status_code == 404:
-            self._create_link()
+            self.create_link()
         logger.debug("core_repository_connector._check_container.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
@@ -824,7 +824,6 @@ class FedoraRepositoryConnector:
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5)
 
         self._delete_link(ident_cely_old)
-        self._create_link(ident_cely_proxy=ident_cely_new)
 
         logger.debug("core_repository_connector.record_ident_change.end", extra={"ident_cely": self.record.ident_cely,
                                                                                  "ident_cely_old": ident_cely_old,
@@ -932,7 +931,14 @@ class FedoraTransactionOperation(Enum):
     ROLLBACK = 2
 
 
+class FedoraTransactionPostCommitTasks(Enum):
+    CREATE_LINK = 1
+
+
 class FedoraTransaction:
+    post_commit_tasks = {}
+    child_transaction = False
+
     def __init__(self, uid=None):
         if uid is None:
             self.__create_transaction()
@@ -973,8 +979,24 @@ class FedoraTransaction:
         logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.start",
                      extra={"transaction": self.uid})
         self._send_transaction_request()
+        if not self.child_transaction:
+            self._perform_post_commit_tasks()
         logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
                      extra={"transaction": self.uid})
+
+    def _perform_post_commit_tasks(self):
+        if len(self.post_commit_tasks) == 0:
+            return
+        new_transaction = FedoraTransaction()
+        new_transaction.child_transaction = True
+        for key, value in self.post_commit_tasks.items():
+            if key == FedoraTransactionPostCommitTasks.CREATE_LINK:
+                if not isinstance(value, list) or len(value) != 2:
+                    logger.error("core_repository_connector.FedoraTransaction._perform_post_commit_tasks."
+                                 "parameter_error", extra={"transaction": self.uid})
+                connector = FedoraRepositoryConnector(value[0], new_transaction)
+                connector.create_link(ident_cely_proxy=value[1])
+        new_transaction.mark_transaction_as_closed()
 
     def __create_transaction(self):
         logger.debug("core_repository_connector.FedoraTransaction.__create_transaction.start")

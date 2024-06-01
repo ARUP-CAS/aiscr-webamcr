@@ -6,7 +6,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from celery import Celery
 
-
 logger = logging.getLogger(__name__)
 UPDATE_REDIS_SNAPSHOT = 20
 
@@ -256,6 +255,9 @@ class ModelWithMetadata(models.Model):
 
                 self: Pian
                 transaction.on_commit(lambda: save_metadata(self))
+
+        from core.repository_connector import FedoraTransactionPostCommitTasks
+        fedora_transaction.post_commit_tasks[FedoraTransactionPostCommitTasks.CREATE_LINK] = [self, old_ident_cely]
         logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end",
                      extra={"transaction": fedora_transaction.uid, "old_ident_cely": old_ident_cely,
                             "new_ident_cely": new_ident_cely})
