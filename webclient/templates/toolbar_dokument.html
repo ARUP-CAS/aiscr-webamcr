@@ -6,7 +6,7 @@
       {% if is_3d %}
         <a href="{% url 'dokument:index-model-3D' %}"><span class="material-icons">3d_rotation</span><span class="app-controls-button-text app-controls-button-text"> {% trans "templates.toolbarDokument.knihovna3D.title" %}</span></a>
       {% else %}
-        <a href="#"><span class="material-icons">description</span> <span class="app-controls-button-text app-controls-button-text"> {% trans "templates.toolbarDokument.dokument.title" %}</span></a>
+        <a href="{% url 'dokument:index' %}"><span class="material-icons">description</span> <span class="app-controls-button-text app-controls-button-text"> {% trans "templates.toolbarDokument.dokument.title" %}</span></a>
       {% endif %}
     </div>
     <div id="id-app-entity-item" class="app-entity-item">

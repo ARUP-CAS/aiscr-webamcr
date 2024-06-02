@@ -3,7 +3,7 @@
 <div class="app-toolbar {% if showcontrols %}mb-0{% else %}mb-2{% endif %}">
   <div class="app-left">
     <div class="app-entity-title">
-      <a href="#"><span class="material-icons">menu_book</span><span class="app-controls-button-text"> {{toolbar_name}}</span></a>
+      <a href="{% url 'ez:index' %}"><span class="material-icons">menu_book</span><span class="app-controls-button-text"> {{toolbar_name}}</span></a>
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
       {{zaznam.ident_cely}}
