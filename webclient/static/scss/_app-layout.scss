@@ -114,8 +114,8 @@ table th {
   padding-bottom: 0.1rem !important;
 }
 
-.form-control-sm:not(.textarea),
-.form-control:not(.textarea),
+.form-control-sm:not(textarea),
+.form-control:not(textarea),
 .app-daterangepicker .form-group>div .textinput {
   height: 1.5rem !important;
   padding-top: 0 !important;
