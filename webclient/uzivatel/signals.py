@@ -22,19 +22,21 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Organizace)
 def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
     logger.debug("uzivatel.signals.orgnaizace_save_metadata.start", extra={"ident_cely": instance.ident_cely})
-    fedora_transaction = get_or_create_transaction(instance)
-    instance.save_metadata(fedora_transaction, close_transaction=True)
-    logger.debug("uzivatel.signals.orgnaizace_save_metadata.end",
-                 extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction})
+    if not instance.suppress_signal:
+        fedora_transaction = get_or_create_transaction(instance)
+        instance.save_metadata(fedora_transaction, close_transaction=True)
+        logger.debug("uzivatel.signals.orgnaizace_save_metadata.end",
+                     extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction})
 
 
 @receiver(post_save, sender=Osoba)
 def osoba_save_metadata(sender, instance: Osoba, **kwargs):
     logger.debug("uzivatel.signals.osoba_save_metadata.start", extra={"ident_cely": instance.ident_cely})
-    fedora_transaction = get_or_create_transaction(instance)
-    instance.save_metadata(fedora_transaction, close_transaction=True)
-    logger.debug("uzivatel.signals.osoba_save_metadata.end",
-                 extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction})
+    if not instance.suppress_signal:
+        fedora_transaction = get_or_create_transaction(instance)
+        instance.save_metadata(fedora_transaction, close_transaction=True)
+        logger.debug("uzivatel.signals.osoba_save_metadata.end",
+                     extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction})
 
 
 @receiver(pre_save, sender=User)

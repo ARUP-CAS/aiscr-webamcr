@@ -37,10 +37,11 @@ def save_metadata_heslar(sender, instance: Heslar, **kwargs):
     Funkce pro uložení metadat hesláře.
     """
     logger.debug("heslo.signals.save_metadata_heslar.start")
-    fedora_transaction = FedoraTransaction()
-    transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
-    logger.debug("heslo.signals.save_metadata_heslar.end",
-                 extra={"transaction": getattr(fedora_transaction, "uid", None)})
+    if not instance.suppress_signal:
+        fedora_transaction = FedoraTransaction()
+        transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
+        logger.debug("heslo.signals.save_metadata_heslar.end",
+                     extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
 @receiver(post_save, sender=RuianKatastr)
@@ -49,10 +50,11 @@ def save_metadata_katastr(sender, instance: RuianKatastr, **kwargs):
     Funkce pro uložení metadat katastru.
     """
     logger.debug("heslo.signals.save_metadata_katastr.start")
-    fedora_transaction = FedoraTransaction()
-    transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
-    logger.debug("heslo.signals.save_metadata_katastr.end",
-                 extra={"transaction": getattr(fedora_transaction, "uid", None)})
+    if not instance.suppress_signal:
+        fedora_transaction = FedoraTransaction()
+        transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
+        logger.debug("heslo.signals.save_metadata_katastr.end",
+                     extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
 @receiver(post_save, sender=RuianKraj)
@@ -61,19 +63,21 @@ def save_metadata_kraj(sender, instance: RuianKraj, **kwargs):
     Funkce pro uložení metadat kraje.
     """
     logger.debug("heslo.signals.save_metadata_kraj.start")
-    fedora_transaction = FedoraTransaction()
-    transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
-    logger.debug("heslo.signals.save_metadata_kraj.end",
-                 extra={"transaction": getattr(fedora_transaction, "uid", None)})
+    if not instance.suppress_signal:
+        fedora_transaction = FedoraTransaction()
+        transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
+        logger.debug("heslo.signals.save_metadata_kraj.end",
+                     extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
 @receiver(post_save, sender=RuianOkres)
 def save_metadata_okres(sender, instance: RuianOkres, **kwargs):
     logger.debug("heslo.signals.save_metadata_okres.start")
-    fedora_transaction = FedoraTransaction()
-    transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
-    logger.debug("heslo.signals.save_metadata_okres.end",
-                 extra={"transaction": getattr(fedora_transaction, "uid", None)})
+    if not instance.suppress_signal:
+        fedora_transaction = FedoraTransaction()
+        transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
+        logger.debug("heslo.signals.save_metadata_okres.end",
+                     extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
 @receiver(post_save, sender=HeslarHierarchie)
@@ -83,20 +87,22 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, created,
     """
     logger.debug("heslo.signals.save_metadata_heslar_hierarchie.start")
 
-    def save_metadata():
-        fedora_transaction = FedoraTransaction()
-        if instance.heslo_podrazene:
-            instance.heslo_podrazene.save_metadata(fedora_transaction)
-        if instance.heslo_nadrazene:
-            instance.heslo_nadrazene.save_metadata(fedora_transaction)
-        if instance.initial_heslo_nadrazene and instance.heslo_nadrazene.pk != instance.initial_heslo_nadrazene.pk:
-            instance.initial_heslo_nadrazene.save_metadata(fedora_transaction)
-        if instance.initial_heslo_podrazene and instance.heslo_podrazene.pk != instance.initial_heslo_podrazene.pk:
-            instance.initial_heslo_podrazene.save_metadata(fedora_transaction)
-        fedora_transaction.mark_transaction_as_closed()
-        logger.debug("heslo.signals.save_metadata_heslar_hierarchie.end",
-                     extra={"transaction": getattr(fedora_transaction, "uid", None)})
-    transaction.on_commit(save_metadata)
+    if not instance.suppress_signal:
+
+        def save_metadata():
+            fedora_transaction = FedoraTransaction()
+            if instance.heslo_podrazene:
+                instance.heslo_podrazene.save_metadata(fedora_transaction)
+            if instance.heslo_nadrazene:
+                instance.heslo_nadrazene.save_metadata(fedora_transaction)
+            if instance.initial_heslo_nadrazene and instance.heslo_nadrazene.pk != instance.initial_heslo_nadrazene.pk:
+                instance.initial_heslo_nadrazene.save_metadata(fedora_transaction)
+            if instance.initial_heslo_podrazene and instance.heslo_podrazene.pk != instance.initial_heslo_podrazene.pk:
+                instance.initial_heslo_podrazene.save_metadata(fedora_transaction)
+            fedora_transaction.mark_transaction_as_closed()
+            logger.debug("heslo.signals.save_metadata_heslar_hierarchie.end",
+                         extra={"transaction": getattr(fedora_transaction, "uid", None)})
+        transaction.on_commit(save_metadata)
 
 
 @receiver(post_save, sender=HeslarDatace)
@@ -105,17 +111,18 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarDatace, created, **k
     Funkce pro uložení metadat heslář - hierarchie.
     """
     logger.debug("heslo.signals.save_metadata_heslar_hierarchie.start")
-    fedora_transaction = FedoraTransaction()
+    if not instance.suppress_signal:
+        fedora_transaction = FedoraTransaction()
 
-    def save_metadata():
-        if instance.initial_obdobi and instance.initial_obdobi != instance.obdobi:
-            instance.initial_obdobi.save_metadata(fedora_transaction)
-            logger.debug("heslo.signals.save_metadata_heslar_hierarchie.save_metadata",
-                         extra={"transaction": fedora_transaction})
-        instance.obdobi.save_metadata(fedora_transaction, close_transaction=True)
-    transaction.on_commit(save_metadata)
-    logger.debug("heslo.signals.save_metadata_heslar_hierarchie.end",
-                 extra={"transaction": getattr(fedora_transaction, "uid", None)})
+        def save_metadata():
+            if instance.initial_obdobi and instance.initial_obdobi != instance.obdobi:
+                instance.initial_obdobi.save_metadata(fedora_transaction)
+                logger.debug("heslo.signals.save_metadata_heslar_hierarchie.save_metadata",
+                             extra={"transaction": fedora_transaction})
+            instance.obdobi.save_metadata(fedora_transaction, close_transaction=True)
+        transaction.on_commit(save_metadata)
+        logger.debug("heslo.signals.save_metadata_heslar_hierarchie.end",
+                     extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
 @receiver(post_save, sender=HeslarDokumentTypMaterialRada)
@@ -124,15 +131,16 @@ def save_metadata_heslar_dokument_typ_material_rada(sender, instance: HeslarDoku
     Funkce pro uložení metadat heslář - hierarchie.
     """
     logger.debug("heslo.signals.save_metadata_heslar_dokument_typ_material_rada.start")
-    if created:
-        def save_metadata():
-            fedora_transaction = FedoraTransaction()
-            instance.dokument_typ.save_metadata(fedora_transaction)
-            instance.dokument_material.save_metadata(fedora_transaction)
-            instance.dokument_rada.save_metadata(fedora_transaction, close_transaction=True)
-            logger.debug("heslo.signals.save_metadata_heslar_dokument_typ_material_rada.save_metadata",
-                         extra={"transaction": getattr(fedora_transaction, "uid", None)})
-        transaction.on_commit(save_metadata)
+    if not instance.suppress_signal:
+        if created:
+            def save_metadata():
+                fedora_transaction = FedoraTransaction()
+                instance.dokument_typ.save_metadata(fedora_transaction)
+                instance.dokument_material.save_metadata(fedora_transaction)
+                instance.dokument_rada.save_metadata(fedora_transaction, close_transaction=True)
+                logger.debug("heslo.signals.save_metadata_heslar_dokument_typ_material_rada.save_metadata",
+                             extra={"transaction": getattr(fedora_transaction, "uid", None)})
+            transaction.on_commit(save_metadata)
     logger.debug("heslo.signals.save_metadata_heslar_dokument_typ_material_rada.end")
 
 
@@ -142,21 +150,21 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
     Funkce pro uložení metadat heslář - odkaz.
     """
     logger.debug("heslo.signals.save_metadata_heslar_odkaz.start")
-
-    def save_metadata():
-        fedora_transaction = FedoraTransaction()
-        if instance.initial_heslo and instance.initial_heslo != instance.heslo:
-            heslo = Heslar.objects.get(pk=instance.initial_heslo.pk)
+    if not instance.suppress_signal:
+        def save_metadata():
+            fedora_transaction = FedoraTransaction()
+            if instance.initial_heslo and instance.initial_heslo != instance.heslo:
+                heslo = Heslar.objects.get(pk=instance.initial_heslo.pk)
+                heslo.save_metadata(fedora_transaction)
+            heslo = Heslar.objects.get(pk=instance.heslo.pk)
             heslo.save_metadata(fedora_transaction)
-        heslo = Heslar.objects.get(pk=instance.heslo.pk)
-        heslo.save_metadata(fedora_transaction)
-        fedora_transaction.mark_transaction_as_closed()
-        logger.debug("heslo.signals.save_metadata_heslar_odkaz.save_medata",
-                     extra={"transaction": getattr(fedora_transaction, "uid", None),
-                            "initial_heslo": getattr(instance.initial_heslo, "ident_cely", None),
-                            "heslo": getattr(instance.initial_heslo, "ident_cely", None)})
-    transaction.on_commit(save_metadata)
-    logger.debug("heslo.signals.save_metadata_heslar_odkaz.end")
+            fedora_transaction.mark_transaction_as_closed()
+            logger.debug("heslo.signals.save_metadata_heslar_odkaz.save_medata",
+                         extra={"transaction": getattr(fedora_transaction, "uid", None),
+                                "initial_heslo": getattr(instance.initial_heslo, "ident_cely", None),
+                                "heslo": getattr(instance.initial_heslo, "ident_cely", None)})
+        transaction.on_commit(save_metadata)
+        logger.debug("heslo.signals.save_metadata_heslar_odkaz.end")
 
 
 @receiver(pre_delete, sender=Heslar)

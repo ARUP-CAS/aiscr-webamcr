@@ -223,7 +223,7 @@ def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs)
 @receiver(post_save, sender=Tvar)
 def tvar_save(sender, instance: Tvar, created, **kwargs):
     logger.debug("dokument.signals.tvar_save.start", extra={"pk": instance.pk})
-    if instance.dokument and instance.active_transaction:
+    if instance.dokument and instance.active_transaction and not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
         instance.dokument.save_metadata(fedora_transaction,
                                         close_transaction=instance.close_active_transaction_when_finished)

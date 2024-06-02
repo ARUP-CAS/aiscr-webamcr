@@ -41,16 +41,17 @@ def soubor_get_rozsah(sender, instance, **kwargs):
 def soubor_save_update_record_metadata(sender, instance: Soubor, **kwargs):
     logger.debug("cron.signals.soubor_save_update_record_metadata.start",
                  extra={"close_active_transaction_when_finished": instance.close_active_transaction_when_finished})
-    fedora_transaction: FedoraTransaction = instance.active_transaction
-    if instance.vazba is not None and isinstance(instance.vazba.navazany_objekt, ModelWithMetadata) \
-            and instance.suppress_signal is False:
-        instance.vazba.navazany_objekt.save_metadata(fedora_transaction,
-                                                     close_transaction=instance.close_active_transaction_when_finished)
-        logger.debug("cron.signals.soubor_save_update_record_metadata.save_metadata",
-                     extra={"transaction": getattr(fedora_transaction, "uid", ""),
-                            "navazany_objekt": getattr(instance, "ident_cely", "")})
-    elif instance.close_active_transaction_when_finished:
-        fedora_transaction.mark_transaction_as_closed()
+    if not instance.suppress_signal:
+        fedora_transaction: FedoraTransaction = instance.active_transaction
+        if instance.vazba is not None and isinstance(instance.vazba.navazany_objekt, ModelWithMetadata) \
+                and instance.suppress_signal is False:
+            instance.vazba.navazany_objekt.save_metadata(fedora_transaction,
+                                                         close_transaction=instance.close_active_transaction_when_finished)
+            logger.debug("cron.signals.soubor_save_update_record_metadata.save_metadata",
+                         extra={"transaction": getattr(fedora_transaction, "uid", ""),
+                                "navazany_objekt": getattr(instance, "ident_cely", "")})
+        elif instance.close_active_transaction_when_finished:
+            fedora_transaction.mark_transaction_as_closed()
     logger.debug("cron.signals.soubor_save_update_record_metadata.no_action")
 
 

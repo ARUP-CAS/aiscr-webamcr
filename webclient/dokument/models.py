@@ -732,6 +732,7 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     poznamka = models.TextField(blank=True, null=True)
     active_transaction = None
     close_active_transaction_when_finished = None
+    suppress_signal = False
 
     class Meta:
         db_table = "tvar"

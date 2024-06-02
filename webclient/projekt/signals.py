@@ -114,8 +114,9 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     fedora_transaction = instance.active_transaction
     if getattr(instance, "suppress_signal", False) is not True:
         instance.save_metadata(fedora_transaction, close_transaction=instance.close_active_transaction_when_finished)
-    if (instance.stav == PROJEKT_STAV_ZAPSANY and hasattr(instance, "__original_stav") \
-            and instance.stav != instance.__original_stav or instance.stav == PROJEKT_STAV_ZAPSANY and not hasattr(instance, "__original_stav")) :
+    if (instance.stav == PROJEKT_STAV_ZAPSANY and hasattr(instance, "__original_stav")\
+            and instance.stav != instance.__original_stav or instance.stav == PROJEKT_STAV_ZAPSANY
+            and not hasattr(instance, "__original_stav")) :
         logger.debug("projekt.signals.projekt_post_save.checked_hlidaci_pes",
                      extra={"instance": instance})
         check_hlidaci_pes.delay(instance.pk)
