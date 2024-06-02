@@ -642,6 +642,7 @@
     }
 
     window.addEventListener("DOMContentLoaded", function() {
+      $(".tooltip").tooltip("hide");
       $('select.select2multiple').each(function() {
         setTimeout(() => {
           if ($(this).next()[0].classList.contains("select2-container")){
