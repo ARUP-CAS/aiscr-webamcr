@@ -178,8 +178,17 @@ textarea.form-control:not(.disabled-text-area) {
   height: auto;
 }
 
-textarea.disabled-text-area {
-  height: 1.5rem !important;
+textarea.disabled-text-area,
+textarea[readonly] {
+  @media (pointer: fine) {
+    height: 1.5rem !important;
+  }
+
+  @media (pointer: coarse) {
+    height: 3rem !important;
+  }
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 // Form groups
