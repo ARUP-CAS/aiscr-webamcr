@@ -106,17 +106,18 @@ def update_akce_snapshot(sender, instance: Akce, **kwargs):
     if not check_if_task_queued("Akce", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["Akce", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
     invalidate_arch_z_related_models()
-    fedora_transaction: Optional[FedoraTransaction, None] = instance.active_transaction
-    if instance.projekt is not None and instance.initial_projekt is None:
-        instance.projekt.save_metadata(fedora_transaction)
-    if instance.projekt is None and instance.initial_projekt is not None:
-        instance.initial_projekt.save_metadata(fedora_transaction)
-    if (instance.projekt is not None and instance.initial_projekt is not None
-            and instance.projekt != instance.initial_projekt):
-        instance.projekt.save_metadata(fedora_transaction)
-        instance.initial_projekt.save_metadata(fedora_transaction)
-    if instance.close_active_transaction_when_finished:
-        fedora_transaction.mark_transaction_as_closed()
+    if not instance.suppress_signal:
+        fedora_transaction: Optional[FedoraTransaction, None] = instance.active_transaction
+        if instance.projekt is not None and instance.initial_projekt is None:
+            instance.projekt.save_metadata(fedora_transaction)
+        if instance.projekt is None and instance.initial_projekt is not None:
+            instance.initial_projekt.save_metadata(fedora_transaction)
+        if (instance.projekt is not None and instance.initial_projekt is not None
+                and instance.projekt != instance.initial_projekt):
+            instance.projekt.save_metadata(fedora_transaction)
+            instance.initial_projekt.save_metadata(fedora_transaction)
+        if instance.close_active_transaction_when_finished:
+            fedora_transaction.mark_transaction_as_closed()
     logger.debug("arch_z.signals.update_akce_snapshot.end", extra={"record_pk": instance.pk})
 
 
@@ -127,16 +128,17 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
     """
     logger.debug("arch_z.signals.create_externi_odkaz_metadata.start", extra={"record_pk": instance.pk})
     invalidate_arch_z_related_models()
-    fedora_transaction: FedoraTransaction = instance.active_transaction
-    if instance.archeologicky_zaznam is not None:
-        instance.archeologicky_zaznam.save_metadata(fedora_transaction)
-    if instance.externi_zdroj is not None:
-        instance.externi_zdroj.save_metadata(fedora_transaction)
-    close_transaction = instance.close_active_transaction_when_finished
-    if close_transaction:
-        fedora_transaction.mark_transaction_as_closed()
-    logger.debug("arch_z.signals.create_externi_odkaz_metadata.end", extra={"record_pk": instance.pk,
-                                                                            "transaction": fedora_transaction})
+    if not instance.suppress_signal:
+        fedora_transaction: FedoraTransaction = instance.active_transaction
+        if instance.archeologicky_zaznam is not None:
+            instance.archeologicky_zaznam.save_metadata(fedora_transaction)
+        if instance.externi_zdroj is not None:
+            instance.externi_zdroj.save_metadata(fedora_transaction)
+        close_transaction = instance.close_active_transaction_when_finished
+        if close_transaction:
+            fedora_transaction.mark_transaction_as_closed()
+        logger.debug("arch_z.signals.create_externi_odkaz_metadata.end", extra={"record_pk": instance.pk,
+                                                                                "transaction": fedora_transaction})
 
 
 @receiver(pre_delete, sender=ArcheologickyZaznam)

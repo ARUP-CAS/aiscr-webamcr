@@ -40,17 +40,18 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
     invalidate_model(SamostatnyNalez)
     invalidate_model(Projekt)
     invalidate_model(Historie)
-    fedora_transaction = instance.active_transaction
+    if not instance.suppress_signal:
+        fedora_transaction = instance.active_transaction
 
-    def save_metadata(close_transaction=False):
-        if (created or instance.initial_pristupnost != instance.pristupnost) and instance.projekt:
-            instance.projekt.save_metadata(fedora_transaction)
-        instance.save_metadata(fedora_transaction, close_transaction=close_transaction)
-    
-    if instance.close_active_transaction_when_finished:
-        transaction.on_commit(lambda: save_metadata(True))
-    else:
-        save_metadata(False)
+        def save_metadata(close_transaction=False):
+            if (created or instance.initial_pristupnost != instance.pristupnost) and instance.projekt:
+                instance.projekt.save_metadata(fedora_transaction)
+            instance.save_metadata(fedora_transaction, close_transaction=close_transaction)
+
+        if instance.close_active_transaction_when_finished:
+            transaction.on_commit(lambda: save_metadata(True))
+        else:
+            save_metadata(False)
     if not check_if_task_queued("SamostatnyNalez", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["SamostatnyNalez", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
     logger.debug("pas.signals.save_metadata_samostatny_nalez.end", extra={"ident_cely": instance.ident_cely,
@@ -88,16 +89,17 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
 @receiver(post_save, sender=UzivatelSpoluprace)
 def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.save_uzivatel_spoluprce.start", extra={"pk": instance.pk})
-    fedora_transaction = instance.active_transaction
+    if not instance.suppress_signal:
+        fedora_transaction = instance.active_transaction
 
-    def save_metadata(close_transaction=False):
-        instance.vedouci.save_metadata(fedora_transaction)
-        instance.spolupracovnik.save_metadata(fedora_transaction, close_transaction=close_transaction)
+        def save_metadata(close_transaction=False):
+            instance.vedouci.save_metadata(fedora_transaction)
+            instance.spolupracovnik.save_metadata(fedora_transaction, close_transaction=close_transaction)
 
-    if instance.close_active_transaction_when_finished:
-        transaction.on_commit(lambda: save_metadata(True))
-    else:
-        save_metadata()
+        if instance.close_active_transaction_when_finished:
+            transaction.on_commit(lambda: save_metadata(True))
+        else:
+            save_metadata()
     logger.debug("pas.signals.save_uzivatel_spoluprce.end", extra={"pk": instance.pk})
 
 
