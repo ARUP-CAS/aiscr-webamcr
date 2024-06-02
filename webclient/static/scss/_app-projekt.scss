@@ -7,3 +7,13 @@
     }
   }
 }
+
+#id-modal-content {
+    .dropdown-menu {
+      &.inner {
+        &.show {
+          width: 100%;
+        }
+      }
+    }
+}
