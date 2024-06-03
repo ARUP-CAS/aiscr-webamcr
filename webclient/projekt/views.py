@@ -553,7 +553,7 @@ def smazat(request, ident_cely):
         projekt.record_deletion()
         projekt.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-        return JsonResponse({"redirect": reverse("projekt:list")})
+        return JsonResponse({"redirect": reverse("projekt:index")})
     else:
         warnings = projekt.check_pred_smazanim()
         if warnings:

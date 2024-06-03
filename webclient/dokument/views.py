@@ -1683,7 +1683,10 @@ def smazat(request, ident_cely):
             logger.debug("dokument.views.smazat.deleted", extra={"resp1": resp1})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             fedora_transaction.mark_transaction_as_closed()
-            return JsonResponse({"redirect": reverse("core:home")})
+            if "3D" in ident_cely:
+                return JsonResponse({"redirect": reverse("dokument:index-model-3D")})
+            else:
+                return JsonResponse({"redirect": reverse("dokument:index")})
         else:
             logger.warning("dokument.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
