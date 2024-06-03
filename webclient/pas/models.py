@@ -231,6 +231,20 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         return reverse("pas:detail", kwargs={"ident_cely": self.ident_cely})
 
+    def check_pred_archivaci(self):
+        resp = []
+        if not self.soubory.soubory.exists():
+            resp.append(_("pas.models.samostatnyNalez.checkPredArchivaci.soubory.text"))
+        resp = [str(x) for x in resp]
+        return resp
+
+    def check_pred_potvrzenim(self):
+        resp = []
+        if not self.soubory.soubory.exists():
+            resp.append(_("pas.models.samostatnyNalez.checkPredPotvrzenim.soubory.text"))
+        resp = [str(x) for x in resp]
+        return resp
+
     def check_pred_odeslanim(self):
         """
         Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:

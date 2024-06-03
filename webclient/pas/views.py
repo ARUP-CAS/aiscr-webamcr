@@ -41,7 +41,8 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA, SAMOSTATNY_NALEZ_NELZE_POTVRDIT,
+    SAMOSTATNY_NALEZ_NELZE_ARCHIVOVAT,
 )
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
@@ -520,6 +521,15 @@ def potvrdit(request, ident_cely):
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
+    warnings = sn.check_pred_odeslanim()
+    logger.info("pas.views.potvrdit.warnings", extra={"warnings": warnings})
+    if warnings:
+        request.session["temp_data"] = warnings
+        messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_POTVRDIT)
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True)
         if form.is_valid():
@@ -567,6 +577,15 @@ def archivovat(request, ident_cely):
         )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, sn):
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
+    warnings = sn.check_pred_odeslanim()
+    logger.info("pas.views.archivovat.warnings", extra={"warnings": warnings})
+    if warnings:
+        request.session["temp_data"] = warnings
+        messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_ARCHIVOVAT)
         return JsonResponse(
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
