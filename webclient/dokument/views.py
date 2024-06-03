@@ -374,9 +374,10 @@ class DokumentListView(SearchListView):
             "licence":"licence__razeni",
             "extra_data__zachovalost":"extra_data__zachovalost__razeni",
             "extra_data__nahrada":"extra_data__nahrada__razeni",
-             "extra_data__zeme":"extra_data__zeme__razeni",
+            "extra_data__zeme":"extra_data__zeme__razeni",
             "extra_data__udalost_typ": "extra_data__udalost_typ__razeni",
             "osoby":"osoby_snapshot",
+            "let": "let__ident_cely"
         }.get(field, field)
 
     def get_queryset(self):

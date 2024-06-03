@@ -640,7 +640,9 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
             "predano_organizace": "predano_organizace__nazev_zkraceny",
             "obdobi": "obdobi__razeni",
             "druh_nalezu": "druh_nalezu__razeni",
-            "specifikace": "specifikace__razeni"
+            "specifikace": "specifikace__razeni",
+            "pristupnost": "pristupnost__razeni",
+            "okolnosti": "okolnosti__razeni",
         }.get(field, field)
 
     def get_queryset(self):
