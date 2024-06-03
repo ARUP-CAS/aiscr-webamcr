@@ -1550,7 +1550,22 @@ class AkceListView(SearchListView):
                 "archeologicky_zaznam__hlavni_katastr__okres",
                 "organizace",
                 "hlavni_vedouci",  
-           ).prefetch_related("archeologicky_zaznam__pristupnost","archeologicky_zaznam__katastry","archeologicky_zaznam__katastry__okres","specifikace_data","hlavni_typ","vedlejsi_typ","akcevedouci_set__organizace")
+           ).prefetch_related(
+                "archeologicky_zaznam__pristupnost",
+                "archeologicky_zaznam__katastry",
+                "archeologicky_zaznam__katastry__okres",
+                "specifikace_data",
+                "hlavni_typ",
+                "vedlejsi_typ",
+                "akcevedouci_set__organizace",
+                "archeologicky_zaznam__dokumentacni_jednotky_akce",
+                "archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty",
+                "archeologicky_zaznam__dokumentacni_jednotky_akce__adb",
+                "archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__predmety",
+                "archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__objekty",
+                "archeologicky_zaznam__casti_dokumentu",
+                "archeologicky_zaznam__casti_dokumentu__dokument",
+            )
         )
         qs.cache()
         return self.check_filter_permission(qs)
