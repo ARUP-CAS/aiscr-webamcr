@@ -106,6 +106,9 @@ DATABASES = {
         "PORT": get_secret("DB_PORT"),
         "ATOMIC_REQUESTS": True,
         "DISABLE_SERVER_SIDE_CURSORS": True,
+        'OPTIONS': {
+            'options': '-c statement_timeout=90000',         
+        },
     },
 }
 

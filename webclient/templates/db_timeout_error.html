@@ -1,0 +1,14 @@
+{% extends "base_error.html" %}
+
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "templates.500.title" %}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block error %}
+<h1 class="display-4">{% trans "templates.db_timeout_error.header" %}</h1>
+<p>{% trans "templates.db_timeout_error.text" %}</p>
+<p>{% trans "templates.db_timeout_error.text.part2" %}</p>
+{% endblock %}

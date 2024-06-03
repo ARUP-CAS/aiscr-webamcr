@@ -5,10 +5,10 @@ from django.core.cache import cache
 from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import render
-
+from django.db.utils import OperationalError
 from core.models import Permissions
 from core.message_constants import NEPRODUKCNI_PROSTREDI_INFO
-
+from core.repository_connector import FedoraError
 
 logger = logging.getLogger(__name__)
 
@@ -76,13 +76,16 @@ class ErrorMiddleware:
         response = self.get_response(request)
         return response
 
-    def process_exception(self, request, exception):
-        from core.repository_connector import FedoraError
+    def process_exception(self, request, exception):        
         if isinstance(exception, FedoraError):
             context = {"exception": exception}
             return render(request, 'fedora_error.html', context, status=500)
 
-
+        if isinstance(exception, OperationalError) and "canceling statement due to statement timeout" in str(exception):
+            context = {"exception": exception}
+            return render(request, 'db_timeout_error.html', context, status=500)
+           
+           
 class TestEnvPopupMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
