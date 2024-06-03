@@ -84,6 +84,7 @@ CACHEOPS = {
     "projekt.Projekt": {"ops": ("fetch", ), "timeout": 60*10},
     "ez.ExterniZdroj": {"ops": ("fetch", ), "timeout": 60*10},
     "dokument.Dokument": {"ops": ("fetch", ), "timeout": 60*10},
+    "dokument.DokumentExtraData": {"ops": ("fetch", ), "timeout": 60*10},
     "historie.Historie": {"ops": ("fetch", ), "timeout": 60*10},
     "pas.SamostatnyNalez": {"ops": ("fetch", ), "timeout": 60*10},
     "core.Permissions": {"ops": ("fetch", ), "timeout": 60*60},
