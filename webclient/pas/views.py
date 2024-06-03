@@ -689,7 +689,7 @@ def smazat(request, ident_cely):
                 extra={"resp1": resp1},
             )
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect": reverse("core:home")})
+            return JsonResponse({"redirect": reverse("pas:index")})
         else:
             logger.warning(
                 "pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely}
