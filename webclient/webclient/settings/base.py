@@ -92,6 +92,7 @@ CACHEOPS = {
     "nalez.*": {"ops": ("fetch", ), "timeout": 60*10},
     "lokalita.Lokalita": {"ops": ("fetch", ), "timeout": 60*10},
     "dj.DokumentacniJednotka": {"ops": ("fetch", ), "timeout": 60*10},
+    "uzivatel.User": {"ops": ("fetch", ), "timeout": 60},
 }
 
 SECRET_KEY = get_secret("SECRET_KEY")
