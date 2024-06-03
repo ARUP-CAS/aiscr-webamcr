@@ -16,6 +16,7 @@
           <div class="card-body">
             <form method="POST" class="form-group" onsubmit="registerSumbitButton.disabled = true; return true;" class="mb-0">
               {% crispy form %}
+              {{ form.captcha }}
               <button id="registerSumbitButton" type="submit" class="btn btn-primary btn-block">{% trans "templates.djangoRegistration.registrationForm.submitButton.text" %}</button>
             </form>
           </div>

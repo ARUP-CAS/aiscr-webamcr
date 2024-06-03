@@ -3,11 +3,14 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout, Field
 from crispy_forms.bootstrap import AppendedText
 from django import forms
+from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.password_validation import validate_password
 from django.forms import PasswordInput
 from django.template import loader
 from django.utils.translation import gettext_lazy as _
+from django_recaptcha.fields import ReCaptchaField
+from django_recaptcha.widgets import ReCaptchaV2Invisible
 from django_registration.forms import RegistrationForm
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
@@ -24,6 +27,7 @@ class AuthUserCreationForm(RegistrationForm):
     """
     Formulář pro vytvoření uživatele.
     """
+    captcha = ReCaptchaField(widget=ReCaptchaV2Invisible)
     class Meta(RegistrationForm):
         model = User
         fields = (
@@ -34,6 +38,7 @@ class AuthUserCreationForm(RegistrationForm):
             "organizace",
             "password1",
             "password2",
+            "captcha",
         )
 
         labels = {
@@ -62,6 +67,8 @@ class AuthUserCreationForm(RegistrationForm):
 
     def __init__(self, *args, **kwargs):
         super(AuthUserCreationForm, self).__init__(*args, **kwargs)
+        if settings.SKIP_RECAPTCHA:
+            self.fields.pop("captcha")
         self.helper = FormHelper(self)
         self.fields["telefon"].validators=[validate_phone_number]
         self.fields["telefon"].widget.input_type="tel"
