@@ -86,7 +86,9 @@ SAMOSTATNY_NALEZ_VRACEN: Final = _("common.message.SAMOSTATNY_NALEZ_VRACEN.text"
 SAMOSTATNY_NALEZ_NELZE_ODESLAT: Final = _("common.message.SAMOSTATNY_NALEZ_NELZE_ODESLAT.text")  # Samostatný nález nelze odeslat.
 SAMOSTATNY_NALEZ_ODESLAN: Final = _("common.message.SAMOSTATNY_NALEZ_ODESLAN.text")  # Samostatný nález úspěšně odeslán.
 SAMOSTATNY_NALEZ_POTVRZEN: Final = _("common.message.SAMOSTATNY_NALEZ_POTVRZEN.text")  # Samostatný nález úspěšně potvrzen.
+SAMOSTATNY_NALEZ_NELZE_POTVRDIT: Final = _("common.message.SAMOSTATNY_NALEZ_NELZE_POTVRDIT.text")  # Samostatný nález nelze potvrdit.
 SAMOSTATNY_NALEZ_ARCHIVOVAN: Final = _("common.message.SAMOSTATNY_NALEZ_ARCHIVOVAN.text")  # Samostatný nález úspěšně archivován.
+SAMOSTATNY_NALEZ_NELZE_ARCHIVOVAT: Final = _("common.message.SAMOSTATNY_NALEZ_NELZE_ARCHIVOVAT.text")  # Samostatný nález nelze archivovat.
 SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV: Final = _("core.message_constants.pasZmenaStavuNekymJinym.text")
 
 # Spoluprace
