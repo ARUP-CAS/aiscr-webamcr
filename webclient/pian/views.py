@@ -116,7 +116,9 @@ def detail(request, ident_cely):
         pian = form.save(commit=False)
         pian.active_transaction = fedora_transaction
         pian.save()
-        update_all_katastr_within_akce_or_lokalita(dj_ident_cely, fedora_transaction)
+        djs=DokumentacniJednotka.objects.filter(pian__ident_cely=ident_cely)
+        for dj in djs:
+            update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
         pian.close_active_transaction_when_finished = True
         pian.save()
         if form.changed_data:
@@ -157,7 +159,7 @@ def odpojit(request, dj_ident_cely):
         dj.pian = None
         dj.active_transaction = fedora_transaction
         dj.save()
-        update_all_katastr_within_akce_or_lokalita(dj_ident_cely, fedora_transaction)
+        update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
         logger.debug("pian.views.odpojit.odpojen", extra={"pian_ident_cely": pian.ident_cely,
                                                           "transaction": fedora_transaction.uid})
         if delete_pian:
@@ -333,7 +335,7 @@ def create(request, dj_ident_cely):
                     dj.active_transaction = fedora_transaction
                     dj.pian = pian
                     dj.save()
-                    update_all_katastr_within_akce_or_lokalita(dj_ident_cely, fedora_transaction)
+                    update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
                     pian.close_active_transaction_when_finished = True
                     pian.save()
                     logger.debug("pian.views.create.finished",

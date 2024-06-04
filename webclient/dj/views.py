@@ -34,7 +34,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from heslar.hesla import HESLAR_DJ_TYP
-from heslar.hesla_dynamicka import TYP_DJ_CAST, TYP_DJ_KATASTR, TYP_DJ_LOKALITA, TYP_DJ_SONDA_ID
+from heslar.hesla_dynamicka import TYP_DJ_CAST, TYP_DJ_KATASTR, TYP_DJ_LOKALITA, TYP_DJ_SONDA_ID, TYP_DJ_CELEK
 from heslar.models import Heslar, RuianKatastr
 from komponenta.models import KomponentaVazby
 from pian.models import Pian, vytvor_pian
@@ -77,7 +77,8 @@ def detail(request, typ_vazby, ident_cely):
         if form.changed_data:
             logger.debug("dj.views.detail.changed", extra={"ident_cely": dj.ident_cely})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-        if dj.typ.heslo == "Celek akce":
+        update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
+        if dj.typ.id == TYP_DJ_CELEK:
             logger.debug("dj.views.detail.celek_akce", extra={"ident_cely": dj.ident_cely})
             typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(id=TYP_DJ_CAST)).first()
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
@@ -88,8 +89,7 @@ def detail(request, typ_vazby, ident_cely):
                 dokumentacni_jednotka.typ = typ
                 dokumentacni_jednotka.active_transaction = fedora_transaction
                 dokumentacni_jednotka.save()
-            update_all_katastr_within_akce_or_lokalita(dj.ident_cely, fedora_transaction)
-        elif dj.typ.heslo == "Sonda":
+        elif dj.typ.id == TYP_DJ_SONDA_ID:
             logger.debug("dj.views.detail.sonda", extra={"ident_cely": dj.ident_cely})
             typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(id=TYP_DJ_SONDA_ID)).first()
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
@@ -100,8 +100,7 @@ def detail(request, typ_vazby, ident_cely):
                 dokumentacni_jednotka.typ = typ
                 dokumentacni_jednotka.active_transaction = fedora_transaction
                 dokumentacni_jednotka.save()
-            update_all_katastr_within_akce_or_lokalita(dj.ident_cely, fedora_transaction)
-        elif dj.typ.heslo == "Lokalita":
+        elif dj.typ.id == TYP_DJ_LOKALITA:
             logger.debug("dj.views.detail.lokalita", extra={"ident_cely": dj.ident_cely})
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
                 Q(archeologicky_zaznam=dj.archeologicky_zaznam)
@@ -113,8 +112,7 @@ def detail(request, typ_vazby, ident_cely):
                 ).first()
                 dokumentacni_jednotka.active_transaction = fedora_transaction
                 dokumentacni_jednotka.save()
-            update_all_katastr_within_akce_or_lokalita(dj.ident_cely, fedora_transaction)
-        elif dj.typ == Heslar.objects.get(id=TYP_DJ_KATASTR):
+        elif dj.typ.id == TYP_DJ_KATASTR:
             logger.debug("dj.views.detail.katastr", extra={"ident_cely": dj.ident_cely})            
             if dj.archeologicky_zaznam.hlavni_katastr.pian:
                 dj.pian = dj.archeologicky_zaznam.hlavni_katastr.pian
@@ -267,7 +265,7 @@ def smazat(request, ident_cely):
             fedora_transaction = FedoraTransaction()
             dj.active_transaction = fedora_transaction
             resp = dj.delete()
-            update_all_katastr_within_akce_or_lokalita(dj.ident_cely, fedora_transaction)
+            update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
             fedora_transaction.mark_transaction_as_closed()
             if resp:
                 logger.debug("dj.views.detail.smazat.deleted", {"resp": resp})

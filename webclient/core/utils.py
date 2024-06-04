@@ -238,54 +238,28 @@ def update_main_katastr_within_ku(ident_cely: str, katastr: RuianKatastr):
     cursor.execute(query_update_archz, [katastr.pk, akce_ident_cely])
 
 
-def update_all_katastr_within_akce_or_lokalita(ident_cely, fedora_transaction):
+def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
     """
     Funkce pro update katastru u akce a lokalit.
     """
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
-    akce_ident_cely = ident_cely.split("-D")[0]
-    hlavni_name = ""
-    hlavni_id = None
-    ostatni_name = []
-    ostatni_id = []
-    for line in get_all_pians_with_akce(akce_ident_cely):
-        if hlavni_id is None:
-            hlavni_id = line["dj_katastr_id"]
-            hlavni_name = line["dj_katastr"]
-        elif (
-            hlavni_name != line["dj_katastr"] and line["dj_katastr"] not in ostatni_name
-        ):
-            ostatni_name.append(line["dj_katastr"])
-            ostatni_id.append(line["dj_katastr_id"])
-    ostatni_name = sorted(ostatni_name)
-    # ostatni_id = sorted(ostatni_id)
+    if dj.typ.id == TYP_DJ_KATASTR:
+        zaznam.katastry.set([]) 
+    else:        
+        akce_ident_cely = dj.archeologicky_zaznam.ident_cely        
+        hlavni_id = None        
+        ostatni_id = []
+        for line in get_all_pians_with_akce(akce_ident_cely):
+            if hlavni_id is None:
+                hlavni_id = line["dj_katastr_id"]
+            elif hlavni_id != line["dj_katastr_id"] and line["dj_katastr_id"] not in ostatni_id:
+                ostatni_id.append(line["dj_katastr_id"])
 
-    zaznam = ArcheologickyZaznam.objects.filter(
-        typ_zaznamu__in=['A', 'L'],
-        ident_cely=akce_ident_cely
-    ).first()
-    if zaznam:
-        katastr_changed = False
-        if hlavni_id is not None and zaznam.hlavni_katastr_id != hlavni_id:
-            zaznam.hlavni_katastr_id = hlavni_id
-            katastr_changed = True
-
-        if ostatni_id:
-            archeologicky_zaznam_katastr_query = ArcheologickyZaznamKatastr.objects.filter(
-                archeologicky_zaznam_id=zaznam.id,
-                katastr_id__in=ostatni_id
-            )
-            existing_ids = [x.katastr_id for x in archeologicky_zaznam_katastr_query]
-            new_ids = set(ostatni_id) - set(existing_ids)
-            for new_id in new_ids:
-                ArcheologickyZaznamKatastr.objects.create(
-                    archeologicky_zaznam_id=zaznam.id,
-                    katastr_id=new_id
-                )
-            ArcheologickyZaznamKatastr.objects.filter(
-                archeologicky_zaznam_id=zaznam.id
-            ).exclude(katastr_id__in=ostatni_id).delete()
-        if katastr_changed:
+        zaznam = ArcheologickyZaznam.objects.filter(ident_cely=akce_ident_cely).first()
+        if zaznam:                 
+            if hlavni_id is not None:
+                zaznam.hlavni_katastr_id = hlavni_id            
+            zaznam.katastry.set(ostatni_id)  
             zaznam.active_transaction = fedora_transaction
             zaznam.save()
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
