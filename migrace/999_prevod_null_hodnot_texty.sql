@@ -14,7 +14,6 @@ UPDATE auth_user SET telefon = '' WHERE telefon is NULL;
 UPDATE dokument SET popis = '' WHERE popis is NULL;
 UPDATE dokument SET poznamka = '' WHERE poznamka is NULL;
 UPDATE dokument SET oznaceni_originalu = '' WHERE oznaceni_originalu is NULL;
-UPDATE dokument SET licence = '' WHERE licence is NULL;
 UPDATE dokument_cast SET poznamka = '' WHERE poznamka is NULL;
 UPDATE dokument_extra_data SET odkaz = '' WHERE odkaz is NULL;
 UPDATE dokument_extra_data SET meritko = '' WHERE meritko is NULL;
