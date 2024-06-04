@@ -1,0 +1,2 @@
+ALTER TABLE dokument_cast
+ADD COLUMN projekt INTEGER REFERENCES projekt (id) ON DELETE SET NULL;
