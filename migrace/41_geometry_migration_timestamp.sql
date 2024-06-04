@@ -1,0 +1,2 @@
+ALTER TABLE public.pian ADD geom_updated_at  TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+ALTER TABLE public.pian ADD geom_sjtsk_updated_at  TIMESTAMP WITH TIME ZONE DEFAULT NULL;
