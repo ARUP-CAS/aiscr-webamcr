@@ -613,6 +613,13 @@ UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 
 UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000179'), kulturni_pamatka_cislo = '2487', kulturni_pamatka_popis = 'Hornická kulturní krajina Krupka' WHERE ident_cely = 'C-202311045';
 UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000179'), kulturni_pamatka_cislo = '2491', kulturni_pamatka_popis = 'Kladrubské Polabí' WHERE ident_cely = 'C-202313105';
 UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000179'), kulturni_pamatka_cislo = '2491', kulturni_pamatka_popis = 'Kladrubské Polabí' WHERE ident_cely = 'C-202209899';
+UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-202405811';
+UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000178'), kulturni_pamatka_cislo = '128', kulturni_pamatka_popis = 'Zámek v Litomyšli' WHERE ident_cely = 'C-202403565';
+UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-202403587';
+UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-202402388';
+UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-202402261';
+UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-202402285';
+UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-202401983';
 DELETE FROM heslar WHERE ident_cely = 'HES-000176';
 DELETE FROM heslar WHERE ident_cely = 'HES-000181';
 
