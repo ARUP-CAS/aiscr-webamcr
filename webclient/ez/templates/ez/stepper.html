@@ -6,7 +6,7 @@
       <button type="button" class="btn step-trigger historie-link"
               onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">1</span>
-        <div class="row">
+        <div class="row stepper-row">
           <div class="col-12 {% if not history_dates.datum_zapsani %}pl-0{% endif %}">
             <span class="bs-stepper-label">
                 {% trans "ez.templates.stepper.zapsany.label" %}
@@ -26,7 +26,7 @@
       <button type="button" class="btn step-trigger historie-link"
               onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">2</span>
-        <div class="row">
+        <div class="row stepper-row">
           <div class="col-12 {% if not history_dates.datum_odeslani %}pl-0{% endif %}">
             <span class="bs-stepper-label">
                 {% trans "ez.templates.stepper.odeslany.label" %}
@@ -46,7 +46,7 @@
       <button type="button" class="btn step-trigger historie-link"
               onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">3</span>
-        <div class="row">
+        <div class="row stepper-row">
           <div class="col-12 {% if not history_dates.datum_potvrzeni %}pl-0{% endif %}">
             <span class="bs-stepper-label">
                 {% trans "ez.templates.stepper.potvrzeny.label" %}
