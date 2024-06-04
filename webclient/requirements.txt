@@ -54,4 +54,4 @@ django-object-actions==4.2.0
 
 
 
-uWSGI==2.0.25.1
+uWSGI==2.0.26
