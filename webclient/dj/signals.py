@@ -72,12 +72,13 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
                              extra={"transaction": fedora_transaction.uid})
         initial_pian: Pian = instance.initial_pian
         try:
-            pian_djs = DokumentacniJednotka.objects.filter(pian=initial_pian)
-            if pian_djs.count() < 2 and initial_pian.stav == PIAN_NEPOTVRZEN:
-                logger.debug("dj.signals.save_dokumentacni_jednotka.delete_initial_pian",
-                             extra={"transaction": fedora_transaction.uid, "pian": initial_pian.ident_cely})
-                initial_pian.active_transaction = fedora_transaction
-                initial_pian.delete()
+            if initial_pian is not None:
+                pian_djs = DokumentacniJednotka.objects.filter(pian=initial_pian)
+                if pian_djs.count() < 1 and initial_pian.stav == PIAN_NEPOTVRZEN:
+                    logger.debug("dj.signals.save_dokumentacni_jednotka.delete_initial_pian",
+                                extra={"transaction": fedora_transaction.uid, "pian": initial_pian.ident_cely})
+                    initial_pian.active_transaction = fedora_transaction
+                    initial_pian.delete()
         except ValueError as err:
             logger.debug("dj.signals.save_dokumentacni_jednotka.deleted",
                          extra={"transaction": fedora_transaction.uid, "err": err, "ident_cely": instance.ident_cely})
