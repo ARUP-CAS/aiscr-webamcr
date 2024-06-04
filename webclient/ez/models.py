@@ -138,14 +138,13 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         Pokud je ident dočasný nahrazení identem stálým.
         """
         self.stav = EZ_STAV_POTVRZENY
-        historie_poznamka=self.check_set_permanent_ident()
+        historie_poznamka = self.check_set_permanent_ident()
         Historie(
             typ_zmeny=POTVRZENI_EXT_ZD,
             uzivatel=user,
             vazba=self.historie,
             poznamka = historie_poznamka,
         ).save()
-        self.save()
         self.close_active_transaction_when_finished = True
         self.save()
 
