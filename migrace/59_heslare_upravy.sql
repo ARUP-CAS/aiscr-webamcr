@@ -620,6 +620,10 @@ UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 
 UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-202402261';
 UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-202402285';
 UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-202401983';
+UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-202312164';
+UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-201229639';
+UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-201226979';
+UPDATE projekt SET kulturni_pamatka = (SELECT id FROM heslar WHERE ident_cely = 'HES-000180'), kulturni_pamatka_cislo = '1028', kulturni_pamatka_popis = 'Praha' WHERE ident_cely = 'C-201774739';
 DELETE FROM heslar WHERE ident_cely = 'HES-000176';
 DELETE FROM heslar WHERE ident_cely = 'HES-000181';
 
