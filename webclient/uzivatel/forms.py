@@ -4,6 +4,7 @@ from crispy_forms.layout import Div, Layout, Field
 from crispy_forms.bootstrap import AppendedText
 from django import forms
 from django.conf import settings
+from django.contrib.auth import authenticate
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.password_validation import validate_password
 from django.forms import PasswordInput
@@ -203,6 +204,12 @@ class UpdatePasswordSettings(forms.ModelForm):
     """
     Formulář pro změnu hesla.
     """
+    old_password = forms.CharField(
+        required=False,
+        widget=PasswordInput(),
+        label=_("uzivatel.forms.userChange.old_password.label"),
+        help_text=_("uzivatel.forms.UpdatePasswordSettings.old_password.tooltip")
+    )
     password1 = forms.CharField(
         required=False,
         widget=PasswordInput(),
@@ -218,9 +225,12 @@ class UpdatePasswordSettings(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+        old_password = cleaned_data.get("old_password")
         password1 = cleaned_data.get("password1")
         password2 = cleaned_data.get("password2")
 
+        if self.instance.check_password(old_password):
+            raise ValidationError({"old_password": [_("uzivatel.forms.UpdatePasswordSettings.old_password.error")]})
         if password1 == "" and password2 != "":
             raise ValidationError({"password1": [_("uzivatel.forms.UpdatePasswordSettings.password1.error")]})
         elif password2 != "" and password2 == "":
@@ -239,6 +249,7 @@ class UpdatePasswordSettings(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
+                Div("old_password", css_class="col-sm-3"),
                 Div("password1", css_class="col-sm-3"),
                 Div("password2", css_class="col-sm-3"),
                 css_class="row",
