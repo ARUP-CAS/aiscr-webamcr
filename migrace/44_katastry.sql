@@ -12,7 +12,7 @@ WITH
 		INSERT INTO komponenta_vazby (id, typ_vazby) SELECT new_id, 'dokumentacni_jednotka' FROM kvtab
 	)
 INSERT INTO dokumentacni_jednotka (negativni_jednotka, ident_cely, archeologicky_zaznam, pian, typ, komponenty)
-SELECT true, az.ident_cely || '-D01', az.id, kat.pian_id, (SELECT id FROM heslar WHERE ident_cely = 'HES-001073'),
+SELECT true, az.ident_cely || '-D01', az.id, kat.pian, (SELECT id FROM heslar WHERE ident_cely = 'HES-001073'),
 	(SELECT new_id FROM kvtab WHERE kvtab.azid = az.id) FROM lokalita lok
 LEFT JOIN archeologicky_zaznam az ON lok.archeologicky_zaznam = az.id
 LEFT JOIN dokumentacni_jednotka dj ON az.id = dj.archeologicky_zaznam
