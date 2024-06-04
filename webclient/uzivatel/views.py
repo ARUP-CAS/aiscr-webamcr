@@ -272,7 +272,8 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         request_data = dict(request.POST)
         logger.debug("uzivatel.views.UserAccountUpdateView.post.start", extra={"request_data": request_data})
         form = self.form_class(data=request.POST, instance=self.request.user)
-        if form.is_valid():
+        has_changed = request.POST.get("telefon") != self.request.user.telefon
+        if form.is_valid() and has_changed:
             obj = form.save(commit=False)
             obj: User
             obj.active_transaction = FedoraTransaction()
@@ -289,7 +290,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
                                  _("uzivatel.views.UserAccountUpdateView.post.success"))
             obj.close_active_transaction_when_finished = True
             obj.save()
-        else:
+        elif not form.is_valid():
             messages.add_message(request, messages.ERROR,
                                  _("uzivatel.views.UserAccountUpdateView.post.change_password.fail"))
             context = self.invalid_form_context(form, "form")
