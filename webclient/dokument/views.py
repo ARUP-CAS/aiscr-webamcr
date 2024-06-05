@@ -254,7 +254,7 @@ def detail_model_3D(request, ident_cely):
     context["show"] = show
     context["global_map_can_edit"] = False
     if dokument.soubory:
-        context["soubory"] = dokument.soubory.soubory.all()
+        context["soubory"] = dokument.soubory.soubory.all().order_by("nazev")
     else:
         context["soubory"] = None
     return render(request, "dokument/detail_model_3D.html", context)
@@ -496,7 +496,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["show"] = show
 
         if dokument.soubory:
-            context["soubory"] = dokument.soubory.soubory.all()
+            context["soubory"] = dokument.soubory.soubory.all().order_by("nazev")
         else:
             context["soubory"] = None
 
