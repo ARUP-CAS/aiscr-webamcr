@@ -6,7 +6,7 @@
       <button type="button" class="btn step-trigger historie-link"
               onclick="location.href='{% url 'historie:'|add:type zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">1</span>
-        <div class="row">
+        <div class="row stepper-row">
           <span class="bs-stepper-label">
             <div class="col-12 {% if not history_dates.datum_zapsani %}pl-0{% endif %}">
               {% trans "arch_z.templates.arch_z.arch_z_stepper.rozepsana.label" %}
@@ -14,7 +14,7 @@
             <div class="col-12 app-stepper-date-container">
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                     title="{{ history_dates.datum_zapsani.uzivatel }}">
-                {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
+                {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}&nbsp;
               </span>
             </div>
           </span>
@@ -26,7 +26,7 @@
       <button type="button" class="btn step-trigger historie-link"
               onclick="location.href='{% url 'historie:'|add:type zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">2</span>
-        <div class="row">
+        <div class="row stepper-row">
           <div class="col-12 {% if not history_dates.datum_odeslani %}pl-0{% endif %}">
             <span class="bs-stepper-label">
                 {% trans "arch_z.templates.arch_z.arch_z_stepper.odeslana.label" %}
@@ -46,7 +46,7 @@
       <button type="button" class="btn step-trigger historie-link"
               onclick="location.href='{% url 'historie:'|add:type zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">3</span>
-        <div class="row">
+        <div class="row stepper-row">
           <div class="col-12 {% if not history_dates.datum_archivace %}pl-0{% endif %}">
             <span class="bs-stepper-label">
                 {% trans "arch_z.templates.arch_z.arch_z_stepper.archivovana.label" %}
