@@ -2,6 +2,7 @@ import time
 import datetime
 import logging
 import unittest
+import base64
 
 from django.conf import settings
 from selenium.webdriver import ActionChains
@@ -121,21 +122,29 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_066_odeslani_dokumentu_p_001(self):
         #Scenar_66 Odeslání dokumentu (pozitivní scénář 1)
         logger.info("AkceDokumenty.test_066_odeslani_dokumentu_p_001.start")
-        self.login("archivar")
+        self.login("badatel")
         self.go_to_form_vybrat()
-      
-        self.assertEqual(Dokument.objects.filter(ident_cely='X-C-TX-202413000').first().stav , D_STAV_ZAPSANY)   
+        self.assertEqual(Dokument.objects.filter(ident_cely='X-C-TX-000000003').first().stav , D_STAV_ZAPSANY)   
+        id=Dokument.objects.filter(ident_cely='X-C-TX-000000003').first().id
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413000")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-000000003")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.LINK_TEXT, "X-C-TX-202413000")
+        self.ElementClick(By.LINK_TEXT, "X-C-TX-000000003")
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons")
+
+        
+        with open("dokument/tests/resources/test.jpg", "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+
+        self.addFileToDropzone("#my-awesome-dropzone",'test.jpg',encoded_string)
+        self.wait(4) 
+        with Wait_for_page_load(self.driver):
+            self.ElementClick(By.LINK_TEXT, _("core.templates.upload_file.submitButton.text"))        
         self.ElementClick(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text")
-        #self.wait(1)
         with Wait_for_page_load(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-   
-        self.assertEqual(Dokument.objects.filter(ident_cely='X-C-TX-202413000').first().stav , D_STAV_ODESLANY)  
+        self.assertEqual(Dokument.objects.filter(id=id).first().stav , D_STAV_ODESLANY) 
 
         logger.info("AkceDokumenty.test_066_odeslani_dokumentu_p_001.end")
         

@@ -345,6 +345,36 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
             self.ElementClick(By.CSS_SELECTOR, ".btn")
 
         self.driver.set_window_rect(0,0,1360, 1020)   
+    
+    def addFileToDropzone(self, css_selector, name, content):
+        """
+        Trigger a file add with `name` and `content` to Dropzone element at `css_selector`.
+        """
+        script = """
+        const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
+        const byteCharacters = atob(b64Data);
+        const byteArrays = [];
+
+        for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+            const slice = byteCharacters.slice(offset, offset + sliceSize);
+            const byteNumbers = new Array(slice.length);
+            for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
+        }
+            
+        const blob = new Blob(byteArrays, {type: contentType});
+        return blob;
+        }  
+
+        var blob = b64toBlob('%s', 'image/jpeg');
+        var dropzone_instance = Dropzone.forElement('%s')
+        var new_file = new File([blob], '%s', {type: 'image/jpeg'})
+        dropzone_instance.addFile(new_file)
+        """% (content,css_selector,name)
+        self.driver.execute_script(script)
 
 
 class CoreSeleniumTest(BaseSeleniumTestClass):

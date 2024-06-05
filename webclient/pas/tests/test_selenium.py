@@ -20,38 +20,6 @@ from django.utils.translation import gettext as _
 from selenium.common.exceptions import *
 logger = logging.getLogger("tests")
 
-
-def addFileToDropzone(driver, css_selector, name, content):
-  """
-  Trigger a file add with `name` and `content` to Dropzone element at `css_selector`.
-  """
-  script = """
-  const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
-  const byteCharacters = atob(b64Data);
-  const byteArrays = [];
-
-  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-    const slice = byteCharacters.slice(offset, offset + sliceSize);
-    const byteNumbers = new Array(slice.length);
-    for (let i = 0; i < slice.length; i++) {
-      byteNumbers[i] = slice.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    byteArrays.push(byteArray);
-  }
-    
-  const blob = new Blob(byteArrays, {type: contentType});
-  return blob;
-}  
-
-var blob = b64toBlob('%s', 'image/jpeg');
-var dropzone_instance = Dropzone.forElement('%s')
-var new_file = new File([blob], '%s', {type: 'image/jpeg'})
-dropzone_instance.addFile(new_file)
-"""% (content,css_selector,name)
-  driver.execute_script(script)
-  
-
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceSamostatneNalezy(BaseSeleniumTestClass):   
     def go_to_form(self):
@@ -171,7 +139,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         with open("pas/tests/resources/test_foto_1.jpg", "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode()
 
-        addFileToDropzone(self.driver,"#my-awesome-dropzone",'test_foto_1.jpg',encoded_string)
+        self.addFileToDropzone("#my-awesome-dropzone",'test_foto_1.jpg',encoded_string)
         wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
         element = wait.until(EC.element_to_be_clickable((By.LINK_TEXT,  _("core.templates.core.upload_file.dz.removeFile"))))
 
@@ -200,7 +168,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         #with open("pas/tests/resources/test_foto_1.jpg", "rb") as image_file:
         #    encoded_string = base64.b64encode(image_file.read()).decode()
 
-        #addFileToDropzone(self.driver,"#my-awesome-dropzone",'test_foto_1.jpg',encoded_string)
+        #addFileToDropzone("#my-awesome-dropzone",'test_foto_1.jpg',encoded_string)
         #wait = WebDriverWait(self.driver, 10, poll_frequency=1, ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException])
         #element = wait.until(EC.element_to_be_clickable((By.LINK_TEXT,  _("core.templates.core.upload_file.dz.removeFile"))))
 

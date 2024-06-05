@@ -20,7 +20,6 @@ from pian.models import Pian
 from nalez.models import NalezObjekt, NalezPredmet
 from django.utils.translation import gettext as _
 from selenium.common.exceptions import *
-from pas.tests.test_selenium import addFileToDropzone
 logger = logging.getLogger("tests")
 
 
@@ -661,7 +660,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         with open("arch_z/tests/resources/geom.csv", "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode()
 
-        addFileToDropzone(self.driver,"#my-awesome-dropzone",'geom.csv',encoded_string)
+        self.addFileToDropzone("#my-awesome-dropzone",'geom.csv',encoded_string)
         self.wait(1) 
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
@@ -694,7 +693,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         with open("arch_z/tests/resources/geom.csv", "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode()
 
-        addFileToDropzone(self.driver,"#my-awesome-dropzone",'geom.csv',encoded_string)
+        self.addFileToDropzone("#my-awesome-dropzone",'geom.csv',encoded_string)
         self.wait(1) 
         with Wait_for_page_load(self.driver):    
             self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
@@ -1312,7 +1311,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         with open("arch_z/tests/resources/geom.csv", "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode()
 
-        addFileToDropzone(self.driver,"#my-awesome-dropzone",'geom.csv',encoded_string)
+        self.addFileToDropzone("#my-awesome-dropzone",'geom.csv',encoded_string)
         self.wait(1) 
         with Wait_for_page_load(self.driver):    
             self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
