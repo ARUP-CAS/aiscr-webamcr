@@ -93,7 +93,7 @@ def get_detail_context(sn, request):
     context["show"] = get_detail_template_shows(sn, request.user)
     logger.debug("pas.views.get_detail_context", extra=context)
     if sn.soubory:
-        context["soubory"] = sn.soubory.soubory.all()
+        context["soubory"] = sn.soubory.soubory.all().order_by("nazev")
     else:
         context["soubory"] = None
     context["app"] = "pas"

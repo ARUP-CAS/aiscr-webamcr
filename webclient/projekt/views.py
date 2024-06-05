@@ -170,7 +170,7 @@ def detail(request, ident_cely):
         .prefetch_related("soubory__soubory")
     ).order_by("ident_cely")
     context["akce"] = akce
-    soubory = projekt.soubory.soubory.all()
+    soubory = projekt.soubory.soubory.all().order_by("nazev")
     context["soubory"] = soubory
     context["dalsi_katastry"] = projekt.katastry.all()
     context["history_dates"] = get_history_dates(projekt.historie, request.user)
