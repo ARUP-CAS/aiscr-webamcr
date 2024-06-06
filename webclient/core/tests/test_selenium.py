@@ -100,16 +100,20 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
         
         
     def get_container_content(self,container_path):
-        headers =  {"Accept": "application/ld+json"}
+        headers = {}
         response = requests.get(container_path,auth=self.auth,headers=headers) 
         members=[]
         if(response.status_code==200):
-            res = json.loads(response.text)
-            if 'http://www.w3.org/ns/ldp#contains' in res[0]:
-                for n in res[0]['http://www.w3.org/ns/ldp#contains']:
-                    members.append(n['@id'])
-        return members   
-    
+            res = response.text.split("\n")
+            for n in res:
+                if 'ldp:contains' in n: 
+                    start = n.find('<')               
+                    end = n.find('>', start)               
+                    if start != -1 and end != -1:               
+                        result = n[start + 1:end]          
+                        members.append(result)
+        return members 
+        
         
     api_url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
     auth = requests.auth.HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
@@ -122,20 +126,35 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
     def delete_container(self,container_path):
         response = requests.delete(container_path,auth=self.auth) 
         
+    def wipe_Fedora_dir(self,name,deep):
+        mem=self.get_container_content(name)
+        for item in mem:
+            self.wipe_Fedora_dir(item,deep+1) 
+            if deep>1:
+                self.delete_container(item)
+                self.purge_container(item)
+
+    def find_files(self,directory, filename):
+        matches = []
+        for root, _, files in os.walk(directory):
+            if filename in files:
+                matches.append(os.path.join(root, filename))
+        return matches
+
+    def delete_tombstones(self,url,name,dir):
+        results=  self.find_files(dir, "fcr-root.json")
+        matches = []
+        for res in results:        
+            with open(res, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+            if data['deleted']==True and name in data['id']:                
+                matches=(data['id'][data['id'].find('/')+1:])
+                self.purge_container(f'{url}{matches}')        
     
     def wipe_Fedora(self):
-        mem=self.get_container_content(f'{self.api_url}{settings.FEDORA_SERVER_NAME}/model')
-        for item in mem:
-            items=self.get_container_content(item+'/member')
-            for i in items:
-                self.delete_container(i)
-                self.purge_container(i)
-        
-        mem=self.get_container_content(f'{self.api_url}{settings.FEDORA_SERVER_NAME}/record')
-        for item in mem:
-            self.delete_container(item) 
-            self.purge_container(item)   
-            
+        self.wipe_Fedora_dir(f'{self.api_url}{settings.FEDORA_SERVER_NAME}/record',2)
+        self.wipe_Fedora_dir(f'{self.api_url}{settings.FEDORA_SERVER_NAME}/model',0)
+        self.delete_tombstones(self.api_url,settings.FEDORA_SERVER_NAME,settings.FEDORA_PATH)           
 
     @staticmethod
     def clone_Database():

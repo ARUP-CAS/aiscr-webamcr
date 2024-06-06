@@ -131,14 +131,17 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-000000003")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         self.ElementClick(By.LINK_TEXT, "X-C-TX-000000003")
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons")
-
-        
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons")        
         with open("dokument/tests/resources/test.jpg", "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode()
 
         self.addFileToDropzone("#my-awesome-dropzone",'test.jpg',encoded_string)
-        self.wait(4) 
+        self.driver.set_script_timeout(15)
+        response = self.driver.execute_async_script("""
+            var done = arguments[0];           
+           newDropzone.on("success", 
+            function(){ done('foo');});
+            """)
         with Wait_for_page_load(self.driver):
             self.ElementClick(By.LINK_TEXT, _("core.templates.upload_file.submitButton.text"))        
         self.ElementClick(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text")
