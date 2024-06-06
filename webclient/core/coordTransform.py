@@ -2,6 +2,8 @@ import math
 from datetime import date
 import os
 import logging
+import re
+
 logger = logging.getLogger(__name__)
 #načtení tabulky s opravamy  
 def readCoef(table):
@@ -394,6 +396,39 @@ def get_multi_transform_to_wgs84(jtsk_points):
         [x1, x2] = convertToWGS84(float(i[0]), float(i[1]))
         my.append([str(round(x1, 7)), str(round(x2, 7))])
     return my
+
+
+def contains_two_floats(text):    
+    pattern = r'^-?\d+(\.\d+)?\s+-?\d+(\.\d+)?$'    
+    match = re.match(pattern, text.strip())    
+    return bool(match)
+
+def transform_geom_to_sjtsk(geom):
+    if not isinstance(geom, str):
+        return "", "Not strig"
+    while geom.find("  ")!=-1:
+        geom=geom.replace("  ", " ")
+    spgeom=geom.split(",")
+    for i1, parts1  in enumerate(spgeom):
+        parts2=parts1.split("(")
+        for i2, parts in enumerate(parts2):
+            parts3=parts.split(")")
+            for i3, parts in enumerate(parts3):
+                parts=parts.strip()
+                if len(parts)>0 and contains_two_floats(parts):
+                    parts4=parts.split(" ")
+                    if len(parts4) != 2:
+                        return "","parse error"
+                    [x1, x2] = convertToJTSK(float(parts4[0]), float(parts4[1]))
+                    parts3[i3]=f"{x1} {x2}"
+            if  len(parts3)>1: parts2[i2]=")".join(parts3)
+            else: parts2[i2]=parts3[0]
+        if len(parts2)>1: spgeom[i1]="(".join(parts2)
+        else: spgeom[i1]=parts2[0]
+    if len(spgeom)>1:geom=", ".join(spgeom)
+    else:geom=spgeom[0]
+    return geom,"OK"
+
 
 #out = convertToJTSK( 13.8098558,50.1278954)
 #spravne 785478.581,1032422.386  
