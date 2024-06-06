@@ -16,7 +16,7 @@ FEDORA_SERVER_NAME = "AMCR-selenium-test"
 FEDORA_SERVER_HOSTNAME = "192.168.254.24"
 FEDORA_PORT_NUMBER = 8081
 FEDORA_PROTOCOL = "http"
-FEDORA_PATH = "/opt/fcrepo/fcrepo-home/data/ocfl-root"
+FEDORA_PATH = "/vol/fcrepo/ocfl-root"
 
 TEST_SCREENSHOT_PATH = "/vol/web/selenium_test/"
 DATABASES["default"]['TEST']={'MIGRATE': False}
