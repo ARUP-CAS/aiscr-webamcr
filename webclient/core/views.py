@@ -481,7 +481,9 @@ def post_upload(request):
                     if duplikat.first().vazba.navazany_objekt is not None else ""
                 help_translation = _('core.views.post_upload.duplikat2.text1')
                 help_translation2 = _('core.views.post_upload.duplikat2.text2')
-                response_data["duplicate"] = (f"{help_translation} {parent_ident}. {help_translation2}",)
+                help_translation3 = _('core.views.post_upload.duplikat2.text3')
+                response_data["duplicate"] = (f"{help_translation} {original_filename} {help_translation2} "
+                                              f"{parent_ident}. {help_translation3}",)
             if renamed:
                 help_translation = _('core.views.post_upload.renamed.text1')
                 help_translation2 = _('core.views.post_upload.renamed.text2')
@@ -548,7 +550,9 @@ def post_upload(request):
                         if duplikat.first().vazba.navazany_objekt is not None else ""
                     help_translation = _('core.views.post_upload.duplikat2.text1')
                     help_translation2 = _('core.views.post_upload.duplikat2.text2')
-                    response_data["duplicate"] = (f"{help_translation} {parent_ident}. {help_translation2}",)
+                    help_translation3 = _('core.views.post_upload.duplikat2.text3')
+                    response_data["duplicate"] = (f"{help_translation} {original_filename} {help_translation2} "
+                                                  f"{parent_ident}. {help_translation3}",)
                 if renamed:
                     help_translation = _('core.views.post_upload.renamed.text1')
                     help_translation2 = _('core.views.post_upload.renamed.text2')
