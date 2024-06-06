@@ -6,7 +6,7 @@
       <button type="button" class="btn step-trigger historie-link"
               onclick="location.href='{% url 'historie:dokument' dokument.ident_cely %}';">
         <span class="bs-stepper-circle">1</span>
-        <div class="row">
+        <div class="row stepper-row">
           <div class="col-12 {% if not history_dates.datum_zapsani %}pl-0{% endif %}">
             <span class="bs-stepper-label">
                 {% trans "templates.stateComponentDocument.rozepsany.label" %}
@@ -26,7 +26,7 @@
       <button type="button" class="btn step-trigger historie-link"
               onclick="location.href='{% url 'historie:dokument' dokument.ident_cely %}';">
         <span class="bs-stepper-circle">2</span>
-        <div class="row">
+        <div class="row stepper-row">
           <div class="col-12 {% if not history_dates.datum_odesalni %}pl-0{% endif %}">
             <span class="bs-stepper-label">
                 {% trans "templates.stateComponentDocument.odeslany.label" %}
@@ -46,7 +46,7 @@
       <button type="button" class="btn step-trigger historie-link"
               onclick="location.href='{% url 'historie:dokument' dokument.ident_cely %}';">
         <span class="bs-stepper-circle">3</span>
-        <div class="row">
+        <div class="row stepper-row">
           <div class="col-12 {% if not history_dates.datum_archivace %}pl-0{% endif %}">
             <span class="bs-stepper-label">
                 {% trans "templates.stateComponentDocument.archivovany.label" %}
