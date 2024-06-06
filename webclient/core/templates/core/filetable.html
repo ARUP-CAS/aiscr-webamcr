@@ -95,8 +95,6 @@
 $('#soubor-modal').on('show.bs.modal', function (event) {
   const button = $(event.relatedTarget)
   const modalImg = document.getElementById("nahled-image");
-  const element = document.getElementById(button[0].id);
-  const fullsrc = element.dataset.fullsrc;
-  modalImg.src = fullsrc;
+  modalImg.src = button.data('fullsrc');
 })
 </script>
