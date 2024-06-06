@@ -88,7 +88,7 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     """
     Admin část pro správu modelu heslař datace.
     """
-    list_display = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
+    list_display = ("obdobi_ident_cely", "obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
     fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max", "poznamka")
     search_fields = ("obdobi__ident_cely", "obdobi__heslo", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max",
                      "poznamka")
@@ -99,6 +99,9 @@ class HeslarDataceAdmin(admin.ModelAdmin):
             return ("obdobi", )
         else:
             return []
+
+    def obdobi_ident_cely(self, obj):
+        return obj.obdobi.ident_cely
 
 
 @admin.register(HeslarDokumentTypMaterialRada)
@@ -128,22 +131,28 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     """
     Admin část pro správu modelu heslař odkaz.
     """
-    list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
+    list_display = ("heslo_ident_cely", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
     fields = ("heslar_nazev","heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
     search_fields = ("heslo__ident_cely", "heslo__heslo", "zdroj", "nazev_kodu", "kod", "uri")
     form = HeslarOdkazForm
+
+    def heslo_ident_cely(self, obj):
+        return obj.heslo.ident_cely
 
 @admin.register(HeslarHierarchie)
 class HeslarHierarchieAdmin(admin.ModelAdmin):
     """
     Admin část pro správu modelu heslař hierarchie.
     """
-    list_display = ("heslo_podrazene", "heslo_nadrazene", "typ")
+    list_display = ("heslo_podrazene_ident_cely", "heslo_podrazene", "heslo_nadrazene", "typ")
     fields = ("heslar_nazev_podrazene","heslo_podrazene", "heslar_nazev_nadrazene","heslo_nadrazene", "typ")
     search_fields = ("heslo_podrazene__ident_cely", "heslo_podrazene__heslo", "heslo_nadrazene__ident_cely",
                      "heslo_nadrazene__heslo", "typ")
     list_filter = ("typ", )
     form = HeslarHierarchieForm
+
+    def heslo_podrazene_ident_cely(self, obj):
+        return obj.heslo_podrazene.ident_cely
 
 
 
