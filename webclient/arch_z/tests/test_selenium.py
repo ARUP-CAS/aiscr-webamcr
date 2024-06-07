@@ -25,7 +25,7 @@ logger = logging.getLogger("tests")
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceProjektoveAkce(BaseSeleniumTestClass):   
-    def go_to_form(self):
+    def go_to_Projekty_vyper(self):
         self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty")) 
 
@@ -50,7 +50,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         logger.info("AkceProjektoveAkce.test_024_pridani_dokumentacni_jednotky_p_001.start")
 
         self.login()
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         
         count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202307816A").count()
         
@@ -79,7 +79,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         #Scenar_34 Přidání dokumentační jednotky celek akce (negativní scénář 1)
         logger.info("AkceProjektoveAkce.test_034_pridani_dokumentacni_jednotky_n_001.start")
         self.login()
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         #ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202401502A").count()
         
@@ -114,7 +114,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         #Scenar_35 Přidání dokumentační jednotky část akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_035_pridani_dokumentacni_jednotky_p_002.start")
         self.login()
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         #ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202309552A").count()
         
@@ -145,7 +145,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         #Scenar_36 Přidání dokumentační jednotky část akce (negativní scénář 1)
         logger.info("AkceProjektoveAkce.test_036_pridani_dokumentacni_jednotky_n_002.start")
         self.login()
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         #ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202309552A").count()
         
@@ -180,7 +180,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         #Scenar_37 Přidání komponenty k dokumentační jednotce celek akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_037_pridani_komponenty_dokumentacni_jednotky_p_001.start")
         self.login()
-        self.go_to_form() #C-202309027
+        self.go_to_Projekty_vyper() #C-202309027
         #ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         #count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202309552A").count()
         count_old=Komponenta.objects.filter(komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202309027A-D01").count()
@@ -215,7 +215,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         #Scenar_40 Přidání komponenty k dokumentační jednotce celek akce (negativní scénář 1)
         logger.info("AkceProjektoveAkce.test_040_pridani_komponenty_dokumentacni_jednotky_n_001.start")
         self.login()
-        self.go_to_form() #C-202309027
+        self.go_to_Projekty_vyper() #C-202309027
         #ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         #count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202309552A").count()
         count_old=Komponenta.objects.filter(komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202309027A-D01").count()
@@ -251,7 +251,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         #Scenar_41 Přidání objektu k pozitivní komponentě (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_041_pridani_objektu_komponente_p_001.start")
         self.login()
-        self.go_to_form() #C-202309027
+        self.go_to_Projekty_vyper() #C-202309027
         count_old=NalezObjekt.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202004814A-D01").count()
 
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
@@ -279,7 +279,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         #Scenar_42 Přidání předmětu k pozitivní komponentě (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_042_pridani_predmetu_komponente_p_001.start")
         self.login()
-        self.go_to_form() #C-202309027
+        self.go_to_Projekty_vyper() #C-202309027
 
         count_old=NalezPredmet.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202004814A-D01").count()
 
@@ -368,7 +368,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.login("archeolog")       
        
         count_old=DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="C-202207641A").count()
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -414,7 +414,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.login("archeolog")       
        
         count_old=DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="C-202207641A").count()
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -444,7 +444,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.login("archeolog")       
        
         count_old=DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="C-202401979B").count()
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -470,7 +470,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.login("archeolog")       
        
         count_old=ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="C-202301164A").count()
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202301164")
@@ -505,7 +505,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         pian_old=DokumentacniJednotka.objects.filter(ident_cely='C-202401980A-D01')[0].pian
         self.assertEqual(pian_old, None)
         
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401980")
@@ -534,7 +534,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.login("archeolog")       
         pian_old=str(DokumentacniJednotka.objects.filter(ident_cely='C-202401981A-D01')[0].pian.geom)        
 
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401981")
@@ -563,7 +563,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         pian =DokumentacniJednotka.objects.filter(ident_cely='C-202401981A-D01')[0].pian
         self.assertNotEqual(pian, None)      
 
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -590,7 +590,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         pian_old=DokumentacniJednotka.objects.filter(ident_cely='C-202401980A-D01')[0].pian
         self.assertEqual(pian_old, None)
         
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401980")
@@ -621,7 +621,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         pian =DokumentacniJednotka.objects.filter(ident_cely='C-202007232A-D01')[0].pian
         self.assertNotEqual(pian, None) 
         
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202007232")
@@ -647,7 +647,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.assertEqual(pian, None)
         
         
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202309724")
@@ -680,7 +680,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         logger.info("AkceProjektoveAkce.test_092_editace_PIAN_projektove_akce_importem_p_001.start")
         self.login("archeolog")       
         pian_old=str(DokumentacniJednotka.objects.filter(ident_cely='C-202005190A-D01')[0].pian.geom)    
-        self.go_to_form()           
+        self.go_to_Projekty_vyper()           
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202005190")
@@ -712,7 +712,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         pian_old=DokumentacniJednotka.objects.filter(ident_cely='C-202401980A-D01')[0].pian
         self.assertEqual(pian_old, None)
         
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401980")
@@ -740,7 +740,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         logger.info("AkceProjektoveAkce.test_094_smazani_komponenty_projektove_akce_p_001.start")
         self.login("archeolog")       
         count_old=Komponenta.objects.filter(komponenta_vazby__dokumentacni_jednotka__ident_cely="C-201015104A-D01").count()   
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -765,7 +765,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         logger.info("AkceProjektoveAkce.test_095_smazani_DJ_projektove_akce_p_001.start")
         self.login("archeolog")       
         count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202401980A").count()   
-        self.go_to_form()
+        self.go_to_Projekty_vyper()
         
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -786,11 +786,11 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceSamostatneAkce(AkceProjektoveAkce): 
-    def go_to_form_zapsat(self):
+    def go_to_Akce_zapsat(self):
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.zapsat")) 
     
-    def go_to_form(self):
+    def go_to_Akce_vybrat(self):
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
         
@@ -802,7 +802,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
        
         arch_z_count_old = Akce.objects.count()
         
-        self.go_to_form_zapsat()
+        self.go_to_Akce_zapsat()
         self.ElementClick(By.ID, "select2-id_hlavni_katastr-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys("Velká Do")
         self.wait(self.wait_interval)
@@ -840,7 +840,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
        
         arch_z_count_old = Akce.objects.count()
         
-        self.go_to_form_zapsat()
+        self.go_to_Akce_zapsat()
         #self.ElementClick(By.ID, "select2-id_hlavni_katastr-container")
         #self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys("Velká Do")
         #self.wait(self.wait_interval)
@@ -879,7 +879,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.login("badatel")       
         
         count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000001A").count()
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000001A")
@@ -902,7 +902,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.login("badatel")       
         
         count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000001A").count()
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000001A")
@@ -929,7 +929,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
        
         count_old=Komponenta.objects.filter(komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000002A-D01").count()
         #count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000001A").count()
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
 
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -968,7 +968,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
        
         count_old=Komponenta.objects.filter(komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000002A-D01").count()
         #count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000001A").count()
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
 
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -1006,7 +1006,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
        
         count_old=NalezObjekt.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000003A-D01").count()
         
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
 
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -1034,7 +1034,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
        
         count_old=NalezPredmet.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000003A-D01").count()
         
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
 
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -1068,7 +1068,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
        
         count_old=NalezObjekt.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000004A-D01").count()
         
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
 
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -1094,7 +1094,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
        
         count_old=NalezPredmet.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000004A-D01").count()
         
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
 
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -1122,7 +1122,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.login("badatel")       
        
         count_old=DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000003A").count()
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
 
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -1172,7 +1172,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.login("badatel")       
        
         count_old=DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000004A").count()
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
 
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -1207,7 +1207,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.login("badatel")       
        
         count_old=ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000003A").count()
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000003A")
@@ -1240,7 +1240,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         pian_old=DokumentacniJednotka.objects.filter(ident_cely='X-C-9000000002A-D01')[0].pian
         self.assertEqual(pian_old, None)
 
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
@@ -1269,7 +1269,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.login("badatel")       
         pian_old=str(DokumentacniJednotka.objects.filter(ident_cely='X-C-9000000006A-D01')[0].pian.geom)        
 
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")      
         
@@ -1296,7 +1296,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.login("badatel")       
         pian_old=str(DokumentacniJednotka.objects.filter(ident_cely='X-C-9000000006A-D01')[0].pian.geom)        
 
-        self.go_to_form()
+        self.go_to_Akce_vybrat()
         self.ElementClick(By.CSS_SELECTOR, ".mt-1")
         self.ElementClick(By.ID, "id_ident_cely")     
         

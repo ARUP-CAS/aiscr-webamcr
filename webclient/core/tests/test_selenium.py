@@ -277,11 +277,11 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
     def ElementClick(self,by=By.ID, value: Optional[str] = None):       
         res=self.wait_for(self.findElement,by,value)
         if res==False:
-            logger.error("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "content": value,})
+            logger.warning("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "content": value,})
             raise Exception("ElementClickError")  
         res=self.wait_for(self.ElementIsClickable,by,value) 
         if res==False:
-            logger.error("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "content": value,})
+            logger.warning("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "content": value,})
             raise Exception("ElementIsNotClickableError")  
         attempts = 0
         while attempts < 10:
@@ -292,7 +292,7 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
                 attempts += 1
                 time.sleep(1)
         if attempts >= 10:
-            logger.error("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "content": value,})
+            logger.warning("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "content": value,})
             raise Exception("ElementClickError")                    
              
         
