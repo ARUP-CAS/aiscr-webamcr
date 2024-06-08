@@ -26,6 +26,7 @@ from core.tests.runner import USERS
 import logging
 import logstash
 from django.db import connection
+from cacheops import invalidate_all
 
 from unittest.util import safe_repr 
 
@@ -176,7 +177,7 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
             prod_cursor.execute(f"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{settings.TEST_DATABASE_NAME}' AND pid <> pg_backend_pid();")
             prod_cursor.execute(f"CREATE DATABASE {connection.settings_dict['NAME']} WITH TEMPLATE {settings.TEST_DATABASE_NAME};")
             prod_conn.commit()
-            
+            invalidate_all()
         except Exception as err:
             logger.error("core.tests.test_selenium.BaseSeleniumTestClass.clone_Database.general_exception",
                            extra={"err": err})

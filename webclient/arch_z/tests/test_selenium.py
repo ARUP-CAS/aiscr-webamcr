@@ -1137,6 +1137,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.LINK_TEXT, _("dokument.templates.dokument_table.pridatNovyDokument.label"))
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Absolon")
+        self.wait(1)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
         self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")        
