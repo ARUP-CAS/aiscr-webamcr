@@ -11,8 +11,18 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 from dal import autocomplete
 
+from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
+
+
+class AdbReadOnlyTextInput(forms.TextInput):
+    def format_value(self, value):
+        if value:
+            osoba_query = Osoba.objects.filter(pk=value)
+            if osoba_query.count():
+                return osoba_query.first().vypis_cely
+        return ""
 
 
 class CreateADBForm(forms.ModelForm):
@@ -102,6 +112,8 @@ class CreateADBForm(forms.ModelForm):
         self.fields["rok_revize"].required = False
         self.helper = FormHelper(self)
         if readonly:
+            self.fields["autor_popisu"].widget = AdbReadOnlyTextInput(attrs={"readonly": "readonly"})
+            self.fields["autor_revize"].widget = AdbReadOnlyTextInput(attrs={"readonly": "readonly"})
             self.helper.layout = Layout(
                 Div(
                     Div("typ_sondy", css_class="col-sm-2"),
