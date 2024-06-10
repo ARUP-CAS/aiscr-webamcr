@@ -496,3 +496,6 @@ DROP TABLE pom;
 
 -- Odstranění sysno
 ALTER TABLE externi_zdroj DROP COLUMN sysno;
+
+-- Odstranění zkratka_en
+ALTER TABLE heslar DROP COLUMN zkratka_en;
