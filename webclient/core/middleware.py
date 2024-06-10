@@ -83,7 +83,7 @@ class ErrorMiddleware:
 
         if isinstance(exception, OperationalError) and "canceling statement due to statement timeout" in str(exception):
             context = {"exception": exception}
-            return render(request, 'db_timeout_error.html', context, status=500)
+            return render(request, 'db_timeout_error.html', context, status=504)
            
            
 class TestEnvPopupMiddleware:
