@@ -14,6 +14,7 @@ skript má následující parametry:
  * `-f`          provede neůspešné testy v tabulce 
  * `-a`          provede všechny testy (výchozí)
  * `-t cislo`    provede test zadaneho čísla
+ * `-b`          spusti všechny testy na pozadí, výstup se uloží do /opt/selenium_test/test.log a run.log
  * `-h`          Zobrazí nápovedu
   
 Výsledky testů se uloží do /opt/selenium_test/results.xlsx. 

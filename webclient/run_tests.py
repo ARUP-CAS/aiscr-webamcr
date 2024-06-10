@@ -9,6 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-f','--fail', help='provede neúspěšné testy', action='store_true')
 parser.add_argument('-a','--all', help='provede všechny testy', action='store_true')
 parser.add_argument('-t','--test',type=int, help='provede test daného čísla')
+parser.add_argument('-s','--soubor', help='uloží výstup do souboru',action='store_true')
 args = parser.parse_args()
 
 SETTINGS = "webclient.settings.dev_test"
@@ -70,14 +71,25 @@ def reader(pipe):
         print(line,end="")
         if not line:
             break
+
+def filelog(pipe):
+    with open("/vol/web/selenium_test/test.log", "a") as file:
+        while True:
+            line = pipe.read(1)
+            file.write(line)
+            if not line:
+                break
     
 logger.info("amcr_test_runner.start_test", extra={"test": f"{' '.join(test_list)}"})
 subprocess.run(f"python3 manage.py migrate --database test_db --settings={SETTINGS}", text=True, shell=True )
 
 process = subprocess.Popen(f"python3 manage.py test {' '.join(test_list)} --settings={SETTINGS} --noinput --verbosity=2", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True )
-
-t1=Thread(target=reader, args=[process.stdout]).start()
-t2=Thread(target=reader, args=[process.stderr]).start()
+if args.soubor==True:
+    t1=Thread(target=filelog, args=[process.stdout]).start()
+    t2=Thread(target=filelog, args=[process.stderr]).start()
+else:
+    t1=Thread(target=reader, args=[process.stdout]).start()
+    t2=Thread(target=reader, args=[process.stderr]).start()
 process.wait()
 
 logger.info("amcr_test_runner.end")
