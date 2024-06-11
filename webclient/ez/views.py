@@ -750,6 +750,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
             eo: ExterniOdkaz
             eo.active_transaction = self.active_transaction
             eo.close_active_transaction_when_finished = True
+            eo.suppress_signal=False
             eo.save()
             messages.add_message(
                 request, messages.SUCCESS, get_message(az, "EO_USPESNE_PRIPOJEN")
