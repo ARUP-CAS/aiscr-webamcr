@@ -7,6 +7,7 @@ services:
       - db_conf
       - mail_conf
       - redis_pass
+      - test_conf
     volumes:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
@@ -287,3 +288,5 @@ secrets:
     external: true
   logstash_elastic_host:
     external: true
+  test_conf:
+   external: true
