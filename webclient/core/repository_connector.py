@@ -909,7 +909,7 @@ class FedoraRepositoryConnector:
     def save_files_from_storage(cls, records: Union[list, range], storage_path: str) -> None:
         records = list(records)
         from core.models import Soubor
-        queryset = Soubor.objects.filter(pk__in=records)
+        queryset = Soubor.objects.filter(pk__in=records).order_by("pk")
         for item in queryset:
             cls.save_single_file_from_storage(item, storage_path)
 
