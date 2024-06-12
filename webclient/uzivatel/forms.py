@@ -225,18 +225,22 @@ class UpdatePasswordSettings(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        old_password = cleaned_data.get("old_password")
-        password1 = cleaned_data.get("password1")
-        password2 = cleaned_data.get("password2")
+        old_password = cleaned_data.get("old_password")[2:-2]
+        password1 = cleaned_data.get("password1")[2:-2]
+        password2 = cleaned_data.get("password2")[2:-2]
 
-        if self.instance.check_password(old_password):
-            raise ValidationError({"old_password": [_("uzivatel.forms.UpdatePasswordSettings.old_password.error")]})
-        if password1 == "" and password2 != "":
-            raise ValidationError({"password1": [_("uzivatel.forms.UpdatePasswordSettings.password1.error")]})
-        elif password2 != "" and password2 == "":
-            raise ValidationError({"password2": [_("uzivatel.forms.UpdatePasswordSettings.password2.error")]})
+        if not old_password and (password1 or password2):
+            raise ValidationError(_("uzivatel.forms.UpdatePasswordSettings.old_password.error"))
+        if old_password and not (password1 or password2):
+            raise ValidationError(_("uzivatel.forms.UpdatePasswordSettings.now_new.error"))
+        if not password1 and password2:
+            raise ValidationError(_("uzivatel.forms.UpdatePasswordSettings.password1.error"))
+        elif not password2 and password1:
+            raise ValidationError(_("uzivatel.forms.UpdatePasswordSettings.password2.error"))
         if password1 != password2:
             raise ValidationError(_("uzivatel.forms.UpdatePasswordSettings.passwordsDifferent.error"))
+        if not self.instance.check_password(old_password):
+            raise ValidationError(_("uzivatel.forms.UpdatePasswordSettings.old_password.error"))
         validate_password(password1)
 
     class Meta:
