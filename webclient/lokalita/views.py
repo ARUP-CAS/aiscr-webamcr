@@ -27,7 +27,9 @@ from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.core.cache import cache
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.generic import TemplateView
 from django.views.generic.detail import SingleObjectMixin
@@ -467,6 +469,23 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
         context = super().get_context_data(**kwargs)
         context["pian_form_create"] = PianCreateForm()
         return context
+    
+    
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        if "index" in self.request.GET and "label" in self.request.GET:
+            try:
+                geom=cache.get("geom_"+str(hash(self.request.session.session_key)))
+                #cache.delete("geom_"+str(hash(self.request.session.session_key)))                
+                index=int(self.request.GET["index"])
+                if self.request.GET["label"]!=geom.iloc[index]["label"]:
+                    raise Exception("lokalita.views.LokalitaPianCreateView.get.label_not_found")
+                context["geom"] = geom.iloc[index]   
+            except Exception as err:
+                logger.error("lokalita.views.LokalitaPianCreateView.get.import_pian.error", extra={"err": err})
+                messages.add_message(self.request, messages.ERROR, _("lokalita.views.LokalitaDokumentacniJednotkaRelatedView.import_pian.error"))
+                return redirect(reverse("lokalita:detail-dj", args=[self.arch_zaznam.ident_cely, context['dj_ident_cely']] ))
+        return self.render_to_response(context)
 
 
 class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
@@ -502,6 +521,18 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         context = self.get_context_data(**kwargs)
         if self.pian == PIAN_POTVRZEN:
             raise PermissionDenied
+        if "index" in self.request.GET and "label" in self.request.GET:
+            try:
+                geom=cache.get("geom_"+str(hash(self.request.session.session_key)))
+                #cache.delete("geom_"+str(hash(self.request.session.session_key)))                
+                index=int(self.request.GET["index"])
+                if self.request.GET["label"]!=geom.iloc[index]["label"]:
+                    raise Exception("lokalita.views.LokalitaPianUpdateView.get.label_not_found")
+                context["geom"] = geom.iloc[index]  
+            except Exception as err:
+                logger.error("lokalita.views.LokalitaPianUpdateView.get.import_pian.error", extra={"err": err})
+                messages.add_message(self.request, messages.ERROR, _("lokalita.views.LokalitaDokumentacniJednotkaRelatedView.import_pian.error"))
+                return redirect(reverse("lokalita:detail-dj", args=[self.arch_zaznam.ident_cely, context['dj_ident_cely']] ))
         return self.render_to_response(context)
 
 

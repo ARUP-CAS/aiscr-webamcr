@@ -13,5 +13,4 @@ urlpatterns = [
     path("autocomplete/", PianAutocomplete.as_view(), name="pian-autocomplete"),
     path("importovat", views.ImportovatPianView.as_view(), name="importovat-pian"),
     path("mapa-connections/<str:ident_cely>", views.mapa_dj, name="mapaDj"),
-    path("validovat-geometrii/", views.ValidateGeometryView.as_view(), name="validovat-geometrii")
 ]

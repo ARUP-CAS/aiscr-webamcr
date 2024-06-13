@@ -78,6 +78,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.core.cache import cache
 from django.forms import inlineformset_factory
 from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -495,6 +496,22 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         context["j"] = self.get_dokumentacni_jednotka()
         context["pian_form_create"] = PianCreateForm()
         return context
+    
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        if "index" in self.request.GET and "label" in self.request.GET:
+            try:
+                geom=cache.get("geom_"+str(hash(self.request.session.session_key)))
+                #cache.delete("geom_"+str(hash(self.request.session.session_key)))                
+                index=int(self.request.GET["index"])
+                if self.request.GET["label"]!=geom.iloc[index]["label"]:
+                    raise Exception("arch_z.views.PianCreateView.get.label_not_found")
+                context["geom"] = geom.iloc[index]  
+            except Exception as err:
+                logger.error("arch_z.views.PianCreateView.get.import_pian.error", extra={"err": err})
+                messages.add_message(self.request, messages.ERROR, _("arch_z.views.DokumentacniJednotkaRelatedUpdateView.get.import_pian.error"))
+                return redirect(reverse("arch_z:detail-dj", args=[self.arch_zaznam.ident_cely, context['dj_ident_cely']] ))
+        return self.render_to_response(context)
 
 
 class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
@@ -527,6 +544,18 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         context = self.get_context_data(**kwargs)
         if context["j"].pian.stav == PIAN_POTVRZEN:
             raise PermissionDenied
+        if "index" in self.request.GET and "label" in self.request.GET:
+            try:
+                geom=cache.get("geom_"+str(hash(self.request.session.session_key)))
+                #cache.delete("geom_"+str(hash(self.request.session.session_key)))                
+                index=int(self.request.GET["index"])
+                if self.request.GET["label"]!=geom.iloc[index]["label"]:
+                    raise Exception("arch_z.views.PianUpdateView.get.label_not_found")
+                context["geom"] = geom.iloc[index]  
+            except Exception as err:
+                logger.error("arch_z.views.PianUpdateView.get.import_pian.error", extra={"err": err})
+                messages.add_message(self.request, messages.ERROR, _("arch_z.views.DokumentacniJednotkaRelatedUpdateView.get.import_pian.error"))
+                return redirect(reverse("arch_z:detail-dj", args=[self.arch_zaznam.ident_cely, context['dj_ident_cely']] ))
         return self.render_to_response(context)
     
 

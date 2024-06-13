@@ -1263,41 +1263,19 @@ window.addEventListener("load", function(){
     }
 });
 
-//kontrola geometrie 
-const validate_geometry = (geometry) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${window.location.origin}/pian/validovat-geometrii/`, false);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    const data = JSON.stringify({
-        geometry: geometry
-    });
-    xhr.send(data);
-    if (xhr.status === 200) {
-        const response = JSON.parse(xhr.responseText);
-        return response.validation_result;
-    } else {
-        return false
-    }
-}
 
 //nahrání geometrie dočasně uložené v session
 function loadSession(){
     addLogText("arch_z_detail_map.loadSession")
     const currentUrl = window.location.href;
     const urlParams = new URLSearchParams(window.location.search);
-    let myParamG = urlParams.get('geometry');
-    let myParamL = urlParams.get('label');
     //global_map_can_grab_geom_from_map = true;
-    if(myParamG !==null){
-        const validate_geometry_result = validate_geometry(myParamG);
-        if (!validate_geometry_result) {
-            return;
-        }
+    if(typeof geom !== 'undefined' && geom.geometry !==''){
         global_map_can_grab_geom_from_map = true;
         global_blocked_by_query_geom=true;
         drawnItems.clearLayers();
         drawnItemsBuffer.clearLayers();
-        addPointQuery(null,  drawnItems,myParamL,myParamG,false, map_translations.currentlyEditedPian);
+        addPointQuery(null,  drawnItems,geom.label,geom.geometry,false, map_translations.currentlyEditedPian);
         geomToText();
         save_edited_geometry_session()
         map.fitBounds(drawnItems.getBounds());
