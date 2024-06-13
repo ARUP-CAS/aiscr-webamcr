@@ -11,7 +11,8 @@ from django.db.models import F, Value, CharField, IntegerField
 from django.db.models import Q
 from django.db.models.functions import Concat
 from django.forms.renderers import BaseRenderer
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
+from django.http.response import HttpResponse as HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -331,10 +332,14 @@ def update_notifications(request):
         return redirect("/uzivatel/edit/")
 
 
+@method_decorator(odstavka_in_progress, name='get')
 class UserActivationView(ActivationView):
     """
     Třída pohledu pro aktivaci uživatele.
     """
+    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        return super().dispatch(request, *args, **kwargs)
+
     def activate(self, *args, **kwargs):
         username = self.validate_key(kwargs.get("activation_key"))
         user = self.get_user(username)
@@ -348,18 +353,26 @@ class UserActivationView(ActivationView):
         return user
 
 
+@method_decorator(odstavka_in_progress, name='dispatch')
 class UserPasswordResetView(PasswordResetView):
     """
     Třída pohledu pro resetování hesla.
     """
     form_class = UserPasswordResetForm
 
+    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        return super().dispatch(request, *args, **kwargs)
 
+
+@method_decorator(odstavka_in_progress, name='dispatch')
 class TokenAuthenticationBearer(TokenAuthentication):
     """
     Override třídy pro nastavení názvu tokenu na Bearer.
     """
     keyword = "Bearer"
+
+    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        return super().dispatch(request, *args, **kwargs)
 
     def authenticate_credentials(self, key):
         model = self.get_model()
@@ -393,6 +406,7 @@ class MyXMLRenderer(BaseRenderer):
         return data
 
 
+@method_decorator(odstavka_in_progress, name='get')
 class GetUserInfo(APIView):
     """
     Třída podlehu pro získaní základních info o uživately.
@@ -406,6 +420,7 @@ class GetUserInfo(APIView):
         user = request.user
         return Response(user.metadata)
 
+@method_decorator(odstavka_in_progress, name='post')
 class ObtainAuthTokenWithUpdate(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
