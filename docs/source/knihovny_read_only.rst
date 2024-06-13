@@ -264,7 +264,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.14.0
+     - 3.15.1
      - The Unlicense (Unlicense)
      - https://github.com/tox-dev/py-filelock
    * - funcy
@@ -324,7 +324,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; GNU General Public License (GPL); GNU Library or Lesser General Public License (LGPL)
      - https://github.com/eea/odfpy
    * - openpyxl
-     - 3.1.3
+     - 3.1.4
      - MIT License
      - https://openpyxl.readthedocs.io
    * - outcome
@@ -332,7 +332,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; MIT License
      - https://github.com/python-trio/outcome
    * - packaging
-     - 24.0
+     - 24.1
      - Apache Software License; BSD License
      - https://github.com/pypa/packaging
    * - pandas
@@ -348,7 +348,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.37
+     - 8.13.38
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -372,7 +372,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/prometheus/client_python
    * - prompt_toolkit
-     - 3.0.46
+     - 3.0.47
      - BSD License
      - https://github.com/prompt-toolkit/python-prompt-toolkit
    * - psutil
@@ -444,7 +444,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rcssmin/
    * - redis
-     - 5.0.4
+     - 5.0.5
      - MIT License
      - https://github.com/redis/redis-py
    * - reportlab
@@ -500,7 +500,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/foutaise/texttable/
    * - tornado
-     - 6.4
+     - 6.4.1
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
@@ -512,7 +512,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-trio/trio-websocket
    * - typing_extensions
-     - 4.12.1
+     - 4.12.2
      - Python Software Foundation License
      - https://github.com/python/typing_extensions
    * - tzdata
