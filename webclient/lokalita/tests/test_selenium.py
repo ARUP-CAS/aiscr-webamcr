@@ -11,7 +11,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from core.constants import AZ_STAV_ZAPSANY,AZ_STAV_ODESLANY,AZ_STAV_ARCHIVOVANY
 
-from core.tests.test_selenium import BaseSeleniumTestClass, Wait_for_page_load
+from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 
 from arch_z.models import ArcheologickyZaznam
 from dj.models import DokumentacniJednotka
@@ -29,11 +29,9 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-lokalita > .card-body")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.lokality.zapsat"))
 
-
     def go_to_form_vybrat(self):
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-lokalita > .card-body")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.lokality.vybrat"))
- 
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.lokality.vybrat")) 
         
     def test_051_zapsani_lokality_p_001(self):
         #Scenar_51 Zapsání lokality (pozitivní scénář 1)
@@ -56,13 +54,12 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "id_nazev")
         self.driver.find_element(By.ID, "id_nazev").send_keys("test")
         
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
        
         count_new = Lokalita.objects.count()
         self.assertEqual(count_old + 1, count_new)
-        logger.info("AkceLokality.test_051_zapsani_lokality_p_001.end")
-        
+        logger.info("AkceLokality.test_051_zapsani_lokality_p_001.end")        
         
     def test_052_zapsani_lokality_n_001(self):
         #Scenar_52 Zapsání lokality (negativní scénář 1)
@@ -84,15 +81,14 @@ class AkceLokality(BaseSeleniumTestClass):
         #self.ElementClick(By.ID, "id_nazev")
         #self.driver.find_element(By.ID, "id_nazev").send_keys("test")
         try:
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "newEntitySubmitBtn")
         except Exception as e:
             pass
        
         count_new = Lokalita.objects.count()
         self.assertEqual(count_old , count_new)
-        logger.info("AkceLokality.test_052_zapsani_lokality_n_001.end")
-        
+        logger.info("AkceLokality.test_052_zapsani_lokality_n_001.end")        
         
     def test_053_pridani_DJ_lokality_p_001(self):
         #Scenar_53 Přidání dokumentační jednotky lokalita (pozitivní scénář 1)
@@ -113,13 +109,12 @@ class AkceLokality(BaseSeleniumTestClass):
 
         self.ElementClick(By.CSS_SELECTOR, "#div_id_negativni_jednotka .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-2-0")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDjSubmitButton")
        
         count_new = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-L000000001").count()     
         self.assertEqual(count_old + 1, count_new)
-        logger.info("AkceLokality.test_053_pridani_DJ_lokality_p_001.end")
-        
+        logger.info("AkceLokality.test_053_pridani_DJ_lokality_p_001.end")        
         
     def test_054_pridani_DJ_lokality_n_001(self):
         #Scenar_54 Přidání dokumentační jednotky lokalita (negativní scénář 1)
@@ -141,15 +136,14 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_negativni_jednotka .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-2-0")
         try:
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "newDjSubmitButton")
         except Exception as e:
             pass   
        
         count_new = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-L000000001").count()     
         self.assertEqual(count_old , count_new)
-        logger.info("AkceLokality.test_054_pridani_DJ_lokality_n_001.end")
-        
+        logger.info("AkceLokality.test_054_pridani_DJ_lokality_n_001.end")        
         
     def test_055_pridani_komponenty_DJ_lokality_p_001(self):
         #Scenar_55 Přidání komponenty k dokumentační jednotce lokalita (pozitivní scénář 1)
@@ -175,13 +169,12 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("s")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createCompotSubmitButton")
     
         count_new = Komponenta.objects.filter(komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-L000000002-D01").count()
         self.assertEqual(count_old + 1, count_new)
-        logger.info("AkceLokality.test_055_pridani_komponenty_DJ_lokality_p_001.end")
-        
+        logger.info("AkceLokality.test_055_pridani_komponenty_DJ_lokality_p_001.end")        
 
     def test_056_odeslani_lokality_p_001(self):
         #Scenar_56 Odeslání lokality (pozitivní scénář 1)
@@ -198,13 +191,11 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-N9000579")
         self.ElementClick(By.CSS_SELECTOR, "#lokalita-odeslat > .app-controls-button-text")
         self.wait(1)
-        with Wait_for_page_load(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
-  
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")  
     
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N9000579').first().stav , AZ_STAV_ODESLANY)   
-        logger.info("AkceLokality.test_056_odeslani_lokality_p_001.end")
-        
+        logger.info("AkceLokality.test_056_odeslani_lokality_p_001.end")        
         
     def test_057_odeslani_lokality_n_001(self):
         #Scenar_57 Odeslání lokality (negativní scénář 1)
@@ -222,14 +213,13 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-N9000145")
         self.ElementClick(By.CSS_SELECTOR, "#lokalita-odeslat > .app-controls-button-text")
         try:
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass    
     
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N9000145').first().stav , AZ_STAV_ZAPSANY) 
-        logger.info("AkceLokality.test_057_odeslani_lokality_n_001.end")
-        
+        logger.info("AkceLokality.test_057_odeslani_lokality_n_001.end")        
         
     def test_058_archivace_lokality_p_001(self):
         #Scenar_58 Archivace lokality (pozitivní scénář 1)
@@ -244,12 +234,11 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-N1000003")
         self.ElementClick(By.CSS_SELECTOR, "#lokalita-archivovat > .material-icons")
         self.wait(1)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")  
     
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N1000003').first().stav , AZ_STAV_ARCHIVOVANY)   
-        logger.info("AkceLokality.test_058_archivace_lokality_p_001.end")
-        
+        logger.info("AkceLokality.test_058_archivace_lokality_p_001.end")        
         
     def test_059_archivace_lokality_n_001(self):
         #Scenar_59 Archivace lokality (negativní scénář 1)
@@ -264,14 +253,13 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-N1000109")
         self.ElementClick(By.CSS_SELECTOR, "#lokalita-archivovat > .material-icons")
         try:
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")  
         except Exception as e:
             pass
             
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N1000109').first().stav , AZ_STAV_ODESLANY)   
-        logger.info("AkceLokality.test_059_archivace_lokality_n_001.end")
-        
+        logger.info("AkceLokality.test_059_archivace_lokality_n_001.end")        
         
     def test_060_vraceni_odeslane_lokality_p_001(self):
         #Scenar_60 Vrácení odeslané lokality (pozitivní scénář 1)
@@ -289,12 +277,11 @@ class AkceLokality(BaseSeleniumTestClass):
         self.wait(1)
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
                     
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N1000003').first().stav , AZ_STAV_ZAPSANY)   
-        logger.info("AkceLokality.test_060_vraceni_odeslane_lokality_p_001.end")
-        
+        logger.info("AkceLokality.test_060_vraceni_odeslane_lokality_p_001.end")        
         
     def test_061_vraceni_odeslane_lokality_n_001(self):
         #Scenar_61 Vrácení odeslané lokality (negativní scénář 1)
@@ -312,13 +299,12 @@ class AkceLokality(BaseSeleniumTestClass):
         #self.ElementClick(By.ID, "id_reason")
         #self.driver.find_element(By.ID, "id_reason").send_keys("test")
         try:
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass            
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N1000003').first().stav , AZ_STAV_ODESLANY)   
-        logger.info("AkceLokality.test_061_vraceni_odeslane_lokality_n_001.end")
-    
+        logger.info("AkceLokality.test_061_vraceni_odeslane_lokality_n_001.end")    
         
     def test_062_vraceni_archivovane_lokality_p_001(self):
         #Scenar_62 Vrácení archivované lokality (pozitivní scénář 1)
@@ -337,12 +323,11 @@ class AkceLokality(BaseSeleniumTestClass):
         self.wait(1)
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
                     
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely='C-N9000593').first().stav , AZ_STAV_ODESLANY)   
-        logger.info("AkceLokality.test_062_vraceni_archivovane_lokality_p_001.end")
-        
+        logger.info("AkceLokality.test_062_vraceni_archivovane_lokality_p_001.end")        
         
     def test_063_vraceni_archivovane_lokality_n_001(self):
         #Scenar_63 Vrácení archivované lokality (negativní scénář 1)
@@ -361,7 +346,7 @@ class AkceLokality(BaseSeleniumTestClass):
         #self.ElementClick(By.ID, "id_reason")
         #self.driver.find_element(By.ID, "id_reason").send_keys("test")
         try:
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass                        

@@ -13,7 +13,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from core.constants import SN_ZAPSANY,SN_ODESLANY,SN_POTVRZENY,SN_ARCHIVOVANY
 #from core.tests.runner import EXISTING_PROJECT_IDENT_ZACHRANNY, EXISTING_PROJECT_IDENT_STATUS
-from core.tests.test_selenium import BaseSeleniumTestClass, Wait_for_page_load
+from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 
 from pas.models import SamostatnyNalez
 from django.utils.translation import gettext as _
@@ -25,7 +25,6 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def go_to_form(self):
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.zapsat"))
-
 
     def test_025_zapsani_samostatneho_nalezu_p_001(self):
         #Scenar_25 Zapsání samostatného nálezu (pozitivní scénář 1)
@@ -68,12 +67,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_specifikace .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("jantar")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
         SN_count_new = SamostatnyNalez.objects.count()
         self.assertEqual(SN_count_old + 1, SN_count_new) 
-        logger.info("AkceSamostatneNalezy.test_025_zapsani_samostatneho_nalezu_p_001.end")
-        
+        logger.info("AkceSamostatneNalezy.test_025_zapsani_samostatneho_nalezu_p_001.end")        
         
     def test_026_zapsani_samostatneho_nalezu_n_001(self):
         #Scenar_26 Zapsání samostatného nálezu (negativní scénář 1)
@@ -117,12 +115,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_specifikace .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("jantar")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
         SN_count_new = SamostatnyNalez.objects.count()
         self.assertEqual(SN_count_old , SN_count_new)   
-        logger.info("AkceSamostatneNalezy.test_026_zapsani_samostatneho_nalezu_n_001.end")
-        
+        logger.info("AkceSamostatneNalezy.test_026_zapsani_samostatneho_nalezu_n_001.end")        
         
     def test_028_odeslani_samostatneho_nalezu_p_001(self):
         #Scenar_28 Odeslání samostatného nálezu (pozitivní scénář 1)        
@@ -147,7 +144,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
 
         self.ElementClick(By.CSS_SELECTOR, "#pas-odeslat > .app-controls-button-text")
         self.wait(1)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202105907-N00091').first().stav , SN_ODESLANY)        
@@ -175,15 +172,14 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         #self.ElementClick(By.LINK_TEXT, _("core.templates.upload_file.submitButton.text"))
         try:
             self.ElementClick(By.CSS_SELECTOR, "#pas-odeslat > .app-controls-button-text")
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")
                 
         except Exception as e:
             pass
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202105907-N00091').first().stav , SN_ZAPSANY)  
-        logger.info("AkceSamostatneNalezy.test_029_odeslani_samostatneho_nalezu_n_001.end")
-        
+        logger.info("AkceSamostatneNalezy.test_029_odeslani_samostatneho_nalezu_n_001.end")        
         
     def test_030_potvrzeni_samostatneho_nalezu_p_001(self):
         #Scenar_30 Potvrzení samostatného nálezu (pozitivní scénář 1)     
@@ -209,12 +205,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
 
         self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-3 > .text")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_POTVRZENY)  
-        logger.info("AkceSamostatneNalezy.test_030_potvrzeni_samostatneho_nalezu_p_001.end")
-        
+        logger.info("AkceSamostatneNalezy.test_030_potvrzeni_samostatneho_nalezu_p_001.end")        
         
     def test_031_potvrzeni_samostatneho_nalezu_n_001(self):
         #Scenar_31 Potvrzení samostatného nálezu (negativní scénář 1)   
@@ -242,14 +237,13 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-3 > .text")
         try:
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)  
-        logger.info("AkceSamostatneNalezy.test_031_potvrzeni_samostatneho_nalezu_n_001.end")
-        
+        logger.info("AkceSamostatneNalezy.test_031_potvrzeni_samostatneho_nalezu_n_001.end")        
         
     def test_032_potvrzeni_samostatneho_nalezu_n_002(self):
         #Scenar_32 Potvrzení samostatného nálezu (negativní scénář 2)
@@ -277,14 +271,13 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-3 > .text")
         try:
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202211308-N00213').first().stav , SN_ODESLANY)  
-        logger.info("AkceSamostatneNalezy.test_032_potvrzeni_samostatneho_nalezu_n_002.end")
-        
+        logger.info("AkceSamostatneNalezy.test_032_potvrzeni_samostatneho_nalezu_n_002.end")        
         
     def test_038_archivace_samostatneho_nalezu_p_001(self):
         #Scenar_38 Archivace samostatného nálezu (pozitivní scénář 1)
@@ -303,11 +296,10 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-202010474-N00002")
         self.ElementClick(By.CSS_SELECTOR, "#pas-archivovat > .app-controls-button-text")
         self.wait(1)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         
-        self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_ARCHIVOVANY)            
-
+        self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_ARCHIVOVANY)  
         logger.info("AkceSamostatneNalezy.test_038_archivace_samostatneho_nalezu_p_001.end")
     
     def test_039_archivace_samostatneho_nalezu_n_001(self):
@@ -325,19 +317,18 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-202010474-N00002")
         self.ElementClick(By.CSS_SELECTOR, "#file-smazat-518731 > .material-icons")
         self.wait(1)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")        
 
         try:
             self.ElementClick(By.CSS_SELECTOR, "#pas-archivovat > .app-controls-button-text")
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception as e:
             pass
         self.wait(1)
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='C-202010474-N00002').first().stav , SN_POTVRZENY)  
-        logger.info("AkceSamostatneNalezy.test_039_archivace_samostatneho_nalezu_n_001.end")
-    
+        logger.info("AkceSamostatneNalezy.test_039_archivace_samostatneho_nalezu_n_001.end")    
 
     def test_045_vraceni_samostatneho_nalezu_p_001(self):
         #Scenar_45 Vrácení samostatného nálezu (pozitivní scénář 1)
@@ -356,7 +347,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.wait(1)
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")        
         
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely='M-202301371-N00015').first().stav , SN_ODESLANY)  

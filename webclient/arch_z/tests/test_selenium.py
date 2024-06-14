@@ -11,7 +11,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from core.tests.test_selenium import BaseSeleniumTestClass, Wait_for_page_load
+from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from arch_z.models import Akce,ExterniOdkaz
 from dokument.models import DokumentCast
 from dj.models import DokumentacniJednotka
@@ -65,15 +65,14 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")       
         self.ElementClick(By.CSS_SELECTOR, "#div_id_negativni_jednotka .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDjSubmitButton")            
         
         self.assertNotEqual(self.driver.find_element(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202307816A_D01 > strong"), None)
         count_new=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202307816A").count()
 
         self.assertEqual(count_old + 1, count_new)
-        logger.info("AkceProjektoveAkce.test_024_pridani_dokumentacni_jednotky_p_001.end")
-        
+        logger.info("AkceProjektoveAkce.test_024_pridani_dokumentacni_jednotky_p_001.end")        
         
     def test_034_pridani_dokumentacni_jednotky_n_001(self):
         #Scenar_34 Přidání dokumentační jednotky celek akce (negativní scénář 1)
@@ -98,7 +97,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
        
         try:
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "newDjSubmitButton")       
         except Exception as e:
             pass       
@@ -107,8 +106,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         count_new=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202401502A").count()
 
         self.assertEqual(count_old , count_new)
-        logger.info("AkceProjektoveAkce.test_034_pridani_dokumentacni_jednotky_n_001.end")
-        
+        logger.info("AkceProjektoveAkce.test_034_pridani_dokumentacni_jednotky_n_001.end")        
         
     def test_035_pridani_dokumentacni_jednotky_p_002(self):
         #Scenar_35 Přidání dokumentační jednotky část akce (pozitivní scénář 1)
@@ -131,15 +129,14 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")       
         self.ElementClick(By.CSS_SELECTOR, "#div_id_negativni_jednotka .filter-option-inner-inner")       
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")  
-        with Wait_for_page_load(self.driver):     
+        with WaitForPageLoad(self.driver):     
             self.ElementClick(By.ID, "newDjSubmitButton")  
           
         self.assertNotEqual(self.driver.find_element(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202309552A_D02 > strong"), None)
         count_new=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202309552A").count()
 
         self.assertEqual(count_old + 1, count_new)
-        logger.info("AkceProjektoveAkce.test_035_pridani_dokumentacni_jednotky_p_002.end")
-        
+        logger.info("AkceProjektoveAkce.test_035_pridani_dokumentacni_jednotky_p_002.end")        
         
     def test_036_pridani_dokumentacni_jednotky_n_002(self):
         #Scenar_36 Přidání dokumentační jednotky část akce (negativní scénář 1)
@@ -164,7 +161,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")       
  
         try:
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "newDjSubmitButton")       
         except Exception as e:
             pass
@@ -174,7 +171,6 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 
         self.assertEqual(count_old , count_new)
         logger.info("AkceProjektoveAkce.test_036_pridani_dokumentacni_jednotky_n_002.end")
-
 
     def test_037_pridani_komponenty_dokumentacni_jednotky_p_001(self):
         #Scenar_37 Přidání komponenty k dokumentační jednotce celek akce (pozitivní scénář 1)
@@ -201,7 +197,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
         
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createCompotSubmitButton")  
                       
         self.assertNotEqual(self.driver.find_element(By.ID, "el_komponenta_C_202309027A_K001"), None)
@@ -209,7 +205,6 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 
         self.assertEqual(count_old+1 , count_new)
         logger.info("AkceProjektoveAkce.test_037_pridani_komponenty_dokumentacni_jednotky_p_001.end")
-
 
     def test_040_pridani_komponenty_dokumentacni_jednotky_n_001(self):
         #Scenar_40 Přidání komponenty k dokumentační jednotce celek akce (negativní scénář 1)
@@ -236,7 +231,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         #self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
         #self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
         
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createCompotSubmitButton")    
           
         #self.assertNotEqual(self.driver.find_element(By.ID, "el_komponenta_C_202309027A_K001"), None)
@@ -245,7 +240,6 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 
         self.assertEqual(count_old , count_new)
         logger.info("AkceProjektoveAkce.test_040_pridani_komponenty_dokumentacni_jednotky_n_001.end")
-
 
     def test_041_pridani_objektu_komponente_p_001(self):
         #Scenar_41 Přidání objektu k pozitivní komponentě (pozitivní scénář 1)
@@ -261,19 +255,18 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-202004814")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.ID, "el_komponenta_C_202004814A_K001")
-        #with Wait_for_page_load(self.driver):
+        #with WaitForPageLoad(self.driver):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_C-202004814A-K001_o-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-7-6 > .text")
         self.ElementClick(By.ID, "id_C-202004814A-K001_o-0-pocet")
         self.driver.find_element(By.ID, "id_C-202004814A-K001_o-0-pocet").send_keys("1")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton") 
 
         count_new=NalezObjekt.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202004814A-D01").count()
         self.assertEqual(self.driver.find_element(By.CSS_SELECTOR, ".badge.badge-primary.badge-pill").text,'1')
         self.assertEqual(count_old+1 , count_new)
-        logger.info("AkceProjektoveAkce.test_041_pridani_objektu_komponente_p_001.end")
-        
+        logger.info("AkceProjektoveAkce.test_041_pridani_objektu_komponente_p_001.end")        
         
     def test_042_pridani_predmetu_komponente_p_001(self):
         #Scenar_42 Přidání předmětu k pozitivní komponentě (pozitivní scénář 1)
@@ -289,7 +282,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         self.ElementClick(By.LINK_TEXT, "C-202004814")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "el_komponenta_C_202004814A_K001")
        
         self.ElementClick(By.CSS_SELECTOR, "#div_id_C-202004814A-K001_p-0-druh .filter-option-inner-inner")
@@ -301,7 +294,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "id_C-202004814A-K001_p-0-pocet")
         self.driver.find_element(By.ID, "id_C-202004814A-K001_p-0-pocet").send_keys("1")
         
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton") 
 
         count_new=NalezPredmet.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202004814A-D01").count()
@@ -326,14 +319,13 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "el_komponenta_X_C_91277520A_K001")
         self.ElementClick(By.CSS_SELECTOR, "#objekt-smazat-101441 > .material-icons")
         self.wait(self.wait_interval)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
        
         count_new=NalezObjekt.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01").count()
         #self.assertEqual(self.driver.find_element(By.CSS_SELECTOR, ".badge.badge-primary.badge-pill").text,'1')
         self.assertEqual(count_old , count_new+1)
-        logger.info("AkceProjektoveAkce.test_043_smazani_objektu_komponente_p_001.end")
-        
+        logger.info("AkceProjektoveAkce.test_043_smazani_objektu_komponente_p_001.end")        
         
     def test_044_smazani_predmetu_komponente_p_001(self):
         #Scenar_44 Smazání předmětu u projektové akce (pozitivní scénář 1)
@@ -353,7 +345,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 
         self.ElementClick(By.CSS_SELECTOR, "#objekt-smazat-161256 > .material-icons")
         self.wait(1)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
           self.ElementClick(By.ID, "submit-btn")
        
         count_new=NalezPredmet.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01").count()
@@ -400,13 +392,12 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("anonym")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
        
         count_new =DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="C-202207641A").count()
         self.assertEqual(count_old+1, count_new)
-        logger.info("AkceProjektoveAkce.test_079_pridani_dokumentu_projektove_akci_p_001.end")  
-        
+        logger.info("AkceProjektoveAkce.test_079_pridani_dokumentu_projektove_akci_p_001.end")        
         
     def test_080_pridani_existujiciho_dokumentu_projektove_akci_p_001(self):
         #Scenar_80 Připojení existujícího dokumentu (pozitivní scénář 1)
@@ -429,13 +420,12 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.wait(3)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
 
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
        
         count_new =DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="C-202207641A").count()
         self.assertEqual(count_old+1, count_new)
         logger.info("AkceProjektoveAkce.test_080_pridani_existujiciho_dokumentu_projektove_akci_p_001.end")  
-
         
     def test_081_pridani_existujiciho_dokumentu_z_projektu_projektove_akci_p_001(self):
         #Scenar_81 Připojení existujícího dokumentu z projektu (pozitivní scénář 1)
@@ -456,13 +446,12 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#others > .material-icons")
         self.ElementClick(By.ID, "dokument-pripojit-z-projektu")
         self.ElementClick(By.NAME, "dokument")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")        
        
         count_new =DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="C-202401979B").count()
         self.assertEqual(count_old+1, count_new)
-        logger.info("AkceProjektoveAkce.test_081_pridani_existujiciho_dokumentu_z_projektu_projektove_akci_p_001.end")
-    
+        logger.info("AkceProjektoveAkce.test_081_pridani_existujiciho_dokumentu_z_projektu_projektove_akci_p_001.end")    
     
     def test_084_pripojeni_externiho_zdroje_projektove_akci_p_001(self):
         #Scenar_84 Připojení externího zdroje k projektové akci (pozitivní scénář 1)
@@ -482,7 +471,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-BIB-1295324")        
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.wait(3)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         
         self.ElementClick(By.CSS_SELECTOR, "#eo-pripojit-do-az > .material-icons")
@@ -490,13 +479,12 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-BIB-1295325")        
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.wait(3)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
        
         count_new =ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="C-202301164A").count()
         self.assertEqual(count_old+2, count_new)
-        logger.info("AkceProjektoveAkce.test_084_pripojeni_externiho_zdroje_projektove_akci_p_001.end")
-        
+        logger.info("AkceProjektoveAkce.test_084_pripojeni_externiho_zdroje_projektove_akci_p_001.end")        
               
     def test_086_vytvoreni_PIAN_projektove_akce_p_001(self):
         #Scenar_86 Vytvoření PIAN u projektové akce (pozitivní scénář 1)
@@ -514,19 +502,18 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401980A_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_C-202401980A-D01 .btn-group:nth-child(1) .material-icons")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "show_menu_pian_new_id")
         self.draw_polygon()
         self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createPianSubmitButton")
        
         pian_new =DokumentacniJednotka.objects.filter(ident_cely='C-202401980A-D01')[0].pian
 
         self.assertNotEqual(pian_new, None)
-        logger.info("AkceProjektoveAkce.test_086_vytvoreni_PIAN_projektove_akce_p_001.end")
-        
+        logger.info("AkceProjektoveAkce.test_086_vytvoreni_PIAN_projektove_akce_p_001.end")        
 
     def test_087_editace_PIAN_projektove_akce_p_001(self):
         #Scenar_87 Editace PIAN u projektové akce (pozitivní scénář 1)
@@ -544,17 +531,16 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401981A_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
         
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "pian-upravit-N-1212-000000002")
         self.draw_polygon()
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editPianButton")
        
         pian_new =str(DokumentacniJednotka.objects.filter(ident_cely='C-202401981A-D01')[0].pian.geom)
 
         self.assertNotEqual(pian_new, pian_old)
-        logger.info("AkceProjektoveAkce.test_087_editace_PIAN_projektove_akce_p_001.end")
-        
+        logger.info("AkceProjektoveAkce.test_087_editace_PIAN_projektove_akce_p_001.end")        
         
     def test_088_smazani_PIAN_projektove_akce_p_001(self):
         #Scenar_88 Smazání PIAN u projektové akce (pozitivní scénář 1)
@@ -575,13 +561,12 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401981A_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
         self.ElementClick(By.ID, "pian-odpojit-N-1212-000000002")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn") 
  
         pian=DokumentacniJednotka.objects.filter(ident_cely='C-202401981A-D01')[0].pian
         self.assertEqual(pian, None)
-        logger.info("AkceProjektoveAkce.test_088_smazani_PIAN_projektove_akce_p_001.end")
-        
+        logger.info("AkceProjektoveAkce.test_088_smazani_PIAN_projektove_akce_p_001.end")        
         
     def test_089_pripojeni_PIAN_projektove_akce_p_001(self):
         #Scenar_89 Připojení PIAN z mapy u projektové akce (pozitivní scénář 1)
@@ -605,7 +590,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.wait(2)  
         self.driver.execute_script('''Object.values(poi_pian._layers)[0].fire("click");''')     
         self.wait(0.5)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
        
         pian_new =DokumentacniJednotka.objects.filter(ident_cely='C-202401980A-D01')[0].pian
@@ -631,7 +616,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202007232A_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
         self.ElementClick(By.ID, "pian-odpojit-P-1221-100589")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         
         pian=DokumentacniJednotka.objects.filter(ident_cely='C-202007232A-D01')[0].pian
@@ -666,7 +651,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
         
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createPianSubmitButton")
               
         pian =DokumentacniJednotka.objects.filter(ident_cely='C-202309724A-D01')[0].pian
@@ -695,15 +680,14 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 
         self.addFileToDropzone("#my-awesome-dropzone",'geom.csv',encoded_string)
         self.wait(1) 
-        with Wait_for_page_load(self.driver):    
+        with WaitForPageLoad(self.driver):    
             self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editPianButton") 
        
         pian_new =str(DokumentacniJednotka.objects.filter(ident_cely='C-202005190A-D01')[0].pian.geom)
         self.assertNotEqual(pian_new, pian_old)
-        logger.info("AkceProjektoveAkce.test_092_editace_PIAN_projektove_akce_importem_p_001.end")
-        
+        logger.info("AkceProjektoveAkce.test_092_editace_PIAN_projektove_akce_importem_p_001.end")        
         
     def test_093_pripojeni_PIAN_projektove_akce_p_001(self):
         #Scenar_93 Připojení PIAN k projektové akci podle ID (pozitivní scénář 1)
@@ -726,11 +710,10 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("P-0134-00000")
         self.wait(0.5) 
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
        
         pian_new =DokumentacniJednotka.objects.filter(ident_cely='C-202401980A-D01')[0].pian
-
         self.assertNotEqual(pian_new, None)
         logger.info("AkceProjektoveAkce.test_093_pripojeni_PIAN_projektove_akce_p_001.end")
      
@@ -751,13 +734,12 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "el_komponenta_C_201015104A_K001")
         self.ElementClick(By.CSS_SELECTOR, "#detail_komponenta_form_C-201015104A-K001 #others > .material-icons")
         self.ElementClick(By.ID, "komponenta-smazat-C-201015104A-K001")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 
         count_new=Komponenta.objects.filter(komponenta_vazby__dokumentacni_jednotka__ident_cely="C-201015104A-D01").count()
         self.assertEqual(count_old-1 , count_new)
-        logger.info("AkceProjektoveAkce.test_094_smazani_komponenty_projektove_akce_p_001.end")  
-        
+        logger.info("AkceProjektoveAkce.test_094_smazani_komponenty_projektove_akce_p_001.end")          
         
     #C-202401980 
     def test_095_smazani_DJ_projektove_akce_p_001(self):
@@ -776,13 +758,13 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401980A_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
         self.ElementClick(By.ID, "dj-smazat-C-202401980A-D01")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-
 
         count_new = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202401980A").count()
         self.assertEqual(count_old-1 , count_new)
         logger.info("AkceProjektoveAkce.test_095_smazani_DJ_projektove_akce_p_001.end")   
+
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceSamostatneAkce(AkceProjektoveAkce): 
@@ -792,8 +774,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
     
     def go_to_Akce_vybrat(self):
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
-        
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))        
         
     def test_046_vytvoreni_samostatne_akce_p_001(self):
         #Scenar_46 Vytvoření samostané akce (pozitivní scénář 1)
@@ -825,13 +806,12 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.driver.find_element(By.ID, "id_datum_ukonceni").send_keys("07.03.2024")
         self.ElementClick(By.ID, "id_lokalizace_okolnosti")
         self.driver.find_element(By.ID, "id_lokalizace_okolnosti").send_keys("Hora")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
           self.ElementClick(By.ID, "actionSubmitBtn")       
        
         arch_z_count_new = Akce.objects.count()
         self.assertEqual(arch_z_count_old + 1, arch_z_count_new)
-        logger.info("AkceSamostatneAkce.test_046_vytvoreni_samostatne_akce_p_001.end")
-        
+        logger.info("AkceSamostatneAkce.test_046_vytvoreni_samostatne_akce_p_001.end")        
         
     def test_047_vytvoreni_samostatne_akce_n_001(self):
         #Scenar_47 Vytvoření samostatné akce (negativní scénář 1)
@@ -864,14 +844,13 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.ID, "id_lokalizace_okolnosti")
         self.driver.find_element(By.ID, "id_lokalizace_okolnosti").send_keys("Hora")
         try:
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "actionSubmitBtn")       
         except Exception as e:
             pass
         arch_z_count_new = Akce.objects.count()
         self.assertEqual(arch_z_count_old, arch_z_count_new)
-        logger.info("AkceSamostatneAkce.test_047_vytvoreni_samostatne_akce_n_001.end")
-        
+        logger.info("AkceSamostatneAkce.test_047_vytvoreni_samostatne_akce_n_001.end")        
 
     def test_048_pridani_dokumentacni_jednotky_samostatne_akce_p_001(self):
         #Scenar_48 Přidání dokumentační jednotky celek akce (pozitivní scénář 1) 
@@ -888,13 +867,12 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDjSubmitButton")
             
         count_new = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000001A").count()
         self.assertEqual(count_old + 1, count_new)
-        logger.info("AkceSamostatneAkce.test_048_pridani_dokumentacni_jednotky_samostatne_akce_p_001.end")
-   
+        logger.info("AkceSamostatneAkce.test_048_pridani_dokumentacni_jednotky_samostatne_akce_p_001.end")   
    
     def test_049_pridani_dokumentacni_jednotky_samostatne_akce_n_001(self):
         #Scenar_49 Přidání dokumentační jednotky “Celek akce” (negativní scénář 1) 
@@ -913,14 +891,13 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         #self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
         #self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
         try:
-            with Wait_for_page_load(self.driver):
+            with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "newDjSubmitButton")
         except Exception as e:
             pass
         count_new = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000001A").count()
         self.assertEqual(count_old, count_new)
-        logger.info("AkceSamostatneAkce.test_049_pridani_dokumentacni_jednotky_samostatne_akce_n_001.end")
-   
+        logger.info("AkceSamostatneAkce.test_049_pridani_dokumentacni_jednotky_samostatne_akce_n_001.end")   
    
     def test_050_pridani_komponenty_DJ_samostatne_akce_p_001(self):
         #Scenar_50 Přidání komponenty k DJ u samostatné akce (pozitivní scénář 1) 
@@ -936,7 +913,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000002A")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
         #self.driver.execute_script("window.scrollTo(0,0)")
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_X-C-9000000002A-D01 .btn-group:nth-child(1) .material-icons")
@@ -953,13 +930,12 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         #self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-39 > .text")
 
         #self.driver.execute_script("window.scrollTo(0,0)")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createCompotSubmitButton")
        
         count_new =Komponenta.objects.filter(komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000002A-D01").count()
         self.assertEqual(count_old + 1, count_new)
-        logger.info("AkceSamostatneAkce.test_050_pridani_komponenty_DJ_samostatne_akce_p_001.end")
-    
+        logger.info("AkceSamostatneAkce.test_050_pridani_komponenty_DJ_samostatne_akce_p_001.end")    
     
     def test_074_pridani_komponenty_DJ_samostatne_akce_n_001(self):
         #Scenar_74 Přidání komponenty k DJ u samostatné akce (negativní scénář 1) 
@@ -975,7 +951,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000002A")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_X-C-9000000002A-D01 .btn-group:nth-child(1) .material-icons")
         self.ElementClick(By.LINK_TEXT, _("arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatKomponentu.label"))
@@ -990,14 +966,12 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         #self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         #self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-39 > .text")
 
-
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createCompotSubmitButton")
        
         count_new =Komponenta.objects.filter(komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000002A-D01").count()
         self.assertEqual(count_old, count_new)
         logger.info("AkceSamostatneAkce.test_074_pridani_komponenty_DJ_samostatne_akce_n_001.end")    
-
         
     def test_075_pridani_objektu_komponente_DJ_samostatna_akce_p_001(self):
         #Scenar_75 Přidání objektu k pozitivní komponentě (pozitivní scénář 1)
@@ -1019,13 +993,12 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_X-C-9000000003A-K001_o-0-pocet")
         self.driver.find_element(By.ID, "id_X-C-9000000003A-K001_o-0-pocet").send_keys("1")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")       
        
         count_new =NalezObjekt.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000003A-D01").count()
         self.assertEqual(count_old+1, count_new)
-        logger.info("AkceSamostatneAkce.test_075_pridani_objektu_komponente_DJ_samostatna_akce_p_001.end") 
-        
+        logger.info("AkceSamostatneAkce.test_075_pridani_objektu_komponente_DJ_samostatna_akce_p_001.end")         
         
     def test_076_pridani_predmetu_komponente_DJ_samostatna_akce_p_001(self):
         #Scenar_76 Přidání předmětu k pozitivní komponentě (pozitivní scénář 1)
@@ -1053,13 +1026,12 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
 
         self.ElementClick(By.ID, "id_X-C-9000000003A-K001_p-0-pocet")
         self.driver.find_element(By.ID, "id_X-C-9000000003A-K001_p-0-pocet").send_keys("1")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")
        
         count_new =NalezPredmet.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000003A-D01").count()
         self.assertEqual(count_old+1, count_new)
-        logger.info("AkceSamostatneAkce.test_076_pridani_predmetu_komponente_DJ_samostatna_akce_p_001.end")    
-   
+        logger.info("AkceSamostatneAkce.test_076_pridani_predmetu_komponente_DJ_samostatna_akce_p_001.end")      
    
     def test_077_smazani_objektu_komponenty_DJ_samostatna_akce_p_001(self):
         #Scenar_77 Smazání objektu u samostatné akce (pozitivní scénář 1)
@@ -1079,13 +1051,12 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.CSS_SELECTOR, "#objekt-smazat-180491 > .material-icons")
         self.ElementClick(By.ID, "submit-btn")
         
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")
        
         count_new =NalezObjekt.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000004A-D01").count()
         self.assertEqual(count_old, count_new+1)
-        logger.info("AkceSamostatneAkce.test_077_smazani_objektu_komponenty_DJ_samostatna_akce_p_001.end")  
-        
+        logger.info("AkceSamostatneAkce.test_077_smazani_objektu_komponenty_DJ_samostatna_akce_p_001.end")          
 
     def test_078_smazani_predmetu_komponenty_DJ_samostatna_akce_p_001(self):
         #Scenar_78 Smazání předmětu u samostatné akce (pozitivní scénář 1)
@@ -1105,17 +1076,14 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.CSS_SELECTOR, "#objekt-smazat-175762 > .material-icons")
         self.ElementClick(By.ID, "submit-btn")
         
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")
        
         count_new =NalezPredmet.objects.filter(komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-9000000004A-D01").count()
         self.assertEqual(count_old, count_new+1)
-        logger.info("AkceSamostatneAkce.test_078_smazani_predmetu_komponenty_DJ_samostatna_akce_p_001.end")  
-        
-    
+        logger.info("AkceSamostatneAkce.test_078_smazani_predmetu_komponenty_DJ_samostatna_akce_p_001.end")       
       
 #82 a 83 X-C-9000000003A
-
     def test_082_pridani_dokumentu_samostatne_akci_p_001(self):
         #Scenar_82 Přidání dokumentu k samostatné akci (pozitivní scénář 1)
         logger.info("AkceSamostatneAkce.test_082_pridani_dokumentu_samostatne_akci_p_001.start")
@@ -1158,14 +1126,12 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("anonym")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
-
        
         count_new =DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000003A").count()
         self.assertEqual(count_old+1, count_new)
-        logger.info("AkceSamostatneAkce.test_082_pridani_dokumentu_samostatne_akci_p_001.end")
-        
+        logger.info("AkceSamostatneAkce.test_082_pridani_dokumentu_samostatne_akci_p_001.end")        
         
     def test_083_pridani_existujiciho_dokumentu_samostatne_akci_p_001(self):
         #Scenar_83 Připojení existujícího dokumentu k samostatné akci (pozitivní scénář 1)
@@ -1193,13 +1159,12 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.wait(3)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
 
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
        
         count_new =DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000004A").count()
         self.assertEqual(count_old+1, count_new)
-        logger.info("AkceSamostatneAkce.test_083_pridani_existujiciho_dokumentu_samostatne_akci_p_001.end")
-                
+        logger.info("AkceSamostatneAkce.test_083_pridani_existujiciho_dokumentu_samostatne_akci_p_001.end")                
                 
         #X-C-9000000003A         
     def test_085_pripojeni_externiho_zdroje_samostatne_akci_p_001(self):
@@ -1219,20 +1184,19 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-BIB-1295324")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.wait(3)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.ElementClick(By.CSS_SELECTOR, "#eo-pripojit-do-az > .material-icons")
         self.ElementClick(By.ID, "select2-id_ez-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-BIB-1295325")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.wait(3)
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
        
         count_new =ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000003A").count()
         self.assertEqual(count_old+2, count_new)
-        logger.info("AkceSamostatneAkce.test_085_pripojeni_externiho_zdroje_samostatne_akci_p_001.end")
-    
+        logger.info("AkceSamostatneAkce.test_085_pripojeni_externiho_zdroje_samostatne_akci_p_001.end")    
            
     def test_096_vytvoreni_PIAN_samostatne_akce_p_001(self):
         #Scenar_96 Vytvoření PIAN u samostatné akce (pozitivní scénář 1)
@@ -1249,20 +1213,19 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.LINK_TEXT, "X-C-9000000002A")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_X-C-9000000002A-D01 .btn-group:nth-child(1) .material-icons")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "show_menu_pian_new_id")
         self.draw_polygon()
 
         self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createPianSubmitButton")
        
         pian_new =DokumentacniJednotka.objects.filter(ident_cely='X-C-9000000002A-D01')[0].pian
 
         self.assertNotEqual(pian_new, None)
         logger.info("AkceSamostatneAkce.test_096_vytvoreni_PIAN_samostatne_akce_p_001.end")
-
 
     def test_097_editace_PIAN_samostatne_akce_p_001(self):
         #Scenar_97 Editace PIAN u samostatné akce (pozitivní scénář 1)
@@ -1280,10 +1243,10 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000006A_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
         
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "pian-upravit-N-1212-000000001")
         self.draw_polygon()
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editPianButton")
        
         pian_new =str(DokumentacniJednotka.objects.filter(ident_cely='X-C-9000000006A-D01')[0].pian.geom)
@@ -1314,9 +1277,9 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
 
         self.addFileToDropzone("#my-awesome-dropzone",'geom.csv',encoded_string)
         self.wait(1) 
-        with Wait_for_page_load(self.driver):    
+        with WaitForPageLoad(self.driver):    
             self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
-        with Wait_for_page_load(self.driver):
+        with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editPianButton") 
        
         pian_new =str(DokumentacniJednotka.objects.filter(ident_cely='X-C-9000000006A-D01')[0].pian.geom)
