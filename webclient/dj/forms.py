@@ -198,7 +198,7 @@ class CreateDJForm(forms.ModelForm):
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
         self.fields["pian_text"].disabled = True
-        if self.instance.komponenty.komponenty.count()>0:
+        if hasattr(self.instance,"komponenty") and hasattr(self.instance.komponenty,"komponenty") and self.instance.komponenty.komponenty.count()>0:
             self.fields["negativni_jednotka"].disabled = True
 
 

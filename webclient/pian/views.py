@@ -117,8 +117,8 @@ def detail(request, ident_cely):
         pian.active_transaction = fedora_transaction
         pian.save()
         djs=DokumentacniJednotka.objects.filter(pian__ident_cely=ident_cely)
-        for dj in djs:
-            update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
+        for fdj in djs:
+            update_all_katastr_within_akce_or_lokalita(fdj, fedora_transaction)
         pian.close_active_transaction_when_finished = True
         pian.save()
         if form.changed_data:
