@@ -1,9 +1,5 @@
-import json
 import logging
 import pandas as pd
-from django.utils.decorators import method_decorator
-from django.views import View
-from django.views.decorators.csrf import csrf_exempt
 
 from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN, PIAN_POTVRZEN, ROLE_ADMIN_ID, ZAPSANI_AZ, ZAPSANI_PIAN, ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from core.exceptions import MaximalIdentNumberError, NeznamaGeometrieError
@@ -37,6 +33,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
 from django.core.exceptions import PermissionDenied
+from django.core.cache import cache
 from django.db import connection
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -504,6 +501,7 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
         context = self.get_context_data()
         context["table"] = self.sheet
+        cache.set("geom_"+str(hash(request.session.session_key)), self.sheet, timeout=60*60)
         if ArcheologickyZaznam.objects.get(ident_cely=request.POST.get("arch_ident")).typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if request.POST.get("action",False) == "change":
                 context["url"] = reverse("arch_z:update-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident"),request.POST.get("pian_ident")])
@@ -518,11 +516,11 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
     
     def check_save_row(self, row):
-        if self.sheet['label'].value_counts()[row[0]] > 1:
+        if self.sheet['label'].value_counts()[row.iloc[0]] > 1:
             return _("pian.views.importovatPianView.check.notUniquelabel")
-        if not self.check_geometry(row[2]):
+        if not self.check_geometry(row.iloc[2]):
             return _("pian.views.importovatPianView.check.wrongGeometry")
-        if not self.check_epsg(row[1]):
+        if not self.check_epsg(row.iloc[1]):
             return _("pian.views.importovatPianView.check.wrongEpsg")
         else:
             return True
@@ -535,16 +533,3 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
         # @jiribartos kontrola geometrie
         return file_validate_epsg(epsg)
 
-
-@method_decorator(csrf_exempt, name='dispatch')
-class ValidateGeometryView(View):
-    def post(self, request):
-        data = json.loads(request.body)
-        geometry = data.get("geometry", None)
-        validation_result, validation_result_description = file_validate_geometry(geometry)
-        if file_validate_geometry(geometry)[0] is True:
-            return JsonResponse({"validation_result": validation_result, "geometry": geometry,
-                                 "validation_result_description": validation_result_description}, status=200)
-        else:
-            return JsonResponse({"validation_result": validation_result, "geometry": geometry,
-                                 "validation_result_description": validation_result_description}, status=200)
