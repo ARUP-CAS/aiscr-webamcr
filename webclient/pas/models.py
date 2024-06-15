@@ -297,8 +297,6 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             )
         if self.geom_system == "4326":
             system = "4326"
-        elif self.geom_system == "5514*":
-            system = "5514*"
         elif self.geom_system == "5514":
             system = "5514"
         else:
@@ -324,7 +322,6 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         constraints = [
             CheckConstraint(
                 check=((Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
-                       | (Q(geom_system="5514*") & Q(geom_sjtsk__isnull=False))
                        | (Q(geom_system="4326") & Q(geom__isnull=False))
                        | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
                 name='samostatny_nalez_geom_check',
