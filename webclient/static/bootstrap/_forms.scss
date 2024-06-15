@@ -180,9 +180,11 @@ textarea.form-control:not(.disabled-text-area) {
 
 textarea.disabled-text-area,
 textarea[readonly] {
-  @media (pointer: fine) {
-    height: 1.5rem !important;
-  }
+  // Commented because of
+  // https://github.com/ARUP-CAS/aiscr-webamcr/issues/1937
+  //@media (pointer: fine) {
+  //  height: 1.5rem !important;
+  //}
 
   @media (pointer: coarse) {
     height: 3rem !important;
