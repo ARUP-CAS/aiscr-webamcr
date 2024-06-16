@@ -137,7 +137,7 @@ from neidentakce.models import NeidentAkce
 from ez.forms import PripojitArchZaznamForm
 from projekt.forms import PripojitProjektForm
 from core.models import Soubor
-from django.db.models import Prefetch, Subquery, OuterRef, F
+from django.db.models import Prefetch, Subquery, OuterRef
 
 from uzivatel.models import Osoba, User
 
