@@ -77,7 +77,7 @@ class ModelWithMetadata(models.Model):
         if close_transaction is True:
             logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.mark_transaction_as_closed",
                          extra={"transaction": getattr(fedora_transaction, "uid", ""), "caller": caller})
-            fedora_transaction.mark_transaction_as_closed()
+            transaction.on_commit(lambda: fedora_transaction.mark_transaction_as_closed())
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.end",
                      extra={"transaction": getattr(fedora_transaction, "uid", ""),
                             "transaction_mark_closed": self.close_active_transaction_when_finished})
@@ -257,10 +257,11 @@ class ModelWithMetadata(models.Model):
                         item.archeologicky_zaznam.save_metadata(fedora_transaction)
 
                 self: Pian
-                transaction.on_commit(lambda: save_metadata(self))
+                save_metadata(self)
 
-        from core.repository_connector import FedoraTransactionPostCommitTasks
-        fedora_transaction.post_commit_tasks[FedoraTransactionPostCommitTasks.CREATE_LINK] = [self, old_ident_cely]
+            from core.repository_connector import FedoraTransactionPostCommitTasks
+            fedora_transaction.post_commit_tasks[FedoraTransactionPostCommitTasks.CREATE_LINK] = \
+                [self, self.ident_cely, old_ident_cely]
         logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end",
                      extra={"transaction": fedora_transaction.uid, "old_ident_cely": old_ident_cely,
                             "new_ident_cely": new_ident_cely})

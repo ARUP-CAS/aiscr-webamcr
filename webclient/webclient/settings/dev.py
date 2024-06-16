@@ -3,6 +3,7 @@ import socket
 from .base import *
 
 DEBUG = True
+USE_I18N = get_secret("USE_I18N", "true").lower() == "true"
 
 ALLOWED_HOSTS = ["*"]
 
