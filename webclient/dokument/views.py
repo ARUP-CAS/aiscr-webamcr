@@ -137,7 +137,7 @@ from neidentakce.models import NeidentAkce
 from ez.forms import PripojitArchZaznamForm
 from projekt.forms import PripojitProjektForm
 from core.models import Soubor
-from django.db.models import Prefetch, Subquery, OuterRef
+from django.db.models import Prefetch, Subquery, OuterRef, F
 
 from uzivatel.models import Osoba, User
 
@@ -254,7 +254,7 @@ def detail_model_3D(request, ident_cely):
     context["show"] = show
     context["global_map_can_edit"] = False
     if dokument.soubory:
-        context["soubory"] = dokument.soubory.soubory.all().order_by("nazev")
+        context["soubory"] = sorted(dokument.soubory.soubory.all(), key=lambda x: (x.nazev.replace('.', '0'), x.nazev))
     else:
         context["soubory"] = None
     return render(request, "dokument/detail_model_3D.html", context)
@@ -496,7 +496,8 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["show"] = show
 
         if dokument.soubory:
-            context["soubory"] = dokument.soubory.soubory.all().order_by("nazev")
+            context["soubory"] = sorted(dokument.soubory.soubory.all(),
+                                        key=lambda x: (x.nazev.replace('.', '0'), x.nazev))
         else:
             context["soubory"] = None
 
