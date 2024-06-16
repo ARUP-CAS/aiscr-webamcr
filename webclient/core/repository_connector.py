@@ -995,11 +995,14 @@ class FedoraTransaction:
         new_transaction.child_transaction = True
         for key, value in self.post_commit_tasks.items():
             if key == FedoraTransactionPostCommitTasks.CREATE_LINK:
-                if not isinstance(value, list) or len(value) != 2:
+                if not isinstance(value, list) or len(value) != 3:
                     logger.error("core_repository_connector.FedoraTransaction._perform_post_commit_tasks."
                                  "parameter_error", extra={"transaction": self.uid})
-                connector = FedoraRepositoryConnector(value[0], new_transaction)
-                connector.create_link(ident_cely_proxy=value[1])
+                record, ident_cely, old_ident_cely = value
+                record.ident_cely = old_ident_cely
+                connector = FedoraRepositoryConnector(record, new_transaction)
+                connector.create_link(ident_cely_proxy=ident_cely)
+        self.post_commit_tasks = {}
         new_transaction.mark_transaction_as_closed()
 
     def __create_transaction(self):

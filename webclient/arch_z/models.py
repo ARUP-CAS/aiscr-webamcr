@@ -577,11 +577,6 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
             "arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely}
         )
 
-    def save_metadata(self):
-        from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(self)
-        return connector.save_metadata(True)
-
     def vedouci_organizace(self):
         return ', '.join([str(x.organizace) for x in self.akcevedouci_set.all()])
 
