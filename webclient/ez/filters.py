@@ -34,6 +34,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
     """
 
     HISTORIE_TYP_ZMENY_STARTS_WITH = "EZ"
+    INCLUDE_KAT_TYP_ZMENY = False
     TYP_VAZBY = EXTERNI_ZDROJ_RELATION_TYPE
 
     stav = MultipleChoiceFilter(
