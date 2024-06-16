@@ -20,7 +20,7 @@ from django_filters import (
 
 from core.connectors import RedisConnector
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_DOK, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, \
-    DOKUMENT_RELATION_TYPE
+    DOKUMENT_RELATION_TYPE, ZMENA_KATASTRU
 from dokument.models import Dokument, DokumentCast, Tvar
 from historie.models import Historie
 from django.db.models import Q, OuterRef, Subquery, F, QuerySet
@@ -85,6 +85,7 @@ class HistorieFilter(FilterSet):
     """
 
     HISTORIE_TYP_ZMENY_STARTS_WITH = None
+    INCLUDE_KAT_TYP_ZMENY = True
     TYP_VAZBY = None
 
     def set_filter_fields(self, user):
@@ -105,7 +106,8 @@ class HistorieFilter(FilterSet):
                 distinct=True,
             )
         self.filters["historie_typ_zmeny"] = MultipleChoiceFilter(
-            choices=filter(lambda x: x[0].startswith(self.HISTORIE_TYP_ZMENY_STARTS_WITH) and
+            choices=filter(lambda x: (x[0].startswith(self.HISTORIE_TYP_ZMENY_STARTS_WITH)
+                                      or (self.INCLUDE_KAT_TYP_ZMENY and x[0] == ZMENA_KATASTRU)) and
                                      not (self.HISTORIE_TYP_ZMENY_STARTS_WITH == "P" and x[0].startswith("PI")),
                            Historie.CHOICES),
             label=_("dokument.filters.historieFilter.historieTypZmeny.label"),
@@ -167,6 +169,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
     """
 
     TYP_VAZBY = DOKUMENT_RELATION_TYPE
+    INCLUDE_KAT_TYP_ZMENY = False
     HISTORIE_TYP_ZMENY_STARTS_WITH = "D"
 
     ident_cely = CharFilter(
