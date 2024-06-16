@@ -180,4 +180,9 @@
         const replaced_action = string.replace(/akce_dj_zakladni|akce_pripojit_pian_mapa|akce_pripojit_pian_id/g, new_action)
         document.getElementById("djEditForm").action = replaced_action
     }
+    document.addEventListener("DOMContentLoaded", function() {
+        if (filtrAkci() === 0) {
+            document.getElementById("others").style.display = "none";
+        }
+    });
 </script>

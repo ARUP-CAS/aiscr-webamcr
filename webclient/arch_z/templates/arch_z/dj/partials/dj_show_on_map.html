@@ -17,6 +17,8 @@
     }
 
     const filtrAkci = () => {
+        let shown_elements = 0
+
         const positive = getFiltrTypeIsKuSafe() ? 'none' : '';
         const negative = positive === '' ? 'none' : '';
 
@@ -24,6 +26,9 @@
             .forEach(element => {
                 if (document.getElementById(element) != null) {
                     document.getElementById(element).style.display = positive;
+                    if (positive === "") {
+                        shown_elements++
+                    }
                 }
             });
 
@@ -31,8 +36,12 @@
             .forEach(element => {
                 if (document.getElementById(element) != null) {
                     document.getElementById(element).style.display = negative;
+                    if (negative === "") {
+                        shown_elements++
+                    }
                 }
             });
+        return shown_elements
     }
 </script>
 <script>
