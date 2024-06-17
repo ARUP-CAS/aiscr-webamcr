@@ -20,6 +20,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
 )
+from heslar.hesla_dynamicka import TYP_DJ_KATASTR   
 from core.repository_connector import FedoraTransaction
 from core.views import SearchListView
 from dj.forms import CreateDJForm
@@ -305,6 +306,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         context["header"] = _("lokalita.views.lokalitaEditView.formHeader.label")
         context["zaznam"] = self.object.archeologicky_zaznam
         context["submit_button"] = _("lokalita.views.LokalitaEditView.submitButton")
+        context["katastry_edit"]= self.object.archeologicky_zaznam.dokumentacni_jednotky_akce.count()==1 and  self.object.archeologicky_zaznam.dokumentacni_jednotky_akce.first().typ.id==TYP_DJ_KATASTR
         return context
 
     def form_valid(self, form):
@@ -319,6 +321,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
             az.active_transaction = fedora_transaction
             az.close_active_transaction_when_finished = True
             az.save()
+            form_az.save_m2m()
             messages.add_message(
                 self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN
             )
