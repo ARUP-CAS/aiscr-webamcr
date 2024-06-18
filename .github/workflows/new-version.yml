@@ -15,7 +15,7 @@ on:
     
 jobs:
   update-citation:
-    name: Update CITATION.cff
+    name: Version citation and new tag
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -39,15 +39,8 @@ jobs:
           git commit -m "Update CITATION.cff for release $VERSION"
           git pull
           git push
-  create-tag:
-    name: Create new tag
-    needs: [update-citation]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: rickstaa/action-create-tag@v1
+      - name: Create tag
+        uses: rickstaa/action-create-tag@v1
         id: "tag_create"
         with:
           tag: ${{ inputs.new_tag }}
