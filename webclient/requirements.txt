@@ -24,7 +24,7 @@ django-extensions==3.2.3
 celery==5.4.0
 django-add-default-value==0.10.0
 selenium==4.21.0
-redis==5.0.5
+redis==5.0.6
 django-celery-beat==2.6.0
 django-celery-results==2.5.1
 django-prometheus==2.3.1
