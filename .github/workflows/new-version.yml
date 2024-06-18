@@ -76,8 +76,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: dev
       - uses: rickstaa/action-create-tag@v1
         id: "tag_create"
         with:
