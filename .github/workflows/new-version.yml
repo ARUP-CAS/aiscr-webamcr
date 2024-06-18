@@ -42,9 +42,10 @@ jobs:
             git commit -m "Update CITATION.cff for release $VERSION"
             git pull
             git push
-            echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-            echo ${{ env.commit_sha }}
           fi
+      - name: Set commit SHA
+        run: |
+          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
   convert_to_rst:
     name: Update pip package list
     needs: [update_citation]
@@ -81,9 +82,10 @@ jobs:
             git commit -m "Update knihovny_read_only.rst for release $VERSION"
             git pull
             git push
-            echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-            echo ${{ env.commit_sha }}
           fi          
+      - name: Set commit SHA
+        run: |
+          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
   create-tag:
     name: Create new tag
     needs: [convert_to_rst]
