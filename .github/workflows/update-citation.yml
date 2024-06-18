@@ -1,8 +1,9 @@
 name: Update CITATION.cff
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+    - '**'
 
 jobs:
   update-citation:
