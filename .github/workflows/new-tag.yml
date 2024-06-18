@@ -19,12 +19,6 @@ jobs:
         id: "tag_create"
         with:
           tag: ${{ inputs.new_tag }}
-
-      # Print result using the env variable.
-      - run: |
-        echo "Tag already present: ${{ env.TAG_EXISTS }}"
-
-      # Print result using the action output.
       - run: |
         echo "Tag already present: ${{ steps.tag_create.outputs.tag_exists }}"
   
