@@ -589,6 +589,8 @@ class AkceFilter(ArchZaznamFilter):
         if "True" not in value and "False" not in value:
             return queryset
         queryset = queryset.filter(archeologicky_zaznam__dokumentacni_jednotky_akce__isnull=False)
+        if "True" in value and "False" in value:
+            return queryset
         doumentacni_jednotka_subquery = DokumentacniJednotka.objects \
             .filter(negativni_jednotka=False).values_list("archeologicky_zaznam__pk", flat=True)
         if "True" in value:
