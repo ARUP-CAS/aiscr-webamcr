@@ -77,10 +77,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          fetch-depth: 0
       - uses: rickstaa/action-create-tag@v1
         id: "tag_create"
         with:
           tag: ${{ inputs.new_tag }}
+          commit_sha: ${{ github.ref }}
       - run: |
           echo "Tag already present: ${{ steps.tag_create.outputs.tag_exists }}"
