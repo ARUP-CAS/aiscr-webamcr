@@ -1,20 +1,21 @@
-name: Update CITATION.cff and create new tag
+name: New version
 
 on:
   workflow_dispatch :
     inputs:
       new_tag:
-       description: 'Tag name following vx.x.x semantics.'
+       description: 'Tag name following vx.x.x semantics:'
        type: string
        required: true
       pre_release:
-       description: 'Is this prerelease version (true/false)?'
+       description: 'Is this pre-release version?'
        type: boolean
        required: true
        default: true
-
+    
 jobs:
   create-tag:
+    name: Create new tag
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +29,8 @@ jobs:
           echo "Tag already present: ${{ steps.tag_create.outputs.tag_exists }}"
   
   update-citation:
+    name: Update CITATION.cff
+    needs: [create-tag]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
