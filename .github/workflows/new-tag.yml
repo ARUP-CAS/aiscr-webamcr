@@ -1,11 +1,33 @@
-name: Update CITATION.cff
+name: Update CITATION.cff and create new tag
 
 on:
-  push:
-    tags:
-    - 'v**'
+  workflow_dispatch :
+    inputs:
+      new_tag:
+       description: 'Tag name following vx.x.x semantics.'
+       type: string
+       required: true
 
 jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: rickstaa/action-create-tag@v1
+        id: "tag_create"
+        with:
+          tag: ${{ inputs.new_tag }}
+
+      # Print result using the env variable.
+      - run: |
+        echo "Tag already present: ${{ env.TAG_EXISTS }}"
+
+      # Print result using the action output.
+      - run: |
+        echo "Tag already present: ${{ steps.tag_create.outputs.tag_exists }}"
+  
   update-citation:
     runs-on: ubuntu-latest
     steps:
