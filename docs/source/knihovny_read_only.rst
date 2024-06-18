@@ -179,12 +179,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 2.5.1
      - BSD License
      - https://github.com/celery/django-celery-results
-   * - django-compressor
-     - 4.4
-     - MIT License
-     - https://django-compressor.readthedocs.io/en/latest/
    * - django-crispy-forms
-     - 2.1
+     - 2.2
      - MIT License
      - https://github.com/django-crispy-forms/django-crispy-forms
    * - django-debug-toolbar
@@ -251,6 +247,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.5.0
      - MIT License
      - https://github.com/jazzband/django-widget-tweaks
+   * - django_compressor
+     - 4.5
+     - MIT License
+     - https://django-compressor.readthedocs.io/en/latest/
    * - djangorestframework
      - 3.15.1
      - BSD License
@@ -348,7 +348,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.38
+     - 8.13.39
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -376,7 +376,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/prompt-toolkit/python-prompt-toolkit
    * - psutil
-     - 5.9.8
+     - 6.0.0
      - BSD License
      - https://github.com/giampaolo/psutil
    * - psycopg2
@@ -440,11 +440,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - ISC License (ISCL)
      - https://github.com/markokr/rarfile
    * - rcssmin
-     - 1.1.1
+     - 1.1.2
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rcssmin/
    * - redis
-     - 5.0.5
+     - 5.0.6
      - MIT License
      - https://github.com/redis/redis-py
    * - reportlab
@@ -456,7 +456,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://requests.readthedocs.io
    * - rjsmin
-     - 1.2.1
+     - 1.2.2
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
