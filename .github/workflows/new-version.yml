@@ -1,11 +1,21 @@
-name: Update CITATION.cff
+name: New version
 
 on:
-  release:
-    types: [created]
-
+  workflow_dispatch :
+    inputs:
+      new_tag:
+        description: 'Tag name following vx.x.x semantics:'
+        type: string
+        required: true
+      pre_release:
+        description: 'Is this pre-release version?'
+        type: boolean
+        required: true
+        default: true
+    
 jobs:
   update-citation:
+    name: Version citation and new tag
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -14,8 +24,8 @@ jobs:
           ref: dev
       - name: Update CITATION.cff
         run: |
-          VERSION=${{ github.event.release.tag_name }}
-          PRERELEASE=${{ github.event.release.prerelease }}
+          VERSION=${{ inputs.new_tag }}
+          PRERELEASE=${{ inputs.pre_release }}
           if [ "$PRERELEASE" == "true" ]; then
             VERSION="$VERSION-pre-release"
           fi
@@ -29,4 +39,10 @@ jobs:
           git commit -m "Update CITATION.cff for release $VERSION"
           git pull
           git push
-
+      - name: Create tag
+        uses: rickstaa/action-create-tag@v1
+        id: "tag_create"
+        with:
+          tag: ${{ inputs.new_tag }}
+      - run: |
+          echo "Tag already present: ${{ steps.tag_create.outputs.tag_exists }}"

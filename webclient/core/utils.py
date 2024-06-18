@@ -244,10 +244,10 @@ def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
     """
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     if dj.typ.id == TYP_DJ_KATASTR:
-        zaznam.katastry.set([]) 
-    else:        
+        pass
+    else:
         akce_ident_cely = dj.archeologicky_zaznam.ident_cely        
-        hlavni_id = None        
+        hlavni_id = None
         ostatni_id = []
         for line in get_all_pians_with_akce(akce_ident_cely):
             if hlavni_id is None:

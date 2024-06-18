@@ -205,7 +205,7 @@ map.on('popupopen', function (e) {
     if (tooltip) 
     {
         // close the open tooltip, if you have configured animations on the tooltip this looks snazzy
-        e.target.closeTooltip();
+        e.popup._source.closeTooltip()
         // use opacity to make the tooltip for this feature invisible while the popup is active.
         e.popup._source.getTooltip().setOpacity(0);
     }

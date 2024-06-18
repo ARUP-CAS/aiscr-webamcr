@@ -1,14 +1,14 @@
 Django==5.0.6
 psycopg2-binary==2.9.9
 simplejson==3.19.2
-django-crispy-forms==2.1
+django-crispy-forms==2.2
 crispy-bootstrap4
 django-recaptcha==4.0.0
 django_registration==3.3
 django-filter==24.2
 django-tables2==2.6.0
 django-tables2-column-shifter==2.2.0
-django-compressor==4.4
+django-compressor==4.5
 django-libsass==0.9 
 django-autocomplete-light==3.11.0
 django-widget-tweaks==1.5.0
@@ -24,7 +24,7 @@ django-extensions==3.2.3
 celery==5.4.0
 django-add-default-value==0.10.0
 selenium==4.21.0
-redis==5.0.5
+redis==5.0.6
 django-celery-beat==2.6.0
 django-celery-results==2.5.1
 django-prometheus==2.3.1
@@ -34,7 +34,7 @@ djangorestframework-xml==2.0.0
 lxml==5.2.2
 python-magic==0.4.27
 pdf2image==1.17.0
-phonenumbers==8.13.38
+phonenumbers==8.13.39
 py7zr==0.21.0
 rarfile==4.2
 django-cacheops==7.0.2

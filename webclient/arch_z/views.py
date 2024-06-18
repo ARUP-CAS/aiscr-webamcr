@@ -621,6 +621,7 @@ def edit(request, ident_cely):
             az = form_az.save(commit=False)
             az.active_transaction = fedora_trasnaction
             az.save()
+            form_az.save_m2m()
             akce = form_akce.save()
             ostatni_vedouci_objekt_formset.save()
             if form_az.changed_data or form_akce.changed_data:
@@ -670,6 +671,7 @@ def edit(request, ident_cely):
             "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
             "arch_z_ident_cely":zaznam.ident_cely,
             "toolbar_name": _("arch_z.views.edit.toolbar_name.text"),
+            "katastry_edit": zaznam.dokumentacni_jednotky_akce.count()==1 and  zaznam.dokumentacni_jednotky_akce.first().typ.id==TYP_DJ_KATASTR,
         },
     )
 

@@ -2,17 +2,19 @@ version: "3.8"
 
 services:
   web:
-    image: aiscr/webamcr:${IMAGE_TAG}
+    image: docker.io/library/test_prod
     secrets:
       - db_conf
       - mail_conf
       - redis_pass
+      - test_conf
     volumes:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
       - /opt/data-migrace:/vol/data-migrace
       - /opt/selenium_test:/vol/web/selenium_test
+      - /opt/fcrepo/fcrepo-home/data:/vol/fcrepo
     environment:
       - TEST_ENV_SETTING
       - IMAGE_TAG=${IMAGE_TAG}
@@ -31,6 +33,23 @@ services:
       - celery_worker
       - celery_beat
 
+
+  proxy:
+    image: aiscr/webamcr-proxy:latest
+    volumes:
+      - static_data:/vol/static
+      - nginx_data:/vol/nginx/data
+    ports:
+      - "8080:8080"
+    networks:
+      - prod-net
+    healthcheck:
+      test: ["CMD-SHELL", 'sh /scripts/run-healthcheck_proxy.sh']
+      interval: 2m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
   sidecar:
     image: eeacms/rsync:latest
     environment:
@@ -42,7 +61,7 @@ services:
       - client
 
   redis:
-    image: aiscr/webamcr-redis:${IMAGE_TAG}
+    image: aiscr/webamcr-redis:latest
     restart: always
     ports:
       - "6379:6379"
@@ -61,7 +80,7 @@ services:
       start_period: 30s
 
   celery_worker:
-    image: aiscr/webamcr:${IMAGE_TAG}
+    image: docker.io/library/test_prod
     command: celery -A webclient worker -l DEBUG -n worker1@amcr
     environment:
       - IMAGE_TAG=${IMAGE_TAG}
@@ -86,7 +105,7 @@ services:
       - redis
 
   celery_beat:
-    image: aiscr/webamcr:${IMAGE_TAG}
+    image: docker.io/library/test_prod
     command: celery -A webclient beat -l INFO
     environment:
       - IMAGE_TAG=${IMAGE_TAG}
@@ -269,3 +288,5 @@ secrets:
     external: true
   logstash_elastic_host:
     external: true
+  test_conf:
+   external: true
