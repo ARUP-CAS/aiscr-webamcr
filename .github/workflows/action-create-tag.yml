@@ -1,5 +1,6 @@
 name: "Create/Update tag"
-description: "Creates or updates a tag for a given commit."
+
+description: "Creates or updates a tag for a given commit. See also: https://github.com/rickstaa/action-create-tag"
 author: "Rick Staa"
 inputs:
   github_token:
