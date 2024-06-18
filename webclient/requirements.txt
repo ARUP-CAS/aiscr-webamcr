@@ -1,7 +1,7 @@
 Django==5.0.6
 psycopg2-binary==2.9.9
 simplejson==3.19.2
-django-crispy-forms==2.1
+django-crispy-forms==2.2
 crispy-bootstrap4
 django-recaptcha==4.0.0
 django_registration==3.3
