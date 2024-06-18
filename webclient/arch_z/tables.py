@@ -6,6 +6,18 @@ from core.utils import SearchTable
 from .models import Akce
 
 
+class BooleanValueColumn(tables.columns.Column):
+    def __init__(self, *args, **kwargs):
+        self.value_labels = kwargs.pop("value_labels", None)
+        super(BooleanValueColumn, self).__init__(*args, **kwargs)
+
+    def render(self, value):
+        value = [x for x in self.value_labels if x[0] == bool(value)]
+        if len(value) > 0:
+            return value[0][1]
+        return ""
+
+
 class AkceTable(SearchTable):
     """
         Class pro definování tabulky pro akci použitých pro zobrazení přehledu akcií a exportu.
@@ -96,13 +108,17 @@ class AkceTable(SearchTable):
         verbose_name=_("arch_z.tables.AkceTable.ulozeni_dokumentace.label"),
         default="",
     )
-    je_nz = tables.columns.Column(
+    je_nz = BooleanValueColumn(
         verbose_name=_("arch_z.tables.AkceTable.je_nz.label"),
         default="",
+        value_labels=[(False, _("arch_z.tables.AkceTable.je_nz.ne")),
+                      (True, _("arch_z.tables.AkceTable.je_nz.ano"))],
     )
-    odlozena_nz = tables.columns.Column(
+    odlozena_nz = BooleanValueColumn(
         verbose_name=_("arch_z.tables.AkceTable.odlozena_nz.label"),
         default="",
+        value_labels=[(False, _("arch_z.tables.AkceTable.odlozena_nz.ne")),
+                      (True, _("arch_z.tables.AkceTable.odlozena_nz.ano"))],
     )
 
     def order_vedouci_organizace(self, queryset, is_descending):
