@@ -3,7 +3,7 @@ name: Update CITATION.cff
 on:
   push:
     tags:
-    - '**'
+    - 'v**'
 
 jobs:
   update-citation:
