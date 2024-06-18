@@ -281,7 +281,7 @@
     <amcr:dokument_cast>
       <amcr:ident_cely>C-TX-201901234-D001</amcr:ident_cely>
       <amcr:archeologicky_zaznam id="C-201901234A">C-201901234A</amcr:archeologicky_zaznam>
-      <amcr:projekt id="C-201901234"></amcr:projekt>
+      <amcr:projekt id="C-201901234">C-201901234</amcr:projekt>
       <amcr:poznamka>1. část</amcr:poznamka>
       <amcr:komponenta>
         <amcr:ident_cely>C-TX-201901234-K001</amcr:ident_cely>
