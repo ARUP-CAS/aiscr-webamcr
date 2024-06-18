@@ -20,7 +20,7 @@ jobs:
         with:
           tag: ${{ inputs.new_tag }}
       - run: |
-        echo "Tag already present: ${{ env.TAG_EXISTS }}"
+          echo "Tag already present: ${{ steps.tag_create.outputs.tag_exists }}"
   
   update-citation:
     runs-on: ubuntu-latest
