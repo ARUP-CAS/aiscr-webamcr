@@ -39,9 +39,17 @@ jobs:
           git commit -m "Update CITATION.cff for release $VERSION"
           git pull
           git push
-  create-tag-call:
-      name: Call create tag
-      needs: [update-citation]
-      uses: ./.github/workflows/new-version-tag.yml
-      with:
-         new_tag: ${{ inputs.new_tag }}          
+  create-tag:
+    name: Create new tag
+    needs: [update-citation]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: rickstaa/action-create-tag@v1
+        id: "tag_create"
+        with:
+          tag: ${{ inputs.new_tag }}
+      - run: |
+          echo "Tag already present: ${{ steps.tag_create.outputs.tag_exists }}"
