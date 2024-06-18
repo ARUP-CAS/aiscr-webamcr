@@ -4,14 +4,14 @@ on:
   workflow_dispatch :
     inputs:
       new_tag:
-       description: 'Tag name following vx.x.x semantics:'
-       type: string
-       required: true
+        description: 'Tag name following vx.x.x semantics:'
+        type: string
+        required: true
       pre_release:
-       description: 'Is this pre-release version?'
-       type: boolean
-       required: true
-       default: true
+        description: 'Is this pre-release version?'
+        type: boolean
+        required: true
+        default: true
     
 jobs:
   update-citation:
@@ -39,19 +39,9 @@ jobs:
           git commit -m "Update CITATION.cff for release $VERSION"
           git pull
           git push
-          
-  create-tag:
-    name: Create new tag
-    needs: [update-citation]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: rickstaa/action-create-tag@v1
-        id: "tag_create"
-        with:
-          tag: ${{ inputs.new_tag }}
-      - run: |
-          echo "Tag already present: ${{ steps.tag_create.outputs.tag_exists }}"
-
+  create-tag-call:
+      name: Call create tag
+      needs: [update-citation]
+      uses: ./.github/workflows/new-version-tag.yml
+      with:
+         new_tag: ${{ inputs.new_tag }}          
