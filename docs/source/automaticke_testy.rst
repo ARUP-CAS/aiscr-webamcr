@@ -1,16 +1,34 @@
 Automatické testy
 =================
 
-Ke spuštění testů slouží vývojový server (.24). Testy je možné spustit
-následujícím příkazem
+Ke spuštění testů slouží vývojový server (.24). Před spuštěním testů je nutné nasatit aktuální nebo požadovanou verzi aplikace WebAMČR.
+To se provede pomocí skriptu ``./scripts/test_deploy.sh``. Skript se při spuštění také zeptá, zda má stáhnout aktuální verzi WebAMČR origin/dev.
+Po nasazení verze je potřeba cca 5min počkat než se WebAMČR rozběhne
+Testy je možné spustit následujícím příkazem 
 
 ::
 
-   0 4 * * * docker exec git_aiscr_web_1 python3 run_tests.py
+./scripts/start_selenium_tests.sh
 
-Testy jsou dále nastavené ke spuštění každý den ve 4 hodiny ráno s
-využitím cronu. **Automatické testy musí být spuštěny vždy před
-deploymentem nové verze na testovací server.**
+skript má následující parametry:
+ * `-f`          provede neůspešné testy v tabulce 
+ * `-a`          provede všechny testy (výchozí)
+ * `-t cislo`    provede test zadaneho čísla
+ * `-b`          spusti všechny testy na pozadí, výstup se uloží do /opt/selenium_test/test.log a run.log
+ * `-h`          Zobrazí nápovedu
+  
+Výsledky testů se uloží do /opt/selenium_test/results.xlsx. 
+
+V tabulce se ukládá:
+ * `index` Pořadové číslo testu
+ * `date` Datum a čas provedení testu
+ * `test name` Jméno testu
+ * `result` Výsledek testu (OK, Fail nebo Error)
+
+V  adresáři ``/opt/selenium_test/`` se ukládají také screenshoty každého testu.
+
+**Pozn.** Pokud uživatel přeruší probíhající test, je potřeba před spuštěním nového testu počkat několik minut, než se ukonči Selenium.
+
 
 Vyhodnocení výsledků testu
 --------------------------

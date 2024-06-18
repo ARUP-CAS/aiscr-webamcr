@@ -1,8 +1,16 @@
 import logging
 import os
 import subprocess
-
+from threading import Thread
 import logstash
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-f','--fail', help='provede neúspěšné testy', action='store_true')
+parser.add_argument('-a','--all', help='provede všechny testy', action='store_true')
+parser.add_argument('-t','--test',type=int, help='provede test daného čísla')
+parser.add_argument('-s','--soubor', help='uloží výstup do souboru',action='store_true')
+args = parser.parse_args()
 
 SETTINGS = "webclient.settings.dev_test"
 
@@ -11,79 +19,77 @@ if os.path.exists(test_preparation_path):
     subprocess.run(f"./{test_preparation_path}")
 
 logger = logging.getLogger('webamcr.test_runner')
-logger.setLevel(logging.INFO)
+#logger.setLevel(logging.INFO)
 logger.addHandler(logstash.TCPLogstashHandler(host='logstash', version=1, tags="dev_test"))
 logger.info('amcr_test_runner.start')
 
-test_list = {
-    "core.tests.test_selenium": {
-        "CoreSeleniumTest": ["test_core_001"]
-    },
-    "projekt.tests.test_selenium": {
-        "ProjektSeleniumTest":
-            [
-                "test_projekt_001",
-            ],
-        "ProjektZapsatSeleniumTest":
-            [
-                "test_projekt_zapsat_p_001", "test_projekt_zapsat_n_001", "test_projekt_zapsat_n_002",
-                "test_projekt_zapsat_n_003"
-            ],
-        "ProjektZahajitVyzkumSeleniumTest":
-            [
-                "test_projekt_zahajit_vyzkum_p_001"
-            ],
-        "ProjektUkoncitVyzkumSeleniumTest":
-            [
-                "test_projekt_ukoncit_vyzkum_p_001", "test_projekt_ukoncit_vyzkum_n_001"
-            ],
-        "ProjektUzavritSeleniumTest":
-            [
-                "test_projekt_uzavrit_p_001", "test_projekt_uzavrit_n_001"
-            ],
-        "ProjektArchivovatSeleniumTest":
-            [
-                "test_projekt_archivovat_p_001", "test_projekt_uzavrit_n_001"
-            ],
-        "ProjektVratitArchivovanySeleniumTest":
-            [
-                "test_projekt_vratit_p_001"
-            ],
-        "ProjektVratitUzavrenySeleniumTest":
-            [
-                "test_projekt_vratit_p_001"
-            ],
-        "ProjektVratitUkoncenySeleniumTest":
-            [
-                "test_projekt_vratit_p_001"
-            ],
-        "ProjektVratitZahajenySeleniumTest":
-            [
-                "test_projekt_vratit_p_001"
-            ],
-        "ProjektVratitPrihlasenySeleniumTest":
-            [
-                "test_projekt_vratit_p_001"
-            ],
-        "ProjektNavrhnoutZrusitSeleniumTest":
-            [
-                "test_projekt_zrusit_p_001", "test_projekt_zrusit_p_002", "test_projekt_zrusit_n_001"
-            ],
-        "ProjektZrusitSeleniumTest":
-            [
-                "test_projekt_zrusit_p_001"
-            ]
-    }
-}
+if args.fail==True:
+    from webclient.settings.dev_test import TEST_SCREENSHOT_PATH
+    import pandas
+    if os.path.isfile(f'{TEST_SCREENSHOT_PATH}results.xlsx'):
+            data= pandas.read_excel(f'{TEST_SCREENSHOT_PATH}results.xlsx')
+            d= data.values.tolist()
+            test_list = []
+            for line in d:
+                if(line[3]!="OK" and isinstance(line[3], float)!=True ):
+                    test_list.append(line[2])
+            if len(test_list)==0:
+                print("Všechny testy OK")
+                exit()
+                
+    else:
+        print("Nenalezn soubor s výsledky")
+        exit()
+elif args.test != None:
+    from webclient.settings.dev_test import TEST_SCREENSHOT_PATH
+    import pandas
+    if os.path.isfile(f'{TEST_SCREENSHOT_PATH}results.xlsx'):
+            data= pandas.read_excel(f'{TEST_SCREENSHOT_PATH}results.xlsx')
+            d= data.values.tolist()
+            test_list = []
+            for line in d:
+                if(line[0]==args.test ):
+                    test_list.append(line[2])
+                    break
+            if len(test_list)==0:
+                print(f"Test {args.test} nenalezen.")
+                exit()    
+else:    
+    test_list = [
+    "core.tests.test_selenium",
+    "projekt.tests.test_selenium",
+    "dokument.tests.test_selenium",
+    "lokalita.tests.test_selenium",  
+    "arch_z.tests.test_selenium",  
+    "pas.tests.test_selenium",       
+    ]
 
-test_count = 0
-for test_file, test_list in test_list.items():
-    for test_class, test_method_list in test_list.items():
-        for test_method in test_method_list:
-            logger.info("amcr_test_runner.start_test", extra={"test": f"{test_file}.{test_class}.{test_method}"})
-            subprocess.run(f"python3 manage.py test {test_file}.{test_class}.{test_method} --settings={SETTINGS}",
-                           shell=True, capture_output=True)
-            logger.info("amcr_test_runner.end_test", extra={"test_file": test_file, "test_class": test_class,
-                                                            "test_method": test_method})
-            test_count += 1
-logger.info("amcr_test_runner.end", extra={"test_count": test_count})
+
+def reader(pipe):
+    while True:
+        line = pipe.read(1)
+        print(line,end="")
+        if not line:
+            break
+
+def filelog(pipe):
+    with open("/vol/web/selenium_test/test.log", "a") as file:
+        while True:
+            line = pipe.read(1)
+            file.write(line)
+            if not line:
+                break
+    
+logger.info("amcr_test_runner.start_test", extra={"test": f"{' '.join(test_list)}"})
+subprocess.run(f"python3 manage.py migrate --database test_db --settings={SETTINGS}", text=True, shell=True )
+
+process = subprocess.Popen(f"python3 manage.py test {' '.join(test_list)} --settings={SETTINGS} --noinput --verbosity=2", stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True )
+if args.soubor==True:
+    t1=Thread(target=filelog, args=[process.stdout]).start()
+    t2=Thread(target=filelog, args=[process.stderr]).start()
+else:
+    t1=Thread(target=reader, args=[process.stdout]).start()
+    t2=Thread(target=reader, args=[process.stderr]).start()
+process.wait()
+
+logger.info("amcr_test_runner.end")
