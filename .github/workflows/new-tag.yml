@@ -11,6 +11,7 @@ on:
        description: 'Is this prerelease version (true/false)?'
        type: boolean
        required: true
+       default: true
 
 jobs:
   create-tag:
