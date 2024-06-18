@@ -7,6 +7,10 @@ on:
        description: 'Tag name following vx.x.x semantics.'
        type: string
        required: true
+      pre_release:
+       description: 'Is this prerelease version (true/false)?'
+       type: boolean
+       required: true
 
 jobs:
   create-tag:
@@ -31,8 +35,8 @@ jobs:
           ref: dev
       - name: Update CITATION.cff
         run: |
-          VERSION=${{ github.event.release.tag_name }}
-          PRERELEASE=${{ github.event.release.prerelease }}
+          VERSION=${{ inputs.new_tag }}
+          PRERELEASE=${{ inputs.pre_release }}
           if [ "$PRERELEASE" == "true" ]; then
             VERSION="$VERSION-pre-release"
           fi
