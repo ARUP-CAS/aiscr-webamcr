@@ -14,8 +14,39 @@ on:
         default: true
     
 jobs:
-  update-citation:
-    name: Version citation and new tag
+  convert_to_rst:
+    name: Update pip package list
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-licenses
+          pip install -r webclient/requirements.txt
+      - name: Run convert_to_rst.py
+        run: python docs/licenses/convert_to_rst.py
+      - name: Commit changes
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git config --global pull.rebase true
+          git add docs/source/knihovny_read_only.rst
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update knihovny_read_only.rst for release $VERSION"
+            git pull
+            git push
+          fi
+  update_citation:
+    name: Update CITATION.cff
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -39,8 +70,15 @@ jobs:
           git commit -m "Update CITATION.cff for release $VERSION"
           git pull
           git push
-      - name: Create tag
-        uses: rickstaa/action-create-tag@v1
+  create-tag:
+    name: Create new tag
+    needs: [update_citation, convert_to_rst]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: rickstaa/action-create-tag@v1
         id: "tag_create"
         with:
           tag: ${{ inputs.new_tag }}
