@@ -316,7 +316,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 1.26.4
+     - 2.0.0
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -524,7 +524,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU General Public License v2 or later (GPLv2+)
      - https://uwsgi-docs.readthedocs.io/en/latest/
    * - urllib3
-     - 2.2.1
+     - 2.2.2
      - MIT License
      - https://github.com/urllib3/urllib3/blob/main/CHANGES.rst
    * - vine
