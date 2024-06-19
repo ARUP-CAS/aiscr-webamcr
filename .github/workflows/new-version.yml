@@ -71,11 +71,13 @@ jobs:
             git commit -m "Update knihovny_read_only.rst for release $VERSION"
             git pull
             git push
-          fi
+          fi 
       - name: Create tag
         uses: rickstaa/action-create-tag@v1
         id: "tag_create"
         with:
           tag: ${{ inputs.new_tag }}
-      - run: |
+          commit_sha: git log --pretty=format:'%h' -n 1
+      - name: Check tag exists
+        run: |
           echo "Tag already present: ${{ steps.tag_create.outputs.tag_exists }}"
