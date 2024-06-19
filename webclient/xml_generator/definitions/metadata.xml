@@ -241,17 +241,21 @@
     <amcr:popis xml:lang="cs">sídlištní aktivita</amcr:popis>
     <amcr:popis_en xml:lang="en">settlement activity</amcr:popis_en>
     <amcr:zkratka xml:lang="cs">síd</amcr:zkratka>
-    <amcr:razeni>1</amcr:razeni>
-    <amcr:hierarchie_vyse>
-      <amcr:id>hier-1</amcr:id>
-      <amcr:heslo_nadrazene id="HES-123456" xml:lang="cs">nějaké heslo</amcr:heslo_nadrazene>
-      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
-    </amcr:hierarchie_vyse>
-    <amcr:hierarchie_nize>
-      <amcr:id>hier-1</amcr:id>
-      <amcr:heslo_podrazene id="HES-123456" xml:lang="cs">sídliště nesp.</amcr:heslo_podrazene>
-      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
-    </amcr:hierarchie_nize>
+    <amcr:odkaz>
+      <amcr:id>hodk-1</amcr:id>
+      <amcr:zdroj>Getty Art & Architecture Thesaurus</amcr:zdroj>
+      <amcr:nazev_kodu>ID</amcr:nazev_kodu>
+      <amcr:kod>300010957</amcr:kod>
+      <amcr:uri>http://vocab.getty.edu/aat/300010957</amcr:uri>
+      <amcr:skos_mapping_relation>skos:exactMatch</amcr:skos_mapping_relation>
+    </amcr:odkaz>
+  </amcr:heslo>
+  <amcr:heslo>
+    <amcr:ident_cely>HES-000328</amcr:ident_cely>
+    <amcr:nazev_heslare xml:lang="cs">období</amcr:nazev_heslare>
+    <amcr:heslo xml:lang="cs">vrcholný středověk</amcr:heslo>
+    <amcr:heslo_en xml:lang="en">High Middle Ages</amcr:heslo_en>
+    <amcr:zkratka xml:lang="cs">vstred</amcr:zkratka>
     <amcr:datace>
       <amcr:rok_od_min>-1500</amcr:rok_od_min>
       <amcr:rok_od_max>-1300</amcr:rok_od_max>
@@ -260,11 +264,11 @@
       <amcr:poznamka>Odhadem.</amcr:poznamka>
     </amcr:datace>
     <amcr:odkaz>
-      <amcr:id>hodk-1</amcr:id>
-      <amcr:zdroj>Getty AAT</amcr:zdroj>
-      <amcr:nazev_kodu>sysno</amcr:nazev_kodu>
-      <amcr:kod>1234</amcr:kod>
-      <amcr:uri>https://a.cz/id/1234</amcr:uri>
+      <amcr:id>hodk-2</amcr:id>
+      <amcr:zdroj>PeriodO</amcr:zdroj>
+      <amcr:nazev_kodu>Locator</amcr:nazev_kodu>
+      <amcr:kod>vstred</amcr:kod>
+      <amcr:uri>http://n2t.net/ark:/99152/p0wctqtvkmn</amcr:uri>
       <amcr:skos_mapping_relation>skos:exactMatch</amcr:skos_mapping_relation>
     </amcr:odkaz>
   </amcr:heslo>
