@@ -14,8 +14,8 @@ on:
         default: true
     
 jobs:
-  update_citation:
-    name: Update CITATION.cff
+  new_version:
+    name: New version job
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -42,18 +42,7 @@ jobs:
             git commit -m "Update CITATION.cff for release $VERSION"
             git pull
             git push
-          fi
-      - name: Set commit SHA
-        run: |
-          echo "commit_sha=$(git log -1 --format='%h')" >> "$GITHUB_ENV"
-  convert_to_rst:
-    name: Update pip package list
-    needs: [update_citation]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: dev
+          fi    
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -65,7 +54,7 @@ jobs:
           pip install -r webclient/requirements.txt
       - name: Run convert_to_rst.py
         run: python docs/licenses/convert_to_rst.py
-      - name: Commit changes
+      - name: Update pip package list
         run: |
           VERSION=${{ inputs.new_tag }}
           PRERELEASE=${{ inputs.pre_release }}
@@ -82,22 +71,11 @@ jobs:
             git commit -m "Update knihovny_read_only.rst for release $VERSION"
             git pull
             git push
-          fi          
-      - name: Set commit SHA
-        run: |
-          echo "commit_sha=$(git log -1 --format='%h')" >> "$GITHUB_ENV"
-  create-tag:
-    name: Create new tag
-    needs: [convert_to_rst]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: rickstaa/action-create-tag@v1
+          fi
+      - name: Create tag
+        uses: rickstaa/action-create-tag@v1
         id: "tag_create"
         with:
           tag: ${{ inputs.new_tag }}
-          commit_sha: ${{ env.commit_sha }}
       - run: |
           echo "Tag already present: ${{ steps.tag_create.outputs.tag_exists }}"
