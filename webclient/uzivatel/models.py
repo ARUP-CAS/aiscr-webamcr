@@ -329,6 +329,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
                                 max_length=255)
     zanikla = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.zanikla"))
     ident_cely = models.CharField(max_length=20, unique=True)
+    cteni_dokumentu = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.cteni_dokumentu"))
 
     def save(self, *args, **kwargs):
         """
