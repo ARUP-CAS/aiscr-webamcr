@@ -28,6 +28,39 @@
         <amcr:souhrn_upresneni>Bylo tam toho hodně a bylo to pěkné.</amcr:souhrn_upresneni>
       </amcr:chranene_udaje>
     </amcr:akce>
+    <amcr:dokumentacni_jednotka>
+      <amcr:ident_cely>C-201901234A-D01</amcr:ident_cely>
+      <amcr:pian id="P-1234-123456">P-1234-123456</amcr:pian>
+      <amcr:negativni_jednotka>0</amcr:negativni_jednotka>
+      <amcr:adb id="ADB-PRAH10-001234">ADB-PRAH10-001234</amcr:adb>
+      <amcr:komponenta>
+        <amcr:ident_cely>C-201901234A-K001</amcr:ident_cely>
+        <amcr:obdobi id="HES-123456" xml:lang="cs">doba bronzová</amcr:obdobi>
+        <amcr:areal id="HES-123456" xml:lang="cs">sídliště nesp.</amcr:areal>
+        <amcr:aktivita id="HES-123456" xml:lang="cs">sídlištní</amcr:aktivita>
+        <amcr:nalez_objekt>
+          <amcr:id>nalo-1</amcr:id>
+          <amcr:druh id="HES-123456" xml:lang="cs">(polo)zemnice</amcr:druh>
+          <amcr:specifikace id="HES-123456" xml:lang="cs">konstrukce dřevěná</amcr:specifikace>
+        </amcr:nalez_objekt>
+        <amcr:nalez_predmet>
+          <amcr:id>nalp-1</amcr:id>
+          <amcr:druh id="HES-123456" xml:lang="cs">zlomek keramiky nesp.</amcr:druh>
+          <amcr:specifikace id="HES-123456" xml:lang="cs">keramika nesp.</amcr:specifikace>
+        </amcr:nalez_predmet>
+      </amcr:komponenta>
+    </amcr:dokumentacni_jednotka>
+    <amcr:dokument id="C-TX-201901234">C-TX-201901234</amcr:dokument>
+  </amcr:archeologicky_zaznam>
+  <amcr:archeologicky_zaznam>
+    <amcr:ident_cely>C-201901234A</amcr:ident_cely>
+    <amcr:stav>3</amcr:stav>
+    <amcr:okres id="ruian-12" xml:lang="cs">Beroun</amcr:okres>
+    <amcr:pristupnost id="HES-123456" xml:lang="cs">anonym</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr id="ruian-123" xml:lang="cs">RPETY</amcr:hlavni_katastr>
+      <amcr:dalsi_katastr id="ruian-123" xml:lang="cs">FELBABKA</amcr:dalsi_katastr>
+    </amcr:chranene_udaje>
     <amcr:lokalita>
       <amcr:typ_lokality id="HES-123456" xml:lang="cs">nemovitá památka</amcr:typ_lokality>
       <amcr:druh id="HES-123456" xml:lang="cs">zaniklý areál s nadzemními relikty</amcr:druh>
