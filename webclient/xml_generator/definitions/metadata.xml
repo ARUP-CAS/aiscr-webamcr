@@ -243,7 +243,7 @@
     <amcr:zkratka xml:lang="cs">síd</amcr:zkratka>
     <amcr:odkaz>
       <amcr:id>hodk-1</amcr:id>
-      <amcr:zdroj>Getty Art & Architecture Thesaurus</amcr:zdroj>
+      <amcr:zdroj>Getty Art &amp; Architecture Thesaurus</amcr:zdroj>
       <amcr:nazev_kodu>ID</amcr:nazev_kodu>
       <amcr:kod>300010957</amcr:kod>
       <amcr:uri>http://vocab.getty.edu/aat/300010957</amcr:uri>
