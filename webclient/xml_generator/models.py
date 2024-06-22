@@ -260,7 +260,7 @@ class ModelWithMetadata(models.Model):
                 save_metadata(self)
 
             from core.repository_connector import FedoraTransactionPostCommitTasks
-            fedora_transaction.post_commit_tasks[FedoraTransactionPostCommitTasks.CREATE_LINK] = \
+            fedora_transaction.post_commit_tasks[(FedoraTransactionPostCommitTasks.CREATE_LINK, self.ident_cely)] = \
                 [self, self.ident_cely, old_ident_cely]
         logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end",
                      extra={"transaction": fedora_transaction.uid, "old_ident_cely": old_ident_cely,
