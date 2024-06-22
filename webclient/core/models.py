@@ -633,6 +633,8 @@ class Permissions(models.Model):
         PRISTUPNOST_ARCHIVAR_ID: ROLE_ARCHIVAR_ID,
     }
 
+    permission_to_override = [actionChoices.soubor_nahled_dokument,actionChoices.soubor_stahnout_dokument]
+
     address_in_app = models.CharField(
         max_length=150, verbose_name=_("core.models.permissions.addressInApp")
     )
@@ -696,6 +698,8 @@ class Permissions(models.Model):
             if not perm_check and status_check and self.check_permission_skip():
                 logger.debug("skip True")
                 perm_check = True
+            if not perm_check and self.action in self.permission_to_override:
+                perm_check = self.permission_override()
         logger.debug("Permission check outcome: %s", perm_check)
         return perm_check
 
@@ -810,6 +814,16 @@ class Permissions(models.Model):
             except Exception as e:
                 logger.error(e)
                 self.permission_object = "error"
+
+    def permission_override(self):
+        """
+        Metoda pro uplatneni specifickych obejiti opravneni podle nazvu akce.
+        """
+        if self.action in [self.actionChoices.soubor_nahled_dokument,self.actionChoices.soubor_stahnout_dokument]:
+            if self.logged_in_user.organizace.cteni_dokumentu and self.logged_in_user.hlavni_role.pk == ROLE_ARCHEOLOG_ID:
+                return True
+            else:
+                return False
     
 
 def check_permissions(action, user, ident=None):
