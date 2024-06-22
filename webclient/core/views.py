@@ -1201,6 +1201,9 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
         p.rename(Path(p.parent, f"{p.stem}_backup_{date_sufix}{p.suffix}" ))
         new_pofile = form.cleaned_data["file"]
         self.handle_uploaded_file(new_pofile)
+        po_file = pofile(self.po_file_path)
+        po_filepath, ext = os.path.splitext(self.po_file_path)
+        po_file.save_as_mofile(po_filepath + ".mo")
         messages.add_message(
             self.request, messages.SUCCESS, TRANSLATION_UPLOAD_SUCCESS
         )
