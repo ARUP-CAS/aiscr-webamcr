@@ -117,14 +117,16 @@
         </div>
       </div>
       <div class="col-sm-3 text-right">
-        <div class="app-captcha">
-          {{ form_captcha }}
-        </div>
         <button type="submit" name="save" id="submit-id-save" class="btn btn-primary mt-0">
           {% trans 'oznameni.templates.oznameni.index.dalsiKrok' %} <span class="material-icons">arrow_forward</span>
         </button>
       </div>
     </div>
+    {% if form_captcha %}
+      <div class="app-captcha">
+        {{ form_captcha }}
+      </div>
+    {% endif %}
   </form>
 {% endblock %}
 
