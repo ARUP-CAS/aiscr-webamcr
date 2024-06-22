@@ -147,14 +147,13 @@ function searchByAjax(text, callResponse){
 	let items2=[];
 
 	let ajaxCall=[
-	 $.ajax({//obec
-		url:
-		'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/12/suggest?maxSuggestions=10&outSR={"latestWkid":5514,"wkid":102067}&f=json',
-		type: 'GET',
-		data: {text: text},
-		dataType: 'json',
-		success: function(json) {items1=json.suggestions;/*console.log("Vyhledany Obce");*/}
-		}),
+    $.ajax({//GeoNames
+            url: 'https://ags.cuzk.cz/arcgis/rest/services/GEONAMES/Vyhledavaci_sluzba_nad_daty_GEONAMES/MapServer/exts/GeocodeSOE/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
+            type: 'GET',
+            data: { text: text },
+            dataType: 'json',
+            success: function (json) { items1 = json.suggestions;/*addLogText("Vyhledany GeoNames");*/ }
+        }),
 	$.ajax({//okres
 		url:
 		'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/15/suggest?maxSuggestions=10&outSR={"latestWkid":5514,"wkid":102067}&f=json',
