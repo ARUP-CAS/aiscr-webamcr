@@ -478,8 +478,8 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
         context = self.get_context_data(**kwargs)
         if "index" in self.request.GET and "label" in self.request.GET:
             try:
-                geom=cache.get("geom_"+str(hash(self.request.session.session_key)))
-                #cache.delete("geom_"+str(hash(self.request.session.session_key)))                
+                geom=cache.get(str(request.user.id) + "_geom")
+                #cache.delete(str(request.user.id) + "_geom")
                 index=int(self.request.GET["index"])
                 if self.request.GET["label"]!=geom.iloc[index]["label"]:
                     raise Exception("lokalita.views.LokalitaPianCreateView.get.label_not_found")
@@ -526,8 +526,8 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
             raise PermissionDenied
         if "index" in self.request.GET and "label" in self.request.GET:
             try:
-                geom=cache.get("geom_"+str(hash(self.request.session.session_key)))
-                #cache.delete("geom_"+str(hash(self.request.session.session_key)))                
+                geom=cache.get(str(request.user.id) + "_geom")
+                #cache.delete(str(request.user.id) + "_geom")
                 index=int(self.request.GET["index"])
                 if self.request.GET["label"]!=geom.iloc[index]["label"]:
                     raise Exception("lokalita.views.LokalitaPianUpdateView.get.label_not_found")

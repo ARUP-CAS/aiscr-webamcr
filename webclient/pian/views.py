@@ -501,7 +501,7 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
         context = self.get_context_data()
         context["table"] = self.sheet
-        cache.set("geom_"+str(hash(request.session.session_key)), self.sheet, timeout=60*60)
+        cache.set(str(request.user.id) + "_geom", self.sheet, timeout=60*60)
         if ArcheologickyZaznam.objects.get(ident_cely=request.POST.get("arch_ident")).typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if request.POST.get("action",False) == "change":
                 context["url"] = reverse("arch_z:update-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident"),request.POST.get("pian_ident")])
