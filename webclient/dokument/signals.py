@@ -24,31 +24,33 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
     Metóda pro vytvoření historických vazeb dokumentu.
     Metóda se volá pred uložením záznamu.
     """
-    fedora_transaction = instance.active_transaction
-    logger.debug("dokument.signals.create_dokument_vazby.start",
-                 extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
     invalidate_model(Dokument)
     invalidate_model(Akce)
     invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
-    if instance.pk is None:
-        logger.debug("dokument.signals.create_dokument_vazby.creating_history_for_dokument.create_history",
-                     extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
-        hv = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
-        hv.save()
-        instance.historie = hv
-        sv = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
-        sv.save()
-        instance.soubory = sv
-        if instance.let is not None:
-            instance.let.save_metadata(fedora_transaction)
+    invalidate_model(Historie) 
+    fedora_transaction = instance.active_transaction
+    if not instance.suppress_signal:
+        logger.debug("dokument.signals.create_dokument_vazby.start",
+                    extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
+
+        if instance.pk is None:
+            logger.debug("dokument.signals.create_dokument_vazby.creating_history_for_dokument.create_history",
+                        extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
+            hv = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
+            hv.save()
+            instance.historie = hv
+            sv = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
+            sv.save()
+            instance.soubory = sv
+            if instance.let is not None:
+                instance.let.save_metadata(fedora_transaction)
     try:
         instance.set_snapshots()
     except ValueError as err:
         logger.debug("dokument.signals.create_dokument_vazby.type_error",
-                     extra={"pk": instance.pk, "err": err, "transaction": getattr(fedora_transaction, "uid")})
+                     extra={"pk": instance.pk, "err": err})
     logger.debug("dokument.signals.create_dokument_vazby.end",
-                 extra={"ident_cely": instance.ident_cely,"transaction": getattr(fedora_transaction, "uid")})
+                 extra={"ident_cely": instance.ident_cely})
 
 
 @receiver(pre_save, sender=DokumentCast)
