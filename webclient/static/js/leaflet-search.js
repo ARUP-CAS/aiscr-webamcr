@@ -887,9 +887,12 @@ L.Control.Search = L.Control.extend({
 
 	_defaultMoveToLocation: function(latlng, title, map) {
 		if(this.options.propertyMagicKey){
+			if(latlng.split(":")[1]=='GEONAMES')
+				addr = 'https://ags.cuzk.cz/arcgis/rest/services/GEONAMES/Vyhledavaci_sluzba_nad_daty_GEONAMES/MapServer/exts/GeocodeSOE/findAddressCandidates?outSR={"wkid":4258}&f=json'
+			else			
+				addr = 'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/15/findAddressCandidates?outSR={"wkid":4258}&f=json'
 			$.ajax({
-			url:
-			(latlng.split(":")[1]=='Obec') ? this.options.propertyMagicKeyUrl.replace("{*}",'12'):this.options.propertyMagicKeyUrl.replace("{*}",'15'),
+			url:addr,
 			type: 'GET',
 			data: {magicKey: latlng.split(":")[0]},
 			dataType: 'json',
@@ -897,8 +900,8 @@ L.Control.Search = L.Control.extend({
 			if(json.candidates.length){
 				posX=[json.candidates[0].location.y,json.candidates[0].location.x]
 
-				if(latlng.split(":")[1]=='Obec'){
-					map.setView(posX,13);
+				if(latlng.split(":")[1]=='GEONAMES'){
+					map.setView(posX,15);
 				}else{
 					map.setView(posX,10);
 				}
