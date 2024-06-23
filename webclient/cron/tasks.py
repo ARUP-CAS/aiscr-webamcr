@@ -257,13 +257,12 @@ def cancel_old_projects():
 def update_snapshot_fields():
     try:
         logger.debug("core.cron.update_snapshot_fields.do.start")
-        for item in ExterniZdroj.objects.filter((Q(autori_snapshot__isnull=True) | Q(editori_snapshot__isnull=True))
-                                                & (Q(externizdrojautor__isnull=False)
-                                                   | Q(externizdrojeditor__isnull=False))):
+        for item in ExterniZdroj.objects.filter((Q(autori_snapshot__isnull=True)  & Q(externizdrojautor__isnull=False))   
+                                               |(Q(editori_snapshot__isnull=True) & Q(externizdrojeditor__isnull=False))):
             item.suppress_signal = True
             item.save()
-        for item in Dokument.objects.filter((Q(autori_snapshot__isnull=True) | Q(osoby_snapshot__isnull=True))
-                                            & (Q(dokumentautor__isnull=False) | Q(dokumentosoba__isnull=False))):
+        for item in Dokument.objects.filter((Q(autori_snapshot__isnull=True) & Q(dokumentautor__isnull=False)) 
+                                            | (Q(osoby_snapshot__isnull=True) & Q(dokumentosoba__isnull=False))):
             item: Dokument
             item.suppress_signal = True
             item.save()

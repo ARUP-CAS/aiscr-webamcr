@@ -37,7 +37,7 @@ def save_lokalita_redis_snapshot(sender, instance: Lokalita, **kwargs):
                  extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})
     if not check_if_task_queued("Lokalita", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["Lokalita", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
-    logger.debug("lokalita.signals.save_lokalita_redis_snapshot.start",
+    logger.debug("lokalita.signals.save_lokalita_redis_snapshot.end",
                  extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})
 
 
