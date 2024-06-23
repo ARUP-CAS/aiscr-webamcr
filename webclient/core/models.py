@@ -178,7 +178,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         if record is not None and self.repository_uuid is not None:
             logger.debug("core.models.Soubor.get_repository_content",
                          extra={"record_ident_cely": record.ident_cely, "repository_uuid": self.repository_uuid})
-            conector = FedoraRepositoryConnector(record)
+            conector = FedoraRepositoryConnector(record, skip_container_check=False)
             rep_bin_file = conector.get_binary_file(self.repository_uuid, ident_cely_old, thumb_small, thumb_large)
             return rep_bin_file
         logger.debug("core.models.Soubor.get_repository_content.not_found",

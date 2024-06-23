@@ -211,7 +211,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
         fedora_transaction = FedoraTransaction()
         ez.stav = EZ_STAV_ZAPSANY
         ez.ident_cely = get_temp_ez_ident()
-        repository_connector = FedoraRepositoryConnector(ez)
+        repository_connector = FedoraRepositoryConnector(ez, skip_container_check=False)
         if repository_connector.check_container_deleted_or_not_exists(ez.ident_cely, "ext_zdroj"):
             ez.active_transaction = fedora_transaction
             ez.save()

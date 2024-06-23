@@ -116,7 +116,7 @@ class FedoraRequestType(Enum):
 
 
 class FedoraRepositoryConnector:
-    def __init__(self, record, transaction=None, skip_container_check=False):
+    def __init__(self, record, transaction=None, skip_container_check=True):
         from core.models import ModelWithMetadata
 
         record: ModelWithMetadata

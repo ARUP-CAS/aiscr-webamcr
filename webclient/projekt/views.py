@@ -405,7 +405,7 @@ def create(request):
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
                 fedora_transaction.mark_transaction_as_closed()
             else:
-                repository_connector = FedoraRepositoryConnector(projekt)
+                repository_connector = FedoraRepositoryConnector(projekt, skip_container_check=False)
                 if repository_connector.check_container_deleted_or_not_exists(projekt.ident_cely, "projekt"):
                     projekt.save()
                     projekt.set_zapsany(request.user)
