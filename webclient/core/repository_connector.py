@@ -116,7 +116,7 @@ class FedoraRequestType(Enum):
 
 
 class FedoraRepositoryConnector:
-    def __init__(self, record, transaction=None, skip_container_check=False):
+    def __init__(self, record, transaction=None, skip_container_check=True):
         from core.models import ModelWithMetadata
 
         record: ModelWithMetadata
@@ -994,7 +994,8 @@ class FedoraTransaction:
         new_transaction = FedoraTransaction()
         new_transaction.child_transaction = True
         for key, value in self.post_commit_tasks.items():
-            if key == FedoraTransactionPostCommitTasks.CREATE_LINK:
+            task, _ = key
+            if task == FedoraTransactionPostCommitTasks.CREATE_LINK:
                 if not isinstance(value, list) or len(value) != 3:
                     logger.error("core_repository_connector.FedoraTransaction._perform_post_commit_tasks."
                                  "parameter_error", extra={"transaction": self.uid})

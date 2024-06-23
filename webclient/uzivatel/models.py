@@ -220,7 +220,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         logger.debug("uzivatel.models.User.save_metadata.start",
                      extra={"transaction": fedora_transaction.uid, "ident_cely": self.ident_cely})
         from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(self, fedora_transaction.uid)
+        connector = FedoraRepositoryConnector(self, fedora_transaction.uid, skip_container_check=False)
         connector.save_metadata(True)
         if close_transaction is True or self.close_active_transaction_when_finished:
             logger.debug("uzivatel.models.User.save_metadata.close_transaction",

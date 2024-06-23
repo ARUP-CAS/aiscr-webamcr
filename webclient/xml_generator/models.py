@@ -63,9 +63,7 @@ class ModelWithMetadata(models.Model):
                             "caller": caller})
         fedora_transaction: Optional[FedoraTransaction]
         from core.repository_connector import FedoraRepositoryConnector
-        if self.skip_container_check:
-            skip_container_check = True
-        connector = FedoraRepositoryConnector(self, fedora_transaction, skip_container_check=skip_container_check)
+        connector = FedoraRepositoryConnector(self, fedora_transaction, skip_container_check=self.skip_container_check)
         if include_files:
             from core.models import SouborVazby
             if hasattr(self, "soubory") and isinstance(self.soubory, SouborVazby):
@@ -168,7 +166,8 @@ class ModelWithMetadata(models.Model):
                 and new_ident_cely != old_ident_cely):
 
             from core.repository_connector import FedoraRepositoryConnector
-            connector = FedoraRepositoryConnector(self, fedora_transaction)
+            connector = FedoraRepositoryConnector(self, fedora_transaction, 
+                                                  skip_container_check=self.skip_container_check)
             connector.record_ident_change(old_ident_cely)
             logger.debug("cron.record_ident_change.do.end",
                          extra={"record_pk": self.pk, "old_ident_cely": old_ident_cely, "new_ident_cely": new_ident_cely,
@@ -260,7 +259,7 @@ class ModelWithMetadata(models.Model):
                 save_metadata(self)
 
             from core.repository_connector import FedoraTransactionPostCommitTasks
-            fedora_transaction.post_commit_tasks[FedoraTransactionPostCommitTasks.CREATE_LINK] = \
+            fedora_transaction.post_commit_tasks[(FedoraTransactionPostCommitTasks.CREATE_LINK, self.ident_cely)] = \
                 [self, self.ident_cely, old_ident_cely]
         logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end",
                      extra={"transaction": fedora_transaction.uid, "old_ident_cely": old_ident_cely,
