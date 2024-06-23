@@ -435,6 +435,7 @@ map.addControl(new L.control.coordinates({
     centerUserCoordinates: true,
     markerType: null
 }));
+var message_box = L.control.messagebox({ timeout: 10000, position: 'bottomright'}).addTo(map);
 
 function map_show_edit(show, show_go_back) {
     addLogText("arch_z_detail_map.map_show_edit: " + !global_map_can_edit)
@@ -643,21 +644,41 @@ function onMarkerClick(ident_cely,e) {
 
 var clickOnMap=(e)=>{
     addLogText("arch_z_detail_map.clickOnMap")
-     if(!global_map_can_grab_geom_from_map){
-        try{
-            if(global_unwanted_popup){
-                global_unwanted_popup.unbindPopup()
-                global_unwanted_popup=null
-            }
+    if(!global_map_can_grab_geom_from_map){
+       
+        if(global_unwanted_popup){
+            global_unwanted_popup.unbindPopup()
+            global_unwanted_popup=null
+        }
+        if(typeof e.target.bindPopup === 'function'){ 
             e.target.bindPopup("").openPopup();
             global_unwanted_popup=e.target
             onMarkerClick(e.target.getTooltip().getContent().split(" ")[0],e)
-        }catch(e){}
+            var features = 0;
+            map.eachLayer(function (layer) {
+                if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
+                    if (layer.getBounds().contains(e.latlng)) {
+                        features =features+1;
+                    }
+                }
+            });
+            if (features>1) {
+                message_box.show( map_translations['MessageMultipleElements'] );
+                message_box.timeStamp=e.originalEvent.timeStamp;
+                
+            }
+            else message_box.hide()
+        }
+      
+     
     }
+
 }
 
 map.on('click', function (e) {
     clickOnMap(e);
+   if(message_box.timeStamp!=e.originalEvent.timeStamp) message_box.hide()
+  
 });
 
 map.on('overlayadd', function(eventlayer){
@@ -1213,13 +1234,12 @@ function searchByAjax(text, callResponse) {
     let items2 = [];
 
     let ajaxCall = [
-        $.ajax({//obec
-            url:
-                'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/12/suggest?maxSuggestions=10&outSR={"latestWkid":5514,"wkid":102067}&f=json',
+        $.ajax({//GeoNames
+            url: 'https://ags.cuzk.cz/arcgis/rest/services/GEONAMES/Vyhledavaci_sluzba_nad_daty_GEONAMES/MapServer/exts/GeocodeSOE/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
             type: 'GET',
             data: { text: text },
             dataType: 'json',
-            success: function (json) { items1 = json.suggestions;/*addLogText("Vyhledany Obce");*/ }
+            success: function (json) { items1 = json.suggestions;/*addLogText("Vyhledany GeoNames");*/ }
         }),
         $.ajax({//okres
             url:
