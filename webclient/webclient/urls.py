@@ -68,7 +68,7 @@ urlpatterns = [
         )),
         name="django_registration_disallowed",
     ),
-    path("accounts/activate/<str:activation_key>/", UserActivationView.as_view()),
+    path("accounts/activate/<str:activation_key>/", UserActivationView.as_view(), name="django_registration_activate"),
     path(
         "accounts/login/",
         UserLoginView.as_view(),
