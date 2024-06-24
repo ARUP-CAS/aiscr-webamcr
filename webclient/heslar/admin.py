@@ -53,12 +53,10 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
     """
     Admin část pro správu modelu heslař.
     """
-    list_display = ("ident_cely", "nazev_heslare", "heslo", "zkratka", "heslo_en", "razeni")
-    fields = ("nazev_heslare", "ident_cely", "heslo",
-              "popis", "zkratka", "heslo_en", "popis_en", "razeni")
-    search_fields = ("ident_cely", "nazev_heslare__nazev", "heslo",
-                     "popis", "zkratka", "heslo_en", "popis_en", "razeni")
-    list_filter = ("nazev_heslare",)
+    list_display = ("ident_cely", "nazev_heslare", "heslo", "heslo_en", "zkratka", "popis", "popis_en", "razeni")
+    fields = ("nazev_heslare", "ident_cely", "heslo", "heslo_en", "zkratka", "popis", "popis_en", "razeni")
+    search_fields = ("ident_cely", "heslo", "heslo_en", "zkratka", "popis", "popis_en")
+    list_filter = ("nazev_heslare")
 
     def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
         if add:
@@ -88,11 +86,10 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     """
     Admin část pro správu modelu heslař datace.
     """
-    list_display = ("obdobi_ident_cely", "obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
-    fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max", "poznamka")
-    search_fields = ("obdobi__ident_cely", "obdobi__heslo", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max",
-                     "poznamka")
-    list_filter = ("obdobi", )
+    list_display = ("obdobi_ident_cely", "obdobi", "rok_od_min", "rok_od_max", "rok_do_min", "rok_do_max", "poznamka")
+    fields = ("obdobi", "rok_od_min", "rok_od_max", "rok_do_min", "rok_do_max", "poznamka")
+    search_fields = ("obdobi__ident_cely", "obdobi__heslo", "poznamka")
+    list_filter = ("obdobi")
 
     def get_readonly_fields(self, request, obj=None):
         if obj:  # This means this is an edit
@@ -112,7 +109,8 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
     """
     list_display = ("dokument_rada", "dokument_typ", "dokument_material")
     readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material")
-    fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    fields = ("dokument_rada", "dokument_rada__ident_cely", "dokument_typ", "dokument_typ__ident_cely",
+              "dokument_material", "dokument_material__ident_cely")
     search_fields = ("dokument_rada__ident_cely", "dokument_typ__ident_cely", "dokument_material__ident_cely")
     list_filter = ("dokument_rada", "dokument_typ", "dokument_material")
 
@@ -132,8 +130,9 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     Admin část pro správu modelu heslař odkaz.
     """
     list_display = ("heslo_ident_cely", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
-    fields = ("heslar_nazev","heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
+    fields = ("heslar_nazev", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
     search_fields = ("heslo__ident_cely", "heslo__heslo", "zdroj", "nazev_kodu", "kod", "uri")
+    list_filter = ("zdroj", "skos_mapping_relation")
     form = HeslarOdkazForm
 
     def heslo_ident_cely(self, obj):
@@ -145,10 +144,10 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
     Admin část pro správu modelu heslař hierarchie.
     """
     list_display = ("heslo_podrazene_ident_cely", "heslo_podrazene", "heslo_nadrazene", "typ")
-    fields = ("heslar_nazev_podrazene","heslo_podrazene", "heslar_nazev_nadrazene","heslo_nadrazene", "typ")
+    fields = ("heslar_nazev_podrazene", "heslo_podrazene", "heslar_nazev_nadrazene", "heslo_nadrazene", "typ")
     search_fields = ("heslo_podrazene__ident_cely", "heslo_podrazene__heslo", "heslo_nadrazene__ident_cely",
-                     "heslo_nadrazene__heslo", "typ")
-    list_filter = ("typ", )
+                     "heslo_nadrazene__heslo")
+    list_filter = ("typ")
     form = HeslarHierarchieForm
 
     def heslo_podrazene_ident_cely(self, obj):
@@ -161,13 +160,10 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
     """
     Admin část pro správu modelu osob.
     """
-    list_display = ("ident_cely", "jmeno", "prijmeni", "vypis", "rok_narozeni", "rok_umrti", "vypis_cely",
-                    "rodne_prijmeni")
-    fields = ("jmeno", "prijmeni", "ident_cely", "vypis", "vypis_cely", "rok_narozeni", "rok_umrti",
-              "rodne_prijmeni")
-    search_fields = ("jmeno", "prijmeni", "ident_cely", "vypis", "vypis_cely", "rok_narozeni", "rok_umrti",
-                     "rodne_prijmeni")
-    readonly_fields = ("ident_cely", )
+    list_display = ("ident_cely", "vypis_cely", "vypis", "prijmeni", "rodne_prijmeni", "jmeno", "rok_narozeni", "rok_umrti")
+    fields = ("ident_cely", "jmeno", "prijmeni", "rodne_prijmeni", "vypis_cely", "vypis", "rok_narozeni", "rok_umrti")
+    search_fields = ("ident_cely", "vypis_cely", "vypis", "prijmeni", "rodne_prijmeni", "jmeno")
+    readonly_fields = ("ident_cely")
 
     def has_delete_permission(self, request, obj=None):
         if obj is not None:

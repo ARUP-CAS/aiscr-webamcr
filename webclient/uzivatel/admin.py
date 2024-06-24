@@ -117,9 +117,9 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     add_form = AuthUserCreationForm
     model = User
     list_display = ("ident_cely", "email", "is_active", "organizace", "hlavni_role", "first_name", "last_name",
-                    "telefon", "is_active", "date_joined", "last_login", "osoba")
-    list_filter = ("is_active", "organizace", "groups")
-    readonly_fields = ("ident_cely",)
+                    "telefon", "date_joined", "last_login", "osoba", "is_superuser")
+    list_filter = ("is_active", "organizace", "groups", "is_superuser")
+    readonly_fields = ("ident_cely")
     inlines = [UserNotificationTypeInline, PesKrajNotificationTypeInline, PesOkresNotificationTypeInline, PesKatastrNotificationTypeInline]
     fieldsets = (
         (
