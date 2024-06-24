@@ -15,7 +15,7 @@ class LetAdmin(DokumentWithMetadataAdmin):
     """
     list_display = ("ident_cely", "datum", "letiste_start", "letiste_cil", "organizace", "pilot", "pozorovatel",
                     "uzivatelske_oznaceni")
-    list_filter = ("letiste_start", "letiste_cil", "organizace", "pilot", "pozorovatel")
+    list_filter = ("letiste_start", "letiste_cil", "organizace")
     fields = ("ident_cely", "uzivatelske_oznaceni", "datum", "pilot", "pozorovatel", "ucel_letu", "typ_letounu",
               "letiste_start", "letiste_cil", "hodina_zacatek", "hodina_konec", "pocasi", "dohlednost", "fotoaparat",
               "organizace")
