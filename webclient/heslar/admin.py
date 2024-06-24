@@ -181,7 +181,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
                     "cteni_dokumentu")
     list_filter = ("typ_organizace", "oao", "zanikla", "soucast", "zverejneni_pristupnost", "cteni_dokumentu")
     search_fields = ("nazev", "nazev_zkraceny", "ident_cely", "nazev_en", "nazev_zkraceny_en", "ico", "adresa", "email", "telefon")
-    fields = ("nazev", "nazev_en", "nazev_zkraceny", "nazev_zkraceny_en", "typ_organizace", "oao", "mesicu_do_zverejneni",
+    fields = ("ident_cely", "nazev", "nazev_en", "nazev_zkraceny", "nazev_zkraceny_en", "typ_organizace", "oao", "mesicu_do_zverejneni",
               "zverejneni_pristupnost", "email", "telefon", "adresa", "ico", "soucast", "zanikla", "cteni_dokumentu")
     readonly_fields = ("ident_cely",)
 
