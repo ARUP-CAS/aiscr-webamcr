@@ -15,28 +15,12 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, path, re_path, URLPattern, URLResolver
-from django.utils.decorators import method_decorator
+from django.urls import include, path, re_path
 from core.decorators import odstavka_in_progress
 from django.views.generic import TemplateView
 
 from oznameni import views as oznameni_views
 from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView, UserActivationView, UserPasswordResetView
-
-import django_registration.backends.activation.urls as reg_urls
-
-def apply_decorators_to_included_urls(urlpatterns, decorator):
-    for pattern in urlpatterns:
-        if isinstance(pattern, URLPattern):  # if the pattern is a view
-            pattern.callback = decorator(pattern.callback)
-        elif isinstance(pattern, URLResolver):  # if the pattern includes other patterns
-            apply_decorators_to_included_urls(pattern.url_patterns, decorator)
-
-# Get the URL patterns from the external library
-registration_patterns = reg_urls.urlpatterns
-
-# Apply the CSRF exemption decorator to all views in the included URL patterns
-apply_decorators_to_included_urls(registration_patterns, method_decorator(odstavka_in_progress, name='dispatch'))
 
 
 urlpatterns = [
@@ -65,13 +49,26 @@ urlpatterns = [
     ),
     path(
         "accounts/activate/complete/",
-        TemplateView.as_view(
+        odstavka_in_progress(TemplateView.as_view(
             template_name="django_registration/activation_complete.html"
-        ),
+        )),
         name="django_registration_activation_complete",
     ),
+    path(
+        "accounts/register/complete/",
+        odstavka_in_progress(TemplateView.as_view(
+            template_name="django_registration/registration_complete.html"
+        )),
+        name="django_registration_complete",
+    ),
+    path(
+        "accounts/register/closed/",
+        odstavka_in_progress(TemplateView.as_view(
+            template_name="django_registration/registration_closed.html"
+        )),
+        name="django_registration_disallowed",
+    ),
     path("accounts/activate/<str:activation_key>/", UserActivationView.as_view()),
-    path('accounts/', include((registration_patterns, 'django_registration'), namespace='django_registration')),
     path(
         "accounts/login/",
         UserLoginView.as_view(),
