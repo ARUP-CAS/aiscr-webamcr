@@ -304,6 +304,7 @@
       <xs:element name="ico" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{ico}" -->
       <xs:element name="soucast" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> <!-- "{soucast.ident_cely}" | "{soucast.nazev}" -->
       <xs:element name="zanikla" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{zanikla}" -->
+      <xs:element name="cteni_dokumentu" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{cteni_dokumentu}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="osobaType">
