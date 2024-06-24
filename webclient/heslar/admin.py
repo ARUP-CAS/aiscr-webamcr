@@ -180,15 +180,14 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
     """
     Admin část pro správu modelu organizace.
     """
-    list_display = ("ident_cely", "nazev_zkraceny", "typ_organizace", "oao", "zanikla", "nazev", "nazev_zkraceny_en",
-                    "nazev_en", "soucast", "ico", "adresa", "email", "telefon", "zverejneni_pristupnost",
-                    "mesicu_do_zverejneni")
-    list_filter = ("oao", "zanikla")
-    search_fields = ("nazev", "nazev_zkraceny", "typ_organizace__heslo", "zverejneni_pristupnost__heslo", "ident_cely")
-    fields = ("ident_cely", "nazev", "nazev_zkraceny", "typ_organizace", "oao", "mesicu_do_zverejneni",
-              "zverejneni_pristupnost", "nazev_zkraceny_en", "email", "telefon", "adresa", "ico",
-              "nazev_en", "soucast", "zanikla")
-    readonly_fields = ("ident_cely", )
+    list_display = ("ident_cely", "nazev", "nazev_en", "nazev_zkraceny", "nazev_zkraceny_en", "soucast", "typ_organizace", "oao",
+                    "zanikla", "ico", "adresa", "email", "telefon", "zverejneni_pristupnost", "mesicu_do_zverejneni",
+                    "cteni_dokumentu")
+    list_filter = ("typ_organizace", "oao", "zanikla", "soucast", "zverejneni_pristupnost", "cteni_dokumentu")
+    search_fields = ("nazev", "nazev_zkraceny", "ident_cely", "nazev_en", "nazev_zkraceny_en", "ico", "adresa", "email", "telefon")
+    fields = ("nazev", "nazev_en", "nazev_zkraceny", "nazev_zkraceny_en", "typ_organizace", "oao", "mesicu_do_zverejneni",
+              "zverejneni_pristupnost", "email", "telefon", "adresa", "ico", "soucast", "zanikla", "cteni_dokumentu")
+    readonly_fields = ("ident_cely")
 
     def has_delete_permission(self, request, obj=None):
         if obj is not None:

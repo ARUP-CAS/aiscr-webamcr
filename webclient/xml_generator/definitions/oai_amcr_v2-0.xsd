@@ -303,7 +303,8 @@
       <xs:element name="adresa" minOccurs="0" maxOccurs="1" type="xs:string"/> 
       <xs:element name="ico" minOccurs="0" maxOccurs="1" type="xs:string"/> 
       <xs:element name="soucast" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> 
-      <xs:element name="zanikla" minOccurs="1" maxOccurs="1" type="xs:boolean"/> 
+      <xs:element name="zanikla" minOccurs="1" maxOccurs="1" type="xs:boolean"/>
+      <xs:element name="cteni_dokumentu" minOccurs="1" maxOccurs="1" type="xs:boolean"/>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="osobaType">
