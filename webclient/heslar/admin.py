@@ -56,7 +56,7 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
     list_display = ("ident_cely", "nazev_heslare", "heslo", "heslo_en", "zkratka", "popis", "popis_en", "razeni")
     fields = ("nazev_heslare", "ident_cely", "heslo", "heslo_en", "zkratka", "popis", "popis_en", "razeni")
     search_fields = ("ident_cely", "heslo", "heslo_en", "zkratka", "popis", "popis_en")
-    list_filter = ("nazev_heslare")
+    list_filter = ("nazev_heslare",)
 
     def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
         if add:
@@ -89,7 +89,7 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     list_display = ("obdobi_ident_cely", "obdobi", "rok_od_min", "rok_od_max", "rok_do_min", "rok_do_max", "poznamka")
     fields = ("obdobi", "rok_od_min", "rok_od_max", "rok_do_min", "rok_do_max", "poznamka")
     search_fields = ("obdobi__ident_cely", "obdobi__heslo", "poznamka")
-    list_filter = ("obdobi")
+    list_filter = ("obdobi",)
 
     def get_readonly_fields(self, request, obj=None):
         if obj:  # This means this is an edit
@@ -147,7 +147,7 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
     fields = ("heslar_nazev_podrazene", "heslo_podrazene", "heslar_nazev_nadrazene", "heslo_nadrazene", "typ")
     search_fields = ("heslo_podrazene__ident_cely", "heslo_podrazene__heslo", "heslo_nadrazene__ident_cely",
                      "heslo_nadrazene__heslo")
-    list_filter = ("typ")
+    list_filter = ("typ",)
     form = HeslarHierarchieForm
 
     def heslo_podrazene_ident_cely(self, obj):
@@ -163,7 +163,7 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
     list_display = ("ident_cely", "vypis_cely", "vypis", "prijmeni", "rodne_prijmeni", "jmeno", "rok_narozeni", "rok_umrti")
     fields = ("ident_cely", "jmeno", "prijmeni", "rodne_prijmeni", "vypis_cely", "vypis", "rok_narozeni", "rok_umrti")
     search_fields = ("ident_cely", "vypis_cely", "vypis", "prijmeni", "rodne_prijmeni", "jmeno")
-    readonly_fields = ("ident_cely")
+    readonly_fields = ("ident_cely",)
 
     def has_delete_permission(self, request, obj=None):
         if obj is not None:
@@ -183,7 +183,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
     search_fields = ("nazev", "nazev_zkraceny", "ident_cely", "nazev_en", "nazev_zkraceny_en", "ico", "adresa", "email", "telefon")
     fields = ("nazev", "nazev_en", "nazev_zkraceny", "nazev_zkraceny_en", "typ_organizace", "oao", "mesicu_do_zverejneni",
               "zverejneni_pristupnost", "email", "telefon", "adresa", "ico", "soucast", "zanikla", "cteni_dokumentu")
-    readonly_fields = ("ident_cely")
+    readonly_fields = ("ident_cely",)
 
     def has_delete_permission(self, request, obj=None):
         if obj is not None:
