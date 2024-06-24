@@ -179,6 +179,7 @@ def create_osoba(request):
     return render(request, "uzivatel/create_osoba.html", {"form": form})
 
 
+@method_decorator(odstavka_in_progress, name='dispatch')
 class UserRegistrationView(RegistrationView):
     """
     Třída pohledu pro registraci uživatele.
@@ -332,7 +333,7 @@ def update_notifications(request):
         return redirect("/uzivatel/edit/")
 
 
-@method_decorator(odstavka_in_progress, name='get')
+@method_decorator(odstavka_in_progress, name='dispatch')
 class UserActivationView(ActivationView):
     """
     Třída pohledu pro aktivaci uživatele.

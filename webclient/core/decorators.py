@@ -39,9 +39,9 @@ def odstavka_in_progress(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         last_maintenance = cache.get("last_maintenance")
-        if "LANGUAGE_CODE" in request:
+        try:
             language = request.LANGUAGE_CODE
-        else:
+        except Exception as e:
             language = "cs"
         if "oznameni" in request.path:
             try:
