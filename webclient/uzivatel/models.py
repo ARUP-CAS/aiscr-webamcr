@@ -345,6 +345,8 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
             else:
                 raise (
                     ValidationError(_("uzivatel.models.Organizace.save.check_container_deleted_or_not_exists.invalid")))
+        else:
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return self.nazev_zkraceny
@@ -390,6 +392,8 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
                 super().save(*args, **kwargs)
             else:
                 raise ValidationError(_("uzivatel.models.Osoba.save.check_container_deleted_or_not_exists.invalid"))
+        else:
+            super().save(*args, **kwargs)
 
     class Meta:
         db_table = "osoba"
