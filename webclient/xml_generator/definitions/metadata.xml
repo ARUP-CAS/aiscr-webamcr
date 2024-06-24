@@ -608,6 +608,7 @@
     <amcr:ico>67985912</amcr:ico>
     <amcr:soucast id="ORG-123456" xml:lang="cs">Akademie věd České republiky</amcr:soucast>
     <amcr:zanikla>0</amcr:zanikla>
+    <amcr:cteni_dokumentu>0</amcr:cteni_dokumentu>
   </amcr:organizace>
   <amcr:osoba>
     <amcr:ident_cely>OS-123456</amcr:ident_cely>
