@@ -44,7 +44,7 @@ tablib[all]==3.6.1
 # DEV requirements
 pre-commit==3.7.1
 isort==5.13.2
-coverage==7.5.3
+coverage==7.5.4
 django-debug-toolbar==4.4.2
 black==24.4.2
 django-livereload-server==0.5.1
