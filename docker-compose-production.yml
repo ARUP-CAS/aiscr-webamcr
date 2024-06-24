@@ -166,7 +166,6 @@ services:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms750m -Xmx750m
       - http.host=0.0.0.0
-      - xpack.security.enabled=true
       - XPACK_MONITORING_ENABLED=false
       - ELASTIC_PASSWORD=elastic_pass
     volumes:
