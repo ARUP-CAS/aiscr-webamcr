@@ -109,9 +109,9 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
     """
     list_display = ("dokument_rada", "dokument_typ", "dokument_material")
     readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material")
-    fields = ("dokument_rada", "dokument_rada__ident_cely", "dokument_typ", "dokument_typ__ident_cely",
-              "dokument_material", "dokument_material__ident_cely")
-    search_fields = ("dokument_rada__ident_cely", "dokument_typ__ident_cely", "dokument_material__ident_cely")
+    fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    search_fields = ("dokument_rada", "dokument_typ", "dokument_material",
+                     "dokument_rada__ident_cely", "dokument_typ__ident_cely", "dokument_material__ident_cely")
     list_filter = ("dokument_rada", "dokument_typ", "dokument_material")
 
     def has_add_permission(self, request, obj=None):
