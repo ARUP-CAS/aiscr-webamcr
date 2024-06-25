@@ -22,13 +22,14 @@
         const positive = getFiltrTypeIsKuSafe() ? 'none' : '';
         const negative = positive === '' ? 'none' : '';
 
+        if (positive !== "none") {
+            shown_elements++
+        }
+
         ["show_menu_pian_from_map_id", "show_menu_pian_new_id", "pian-pripojit-" + '{{j.pian_ident_cely }}', "pian-upravit-" + '{{j.pian_ident_cely }}', "pian-potvrdit-" + '{{j.pian_ident_cely }}']
             .forEach(element => {
                 if (document.getElementById(element) != null) {
                     document.getElementById(element).style.display = positive;
-                    if (positive === "") {
-                        shown_elements++
-                    }
                 }
             });
 
@@ -36,7 +37,7 @@
             .forEach(element => {
                 if (document.getElementById(element) != null) {
                     document.getElementById(element).style.display = negative;
-                    if (negative === "") {
+                    if (negative !== "none") {
                         shown_elements++
                     }
                 }
