@@ -24,11 +24,11 @@ from services.mailer import Mailer
 
 logger = logging.getLogger(__name__)
 
+
 class AuthUserCreationForm(RegistrationForm):
     """
     Formulář pro vytvoření uživatele.
     """
-    captcha = ReCaptchaField(widget=ReCaptchaV2Invisible)
     class Meta(RegistrationForm):
         model = User
         fields = (
@@ -39,7 +39,6 @@ class AuthUserCreationForm(RegistrationForm):
             "organizace",
             "password1",
             "password2",
-            "captcha",
         )
 
         labels = {
@@ -68,8 +67,6 @@ class AuthUserCreationForm(RegistrationForm):
 
     def __init__(self, *args, **kwargs):
         super(AuthUserCreationForm, self).__init__(*args, **kwargs)
-        if settings.SKIP_RECAPTCHA:
-            self.fields.pop("captcha")
         self.helper = FormHelper(self)
         self.fields["telefon"].validators=[validate_phone_number]
         self.fields["telefon"].widget.input_type="tel"
@@ -86,6 +83,28 @@ class AuthUserCreationForm(RegistrationForm):
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
+
+
+class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
+    captcha = ReCaptchaField(widget=ReCaptchaV2Invisible)
+
+    class Meta(AuthUserCreationForm):
+        model = User
+        fields = (
+            "first_name",
+            "last_name",
+            "email",
+            "telefon",
+            "organizace",
+            "password1",
+            "password2",
+            "captcha",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super(AuthUserCreationFormWithRecaptcha, self).__init__(*args, **kwargs)
+        if settings.SKIP_RECAPTCHA:
+            self.fields.pop("captcha")
 
 
 class AuthUserChangeForm(forms.ModelForm):
