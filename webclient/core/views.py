@@ -430,7 +430,7 @@ def post_upload(request):
     rep_bin_file = None
     if soubor:
         if not update:
-            conn = FedoraRepositoryConnector(objekt, fedora_transaction)
+            conn = FedoraRepositoryConnector(objekt, fedora_transaction, skip_container_check=False)
             mimetype = Soubor.get_mime_types(soubor)
             mime_extensions = Soubor.get_file_extension_by_mime(soubor)
             if len(mime_extensions) == 0:
