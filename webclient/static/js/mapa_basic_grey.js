@@ -142,6 +142,16 @@ function getLocation() {
     }
 }
 
+function compareSearchResult( a, b ) {
+    if ( a.text < b.text ){
+      return -1;
+    }
+    if ( a.text > b.text ){
+      return 1;
+    }
+    return 0;
+}
+
 function searchByAjax(text, callResponse){
 	let items1=[];
 	let items2=[];
@@ -152,7 +162,7 @@ function searchByAjax(text, callResponse){
             type: 'GET',
             data: { text: text },
             dataType: 'json',
-            success: function (json) { items1 = json.suggestions;/*addLogText("Vyhledany GeoNames");*/ }
+            success: function (json) { items1 = json.suggestions.sort( compareSearchResult );/*addLogText("Vyhledany GeoNames");*/ }
         }),
 	$.ajax({//okres
 		url:
@@ -160,7 +170,7 @@ function searchByAjax(text, callResponse){
 		type: 'GET',
 		data: {text: text},
 		dataType: 'json',
-    success: function(json) {items2=json.suggestions;/*console.log("Vyhledany Okresy");*/}
+        success: function (json) { items2 = json.suggestions.sort( compareSearchResult );/*addLogText("Vyhledany Okresy");*/ }
 		}),
 
 	];

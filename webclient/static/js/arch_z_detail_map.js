@@ -1226,6 +1226,16 @@ function loadKatastry() {
 
 }
 
+function compareSearchResult( a, b ) {
+    if ( a.text < b.text ){
+      return -1;
+    }
+    if ( a.text > b.text ){
+      return 1;
+    }
+    return 0;
+}
+
 //loadKatastry();
 //funkce vyhledávání v mapě
 function searchByAjax(text, callResponse) {
@@ -1239,7 +1249,7 @@ function searchByAjax(text, callResponse) {
             type: 'GET',
             data: { text: text },
             dataType: 'json',
-            success: function (json) { items1 = json.suggestions;/*addLogText("Vyhledany GeoNames");*/ }
+            success: function (json) { items1 = json.suggestions.sort( compareSearchResult );/*addLogText("Vyhledany GeoNames");*/ }
         }),
         $.ajax({//okres
             url:
@@ -1247,7 +1257,7 @@ function searchByAjax(text, callResponse) {
             type: 'GET',
             data: { text: text },
             dataType: 'json',
-            success: function (json) { items2 = json.suggestions;/*addLogText("Vyhledany Okresy");*/ }
+            success: function (json) { items2 = json.suggestions.sort( compareSearchResult );/*addLogText("Vyhledany Okresy");*/ }
         }),
 
     ];

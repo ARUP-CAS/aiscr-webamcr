@@ -143,6 +143,7 @@
 	}
 .leaflet-top {
 	top: 0;
+	max-width: 100%;
 	}
 .leaflet-right {
 	right: 0;

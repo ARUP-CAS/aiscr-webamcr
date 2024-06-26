@@ -18,6 +18,8 @@
 	background: #fff;
 	border: 2px solid rgba(0,0,0,0.2);
 	background-clip: padding-box;
+	max-width: calc(100% - 18px);
+	width: 470px;
 }
 .leaflet-control-search .search-input {
 	display:block;
@@ -29,6 +31,8 @@
 	padding:0 20px 0 2px;
 	margin:4px 0 4px 4px;
 	min-width: 200px;
+	width: calc(100% - 44px);
+	max-width: 414px;
 }
 .leaflet-control-search.search-load .search-input {
 	background: url('../static/img/loader.gif') no-repeat center right #fff;
@@ -41,7 +45,7 @@
 	width:22px;
 	height:22px;
 	position:absolute;
-	right:28px;
+	right:39px;
 	margin:6px 0;
 	background: url('../static/img/search-icon.png') no-repeat 0 -46px;
 	text-decoration:none;
@@ -97,8 +101,6 @@
 	background: #eee;
 	border-radius:.25em;
 	text-decoration:none;
-	white-space:nowrap;
-	vertical-align:center;
 }
 .leaflet-control-search .search-button:hover {
 	background-color: #f4f4f4;
