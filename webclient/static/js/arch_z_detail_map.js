@@ -470,13 +470,14 @@ map.on('contextmenu', (e) => {
         if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
             if (layer.getBounds().contains(e.latlng)) {
                 features.push(layer.getTooltip().getContent());
-                map.contextmenu.addItem({
+                var it=map.contextmenu.addItem({
                     text: layer.getTooltip().getContent(),
                     callback: function () { layer.bringToFront() }
                 })
+                $(it).mouseenter(function(){ layer.fire("mouseover"); });
+                $(it).mouseleave(function(){ layer.fire("mouseout"); });
             }
         }
-        // do something with the layer
     });
     if (features.length == 0) {
         map.contextmenu.hide();
@@ -733,6 +734,20 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
                     // global_map_can_grab_geom_from_map=false;
                     }
                 })
+                var features = 0;
+                map.eachLayer(function (layer) {
+                    if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
+                        if (layer.getBounds().contains(e.latlng)) {
+                            features =features+1;
+                        }
+                    }
+                });
+                if (features>1) {
+                    message_box.show( map_translations['MessageMultipleElements'] );
+                    message_box.timeStamp=e.originalEvent.timeStamp;
+
+                }
+                else message_box.hide()
             } else{
                 clickOnMap(e);
             }
