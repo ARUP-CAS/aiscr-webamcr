@@ -15,13 +15,13 @@ python3 manage.py write_value_to_redis "$STRING1" "$STRING2" --settings=webclien
 
 read_value_from_redis() {
     local key=$1
-    redis-cli -h redis -a "$REDIS_PASSWORD" GET "$key"
+    redis-cli -h redis --no-auth-warning -a "$REDIS_PASSWORD" GET "$key"
 }
 
 delete_value_from_redis() {
     local key=$1
     # Connect to the Redis server running in Docker with hostname 'redis' and use the password
-    redis-cli -h redis -a "$REDIS_PASSWORD" DEL "$key"
+    redis-cli -h redis --no-auth-warning -a "$REDIS_PASSWORD" DEL "$key"
 }
 
 # Try to read the value from Redis and compare with STRING2
