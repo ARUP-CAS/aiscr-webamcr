@@ -121,8 +121,8 @@ class ExpertniListCreator(DocumentCreator):
         ]
         if self.projekt.geom is not None:
             table_texts += [
-                ("Souřadnice(WGS - 84):",
-                 f"{self.projekt.geom.centroid.x}N, {self.projekt.geom.centroid.y}E" if self.projekt.geom is not None else None)
+                ("Souřadnice (WGS-84):",
+                 f"{self.projekt.geom.centroid.y}N, {self.projekt.geom.centroid.x}E" if self.projekt.geom is not None else None)
             ]
 
         table_texts += [
