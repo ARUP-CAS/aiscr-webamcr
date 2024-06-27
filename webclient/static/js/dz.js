@@ -128,7 +128,7 @@ window.onload = function () {
             "application/x-zip-compressed, " +
             "application/vnd.rar, " +
             "application/x-7z-compressed"
-        RejectedFileMessage = reject_dict["rejected_dokument_3d"]
+        RejectedFileMessage = reject_dict["rejected_dokument_model"]
     } else {
         acceptFile = "image/*, " +
             "application/zip, " +
