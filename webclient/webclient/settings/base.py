@@ -73,9 +73,10 @@ def get_redis_pass(default_value=""):
     else:
         return default_value
 
+REDIS_HOST = get_secret("REDIS_HOST")
+REDIS_PORT = get_secret("REDIS_PORT")
 
-redis_url = os.getenv("REDIS_URL", "redis:6379")
-CACHEOPS_REDIS = "redis://"+get_redis_pass()+redis_url
+CACHEOPS_REDIS = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}"
 
 CACHEOPS = {
     "adb.Adb": {"ops": ("fetch", ), "timeout": 60*10},
@@ -450,7 +451,7 @@ AUTHENTICATION_BACKENDS = ["core.authenticators.AMCRAuthUser"]
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://" + get_redis_pass() + redis_url,
+        "LOCATION": f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}" ,
     }
 }
 
@@ -485,7 +486,7 @@ CELERY_RESULT_SERIALIZER = "json"
 
 SKIP_SELENIUM_TESTS = False
 
-CELERY_BROKER_URL = "redis://"+get_redis_pass()+redis_url
+CELERY_BROKER_URL = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}"
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
