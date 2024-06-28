@@ -190,7 +190,7 @@ def get_all_pians_with_akce(ident_cely):
         " from public.pian pian "
         " join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely LIKE %s"
         " WHERE dj.ident_cely IS NOT NULL ) AS A ON ST_Intersects(katastr.hranice,geom)"
-        " ORDER BY A.ident_cely "
+        " ORDER BY A.dj, katastr.nazev"
         " LIMIT 1 )"
         " union all "
         "(select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj, katastr.nazev AS katastr_nazev, katastr.id as ku_id"
