@@ -456,8 +456,7 @@ CACHES = {
 
 DIGI_LINKS = {
     "Digi_archiv_link": "https://digiarchiv.aiscr.cz/id/",
-    "OAPI_link_part1": "https://api.aiscr.cz/dapro/oai?verb=GetRecord&identifier=https://api.aiscr.cz/id/",
-    "OAPI_link_part2": "&metadataPrefix=oai_amcr",
+    "OAPI_link": "https://api.aiscr.cz/id/",
     "ARU_PRAHA": "https://www.arup.cas.cz/",
     "ARU_BRNO": "https://www.arub.cz/",
     "ARUP_MAIL": '<a href="mailto:oznameni@arup.cas.cz">oznameni@arup.cas.cz</a>',
