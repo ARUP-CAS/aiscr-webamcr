@@ -44,16 +44,16 @@
             <span class="app-controls-button-text">{% trans "templates.toolbarDokument.dalsiVolby.label" %}</span>
           </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
+          <a class="dropdown-item" href="{% url 'historie:dokument' d.ident_cely %}">{% trans "templates.toolbarDokument.historie.label" %}</a>
           {% if show.smazat %}
           <button id="dokument-smazat" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarDokument.smazatDokument.label" %}</button>
+          {% endif %}          
+          {% if show.arch_links%}
+          <a class="dropdown-item" href="{{Digi_archiv_link|add:d.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarDokument.digiArchivLink.label" %}</a>          
           {% endif %}
+          <a class="dropdown-item" href="{{OAPI_link|add:d.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarDokument.OAIAPI.label" %}</a>
           {% if show.stahnout_metadata%}
           <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'dokument' d.ident_cely %}">{% trans "templates.toolbarDokument.metadataDownload.label" %}</a>
-          {% endif %}
-          <a class="dropdown-item" href="{% url 'historie:dokument' d.ident_cely %}">{% trans "templates.toolbarDokument.historie.label" %}</a>
-          {% if show.arch_links%}
-          <a class="dropdown-item" href="{{Digi_archiv_link|add:d.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarDokument.digiArchivLink.label" %}</a>
-          <a class="dropdown-item" href="{{OAPI_link_part1|add:d.ident_cely|add:OAPI_link_part2}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarDokument.OAIAPI.label" %}</a>
           {% endif %}
         </div>
       </div>
