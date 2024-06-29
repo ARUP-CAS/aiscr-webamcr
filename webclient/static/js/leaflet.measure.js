@@ -2,7 +2,7 @@ L.Control.Measure = L.Control.extend({
   options: {
     position: 'topleft',
     //  weather to use keyboard control for this plugin
-    keyboard: true,
+    keyboard: false,
     //  shortcut to activate measure
     activeKeyCode: 'M'.charCodeAt(0),
     //  shortcut to cancel measure, defaults to 'Esc'
