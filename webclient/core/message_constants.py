@@ -109,6 +109,7 @@ MAINTENANCE_AFTER_LOGOUT: Final = _("core.message_constants.maintenanceAfterlogo
 # DropZone upload messages
 UPLOADFILE_REJECTED_PAS: Final = _("core.message_constants.uploadFile.rejectedPas.text")
 UPLOADFILE_REJECTED_DOKUMENT: Final = _("core.message_constants.uploadFile.rejectedDokument.text")
+UPLOADFILE_REJECTED_DOKUMENT_MODEL: Final = _("core.message_constants.uploadFile.rejectedDokumentModel.text")
 UPLOADFILE_REJECTED_ALL: Final = _("core.message_constants.uploadFile.rejectedAll.text")
 UPLOADFILE_ERROR: Final = _("core.message_constants.uploadFile.error.text")
 

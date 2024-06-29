@@ -103,42 +103,46 @@ window.onload = function () {
     let acceptFile = null;
     let RejectedFileMessage = null;
     if (currentLocation.includes("soubor/nahrat/pas/")) {
-        acceptFile = "image/*"
+        acceptFile = "image/jpeg, " +
+            "image/png, " +
+            "image/tiff, " +
+            "image/heic"
         RejectedFileMessage = reject_dict["rejected_pas"]
     } else if (currentLocation.includes("soubor/nahrat/dokument/")) {
-        acceptFile = ".jpeg, " +
-            ".JPEG, " +
-            ".jpg, " +
-            ".JPG, " +
-            ".png, " +
-            ".PNG, " +
-            ".tiff, " +
-            ".TIFF, " +
-            ".tif, " +
-            ".TIF, " +
-            ".txt, " +
-            ".TXT, " +
-            ".pdf, " +
-            ".PDF, " +
-            ".csv, " +
-            ".CSV"
+        acceptFile = "image/jpeg, " +
+            "image/png, " +
+            "image/tiff, " +
+            "image/svg+xml, " +
+            "text/plain, " +
+            "application/pdf, " +
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, " +
+            "text/csv"
         RejectedFileMessage = reject_dict["rejected_dokument"]
+    } else if (currentLocation.includes("soubor/nahrat/model3d/")) {
+        acceptFile = "image/jpeg, " +
+            "image/png, " +
+            "image/tiff, " +
+            "image/svg+xml, " +
+            "application/pdf, " +
+            "application/zip, " +
+            "application/x-zip-compressed, " +
+            "application/vnd.rar, " +
+            "application/x-7z-compressed"
+        RejectedFileMessage = reject_dict["rejected_dokument_model"]
     } else {
         acceptFile = "image/*, " +
-            ".zip, " +
-            ".ZIP, " +
-            ".rar, " +
-            ".RAR, " +
-            ".7z, " +
-            ".7Z, " +
+            "application/zip, " +
+            "application/x-zip-compressed, " +
+            "application/vnd.rar, " +
+            "application/x-7z-compressed, " +
+            "application/pdf, " +
+            "application/msword, " +
             "application/vnd.ms-excel, " +
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document, " +
-            "application/docx, " +
-            "application/pdf, " +
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, " +
             "text/plain, " +
             "text/csv, " +
-            "application/msword, " +
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, " +
+            "application/rtf, " +
             "application/vnd.oasis.opendocument.text, " +
             "application/vnd.oasis.opendocument.spreadsheet "
         RejectedFileMessage = reject_dict["rejected_all"]
