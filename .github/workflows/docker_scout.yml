@@ -13,6 +13,8 @@ env:
   REGISTRY: docker.io
   # Image repository, without hostname and tag
   IMAGE_NAME: aiscr/webamcr
+  IMAGE_NAME_PROXY: aiscr/webamcr-proxy
+  IMAGE_NAME_REDIS: aiscr/webamcr-redis
   SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
 
 jobs:
@@ -65,6 +67,92 @@ jobs:
       # Compare the image built in the pull request with the one in production
       - name: Docker Scout
         id: docker-scout
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: docker/scout-action@v1
+        with:
+          command: compare
+          image: ${{ steps.meta.outputs.tags }}
+          to-latest: true
+          ignore-unchanged: true
+          only-severities: critical,high
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          organization: aiscr
+
+      # Extract metadata (tags, labels) for Docker
+      - name: Extract Docker metadata - proxy
+        id: meta-proxy
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROXY }}
+          labels: |
+            org.opencontainers.image.revision=${{ env.SHA }}
+          tags: |
+            type=edge,branch=$repo.default_branch
+            type=semver,pattern=v{{version}}
+            type=sha,prefix=,suffix=,format=short
+
+      # Build and push Docker image with Buildx
+      # (don't push on PR, load instead)
+      - name: Build and push Docker image - proxy
+        id: build-and-push-proxy
+        uses: docker/build-push-action@v6
+        with:
+          context: /proxy
+          sbom: ${{ github.event_name != 'pull_request' }}
+          provenance: ${{ github.event_name != 'pull_request' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          load: ${{ github.event_name == 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      # Compare the image built in the pull request with the one in production
+      - name: Docker Scout - Proxy
+        id: docker-scout-proxy
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: docker/scout-action@v1
+        with:
+          command: compare
+          image: ${{ steps.meta.outputs.tags }}
+          to-latest: true
+          ignore-unchanged: true
+          only-severities: critical,high
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          organization: aiscr
+
+      # Extract metadata (tags, labels) for Docker
+      - name: Extract Docker metadata - Redis
+        id: meta-redis
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDSI }}
+          labels: |
+            org.opencontainers.image.revision=${{ env.SHA }}
+          tags: |
+            type=edge,branch=$repo.default_branch
+            type=semver,pattern=v{{version}}
+            type=sha,prefix=,suffix=,format=short
+
+      # Build and push Docker image with Buildx
+      # (don't push on PR, load instead)
+      - name: Build and push Docker image - Redis
+        id: build-and-push-reds
+        uses: docker/build-push-action@v6
+        with:
+          context: /redis
+          sbom: ${{ github.event_name != 'pull_request' }}
+          provenance: ${{ github.event_name != 'pull_request' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          load: ${{ github.event_name == 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      # Compare the image built in the pull request with the one in production
+      - name: Docker Scout - Redis
+        id: docker-scout-redis
         if: ${{ github.event_name == 'pull_request' }}
         uses: docker/scout-action@v1
         with:
