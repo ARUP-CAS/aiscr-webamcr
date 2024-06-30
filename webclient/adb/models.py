@@ -92,10 +92,6 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
     )
     sm5 = models.ForeignKey(Kladysm5, models.RESTRICT, db_column="sm5")
     tracker = FieldTracker()
-    close_active_transaction_when_finished = False
-    active_transaction = None
-    suppress_signal = False
-    initial_dokumentacni_jednotka = None
 
     class Meta:
         db_table = "adb"
@@ -112,6 +108,10 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
             self.initial_dokumentacni_jednotka = self.dokumentacni_jednotka
         except ObjectDoesNotExist as err:
             pass
+        self.close_active_transaction_when_finished = False
+        self.active_transaction = None
+        self.suppress_signal = False
+        self.initial_dokumentacni_jednotka = None
 
 
 def get_vyskovy_bod(adb: Adb, offset=1) -> str:
@@ -165,10 +165,7 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP},
     )
     geom = pgmodels.PointField(srid=5514, dim=3)
-    active_transaction = None
-    close_active_transaction_when_finished = False
     tracker = FieldTracker()
-    suppress_signal = False
 
     def set_geom(self, northing, easting, niveleta):
         """
@@ -212,6 +209,9 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
                 self.easting = -1 * fabs(round(self.geom[1], 2))
             if geom_length == 3:
                 self.niveleta = round(self.geom[2], 2)
+        self.active_transaction = None
+        self.close_active_transaction_when_finished = False
+        self.suppress_signal = False
 
     class Meta:
         db_table = "vyskovy_bod"

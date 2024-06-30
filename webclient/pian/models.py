@@ -82,7 +82,10 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN, db_index=True)
     geom_updated_at = models.DateTimeField(blank=True, null=True)
     geom_sjtsk_updated_at = models.DateTimeField(blank=True, null=True)
-    update_all_azs = True
+
+    def __str__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.update_all_azs = True
 
     @property
     def pristupnost_pom(self):

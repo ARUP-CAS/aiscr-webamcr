@@ -100,17 +100,12 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
                         "close_transaction": instance.close_active_transaction_when_finished})
 
 
-@receiver(post_delete, sender=DokumentacniJednotka)
-def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
-    logger.debug("dj.signals.delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
-    if instance.suppress_signal:
-        logger.debug("dj.signals.delete_dokumentacni_jednotka.suppress_signal",
-                     extra={"ident_cely": instance.ident_cely})
-        return
+@receiver(pre_delete, sender=DokumentacniJednotka)
+def pre_delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
+    logger.debug("dj.signals.pre_delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
     pian: Pian = instance.pian
-    save_pian_metadata = False
-    invalidate_arch_z_related_models()
+    instance.save_pian_metadata = False
     if not pian:
         logger.debug("dj.signals.delete_dokumentacni_jednotka.no_pian", extra={"ident_cely": instance.ident_cely})
     else:
@@ -130,7 +125,24 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
         else:
             logger.debug("dj.signals.delete_dokumentacni_jednotka.update_pian_metadata",
                          extra={"ident_cely": instance.ident_cely, "pian_ident_cely": pian.ident_cely})
-            save_pian_metadata = True
+            instance.save_pian_metadata = True
+            instance.pian = None
+            instance.suppress_signal = True
+            instance.save()
+            instance.suppress_signal = False
+    logger.debug("dj.signals.pre_delete_dokumentacni_jednotka.end", extra={"ident_cely": instance.ident_cely})
+
+
+@receiver(post_delete, sender=DokumentacniJednotka)
+def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
+    logger.debug("dj.signals.delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
+    if instance.suppress_signal:
+        logger.debug("dj.signals.delete_dokumentacni_jednotka.suppress_signal",
+                     extra={"ident_cely": instance.ident_cely})
+        return
+    fedora_transaction = instance.active_transaction
+    invalidate_arch_z_related_models()
+
     if instance.komponenty:
         for komponenta in instance.komponenty.komponenty.all():
             komponenta: Komponenta
@@ -148,16 +160,16 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
             def save_metadata():
                 if not instance.suppress_signal_arch_z:
                     instance.archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
-                if save_pian_metadata:
-                    pian.save_metadata(fedora_transaction, skip_container_check=True)
+                if instance.save_pian_metadata:
+                    instance.initial_pian.save_metadata(fedora_transaction, skip_container_check=True)
                 fedora_transaction.mark_transaction_as_closed()
 
             transaction.on_commit(save_metadata)
         else:
             if not instance.suppress_signal_arch_z:
                 instance.archeologicky_zaznam.save_metadata(fedora_transaction)
-            if save_pian_metadata:
-                pian.save_metadata(fedora_transaction)
+            if instance.save_pian_metadata:
+                instance.initial_pian.save_metadata(fedora_transaction)
     logger.debug("dj.signals.delete_dokumentacni_jednotka.end", extra={"ident_cely": instance.ident_cely,
                                                                        "transaction": getattr(fedora_transaction,
                                                                                               "uid", None)})

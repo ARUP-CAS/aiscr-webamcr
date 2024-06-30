@@ -18,6 +18,8 @@ from core.exceptions import (
 )
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
+
+from core.repository_connector import FedoraTransaction
 from dokument.models import Dokument
 from heslar.models import HeslarDokumentTypMaterialRada, Heslar
 from pas.models import SamostatnyNalez
@@ -159,7 +161,7 @@ def get_dj_ident(event: ArcheologickyZaznam) -> str:
         raise MaximalIdentNumberError(max_count)
 
 
-def get_komponenta_ident(zaznam) -> str:
+def get_komponenta_ident(zaznam, fedora_transaction: FedoraTransaction) -> str:
     """
     Metoda pro výpočet identu komponenty DJ a dokument části.
 
@@ -172,6 +174,7 @@ def get_komponenta_ident(zaznam) -> str:
     max_count = 0
     if isinstance(zaznam, ArcheologickyZaznam):
         for dj in zaznam.dokumentacni_jednotky_akce.all():
+            dj.active_transaction = fedora_transaction
             if dj.komponenty is None:
                 k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
                 k.save()

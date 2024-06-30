@@ -44,12 +44,15 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
     )
     pocet = models.TextField(blank=True, null=True, db_index=True)
     poznamka = models.TextField(blank=True, null=True)
-    close_active_transaction_when_finished = False
-    active_transaction = None
 
     class Meta:
         db_table = "nalez_objekt"
         ordering = ["druh__razeni", "specifikace__razeni"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.close_active_transaction_when_finished = False
+        self.active_transaction = None
 
     def __str__(self):
         return self.druh.heslo
@@ -91,12 +94,15 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
     )
     pocet = models.TextField(blank=True, null=True, db_index=True)
     poznamka = models.TextField(blank=True, null=True)
-    close_active_transaction_when_finished = False
-    active_transaction = None
 
     class Meta:
         db_table = "nalez_predmet"
         ordering = ["druh__razeni", "specifikace__razeni"]
+
+    def __init_(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.close_active_transaction_when_finished = False
+        self.active_transaction = None
 
     def __str__(self):
         return self.druh.heslo

@@ -52,10 +52,6 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         db_index=True,
     )
     tracker = FieldTracker()
-    active_transaction = None
-    close_active_transaction_when_finished = False
-    suppress_signal = False
-    suppress_signal_arch_z = False
 
     class Meta:
         db_table = "dokumentacni_jednotka"
@@ -91,3 +87,9 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
     def __init__(self, *args, **kwargs):
         super(DokumentacniJednotka, self).__init__(*args, **kwargs)
         self.initial_pian = self.pian
+        self.active_transaction = None
+        self.close_active_transaction_when_finished = False
+        self.suppress_signal = False
+        self.suppress_signal_arch_z = False
+        self.save_pian_metadata = False
+

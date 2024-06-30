@@ -87,8 +87,6 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         related_name="zaznamy_hlavnich_katastru",
         db_index=True
     )
-    initial_stav = None
-    initial_casti_dokumentu = []
 
     class Meta:
         db_table = "archeologicky_zaznam"
@@ -445,7 +443,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         try:
             self.initial_casti_dokumentu = self.casti_dokumentu.all().values_list("id", flat=True)
         except ValueError as err:
-            pass
+            self.initial_casti_dokumentu = []
     
     @property
     def initial_pristupnost(self):
@@ -546,9 +544,6 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         Organizace, on_delete=models.RESTRICT, db_column="organizace", blank=True, null=True, db_index=True
     )
     vedouci_snapshot = models.CharField(max_length=5000, null=True, blank=True)
-    suppress_signal = False
-    active_transaction = None
-    close_active_transaction_when_finished = False
 
     class Meta:
         db_table = "akce"
@@ -568,6 +563,9 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initial_projekt = self.projekt
+        self.suppress_signal = False
+        self.active_transaction = None
+        self.close_active_transaction_when_finished = False
 
     def get_absolute_url(self):
         """
@@ -642,13 +640,16 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         db_column="archeologicky_zaznam",
         related_name="externi_odkazy",
     )
-    suppress_signal_arch_z = False
-    active_transaction = None
-    close_active_transaction_when_finished = False
-    suppress_signal = False
 
     class Meta:
         db_table = "externi_odkaz"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.suppress_signal_arch_z = False
+        self.active_transaction = None
+        self.close_active_transaction_when_finished = False
+        self.suppress_signal = False
 
 
 def get_akce_ident(region):

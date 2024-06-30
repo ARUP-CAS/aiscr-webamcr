@@ -198,9 +198,9 @@ def zapsat(request, typ_vazby, dj_ident_cely):
         komponenta.active_transaction = fedora_transcation
         try:
             if dj:
-                komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam)
+                komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam, fedora_transcation)
             else:
-                komponenta.ident_cely = get_komponenta_ident(cast.dokument)
+                komponenta.ident_cely = get_komponenta_ident(cast.dokument, fedora_transcation)
             komp_ident_cely = komponenta.ident_cely
         except MaximalIdentNumberError:
             messages.add_message(request, messages.ERROR, MAXIMUM_KOMPONENT_DOSAZENO)
