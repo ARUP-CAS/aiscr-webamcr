@@ -39,7 +39,11 @@ print_d1 "START DEPLOYMENT SCRIPT @${d_stamp}"
 print_d1 "DOCKER ROLLING OUT"
 chmod +x ${scriptpath}/prod_deploy.sh
 ${scriptpath}/prod_deploy.sh -x
-${scriptpath}/prod_deploy.sh -t ${current_deployment_tag}
+if [ ${current_deployment_tag} ]; then
+    ${scriptpath}/prod_deploy.sh -t ${current_deployment_tag}
+else
+    ${scriptpath}/prod_deploy.sh
+fi
 
 #Status check
 print_d1 "STATUS CHECK"
