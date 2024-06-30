@@ -1,10 +1,10 @@
 name: Docker Scout
 
 on:
-  push:
-    tags: ["*"]
-    branches:
-      - "dev"
+  # push:
+    # tags: ["*"]
+    # branches:
+      # - "dev"
   pull_request:
     branches: ["**"]
 
