@@ -10,7 +10,7 @@ on:
 
 env:
   # Hostname and user of your registry
-  REGISTRY: https://hub.docker.com/repository/docker
+  REGISTRY: hub.docker.com/repository/docker
   DOCKER_HUB_USERNAME: aiscr
   # Image repository, without hostname and tag
   IMAGE_NAME: ${{ github.repository }}
