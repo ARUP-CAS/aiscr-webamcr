@@ -78,6 +78,7 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
                     logger.debug("dj.signals.save_dokumentacni_jednotka.delete_initial_pian",
                                 extra={"transaction": fedora_transaction.uid, "pian": initial_pian.ident_cely})
                     initial_pian.active_transaction = fedora_transaction
+                    initial_pian.skip_container_check = True
                     initial_pian.delete()
         except ValueError as err:
             logger.debug("dj.signals.save_dokumentacni_jednotka.deleted",
