@@ -27,8 +27,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.man_tag }}
       - name: Install OpenVPN
         run: |
           sudo apt-get update
