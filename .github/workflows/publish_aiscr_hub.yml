@@ -3,12 +3,23 @@ name: Build and Publish Docker images on  https://hub.docker.com/u/aiscr
 on:
   release:
     types: [published]
+    inputs:
+      deploy_dev:
+       description: 'Deploy to DEV server'
+       type: boolean
+       required: true
+       default: false
   workflow_dispatch :
     inputs:
       tags:
        description: 'Tag describing manual trigger'
        type: string
        required: false
+      deploy_dev:
+       description: 'Deploy to DEV server'
+       type: boolean
+       required: true
+       default: false
 
 env:
   DOCKER_HUB_REPO_REDIS: aiscr/webamcr-redis
@@ -94,6 +105,7 @@ jobs:
             TAG_APP=${{ github.ref }}
   deploy_on_dev:
       name: Deploy containers on DEV SERVER
+      if: ${{ inputs.deploy_dev }} == true
       needs: build_publish_images
       uses: ./.github/workflows/deployment.yml
       secrets: inherit
