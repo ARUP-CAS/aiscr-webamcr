@@ -30,6 +30,7 @@ jobs:
   build_publish_images:
     name: Build and push docker images for to Docker Hub
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
