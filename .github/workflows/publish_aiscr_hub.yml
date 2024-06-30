@@ -68,7 +68,7 @@ jobs:
           context: .
           file: Dockerfile-production
           push: true
-          tags: ${{ env.DOCKER_HUB_REPO_PROD }}:${{ env.tag_version }}
+          tags: ${{ env.DOCKER_HUB_REPO_PROD }}:${{ env.tag_version }},${{ env.DOCKER_HUB_REPO_PROD }}:latest
           labels: ${{ steps.meta_prod.outputs.labels }}
           build-args: |
             VERSION_APP=${{ env.tag_version }}
@@ -87,7 +87,7 @@ jobs:
         with:
           context: ./proxy
           push: true
-          tags: ${{ env.DOCKER_HUB_REPO_PROXY }}:${{ env.tag_version }}
+          tags: ${{ env.DOCKER_HUB_REPO_PROXY }}:${{ env.tag_version }},${{ env.DOCKER_HUB_REPO_PROXY }}:latest
           labels: ${{ steps.meta_proxy.outputs.labels }}
           build-args: |
             VERSION_APP=${{ env.tag_version }}
@@ -106,7 +106,7 @@ jobs:
         with:
           context: ./redis
           push: true
-          tags: ${{ env.DOCKER_HUB_REPO_REDIS }}:${{ env.tag_version }}
+          tags: ${{ env.DOCKER_HUB_REPO_REDIS }}:${{ env.tag_version }},${{ env.DOCKER_HUB_REPO_REDIS }}:latest
           labels: ${{ steps.meta_redis.outputs.labels }}
           build-args: |
             VERSION_APP=${{ env.tag_version }}
