@@ -43,7 +43,8 @@ from core.message_constants import (
 from core.repository_connector import FedoraTransaction
 from historie.models import Historie
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
-    UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
+    UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm, \
+    AuthUserCreationFormWithRecaptcha
 from uzivatel.models import Osoba, User, UserNotificationType, UzivatelPrihlaseniLog
 from core.views import PermissionFilterMixin
 from core.models import Permissions as p, check_permissions
@@ -184,7 +185,7 @@ class UserRegistrationView(RegistrationView):
     """
     Třída pohledu pro registraci uživatele.
     """
-    form_class = AuthUserCreationForm
+    form_class = AuthUserCreationFormWithRecaptcha
     success_url = reverse_lazy("django_registration_complete")
 
     def send_activation_email(self, user):
