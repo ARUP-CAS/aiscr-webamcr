@@ -44,8 +44,10 @@ jobs:
         id: step_tag1
         run: |
           if [ "${{ inputs.tags }}" != '' ]; then
+            echo "${{ inputs.tags }}"
             echo "tag_version=${{ inputs.tags }}" >> $GITHUB_ENV
           else
+            echo "$GITHUB_REF | cut -d/ -f3)"
             echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
           fi          
 
