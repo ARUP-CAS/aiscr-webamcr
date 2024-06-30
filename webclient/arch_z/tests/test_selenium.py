@@ -591,7 +591,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.driver.execute_script(''' var latlng = L.latLng(50.357377039,  13.795522698);Object.values(poi_pian._layers)[0].fire('click', {
     latlng: latlng, layerPoint: map.latLngToLayerPoint(latlng), containerPoint: map.latLngToContainerPoint(latlng),
     originalEvent: { clientX: map.latLngToContainerPoint(latlng).x, clientY: map.latLngToContainerPoint(latlng).y}})''')     
-        self.wait(0.5)
+        self.wait(1)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
        
