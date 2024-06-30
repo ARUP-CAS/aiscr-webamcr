@@ -132,7 +132,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.5.3
+     - 7.5.4
      - Apache Software License
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
@@ -252,7 +252,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://django-compressor.readthedocs.io/en/latest/
    * - djangorestframework
-     - 3.15.1
+     - 3.15.2
      - BSD License
      - https://www.django-rest-framework.org/
    * - djangorestframework-xml
@@ -324,7 +324,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; GNU General Public License (GPL); GNU Library or Lesser General Public License (LGPL)
      - https://github.com/eea/odfpy
    * - openpyxl
-     - 3.1.4
+     - 3.1.5
      - MIT License
      - https://openpyxl.readthedocs.io
    * - outcome
@@ -460,7 +460,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
-     - 4.21.0
+     - 4.22.0
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
@@ -535,6 +535,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 20.26.3
      - MIT License
      - https://github.com/pypa/virtualenv
+   * - websocket-client
+     - 1.8.0
+     - Apache Software License
+     - https://github.com/websocket-client/websocket-client.git
    * - wrapt
      - 1.16.0
      - BSD License
