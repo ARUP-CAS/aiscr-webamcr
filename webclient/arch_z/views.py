@@ -964,7 +964,6 @@ def zapsat(request, projekt_ident_cely=None):
                     az.ident_cely = get_project_event_ident(projekt)
                     typ_akce = Akce.TYP_AKCE_PROJEKTOVA
                 else:
-                    az.save()
                     az.ident_cely = get_temp_akce_ident(
                         az.hlavni_katastr.okres.kraj.rada_id
                     )
