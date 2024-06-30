@@ -1,5 +1,4 @@
-name: Build and Publish Docker images on  https://hub.docker.com/u/aiscr
-
+name: Build and Publish Docker images
 on:
   release:
     types: [published]
@@ -25,7 +24,7 @@ env:
   DOCKER_HUB_REPO_REDIS: aiscr/webamcr-redis
   DOCKER_HUB_REPO_PROXY: aiscr/webamcr-proxy
   DOCKER_HUB_REPO_PROD: aiscr/webamcr
-  DOCKER_HUB_USERNAME: aiscr
+  DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USER }}
 
 jobs:
   build_publish_images:
