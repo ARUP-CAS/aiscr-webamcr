@@ -30,7 +30,7 @@ jobs:
         with:
           ref: ${{ inputs.man_tag }}
       - name: Get tag
-        run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
+        run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3):${{ inputs.man_tag }}" >> $GITHUB_ENV
       - name: Install OpenVPN
         run: |
           sudo apt-get update
