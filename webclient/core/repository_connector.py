@@ -130,7 +130,7 @@ class FedoraRepositoryConnector:
         self.restored_container = False
         self.skip_container_check = skip_container_check
         stack = inspect.stack()
-        caller = stack[1]
+        caller = [x for x in stack]
         logger.debug("core_repository_connector.__init__.end",
                      extra={"caller": caller, "transaction": self.transaction_uid, "ident_cely": record.ident_cely})
 
@@ -272,6 +272,8 @@ class FedoraRepositoryConnector:
     def _send_request(self, url: str, request_type: FedoraRequestType, *,
                       headers=None, data=None) -> Optional[requests.Response]:
         extra = {"url": url, "request_type": request_type, "transaction": self.transaction_uid}
+        if isinstance(data, str) and len(data) < 1000:
+            extra["data"] = data
         logger.debug("core_repository_connector._send_request.start", extra=extra)
         auth = self._get_auth(request_type)
         response = None
@@ -940,10 +942,10 @@ class FedoraTransactionPostCommitTasks(Enum):
 
 
 class FedoraTransaction:
-    post_commit_tasks = {}
     child_transaction = False
 
     def __init__(self, uid=None):
+        self.post_commit_tasks = {}
         if uid is None:
             self.__create_transaction()
         else:
@@ -1003,7 +1005,6 @@ class FedoraTransaction:
                 record.ident_cely = old_ident_cely
                 connector = FedoraRepositoryConnector(record, new_transaction)
                 connector.create_link(ident_cely_proxy=ident_cely)
-        self.post_commit_tasks = {}
         new_transaction.mark_transaction_as_closed()
 
     def __create_transaction(self):
