@@ -32,15 +32,15 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Checkout tag
-        if: ${{ inputs.tags != '' }}
-        uses: actions/checkout@v4
-          with:
-	         ref: ${{ inputs.tags }}
-
       - name: Checkout latest
         if: ${{ inputs.tags == '' }}
         uses: actions/checkout@v4
+
+      - name: Checkout tag
+        if: ${{ inputs.tags != '' }}
+	uses: actions/checkout@v4
+	with:
+	  ref: ${{ inputs.tags }}
 
       - name: Get tag from GITHUB_REF
         id: step_tag1
