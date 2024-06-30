@@ -32,16 +32,17 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Checkout latest
-        if: ${{ inputs.tags == '' }}
+      - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Checkout tag
-        if: ${{ inputs.tags != '' }}
-	uses: actions/checkout@v4
-	with:
-	  ref: ${{ inputs.tags }}
-
+        with:
+          ref: ${{ inputs.tags }}
+      
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      
       - name: Get tag from GITHUB_REF
         id: step_tag1
         run: |
@@ -52,12 +53,6 @@ jobs:
             echo "$(echo $GITHUB_REF | cut -d/ -f3)"
             echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
           fi  
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ env.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       #---------------------
       # BUILD PROD
