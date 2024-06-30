@@ -10,7 +10,7 @@ on:
 
 env:
   # Hostname and user of your registry
-  REGISTRY: hub.docker.com/repository/docker
+  REGISTRY: hub.docker.com/repository/docker/aiscr/webamcr
   DOCKER_HUB_USERNAME: aiscr
   # Image repository, without hostname and tag
   IMAGE_NAME: ${{ github.repository }}
@@ -53,6 +53,7 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@v6
         with:
+          context: .
           file: Dockerfile-production
           sbom: ${{ github.event_name != 'pull_request' }}
           provenance: ${{ github.event_name != 'pull_request' }}
