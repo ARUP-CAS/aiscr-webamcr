@@ -113,7 +113,7 @@ jobs:
             TAG_APP=${{ github.ref }}
   deploy_on_dev:
       name: Deploy containers on DEV SERVER
-      if: ${{ inputs.deploy_dev == 'true' }}
+      if: ${{ inputs.deploy_dev }}
       needs: build_publish_images
       uses: ./.github/workflows/deployment.yml
       secrets: inherit
