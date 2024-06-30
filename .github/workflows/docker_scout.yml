@@ -10,10 +10,10 @@ on:
 
 env:
   # Hostname and user of your registry
-  REGISTRY: hub.docker.com/repository/docker/aiscr/webamcr
+  REGISTRY: docker.io
   DOCKER_HUB_USERNAME: aiscr
   # Image repository, without hostname and tag
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: aiscr/webamcr
   SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
 
 jobs:
