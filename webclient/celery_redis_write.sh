@@ -33,7 +33,11 @@ for i in {1..60}; do
         delete_value_from_redis "$STRING1"
         exit 0
     else
-        echo "Attempt $i: The value from Redis does not match STRING2. Retrieved value: $VALUE_FROM_REDIS"
+        if (( i % 5 == 0 )); then
+            SERVICE_NAME=swarm_webamcr_redis
+            docker service update --force $SERVICE_NAME
+            echo "Redis service is being restarted..."
+        fi
     fi
 
     # Wait for 1 second before the next attempt
