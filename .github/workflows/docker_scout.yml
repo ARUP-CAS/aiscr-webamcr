@@ -97,7 +97,7 @@ jobs:
         id: build-and-push-proxy
         uses: docker/build-push-action@v6
         with:
-          context: /proxy
+          context: ./proxy
           sbom: ${{ github.event_name != 'pull_request' }}
           provenance: ${{ github.event_name != 'pull_request' }}
           push: ${{ github.event_name != 'pull_request' }}
@@ -140,7 +140,7 @@ jobs:
         id: build-and-push-reds
         uses: docker/build-push-action@v6
         with:
-          context: /redis
+          context: ./redis
           sbom: ${{ github.event_name != 'pull_request' }}
           provenance: ${{ github.event_name != 'pull_request' }}
           push: ${{ github.event_name != 'pull_request' }}
