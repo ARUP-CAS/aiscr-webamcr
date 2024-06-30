@@ -66,7 +66,7 @@ jobs:
           context: .
           file: Dockerfile-production
           push: true
-          tags: ${{ steps.meta_prod.outputs.tags }}
+          tags: ${{ env.DOCKER_HUB_REPO_PROD }}:${{ env.tag_version }}
           labels: ${{ steps.meta_prod.outputs.labels }}
           build-args: |
             VERSION_APP=${{ env.tag_version }}
@@ -85,7 +85,7 @@ jobs:
         with:
           context: ./proxy
           push: true
-          tags: ${{ steps.meta_proxy.outputs.tags }}
+          tags: ${{ env.DOCKER_HUB_REPO_PROXY }}:${{ env.tag_version }}
           labels: ${{ steps.meta_proxy.outputs.labels }}
           build-args: |
             VERSION_APP=${{ env.tag_version }}
@@ -104,14 +104,14 @@ jobs:
         with:
           context: ./redis
           push: true
-          tags: ${{ steps.meta_redis.outputs.tags }}
+          tags: ${{ env.DOCKER_HUB_REPO_REDIS }}:${{ env.tag_version }}
           labels: ${{ steps.meta_redis.outputs.labels }}
           build-args: |
             VERSION_APP=${{ env.tag_version }}
             TAG_APP=${{ github.ref }}
   deploy_on_dev:
       name: Deploy containers on DEV SERVER
-      if: ${{ inputs.deploy_dev }} == 'true'
+      if: ${{ inputs.deploy_dev == true }}
       needs: build_publish_images
       uses: ./.github/workflows/deployment.yml
       secrets: inherit
