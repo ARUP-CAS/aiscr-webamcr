@@ -47,7 +47,7 @@ jobs:
             echo "${{ inputs.tags }}"
             echo "tag_version=${{ inputs.tags }}" >> $GITHUB_ENV
           else
-            echo "$GITHUB_REF | cut -d/ -f3)"
+            echo "$GITHUB_REF | cut -d/ -f3"
             echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
           fi          
 
