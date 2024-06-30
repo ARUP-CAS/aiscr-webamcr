@@ -120,10 +120,6 @@ def index(request, test_run=False):
             }
 
             context = {"confirm": confirmation}
-            if projekt.ident_cely[2].upper() == OBLAST_CECHY:
-                Mailer.send_eo01(project=projekt)
-            else:
-                Mailer.send_eo02(project=projekt)
             response = render(request, "oznameni/index_2.html", context)
             response.set_cookie("project", hash(projekt.ident_cely), 3600)
             return response
@@ -143,6 +139,10 @@ def index(request, test_run=False):
         projekt.close_active_transaction_when_finished = True
         projekt.save()
         context = {"ident_cely": request.POST["ident_cely"]}
+        if projekt.ident_cely[2].upper() == OBLAST_CECHY:
+            Mailer.send_eo01(project=projekt)
+        else:
+            Mailer.send_eo02(project=projekt)
         logger.debug(f"oznameni.views.index.second_part.end",
                      extra={"ident_cely": request.POST["ident_cely"], "transaction": fedora_transaction.uid})
         return render(request, "oznameni/success.html", context)
