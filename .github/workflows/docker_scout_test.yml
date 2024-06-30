@@ -40,7 +40,7 @@ jobs:
         id: meta-redis
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDSI }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDIS }}
           labels: |
             org.opencontainers.image.revision=${{ env.SHA }}
           tags: |
