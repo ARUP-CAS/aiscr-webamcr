@@ -300,6 +300,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             # Removing personal information from the projekt announcement
             if self.has_oznamovatel():
                 self.oznamovatel.delete()
+                self.oznamovatel = None
                 self.archive_project_documentation()
         self.stav = PROJEKT_STAV_ARCHIVOVANY
         Historie(typ_zmeny=ARCHIVACE_PROJ, uzivatel=user, vazba=self.historie).save()
