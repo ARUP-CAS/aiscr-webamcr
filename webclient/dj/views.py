@@ -268,18 +268,18 @@ def smazat(request, ident_cely):
             update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
             fedora_transaction.mark_transaction_as_closed()
             if resp:
-                logger.debug("dj.views.detail.smazat.deleted", {"resp": resp})
+                logger.debug("dj.views.detail.smazat.deleted", extra={"resp": resp})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
                 return JsonResponse({"redirect": dj.archeologicky_zaznam.get_absolute_url()})
             else:
-                logger.warning("dj.views.detail.smazat.not_deleted", {"ident_cely": ident_cely})
+                logger.warning("dj.views.detail.smazat.not_deleted", extra={"ident_cely": ident_cely})
                 messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
                 return JsonResponse(
                     {"redirect": dj.archeologicky_zaznam.get_absolute_url()},
                     status=403,
                 )
         except RestrictedError as err:
-            logger.warning("dj.views.detail.smazat.not_deleted", {"ident_cely": ident_cely, "err": err})
+            logger.warning("dj.views.detail.smazat.not_deleted", extra={"ident_cely": ident_cely, "err": err})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
             return JsonResponse(
                 {"redirect": dj.archeologicky_zaznam.get_absolute_url()},

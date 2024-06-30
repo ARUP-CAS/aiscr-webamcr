@@ -79,15 +79,18 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                                                 db_table='auth_user_notifikace_typ',
                                                 limit_choices_to={'ident_cely__icontains': 'S-E-'},
                                                 default=only_notification_groups)
-    created_from_admin_panel = False
-    suppress_signal = False
-    active_transaction = None
-    close_active_transaction_when_finished = False
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.created_from_admin_panel = False
+        self.suppress_signal = False
+        self.active_transaction = None
+        self.close_active_transaction_when_finished = False
 
     @cached_property
     def hlavni_role(self) -> Union[Group, None]:

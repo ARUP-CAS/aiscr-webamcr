@@ -176,7 +176,6 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     )
     autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
     osoby_snapshot = models.CharField(max_length=5000, null=True, blank=True)
-    initial_let = None
 
     class Meta:
         db_table = "dokument"
@@ -522,10 +521,6 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         null=True,
         related_name="casti_dokumentu",
     )
-    active_transaction = None
-    close_active_transaction_when_finished = False
-    suppress_signal = False
-    suppress_dokument_signal = False
 
     class Meta:
         db_table = "dokument_cast"
@@ -563,6 +558,10 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         super().__init__(*args, **kwargs)
         self.initial_projekt = self.projekt
         self.initial_archeologicky_zaznam = self.archeologicky_zaznam
+        self.active_transaction = None
+        self.close_active_transaction_when_finished = False
+        self.suppress_signal = False
+        self.suppress_dokument_signal = False
 
 
 class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):
@@ -730,14 +729,17 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     )
     tvar = models.ForeignKey(Heslar, models.RESTRICT, db_column="tvar")
     poznamka = models.TextField(blank=True, null=True)
-    active_transaction = None
-    close_active_transaction_when_finished = None
-    suppress_signal = False
 
     class Meta:
         db_table = "tvar"
         unique_together = (("dokument", "tvar", "poznamka"),)
         ordering = ["tvar__razeni"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.active_transaction = None
+        self.close_active_transaction_when_finished = None
+        self.suppress_signal = False
 
 
 class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.Model):

@@ -36,8 +36,6 @@ class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
         related_name="neident_akce_vedouci",
         blank=True,
     )
-    suppress_signal = False
-    initial_dokument = None
 
     class Meta:
         db_table = "neident_akce"
@@ -50,6 +48,8 @@ class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
         except ValueError as err:
             logger.error("neidentakce.models.NeidentAkce.__init__.no_dokument",
                          extra={"err": err})
+            self.initial_dokument = None
+        self.suppress_signal = False
 
 
 class NeidentAkceVedouci(ExportModelOperationsMixin("neident_akce_vedouci"), models.Model):

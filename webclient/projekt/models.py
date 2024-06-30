@@ -161,14 +161,12 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         db_index=True,
     )
 
-    initial_dokumenty = []
-
     def __init__(self, *args, **kwargs):
         super(Projekt, self).__init__(*args, **kwargs)
         try:
             self.initial_dokumenty = list(self.casti_dokumentu.all().values_list("dokument__id", flat=True))
         except ValueError as err:
-            pass
+            self.initial_dokumenty = []
 
 
     def __str__(self):

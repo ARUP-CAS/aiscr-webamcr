@@ -24,10 +24,13 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
     )
 
     typ_vazby = models.TextField(max_length=24, choices=CHOICES)
-    suppress_komponenta_signal = False
 
     class Meta:
         db_table = "komponenta_vazby"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.suppress_komponenta_signal = False
 
     @property
     def navazany_objekt(self):
@@ -71,9 +74,12 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
         null=False,
     )
     aktivity = models.ManyToManyField(Heslar, through="KomponentaAktivita")
-    active_transaction = None
-    close_active_transaction_when_finished = False
-    suppress_signal = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.active_transaction = None
+        self.close_active_transaction_when_finished = False
+        self.suppress_signal = False
 
     @property
     def ident_cely_safe(self):

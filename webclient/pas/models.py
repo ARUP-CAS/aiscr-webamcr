@@ -390,9 +390,11 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         related_name="spoluprace_historie",
     )
 
-    suppress_signal = False
-    active_transaction = None
-    close_active_transaction_when_finished = False
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.suppress_signal = False
+        self.active_transaction = None
+        self.close_active_transaction_when_finished = False
 
     @property
     def aktivni(self):

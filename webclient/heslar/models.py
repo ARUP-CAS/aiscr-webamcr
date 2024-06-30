@@ -100,7 +100,6 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
     rok_do_min = models.IntegerField(verbose_name=_("heslar.models.HeslarDatace.rok_do_min"))
     rok_do_max = models.IntegerField(verbose_name=_("heslar.models.HeslarDatace.rok_do_max"))
     poznamka = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.HeslarDatace.poznamka"))
-    suppress_signal = False
 
     class Meta:
         db_table = "heslar_datace"
@@ -113,6 +112,7 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
         except ObjectDoesNotExist as err:
             logger.debug("heslar.obdobi.HeslarDatace.__init__.no_obdobi", extra={"err": err})
             self.initial_obdobi = None
+        self.suppress_signal = False
 
 
 class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_typ_material_rada"), models.Model):
@@ -143,7 +143,6 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
         verbose_name=_("heslar.models.HeslarDokumentTypMaterialRada.dokument_material"),
     )
-    suppress_signal = False
 
     class Meta:
         db_table = "heslar_dokument_typ_material_rada"
@@ -157,6 +156,7 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
         self.initial_dokument_rada = self.dokument_rada
         self.initial_dokument_typ = self.dokument_typ
         self.initial_dokument_material = self.dokument_material
+        self.suppress_signal = False
 
 
 class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.Model):
@@ -180,9 +180,6 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
         Heslar, models.RESTRICT, db_column="heslo_nadrazene", related_name="nadrazene", verbose_name=_("heslar.models.HeslarHierarchie.heslo_nadrazene")
     )
     typ = models.TextField(verbose_name=_("heslar.models.HeslarHierarchie.typ"), choices=TYP_CHOICES)
-    initial_heslo_nadrazene = None
-    initial_heslo_podrazene = None
-    suppress_signal = False
 
     class Meta:
         db_table = "heslar_hierarchie"
@@ -200,6 +197,10 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
         if self.pk:
             self.initial_heslo_podrazene = self.heslo_podrazene
             self.initial_heslo_nadrazene = self.heslo_nadrazene
+        else:
+            self.initial_heslo_nadrazene = None
+            self.initial_heslo_podrazene = None
+        self.suppress_signal = False
 
 
 class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
@@ -238,8 +239,6 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
     skos_mapping_relation = models.CharField(max_length=20,
                                              verbose_name=_("heslar.models.HeslarOdkaz.skos_mapping_relation"),
                                              choices=SKOS_MAPPING_RELATION_CHOICES)
-    initial_heslo = None
-    suppress_signal = False
 
     class Meta:
         db_table = "heslar_odkaz"
@@ -250,6 +249,9 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
         if self.pk:
             logger.debug(self.heslo)
             self.initial_heslo = self.heslo
+        else:
+            self.initial_heslo = None
+        self.suppress_signal = False
 
 
 class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadata):
