@@ -9,9 +9,8 @@ on:
     branches: ["**"]
 
 env:
-  # Hostname and user of your registry
+  # Hostname of your registry
   REGISTRY: docker.io
-  DOCKER_HUB_USERNAME: aiscr
   # Image repository, without hostname and tag
   IMAGE_NAME: aiscr/webamcr
   SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
@@ -31,7 +30,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ env.DOCKER_HUB_USERNAME }}
+          username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       # Extract metadata (tags, labels) for Docker
@@ -75,3 +74,4 @@ jobs:
           ignore-unchanged: true
           only-severities: critical,high
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          organization: aiscr
