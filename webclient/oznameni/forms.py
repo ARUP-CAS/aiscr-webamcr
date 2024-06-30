@@ -271,4 +271,4 @@ class FormWithCaptcha(forms.Form):
     """
     Hlavní formulář pro captchu.
     """
-    captcha = ReCaptchaField(widget=ReCaptchaV2Invisible)
+    captcha = ReCaptchaField(widget=ReCaptchaV2Invisible, label="")
