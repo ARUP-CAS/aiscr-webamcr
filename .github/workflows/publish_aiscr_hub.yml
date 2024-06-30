@@ -1,4 +1,4 @@
-name: Build and Publish Docker images
+name: Build and publish Docker images
 on:
   release:
     types: [published]
@@ -42,7 +42,12 @@ jobs:
       
       - name: Get tag from GITHUB_REF
         id: step_tag1
-        run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
+        run: |
+          if [ "${{ inputs.tags }}" != '' ]; then
+            echo "tag_version=${{ inputs.tags }}" >> $GITHUB_ENV
+          else
+            echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
+          fi          
 
       #---------------------
       # BUILD PROD
@@ -104,7 +109,7 @@ jobs:
             TAG_APP=${{ github.ref }}
   deploy_on_dev:
       name: Deploy containers on DEV SERVER
-      if: ${{ inputs.deploy_dev }} == true
+      if: ${{ inputs.deploy_dev }} == 'true'
       needs: build_publish_images
       uses: ./.github/workflows/deployment.yml
       secrets: inherit
