@@ -280,7 +280,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         # making txt file with deleted files
         soubory = self.soubory.soubory.all()
         if soubory.count() > 0:
-            conn = FedoraRepositoryConnector(self)
+            conn = FedoraRepositoryConnector(self, self.active_transaction)
             file_deleted_pk_list = []
             for file in soubory:
                 if file.repository_uuid is not None:
