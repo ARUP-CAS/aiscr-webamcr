@@ -70,7 +70,7 @@ jobs:
         with:
           command: compare
           image: ${{ steps.meta.outputs.tags }}
-          to-env: production
+          to-latest: true
           ignore-unchanged: true
           only-severities: critical,high
           github-token: ${{ secrets.GITHUB_TOKEN }}
