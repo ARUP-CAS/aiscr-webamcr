@@ -8,7 +8,7 @@ on:
        description: 'Deploy to DEV server'
        type: boolean
        required: true
-       default: false
+       default: true
   workflow_dispatch :
     inputs:
       tags:
