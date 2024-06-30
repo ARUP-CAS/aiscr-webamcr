@@ -18,7 +18,8 @@ env:
   SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
 
 jobs:
-  build:
+  create-report:
+    name: Create security report using Docker Scout
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -97,13 +98,13 @@ jobs:
         id: build-and-push-proxy
         uses: docker/build-push-action@v6
         with:
-          context: ./proxy
+          context: "{{defaultContext}}:proxy"
           sbom: ${{ github.event_name != 'pull_request' }}
           provenance: ${{ github.event_name != 'pull_request' }}
           push: ${{ github.event_name != 'pull_request' }}
           load: ${{ github.event_name == 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-proxy.outputs.tags }}
+          labels: ${{ steps.meta-proxy.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           
@@ -114,7 +115,7 @@ jobs:
         uses: docker/scout-action@v1
         with:
           command: compare
-          image: ${{ steps.meta.outputs.tags }}
+          image: ${{ steps.meta-proxy.outputs.tags }}
           to-latest: true
           ignore-unchanged: true
           only-severities: critical,high
@@ -126,7 +127,7 @@ jobs:
         id: meta-redis
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDSI }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDIS }}
           labels: |
             org.opencontainers.image.revision=${{ env.SHA }}
           tags: |
@@ -137,16 +138,16 @@ jobs:
       # Build and push Docker image with Buildx
       # (don't push on PR, load instead)
       - name: Build and push Docker image - Redis
-        id: build-and-push-reds
+        id: build-and-push-redis
         uses: docker/build-push-action@v6
         with:
-          context: ./redis
+          context: "{{defaultContext}}:redis"
           sbom: ${{ github.event_name != 'pull_request' }}
           provenance: ${{ github.event_name != 'pull_request' }}
           push: ${{ github.event_name != 'pull_request' }}
           load: ${{ github.event_name == 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-redis.outputs.tags }}
+          labels: ${{ steps.meta-redis.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           
@@ -157,7 +158,7 @@ jobs:
         uses: docker/scout-action@v1
         with:
           command: compare
-          image: ${{ steps.meta.outputs.tags }}
+          image: ${{ steps.meta-redis.outputs.tags }}
           to-latest: true
           ignore-unchanged: true
           only-severities: critical,high
