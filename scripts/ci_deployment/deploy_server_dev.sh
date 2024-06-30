@@ -12,7 +12,7 @@ stack_name="swarm_webamcr"
 current_deployment_tag=${1}
 deployment_root=${2}
 branch=${3}
-
+autostash_path=${4}
 
 d_stamp="$(date +%Y%m%dT%H%M%S)"
 logpath="${deployment_root}/logs"
@@ -27,7 +27,7 @@ find "$logpath" -name "$logfile" -type f -mtime +5 -exec rm -f {} \;
 mkdir -p ${logpath}
 
 #Repo update
-git stash push -m "CI_autostash_${current_deployment_tag}_${d_stamp}"
+git stash push -m "CI_autostash_${autostash_path}_${d_stamp}"
 git checkout ${branch}
 git pull
 
@@ -60,8 +60,8 @@ fi
 #TBD
 
 #FINAL
-print_d1 "PUTTING TAG ${current_deployment_tag} as LAST into ${path_last_tag}"
-echo "${current_deployment_tag}" > ${path_last_tag}
+print_d1 "PUTTING TAG ${autostash_path} as LAST into ${path_last_tag}"
+echo "${autostash_path}" > ${path_last_tag}
 
 print_d1 "EXITING"
 
