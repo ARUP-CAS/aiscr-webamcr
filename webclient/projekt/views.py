@@ -1018,7 +1018,7 @@ def archivovat(request, ident_cely):
     """
     Funkce pohledu pro archivaci projektu pomoci modalu.
     """
-    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UZAVRENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse(
