@@ -30,7 +30,7 @@ class CreateKomponentaForm(forms.ModelForm):
         widgets = {
             "poznamka": forms.TextInput(),
             "presna_datace": forms.TextInput(),
-            "jistota": forms.Select(choices=[(True, _("komponenta.forms.createKomponentaForm.choices.true")),(False, _("komponenta.forms.createKomponentaForm.choices.false"))], attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true", "data-container": ".content-with-table-responsive-container"},),
+            "jistota": forms.Select(choices=[(True, _("komponenta.forms.createKomponentaForm.choices.true")),(False, _("komponenta.forms.createKomponentaForm.choices.false"))], attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},),
             "aktivity": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
