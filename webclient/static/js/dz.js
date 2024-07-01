@@ -127,6 +127,8 @@ window.onload = function () {
             "application/zip, " +
             "application/x-zip-compressed, " +
             "application/vnd.rar, " +
+            "application/x-rar, " +
+            "application/x-rar-compressed, " +
             "application/x-7z-compressed"
         RejectedFileMessage = reject_dict["rejected_dokument_model"]
     } else {
@@ -134,6 +136,8 @@ window.onload = function () {
             "application/zip, " +
             "application/x-zip-compressed, " +
             "application/vnd.rar, " +
+            "application/x-rar, " +
+            "application/x-rar-compressed, " +
             "application/x-7z-compressed, " +
             "application/pdf, " +
             "application/msword, " +
