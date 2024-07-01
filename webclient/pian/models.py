@@ -83,7 +83,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     geom_updated_at = models.DateTimeField(blank=True, null=True)
     geom_sjtsk_updated_at = models.DateTimeField(blank=True, null=True)
 
-    def __str__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.update_all_azs = True
 
