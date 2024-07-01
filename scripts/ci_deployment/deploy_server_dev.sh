@@ -38,7 +38,7 @@ print_d1 "START DEPLOYMENT SCRIPT @${d_stamp}"
 print_d1 "DOCKER ROLLING OUT"
 chmod +x ${scriptpath}/prod_deploy.sh
 ${scriptpath}/prod_deploy.sh -x
-if [ ${current_deployment_tag} -eq 'dev' ]; then
+if [ ${current_deployment_tag} == "dev" ]; then
     ${scriptpath}/prod_deploy.sh
 else
     ${scriptpath}/prod_deploy.sh -t ${current_deployment_tag}
