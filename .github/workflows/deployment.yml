@@ -29,8 +29,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.man_tag }}
-      - name: Get tag
-        run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)_${{ inputs.man_tag }}" >> $GITHUB_ENV
+      - name: Get tag from GITHUB_REF
+        run: |
+          if [ "${{ inputs.man_tag }}" != '' ]; then
+            echo "${{ inputs.man_tag }}"
+            echo "tag_version=${{ inputs.man_tag }}" >> $GITHUB_ENV
+          else
+            echo "$(echo $GITHUB_REF | cut -d/ -f3)"
+            echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
+          fi  
       - name: Install OpenVPN
         run: |
           sudo apt-get update
@@ -68,7 +75,7 @@ jobs:
           git checkout ${{ env.branch }}
           git pull
           chmod +x ${{ env.dep_script_dev }}
-          ./${{ env.dep_script_dev }} ${{ inputs.man_tag }} ${{ env.server_deploy_root }} ${{ env.branch }} ${{ env.tag_version }}
+          ./${{ env.dep_script_dev }} ${{ env.tag_version }} ${{ env.server_deploy_root }} ${{ env.branch }}
           AOF
           EOF
 
