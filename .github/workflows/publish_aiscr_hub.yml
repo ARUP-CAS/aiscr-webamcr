@@ -137,7 +137,7 @@ jobs:
   
   deploy_on_dev:
       name: Deploy containers on DEV server
-      if: ${{ inputs.deploy_dev }}
+      if: ${{ inputs.deploy_dev == 'true' }}
       needs: build_publish_images
       uses: ./.github/workflows/deployment.yml
       secrets: inherit
