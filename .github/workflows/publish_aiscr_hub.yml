@@ -43,7 +43,6 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
       
       - name: Get tag from GITHUB_REF
-        id: step_tag1
         run: |
           if [ "${{ inputs.tags }}" != '' ]; then
             echo "${{ inputs.tags }}"
@@ -61,14 +60,22 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.DOCKER_HUB_REPO_PROD }}
-      
+          
+      - name: Set tags prod
+        run: |
+          if [ "${{ inputs.tags }}" != '' ]; then
+            echo "prod_tags=${{ env.DOCKER_HUB_REPO_PROD }}:${{ env.tag_version }}" >> $GITHUB_ENV
+          else
+            echo "prod_tags=${{ env.DOCKER_HUB_REPO_PROD }}:${{ env.tag_version }},${{ env.DOCKER_HUB_REPO_PROD }}:latest" >> $GITHUB_ENV
+          fi
+          
       - name: PRODUCTION - Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile-production
           push: true
-          tags: ${{ env.DOCKER_HUB_REPO_PROD }}:${{ env.tag_version }},${{ env.DOCKER_HUB_REPO_PROD }}:latest
+          tags: ${{ env.prod_tags }}
           labels: ${{ steps.meta_prod.outputs.labels }}
           build-args: |
             VERSION_APP=${{ env.tag_version }}
@@ -82,12 +89,20 @@ jobs:
         with:
           images: ${{ env.DOCKER_HUB_REPO_PROXY }}
 
+      - name: Set tags proxy
+        run: |
+          if [ "${{ inputs.tags }}" != '' ]; then
+            echo "proxy_tags=${{ env.DOCKER_HUB_REPO_PROXY }}:${{ env.tag_version }}" >> $GITHUB_ENV
+          else
+            echo "proxy_tags=${{ env.DOCKER_HUB_REPO_PROXY }}:${{ env.tag_version }},${{ env.DOCKER_HUB_REPO_PROXY }}:latest" >> $GITHUB_ENV
+          fi
+
       - name: PROXY - Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: ./proxy
           push: true
-          tags: ${{ env.DOCKER_HUB_REPO_PROXY }}:${{ env.tag_version }},${{ env.DOCKER_HUB_REPO_PROXY }}:latest
+          tags: ${{ env.proxy_tags }}
           labels: ${{ steps.meta_proxy.outputs.labels }}
           build-args: |
             VERSION_APP=${{ env.tag_version }}
@@ -101,18 +116,27 @@ jobs:
         with:
           images: ${{ env.DOCKER_HUB_REPO_REDIS }}
 
+      - name: Set tags redis
+        run: |
+          if [ "${{ inputs.tags }}" != '' ]; then
+            echo "redis_tags=${{ env.DOCKER_HUB_REPO_REDIS }}:${{ env.tag_version }}" >> $GITHUB_ENV
+          else
+            echo "redis_tags=${{ env.DOCKER_HUB_REPO_REDIS }}:${{ env.tag_version }},${{ env.DOCKER_HUB_REPO_REDIS }}:latest" >> $GITHUB_ENV
+          fi
+
       - name: REDIS - Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: ./redis
           push: true
-          tags: ${{ env.DOCKER_HUB_REPO_REDIS }}:${{ env.tag_version }},${{ env.DOCKER_HUB_REPO_REDIS }}:latest
+          tags: ${{ env.redis_tags }}
           labels: ${{ steps.meta_redis.outputs.labels }}
           build-args: |
             VERSION_APP=${{ env.tag_version }}
             TAG_APP=${{ github.ref }}
+  
   deploy_on_dev:
-      name: Deploy containers on DEV SERVER
+      name: Deploy containers on DEV server
       if: ${{ inputs.deploy_dev }}
       needs: build_publish_images
       uses: ./.github/workflows/deployment.yml
