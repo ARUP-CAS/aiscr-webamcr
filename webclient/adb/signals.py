@@ -56,7 +56,7 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
         def save_metadata():
             try:
                 instance.initial_dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
-            except ObjectDoesNotExist as err:
+            except (ObjectDoesNotExist, AttributeError) as err:
                 logger.debug("adb.signals.adb_delete_repository_container.not_exists",
                              extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid,
                                     "err": err})
