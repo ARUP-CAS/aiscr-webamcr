@@ -413,8 +413,8 @@ class PermissionAdmin(admin.ModelAdmin):
         """
         Metóda pro kontrolu správneho zadáni statusu v excelu.
         """
-        if re.fullmatch("(<|>|)[A-Z]{1,2}\d{1}", cell) or re.fullmatch(
-            "\D{1,2}\d{1}-\D{1,2}\d{1}", cell
+        if re.fullmatch(r"(<|>|)[A-Z]{1,2}\d{1}", cell) or re.fullmatch(
+            r"\D{1,2}\d{1}-\D{1,2}\d{1}", cell
         ):
             return True
         else:
