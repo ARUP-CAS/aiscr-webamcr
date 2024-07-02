@@ -587,9 +587,11 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "show_menu_pian_from_map_id")
         self.wait(0.5)
         self.driver.execute_script('''map.setView([50.357377039,  13.795522698],19)''')
-        self.wait(2)  
-        self.driver.execute_script('''Object.values(poi_pian._layers)[0].fire("click");''')     
-        self.wait(0.5)
+        self.wait(2)
+        self.driver.execute_script(''' var latlng = L.latLng(50.357377039,  13.795522698);Object.values(poi_pian._layers)[0].fire('click', {
+    latlng: latlng, layerPoint: map.latLngToLayerPoint(latlng), containerPoint: map.latLngToContainerPoint(latlng),
+    originalEvent: { clientX: map.latLngToContainerPoint(latlng).x, clientY: map.latLngToContainerPoint(latlng).y}})''')     
+        self.wait(1)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
        
