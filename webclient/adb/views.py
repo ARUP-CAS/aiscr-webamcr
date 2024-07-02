@@ -57,7 +57,7 @@ def zapsat(request, dj_ident_cely):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
             else:
                 logger.debug("adb.views.zapsat.check_container_deleted_or_not_exists.incorrect",
-                             extra={"ident_cely": adb.indent_cely})
+                             extra={"ident_cely": adb.ident_cely})
                 messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
     else:
         logger.debug("adb.views.zapsat.not_valid", extra={"errors": form.errors})
