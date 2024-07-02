@@ -16,7 +16,7 @@ Dočasný ident
 
 * Příklad: "X-M-000001234"
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L35 `get_temporary_project_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L44 `get_temporary_project_ident`
 
 Permanentní ident
 --------------------
@@ -29,7 +29,7 @@ Permanentní ident
 
 * Při překročení maximálního pořadového čísla (99999) se uživateli na webu zobrazí chybové hlášení.
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/projekt/models.py#L496 `set_permanent_ident_cely`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/projekt/models.py#L484 `set_permanent_ident_cely`
 
 Projektová akce
 ----------------
@@ -42,7 +42,7 @@ Projektová akce
 
 * Pokud je překročen maximální počet akcí pro projekt (26), zobrazí se na webu chybová zpráva
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L46 `get_project_event_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L55 `get_project_event_ident`
 
 ========
 Dokument
@@ -56,7 +56,7 @@ Dočasný ident
 
 * Příklad: "X-M-TX-000000034"
   
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L91 `get_temp_dokument_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L103 `get_temp_dokument_ident`
 
 Permanentní ident
 ------------------
@@ -71,7 +71,7 @@ Permanentní ident
 
 * Při překročení maximálního pořadového čísla (99999) je uživateli vrácena chybová zpráva
   
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/dokument/models.py#L308 `set_permanent_ident_cely`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/dokument/models.py#L366 `set_permanent_ident_cely`
 
 ===============
 Část Dokumentu
@@ -85,7 +85,7 @@ Permanentní ident
 
 * Při překročení maximální části dokumentu (999) se na webu zobrazí chybové hlášení
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L105 `get_cast_dokumentu_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L117 `get_cast_dokumentu_ident`
 
 =====================
 Dokumentační jednotka
@@ -99,7 +99,7 @@ Dokumentační jednotka
 
 * Při překročení maximálního počtu DJ arch záznamu (99) se na webu zobrazí chybové hlášení
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L129 `get_dj_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L141 `get_dj_ident`
 
 ================================
 Komponenta dokumentační jednotky
@@ -113,7 +113,7 @@ Komponenta dokumentační jednotky
 
 * Pokud je překročeno maximum komponent arch záznamu pod DJ (999), zobrazí se na webu chybové hlášení
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L152 `get_komponenta_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L164 `get_komponenta_ident`
 
 ====================
 Komponenta dokumentu
@@ -127,7 +127,7 @@ Komponenta dokumentu
 
 * Pokud je překročeno maximum komponent u dokumentu (999), zobrazí se na webu chybové hlášení
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L152 `get_komponenta_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L164 `get_komponenta_ident`
 
 ====
 Pian
@@ -141,7 +141,7 @@ Dočasný ident
 
 * Příklad: "N-1224-000001234"
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L197 `get_temporary_pian_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L215 `get_temporary_pian_ident`
 
 Permanentní ident
 ------------------
@@ -156,7 +156,7 @@ Permanentní ident
 
 * Podkud jde o PIAN katastru, používá se odlišná řada začínající číslicí 9 (s maximem na 999999).
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/pian/models.py#L105 `set_permanent_ident_cely`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/pian/models.py#L180 `set_permanent_ident_cely`
 
 ================
 Samostatný nález
@@ -170,7 +170,7 @@ Samostatný nález
 
 * Pokud je překročeno maximum SN u projektu (99999), zobrazí se na webu chybové hlášení
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L209 `get_sn_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L227 `get_sn_ident`
 
 ===
 ADB
@@ -184,7 +184,7 @@ ADB
 
 * Pri překročení maxima sekvence u ADB (999999) se vráti uživateli na web chybová hláška.
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L233 `get_adb_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L251 `get_adb_ident`
 
 ============
 Výškové body
@@ -198,7 +198,7 @@ Výškové body
 
 * Pri překročení maxima VB u ADB (9999) se vráti uživateli na web chybová hláška
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/adb/models.py#L94 `get_vyskovy_bod`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/adb/models.py#L117 `get_vyskovy_bod`
 
 ========
 Uživatel
@@ -210,7 +210,7 @@ Permanentní ident
 
 * Příklad: "U-012345"
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L336 `get_uzivatel_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L339 `get_uzivatel_ident`
 
 ==========
 Organizace
@@ -222,7 +222,7 @@ Permanentní ident
 
 * Příklad: "ORG-012345"
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L342 `get_organizace_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L345 `get_organizace_ident`
 
 ======
 Osoba
@@ -234,7 +234,7 @@ Permanentní ident
 
 * Příklad: "OS-012345"
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L348 `get_osoba_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L351 `get_osoba_ident`
 
 =========
 Lokalita
@@ -248,7 +248,7 @@ Dočasný ident
 
 * Příklad: "X-M-L000123456"
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L280 `get_temp_lokalita_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L298 `get_temp_lokalita_ident`
 
 Permanentní ident
 ------------------
@@ -261,7 +261,7 @@ Permanentní ident
 
 * Pri překročení maxima čísla sekvence (9999999) se vráti uživateli na web chybová hláška
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/arch_z/models.py#L282 `set_lokalita_permanent_ident_cely`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/arch_z/models.py#L296 `set_lokalita_permanent_ident_cely`
 
 ================
 Samostatná akce
@@ -275,7 +275,7 @@ Dočasný ident
 
 * Příklad: "X-M-9000123456A"
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L292 `get_temp_akce_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L310 `get_temp_akce_ident`
 
 Permanentní ident
 ------------------
@@ -288,7 +288,7 @@ Permanentní ident
 
 * Při překročení maxima čísla sekvence (999999) se vráti uživateli na web chybová hláška
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/arch_z/models.py#L528 `get_akce_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/arch_z/models.py#L655 `get_akce_ident`
 
 
 ================
@@ -303,17 +303,17 @@ Dočasný ident
 
 * Příklad: "X-BIB-000123456"
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L303 `get_temp_ez_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L321 `get_temp_ez_ident`
 
 Permanentní ident
 ------------------
 
 * Přiděluje se pro archivované externí zdroje
 
-* Logika složení je: "BIB" + číslo sekvence z tabulky `externi_zdroj_sekvence` doplněno na 6 čísel nulami.
+* Logika složení je: "BIB" + číslo sekvence z tabulky `externi_zdroj_sekvence` doplněno na 7 čísel nulami.
 
-* Příklad: "BIB-123456"
+* Příklad: "BIB-1234567"
 
-* Pri překročení maxima čísla sekvence (999999) se vráti uživateli na web chybová hláška
+* Pri překročení maxima čísla sekvence (9999999) se vráti uživateli na web chybová hláška
 
-* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/ez/models.py#L165 `get_perm_ez_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/ez/models.py#L214 `get_perm_ez_ident`
