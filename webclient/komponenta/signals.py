@@ -43,9 +43,17 @@ def komponenta_save(sender, instance: Komponenta, **kwargs):
     if instance.komponenta_vazby.navazany_objekt:
         navazany_objekt = instance.komponenta_vazby.navazany_objekt
         if isinstance(navazany_objekt, DokumentCast):
-            navazany_objekt.dokument.save_metadata(fedora_transaction, close_transaction=close_transaction)
+            if close_transaction:
+                transaction.on_commit(lambda: navazany_objekt.dokument.save_metadata(fedora_transaction,
+                                                                                     close_transaction=True))
+            else:
+                navazany_objekt.dokument.save_metadata(fedora_transaction)
         elif isinstance(navazany_objekt, DokumentacniJednotka):
-            navazany_objekt.archeologicky_zaznam.save_metadata(fedora_transaction, close_transaction=close_transaction)
+            if close_transaction:
+                transaction.on_commit(lambda: navazany_objekt.archeologicky_zaznam.save_metadata(fedora_transaction,
+                                                                                                 close_transaction=True))
+            else:
+                navazany_objekt.archeologicky_zaznam.save_metadata(fedora_transaction)
     logger.debug("komponenta.signals.komponenta_save.end",
                  extra={"transaction": getattr(fedora_transaction, "uid", None), "pk": instance.pk})
 
