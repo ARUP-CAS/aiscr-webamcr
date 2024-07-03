@@ -3,9 +3,10 @@ import logging
 from django.db import transaction
 from django.db.models.signals import post_save, post_delete, pre_save, pre_delete
 from django.dispatch import receiver
+from django.utils.translation import gettext as _
 
 from core.ident_cely import get_heslar_ident
-from core.repository_connector import FedoraTransaction
+from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector, FedoraError
 from .models import Heslar, RuianKatastr, RuianKraj, RuianOkres, HeslarDatace, HeslarHierarchie, \
     HeslarDokumentTypMaterialRada, HeslarOdkaz
 
@@ -27,6 +28,8 @@ def save_ident_cely(sender, instance: Heslar, **kwargs):
     logger.debug("heslo.signals.save_ident_cely.start")
     if not instance.ident_cely and not instance.pk:
         instance.ident_cely = get_heslar_ident()
+        if not FedoraRepositoryConnector.check_container_deleted_or_not_exists(instance.ident_cely, "heslar"):
+            raise Exception(_("heslo.signals.save_ident_cely.fedora_container_deleted_or_not_exists"))
         logger.debug("heslo.signals.save_ident_cely.ident_cely", extra={"ident_cely": instance.ident_cely})
     logger.debug("heslo.signals.save_ident_cely.end")
 
