@@ -29,7 +29,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'lokalita:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-lokality">
+        <a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-lokality">
           <div class="card-body card-body-background">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -40,7 +40,7 @@
       </div>
       {% if user.can_see_ours_item %}
         <div class="col">
-          <a href="{% url 'lokalita:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-lokality">
+          <a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-lokality">
             <div class="card-body card-body-background">
               <img src="{% static 'logo-am-mark.png' %}" />
             </div>
