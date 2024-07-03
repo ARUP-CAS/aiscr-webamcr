@@ -13,9 +13,11 @@ from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
 from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
-    OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, RUSENI_STARE_PROJ, UDAJ_ODSTRANEN, STARY_PROJEKT_ZRUSEN
+    OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, RUSENI_STARE_PROJ, UDAJ_ODSTRANEN, \
+    STARY_PROJEKT_ZRUSEN, PROJEKT_STAV_ZAPSANY, SCHVALENI_OZNAMENI_PROJ
 from core.models import Soubor
 from core.coordTransform import transform_geom_to_sjtsk
+from core.repository_connector import FedoraTransaction
 from cron.functions import collect_en01_en02
 from django.db import connection, transaction
 from django.utils.translation import gettext as _
@@ -147,6 +149,7 @@ def delete_personal_data_canceled_projects():
         for item in projects:
             item: Projekt
             if item.has_oznamovatel():
+                item.active_transaction = FedoraTransaction()
                 logger.debug("core.cron.delete_personal_data_canceled_projects.do.project",
                              extra={"project": item.ident_cely})
                 item.oznamovatel.email = f"{today.strftime('%Y%m%d')}: {deleted_string}"
@@ -156,6 +159,8 @@ def delete_personal_data_canceled_projects():
                 item.oznamovatel.telefon = f"{today.strftime('%Y%m%d')}: {deleted_string}"
                 item.oznamovatel.save()
                 item.archive_project_documentation()
+                item.close_active_transaction_when_finished = True
+                item.save()
         logger.debug("core.cron.delete_personal_data_canceled_projects.do.end")
     except Exception as err:
         logger.error("core.cron.delete_personal_data_canceled_projects.do.error", extra={"error": err})
@@ -175,9 +180,13 @@ def delete_reporter_data_canceled_projects():
             .filter(oznamovatel__isnull=False)\
             .filter(historie__historie__datum_zmeny__lt=ten_years_ago)
         for item in projects:
-            logger.debug("core.cron.delete_reporter_data_canceled_projects.do.project", extra={"project": item.ident_cely})
+            logger.debug("core.cron.delete_reporter_data_canceled_projects.do.project",
+                         extra={"project": item.ident_cely})
+            item.active_transaction = FedoraTransaction()
             item.oznamovatel.delete()
             item.archive_project_documentation()
+            item.close_active_transaction_when_finished = True
+            item.save()
         logger.debug("core.cron.delete_reporter_data_canceled_projects.do.end")
     except Exception as err:
         logger.error("core.cron.delete_reporter_data_canceled_projects.do.error", extra={"error": err})
@@ -196,7 +205,7 @@ def change_document_accessibility():
             .filter(datum_zverejneni__lte=datetime.datetime.now().date()) \
             .annotate(min_pristupnost_razeni=Min(F("casti__archeologicky_zaznam__pristupnost__razeni"))) \
             .filter(Q(pristupnost__razeni__gt=F("min_pristupnost_razeni"))
-                    | ~Q(pristupnost__razeni=F('organizace__zverejneni_pristupnost__razeni')))
+                    | Q(pristupnost__razeni_lt=F('organizace__zverejneni_pristupnost__razeni')))
         for item in documents:
             item: Dokument
             pristupnost_razeni = min(*[x.archeologicky_zaznam.pristupnost.razeni for x in item.casti.all()],
@@ -204,7 +213,9 @@ def change_document_accessibility():
             pristupnost = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST)\
                 .filter(razeni=pristupnost_razeni).first()
             if item.pristupnost != pristupnost:
+                item.active_transaction = FedoraTransaction()
                 item.pristupnost = pristupnost
+                item.close_active_transaction_when_finished = True
                 item.save()
                 logger.debug("core.cron.change_document_accessibility.do.dokument", extra={"dokument": item.ident_cely})
         logger.debug("core.cron.change_document_accessibility.do.end")
@@ -220,8 +231,14 @@ def delete_unsubmited_projects():
     try:
         logger.debug("core.cron.delete_unsubmited_projects.do.start")
         now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
-        Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY).filter(historie__historie__typ_zmeny=OZNAMENI_PROJ)\
-            .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).delete()
+        projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)
+                         .filter(historie__historie__typ_zmeny=OZNAMENI_PROJ)
+                         .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours))
+        for item in projekt_query:
+            item: Projekt
+            item.active_transaction = FedoraTransaction()
+            item.close_active_transaction_when_finished = True
+            item.delete()
         logger.debug("core.cron.delete_unsubmited_projects.do.end")
     except Exception as err:
         logger.error("core.cron.delete_unsubmited_projects.do.error", extra={"error": err})
@@ -238,14 +255,16 @@ def cancel_old_projects():
         logger.debug("core.cron.cancel_old_projects.do.start")
         toady_minus_3_years = timezone.now() - datetime.timedelta(days=365 * 3)
         toady_minus_1_year = timezone.now() - datetime.timedelta(days=365)
-        projects = Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY) \
-            .filter(Q(historie__historie__typ_zmeny=ZAPSANI_PROJ)
+        projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZAPSANY) \
+            .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
                     & Q(historie__historie__datum_zmeny__lt=toady_minus_3_years)) \
             .annotate(upper=Upper('planovane_zahajeni')).annotate(new_upper=F('upper')) \
             .filter(upper__lte=toady_minus_1_year)
         cancelled_string = STARY_PROJEKT_ZRUSEN
         for project in projects:
             project: Projekt
+            project.active_transaction = FedoraTransaction()
+            project.close_active_transaction_when_finished = True
             project.set_zruseny(User.objects.get(email="amcr@arup.cas.cz"), cancelled_string, RUSENI_STARE_PROJ)
             logger.debug("core.cron.cancel_old_projects.do.project", extra={"ident_cely": project.ident_cely})
         logger.debug("core.cron.cancel_old_projects.do.end")
