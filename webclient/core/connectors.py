@@ -2,14 +2,14 @@ import redis
 from django.utils.encoding import force_str
 
 from webclient.settings.base import get_plain_redis_pass
-
+from django.conf import settings
 
 class RedisConnector:
     r = None
 
     @classmethod
     def _create_connection(cls):
-        cls.r = redis.Redis(host="redis", port=6379, password=get_plain_redis_pass())
+        cls.r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass())
 
     @classmethod
     def get_connection(cls) -> redis.Redis:
