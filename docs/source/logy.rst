@@ -173,12 +173,15 @@ Nasazení systému
 ----------------
 
 Po nasazení je potřeba sputit následující příkaz a nastavit hesla
-systémových účtů. ``git_aiscr_elasticsearch_1`` je potřeba nahradit
-názvem kontejneru.
+systémových účtů.
 
 ::
 
-   docker exec -it git_aiscr_elasticsearch_1 bin/elasticsearch-setup-passwords interactive
+   sudo docker exec -t -i $(sudo docker ps -q -f name=swarm_webamcr_elasticsearch) bin/elasticsearch-reset-password -u elastic -i --url http://localhost:9200
+
+::
+
+   sudo docker exec -t -i $(sudo docker ps -q -f name=swarm_webamcr_elasticsearch) bin/elasticsearch-reset-password -u kibana_system -i --url http://localhost:9200
 
 Po nastavení je nutné restartovat kontejner Kibana a vytvořit index
 ``amcr`` s využitím konzole (konzoli lze otevřít kliknutím na odkaz Dev
