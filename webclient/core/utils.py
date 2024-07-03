@@ -43,6 +43,8 @@ class CannotFindCadasterCentre(Exception):
 def file_validate_epsg(epsg):
     if epsg == '4326' or epsg == 4326:
         return True
+    elif epsg == '5514' or epsg == 5514:
+        return True
     else:
         return False
 
@@ -66,60 +68,30 @@ def file_validate_geometry(lower_geom):
     if not isinstance(lower_geom, str):
         return [False,'Not string']
     geom=" ".join(lower_geom.upper().split())
-    geom=geom.replace(" (", "(") 
+    geom=geom.replace(" (", "(")
 
     if geom=='':
         return [False,'Empty string']
     elif not geom.startswith(('POINT(', 'LINESTRING(', 'POLYGON(')):
         return [False,geom.split('(')[0]+' is not supported']
-    elif not balanced_parentheses(geom):
-        return [False,'Unclosed parentheses']
-    else:
-        if "POINT(" in geom:
-            try:
-                p=geom.split("POINT(")[1].split(")")[0].split(" ")
-                if (len(p)==2 or len(p)==3) and float(p[0]) and float(p[1]):
-                    return [True, "Point geometry is valid"]
-                else:
-                    return [False,"Point is not valid"]
-            except:
-                return [False,"Point is not valid"]
-        elif "LINESTRING(" in geom:
-            larray=geom.split("LINESTRING(")[1].split(")")[0].split(",")
-            if len(larray)>1:
-                for l in larray:
-                    p=l.strip().split(" ")
-                    try:
-                        if len(p)==2 and float(p[0]) and float(p[1]):
-                            continue
-                        else:
-                            return [False,"Linestring is not valid"]
-                    except:
-                        return [False,"Linestring is not valid"]
-                return [True,"Linestring is valid"]
-            else:
-                return [False,"Linestring is not valid"]
-        elif "POLYGON(" in geom:
-            if " (" in geom or ",(" in geom:
-                return [False,"Polygon with innerbound is not supported"]
-            else:
-                larray=geom.split("POLYGON((")[1].split("))")[0].split(",")
-                if len(larray)>2:
-                    for l in larray:
-                        p=l.strip().split(" ")
-                        try:
-                            if len(p)==2 and float(p[0]) and float(p[1]):
-                                continue
-                            else:
-                                return [False,"Polygon is not valid"]
-                        except:
-                            return [False,"Polygon is not valid"]
-                    return [True,"Polygon is valid"]
-                else:
-                    return [False,"Polygon is not valid"]
-        else:
-            return [False,"Polygon is not valid"]
-            
+    query = ("WITH geom_to_insert AS ( SELECT ST_GeomFromText(%s) AS geom ) "
+             "SELECT ST_IsValid(geom) AS is_valid,"
+             "ST_IsSimple(geom) AS is_simple,"
+             "ST_IsValidReason(geom) AS invalid_reason "
+             "FROM geom_to_insert;")
+    cursor = connection.cursor()
+    try:
+        cursor.execute(query, [geom])
+    except Exception as e:
+        logger.debug("core.utils.file_validate_geometry.exception", extra={"e": e})
+        return [False,str(e)]
+    res = cursor.fetchone()
+    if res[0] is False:
+        return [False,res[2]]
+    if res[1] is False:
+        return [False,'Geometry is not simple']
+    return [True,'Geometry is valid']
+
 def get_mime_type(file_name):
     """
     Funkce pro získaní mime typu pro soubor.

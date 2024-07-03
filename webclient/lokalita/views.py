@@ -23,6 +23,7 @@ from core.message_constants import (
 from heslar.hesla_dynamicka import TYP_DJ_KATASTR   
 from core.repository_connector import FedoraTransaction
 from core.views import SearchListView
+from core.coordTransform import transform_geom_to_wgs84
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -483,7 +484,11 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
                 index=int(self.request.GET["index"])
                 if self.request.GET["label"]!=geom.iloc[index]["label"]:
                     raise Exception("lokalita.views.LokalitaPianCreateView.get.label_not_found")
-                context["geom"] = geom.iloc[index]   
+                context["geom"] = geom.iloc[index]
+                if context["geom"]["epsg"]=='5514' or context["geom"]["epsg"] == 5514:
+                    context["geom"]['geometry'],stat =  transform_geom_to_wgs84(context["geom"]['geometry'])
+                    if stat != "OK":
+                        raise Exception("lokalita.views.LokalitaPianCreateView.get.transormation_error")
             except Exception as err:
                 logger.error("lokalita.views.LokalitaPianCreateView.get.import_pian.error", extra={"err": err})
                 messages.add_message(self.request, messages.ERROR, _("lokalita.views.LokalitaDokumentacniJednotkaRelatedView.import_pian.error"))
@@ -531,7 +536,11 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
                 index=int(self.request.GET["index"])
                 if self.request.GET["label"]!=geom.iloc[index]["label"]:
                     raise Exception("lokalita.views.LokalitaPianUpdateView.get.label_not_found")
-                context["geom"] = geom.iloc[index]  
+                context["geom"] = geom.iloc[index]
+                if context["geom"]["epsg"]=='5514' or context["geom"]["epsg"] == 5514:
+                    context["geom"]['geometry'],stat =  transform_geom_to_wgs84(context["geom"]['geometry'])
+                    if stat != "OK":
+                        raise Exception("lokalita.views.LokalitaPianUpdateView.get.transormation_error")
             except Exception as err:
                 logger.error("lokalita.views.LokalitaPianUpdateView.get.import_pian.error", extra={"err": err})
                 messages.add_message(self.request, messages.ERROR, _("lokalita.views.LokalitaDokumentacniJednotkaRelatedView.import_pian.error"))
