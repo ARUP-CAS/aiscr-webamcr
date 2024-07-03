@@ -73,8 +73,8 @@ def get_redis_pass(default_value=""):
     else:
         return default_value
 
-REDIS_HOST = get_secret("REDIS_HOST")
-REDIS_PORT = get_secret("REDIS_PORT")
+REDIS_HOST = get_secret("REDIS_HOST", "redis")
+REDIS_PORT = get_secret("REDIS_PORT", 6379)
 
 CACHEOPS_REDIS = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}"
 
