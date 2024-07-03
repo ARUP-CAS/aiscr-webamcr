@@ -205,7 +205,7 @@ def change_document_accessibility():
             .filter(datum_zverejneni__lte=datetime.datetime.now().date()) \
             .annotate(min_pristupnost_razeni=Min(F("casti__archeologicky_zaznam__pristupnost__razeni"))) \
             .filter(Q(pristupnost__razeni__gt=F("min_pristupnost_razeni"))
-                    | Q(pristupnost__razeni_lt=F('organizace__zverejneni_pristupnost__razeni')))
+                    | Q(pristupnost__razeni__lt=F('organizace__zverejneni_pristupnost__razeni')))
         for item in documents:
             item: Dokument
             pristupnost_razeni = min(*[x.archeologicky_zaznam.pristupnost.razeni for x in item.casti.all()],
