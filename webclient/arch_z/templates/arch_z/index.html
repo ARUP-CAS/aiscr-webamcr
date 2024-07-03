@@ -40,7 +40,7 @@
       </div>
       {% if user.can_see_ours_item %}
         <div class="col">
-          <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-akce">
+          <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-akce">
             <div class="card-body card-body-background">
               <img src="{% static 'logo-am-mark.png' %}" />
             </div>
