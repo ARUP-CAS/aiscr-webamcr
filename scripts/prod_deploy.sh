@@ -88,7 +88,7 @@ run_default ()
 	exit
    fi
 
-   if [ ${include_db} -eq 1 ]; then
+   if [ -n "${include_db}" ] && [ ${include_db} -eq 1 ]; then
       er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
       ${cmd_deploy_base} ${compose_prod} ${stack_name} && \
       ${cmd_deploy_base} ${compose_db} ${stack_name}" && \
@@ -267,6 +267,8 @@ while getopts "hxbut:d" option; do
         fi
         ;;
       t)
+        echo "OPTION: -t"
+        run_default b
 	      ;;
       d)  # Include database compose file in deployment
           echo "OPTION: -d"
