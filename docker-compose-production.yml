@@ -59,6 +59,19 @@ services:
       timeout: 30s
       retries: 5
       start_period: 30s
+  
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.61.0
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=/run/secrets/redis_host 
+      - REDIS_PASSWORD=/run/secrets/redis_pass
+    secrets:
+      - redis_pass
+    depends_on:
+      - redis
+
 
   celery_worker:
     image: aiscr/webamcr:${IMAGE_TAG}

@@ -106,6 +106,18 @@ services:
       - redis_pass
     command: sh -c 'redis-server /home/redis/redis.conf'
 
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.61.0
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=/run/secrets/redis_host 
+      - REDIS_PASSWORD=/run/secrets/redis_pass
+    secrets:
+      - redis_pass
+    depends_on:
+      - redis
+
   grafana:
     image: grafana/grafana-enterprise:8.2.0
     restart: always
