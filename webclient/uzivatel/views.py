@@ -31,6 +31,7 @@ import datetime
 from django.utils import timezone
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from rest_framework.renderers import JSONRenderer
 
 from core.constants import ZMENA_UDAJU_UZIVATEL, ZMENA_HESLA_UZIVATEL
 from core.decorators import odstavka_in_progress
@@ -421,6 +422,26 @@ class GetUserInfo(APIView):
     def get(self, request, format=None):
         user = request.user
         return Response(user.metadata)
+    
+    def handle_exception(self, exc):
+        self.is_exception=True
+        return super().handle_exception(exc)
+    
+    def perform_content_negotiation(self, request, force=False):
+        try:
+            self.is_exception
+            return JSONRenderer(), JSONRenderer.media_type
+        except Exception as e:
+            return super().perform_content_negotiation(request,force)
+        
+    def finalize_response(self, request, response, *args, **kwargs):
+        try:
+            self.is_exception
+            neg = self.perform_content_negotiation(request, force=True)
+            request.accepted_renderer, request.accepted_media_type = neg
+        finally:
+            return super().finalize_response(request, response, *args, **kwargs)
+            
 
 @method_decorator(odstavka_in_progress, name='post')
 class ObtainAuthTokenWithUpdate(ObtainAuthToken):
