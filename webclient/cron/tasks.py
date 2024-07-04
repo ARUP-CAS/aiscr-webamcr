@@ -41,32 +41,43 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task
-def send_notifications():
+def send_notifications_enz():
     """
      Každý den zkontrolovat a případně odeslat upozornění uživatelům na základě pole projekt.datum_odevzdani_NZ,
      pokud je projekt ve stavu <P5 a zároveň:
         -- pokud [dnes] + 90 dní = datum_odevzdani_NZ => email E-NZ-01
         -- pokud [dnes] - 1 den = datum_odevzdani_NZ => email E-NZ-02
-
-     Každý den kontrola a odeslání emailů E-N-01 a E-N-02
     """
     try:
-        logger.debug("cron.tasks.send_notifications.do.start")
+        logger.debug("cron.tasks.send_notifications_enz.do.start")
         Mailer.send_enz01()
         logger.debug("cron.tasks.send_notifications.do.send_enz_01.end")
         Mailer.send_enz02()
         logger.debug("cron.tasks.send_notifications.do.send_enz_02.end")
+        logger.debug("cron.tasks.send_notifications_enz.do.end")
+    except Exception as err:
+        logger.error("cron.tasks.send_notifications_enz.do.error",
+                     extra={"error": str(err), "traceback": traceback.format_exc()})
+
+@shared_task
+def send_notifications_en():
+    """
+     Každý den kontrola a odeslání emailů E-N-01 a E-N-02
+
+     !!! jen odděleno - nutno přepracovat !!!
+    """
+    try:
+        logger.debug("cron.tasks.send_notifications_en.do.start")
         dataEn01 = collect_en01_en02(stav=ODESLANI_SN)
         for email, projekt_id_list in dataEn01.items():
             Mailer.send_en01(send_to=email, projekt_id_list=projekt_id_list)
         dataEn02 = collect_en01_en02(stav=ARCHIVACE_SN)
         for email, projekt_id_list in dataEn02.items():
             Mailer.send_en02(send_to=email, projekt_id_list=projekt_id_list)
-        logger.debug("cron.tasks.send_notifications.do.end")
+        logger.debug("cron.tasks.send_notifications_en.do.end")
     except Exception as err:
-        logger.error("cron.tasks.send_notifications.do.error",
+        logger.error("cron.tasks.send_notifications_en.do.error",
                      extra={"error": str(err), "traceback": traceback.format_exc()})
-
 
 @shared_task
 def pian_to_sjtsk():
@@ -144,8 +155,8 @@ def delete_personal_data_canceled_projects():
         year_ago = today - datetime.timedelta(days=365)
         projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
             .filter(~Q(oznamovatel__email__icontains=deleted_string))\
-            .filter(Q(historie__historie__typ_zmeny=RUSENI_PROJ) | Q(historie__historie__typ_zmeny=RUSENI_STARE_PROJ))\
-            .filter(historie__historie__datum_zmeny__lt=year_ago)
+            .filter(Q(historie__historie__typ_zmeny__in=(RUSENI_PROJ, RUSENI_STARE_PROJ))
+                    & Q(historie__historie__datum_zmeny__lt=year_ago))
         for item in projects:
             item: Projekt
             if item.has_oznamovatel():
@@ -177,7 +188,8 @@ def delete_reporter_data_ten_years():
         today = datetime.datetime.now().date()
         ten_years_ago = today - datetime.timedelta(days=365*10)
         projects = Projekt.objects.filter(oznamovatel__isnull=False)\
-            .filter(historie__historie__datum_zmeny__lt=ten_years_ago)
+            .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
+                    & Q(historie__historie__datum_zmeny__lt=ten_years_ago))
         for item in projects:
             logger.debug("core.cron.delete_reporter_data_canceled_projects.do.project",
                          extra={"project": item.ident_cely})
@@ -230,8 +242,7 @@ def delete_unsubmited_projects():
     try:
         logger.debug("core.cron.delete_unsubmited_projects.do.start")
         now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
-        projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)
-                         .filter(historie__historie__typ_zmeny=OZNAMENI_PROJ)
+        projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)\
                          .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours))
         for item in projekt_query:
             item: Projekt
@@ -275,7 +286,7 @@ def cancel_old_projects():
 def update_snapshot_fields():
     try:
         logger.debug("core.cron.update_snapshot_fields.do.start")
-        for item in ExterniZdroj.objects.filter((Q(autori_snapshot__isnull=True)  & Q(externizdrojautor__isnull=False))   
+        for item in ExterniZdroj.objects.filter((Q(autori_snapshot__isnull=True) & Q(externizdrojautor__isnull=False))   
                                                |(Q(editori_snapshot__isnull=True) & Q(externizdrojeditor__isnull=False))):
             item.suppress_signal = True
             item.save()
