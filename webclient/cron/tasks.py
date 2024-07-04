@@ -152,11 +152,11 @@ def delete_personal_data_canceled_projects():
                 item.active_transaction = FedoraTransaction()
                 logger.debug("core.cron.delete_personal_data_canceled_projects.do.project",
                              extra={"project": item.ident_cely})
-                item.oznamovatel.email = f"{today.strftime('%Y%m%d')}: {deleted_string}"
-                item.oznamovatel.adresa = f"{today.strftime('%Y%m%d')}: {deleted_string}"
-                item.oznamovatel.odpovedna_osoba = f"{today.strftime('%Y%m%d')}: {deleted_string}"
-                item.oznamovatel.oznamovatel = f"{today.strftime('%Y%m%d')}: {deleted_string}"
-                item.oznamovatel.telefon = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+                item.oznamovatel.email = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
+                item.oznamovatel.adresa = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
+                item.oznamovatel.odpovedna_osoba = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
+                item.oznamovatel.oznamovatel = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
+                item.oznamovatel.telefon = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.save()
                 item.archive_project_documentation()
                 item.close_active_transaction_when_finished = True
