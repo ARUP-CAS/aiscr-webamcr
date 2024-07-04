@@ -265,13 +265,13 @@ def cancel_old_projects():
     """
     try:
         logger.debug("core.cron.cancel_old_projects.do.start")
-        toady_minus_3_years = timezone.now() - datetime.timedelta(days=365 * 3)
-        toady_minus_1_year = timezone.now() - datetime.timedelta(days=365)
+        today_minus_3_years = timezone.now() - datetime.timedelta(days=365 * 3)
+        today_minus_1_year = timezone.now() - datetime.timedelta(days=365)
         projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZAPSANY) \
             .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
-                    & Q(historie__historie__datum_zmeny__lt=toady_minus_3_years)) \
+                    & Q(historie__historie__datum_zmeny__lt=today_minus_3_years)) \
             .annotate(upper=Upper('planovane_zahajeni')).annotate(new_upper=F('upper')) \
-            .filter(upper__lte=toady_minus_1_year)
+            .filter(upper__lte=today_minus_1_year)
         cancelled_string = STARY_PROJEKT_ZRUSEN
         for project in projects:
             project: Projekt
