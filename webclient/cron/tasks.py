@@ -153,8 +153,8 @@ def delete_personal_data_canceled_projects():
         deleted_string = UDAJ_ODSTRANEN
         today = datetime.datetime.now().date()
         year_ago = today - datetime.timedelta(days=365)
-        projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
-            .filter(~Q(oznamovatel__email__icontains=deleted_string))\
+        projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY) \
+            .filter(~Q(oznamovatel__email__icontains=deleted_string)) \
             .filter(Q(historie__historie__typ_zmeny__in=(RUSENI_PROJ, RUSENI_STARE_PROJ))
                     & Q(historie__historie__datum_zmeny__lt=year_ago))
         for item in projects:
@@ -187,7 +187,7 @@ def delete_reporter_data_ten_years():
         logger.debug("core.cron.delete_reporter_data_canceled_projects.do.start")
         today = datetime.datetime.now().date()
         ten_years_ago = today - datetime.timedelta(days=365*10)
-        projects = Projekt.objects.filter(oznamovatel__isnull=False)\
+        projects = Projekt.objects.filter(oznamovatel__isnull=False) \
             .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
                     & Q(historie__historie__datum_zmeny__lt=ten_years_ago))
         for item in projects:
@@ -212,7 +212,7 @@ def change_document_accessibility():
     """
     try:
         logger.debug("core.cron.change_document_accessibility.do.start")
-        documents = Dokument.objects\
+        documents = Dokument.objects \
             .filter(datum_zverejneni__lte=datetime.datetime.now().date()) \
             .annotate(min_pristupnost_razeni=Coalesce(Min(F("casti__archeologicky_zaznam__pristupnost__razeni")), 1)) \
             .filter(Q(pristupnost__razeni__gt=F("min_pristupnost_razeni"))
@@ -223,7 +223,7 @@ def change_document_accessibility():
             az_pristupnost_razeni = min(*[x.archeologicky_zaznam.pristupnost.razeni for x in item.casti.all()])
             if pristupnost_razeni < az_pristupnost_razeni:
                 pristupnost_razeni = az_pristupnost_razeni
-            pristupnost = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST)\
+            pristupnost = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST) \
                 .filter(razeni=pristupnost_razeni).first()
             if item.pristupnost != pristupnost:
                 item.active_transaction = FedoraTransaction()
@@ -244,7 +244,7 @@ def delete_unsubmited_projects():
     try:
         logger.debug("core.cron.delete_unsubmited_projects.do.start")
         now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
-        projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)\
+        projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY) \
                          .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours))
         for item in projekt_query:
             item: Projekt
@@ -270,7 +270,7 @@ def cancel_old_projects():
         projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZAPSANY) \
             .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
                     & Q(historie__historie__datum_zmeny__lt=today_minus_3_years)) \
-            .annotate(upper=Upper('planovane_zahajeni')).annotate(new_upper=F('upper')) \
+            .annotate(upper=Upper('planovane_zahajeni')) \
             .filter(upper__lte=today_minus_1_year)
         cancelled_string = STARY_PROJEKT_ZRUSEN
         for project in projects:
