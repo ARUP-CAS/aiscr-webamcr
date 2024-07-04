@@ -88,6 +88,7 @@ services:
       - REDIS_PASSWORD=/run/secrets/redis_pass
     secrets:
       - redis_pass
+      - redis_host
     depends_on:
       - redis
 
@@ -285,6 +286,8 @@ secrets:
   mail_conf:
    external: true
   redis_pass:
+    external: true
+  redis_host:
     external: true
   grafana_admin_password:
     external: true

@@ -115,6 +115,7 @@ services:
       - REDIS_PASSWORD=/run/secrets/redis_pass
     secrets:
       - redis_pass
+      - redis_host
     depends_on:
       - redis
 
@@ -241,6 +242,10 @@ secrets:
   redis_pass:
     # PLEASE CHECK and UPDATE path accordingly to a secret setting pg_admin web client password ) - local dev machine
     file: ./secrets/redis_pass.txt
+  redis_host:
+    # PLEASE CHECK and UPDATE path accordingly to a secret setting
+    file: ./secrets/redis_host.txt
+
     # production environment
     # external: true
   grafana_admin_password:

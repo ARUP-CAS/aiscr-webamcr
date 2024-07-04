@@ -70,6 +70,7 @@ services:
       - REDIS_PASSWORD=/run/secrets/redis_pass
     secrets:
       - redis_pass
+      - redis_host
     depends_on:
       - redis
 
@@ -243,6 +244,8 @@ secrets:
    file: secrets_mail_client.json
   redis_pass:
     file: redis_pass.txt
+  redis_host:
+    file: redis_host.txt
   grafana_admin_password:
     file: grafana_admin_password.txt
   elastic_pass:
