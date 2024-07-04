@@ -19,5 +19,5 @@ class Command(BaseCommand):
         characters = string.ascii_letters + string.digits
         key = kwargs["key"]
         value = kwargs["value"]
-        write_value_to_redis.apply_async([key, value], priority=10)
+        write_value_to_redis.apply_async([key, value], priority=0)
         logger.debug("core.views.update_snapshot_fields.end", extra={"key": key, "value": value})
