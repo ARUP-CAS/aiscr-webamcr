@@ -89,5 +89,4 @@ for lang_item in ${languages[@]}; do
 
 done
 
-#docasne se sudo
 sudo uwsgi /scripts/uwsgi_site.ini
