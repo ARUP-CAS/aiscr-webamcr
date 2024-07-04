@@ -1,4 +1,4 @@
-FROM redis:7
+FROM redis:7.2.5
 
 COPY redis.conf /home/redis/
 RUN mkdir -p /scripts

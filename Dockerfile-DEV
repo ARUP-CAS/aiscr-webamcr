@@ -1,7 +1,7 @@
 ### from https://github.com/OSGeo/gdal/tree/master/docker ###
 
 #### Use latest gdal official image
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.6.3
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.9.1
 
 
 ARG VERSION_APP
@@ -35,7 +35,7 @@ RUN echo "alias pip=pip3" >> ~/.bashrc
 
 COPY ./webclient/requirements.txt .
 
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt --break-system-packages
 
 RUN mkdir /code
 COPY ./webclient /code
@@ -51,7 +51,7 @@ RUN mkdir -p /vol/web/locale
 
 RUN mkdir -p /vol/web/nginx/data
 ADD ./proxy/custom_html /vol/web/nginx/data
-
+RUN userdel ubuntu
 RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > /version.txt
 RUN adduser user
 RUN passwd -d user
