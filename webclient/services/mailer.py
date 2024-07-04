@@ -254,7 +254,7 @@ class Mailer:
         IDENT_CELY = 'E-NZ-02'
         logger.debug("services.mailer.send_enz02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        projects = projekt.models.Projekt.objects.filter(stav__lt=PROJEKT_STAV_UKONCENY_V_TERENU,
+        projects = projekt.models.Projekt.objects.filter(stav=PROJEKT_STAV_UKONCENY_V_TERENU,
                                                          termin_odevzdani_nz=today_minus_1_day)
         cls._send_notification_for_projects(projects, notification_type)
 
