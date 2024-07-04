@@ -144,7 +144,7 @@ def delete_personal_data_canceled_projects():
         year_ago = today - datetime.timedelta(days=365)
         projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
             .filter(~Q(oznamovatel__email__icontains=deleted_string))\
-            .filter(historie__historie__typ_zmeny=RUSENI_PROJ)\
+            .filter(Q(historie__historie__typ_zmeny=RUSENI_PROJ) | Q(historie__historie__typ_zmeny=RUSENI_STARE_PROJ))\
             .filter(historie__historie__datum_zmeny__lt=year_ago)
         for item in projects:
             item: Projekt
@@ -167,7 +167,7 @@ def delete_personal_data_canceled_projects():
 
 
 @shared_task
-def delete_reporter_data_canceled_projects():
+def delete_reporter_data_ten_years():
     """
      Deset let po zápisu projektu smazat související záznam z tabulky oznamovatel + odstranit projektovou dokumentaci
      a vytvořit log (jako při archivaci projektu).
@@ -176,8 +176,7 @@ def delete_reporter_data_canceled_projects():
         logger.debug("core.cron.delete_reporter_data_canceled_projects.do.start")
         today = datetime.datetime.now().date()
         ten_years_ago = today - datetime.timedelta(days=365*10)
-        projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
-            .filter(oznamovatel__isnull=False)\
+        projects = Projekt.objects.filter(oznamovatel__isnull=False)\
             .filter(historie__historie__datum_zmeny__lt=ten_years_ago)
         for item in projects:
             logger.debug("core.cron.delete_reporter_data_canceled_projects.do.project",
