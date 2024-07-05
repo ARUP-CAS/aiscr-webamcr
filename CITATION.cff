@@ -29,7 +29,7 @@ authors:
 - family-names: "Pavloň"
   given-names: "Tomáš"
 title: "Archeologická mapa České republiky"
-version: "v1.0.0-RC2.7-pre-release"
+version: "v1.0.0-RC2.8-pre-release"
 doi: 10.5281/zenodo.8363642
 date-released: 2024-07-05
 url: "https://github.com/ARUP-CAS/aiscr-webamcr"
