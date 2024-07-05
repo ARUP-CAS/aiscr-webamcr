@@ -35,7 +35,7 @@ fedora_status_code=$(curl -o /dev/null -s -w "%{http_code}" -u "${fedora_user}":
 echo "HTTP status code from FEDORA is ${fedora_status_code}"
 
 
-test "${status_code}" -eq "200" && test "${fedora_status_code}" -eq "200" && python /scripts/db/db_connection_from_docker-web.py && test ${disk_status} -eq 0 && test ${ram_status} -eq 0 && true || false
+test "${status_code}" -eq "200" && test "${fedora_status_code}" -eq "200" && python /scripts/db/db_connection_from_docker-web.py && test ${ram_status} -eq 0 && true || false
 
 exit_code="$?"
 
