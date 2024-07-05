@@ -181,5 +181,5 @@ PERMISSIONS_SHEET_APP_NAME = "app"
 PERMISSIONS_SHEET_URL_NAME = "URL"
 PERMISSIONS_SHEET_ACTION_NAME = "action"
 
-UDAJ_ODSTRANEN = "údaj odstraněn"
+UDAJ_ODSTRANEN = "údaj odstraněn"  # POZOR - neměnit - po změně by se v rámci periodických úloh všechny výskyty přepisovaly znovu, tj. vznikly nové verze všech dotčených projektů
 STARY_PROJEKT_ZRUSEN = "Automatické zrušení projektů starších tří let, u kterých již nelze očekávat zahájení."
