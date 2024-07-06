@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime, timedelta
+
 from cacheops import invalidate_model
 from typing import Any
 import simplejson as json
@@ -1812,6 +1814,8 @@ def zapsat(request, zaznam=None):
             dokument.rada = get_dokument_rada(
                 dokument.typ_dokumentu, dokument.material_originalu
             )
+            if isinstance(zaznam, Projekt):
+                dokument.datum_zverejneni = datetime.now().date() + timedelta(days=350 * 100)
             try:
                 if zaznam:
                     prefix = zaznam.ident_cely[0] + "-"

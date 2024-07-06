@@ -270,7 +270,7 @@ class FedoraRepositoryConnector:
         return auth
 
     def _send_request(self, url: str, request_type: FedoraRequestType, *,
-                      headers=None, data=None) -> Optional[requests.Response]:
+                      headers=None, data=None) -> requests.Response | None:
         extra = {"url": url, "request_type": request_type, "transaction": self.transaction_uid}
         if isinstance(data, str) and len(data) < 1000:
             extra["data"] = data
@@ -346,6 +346,12 @@ class FedoraRepositoryConnector:
                 fedora_transaction = FedoraTransaction(self.transaction_uid)
                 fedora_transaction.rollback_transaction()
                 raise FedoraError(url, response.text, response.status_code)
+        elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
+                              FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE):
+            if str(response.status_code)[0] == "2":
+                return response
+            else:
+                return None
         else:
             logger.debug("core_repository_connector._send_request.response", extra=extra)
             if (request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
@@ -683,7 +689,8 @@ class FedoraRepositoryConnector:
                                 "transaction": self.transaction_uid})
             return rep_bin_file
 
-    def get_binary_file(self, uuid, ident_cely_old=None, thumb_small=False, thumb_large=False) -> RepositoryBinaryFile:
+    def get_binary_file(self, uuid, ident_cely_old=None, thumb_small=False, thumb_large=False) \
+            -> RepositoryBinaryFile | None:
         logger.debug("core_repository_connector.get_binary_file.start",
                      extra={"url": uuid, "ident_cely_old": ident_cely_old, "thumb_small": thumb_small,
                             "thumb_large": thumb_large, "transaction": self.transaction_uid})
@@ -701,7 +708,7 @@ class FedoraRepositoryConnector:
             response = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE)
         else:
             response = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTENT)
-        if response is not None:
+        if response:
             file = io.BytesIO()
             file.write(response.content)
             file.seek(0)
@@ -711,6 +718,8 @@ class FedoraRepositoryConnector:
                                 "thumb_small": thumb_small, "thumb_large": thumb_large,
                                 "transaction": self.transaction_uid})
             return rep_bin_file
+        else:
+            return None
 
     def update_binary_file(self, file_name, content_type, file: io.BytesIO, uuid: str,
                            save_thumbs: bool = True) -> RepositoryBinaryFile:

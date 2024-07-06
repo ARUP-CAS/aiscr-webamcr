@@ -1,4 +1,5 @@
-from django.core.exceptions import ObjectDoesNotExist
+from functools import cached_property
+
 from django.db.models import CheckConstraint, Q
 
 from core.connectors import RedisConnector
@@ -285,6 +286,20 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             return self.soubory.soubory.first()
         else:
             return None
+
+    @cached_property
+    def large_thumbnail(self):
+        soubor = self.nahled_soubor
+        if soubor:
+            return soubor.large_thumbnail
+        return None
+
+    @cached_property
+    def small_thumbnail(self):
+        soubor = self.nahled_soubor
+        if soubor:
+            return soubor.small_thumbnail
+        return None
         
     def generate_coord_forms_initial(self):
         geom = "0 0"

@@ -207,7 +207,7 @@ class DownloadFile(LoginRequiredMixin, View):
     def _preprocess_image(file_content: BytesIO) -> BytesIO:
         return file_content
 
-    def get(self, request, typ_vazby, ident_cely, pk, *args, **kwargs):
+    def get(self, request, typ_vazby, ident_cely, pk, *args, **kwargs) -> FileResponse | HttpResponse:
         try:
             check_soubor_vazba(typ_vazby, ident_cely, pk)
         except ZaznamSouborNotmatching as e:
@@ -217,37 +217,14 @@ class DownloadFile(LoginRequiredMixin, View):
                         )
             return redirect(request.GET.get("next", "core:home"))
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
-        rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content(thumb_small=self.thumb_small,
-                                                                           thumb_large=self.thumb_large)
-        if soubor.repository_uuid is not None:
-            # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
-            content = self._preprocess_image(rep_bin_file.content)
-            response = FileResponse(content, filename=soubor.nazev)
-            content.seek(0)
-            response["Content-Length"] = content.getbuffer().nbytes
-            content.seek(0)
-            response["Content-Disposition"] = (
-                    f"attachment; filename={soubor.nazev}"
-            )
-            return response
-
-        if soubor.path is not None:
-            path = os.path.join(settings.MEDIA_ROOT, soubor.path)
-            if os.path.exists(path):
-                content_type = mimetypes.guess_type(soubor.nazev)[
-                    0
-                ]  # Use mimetypes to get file type
-                response = HttpResponse(soubor.path, content_type=content_type)
-                response["Content-Length"] = str(len(soubor.path))
-                response["Content-Disposition"] = (
-                        "attachment; filename=" + soubor.nazev
-                )
-                return response
+        if soubor.repository_uuid:
+            if self.thumb_small:
+                return soubor.small_thumbnail
+            elif self.thumb_large:
+                return soubor.large_thumbnail
             else:
-                logger.debug("core.views.download_file.not_exists", extra={"soubor_name": soubor.nazev, "path": path})
-        else:
-            logger.debug("core.views.download_file.path_is_none", extra={"soubor_name": soubor.nazev, "pk": pk})
-        return HttpResponse("")
+                return soubor.content_file_response
+        return HttpResponse()
 
 
 class DownloadThumbnailSmall(DownloadFile):
