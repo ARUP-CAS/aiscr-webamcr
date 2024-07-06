@@ -70,7 +70,7 @@ jobs:
           fi
           
       - name: PRODUCTION - Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: Dockerfile-production
@@ -98,7 +98,7 @@ jobs:
           fi
 
       - name: PROXY - Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./proxy
           push: true
@@ -125,7 +125,7 @@ jobs:
           fi
 
       - name: REDIS - Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./redis
           push: true
