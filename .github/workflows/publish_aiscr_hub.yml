@@ -64,6 +64,8 @@ jobs:
           context: .
           file: Dockerfile-production
           push: true
+          sbom: true
+          provenance: mode=max
           tags: ${{ env.prod_tags }}
           labels: ${{ steps.meta_prod.outputs.labels }}
           build-args: |
@@ -91,6 +93,8 @@ jobs:
         with:
           context: ./proxy
           push: true
+          sbom: true
+          provenance: mode=max
           tags: ${{ env.proxy_tags }}
           labels: ${{ steps.meta_proxy.outputs.labels }}
           build-args: |
@@ -118,6 +122,8 @@ jobs:
         with:
           context: ./redis
           push: true
+          sbom: true
+          provenance: mode=max
           tags: ${{ env.redis_tags }}
           labels: ${{ steps.meta_redis.outputs.labels }}
           build-args: |
