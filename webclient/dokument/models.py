@@ -3,6 +3,7 @@ import datetime
 import logging
 import math
 import os
+from functools import cached_property
 from string import ascii_uppercase as letters
 from typing import Optional
 
@@ -451,9 +452,23 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             return ()
         
     @property
-    def thumbnail_image(self):
+    def thumbnail_image_file(self) -> Soubor | None:
         if self.soubory.soubory.count() > 0:
             return self.soubory.soubory.first().pk
+
+    @cached_property
+    def large_thumbnail(self):
+        soubor = self.thumbnail_image_file
+        if soubor:
+            return soubor.large_thumbnail
+        return None
+
+    @cached_property
+    def small_thumbnail(self):
+        soubor = self.thumbnail_image_file
+        if soubor:
+            return soubor.small_thumbnail
+        return None
 
     def set_snapshots(self):
         if not self.dokumentautor_set.all():

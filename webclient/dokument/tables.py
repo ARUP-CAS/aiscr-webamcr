@@ -7,6 +7,7 @@ from django.utils.html import conditional_escape, mark_safe
 from django.utils.encoding import force_str
 from django.utils.html import format_html
 
+from core.models import Soubor
 from uzivatel.models import Osoba
 from core.utils import SearchTable
 from django.db.models import OuterRef, Subquery
@@ -90,12 +91,14 @@ class Model3DTable(SearchTable):
         else:
             soubor = None
         if soubor is not None:
-            thumbnail_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely ,soubor.id,))
-            soubor_url = reverse("core:download_file", args=('model3d', record.ident_cely, soubor.id,))
-            return format_html(
-                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" loading="lazy" data-fullsrc="{}">',
-                thumbnail_url, soubor_url
-            )
+            soubor: Soubor
+            if soubor.small_thumbnail:
+                thumbnail_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely ,soubor.id,))
+                soubor_url = reverse("core:download_file", args=('model3d', record.ident_cely, soubor.id,))
+                return format_html(
+                    '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" loading="lazy" data-fullsrc="{}">',
+                    thumbnail_url, soubor_url
+                )
         return ""
 
 
@@ -189,13 +192,15 @@ class DokumentTable(SearchTable):
         else: 
             soubor = None
         if soubor is not None:
-            thumbnail_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely, soubor.id,))
-            thumbnail_large_url = reverse("core:download_thumbnail_large", args=('model3d', record.ident_cely, soubor.id,))
-            return format_html(
-                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
-                'loading="lazy" data-fullsrc="{}">',
-                thumbnail_url, thumbnail_large_url,
-            )
+            soubor: Soubor
+            if soubor.small_thumbnail:
+                thumbnail_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely, soubor.id,))
+                thumbnail_large_url = reverse("core:download_thumbnail_large", args=('model3d', record.ident_cely, soubor.id,))
+                return format_html(
+                    '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
+                    'loading="lazy" data-fullsrc="{}">',
+                    thumbnail_url, thumbnail_large_url,
+                )
         return ""
 
     class Meta:

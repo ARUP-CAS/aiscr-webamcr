@@ -9,7 +9,7 @@ from django.template import Context, Template
 from django.template.loader import get_template
 
 from core.utils import SearchTable
-from core.models import Permissions as p, check_permissions
+from core.models import Permissions as p, check_permissions, Soubor
 
 from .models import SamostatnyNalez, UzivatelSpoluprace
 
@@ -113,14 +113,16 @@ class SamostatnyNalezTable(SearchTable):
         """
         soubor = record.nahled_soubor
         if soubor is not None:
-            thumbnail_url = reverse("core:download_thumbnail", args=('pas', record.ident_cely, soubor.id,))
-            thumbnail_large_url \
-                = reverse("core:download_thumbnail_large", args=('pas', record.ident_cely, soubor.id,))
-            return format_html(
-                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
-                'loading="lazy" data-fullsrc="{}">',
-                thumbnail_url, thumbnail_large_url,
-            )
+            soubor: Soubor
+            if soubor.small_thumbnail:
+                thumbnail_url = reverse("core:download_thumbnail", args=('pas', record.ident_cely, soubor.id,))
+                thumbnail_large_url \
+                    = reverse("core:download_thumbnail_large", args=('pas', record.ident_cely, soubor.id,))
+                return format_html(
+                    '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
+                    'loading="lazy" data-fullsrc="{}">',
+                    thumbnail_url, thumbnail_large_url,
+                )
         return ""
 
     def __init__(self, *args, **kwargs):
