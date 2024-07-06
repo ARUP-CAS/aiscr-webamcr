@@ -2,23 +2,12 @@ name: Build and publish Docker images
 on:
   release:
     types: [published]
-    inputs:
-      deploy_dev:
-       description: 'Deploy to DEV server'
-       type: boolean
-       required: true
-       default: true
   workflow_dispatch :
     inputs:
       tags:
        description: 'Tag describing manual trigger'
        type: string
        required: false
-      deploy_dev:
-       description: 'Deploy to DEV server'
-       type: boolean
-       required: true
-       default: false
 
 env:
   DOCKER_HUB_REPO_REDIS: aiscr/webamcr-redis
@@ -134,12 +123,3 @@ jobs:
           build-args: |
             VERSION_APP=${{ env.tag_version }}
             TAG_APP=${{ github.ref }}
-  
-  deploy_on_dev:
-      name: Deploy containers on DEV server
-      if: ${{ inputs.deploy_dev == 'true' }}
-      needs: build_publish_images
-      uses: ./.github/workflows/deployment.yml
-      secrets: inherit
-      with:
-         man_tag: ${{ inputs.tags }}
