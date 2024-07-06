@@ -1,16 +1,10 @@
-name: Deployment to selected environment
+name: Deployment to DEV environment
 
 on:
-  workflow_call:
-    inputs:
-      man_tag:
-        description: 'Auxilliary tag describing deployment [optional]'
-        required: false
-        type: string
   workflow_dispatch :
     inputs:
       man_tag:
-       description: 'Auxilliary tag describing deployment [optional]'
+       description: 'Version tag for deployment [optional]'
        type: string
        required: false
 
