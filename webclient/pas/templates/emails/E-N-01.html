@@ -6,7 +6,7 @@
     v AMČR-PAS byly dnes Vaším spolupracovníkem odeslány nové nálezy ke schválení:
     <ul style="list-style: none">
         {% for ident in projekt_ident_list %}
-            <li><a href="{% get_site_url %}{% url 'core:redirect_ident' id %}">{{ ident }}</a></li>
+            <li><a href="{% get_site_url %}{% url 'core:redirect_ident' ident %}">{{ ident }}</a></li>
         {% endfor %}
     </ul>
     <p>Detaily zjistíte po přihlášení do AMČR-PAS.</p>
