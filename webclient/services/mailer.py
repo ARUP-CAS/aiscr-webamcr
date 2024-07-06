@@ -1,14 +1,14 @@
-import datetime
+from datetime import datetime, timedelta
 import logging
 import time
-from typing import Union
-
-
+from typing import Union, Dict
 
 from django.conf import settings
+from django.db.models import F, Count, OuterRef, Subquery
+from django.utils import timezone
 
 from core.constants import OZNAMENI_PROJ, UZAVRENI_PROJ, ZAPSANI_DOK, NAVRZENI_KE_ZRUSENI_PROJ, ODESLANI_AZ, \
-    SN_POTVRZENY, SN_ODESLANY, SN_ZAPSANY, AZ_STAV_ZAPSANY, AZ_STAV_ODESLANY
+    SN_POTVRZENY, SN_ODESLANY, SN_ZAPSANY, AZ_STAV_ZAPSANY, AZ_STAV_ODESLANY, ZAPSANI_SN
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
@@ -16,12 +16,12 @@ import projekt.models
 import arch_z.models
 import uzivatel.models
 import dokument.models
-import pas.models
 from core.constants import PROJEKT_STAV_UKONCENY_V_TERENU, PRIHLASENI_PROJ
 from core.models import Soubor
 from core.repository_connector import FedoraRepositoryConnector, RepositoryBinaryFile
 from historie.models import Historie
 from oznameni.models import Oznamovatel
+from pas.models import SamostatnyNalez
 from .mlstripper import MLStripper
 
 logger = logging.getLogger(__name__)
@@ -551,11 +551,11 @@ class Mailer:
         cls._send_ep06(project, notification_type, reason)
 
     @classmethod
-    def _send_en01(cls, projekt_id_list, notification_type, send_to):
+    def _send_en01_02(cls, projekt_ident_list, notification_type, send_to):
         subject = notification_type.predmet
         context = {
             "title": subject,
-            "ids": ",".join(projekt_id_list),
+            "projekt_ident_list": projekt_ident_list,
         }
         html = render_to_string(notification_type.cesta_sablony, context)
         user = uzivatel.models.User.objects.get(email=send_to)
@@ -563,18 +563,18 @@ class Mailer:
             cls.__send(subject=subject, to=send_to, html_content=html, notification_type=notification_type, user=user)
 
     @classmethod
-    def send_en01(cls, send_to, projekt_id_list):
+    def send_en01(cls, send_to, projekt_ident_list):
         IDENT_CELY = 'E-N-01'
         logger.debug("services.mailer.send_en01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        cls._send_en01(projekt_id_list, notification_type, send_to)
+        cls._send_en01_02(projekt_ident_list, notification_type, send_to)
 
     @classmethod
-    def send_en02(cls, send_to, projekt_id_list):
+    def send_en02(cls, send_to, projekt_ident_list):
         IDENT_CELY = 'E-N-02'
         logger.debug("services.mailer.send_en02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        cls._send_en01(projekt_id_list, notification_type, send_to)
+        cls._send_en01_02(projekt_ident_list, notification_type, send_to)
 
     @classmethod
     def send_en03_en04(cls, samostatny_nalez: 'pas.models.SamostatnyNalez', reason):
@@ -679,3 +679,56 @@ class Mailer:
                            notification_type=notification_type, user=first_log_entry.uzivatel)
         else:
             logger.warning("services.mailer.send_ek02.no_log_found", extra={"ident_cely": IDENT_CELY})
+
+    @staticmethod
+    def get_en01_data() -> Dict:
+        subquery_sn12 = SamostatnyNalez.objects.filter(
+            historie__historie__typ_zmeny='SN12',
+            id=OuterRef('id')
+        ).values('id')
+
+        results = SamostatnyNalez.objects.filter(
+            historie__historie__typ_zmeny='SN01',
+            projekt__organizace=F('historie__historie__uzivatel__spoluprace_badatelu__vedouci__organizace'),
+            historie__historie__uzivatel__spoluprace_badatelu__vedouci__notification_types__ident_cely='S-E-N-01',
+            id__in=Subquery(subquery_sn12),
+            historie__historie__datum_zmeny=timezone.now().date() + timedelta(days=-1)
+        ).distinct().values(
+            'ident_cely',
+            'historie__historie__uzivatel__spoluprace_badatelu__vedouci__email'
+        )
+
+        results_dict = {}
+        for result in results:
+            email = result['historie__historie__uzivatel__spoluprace_badatelu__vedouci__email']
+            if email in results_dict:
+                results_dict[email].append(result["ident_cely"])
+            else:
+                results_dict[email] = [result["ident_cely"], ]
+        return results_dict
+
+    @staticmethod
+    def get_en02_data() -> Dict:
+        sn34_subquery = SamostatnyNalez.objects.filter(
+            historie__historie__typ_zmeny='SN34',
+            id=OuterRef('id')
+        ).values('id')
+
+        results = SamostatnyNalez.objects.filter(
+            historie__historie__typ_zmeny='SN01',
+            historie__historie__uzivatel__notification_types__ident_cely='S-E-N-02',
+            id__in=Subquery(sn34_subquery),
+            historie__historie__datum_zmeny=timezone.now().date() + timedelta(days=-1)
+        ).distinct().values(
+            'ident_cely',
+            'historie__historie__uzivatel__email'
+        )
+
+        results_dict = {}
+        for result in results:
+            email = result['historie__historie__uzivatel__email']
+            if email in results_dict:
+                results_dict[email].append(result["ident_cely"])
+            else:
+                results_dict[email] = [result["ident_cely"], ]
+        return results_dict
