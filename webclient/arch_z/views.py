@@ -1652,6 +1652,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             )
         akce: Akce = az.akce
         akce.active_transaction = fedora_transaction
+        az.active_transaction = fedora_transaction
         akce.projekt = None
         akce.typ = Akce.TYP_AKCE_SAMOSTATNA
         akce.save()
@@ -1662,7 +1663,6 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             az.set_akce_ident(
                 get_temp_akce_ident(az.hlavni_katastr.okres.kraj.rada_id)
             )
-        az.active_transaction = fedora_transaction
         az.close_active_transaction_when_finished = True
         az.save()
         Historie(
@@ -1739,8 +1739,8 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             akce.typ = Akce.TYP_AKCE_PROJEKTOVA
             akce.save()
             old_ident = az.ident_cely
-            az.set_akce_ident(get_project_event_ident(az.akce.projekt))
             az.active_transaction = fedora_transaction
+            az.set_akce_ident(get_project_event_ident(az.akce.projekt))
             az.save()
             Historie(
                 typ_zmeny=ZMENA_AZ,
