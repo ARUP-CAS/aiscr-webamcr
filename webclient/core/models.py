@@ -9,6 +9,8 @@ from typing import Optional, Union
 
 import magic
 import rarfile
+from django.http import FileResponse
+from django.utils.functional import cached_property
 from django_prometheus.models import ExportModelOperationsMixin
 
 from django.conf import settings
@@ -380,6 +382,38 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             s.close()
             logger.debug("core.models.Soubor.check_antivirus.response", extra={"response": response})
             return response.upper() == "OK" or response.upper().endswith("OK")
+        return None
+
+    def _create_file_response(self, rep_bin_file: RepositoryBinaryFile) -> FileResponse:
+        content = rep_bin_file.content
+        response = FileResponse(content, filename=self.nazev)
+        content.seek(0)
+        response["Content-Length"] = content.getbuffer().nbytes
+        content.seek(0)
+        response["Content-Disposition"] = (
+            f"attachment; filename={self.nazev}"
+        )
+        return response
+
+    @cached_property
+    def large_thumbnail(self) -> FileResponse | None:
+        rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_large=True)
+        if self.repository_uuid is not None and rep_bin_file:
+            return self._create_file_response(rep_bin_file)
+        return None
+
+    @cached_property
+    def small_thumbnail(self) -> FileResponse | None:
+        rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_small=True)
+        if self.repository_uuid is not None and rep_bin_file:
+            return self._create_file_response(rep_bin_file)
+        return None
+
+    @cached_property
+    def content_file_response(self) -> FileResponse | None:
+        rep_bin_file: RepositoryBinaryFile = self.get_repository_content()
+        if self.repository_uuid is not None and rep_bin_file and rep_bin_file.size_mb > 0:
+            return self._create_file_response(rep_bin_file)
         return None
 
 

@@ -1101,6 +1101,8 @@ class SearchTable(ColumnShiftTableBootstrap4):
         else:
             soubor = None
         if soubor is not None:
+            from core.models import Soubor
+            soubor: Soubor
             soubor_url = reverse(
                 "core:download_thumbnail",
                 args=(
@@ -1109,10 +1111,11 @@ class SearchTable(ColumnShiftTableBootstrap4):
                     soubor.id,
                 ),
             )
-            return format_html(
-                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
-                soubor_url,
-            )
+            if soubor.small_thumbnail:
+                return format_html(
+                    '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
+                    soubor_url,
+                )
         return ""
 
 

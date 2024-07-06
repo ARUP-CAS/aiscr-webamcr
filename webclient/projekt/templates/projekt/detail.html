@@ -688,7 +688,7 @@
             {% for nalez in samostatne_nalezy %}
               <tr>
                 <td>
-                  {% if nalez.nahled_soubor %}
+                  {% if nalez.nahled_soubor and nalez.small_thumbnail %}
                     <img src="{% url 'core:download_thumbnail' 'pas' nalez.ident_cely nalez.nahled_soubor.pk %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" data-fullsrc="{% url 'core:download_thumbnail_large' 'pas' nalez.ident_cely nalez.nahled_soubor.pk %}">
                   {% endif %}
                 </td>
