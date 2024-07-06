@@ -168,7 +168,7 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                               FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2):
             return f"{base_url}/record/{self.record.ident_cely}"
-        elif request_type in (FedoraRequestType.CREATE_LINK, ):
+        elif request_type in (FedoraRequestType.CREATE_LINK,):
             return f"{base_url}/model/{self._get_model_name()}/member"
         elif request_type in (FedoraRequestType.GET_LINK, FedoraRequestType.DELETE_LINK_CONTAINER):
             return (f"{base_url}/model/{self._get_model_name()}/member/"
@@ -331,10 +331,11 @@ class FedoraRepositoryConnector:
             else:
                 logger.warning("core_repository_connector._send_request.error", extra=extra)
         elif request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
-                                FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
-                                FedoraRequestType.GET_LINK, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
-                                FedoraRequestType.GET_DELETED_LINK, FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
-                                FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE):
+                                  FedoraRequestType.GET_BINARY_FILE_CONTAINER,
+                                  FedoraRequestType.GET_BINARY_FILE_CONTENT,
+                                  FedoraRequestType.GET_LINK, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
+                                  FedoraRequestType.GET_DELETED_LINK, FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
+                                  FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE):
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
             else:
@@ -354,6 +355,10 @@ class FedoraRepositoryConnector:
                 return None
         else:
             logger.debug("core_repository_connector._send_request.response", extra=extra)
+            if (request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
+                                 FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE) and
+                    str(response.status_code)[0] != "2"):
+                return None
         return response
 
     def _create_container(self):
@@ -505,6 +510,7 @@ class FedoraRepositoryConnector:
                 "Digest": f"sha-512={hash512}"
             }
             return document_func, headers_func
+
         if result.status_code == 404:
             document, headers = generate_metadata()
             headers["slug"] = "metadata"
@@ -517,7 +523,8 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector.save_metadata.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
-    def save_binary_file(self, file_name, content_type, file: io.BytesIO) -> RepositoryBinaryFile:
+    def save_binary_file(self, file_name, content_type, file: io.BytesIO,
+                         save_thumbs: bool = True) -> RepositoryBinaryFile:
         logger.debug("core_repository_connector.save_binary_file.start",
                      extra={"file_name": file_name, "ident_cely": self.record.ident_cely,
                             "transaction": self.transaction_uid})
@@ -536,7 +543,8 @@ class FedoraRepositoryConnector:
         }
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
-        self._save_thumbs(file_name, file, uuid)
+        if save_thumbs:
+            self.save_thumbs(file_name, file, uuid)
         logger.debug("core_repository_connector.save_binary_file.end",
                      extra={"url": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         return rep_bin_file
@@ -580,7 +588,7 @@ class FedoraRepositoryConnector:
                              extra={"err": err, "file_name": file_name, "large": large})
                 return None
 
-    def _save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None):
+    def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None):
         logger.debug("core_repository_connector._save_thumb.start",
                      extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "update": update,
                             "uuid": uuid, "transaction": self.transaction_uid})
@@ -602,29 +610,34 @@ class FedoraRepositoryConnector:
                 "Slug": f"thumb{'-large' * large}"
             }
             ident_cely = ident_cely_old if ident_cely_old and update else self.record.ident_cely
+            existing_large_thumb, existing_small_thumb = None, None
             if large:
-                if update:
+                existing_large_thumb = self.get_binary_file(uuid, thumb_large=True)
+            else:
+                existing_small_thumb = self.get_binary_file(uuid, thumb_small=True)
+            if large:
+                if update and existing_large_thumb is not None:
                     url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE, uuid=uuid,
                                                 ident_cely=ident_cely)
                 else:
                     url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE, uuid=uuid,
                                                 ident_cely=ident_cely)
             else:
-                if update:
+                if update and existing_small_thumb is not None:
                     url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB, uuid=uuid,
                                                 ident_cely=ident_cely)
                 else:
                     url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_THUMB, uuid=uuid,
                                                 ident_cely=ident_cely)
             if large:
-                if update:
+                if update and existing_large_thumb is not None:
                     self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE, headers=headers,
                                        data=data)
                 else:
                     self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE, headers=headers,
                                        data=data)
             else:
-                if update:
+                if update and existing_small_thumb is not None:
                     self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB, headers=headers,
                                        data=data)
                 else:
@@ -673,7 +686,7 @@ class FedoraRepositoryConnector:
             }
             url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
             self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
-            self._save_thumbs(soubor.nazev, data, soubor.repository_uuid)
+            self.save_thumbs(soubor.nazev, data, soubor.repository_uuid)
             logger.debug("core_repository_connector.migrate_binary_file.end",
                          extra={"uuid": uuid, "ident_cely": self.record.ident_cely,
                                 "transaction": self.transaction_uid})
@@ -711,10 +724,11 @@ class FedoraRepositoryConnector:
         else:
             return None
 
-    def update_binary_file(self, file_name, content_type, file: io.BytesIO, uuid: str) -> RepositoryBinaryFile:
+    def update_binary_file(self, file_name, content_type, file: io.BytesIO, uuid: str,
+                           save_thumbs: bool = True) -> RepositoryBinaryFile:
         logger.debug("core_repository_connector.update_binary_file.start",
                      extra={"file_name": file_name, "ident_cely": self.record.ident_cely,
-                            "transaction": self.transaction_uid})
+                            "transaction": self.transaction_uid, "save_thumbs": save_thumbs})
         rep_bin_file = RepositoryBinaryFile(uuid, file, file_name)
         data = file.read()
         file_sha_512 = hashlib.sha512(data).hexdigest()
@@ -725,7 +739,8 @@ class FedoraRepositoryConnector:
         }
         url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, headers=headers, data=data)
-        self._save_thumbs(file_name, file, uuid, True)
+        if save_thumbs:
+            self.save_thumbs(file_name, file, uuid, True)
         logger.debug("core_repository_connector.update_binary_file.end",
                      extra={"url": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         return rep_bin_file
@@ -804,7 +819,7 @@ class FedoraRepositoryConnector:
                 "Content-Type": "text/turtle"
             }
             data = f"@prefix ore: <http://www.openarchives.org/ore/terms/> . " \
-                    f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}>"
+                   f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}>"
             url = self._get_request_url(FedoraRequestType.RECORD_DELETION_ADD_MARK)
             self._send_request(url, FedoraRequestType.RECORD_DELETION_ADD_MARK, headers=headers, data=data)
         logger.debug("core_repository_connector.record_deletion.end",
@@ -859,15 +874,40 @@ class FedoraRepositoryConnector:
                                          ident_cely_old=ident_cely_old)
 
     @classmethod
-    def save_single_file_from_storage(cls, record, storage_path: str, fedora_transaction=None) -> None:
+    def generate_thumb_for_single_file(cls, record) -> None:
         from core.models import Soubor
         from xml_generator.models import ModelWithMetadata
         if isinstance(record, int):
             record = Soubor.objects.get(pk=record)
         record: Soubor
         related_record: ModelWithMetadata = record.vazba.navazany_objekt
-        if not fedora_transaction:
-            fedora_transaction = FedoraTransaction()
+        fedora_transaction = FedoraTransaction()
+        record.active_transaction = fedora_transaction
+        conn = FedoraRepositoryConnector(related_record, fedora_transaction)
+        if (not conn.get_binary_file(record.repository_uuid, thumb_small=True)
+                and not conn.get_binary_file(record, thumb_large=True)):
+            rep_bin_file = conn.get_binary_file(record.repository_uuid)
+            if rep_bin_file:
+                conn.save_thumbs(record.nazev, rep_bin_file.content, record.repository_uuid)
+                fedora_transaction.mark_transaction_as_closed()
+
+    @classmethod
+    def generate_thumbs(cls, records: Union[list, range]) -> None:
+        records = list(records)
+        from core.models import Soubor
+        queryset = Soubor.objects.filter(pk__in=records).order_by("pk")
+        for item in queryset:
+            cls.generate_thumb_for_single_file(item)
+
+    @classmethod
+    def save_single_file_from_storage(cls, record, storage_path: str, save_thumbs: bool = False) -> None:
+        from core.models import Soubor
+        from xml_generator.models import ModelWithMetadata
+        if isinstance(record, int):
+            record = Soubor.objects.get(pk=record)
+        record: Soubor
+        related_record: ModelWithMetadata = record.vazba.navazany_objekt
+        fedora_transaction = FedoraTransaction()
         record.active_transaction = fedora_transaction
         conn = FedoraRepositoryConnector(related_record, fedora_transaction)
 
@@ -908,9 +948,10 @@ class FedoraRepositoryConnector:
             return
         record.mimetype = mimetype
         if record.repository_uuid:
-            rep_bin_file = conn.update_binary_file(record.nazev, mimetype, soubor_data, record.repository_uuid)
+            rep_bin_file = conn.update_binary_file(record.nazev, mimetype, soubor_data, record.repository_uuid,
+                                                   save_thumbs)
         else:
-            rep_bin_file = conn.save_binary_file(record.nazev, mimetype, soubor_data)
+            rep_bin_file = conn.save_binary_file(record.nazev, mimetype, soubor_data, save_thumbs)
             record.path = rep_bin_file.url_without_domain
         record.size_mb = rep_bin_file.size_mb
         record.sha_512 = rep_bin_file.sha_512
@@ -918,7 +959,7 @@ class FedoraRepositoryConnector:
         fedora_transaction.mark_transaction_as_closed()
 
     @classmethod
-    def save_files_from_storage(cls, records: Union[list, range], storage_path: str) -> None:
+    def save_files_from_storage(cls, records: Union[list, range], storage_path: str, save_thumbs: bool = False) -> None:
         records = list(records)
         from core.models import Soubor
         queryset = Soubor.objects.filter(pk__in=records).order_by("pk")
