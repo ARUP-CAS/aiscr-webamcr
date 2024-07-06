@@ -18,7 +18,6 @@ from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSE
 from core.models import Soubor
 from core.coordTransform import transform_geom_to_sjtsk
 from core.repository_connector import FedoraTransaction
-from cron.functions import collect_en01_en02
 from django.db import connection, transaction
 from django.utils.translation import gettext as _
 
@@ -68,12 +67,12 @@ def send_notifications_en():
     """
     try:
         logger.debug("cron.tasks.send_notifications_en.do.start")
-        dataEn01 = collect_en01_en02(stav=ODESLANI_SN)
-        for email, projekt_id_list in dataEn01.items():
-            Mailer.send_en01(send_to=email, projekt_id_list=projekt_id_list)
-        dataEn02 = collect_en01_en02(stav=ARCHIVACE_SN)
-        for email, projekt_id_list in dataEn02.items():
-            Mailer.send_en02(send_to=email, projekt_id_list=projekt_id_list)
+        dataEn01 = Mailer.get_en01_data()
+        for email, projekt_ident_list in dataEn01.items():
+            Mailer.send_en01(email, projekt_ident_list)
+        dataEn02 = Mailer.get_en02_data()
+        for email, projekt_ident_list in dataEn02.items():
+            Mailer.send_en02(email, projekt_ident_list)
         logger.debug("cron.tasks.send_notifications_en.do.end")
     except Exception as err:
         logger.error("cron.tasks.send_notifications_en.do.error",
@@ -156,7 +155,7 @@ def delete_personal_data_canceled_projects():
         projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY) \
             .filter(~Q(oznamovatel__email__icontains=deleted_string)) \
             .filter(Q(historie__historie__typ_zmeny__in=(RUSENI_PROJ, RUSENI_STARE_PROJ))
-                    & Q(historie__historie__datum_zmeny__lt=year_ago))
+                    & Q(historie__historie__datum_zmeny__lt=year_ago)).distinct()
         for item in projects:
             item: Projekt
             if item.has_oznamovatel():
@@ -189,7 +188,7 @@ def delete_reporter_data_ten_years():
         ten_years_ago = today - datetime.timedelta(days=365*10)
         projects = Projekt.objects.filter(oznamovatel__isnull=False) \
             .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
-                    & Q(historie__historie__datum_zmeny__lt=ten_years_ago))
+                    & Q(historie__historie__datum_zmeny__lt=ten_years_ago)).distinct()
         for item in projects:
             logger.debug("core.cron.delete_reporter_data_canceled_projects.do.project",
                          extra={"project": item.ident_cely})
@@ -216,7 +215,7 @@ def change_document_accessibility():
             .filter(datum_zverejneni__lte=datetime.datetime.now().date()) \
             .annotate(min_pristupnost_razeni=Coalesce(Min(F("casti__archeologicky_zaznam__pristupnost__razeni")), 1)) \
             .filter(Q(pristupnost__razeni__gt=F("min_pristupnost_razeni"))
-                    & Q(pristupnost__razeni__gt=F('organizace__zverejneni_pristupnost__razeni')))
+                    & Q(pristupnost__razeni__gt=F('organizace__zverejneni_pristupnost__razeni'))).distinct()
         for item in documents:
             item: Dokument
             pristupnost_razeni = item.organizace.zverejneni_pristupnost.razeni
@@ -244,8 +243,8 @@ def delete_unsubmited_projects():
     try:
         logger.debug("core.cron.delete_unsubmited_projects.do.start")
         now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
-        projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY) \
-                         .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours))
+        projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)\
+                         .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).distinct())
         for item in projekt_query:
             item: Projekt
             item.active_transaction = FedoraTransaction()
@@ -271,7 +270,7 @@ def cancel_old_projects():
             .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
                     & Q(historie__historie__datum_zmeny__lt=today_minus_3_years)) \
             .annotate(upper=Upper('planovane_zahajeni')) \
-            .filter(upper__lte=today_minus_1_year)
+            .filter(upper__lte=today_minus_1_year).distinct()
         cancelled_string = STARY_PROJEKT_ZRUSEN
         for project in projects:
             project: Projekt
