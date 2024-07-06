@@ -64,6 +64,9 @@ RUN crontab -u user /scripts/crontab.txt
 
 RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > /version.txt
 RUN sed -i "s/1.0.0/${VERSION}/g" ./templates/base_logged_in.html
+RUN release_data=$(curl -s https://api.github.com/repos/aiscr-webamcr/releases/tags/${VERSION}) && \
+    release_year=$(echo $release_data | jq -r '.published_at' | cut -d '-' -f 1) && \
+    sed -i "s/YYYY/${release_year}/g" ./templates/base_logged_in.html
 
 USER user
 
