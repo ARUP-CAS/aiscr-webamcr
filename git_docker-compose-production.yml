@@ -61,6 +61,19 @@ services:
     networks:
       - git-reverse-proxy
 
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.61.0
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=/run/secrets/redis_host 
+      - REDIS_PASSWORD=/run/secrets/redis_pass
+    secrets:
+      - redis_pass
+      - redis_host
+    depends_on:
+      - redis
+
   celery_worker:
     build:
       context: .
@@ -110,7 +123,7 @@ services:
           memory: "1G"
 
   grafana:
-    image: grafana/grafana-enterprise:8.2.0
+    image: grafana/grafana-enterprise:10.2.8
     restart: always
     depends_on:
       - prometheus
@@ -127,7 +140,7 @@ services:
       - git-reverse-proxy
 
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:v2.45.6
     volumes:
       - ./prometheus:/etc/prometheus
     networks:
@@ -141,7 +154,7 @@ services:
       - "--config.file=/run/secrets/prometheus_config"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.7.0
+    image: docker.elastic.co/logstash/logstash:8.14.1
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
     volumes:
@@ -156,7 +169,7 @@ services:
       - logstash_elastic_pass
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
     hostname: elasticsearch
     environment:
       - discovery.type=single-node
@@ -181,7 +194,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.7.0
+    image: docker.elastic.co/kibana/kibana:8.14.1
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
@@ -231,6 +244,8 @@ secrets:
    file: secrets_mail_client.json
   redis_pass:
     file: redis_pass.txt
+  redis_host:
+    file: redis_host.txt
   grafana_admin_password:
     file: grafana_admin_password.txt
   elastic_pass:

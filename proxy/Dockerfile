@@ -1,4 +1,4 @@
-FROM nginxinc/nginx-unprivileged:1-alpine
+FROM nginxinc/nginx-unprivileged:1.26.1-alpine3.19
 
 ARG VERSION_APP
 ARG TAG_APP

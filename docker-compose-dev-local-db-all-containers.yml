@@ -106,8 +106,21 @@ services:
       - redis_pass
     command: sh -c 'redis-server /home/redis/redis.conf'
 
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.61.0
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=/run/secrets/redis_host 
+      - REDIS_PASSWORD=/run/secrets/redis_pass
+    secrets:
+      - redis_pass
+      - redis_host
+    depends_on:
+      - redis
+
   grafana:
-    image: grafana/grafana-enterprise:8.2.0
+    image: grafana/grafana-enterprise:10.2.8
     restart: always
     depends_on:
       - prometheus
@@ -122,7 +135,7 @@ services:
       - "3000:3000"
 
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:v2.45.6
     volumes:
       - ./prometheus:/etc/prometheus
     ports:
@@ -175,7 +188,7 @@ services:
     shm_size: '1gb'
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.7.0
+    image: docker.elastic.co/logstash/logstash:8.14.1
     depends_on:
       - elasticsearch
     ports:
@@ -186,7 +199,7 @@ services:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
     environment:
       - discovery.type=single-node
       - http.host=0.0.0.0
@@ -198,7 +211,7 @@ services:
       - elasticsearch_volume:/usr/share/elasticsearch/data
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.7.0
+    image: docker.elastic.co/kibana/kibana:8.14.1
     restart: always
     ports:
       - 5601:5601
@@ -229,6 +242,10 @@ secrets:
   redis_pass:
     # PLEASE CHECK and UPDATE path accordingly to a secret setting pg_admin web client password ) - local dev machine
     file: ./secrets/redis_pass.txt
+  redis_host:
+    # PLEASE CHECK and UPDATE path accordingly to a secret setting
+    file: ./secrets/redis_host.txt
+
     # production environment
     # external: true
   grafana_admin_password:

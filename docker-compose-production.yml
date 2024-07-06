@@ -32,7 +32,7 @@ services:
       - celery_beat
 
   sidecar:
-    image: eeacms/rsync:latest
+    image: eeacms/rsync:2.4
     environment:
       - CRON_TASK_1=*/1 * * * * rsync -a /vol/web/locale/* /backup/
     volumes:
@@ -59,6 +59,20 @@ services:
       timeout: 30s
       retries: 5
       start_period: 30s
+  
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.61.0
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=/run/secrets/redis_host 
+      - REDIS_PASSWORD=/run/secrets/redis_pass
+    secrets:
+      - redis_pass
+      - redis_host
+    depends_on:
+      - redis
+
 
   celery_worker:
     image: aiscr/webamcr:${IMAGE_TAG}
@@ -111,7 +125,7 @@ services:
       - redis
 
   grafana:
-    image: grafana/grafana-enterprise:8.2.0
+    image: grafana/grafana-enterprise:10.2.8
     restart: always
     depends_on:
       - prometheus
@@ -128,7 +142,7 @@ services:
       - prod-net
 
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:v2.45.6
     restart: always
     volumes:
       - ./prometheus:/etc/prometheus
@@ -144,7 +158,7 @@ services:
       - "--storage.tsdb.retention.time=30d"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.7.0
+    image: docker.elastic.co/logstash/logstash:8.14.1
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
@@ -159,7 +173,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
     hostname: elasticsearch
     restart: always
     environment:
@@ -184,7 +198,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.7.0
+    image: docker.elastic.co/kibana/kibana:8.14.1
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
@@ -207,7 +221,7 @@ services:
       - prod-net
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
     volumes:
       - "/:/rootfs:ro"
       - "/var/run:/var/run:ro"
@@ -220,7 +234,7 @@ services:
     restart: always
 
   postgresql_exporter:
-    image: quay.io/prometheuscommunity/postgres-exporter
+    image: prometheuscommunity/postgres-exporter:v0.15.0
     restart: always
     environment:
       - DATA_SOURCE_URI_FILE=/run/secrets/postgresql_exporter_uri
@@ -254,6 +268,8 @@ secrets:
   mail_conf:
    external: true
   redis_pass:
+    external: true
+  redis_host:
     external: true
   grafana_admin_password:
     external: true
