@@ -6,7 +6,7 @@ import traceback
 import redis
 from celery import shared_task
 from django.db.models import Q, F, Min, Prefetch
-from django.db.models.functions import Upper
+from django.db.models.functions import Upper, Coalesce
 from django.utils import timezone
 
 from adb.models import Adb
