@@ -56,8 +56,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           file: Dockerfile-production
-          sbom: ${{ github.event_name != 'pull_request' }}
-          provenance: ${{ github.event_name != 'pull_request' }}
+          sbom: true
+          provenance: mode=max
           push: ${{ github.event_name != 'pull_request' }}
           load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
@@ -99,8 +99,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: "{{defaultContext}}:proxy"
-          sbom: ${{ github.event_name != 'pull_request' }}
-          provenance: ${{ github.event_name != 'pull_request' }}
+          sbom: true
+          provenance: mode=max
           push: ${{ github.event_name != 'pull_request' }}
           load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta-proxy.outputs.tags }}
@@ -142,8 +142,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: "{{defaultContext}}:redis"
-          sbom: ${{ github.event_name != 'pull_request' }}
-          provenance: ${{ github.event_name != 'pull_request' }}
+          sbom: true
+          provenance: mode=max
           push: ${{ github.event_name != 'pull_request' }}
           load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta-redis.outputs.tags }}
