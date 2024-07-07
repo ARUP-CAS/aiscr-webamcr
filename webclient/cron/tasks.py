@@ -167,6 +167,7 @@ def delete_personal_data_canceled_projects():
                 item.oznamovatel.odpovedna_osoba = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.oznamovatel = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.telefon = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
+                item.oznamovatel.poznamka = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.save()
                 item.archive_project_documentation()
                 item.close_active_transaction_when_finished = True
