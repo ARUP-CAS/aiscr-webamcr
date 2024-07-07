@@ -215,3 +215,6 @@ UPDATE dokumentacni_jednotka SET negativni_jednotka = false FROM komponenta WHER
 
 -- Oprava emailových adres na lower-case
 UPDATE user_storage SET email = LOWER(email);
+
+-- Odstranění souborů typu "log_dokumentace.pdf"
+DELETE FROM soubor WHERE nazev = 'log_dokumentace.pdf' AND projekt IS NOT null;
