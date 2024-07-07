@@ -1,4 +1,4 @@
-# Zrušení starých projektů (cron.cancel_old_projects)
+-- Zrušení starých projektů (cron.cancel_old_projects)
 WITH zrus AS (
 	SELECT DISTINCT pr.historie FROM projekt pr
 		JOIN historie h ON pr.historie = h.vazba
@@ -16,7 +16,7 @@ WITH zrus AS (
 UPDATE projekt SET stav = 8 FROM zrus WHERE projekt.ident_cely = zrus.ident_cely;
 
 
-# Smazání os. údajů u dříve zrušených projektů (cron.delete_personal_data_canceled_projects)
+-- Smazání os. údajů u dříve zrušených projektů (cron.delete_personal_data_canceled_projects)
 WITH stare AS (
 	SELECT h1.vazba FROM historie h1	
 		JOIN soubor ON soubor.historie = h1.vazba
@@ -47,7 +47,7 @@ UPDATE oznamovatel SET
 FROM stare WHERE oznamovatel.projekt = stare.projekt;
 
 
-# Smazání oznamovatelů u velmi starých projektů (cron.delete_reporter_data_ten_years)
+-- Smazání oznamovatelů u velmi starých projektů (cron.delete_reporter_data_ten_years)
 WITH smaz AS (
 	SELECT h1.vazba FROM historie h1	
 		JOIN soubor ON soubor.historie = h1.vazba
