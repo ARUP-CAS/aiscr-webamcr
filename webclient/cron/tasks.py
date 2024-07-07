@@ -154,7 +154,6 @@ def delete_personal_data_canceled_projects():
         today = datetime.datetime.now().date()
         year_ago = today - datetime.timedelta(days=365)
         projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY) \
-            .filter(typ_projektu=TYP_PROJEKTU_ZACHRANNY_ID) \
             .filter(~Q(oznamovatel__email__icontains=deleted_string)) \
             .filter(Q(historie__historie__typ_zmeny__in=(RUSENI_PROJ, RUSENI_STARE_PROJ))
                     & Q(historie__historie__datum_zmeny__lt=year_ago)).distinct()
