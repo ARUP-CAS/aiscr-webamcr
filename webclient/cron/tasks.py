@@ -165,7 +165,6 @@ def delete_personal_data_canceled_projects():
                 item.oznamovatel.email = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.adresa = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.odpovedna_osoba = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
-                item.oznamovatel.oznamovatel = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.telefon = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.poznamka = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.save()
