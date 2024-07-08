@@ -15,7 +15,6 @@ CREATE SEQUENCE public.heslar_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER TABLE public.heslar_id_seq OWNER TO cz_archeologickamapa_api;
 CREATE TABLE public.heslar (
     id integer DEFAULT nextval('public.heslar_id_seq'::regclass) NOT NULL,
     ident_cely text NOT NULL UNIQUE,
@@ -61,7 +60,6 @@ CREATE SEQUENCE public.heslar_nazev_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER TABLE public.heslar_nazev_id_seq OWNER TO cz_archeologickamapa_api;
 CREATE TABLE public.heslar_nazev (
     id integer DEFAULT nextval('public.heslar_nazev_id_seq'::regclass) NOT NULL,
     heslar text not null unique,
@@ -75,7 +73,6 @@ CREATE SEQUENCE public.heslar_odkaz_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER TABLE public.heslar_odkaz_id_seq OWNER TO cz_archeologickamapa_api;
 CREATE TABLE public.heslar_odkaz (
     id integer DEFAULT nextval('public.heslar_odkaz_id_seq'::regclass) NOT NULL,
     heslo integer not null,
