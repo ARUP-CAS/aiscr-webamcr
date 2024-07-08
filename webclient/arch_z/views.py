@@ -507,7 +507,7 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
                 index=int(self.request.GET["index"])
                 if self.request.GET["label"]!=geom.iloc[index]["label"]:
                     raise Exception("arch_z.views.PianCreateView.get.label_not_found")
-                context["geom"] = geom.iloc[index]
+                context["geom"] = geom.iloc[index].copy()
                 if context["geom"]["epsg"]=='5514' or context["geom"]["epsg"] == 5514:
                     context["geom"]['geometry'],stat =  transform_geom_to_wgs84(context["geom"]['geometry'])
                     if stat != "OK":
@@ -556,7 +556,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
                 index=int(self.request.GET["index"])
                 if self.request.GET["label"]!=geom.iloc[index]["label"]:
                     raise Exception("arch_z.views.PianUpdateView.get.label_not_found")
-                context["geom"] = geom.iloc[index]
+                context["geom"] = geom.iloc[index].copy()
                 if context["geom"]["epsg"]=='5514' or context["geom"]["epsg"] == 5514:
                     context["geom"]['geometry'],stat =  transform_geom_to_wgs84(context["geom"]['geometry'])
                     if stat != "OK":
