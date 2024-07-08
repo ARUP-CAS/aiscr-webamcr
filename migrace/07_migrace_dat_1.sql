@@ -47,7 +47,7 @@ insert into akce_katastr(akce, katastr, hlavni) select id, katastr, true from ak
 CREATE OR REPLACE FUNCTION migrateCatastersFromAkce() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..100
+    FOR counter IN 1..150
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
@@ -175,7 +175,7 @@ insert into projekt_katastr(projekt, katastr, hlavni) select id, katastr, true f
 CREATE OR REPLACE FUNCTION migrateCatastersFromProjekt() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..100
+    FOR counter IN 1..150
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
