@@ -240,7 +240,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/djk2/django-tables2-column-shifter
    * - django-timezone-field
-     - 6.1.0
+     - 7.0
      - BSD License
      - https://github.com/mfogel/django-timezone-field/
    * - django-widget-tweaks
@@ -276,7 +276,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.5.36
+     - 2.6.0
      - MIT License
      - https://github.com/pre-commit/identify
    * - idna
