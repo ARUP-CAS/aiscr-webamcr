@@ -188,11 +188,11 @@ UPDATE akce_vedouci SET organizace = (SELECT organizace FROM akce WHERE akce.arc
 WHERE akce IN (SELECT archeologicky_zaznam FROM akce WHERE (coalesce(akce.organizace_ostatni, '') = ''));
 
 INSERT INTO akce_vedouci(akce, vedouci, organizace) SELECT
-(SELECT archeologicky_zaznam.id FROM archeologicky_zaznam WHERE archeologicky_zaznam.ident_cely = akce.ident_cely),
+(SELECT archeologicky_zaznam.id FROM archeologicky_zaznam WHERE archeologicky_zaznam.id = akce.archeologicky_zaznam),
 (SELECT osoba.id FROM osoba WHERE osoba.vypis_cely = 'anonym'),
 (SELECT organizace.id FROM organizace WHERE organizace.nazev_zkraceny = akce.organizace_ostatni)
 FROM akce WHERE
-EXISTS (SELECT archeologicky_zaznam.id FROM archeologicky_zaznam WHERE archeologicky_zaznam.ident_cely = akce.ident_cely)
+EXISTS (SELECT archeologicky_zaznam.id FROM archeologicky_zaznam WHERE archeologicky_zaznam.id = akce.archeologicky_zaznam)
 AND EXISTS (SELECT organizace.id FROM organizace WHERE organizace.nazev_zkraceny = akce.organizace_ostatni)
 AND (vedouci_akce_ostatni IS NULL OR vedouci_akce_ostatni = '');
 
