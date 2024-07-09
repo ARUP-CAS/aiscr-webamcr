@@ -1,4 +1,5 @@
 update externi_zdroj ez set organizace = null where organizace = '-1' or organizace = '';
+update externi_zdroj ez set organizace = 'NPÚ ú.o.p. Pardubice' where organizace = 'Památkový ústav v Pardubicích';
 update externi_zdroj ez set organizace = (SELECT id FROM organizace WHERE ez.organizace = organizace.nazev_zkraceny) where organizace is not null;
 alter table externi_zdroj alter column organizace type INT using organizace::integer;
 alter table externi_zdroj
