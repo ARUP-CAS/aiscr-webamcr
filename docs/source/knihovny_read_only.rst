@@ -609,11 +609,11 @@ Knihovny vkládané jako statické soubory
      - MIT License
      - https://jquery.com/
    * - Leaflet
-     - 1.7.1
+     - 1.9.4
      - BSD License
      - https://leafletjs.com/
    * - Leaflet Context Menu
-     - 1.4.0
+     - 1.5.1
      - MIT License
      - https://github.com/aratcliffe/Leaflet.contextmenu
    * - Leaflet Control Search
@@ -658,8 +658,12 @@ Knihovny vkládané jako statické soubory
      - https://github.com/makinacorpus/Leaflet.Spin
    * - Leaflet TileLayer Grayscale
      -
-     -
+     - WTFPL license
      - https://github.com/Zverik/leaflet-grayscale
+   * - Leaflet Messagebox
+     - 1.1
+     - BSD License
+     - https://github.com/tinuzz/leaflet-messagebox
    * - LercDecode
      - 1.0.1
      - Apache Software License
