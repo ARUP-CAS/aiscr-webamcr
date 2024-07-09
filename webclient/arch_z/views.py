@@ -68,6 +68,7 @@ from core.utils import (
     get_num_pians_from_envelope,
     get_dj_pians_from_envelope, CannotFindCadasterCentre,
 )
+from core.coordTransform import transform_geom_to_wgs84
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
 from dj.forms import CreateDJForm
@@ -506,7 +507,11 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
                 index=int(self.request.GET["index"])
                 if self.request.GET["label"]!=geom.iloc[index]["label"]:
                     raise Exception("arch_z.views.PianCreateView.get.label_not_found")
-                context["geom"] = geom.iloc[index]  
+                context["geom"] = geom.iloc[index].copy()
+                if context["geom"]["epsg"]=='5514' or context["geom"]["epsg"] == 5514:
+                    context["geom"]['geometry'],stat =  transform_geom_to_wgs84(context["geom"]['geometry'])
+                    if stat != "OK":
+                        raise Exception("arch_z.views.PianCreateView.get.transormation_error")
             except Exception as err:
                 logger.error("arch_z.views.PianCreateView.get.import_pian.error", extra={"err": err})
                 messages.add_message(self.request, messages.ERROR, _("arch_z.views.DokumentacniJednotkaRelatedUpdateView.get.import_pian.error"))
@@ -551,7 +556,11 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
                 index=int(self.request.GET["index"])
                 if self.request.GET["label"]!=geom.iloc[index]["label"]:
                     raise Exception("arch_z.views.PianUpdateView.get.label_not_found")
-                context["geom"] = geom.iloc[index]  
+                context["geom"] = geom.iloc[index].copy()
+                if context["geom"]["epsg"]=='5514' or context["geom"]["epsg"] == 5514:
+                    context["geom"]['geometry'],stat =  transform_geom_to_wgs84(context["geom"]['geometry'])
+                    if stat != "OK":
+                        raise Exception("arch_z.views.PianUpdateView.transormation_error")
             except Exception as err:
                 logger.error("arch_z.views.PianUpdateView.get.import_pian.error", extra={"err": err})
                 messages.add_message(self.request, messages.ERROR, _("arch_z.views.DokumentacniJednotkaRelatedUpdateView.get.import_pian.error"))

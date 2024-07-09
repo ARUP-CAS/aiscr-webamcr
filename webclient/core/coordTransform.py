@@ -403,7 +403,7 @@ def contains_two_floats(text):
     match = re.match(pattern, text.strip())    
     return bool(match)
 
-def transform_geom_to_sjtsk(geom):
+def transform_geom(geom,transFunc):
     if not isinstance(geom, str):
         return "", "Not strig"
     while geom.find("  ")!=-1:
@@ -419,7 +419,7 @@ def transform_geom_to_sjtsk(geom):
                     parts4=parts.split(" ")
                     if len(parts4) != 2:
                         return "","parse error"
-                    [x1, x2] = convertToJTSK(float(parts4[0]), float(parts4[1]))
+                    [x1, x2] = transFunc(float(parts4[0]), float(parts4[1]))
                     parts3[i3]=f"{x1} {x2}"
             if  len(parts3)>1: parts2[i2]=")".join(parts3)
             else: parts2[i2]=parts3[0]
@@ -429,6 +429,11 @@ def transform_geom_to_sjtsk(geom):
     else:geom=spgeom[0]
     return geom,"OK"
 
+def transform_geom_to_sjtsk(geom):
+    return transform_geom(geom,convertToJTSK)
+
+def transform_geom_to_wgs84(geom):
+    return transform_geom(geom,convertToWGS84)
 
 #out = convertToJTSK( 13.8098558,50.1278954)
 #spravne 785478.581,1032422.386  
