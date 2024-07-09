@@ -1,9 +1,6 @@
-update externi_zdroj ez
-set organizace = null
-where organizace = '-1'
-    or organizace = '';
-alter table externi_zdroj
-alter column organizace type INT using organizace::integer;
+update externi_zdroj ez set organizace = null where organizace = '-1' or organizace = '';
+update externi_zdroj ez set organizace = (SELECT id FROM organizace WHERE ez.organizace = organizace.nazev_zkraceny) where organizace is not null;
+alter table externi_zdroj alter column organizace type INT using organizace::integer;
 alter table externi_zdroj
 add CONSTRAINT externi_zdroj_organizace_fkey FOREIGN KEY(organizace) REFERENCES organizace(id) ON UPDATE CASCADE ON DELETE NO ACTION;
 update heslar h
