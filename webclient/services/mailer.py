@@ -381,7 +381,8 @@ class Mailer:
                 project_file: Soubor
                 repository_coonector = FedoraRepositoryConnector(project)
                 attachment = repository_coonector.get_binary_file(project_file.repository_uuid)
-                attachment.filename = project_file.nazev
+                if attachment:
+                    attachment.filename = project_file.nazev
             cls.__send(subject=subject, to=project.oznamovatel.email, html_content=html,
                        notification_type=notification_type, attachment=attachment)
 
