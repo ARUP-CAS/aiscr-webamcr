@@ -419,12 +419,12 @@ def create(request):
                     if projekt.should_generate_confirmation_document:
                         projekt.create_confirmation_document(fedora_transaction, user=request.user)
                     messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                    projekt.close_active_transaction_when_finished = True
+                    projekt.save()
                     if projekt.ident_cely[0] == OBLAST_CECHY:
                         Mailer.send_ep01a(project=projekt)
                     else:
                         Mailer.send_ep01b(project=projekt)
-                    projekt.close_active_transaction_when_finished = True
-                    projekt.save()
                     return redirect("projekt:detail", ident_cely=projekt.ident_cely)
                 else:
                     fedora_transaction.rollback_transaction()
