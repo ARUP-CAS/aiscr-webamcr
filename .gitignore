@@ -104,6 +104,9 @@ logstash/logstash.conf
 /scripts/test_preparaton.sh
 /redis_pass.txt
 
+# elasticsearch config
+/elasticsearch/elasticsearch.yml
+
 # rewrite preklady
 /preklady
 /prometheus/prometheus.yml
