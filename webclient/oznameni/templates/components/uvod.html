@@ -2,15 +2,9 @@
 
 <div class="jumbotron mb-0">
   <h1>{% trans "oznameni.templates.components.uvod.title" %}</h1>
-  <p>{% trans "oznameni.templates.components.uvod.text" %}</p>
-  <a class="btn btn-primary app-btn-show-more collapsed" data-toggle="collapse" href="#collapseMore" role="button" aria-expanded="false" aria-controls="collapseMore">
-    {% trans "oznameni.templates.components.uvod.readMore.button" %}
-    <span class="material-icons">expand_more</span>
-  </a>
-  <div class="collapse" id="collapseMore">
-    <hr />
-      {% blocktranslate with mail_arup=ARUP_MAIL|safe mail_arub=ARUB_MAIL|safe %}
-      oznameni.templates.components.uvod.collapsed.text{{mail_arup}}{{mail_arub}}
-      {% endblocktranslate %}
-  </div>
+  {% trans "oznameni.templates.components.uvod.text" %}
+  {% trans "oznameni.templates.components.warning.text" %}
+  {% blocktranslate with mail_arup=ARUP_MAIL|safe mail_arub=ARUB_MAIL|safe %}
+  oznameni.templates.components.uvod.collapsed.text{{mail_arup}}{{mail_arub}}
+  {% endblocktranslate %}
 </div>
