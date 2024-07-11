@@ -197,6 +197,7 @@ def delete_reporter_data_ten_years():
             item.active_transaction = FedoraTransaction()
             item.oznamovatel.delete()
             item.archive_project_documentation()
+            item.save()
             item.close_active_transaction_when_finished = True
             item.save()
         logger.debug("core.cron.delete_reporter_data_canceled_projects.do.end")

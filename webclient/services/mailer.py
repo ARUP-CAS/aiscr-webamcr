@@ -250,7 +250,7 @@ class Mailer:
 
     @classmethod
     def send_enz02(cls):
-        today_minus_1_day = (datetime.datetime.now() - datetime.timedelta(days=1)).date()
+        today_minus_1_day = (datetime.now() - timedelta(days=1)).date()
         IDENT_CELY = 'E-NZ-02'
         logger.debug("services.mailer.send_enz02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)

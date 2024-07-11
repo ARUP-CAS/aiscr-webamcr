@@ -13,6 +13,7 @@ from django.utils.translation import gettext as _
 
 from dokument.models import Dokument
 from historie.models import HistorieVazby, Historie
+from oznameni.models import Oznamovatel
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
@@ -111,6 +112,7 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     invalidate_model(ArcheologickyZaznam)
     invalidate_model(SamostatnyNalez)
     invalidate_model(Historie)
+    invalidate_model(Oznamovatel)
     fedora_transaction = instance.active_transaction
     if getattr(instance, "suppress_signal", False) is not True:
         if instance.close_active_transaction_when_finished:
