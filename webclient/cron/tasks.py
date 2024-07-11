@@ -15,6 +15,7 @@ from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
     OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, RUSENI_STARE_PROJ, UDAJ_ODSTRANEN, \
     STARY_PROJEKT_ZRUSEN, PROJEKT_STAV_ZAPSANY, SCHVALENI_OZNAMENI_PROJ
+from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
 from core.models import Soubor
 from core.coordTransform import transform_geom_to_sjtsk
 from core.repository_connector import FedoraTransaction
@@ -165,8 +166,8 @@ def delete_personal_data_canceled_projects():
                 item.oznamovatel.email = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.adresa = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.odpovedna_osoba = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
-                item.oznamovatel.oznamovatel = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.telefon = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
+                item.oznamovatel.poznamka = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.save()
                 item.archive_project_documentation()
                 item.close_active_transaction_when_finished = True
@@ -187,6 +188,7 @@ def delete_reporter_data_ten_years():
         today = datetime.datetime.now().date()
         ten_years_ago = today - datetime.timedelta(days=365*10)
         projects = Projekt.objects.filter(oznamovatel__isnull=False) \
+            .filter(typ_projektu=TYP_PROJEKTU_ZACHRANNY_ID) \
             .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
                     & Q(historie__historie__datum_zmeny__lt=ten_years_ago)).distinct()
         for item in projects:
@@ -267,6 +269,7 @@ def cancel_old_projects():
         today_minus_3_years = timezone.now() - datetime.timedelta(days=365 * 3)
         today_minus_1_year = timezone.now() - datetime.timedelta(days=365)
         projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZAPSANY) \
+            .filter(typ_projektu=TYP_PROJEKTU_ZACHRANNY_ID) \
             .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
                     & Q(historie__historie__datum_zmeny__lt=today_minus_3_years)) \
             .annotate(upper=Upper('planovane_zahajeni')) \

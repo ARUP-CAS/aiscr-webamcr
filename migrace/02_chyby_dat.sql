@@ -26,6 +26,7 @@ update user_storage set auth_level = 0 where auth_level is null;
 -- DONE 8. nelze pridat not null na uzivatel.heslo a email protoze uzivatel s ID -1 nema heslo ani email
 ---- COMMENT: existuje jedna akce ktera na neho ukazuje asi to je chyba, to same plati pro jeden externi zdroj a pian.potvrdil, 10 pripadu pian.vymezil, 7 pripadu projekt.odpovedny_pracovnik_zahajeni, 808 pripadu dokument.odpovedny_pracovnik_archivace, historie.uzivatel tam ma taky -1 (nastavim je na tebe, protoze tam chci ponechat not null constraint)
 update akce set odpovedny_pracovnik_archivace_zaa = null where odpovedny_pracovnik_archivace_zaa = -1;
+update akce set odpovedny_pracovnik_archivace = null where odpovedny_pracovnik_archivace = -1;
 update akce set odpovedny_pracovnik_podani_nz = null where odpovedny_pracovnik_podani_nz = -1;
 update externi_zdroj set odpovedny_pracovnik_vlozeni = null where odpovedny_pracovnik_vlozeni = -1;
 update pian set potvrdil = null where potvrdil = -1;
@@ -215,3 +216,6 @@ UPDATE dokumentacni_jednotka SET negativni_jednotka = false FROM komponenta WHER
 
 -- Oprava emailových adres na lower-case
 UPDATE user_storage SET email = LOWER(email);
+
+-- Odstranění souborů typu "log_dokumentace.pdf"
+DELETE FROM soubor WHERE nazev = 'log_dokumentace.pdf' AND projekt IS NOT null;

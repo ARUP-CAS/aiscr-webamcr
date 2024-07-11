@@ -14,11 +14,4 @@ app = Celery("webclient")
 
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
-app.conf.beat_schedule = {
-    'send-notifications-E-N-01-02': {
-        'task': 'cron.tasks.send_notifications',
-        'schedule': crontab(hour=2)
-    },
-}
-
 app.autodiscover_tasks()

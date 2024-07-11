@@ -13,7 +13,6 @@ CREATE SEQUENCE public.historie_akce_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER TABLE public.historie_akce_seq OWNER TO cz_archeologickamapa_api;
 CREATE TABLE public.historie_akce (
     id integer DEFAULT nextval('public.historie_akce_seq'::regclass) NOT NULL,
     datum_zmeny timestamp with time zone,
@@ -118,7 +117,6 @@ CREATE SEQUENCE public.heslar_kraj_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-ALTER TABLE public.heslar_kraj_id_seq OWNER TO cz_archeologickamapa_api;
 CREATE TABLE public.heslar_kraj (
     id integer DEFAULT nextval('public.heslar_kraj_id_seq'::regclass) NOT NULL,
     heslo text NOT NULL,
