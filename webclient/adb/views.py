@@ -144,14 +144,18 @@ def smazat_vb(request, ident_cely):
         zaznam.close_active_transaction_when_finished = True
         resp = zaznam.delete()
         next_url = request.POST.get("next")
+        if url_has_allowed_host_and_scheme(request.META.get("HTTP_REFERER"), allowed_hosts=settings.ALLOWED_HOSTS):
+            safe_redirect = request.META.get("HTTP_REFERER")
+        else:
+            safe_redirect = "/"
         if next_url:
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
                 response = next_url
             else:
                 logger.warning("adb.views.smazat.smazat_vb.not_safe", extra={"next_url": str(next_url)})
-                response = redirect(request.META.get("HTTP_REFERER"))
+                response = redirect(safe_redirect)
         else:
-            response = redirect(request.META.get("HTTP_REFERER"))
+            response = redirect(safe_redirect)
         if resp:
             logger.debug("adb.views.smazat.smazat_vb.deleted", extra={"resp": str(resp)})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)

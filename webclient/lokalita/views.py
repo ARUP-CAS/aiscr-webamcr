@@ -26,6 +26,7 @@ from core.views import SearchListView
 from core.coordTransform import transform_geom_to_wgs84
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
@@ -33,6 +34,7 @@ from django.core.cache import cache
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic import TemplateView
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import CreateView, UpdateView
@@ -376,7 +378,11 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
             messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                     )
-            return redirect(request.GET.get("next","core:home"))
+            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+                safe_redirect = request.GET.get("next","core:home")
+            else:
+                safe_redirect = "/"
+            return redirect(safe_redirect)
         return super().dispatch(request, *args, **kwargs)
     
     def get_dokumentacni_jednotka(self):
@@ -440,7 +446,11 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
             messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                     )
-            return redirect(request.GET.get("next","core:home"))
+            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+                safe_redirect = request.GET.get("next","core:home")
+            else:
+                safe_redirect = "/"
+            return redirect(safe_redirect)
         return super().dispatch(request, *args, **kwargs)
 
     def get_komponenta(self):
@@ -511,7 +521,11 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
             messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                     )
-            return redirect(request.GET.get("next","core:home"))
+            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+                safe_redirect = request.GET.get("next","core:home")
+            else:
+                safe_redirect = "/"
+            return redirect(safe_redirect)
         return super().dispatch(request, *args, **kwargs)
 
     def get_pian(self):
