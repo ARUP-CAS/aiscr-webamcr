@@ -117,9 +117,9 @@ jobs:
             VERSION_APP=${{ env.tag_version }}
             TAG_APP=${{ github.ref }}
 
-      - name: Attest
+      - name: Attest - proxy
         uses: actions/attest-build-provenance@v1
-        id: attest
+        id: attest_proxy
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_PROXY }}
           subject-digest: ${{ steps.push.outputs.digest }}
@@ -154,9 +154,9 @@ jobs:
             VERSION_APP=${{ env.tag_version }}
             TAG_APP=${{ github.ref }}
 
-      - name: Attest
+      - name: Attest - Redis
         uses: actions/attest-build-provenance@v1
-        id: attest
+        id: attest_redis
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_REDIS }}
           subject-digest: ${{ steps.push.outputs.digest }}
