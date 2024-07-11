@@ -186,12 +186,12 @@ class ModelWithMetadata(models.Model):
                     inner_item: DokumentacniJednotka
                     try:
                         inner_item.pian.save_metadata(fedora_transaction)
-                    except ObjectDoesNotExist as err:
+                    except (ObjectDoesNotExist, AttributeError) as err:
                         logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.process_arch_z"
                                      ".no_pian", extra={"err": err})
                     try:
                         inner_item.adb.save_metadata(fedora_transaction)
-                    except ObjectDoesNotExist as err:
+                    except (ObjectDoesNotExist, AttributeError) as err:
                         logger.debug(
                             "xml_generator.models.ModelWithMetadata.record_ident_change.process_arch_z.no_adb",
                             extra={"err": err})
