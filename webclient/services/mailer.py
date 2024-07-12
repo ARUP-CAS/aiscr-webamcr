@@ -375,14 +375,19 @@ class Mailer:
             project_file = project_files[0]
         else:
             project_file = None
+            logger.debug("services.mailer._send_ep01.no_project_file", extra={"ident_cely": project.ident_cely})
         if project.has_oznamovatel():
             attachment = None
             if project_file:
                 project_file: Soubor
                 repository_coonector = FedoraRepositoryConnector(project)
                 attachment = repository_coonector.get_binary_file(project_file.repository_uuid)
-                if attachment:
+                if attachment is not None:
                     attachment.filename = project_file.nazev
+                else:
+                    logger.error("services.mailer._send_ep01.cannot_read_attachment",
+                                 extra={"ident_cely": project.ident_cely,
+                                        "repository_uuid": project_file.repository_uuid})
             cls.__send(subject=subject, to=project.oznamovatel.email, html_content=html,
                        notification_type=notification_type, attachment=attachment)
 

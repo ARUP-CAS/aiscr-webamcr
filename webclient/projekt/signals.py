@@ -3,9 +3,8 @@ import logging
 from cacheops import invalidate_model
 from django.db import transaction
 
-from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
+from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY, OBLAST_CECHY
 from core.models import SouborVazby
-from core.repository_connector import FedoraTransaction
 from cron.tasks import update_single_redis_snapshot
 from django.db.models.signals import pre_save, post_save, pre_delete, post_delete
 from django.dispatch import receiver
@@ -18,6 +17,7 @@ from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
 from arch_z.models import Akce, ArcheologickyZaznam
+from services.mailer import Mailer
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
 logger = logging.getLogger(__name__)
@@ -116,7 +116,14 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     fedora_transaction = instance.active_transaction
     if getattr(instance, "suppress_signal", False) is not True:
         if instance.close_active_transaction_when_finished:
-            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
+            def on_commit():
+                instance.save_metadata(fedora_transaction, close_transaction=True)
+                if instance.ident_cely[0] == OBLAST_CECHY:
+                    Mailer.send_ep01a(project=instance)
+                else:
+                    Mailer.send_ep01b(project=instance)
+                instance.send_ep01 = False
+            transaction.on_commit(on_commit)
         else:
             instance.save_metadata(fedora_transaction)
     if (instance.stav == PROJEKT_STAV_ZAPSANY and hasattr(instance, "__original_stav")
