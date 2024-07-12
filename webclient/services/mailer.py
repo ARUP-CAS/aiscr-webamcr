@@ -240,7 +240,7 @@ class Mailer:
 
     @classmethod
     def send_enz01(cls):
-        today_plus_90_days = (datetime.datetime.now() + datetime.timedelta(days=90)).date()
+        today_plus_90_days = (datetime.now() + timedelta(days=90)).date()
         IDENT_CELY = 'E-NZ-01'
         logger.debug("services.mailer.send_enz01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -693,7 +693,7 @@ class Mailer:
             projekt__organizace=F('historie__historie__uzivatel__spoluprace_badatelu__vedouci__organizace'),
             historie__historie__uzivatel__spoluprace_badatelu__vedouci__notification_types__ident_cely='S-E-N-01',
             id__in=Subquery(subquery_sn12),
-            historie__historie__datum_zmeny=timezone.now().date() + timedelta(days=-1)
+            historie__historie__datum_zmeny__date=timezone.now().date() + timedelta(days=-1)
         ).distinct().values(
             'ident_cely',
             'historie__historie__uzivatel__spoluprace_badatelu__vedouci__email'

@@ -184,6 +184,12 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Metóda pro nastavení pomocného stavu vytvořený.
         """
         self.stav = PROJEKT_STAV_VYTVORENY
+        owner = get_object_or_404(User, email="amcr@arup.cas.cz")
+        Historie(
+            typ_zmeny=OZNAMENI_PROJ,
+            uzivatel=owner,
+            vazba=self.historie,
+        ).save()
         self.save()
 
     def set_oznameny(self):
@@ -191,12 +197,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Metóda pro nastavení stavu oznámený a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_OZNAMENY
-        owner = get_object_or_404(User, email="amcr@arup.cas.cz")
-        Historie(
-            typ_zmeny=OZNAMENI_PROJ,
-            uzivatel=owner,
-            vazba=self.historie,
-        ).save()
         self.save()
 
     def set_schvaleny(self, user, old_ident):
