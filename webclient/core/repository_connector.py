@@ -993,9 +993,9 @@ class FedoraTransactionPostCommitTasks(Enum):
 
 
 class FedoraTransaction:
-    child_transaction = False
 
     def __init__(self, uid=None):
+        self.child_transaction = False
         self.post_commit_tasks = {}
         if uid is None:
             self.__create_transaction()
@@ -1034,7 +1034,7 @@ class FedoraTransaction:
 
     def mark_transaction_as_closed(self):
         logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.start",
-                     extra={"transaction": self.uid})
+                     extra={"transaction": self.uid, "post_commit_tasks": self.post_commit_tasks.keys()})
         self._send_transaction_request()
         if not self.child_transaction:
             self._perform_post_commit_tasks()
