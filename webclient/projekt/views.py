@@ -31,7 +31,6 @@ from core.constants import (
     ROLE_ADMIN_ID,
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
-    ROLE_BADATEL_ID,
     RUSENI_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
     UKONCENI_V_TERENU_PROJ,
@@ -66,7 +65,7 @@ from core.message_constants import (
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
+    ZAZNAM_USPESNE_VYTVOREN
 )
 from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
 from core.utils import (
@@ -81,21 +80,21 @@ from core.utils import (
 )
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from core.models import Permissions as p, check_permissions
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import Group
 from django.contrib.gis.geos import Point
-from django.core.exceptions import PermissionDenied
 from django.db.models import Q, OuterRef, Subquery
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument, DokumentCast
 from dokument.views import odpojit, pripojit
-from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_BADATEL_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie
 from oznameni.forms import OznamovatelForm
@@ -111,7 +110,7 @@ from projekt.forms import (
     ZahajitVTerenuForm,
     ZruseniProjektForm,
 )
-from projekt.models import Projekt, ProjektKatastr
+from projekt.models import Projekt
 from projekt.tables import ProjektTable
 from uzivatel.forms import OsobaForm
 from services.mailer import Mailer
@@ -1341,7 +1340,11 @@ def odpojit_dokument(request, ident_cely, proj_ident_cely):
     if not relace_dokumentu.count() > 0:
         logger.error("Projekt - Dokument wrong relation")
         messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
-        return redirect(request.GET.get("next", "core:home"))
+        if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+                safe_redirect = request.GET.get("next","core:home")
+        else:
+            safe_redirect = "/"
+        return redirect(safe_redirect)
     return odpojit(request, ident_cely, proj_ident_cely, proj)
 
 

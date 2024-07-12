@@ -1661,7 +1661,8 @@ UPDATE heslar SET razeni = 5, heslo = 'mikroštítek', heslo_en = 'microfiche', 
 UPDATE heslar SET razeni = 4, heslo = 'památková zóna', heslo_en = 'heritage zone', popis = '' WHERE ident_cely = 'HES-000179';
 UPDATE heslar SET razeni = 5, heslo = 'pravěk', heslo_en = 'Prehistory', popis = '' WHERE ident_cely = 'HES-001161';
 UPDATE heslar SET razeni = 5, heslo = 'přirozený půdní horizont', heslo_en = 'natural topsoil', popis = '' WHERE ident_cely = 'HES-000246';
-UPDATE heslar SET razeni = 5, heslo = 'slovenština', heslo_en = 'Slovak', zkratka = 'SK', popis = '' WHERE ident_cely = 'HES-000171';
+UPDATE heslar SET razeni = 5, heslo = 'italština', heslo_en = 'Italian', zkratka = 'IT', popis = '' WHERE ident_cely = 'HES-001448';
+UPDATE heslar SET razeni = 6, heslo = 'slovenština', heslo_en = 'Slovak', zkratka = 'SK', popis = '' WHERE ident_cely = 'HES-000171';
 UPDATE heslar SET razeni = 5, heslo = 'slunečno', heslo_en = 'sunny', popis = '' WHERE ident_cely = 'HES-000590';
 UPDATE heslar SET razeni = 5, heslo = 'stavebně-historický průzkum', heslo_en = 'building-history survey', popis = '' WHERE ident_cely = 'HES-001143';
 UPDATE heslar SET razeni = 5, heslo = 'ústav památkové péče', heslo_en = 'heritage organisation', popis = '' WHERE ident_cely = 'HES-001130';
@@ -1744,7 +1745,7 @@ UPDATE heslar SET razeni = 6, heslo = 'hlášení', heslo_en = 'brief report', p
 UPDATE heslar SET razeni = 6, heslo = 'jiný podnět', heslo_en = 'other motivation', popis = '' WHERE ident_cely = 'HES-000599';
 UPDATE heslar SET razeni = 6, heslo = 'komunikace', heslo_en = 'transportation activity', zkratka = 'kom', popis = '' WHERE ident_cely = 'HES-000006';
 UPDATE heslar SET razeni = 6, heslo = 'kulturní vrstva/objekt', heslo_en = 'cultural layer/feature', popis = '' WHERE ident_cely = 'HES-000247';
-UPDATE heslar SET razeni = 6, heslo = 'latina', heslo_en = 'Latin', zkratka = 'LA', popis = '' WHERE ident_cely = 'HES-000172';
+UPDATE heslar SET razeni = 7, heslo = 'latina', heslo_en = 'Latin', zkratka = 'LA', popis = '' WHERE ident_cely = 'HES-000172';
 UPDATE heslar SET razeni = 6, heslo = 'linie ohrazující', heslo_en = 'delimiting line', popis = '' WHERE ident_cely = 'HES-001033';
 UPDATE heslar SET razeni = 6, heslo = 'nízká výpovědní hodnota', heslo_en = 'low relevancy', zkratka = 'N', popis = 'kvalitní, má záznam, neskenován kvůli nízké vypovídací hodnotě' WHERE ident_cely = 'HES-001178';
 UPDATE heslar SET razeni = 6, heslo = 'originál ztracen/zničen', heslo_en = 'original lost/destroyed', popis = '' WHERE ident_cely = 'HES-001171';
@@ -1819,7 +1820,7 @@ UPDATE heslar SET razeni = 7, heslo = 'lineární systém', heslo_en = 'system o
 UPDATE heslar SET razeni = 7, heslo = 'liniová stavba', heslo_en = 'line construction', popis = '' WHERE ident_cely = 'HES-000600';
 UPDATE heslar SET razeni = 7, heslo = 'neznámé uložení', heslo_en = 'unknown deposition', popis = '' WHERE ident_cely = 'HES-001172';
 UPDATE heslar SET razeni = 7, heslo = 'podorničí/podloží', heslo_en = 'subsoil', popis = '' WHERE ident_cely = 'HES-000248';
-UPDATE heslar SET razeni = 7, heslo = 'ruština', heslo_en = 'Russian', zkratka = 'RU', popis = '' WHERE ident_cely = 'HES-000173';
+UPDATE heslar SET razeni = 8, heslo = 'ruština', heslo_en = 'Russian', zkratka = 'RU', popis = '' WHERE ident_cely = 'HES-000173';
 UPDATE heslar SET razeni = 7, heslo = 'slunečno, oblačno, zataženo', heslo_en = 'sunny, cloudy, overcast', popis = '' WHERE ident_cely = 'HES-000592';
 UPDATE heslar SET razeni = 7, heslo = 'středověk', heslo_en = 'Medieval', popis = '' WHERE ident_cely = 'HES-001163';
 UPDATE heslar SET razeni = 70, heslo = 'areál těžby', heslo_en = 'extracting site', popis = '' WHERE ident_cely = 'HES-000089';
@@ -1889,7 +1890,7 @@ UPDATE heslar SET razeni = 8, heslo = 'fotografie černobílá', heslo_en = 'bla
 UPDATE heslar SET razeni = 8, heslo = 'fotografie předmětů', heslo_en = 'photographs of objects', zkratka = 'FP', popis = '' WHERE ident_cely = 'HES-000878';
 UPDATE heslar SET razeni = 8, heslo = 'Choceň', heslo_en = 'Choceň', popis = '' WHERE ident_cely = 'HES-000188';
 UPDATE heslar SET razeni = 8, heslo = 'jantar', heslo_en = 'amber', popis = '' WHERE ident_cely = 'HES-000972';
-UPDATE heslar SET razeni = 8, heslo = 'nerelevantní', heslo_en = 'irrelevant', zkratka = 'x', popis = '' WHERE ident_cely = 'HES-000174';
+UPDATE heslar SET razeni = 9, heslo = 'nerelevantní', heslo_en = 'irrelevant', zkratka = 'x', popis = '' WHERE ident_cely = 'HES-000174';
 UPDATE heslar SET razeni = 8, heslo = 'neznámý', heslo_en = 'unknown', popis = '' WHERE ident_cely = 'HES-000601';
 UPDATE heslar SET razeni = 8, heslo = 'novověk', heslo_en = 'Modern', popis = '' WHERE ident_cely = 'HES-001164';
 UPDATE heslar SET razeni = 8, heslo = 'ohrazení kruhové malé', heslo_en = 'circular enclosure (small)', popis = '' WHERE ident_cely = 'HES-001035';
@@ -2601,6 +2602,7 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000259';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000329';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000333';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-001447';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE ident_cely = 'HES-000355';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1010;
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300019384, 'http://vocab.getty.edu/aat/300019384', 'skos:broadMatch' FROM heslar WHERE nazev_heslare = 16 AND razeni = 1020;
@@ -3192,6 +3194,7 @@ INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relat
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300388344, 'http://vocab.getty.edu/aat/300388344', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000168';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300388693, 'http://vocab.getty.edu/aat/300388693', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000172';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300389168, 'http://vocab.getty.edu/aat/300389168', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000173';
+INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300388474, 'http://vocab.getty.edu/aat/300388474', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-001448';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300389290, 'http://vocab.getty.edu/aat/300389290', 'skos:exactMatch' FROM heslar WHERE ident_cely = 'HES-000171';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300389849, 'http://vocab.getty.edu/aat/300389849', 'skos:narrowMatch' FROM heslar WHERE ident_cely = 'HES-000030';
 INSERT INTO heslar_odkaz (heslo, zdroj, nazev_kodu, kod, uri, skos_mapping_relation) SELECT id, 'Getty AAT', 'ID', 300389893, 'http://vocab.getty.edu/aat/300389893', 'skos:closeMatch' FROM heslar WHERE ident_cely = 'HES-001113';

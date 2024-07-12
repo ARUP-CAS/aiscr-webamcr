@@ -23,7 +23,6 @@
 <script src="{% static 'heatmap/leaflet-heatmap.js' %}"></script>
 
 <!--Leaflet FullScreen-->
-<script src="https://unpkg.com/lerc@1.0.1/LercDecode.js"></script>
 <script src='{% static 'js/Leaflet.fullscreen1.0.1/Leaflet.fullscreen.min.js' %}'></script>
 <link href='{% static 'js/Leaflet.fullscreen1.0.1/leaflet.fullscreen.css' %}'rel='stylesheet'/>
 <!-- static leaflet additional import-->
@@ -230,10 +229,10 @@
 
               if(this.id=="visible_x1" || this.id=="visible_x2"){
                 var res_system="4326";
-                var re  = new RegExp("^(\-?[1-9][0-9]{0,1})$|^(\-?[1-9][0-9]{0,1},[0-9]{0,7})$");
-                var re1 = new RegExp("^(\-?[1-9][0-9]{0,1}),?");
-                var re2 = new RegExp("^(\-?[1-9][0-9]{0,1},[0-9]{0,8})$");
-                var re3 = new RegExp("^(\-?[1-9][0-9]{0,1}),$");
+                var re  = new RegExp("^(-?[1-9][0-9]{0,1})$|^(-?[1-9][0-9]{0,1},[0-9]{0,7})$");
+                var re1 = new RegExp("^(-?[1-9][0-9]{0,1}),?");
+                var re2 = new RegExp("^(-?[1-9][0-9]{0,1},[0-9]{0,8})$");
+                var re3 = new RegExp("^(-?[1-9][0-9]{0,1}),$");
                 var pos=this.selectionStart;
                 if(document.getElementById('visible_ss_combo').value == 2){
                   res_system="5514";

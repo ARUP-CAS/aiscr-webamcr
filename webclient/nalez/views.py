@@ -1,7 +1,6 @@
 import logging
 from typing import Union
 
-from arch_z.models import ArcheologickyZaznam
 from core.constants import DOKUMENT_CAST_RELATION_TYPE
 from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
@@ -21,8 +20,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 
 from core.repository_connector import FedoraTransaction
-from dj.models import DokumentacniJednotka
-from dokument.models import Dokument, DokumentCast
+from dokument.models import Dokument
 from heslar.hesla import (
     HESLAR_OBJEKT_DRUH,
     HESLAR_OBJEKT_DRUH_KAT,
@@ -37,7 +35,6 @@ from heslar.views import heslar_12
 from komponenta.models import Komponenta
 from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
-from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -155,8 +152,11 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         request.session["_old_nalez_post"] = request.POST
         request.session["komp_ident_cely"] = komp_ident_cely
-
-    response = redirect(request.META.get("HTTP_REFERER"))
+    if url_has_allowed_host_and_scheme(request.META.get("HTTP_REFERER"), allowed_hosts=settings.ALLOWED_HOSTS):
+        safe_redirect = request.META.get("HTTP_REFERER")
+    else:
+        safe_redirect = "/"
+    response = redirect(safe_redirect)
     response.set_cookie(
         "show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000
     )

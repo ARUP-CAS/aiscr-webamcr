@@ -184,7 +184,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/django-crispy-forms/django-crispy-forms
    * - django-debug-toolbar
-     - 4.4.2
+     - 4.4.5
      - BSD License
      - https://github.com/jazzband/django-debug-toolbar
    * - django-debug-toolbar-template-profiler
@@ -499,6 +499,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.7.0
      - MIT License
      - https://github.com/foutaise/texttable/
+   * - tomli
+     - 2.0.1
+     - MIT License
+     - https://github.com/hukkin/tomli
    * - tornado
      - 6.4.1
      - Apache Software License

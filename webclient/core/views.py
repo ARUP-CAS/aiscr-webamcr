@@ -146,8 +146,15 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                         request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                     )
         if request.method == "POST":
-            return redirect(request.POST.get("next","core:home"))
-        return redirect(request.GET.get("next", "core:home"))
+            if url_has_allowed_host_and_scheme(request.POST.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+                safe_redirect = request.POST.get("next","core:home")
+            else:
+                safe_redirect = "/"
+        elif url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+            safe_redirect = request.GET.get("next","core:home")
+        else:
+            safe_redirect = "/"
+        return redirect(safe_redirect)
     if request.method == "POST":
         logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor.pk})
         soubor.deleted_by_user = request.user
@@ -215,7 +222,11 @@ class DownloadFile(LoginRequiredMixin, View):
             messages.add_message(
                             request, messages.ERROR, SPATNY_ZAZNAM_SOUBOR_VAZBA
                         )
-            return redirect(request.GET.get("next", "core:home"))
+            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+                safe_redirect = request.GET.get("next","core:home")
+            else:
+                safe_redirect = "/"
+            return redirect(safe_redirect)
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
         if soubor.repository_uuid:
             if self.thumb_small:
@@ -273,6 +284,10 @@ def update_file(request, typ_vazby, ident_cely, file_id):
     """
     Funkce pohledu pro zobrazení stránky pro upload souboru.
     """
+    if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+        safe_redirect = request.GET.get("next","core:home")
+    else:
+        safe_redirect = "/"
     try:
         check_soubor_vazba(typ_vazby, ident_cely, file_id)
     except ZaznamSouborNotmatching as e:
@@ -280,10 +295,10 @@ def update_file(request, typ_vazby, ident_cely, file_id):
         messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_SOUBOR_VAZBA
                     )
-        return redirect(request.GET.get("next", "core:home"))
+        return redirect(safe_redirect)
 
     ident_cely = ""
-    back_url = request.GET.get("next","core:home")
+    back_url = safe_redirect
     return render(
         request,
         "core/upload_file.html",
@@ -1353,7 +1368,7 @@ class ApplicationRestartView(LoginRequiredMixin, View):
                         )
         referer = request.META.get('HTTP_REFERER')
         fallback_url = '/admin'
-        if referer:
+        if referer and url_has_allowed_host_and_scheme(referer, allowed_hosts=settings.ALLOWED_HOSTS):
             # Validate referer URL
             try:
                 validator = URLValidator()
