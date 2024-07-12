@@ -59,7 +59,7 @@ from core.repository_connector import FedoraTransaction, FedoraRepositoryConnect
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from core.models import Permissions as p, check_permissions
 from dal import autocomplete
-from django.db.models.functions import Length
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -71,6 +71,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
 from django.views.generic.edit import UpdateView
@@ -92,8 +93,6 @@ from dokument.models import (
     DokumentAutor,
     DokumentCast,
     DokumentExtraData,
-    DokumentJazyk,
-    DokumentPosudek,
     Let,
     Tvar,
 )
@@ -124,7 +123,6 @@ from heslar.views import heslar_12
 from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta, KomponentaAktivita, KomponentaVazby
-from lokalita.models import Lokalita
 from nalez.forms import (
     NalezFormSetHelper,
     create_nalez_objekt_form,
@@ -582,7 +580,11 @@ class DokumentCastDetailView(RelatedContext):
             messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                     )
-            return redirect(request.GET.get("next","core:home"))
+            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+                safe_redirect = request.GET.get("next","core:home")
+            else:
+                safe_redirect = "/"
+            return redirect(safe_redirect)
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -664,7 +666,11 @@ class KomponentaDokumentDetailView(RelatedContext):
             messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                     )
-            return redirect(request.GET.get("next","core:home"))
+            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+                safe_redirect = request.GET.get("next","core:home")
+            else:
+                safe_redirect = "/"
+            return redirect(safe_redirect)
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -701,7 +707,11 @@ class KomponentaDokumentCreateView(RelatedContext):
             messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                     )
-            return redirect(request.GET.get("next","core:home"))
+            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+                safe_redirect = request.GET.get("next","core:home")
+            else:
+                safe_redirect = "/"
+            return redirect(safe_redirect)
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):

@@ -336,7 +336,11 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
             messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                     )
-            return redirect(request.GET.get("next","core:home"))
+            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+                safe_redirect = request.GET.get("next","core:home")
+            else:
+                safe_redirect = "/"
+            return redirect(safe_redirect)
         return super().dispatch(request, *args, **kwargs)
 
     def get_dokumentacni_jednotka(self):
@@ -447,7 +451,11 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
             messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                     )
-            return redirect(request.GET.get("next","core:home"))
+            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+                safe_redirect = request.GET.get("next","core:home")
+            else:
+                safe_redirect = "/"
+            return redirect(safe_redirect)
         return super().dispatch(request, *args, **kwargs)
 
     def get_komponenta(self):
@@ -533,7 +541,11 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
             messages.add_message(
                         request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
                     )
-            return redirect(request.GET.get("next", "core:home"))
+            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
+                safe_redirect = request.GET.get("next","core:home")
+            else:
+                safe_redirect = "/"
+            return redirect(safe_redirect)
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
