@@ -19,6 +19,7 @@ jobs:
   build_publish_images:
     name: Build and push docker images for to Docker Hub
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       id-token: write
       packages: write
