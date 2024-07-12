@@ -29,13 +29,16 @@ def check_if_task_queued(class_name, pk, task_name):
 
 class ModelWithMetadata(models.Model):
     ident_cely = models.TextField(unique=True)
-    suppress_signal = False
-    soubory = None
-    deleted_by_user = None
-    active_transaction = None
-    close_active_transaction_when_finished = False
-    deletion_record_saved = False
-    skip_container_check = False
+
+    def __init__(self, *args, **kwargs):
+        super(ModelWithMetadata, self).__init__(*args, **kwargs)
+        self.suppress_signal = False
+        self.soubory = None
+        self.deleted_by_user = None
+        self.active_transaction = None
+        self.close_active_transaction_when_finished = False
+        self.deletion_record_saved = False
+        self.skip_container_check = False
 
     @property
     def metadata(self):
