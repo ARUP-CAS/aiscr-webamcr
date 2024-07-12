@@ -164,10 +164,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def __init__(self, *args, **kwargs):
         super(Projekt, self).__init__(*args, **kwargs)
         self.send_ep01 = False
-        try:
-            self.initial_dokumenty = list(self.casti_dokumentu.all().values_list("dokument__id", flat=True))
-        except ValueError as err:
-            self.initial_dokumenty = []
+        self.initial_dokumenty = []
 
 
     def __str__(self):

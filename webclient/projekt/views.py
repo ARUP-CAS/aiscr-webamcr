@@ -544,6 +544,7 @@ def smazat(request, ident_cely):
         )
     if request.method == "POST":
         fedora_trasnaction = FedoraTransaction()
+        projekt.initial_dokumenty = list(projekt.casti_dokumentu.all().values_list("dokument__id", flat=True))
         projekt.active_transaction = fedora_trasnaction
         projekt.close_active_transaction_when_finished = True
         projekt.deleted_by_user = request.user
