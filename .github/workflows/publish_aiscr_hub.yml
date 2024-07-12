@@ -87,7 +87,7 @@ jobs:
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_PROD }}
           subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
+
       #---------------------
       # BUILD PROXY
       #---------------------
@@ -125,7 +125,7 @@ jobs:
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_PROXY }}
           subject-digest: ${{ steps.push_proxy.outputs.digest }}
-          push-to-registry: true
+          
       #---------------------
       # BUILD REDIS
       #---------------------
@@ -163,4 +163,3 @@ jobs:
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_REDIS }}
           subject-digest: ${{ steps.push_redis.outputs.digest }}
-          push-to-registry: true
