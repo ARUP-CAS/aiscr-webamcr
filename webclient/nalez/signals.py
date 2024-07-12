@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
     logger.debug("nalez.signals.delete_nalez_objekt.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
+    if not hasattr(instance, "active_transaction") or not hasattr(instance, "close_active_transaction_when_finished"):
+        logger.debug("nalez.signals.delete_nalez_objekt.no_transaction", extra={"pk": instance.pk})
+        return
     if instance.active_transaction:
         fedora_transaction: FedoraTransaction = instance.active_transaction
     elif instance.komponenta.active_transaction:
@@ -51,6 +54,9 @@ def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
 def delete_nalez_predmet(sender, instance: NalezObjekt, **kwargs):
     logger.debug("nalez.signals.delete_nalez_predmet.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
+    if not hasattr(instance, "active_transaction") or not hasattr(instance, "close_active_transaction_when_finished"):
+        logger.debug("nalez.signals.delete_nalez_predmet.no_transaction", extra={"pk": instance.pk})
+        return
     if instance.active_transaction:
         fedora_transaction: FedoraTransaction = instance.active_transaction
     elif instance.komponenta.active_transaction:
