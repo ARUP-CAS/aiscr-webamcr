@@ -213,6 +213,10 @@ INSERT INTO  akce_vedouci (akce, organizace, vedouci) VALUES
 ((SELECT id FROM archeologicky_zaznam WHERE ident_cely = 'C-9111440A'), (SELECT id FROM organizace WHERE nazev_zkraceny = 'Archeologický ústav Praha'), (SELECT id FROM osoba WHERE vypis_cely = 'Limburský, Petr')),
 ((SELECT id FROM archeologicky_zaznam WHERE ident_cely = 'C-9162972A'), (SELECT id FROM organizace WHERE nazev_zkraceny = 'Archeologický ústav Praha'), (SELECT id FROM osoba WHERE vypis_cely = 'Vencl, Slavomil'));
 
+-- DK: Náhodou jsem si všimla, že v AMČR je 15x omylem zapsaná "Richterová, Jana" místo "Richterová, Julie"  (z MM Praha).
+UPDATE akce SET hlavni_vedouci = 30972 WHERE hlavni_vedouci = 29211 AND organizace = 315783;
+UPDATE akce_vedouci SET vedouci = 30972 WHERE vedouci = 29211 AND organizace = 315783;
+
 -- Zkontrolovat a odstranit nepoužitá jména z hesláře.
 with pom AS
 (
