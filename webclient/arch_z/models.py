@@ -425,6 +425,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             ):
                 old_ident = self.ident_cely
                 self.set_akce_ident()
+                ident_change_recorded = True
                 poznamka_historie = f"{old_ident} -> {self.ident_cely}"
             else:
                 old_ident = self.ident_cely

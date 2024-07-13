@@ -31,14 +31,13 @@ class ModelWithMetadata(models.Model):
     ident_cely = models.TextField(unique=True)
 
     def __init__(self, *args, **kwargs):
-        super(ModelWithMetadata, self).__init__(*args, **kwargs)
         self.suppress_signal = False
-        self.soubory = None
         self.deleted_by_user = None
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
         self.deletion_record_saved = False
         self.skip_container_check = False
+        super(ModelWithMetadata, self).__init__(*args, **kwargs)
 
     @property
     def metadata(self):
