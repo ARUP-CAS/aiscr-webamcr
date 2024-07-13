@@ -106,7 +106,8 @@ window.onload = function () {
         acceptFile = "image/jpeg, " +
             "image/png, " +
             "image/tiff, " +
-            "image/heic"
+            "image/heic, " +
+            "image/heif"
         RejectedFileMessage = reject_dict["rejected_pas"]
     } else if (currentLocation.includes("soubor/nahrat/dokument/")) {
         acceptFile = "image/jpeg, " +
@@ -125,6 +126,7 @@ window.onload = function () {
             "image/svg+xml, " +
             "application/pdf, " +
             "application/zip, " +
+            "application/zip-compressed, " +
             "application/x-zip-compressed, " +
             "application/vnd.rar, " +
             "application/x-rar, " +
@@ -132,8 +134,16 @@ window.onload = function () {
             "application/x-7z-compressed"
         RejectedFileMessage = reject_dict["rejected_dokument_model"]
     } else {
-        acceptFile = "image/*, " +
+        acceptFile = image/jpeg, " +
+            "image/png, " +
+            "image/tiff, " +
+            "image/heic, " +
+            "image/heif", " +
+            "image/svg+xml, " +
+            "image/bmp", " +
+            "image/gif", " +
             "application/zip, " +
+            "application/zip-compressed, " +
             "application/x-zip-compressed, " +
             "application/vnd.rar, " +
             "application/x-rar, " +
