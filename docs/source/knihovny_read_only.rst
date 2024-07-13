@@ -499,10 +499,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.7.0
      - MIT License
      - https://github.com/foutaise/texttable/
-   * - tomli
-     - 2.0.1
-     - MIT License
-     - https://github.com/hukkin/tomli
    * - tornado
      - 6.4.1
      - Apache Software License
