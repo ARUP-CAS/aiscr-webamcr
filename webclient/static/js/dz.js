@@ -134,7 +134,7 @@ window.onload = function () {
             "application/x-7z-compressed"
         RejectedFileMessage = reject_dict["rejected_dokument_model"]
     } else {
-        acceptFile = image/jpeg, " +
+        acceptFile = "image/jpeg, " +
             "image/png, " +
             "image/tiff, " +
             "image/heic, " +
