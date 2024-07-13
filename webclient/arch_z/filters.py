@@ -12,7 +12,8 @@ from django_filters import (
     MultipleChoiceFilter,
     DateFromToRangeFilter,
     RangeFilter,
-    ChoiceFilter, FilterSet
+    ChoiceFilter, FilterSet,
+    NumberFilter
 )
 from django_filters.widgets import DateRangeWidget, SuffixedMultiWidget
 from django_filters.fields import RangeField
@@ -522,9 +523,15 @@ class AkceFilter(ArchZaznamFilter):
         distinct=True,
     )
 
-    vb_niveleta = NumberRangeFilter(
+    vb_niveleta_od = NumberFilter(
         label=_("arch_z.filters.AkceFilter.vb_niveleta.label"),
-        field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__adb__vyskove_body__niveleta",
+        method='filter_by_z_range',
+        distinct=True,
+    )
+
+    vb_niveleta_do = NumberFilter(
+        label=_(" "),
+        method='filter_by_z_range',
         distinct=True,
     )
 
@@ -659,10 +666,22 @@ class AkceFilter(ArchZaznamFilter):
         )
         return queryset.filter(Q(**{lookup1: value}) | Q(**{lookup2: value})).distinct()
 
+    def filter_by_z_range(self, queryset, name, value):
+        if value:
+            if name ==  'vb_niveleta_od':
+                queryset = queryset.extra(where=["ST_Z(geom) >= %s"],params=[value])
+            if name ==  'vb_niveleta_do':
+                queryset = queryset.extra(where=["ST_Z(geom) <= %s"],params=[value])
+        return queryset
+
     def filter_queryset(self, queryset):
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(AkceFilter, self).filter_queryset(queryset)
+        if 'vb_niveleta_od' in self.request.GET or 'vb_niveleta_do' in self.request.GET:
+            queryset = queryset.filter(
+                    archeologicky_zaznam__dokumentacni_jednotky_akce__adb__vyskove_body__geom__isnull=False
+                )            
         if historie:
             queryset_history = Q(archeologicky_zaznam__historie__typ_vazby=historie["typ_vazby"])
             if "uzivatel" in historie:
@@ -832,7 +851,8 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
                     Div(css_class="col-sm-6"),
                     Div("vb_ident_obsahuje", css_class="col-sm-2"),
                     Div("vb_uroven", css_class="col-sm-2"),
-                    Div("vb_niveleta", css_class="col-sm-4 app-daterangepicker"),
+                    Div("vb_niveleta_od", css_class="col-sm-2"),
+                    Div("vb_niveleta_do", css_class="col-sm-2"),
                     id="AdbCollapse",
                     css_class="collapse row",
                 ),
