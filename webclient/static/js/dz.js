@@ -138,10 +138,10 @@ window.onload = function () {
             "image/png, " +
             "image/tiff, " +
             "image/heic, " +
-            "image/heif", " +
+            "image/heif, " +
             "image/svg+xml, " +
-            "image/bmp", " +
-            "image/gif", " +
+            "image/bmp, " +
+            "image/gif, " +
             "application/zip, " +
             "application/zip-compressed, " +
             "application/x-zip-compressed, " +
