@@ -14,11 +14,11 @@ from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 from core.repository_connector import FedoraTransaction
 from cron.tasks import update_single_redis_snapshot
 from dj.models import DokumentacniJednotka
-from dokument.models import DokumentCast
 from historie.models import HistorieVazby, Historie
 from komponenta.models import KomponentaVazby, Komponenta
 from nalez.models import NalezPredmet, NalezObjekt
 from pian.models import Pian
+from projekt.models import Projekt
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
 logger = logging.getLogger(__name__)
@@ -34,6 +34,7 @@ def invalidate_arch_z_related_models():
     invalidate_model(NalezObjekt)
     invalidate_model(DokumentacniJednotka)
     invalidate_model(Komponenta)
+    invalidate_model(Projekt)
 
 
 @receiver(pre_save, sender=ArcheologickyZaznam)
@@ -64,9 +65,10 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     fedora_transaction = instance.active_transaction
     if not instance.suppress_signal:
         try:
-            if instance.akce and instance.akce.projekt:
+            if (instance.akce and instance.akce.projekt
+                    and instance.akce.projekt.ident_cely != instance.initial_projekt.ident_cely):
                 instance.akce.projekt.save_metadata(fedora_transaction)
-        except ObjectDoesNotExist as err:
+        except (ObjectDoesNotExist, AttributeError) as err:
             logger.debug("arch_z.signals.create_arch_z_metadata.no_akce",
                          extra={"record_ident_cely": instance.ident_cely, "err": err})
         if instance.initial_pristupnost is not None and instance.pristupnost.id != instance.initial_pristupnost.id:
@@ -113,7 +115,7 @@ def update_akce_snapshot(sender, instance: Akce, **kwargs):
         if instance.projekt is None and instance.initial_projekt is not None:
             instance.initial_projekt.save_metadata(fedora_transaction)
         if (instance.projekt is not None and instance.initial_projekt is not None
-                and instance.projekt != instance.initial_projekt):
+                and instance.projekt.ident_cely != instance.initial_projekt.ident_cely):
             instance.projekt.save_metadata(fedora_transaction)
             instance.initial_projekt.save_metadata(fedora_transaction)
         if instance.close_active_transaction_when_finished:

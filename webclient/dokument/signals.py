@@ -153,10 +153,7 @@ def let_delete_repository_container(sender, instance: Let, **kwargs):
     logger.debug("dokument.signals.let_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
     fedora_transaction = FedoraTransaction()
-    if instance.close_active_transaction_when_finished:
-        transaction.on_commit(lambda: instance.record_deletion(fedora_transaction, True))
-    else:
-        instance.record_deletion(fedora_transaction)
+    transaction.on_commit(lambda: instance.record_deletion(fedora_transaction, True))
     logger.debug("dokument.signals.let_delete_repository_container.end",
                  extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
 

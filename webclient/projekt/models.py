@@ -163,10 +163,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def __init__(self, *args, **kwargs):
         super(Projekt, self).__init__(*args, **kwargs)
-        try:
-            self.initial_dokumenty = list(self.casti_dokumentu.all().values_list("dokument__id", flat=True))
-        except ValueError as err:
-            self.initial_dokumenty = []
+        self.send_ep01 = False
+        self.initial_dokumenty = []
 
 
     def __str__(self):
@@ -184,6 +182,12 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Metóda pro nastavení pomocného stavu vytvořený.
         """
         self.stav = PROJEKT_STAV_VYTVORENY
+        owner = get_object_or_404(User, email="amcr@arup.cas.cz")
+        Historie(
+            typ_zmeny=OZNAMENI_PROJ,
+            uzivatel=owner,
+            vazba=self.historie,
+        ).save()
         self.save()
 
     def set_oznameny(self):
@@ -191,12 +195,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Metóda pro nastavení stavu oznámený a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_OZNAMENY
-        owner = get_object_or_404(User, email="amcr@arup.cas.cz")
-        Historie(
-            typ_zmeny=OZNAMENI_PROJ,
-            uzivatel=owner,
-            vazba=self.historie,
-        ).save()
         self.save()
 
     def set_schvaleny(self, user, old_ident):

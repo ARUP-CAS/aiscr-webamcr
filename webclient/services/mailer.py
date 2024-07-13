@@ -240,7 +240,7 @@ class Mailer:
 
     @classmethod
     def send_enz01(cls):
-        today_plus_90_days = (datetime.datetime.now() + datetime.timedelta(days=90)).date()
+        today_plus_90_days = (datetime.now() + timedelta(days=90)).date()
         IDENT_CELY = 'E-NZ-01'
         logger.debug("services.mailer.send_enz01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -375,14 +375,19 @@ class Mailer:
             project_file = project_files[0]
         else:
             project_file = None
+            logger.debug("services.mailer._send_ep01.no_project_file", extra={"ident_cely": project.ident_cely})
         if project.has_oznamovatel():
             attachment = None
             if project_file:
                 project_file: Soubor
                 repository_coonector = FedoraRepositoryConnector(project)
                 attachment = repository_coonector.get_binary_file(project_file.repository_uuid)
-                if attachment:
+                if attachment is not None:
                     attachment.filename = project_file.nazev
+                else:
+                    logger.error("services.mailer._send_ep01.cannot_read_attachment",
+                                 extra={"ident_cely": project.ident_cely,
+                                        "repository_uuid": project_file.repository_uuid})
             cls.__send(subject=subject, to=project.oznamovatel.email, html_content=html,
                        notification_type=notification_type, attachment=attachment)
 
@@ -693,7 +698,7 @@ class Mailer:
             projekt__organizace=F('historie__historie__uzivatel__spoluprace_badatelu__vedouci__organizace'),
             historie__historie__uzivatel__spoluprace_badatelu__vedouci__notification_types__ident_cely='S-E-N-01',
             id__in=Subquery(subquery_sn12),
-            historie__historie__datum_zmeny=timezone.now().date() + timedelta(days=-1)
+            historie__historie__datum_zmeny__date=timezone.now().date() + timedelta(days=-1)
         ).distinct().values(
             'ident_cely',
             'historie__historie__uzivatel__spoluprace_badatelu__vedouci__email'

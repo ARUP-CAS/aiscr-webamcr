@@ -418,12 +418,9 @@ def create(request):
                     if projekt.should_generate_confirmation_document:
                         projekt.create_confirmation_document(fedora_transaction, user=request.user)
                     messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                    projekt.send_ep01 = True
                     projekt.close_active_transaction_when_finished = True
                     projekt.save()
-                    if projekt.ident_cely[0] == OBLAST_CECHY:
-                        Mailer.send_ep01a(project=projekt)
-                    else:
-                        Mailer.send_ep01b(project=projekt)
                     return redirect("projekt:detail", ident_cely=projekt.ident_cely)
                 else:
                     fedora_transaction.rollback_transaction()
@@ -546,6 +543,7 @@ def smazat(request, ident_cely):
         )
     if request.method == "POST":
         fedora_trasnaction = FedoraTransaction()
+        projekt.initial_dokumenty = list(projekt.casti_dokumentu.all().values_list("dokument__id", flat=True))
         projekt.active_transaction = fedora_trasnaction
         projekt.close_active_transaction_when_finished = True
         projekt.deleted_by_user = request.user
@@ -713,10 +711,7 @@ def schvalit(request, ident_cely):
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             projekt.create_confirmation_document(fedora_transaction, user=request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
-        if projekt.ident_cely[0] == OBLAST_CECHY:
-            Mailer.send_ep01a(project=projekt)
-        else:
-            Mailer.send_ep01b(project=projekt)
+        projekt.send_ep01 = True
         projekt.close_active_transaction_when_finished = True
         projekt.save()
         logger.debug("projekt.views.schvalit.post.done",
@@ -1383,10 +1378,7 @@ def generovat_oznameni(request, ident_cely):
         return redirect(projekt.get_absolute_url())
     projekt.create_confirmation_document(fedora_transaction, additional=True, user=request.user)
     if request.POST.get("odeslat_oznamovateli", False):
-        if projekt.ident_cely[0] == OBLAST_CECHY:
-            Mailer.send_ep01a(project=projekt)
-        else:
-            Mailer.send_ep01b(project=projekt)
+        projekt.send_ep01 = True
     projekt.close_active_transaction_when_finished = True
     projekt.save()
     return redirect(projekt.get_absolute_url())
@@ -1401,11 +1393,8 @@ class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
         fedora_transaction = FedoraTransaction()
         projekt.active_transaction = fedora_transaction
         projekt.create_confirmation_document(fedora_transaction, additional=True, user=self.request.user)
-        if projekt.ident_cely[0] == OBLAST_CECHY:
-            Mailer.send_ep01a(project=projekt)
-        else:
-            Mailer.send_ep01b(project=projekt)
         projekt.close_active_transaction_when_finished = True
+        projekt.send_ep01 = True
         projekt.save()
         return super().get_redirect_url(*args, **kwargs)
 

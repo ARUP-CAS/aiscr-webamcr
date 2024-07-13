@@ -425,6 +425,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             ):
                 old_ident = self.ident_cely
                 self.set_akce_ident()
+                ident_change_recorded = True
                 poznamka_historie = f"{old_ident} -> {self.ident_cely}"
             else:
                 old_ident = self.ident_cely
@@ -443,6 +444,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     def __init__(self, *args, **kwargs):
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
         self.initial_stav = self.stav
+        try:
+            self.initial_projekt = self.akce.projekt
+        except (ObjectDoesNotExist, AttributeError):
+            self.initial_projekt = None
         try:
             self.initial_casti_dokumentu = self.casti_dokumentu.all().values_list("id", flat=True)
         except ValueError as err:

@@ -107,11 +107,10 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         try:
             self.initial_dokumentacni_jednotka = self.dokumentacni_jednotka
         except ObjectDoesNotExist as err:
-            pass
+            self.initial_dokumentacni_jednotka = None
         self.close_active_transaction_when_finished = False
         self.active_transaction = None
         self.suppress_signal = False
-        self.initial_dokumentacni_jednotka = None
 
 
 def get_vyskovy_bod(adb: Adb, offset=1) -> str:

@@ -1464,6 +1464,7 @@ def create_model_3D(request):
                 komponenta.komponenta_vazby = dc.komponenty
                 komponenta.ident_cely = dokument.ident_cely + "-K001"
                 komponenta.save()
+                form_komponenta.save_m2m()
 
                 dokument.close_active_transaction_when_finished = True
                 dokument.save()
