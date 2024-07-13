@@ -165,6 +165,13 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     def initial_pristupnost(self, value):
         self._initial_pristupnost=value
 
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            previous = SamostatnyNalez.objects.get(pk=self.pk)
+            if previous.pristupnost != self.pristupnost:
+                self.initial_pristupnost=previous.pristupnost
+        super(SamostatnyNalez, self).save(*args, **kwargs)
+
     def set_zapsany(self, user):
         """
         Metóda pro nastavení stavu zapsaný a uložení změny do historie pro samostatný nález.
