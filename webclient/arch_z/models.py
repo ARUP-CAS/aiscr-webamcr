@@ -459,11 +459,18 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         if hasattr(self, "pristupnost"):       
             self._initial_pristupnost = self.pristupnost
         else: self._initial_pristupnost= None
-        return  self._initial_pristupnost  
-    
+        return  self._initial_pristupnost
+
     @initial_pristupnost.setter
     def initial_pristupnost(self, value):
         self._initial_pristupnost=value
+
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            previous = ArcheologickyZaznam.objects.get(pk=self.pk)
+            if previous.pristupnost != self.pristupnost:
+                self.initial_pristupnost=previous.pristupnost
+        super(ArcheologickyZaznam, self).save(*args, **kwargs)
 
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):
