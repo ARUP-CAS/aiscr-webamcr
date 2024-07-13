@@ -38,6 +38,8 @@ class ModelWithMetadata(models.Model):
         self.deletion_record_saved = False
         self.skip_container_check = False
         super(ModelWithMetadata, self).__init__(*args, **kwargs)
+        if not hasattr(self, "soubory"):
+            self.soubory = None
 
     @property
     def metadata(self):
