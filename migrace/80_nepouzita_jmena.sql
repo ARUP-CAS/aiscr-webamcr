@@ -31,3 +31,6 @@ with pom AS
     sn.id is null
 )
 DELETE FROM osoba USING pom WHERE osoba.id = pom.id;
+
+-- Vymazání odstraněných hesel z hesláře (opomenuto dříve)
+DELETE FROM heslar WHERE ident_cely IN ('HES-000611', 'HES-000616', 'HES-000622');
