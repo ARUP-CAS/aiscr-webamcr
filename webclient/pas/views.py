@@ -74,7 +74,7 @@ from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from services.mailer import Mailer
 from uzivatel.models import Organizace, User
-from core.models import Permissions as p, check_permissions
+from core.models import Permissions as p, PermissionsSkip, check_permissions
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
@@ -856,6 +856,30 @@ class UzivatelSpolupraceListView(SearchListView):
             "spolupracovnik__organizace",
         )
         return self.check_filter_permission(qs).order_by("id")
+    
+    def check_filter_permission(self, qs):  
+        permissions = p.objects.filter(
+                main_role=self.request.user.hlavni_role,
+                address_in_app=self.request.resolver_match.route,
+            )
+        if permissions.count()>0:
+            for idx, perm in enumerate(permissions):
+                if idx == 0:
+                    new_qs = self.filter_by_permission(qs, perm)
+                else:
+                    new_qs = self.filter_by_permission(qs, perm) | new_qs
+
+            perm_skips = list(PermissionsSkip.objects.filter(user=self.request.user).values_list("ident_list",flat=True))
+            if len(perm_skips) > 0:
+                ident_key = self.permission_model_lookup + "id__in"
+                perm_skips_list = [id for id in perm_skips[0].split(",") if id.isdigit()]
+                filterdoc = {ident_key:perm_skips_list}
+                if perm.status:
+                    filterdoc.update(self.add_status_lookup(perm))
+                qs = new_qs | qs.filter(**filterdoc)
+            else:
+                qs = new_qs
+        return qs
     
     def add_ownership_lookup(self, ownership, qs=None):
         filtered_my = Q(spolupracovnik=self.request.user)
