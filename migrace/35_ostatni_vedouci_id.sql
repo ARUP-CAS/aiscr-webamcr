@@ -1,1 +1,0 @@
-ALTER TABLE akce_vedouci ADD COLUMN id SERIAL;
