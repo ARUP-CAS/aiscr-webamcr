@@ -181,7 +181,7 @@ services:
       - XPACK_MONITORING_ENABLED=false
       - ELASTIC_PASSWORD=elastic_pass
     volumes:
-      - elasticsearch_volume:/usr/share/elasticsearch/data
+      - /opt/elastic_logs:/usr/share/elasticsearch/data
       - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     ports:
       - 9200:9200
@@ -251,7 +251,6 @@ volumes:
   locale_data:
   nginx_data:
   logs_volume:
-  elasticsearch_volume:
   grafana_data:
   redis_data:
   prometheus_data:
