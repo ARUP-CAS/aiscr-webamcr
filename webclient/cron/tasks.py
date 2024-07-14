@@ -185,27 +185,29 @@ def delete_reporter_data_ten_years():
      Deset let po zápisu projektu smazat související záznam z tabulky oznamovatel + odstranit projektovou dokumentaci
      a vytvořit log (jako při archivaci projektu).
     """
-    try:
-        logger.debug("core.cron.delete_reporter_data_canceled_projects.do.start")
-        today = datetime.datetime.now().date()
-        ten_years_ago = today - datetime.timedelta(days=365*10)
-        projects = Projekt.objects.filter(oznamovatel__isnull=False) \
-            .filter(typ_projektu=TYP_PROJEKTU_ZACHRANNY_ID) \
-            .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
-                    & Q(historie__historie__datum_zmeny__lt=ten_years_ago)).distinct()
-        for item in projects:
-            logger.debug("core.cron.delete_reporter_data_canceled_projects.do.project",
-                         extra={"project": item.ident_cely})
+    logger.debug("core.cron.delete_reporter_data_canceled_projects.do.start")
+    today = datetime.datetime.now().date()
+    ten_years_ago = today - datetime.timedelta(days=365*10)
+    projects = Projekt.objects.filter(oznamovatel__isnull=False) \
+        .filter(typ_projektu=TYP_PROJEKTU_ZACHRANNY_ID) \
+        .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
+                & Q(historie__historie__datum_zmeny__lt=ten_years_ago)).distinct()
+    for item in projects:
+        try:
             item.active_transaction = FedoraTransaction()
+            logger.debug("core.cron.delete_reporter_data_canceled_projects.do.project.start",
+                         extra={"project": item.ident_cely, "transaction": item.active_transaction.uid})
             item.oznamovatel.delete()
             item.archive_project_documentation()
             item.oznamovatel = None
             item.save()
             item.close_active_transaction_when_finished = True
             item.save()
-        logger.debug("core.cron.delete_reporter_data_canceled_projects.do.end")
-    except Exception as err:
-        logger.error("core.cron.delete_reporter_data_canceled_projects.do.error", extra={"error": err})
+            logger.debug("core.cron.delete_reporter_data_canceled_projects.do.end",
+                         extra={"project": item.ident_cely, "transaction": item.active_transaction.uid})
+        except Exception as err:
+            logger.error("core.cron.delete_reporter_data_canceled_projects.do.error", extra={"error": err})
+    logger.debug("core.cron.delete_reporter_data_canceled_projects.do.end")
 
 
 @shared_task
