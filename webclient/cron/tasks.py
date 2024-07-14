@@ -59,6 +59,7 @@ def send_notifications_enz():
         logger.error("cron.tasks.send_notifications_enz.do.error",
                      extra={"error": str(err), "traceback": traceback.format_exc()})
 
+
 @shared_task
 def send_notifications_en():
     """
@@ -78,6 +79,7 @@ def send_notifications_en():
     except Exception as err:
         logger.error("cron.tasks.send_notifications_en.do.error",
                      extra={"error": str(err), "traceback": traceback.format_exc()})
+
 
 @shared_task
 def pian_to_sjtsk():
@@ -197,6 +199,7 @@ def delete_reporter_data_ten_years():
             item.active_transaction = FedoraTransaction()
             item.oznamovatel.delete()
             item.archive_project_documentation()
+            item.oznamovatel = None
             item.save()
             item.close_active_transaction_when_finished = True
             item.save()
@@ -243,19 +246,21 @@ def delete_unsubmited_projects():
     """
      Každý den smazat projekty ve stavu -1, které vznikly před více než 12 hodinami.
     """
-    try:
-        logger.debug("core.cron.delete_unsubmited_projects.do.start")
-        now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
-        projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)\
-                         .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).distinct())
-        for item in projekt_query:
-            item: Projekt
-            item.active_transaction = FedoraTransaction()
-            item.close_active_transaction_when_finished = True
+    logger.debug("core.cron.delete_unsubmited_projects.do.start")
+    now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
+    projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)\
+                     .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).distinct())
+    for item in projekt_query:
+        item: Projekt
+        fedora_transaction = FedoraTransaction()
+        item.active_transaction = fedora_transaction
+        item.close_active_transaction_when_finished = True
+        try:
             item.delete()
+        except Exception as err:
+            fedora_transaction.rollback_transaction()
+            logger.error("core.cron.delete_unsubmited_projects.do.error", extra={"error": err})
         logger.debug("core.cron.delete_unsubmited_projects.do.end")
-    except Exception as err:
-        logger.error("core.cron.delete_unsubmited_projects.do.error", extra={"error": err})
 
 
 @shared_task
