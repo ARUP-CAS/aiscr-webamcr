@@ -1,5 +1,6 @@
 from django.contrib.auth.backends import ModelBackend
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 
 class AMCRAuthUser(ModelBackend):
@@ -13,7 +14,7 @@ class AMCRAuthUser(ModelBackend):
         else:
             raise ValidationError(
                 (
-                    "Účet ješte nebyl aktivován. Pokud ste ho už aktivoval přes link v emailu, vyčkejte prosím na potvrzovací email od admina."
+                    _("core.authenticators.user_can_authenticate")
                 ),
                 code="inactive",
             )
