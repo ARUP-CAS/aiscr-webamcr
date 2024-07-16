@@ -65,14 +65,14 @@ map.on('click', function (e) {
 });
 
 map.on('overlayadd', function(eventlayer){
-    console.log("pridat mapu")
+    debugText("pridat mapu")
     if(eventlayer.layer===poi_pian || eventlayer.layer===poi_sn){
         switchMap(false)
     }
 });
 
 map.on('overlayremove', function(eventlayer){
-    console.log("ubrat mapu")
+    debugText("ubrat mapu")
     if(eventlayer.layer===poi_pian || eventlayer.layer===poi_sn){
         switchMap(false)
     }
@@ -373,7 +373,7 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost) => {
         x0 = 0.0;
         x1 = 0.0
         c0 = 0
-        //console.log(coor)
+        debugText(coor)
         for (const i of coor) {
             if(!(st_text.includes("POLYGON") && c0==coor.length-1)){
                 x0 = x0 + parseFloat(i[0])
@@ -410,7 +410,7 @@ switchMap = function (overview = false) {
         southEast = bounds.getSouthEast();
     if (global_map_can_load_projects) {
         if (overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest) {
-            console.log("Change: " + northWest + "  " + southEast + " " + zoom);
+            debugText("Change: " + northWest + "  " + southEast + " " + zoom);
             boundsLock = bounds;
             let xhr = new XMLHttpRequest();
             xhr.open('POST', '/mapa-pian-pas');
@@ -463,7 +463,7 @@ switchMap = function (overview = false) {
                             heatPoints.push({lat:parseFloat(geom[1]), lng:parseFloat(geom[0]), count:i.pocet});//chyba je to geome
                         })
                         heatLayer = new HeatmapOverlay( heatmapOptions); //= L.heatLayer(heatPoints, heatmapOptions);
-                        //console.log({max:maxHeat,data:heatPoints})
+                        debugText({max:maxHeat,data:heatPoints})
                         heatLayer.setData({max:maxHeat,data:heatPoints})
                         map.addLayer(heatLayer);
                         //poi_other.clearLayers();
@@ -471,7 +471,7 @@ switchMap = function (overview = false) {
                         //poi_dj.clearLayers();
                     }
                     map.spin(false);
-                } catch(e){map.spin(false);/*console.log(e)*/}
+                } catch(e){map.spin(false);debugText(e)}
             };
         }
     }
