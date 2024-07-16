@@ -176,10 +176,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         for dokument_cast in self.archeologicky_zaznam.casti_dokumentu.all():
             dokument_warning = dokument_cast.dokument.check_pred_odeslanim()
             if dokument_warning:
-                dokument_warning.insert(
-                    0, ("Dokument " + dokument_cast.dokument.ident_cely + ": ")
-                )
-                result.append(dokument_warning)
+                result.append("Dokument " + dokument_cast.dokument.ident_cely + ": " + ', '.join(dokument_warning))
                 logger.debug("lokalita.models.Lokalita.check_pred_odeslanim.nema_pian",
                              extra={"dokument_warning": dokument_warning,
                                     "dokument_cast_dokument_ident_cely": dokument_cast.dokument.ident_cely})

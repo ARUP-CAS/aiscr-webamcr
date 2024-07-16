@@ -244,10 +244,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         for dokument_cast in self.casti_dokumentu.all():
             dokument_warning = dokument_cast.dokument.check_pred_odeslanim()
             if dokument_warning:
-                dokument_warning.insert(
-                    0, ("Dokument " + dokument_cast.dokument.ident_cely + ": ")
-                )
-                result.append(dokument_warning)
+                result.append("Dokument " + dokument_cast.dokument.ident_cely + ": " + ', '.join(dokument_warning))
                 logger.debug(
                     "arch_z.models.ArcheologickyZaznam.dokument_warning",
                     extra={"ident_cely": dokument_cast.dokument.ident_cely, "dokument_warning": str(dokument_warning)}
