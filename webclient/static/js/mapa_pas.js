@@ -216,7 +216,7 @@ let set_numeric_coordinates = async (push=false,addComa=false) => {
             point_global_WGS84 = amcr_static_coordinate_precision_wgs84(convertToWGS84(cor_x1, cor_x2));
         }
         point_leaf=[point_global_WGS84[1],point_global_WGS84[0]]
-        addUniquePointToPoiLayer(point_leaf);
+        addUniquePointToPoiLayer(point_leaf,"");
         fill_katastr();
         document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
         document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
@@ -285,7 +285,7 @@ const addUniquePointToPoiLayer = (point_leaf, text, zoom = true, redPin = false)
 };
 
 var addReadOnlyUniquePointToPoiLayer = (lat, long, ident_cely) => {
-    addUniquePointToPoiLayer(lat, long, ident_cely, true)
+    addUniquePointToPoiLayer([lat, long], ident_cely, true)
     lock = false;
 };
 
@@ -294,7 +294,7 @@ function showPosition(position) {
     var latlng = new L.LatLng(latitude, longitude);
 
     map.setView(latlng, 16);
-    addUniquePointToPoiLayer(latitude, longitude, '', false, true)
+    addUniquePointToPoiLayer([latitude, longitude], '', false, true)
 
     document.getElementById('visible_ss_combo').value = 1
     point_global_WGS84 = [latitude, longitude];
