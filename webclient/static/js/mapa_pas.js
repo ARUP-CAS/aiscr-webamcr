@@ -296,10 +296,15 @@ function showPosition(position) {
     map.setView(latlng, 16);
     addUniquePointToPoiLayer([latitude, longitude], '', false, true)
 
-    document.getElementById('visible_ss_combo').value = 1
-    point_global_WGS84 = [latitude, longitude];
-    document.getElementById('visible_x1').value = point_global_WGS84[0]
-    document.getElementById('visible_x2').value = point_global_WGS84[1]
+    point_global_WGS84 = [longitude,latitude];
+    point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0], point_global_WGS84[1]));
+    if (document.getElementById('visible_ss_combo').value == 1) {
+        document.getElementById('visible_x1').value = point_global_WGS84[0]
+        document.getElementById('visible_x2').value = point_global_WGS84[1]
+    } else if (document.getElementById('visible_ss_combo').value == 2) {
+        document.getElementById('visible_x1').value = -1*Math.abs(point_global_JTSK[0])
+        document.getElementById('visible_x2').value = -1*Math.abs(point_global_JTSK[1])
+    }
     replace_coor();
 
     L.marker(latlng,{icon:pinIconGreenPin}).addTo(poi_sugest)
