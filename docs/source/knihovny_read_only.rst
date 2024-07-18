@@ -52,7 +52,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.0.6
+     - 5.0.7
      - BSD License
      - https://www.djangoproject.com/
    * - PyRTF3
@@ -132,7 +132,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.5.4
+     - 7.6.0
      - Apache Software License
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
@@ -184,7 +184,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/django-crispy-forms/django-crispy-forms
    * - django-debug-toolbar
-     - 4.4.5
+     - 4.4.6
      - BSD License
      - https://github.com/jazzband/django-debug-toolbar
    * - django-debug-toolbar-template-profiler
@@ -404,7 +404,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 4.2.0
+     - 4.3.0
      - BSD License
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -484,7 +484,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/facelessuser/soupsieve
    * - sqlparse
-     - 0.5.0
+     - 0.5.1
      - BSD License
      - https://github.com/andialbrecht/sqlparse
    * - tablib
