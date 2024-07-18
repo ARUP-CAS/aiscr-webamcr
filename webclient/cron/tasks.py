@@ -16,7 +16,7 @@ from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSE
     OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, RUSENI_STARE_PROJ, UDAJ_ODSTRANEN, \
     STARY_PROJEKT_ZRUSEN, PROJEKT_STAV_ZAPSANY, SCHVALENI_OZNAMENI_PROJ
 from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
-from core.models import Soubor
+from core.models import Soubor, SouborVazby
 from core.coordTransform import transform_geom_to_sjtsk
 from core.repository_connector import FedoraTransaction
 from django.db import connection, transaction
@@ -258,11 +258,16 @@ def delete_unsubmited_projects():
         item.active_transaction = fedora_transaction
         item.close_active_transaction_when_finished = True
         try:
+            if isinstance(item.soubory, SouborVazby):
+                for item_file in item.soubory.soubory.all():
+                    item_file.delete()
+                item.soubory.delete()
+                item.soubory = None
             item.delete()
         except Exception as err:
             fedora_transaction.rollback_transaction()
             logger.error("core.cron.delete_unsubmited_projects.do.error", extra={"error": err})
-        logger.debug("core.cron.delete_unsubmited_projects.do.end")
+    logger.debug("core.cron.delete_unsubmited_projects.do.end")
 
 
 @shared_task
