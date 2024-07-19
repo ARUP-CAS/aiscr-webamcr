@@ -35,7 +35,7 @@ from core.constants import (
     VRACENI_PROJ,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ,
-    VRACENI_ZRUSENI,
+    VRACENI_ZRUSENI, OBLAST_CECHY,
 )
 from core.exceptions import MaximalIdentNumberError
 from core.models import ProjektSekvence, Soubor, SouborVazby
@@ -163,7 +163,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def __init__(self, *args, **kwargs):
         super(Projekt, self).__init__(*args, **kwargs)
-        self.send_ep01 = False
         self.initial_dokumenty = []
 
 
@@ -176,6 +175,15 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     class Meta:
         db_table = "projekt"
         verbose_name = "projekty"
+
+    def send_ep01(self, rep_bin_file=None):
+        logger.debug("projekt.models.Projekt.send_ep01", extra={"rep_bin_file": rep_bin_file,
+                                                                "ident_cely": self.ident_cely})
+        from services.mailer import Mailer
+        if self.ident_cely[0] == OBLAST_CECHY:
+            Mailer.send_ep01a(self, rep_bin_file)
+        else:
+            Mailer.send_ep01b(self, rep_bin_file)
 
     def set_vytvoreny(self):
         """
@@ -530,7 +538,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                      extra={"ident_cely_old": old_ident, "ident_cely_new": self.ident_cely,
                             "transaction": getattr(self.active_transaction, "uid", None)})
 
-    def create_confirmation_document(self, fedora_transaction: FedoraTransaction, additional=False, user=None):
+    def create_confirmation_document(self, fedora_transaction: FedoraTransaction, additional=False, user=None) \
+            -> RepositoryBinaryFile:
         """
         Metóda na vytvoření oznámovací dokumentace.
         """
@@ -564,6 +573,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             logger.debug("projekt.models.create_confirmation_document.duplicat_exists",
                          extra={"projekt_ident": self.ident_cely, "filename": filename,
                                 "transaction": fedora_transaction.uid})
+        return rep_bin_file
 
     @property
     def expert_list_can_be_created(self):
