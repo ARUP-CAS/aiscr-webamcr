@@ -122,6 +122,19 @@ services:
     depends_on:
       - redis
 
+  celery_exporter:
+    image: danihodovic/celery-exporter
+    networks:
+      - prod-net
+    secrets:
+      - redis_pass
+      - redis_host
+    ports:
+      - "9808:9808"
+    depends_on:
+      - redis
+    entrypoint: [ '/bin/sh', '-c', 'export CE_BROKER_URL="redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat /var/run/secrets/redis_host)"; python /app/cli.py' ] 
+
   grafana:
     image: grafana/grafana-enterprise:10.2.8
     restart: always
@@ -181,7 +194,7 @@ services:
       - XPACK_MONITORING_ENABLED=false
       - ELASTIC_PASSWORD=elastic_pass
     volumes:
-      - elasticsearch_volume:/usr/share/elasticsearch/data
+      - /opt/elastic_logs:/usr/share/elasticsearch/data
       - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     ports:
       - 9200:9200
@@ -251,7 +264,6 @@ volumes:
   locale_data:
   nginx_data:
   logs_volume:
-  elasticsearch_volume:
   grafana_data:
   redis_data:
   prometheus_data:

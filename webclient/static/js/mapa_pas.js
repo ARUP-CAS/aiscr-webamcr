@@ -65,14 +65,14 @@ map.on('click', function (e) {
 });
 
 map.on('overlayadd', function(eventlayer){
-    console.log("pridat mapu")
+    debugText("pridat mapu")
     if(eventlayer.layer===poi_pian || eventlayer.layer===poi_sn){
         switchMap(false)
     }
 });
 
 map.on('overlayremove', function(eventlayer){
-    console.log("ubrat mapu")
+    debugText("ubrat mapu")
     if(eventlayer.layer===poi_pian || eventlayer.layer===poi_sn){
         switchMap(false)
     }
@@ -216,7 +216,7 @@ let set_numeric_coordinates = async (push=false,addComa=false) => {
             point_global_WGS84 = amcr_static_coordinate_precision_wgs84(convertToWGS84(cor_x1, cor_x2));
         }
         point_leaf=[point_global_WGS84[1],point_global_WGS84[0]]
-        addUniquePointToPoiLayer(point_leaf);
+        addUniquePointToPoiLayer(point_leaf,"");
         fill_katastr();
         document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
         document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
@@ -285,7 +285,7 @@ const addUniquePointToPoiLayer = (point_leaf, text, zoom = true, redPin = false)
 };
 
 var addReadOnlyUniquePointToPoiLayer = (lat, long, ident_cely) => {
-    addUniquePointToPoiLayer(lat, long, ident_cely, true)
+    addUniquePointToPoiLayer([lat, long], ident_cely, true)
     lock = false;
 };
 
@@ -294,12 +294,17 @@ function showPosition(position) {
     var latlng = new L.LatLng(latitude, longitude);
 
     map.setView(latlng, 16);
-    addUniquePointToPoiLayer(latitude, longitude, '', false, true)
+    addUniquePointToPoiLayer([latitude, longitude], '', false, true)
 
-    document.getElementById('visible_ss_combo').value = 1
-    point_global_WGS84 = [latitude, longitude];
-    document.getElementById('visible_x1').value = point_global_WGS84[0]
-    document.getElementById('visible_x2').value = point_global_WGS84[1]
+    point_global_WGS84 = [longitude,latitude];
+    point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0], point_global_WGS84[1]));
+    if (document.getElementById('visible_ss_combo').value == 1) {
+        document.getElementById('visible_x1').value = point_global_WGS84[0]
+        document.getElementById('visible_x2').value = point_global_WGS84[1]
+    } else if (document.getElementById('visible_ss_combo').value == 2) {
+        document.getElementById('visible_x1').value = -1*Math.abs(point_global_JTSK[0])
+        document.getElementById('visible_x2').value = -1*Math.abs(point_global_JTSK[1])
+    }
     replace_coor();
 
     L.marker(latlng,{icon:pinIconGreenPin}).addTo(poi_sugest)
@@ -373,7 +378,7 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost) => {
         x0 = 0.0;
         x1 = 0.0
         c0 = 0
-        //console.log(coor)
+        debugText(coor)
         for (const i of coor) {
             if(!(st_text.includes("POLYGON") && c0==coor.length-1)){
                 x0 = x0 + parseFloat(i[0])
@@ -410,7 +415,7 @@ switchMap = function (overview = false) {
         southEast = bounds.getSouthEast();
     if (global_map_can_load_projects) {
         if (overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest) {
-            console.log("Change: " + northWest + "  " + southEast + " " + zoom);
+            debugText("Change: " + northWest + "  " + southEast + " " + zoom);
             boundsLock = bounds;
             let xhr = new XMLHttpRequest();
             xhr.open('POST', '/mapa-pian-pas');
@@ -463,7 +468,7 @@ switchMap = function (overview = false) {
                             heatPoints.push({lat:parseFloat(geom[1]), lng:parseFloat(geom[0]), count:i.pocet});//chyba je to geome
                         })
                         heatLayer = new HeatmapOverlay( heatmapOptions); //= L.heatLayer(heatPoints, heatmapOptions);
-                        //console.log({max:maxHeat,data:heatPoints})
+                        debugText({max:maxHeat,data:heatPoints})
                         heatLayer.setData({max:maxHeat,data:heatPoints})
                         map.addLayer(heatLayer);
                         //poi_other.clearLayers();
@@ -471,7 +476,7 @@ switchMap = function (overview = false) {
                         //poi_dj.clearLayers();
                     }
                     map.spin(false);
-                } catch(e){map.spin(false);/*console.log(e)*/}
+                } catch(e){map.spin(false);debugText(e)}
             };
         }
     }
