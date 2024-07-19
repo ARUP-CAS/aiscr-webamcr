@@ -559,6 +559,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 soubor.zaznamenej_nahrani(user)
             else:
                 soubor.create_soubor_vazby()
+            self.save()
         else:
             logger.debug("projekt.models.create_confirmation_document.duplicat_exists",
                          extra={"projekt_ident": self.ident_cely, "filename": filename,

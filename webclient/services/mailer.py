@@ -129,7 +129,11 @@ class Mailer:
             plain_text = cls.__strip_tags(html_content)
             email = EmailMultiAlternatives(subject, plain_text, from_email, [to])
             email.attach_alternative(html_content, "text/html")
-            logger.info("services.mailer.send.debug", extra={"from_email": from_email, "to": to, "subject": subject})
+            logger.info("services.mailer.send.debug", extra={"from_email": from_email, "to": to,
+                                                             "subject": subject,
+                                                             "attachment": getattr(attachment, "filename", None),
+                                                             "attachment_size_mb": getattr(attachment, "size_mb", None),
+                                                             })
             if attachment:
                 email.attach(attachment.filename, attachment.content.read(), mimetype=attachment.mime_type)
             try:
@@ -367,12 +371,12 @@ class Mailer:
         })
         logger.debug("services.mailer._send_ep01",
                      extra={"html": html, "cesta_sablony": notification_type.cesta_sablony})
-        project_files = list(projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
-                                                            nazev__startswith=f"oznameni_{project.ident_cely}",
-                                                            nazev__endswith=".pdf"))
+        project_files = project.soubory.soubory.filter(nazev__startswith=f"oznameni_{project.ident_cely}",
+                                                            nazev__endswith=".pdf")
         project_files = list(sorted(project_files, key=lambda x: x.vytvoreno.datum_zmeny))
         if len(project_files) > 0:
             project_file = project_files[0]
+            logger.debug("services.mailer._send_ep01.attachment_added", extra={"nazev": project_files[0].nazev})
         else:
             project_file = None
             logger.debug("services.mailer._send_ep01.no_project_file", extra={"ident_cely": project.ident_cely})

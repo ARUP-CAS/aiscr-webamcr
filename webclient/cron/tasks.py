@@ -64,8 +64,6 @@ def send_notifications_enz():
 def send_notifications_en():
     """
      Každý den kontrola a odeslání emailů E-N-01 a E-N-02
-
-     !!! jen odděleno - nutno přepracovat - viz issue #387 !!!
     """
     try:
         logger.debug("cron.tasks.send_notifications_en.do.start")
