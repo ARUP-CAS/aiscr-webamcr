@@ -2,7 +2,8 @@ import logging
 
 from cacheops import invalidate_model
 from django.contrib.auth import user_logged_in
-from django.core.exceptions import ValidationError
+from django.contrib.auth.hashers import check_password
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed, pre_delete
 from django.dispatch import receiver
@@ -78,6 +79,15 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
                  extra={"user": instance.ident_cely, "suppress_signal": instance.suppress_signal,
                         "transaction": getattr(fedora_transaction, "uid", None)})
     if not instance.suppress_signal:
+        def check_password_change():
+            if created:
+                return False
+            try:
+                old_instance = User.objects.get(pk=instance.pk)
+            except ObjectDoesNotExist:
+                return False
+            return not check_password(instance.password, old_instance.password)
+
         send_deactivation_email(sender, instance, **kwargs)
         send_account_confirmed_email(sender, instance, created)
         # Create or change token when user changed.
@@ -88,6 +98,9 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
         else:
             old_token.delete()
             Token.objects.create(user=instance)
+        if instance.active_transaction is None and check_password_change():
+            instance.active_transaction = FedoraTransaction()
+            instance.close_active_transaction_when_finished = True
         if instance.close_active_transaction_when_finished:
             transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
         else:
