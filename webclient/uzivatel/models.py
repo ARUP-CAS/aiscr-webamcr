@@ -151,7 +151,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                 PROJEKT_STAV_ZRUSENY,
             )
 
-    def email_user(self, *args, **kwargs) -> int:
+    def email_user(self, *args, **kwargs):
         try:
             send_mail(
                 "{}".format(args[0]),
