@@ -230,11 +230,3 @@ Každý kontejner používá jinou sadu charakteristik k odvození příslušné
 * Kontejner `celery`, metrika je odezva na příkaz celery ping, který musí mít nulový návratový kód, implemetováno ve skriptu `run-healthcheck_celery.sh`.
 * Kontejner `redis` metrika je odevzva na příkaz redis ping, očekáván nulový návratový kód, implementováno ve skriptu `run-healthcheck_redis.sh`.
 
-==================================
-Nasazení aplikace s příznakem TEST
-==================================
-
-Pokud chceme nasadit aplikaci s příznakem testovací-neprodukční prostředí se dělá pomoci nastavení env proměnné. 
-Ta se musí nastavit na serveru před nasazením a to buď jen pro dané nasazení scriptem `export TEST_ENV_SETTING=true` 
-anebo pro každé nasazení úpravou global variables, přidáním souboru `test_env.sh` do složky `/etc/profile.d/` s řádkem `export TEST_ENV_SETTING=true`. 
-Pokud bude daný soubor přítomen, tak každé nasazení aplikace bude označeno jako testovací a zobrazí se uživateli hláška jednou denne. 
