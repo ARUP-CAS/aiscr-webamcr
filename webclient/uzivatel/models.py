@@ -153,14 +153,13 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def email_user(self, *args, **kwargs) -> int:
         try:
-            sent = send_mail(
+            send_mail(
                 "{}".format(args[0]),
                 "{}".format(args[1]),
                 "{}".format(args[2]),
                 [self.email],
                 fail_silently=False,
             )
-            return sent
         except ConnectionRefusedError as err:
             logger.error("user.email_user.error", extra={"user_id": self.pk, "email": self.email})
 
