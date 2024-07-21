@@ -29,7 +29,6 @@ services:
       - "2525:2525"
     environment:
       - DJANGO_SETTINGS_MODULE=webclient.settings.dev
-      - TEST_ENV_SETTING
     depends_on:
       db:
         condition: service_healthy

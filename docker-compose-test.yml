@@ -16,7 +16,6 @@ services:
       - /opt/selenium_test:/vol/web/selenium_test
       - /opt/fcrepo/fcrepo-home/data:/vol/fcrepo
     environment:
-      - TEST_ENV_SETTING
       - IMAGE_TAG=${IMAGE_TAG}
     networks:
       - prod-net
