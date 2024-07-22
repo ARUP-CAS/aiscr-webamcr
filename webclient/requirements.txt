@@ -23,7 +23,7 @@ beautifulsoup4==4.12.3
 django-extensions==3.2.3
 celery==5.4.0
 django-add-default-value==0.10.0
-selenium==4.22.0
+selenium==4.23.0
 redis==5.0.7
 django-celery-beat==2.6.0
 django-celery-results==2.5.1
