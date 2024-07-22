@@ -647,7 +647,7 @@
   </xs:complexType>
   <xs:complexType name="gmlType">
     <xs:sequence>
-      <xs:any namespace="https://www.opengis.net/gml/3.2" processContents="skip"/>
+      <xs:any namespace="http://www.opengis.net/gml/3.2" processContents="skip"/>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="langstringType">
