@@ -256,10 +256,10 @@
       <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
       <xs:element name="nazev_en" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
       <xs:element name="rada_id" minOccurs="1" maxOccurs="1" type="xs:string"/> 
-      <xs:element name="definicni_bod_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> 
-      <xs:element name="definicni_bod_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> 
-      <xs:element name="hranice_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> 
-      <xs:element name="hranice_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> 
+      <xs:element name="definicni_bod_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> 
+      <xs:element name="definicni_bod_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> 
+      <xs:element name="hranice_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> 
+      <xs:element name="hranice_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> 
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="ruian_okresType">
@@ -269,10 +269,10 @@
       <xs:element name="nazev_en" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> 
       <xs:element name="spz" minOccurs="1" maxOccurs="1" type="xs:string"/> 
       <xs:element name="kraj" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> 
-      <xs:element name="definicni_bod_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> 
-      <xs:element name="definicni_bod_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> 
-      <xs:element name="hranice_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> 
-      <xs:element name="hranice_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> 
+      <xs:element name="definicni_bod_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> 
+      <xs:element name="definicni_bod_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> 
+      <xs:element name="hranice_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> 
+      <xs:element name="hranice_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> 
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="ruian_katastrType">
