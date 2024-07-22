@@ -36,7 +36,7 @@ class ParsedComment:
 class DocumentGenerator:
     _nsmap = {
         "xsi": "http://www.w3.org/2001/XMLSchema-instance",
-        "gml": "https://www.opengis.net/gml/3.2",
+        "gml": "http://www.opengis.net/gml/3.2",
         "amcr": AMCR_NAMESPACE_URL,
         "xml": "http://www.w3.org/XML/1998/namespace"
     }
