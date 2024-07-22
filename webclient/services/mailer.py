@@ -710,13 +710,17 @@ class Mailer:
             id=OuterRef('id')
         ).values('id')
 
+        now = timezone.now()
+        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        previous_midnight = midnight + timedelta(days=-1)
+
         results = SamostatnyNalez.objects.filter(
             historie__historie__typ_zmeny='SN01',
             projekt__organizace=F('historie__historie__uzivatel__spoluprace_badatelu__vedouci__organizace'),
             historie__historie__uzivatel__spoluprace_badatelu__vedouci__notification_types__ident_cely='S-E-N-01',
             id__in=Subquery(subquery_sn12),
-            historie__historie__datum_zmeny__gt=timezone.now() + timedelta(days=-2),
-            historie__historie__datum_zmeny__lt=timezone.now() + timedelta(days=-1),
+            historie__historie__datum_zmeny__gt=previous_midnight,
+            historie__historie__datum_zmeny__lt=midnight,
         ).distinct().values(
             'ident_cely',
             'historie__historie__uzivatel__spoluprace_badatelu__vedouci__email'
@@ -738,12 +742,16 @@ class Mailer:
             id=OuterRef('id')
         ).values('id')
 
+        now = timezone.now()
+        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        previous_midnight = midnight + timedelta(days=-1)
+
         results = SamostatnyNalez.objects.filter(
             historie__historie__typ_zmeny='SN01',
             historie__historie__uzivatel__notification_types__ident_cely='S-E-N-02',
             id__in=Subquery(sn34_subquery),
-            historie__historie__datum_zmeny__gt=timezone.now() + timedelta(days=-2),
-            historie__historie__datum_zmeny__lt=timezone.now() + timedelta(days=-1),
+            historie__historie__datum_zmeny__gt=previous_midnight,
+            historie__historie__datum_zmeny__lt=midnight,
         ).distinct().values(
             'ident_cely',
             'historie__historie__uzivatel__email'
