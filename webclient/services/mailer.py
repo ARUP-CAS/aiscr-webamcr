@@ -752,6 +752,7 @@ class Mailer:
             id__in=Subquery(sn34_subquery),
             historie__historie__datum_zmeny__gte=previous_midnight,
             historie__historie__datum_zmeny__lt=midnight,
+
         ).distinct().values(
             'ident_cely',
             'historie__historie__uzivatel__email'
