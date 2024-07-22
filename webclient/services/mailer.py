@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime, timedelta
 import logging
 import time
@@ -107,16 +108,18 @@ class Mailer:
     def _log_notification(cls, notification_type: 'uzivatel.models.UserNotificationType', receiver_object,
                           receiver_address, status, exception):
         try:
-            uzivatel.models.User.objects.get(pk = receiver_object.pk)
+            uzivatel.models.User.objects.get(pk=receiver_object.pk)
         except Exception as e:
-            logger.debug("services.mailer._log_notification", extra = {"exception":e})
+            logger.info("services.mailer._log_notification", extra = {"exception": e,
+                                                                      "traceback": traceback.format_exc()})
             receiver_object = None
         finally:
             try:
                 uzivatel.models.NotificationsLog(notification_type=notification_type, user=receiver_object,
                                          receiver_address=receiver_address, status=status, exception=exception).save()
             except Exception as e:
-                logger.debug("services.mailer._log_notification", extra = {"exception":e})
+                logger.info("services.mailer._log_notification", extra={"exception": e,
+                                                                        "traceback": traceback.format_exc()})
         logger.debug("services.mailer._log_notification",
                      extra={"notification_type": notification_type, "user": receiver_object,
                             "receiver_address": receiver_address})
@@ -129,7 +132,11 @@ class Mailer:
             plain_text = cls.__strip_tags(html_content)
             email = EmailMultiAlternatives(subject, plain_text, from_email, [to])
             email.attach_alternative(html_content, "text/html")
-            logger.info("services.mailer.send.debug", extra={"from_email": from_email, "to": to, "subject": subject})
+            logger.info("services.mailer.send.debug", extra={"from_email": from_email, "to": to,
+                                                             "subject": subject,
+                                                             "attachment": getattr(attachment, "filename", None),
+                                                             "attachment_size_mb": getattr(attachment, "size_mb", None),
+                                                             })
             if attachment:
                 email.attach(attachment.filename, attachment.content.read(), mimetype=attachment.mime_type)
             try:
@@ -355,7 +362,7 @@ class Mailer:
         cls._send_e(project, notification_type)
 
     @classmethod
-    def _send_ep01(cls, project, notification_type):
+    def _send_ep01(cls, project, notification_type, rep_bin_file=None):
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
@@ -366,24 +373,34 @@ class Mailer:
             "lokalita": project.lokalizace,
         })
         logger.debug("services.mailer._send_ep01",
-                     extra={"html": html, "cesta_sablony": notification_type.cesta_sablony})
-        project_files = list(projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
-                                                            nazev__startswith=f"oznameni_{project.ident_cely}",
-                                                            nazev__endswith=".pdf"))
-        project_files = list(sorted(project_files, key=lambda x: x.vytvoreno.datum_zmeny))
-        if len(project_files) > 0:
-            project_file = project_files[0]
+                     extra={"html": html, "cesta_sablony": notification_type.cesta_sablony,
+                            "ident_cely": project.ident_cely})
+        if isinstance(rep_bin_file, RepositoryBinaryFile):
+            project_file = rep_bin_file
         else:
-            project_file = None
-            logger.debug("services.mailer._send_ep01.no_project_file", extra={"ident_cely": project.ident_cely})
+            project_files = project.soubory.soubory.filter(nazev__startswith=f"oznameni_{project.ident_cely}",
+                                                                nazev__endswith=".pdf")
+            project_files = list(sorted(project_files, key=lambda x: x.vytvoreno.datum_zmeny))
+            logger.debug("services.mailer._send_ep01",
+                         extra={"project_files": project_files, "ident_cely": project.ident_cely})
+            if len(project_files) > 0:
+                project_file = project_files[0]
+                logger.debug("services.mailer._send_ep01.attachment_added",
+                             extra={"nazev": project_file.nazev, "ident_cely": project.ident_cely})
+            else:
+                project_file = None
+                logger.debug("services.mailer._send_ep01.no_project_file", extra={"ident_cely": project.ident_cely})
         if project.has_oznamovatel():
             attachment = None
             if project_file:
-                project_file: Soubor
-                repository_coonector = FedoraRepositoryConnector(project)
-                attachment = repository_coonector.get_binary_file(project_file.repository_uuid)
+                project_file: Soubor | RepositoryBinaryFile
+                if isinstance(project_file, Soubor):
+                    repository_coonector = FedoraRepositoryConnector(project)
+                    attachment = repository_coonector.get_binary_file(project_file.repository_uuid)
+                else:
+                    attachment = project_file
                 if attachment is not None:
-                    attachment.filename = project_file.nazev
+                    attachment.filename = attachment.filename
                 else:
                     logger.error("services.mailer._send_ep01.cannot_read_attachment",
                                  extra={"ident_cely": project.ident_cely,
@@ -392,18 +409,18 @@ class Mailer:
                        notification_type=notification_type, attachment=attachment)
 
     @classmethod
-    def send_ep01a(cls, project: 'projekt.models.Projekt'):
+    def send_ep01a(cls, project: 'projekt.models.Projekt', rep_bin_file=None):
         IDENT_CELY = 'E-P-01a'
         logger.debug("services.mailer.send_ep01a", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        cls._send_ep01(project, notification_type)
+        cls._send_ep01(project, notification_type, rep_bin_file)
 
     @classmethod
-    def send_ep01b(cls, project: 'projekt.models.Projekt'):
+    def send_ep01b(cls, project: 'projekt.models.Projekt', rep_bin_file=None):
         IDENT_CELY = 'E-P-01b'
         logger.debug("services.mailer.send_ep01b", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        cls._send_ep01(project, notification_type)
+        cls._send_ep01(project, notification_type, rep_bin_file)
 
     @classmethod
     def send_ep02(cls, psi, project):
@@ -698,7 +715,8 @@ class Mailer:
             projekt__organizace=F('historie__historie__uzivatel__spoluprace_badatelu__vedouci__organizace'),
             historie__historie__uzivatel__spoluprace_badatelu__vedouci__notification_types__ident_cely='S-E-N-01',
             id__in=Subquery(subquery_sn12),
-            historie__historie__datum_zmeny__date=timezone.now().date() + timedelta(days=-1)
+            historie__historie__datum_zmeny__gt=timezone.now() + timedelta(days=-2),
+            historie__historie__datum_zmeny__lt=timezone.now() + timedelta(days=-1),
         ).distinct().values(
             'ident_cely',
             'historie__historie__uzivatel__spoluprace_badatelu__vedouci__email'
@@ -724,7 +742,8 @@ class Mailer:
             historie__historie__typ_zmeny='SN01',
             historie__historie__uzivatel__notification_types__ident_cely='S-E-N-02',
             id__in=Subquery(sn34_subquery),
-            historie__historie__datum_zmeny=timezone.now().date() + timedelta(days=-1)
+            historie__historie__datum_zmeny__gt=timezone.now() + timedelta(days=-2),
+            historie__historie__datum_zmeny__lt=timezone.now() + timedelta(days=-1),
         ).distinct().values(
             'ident_cely',
             'historie__historie__uzivatel__email'

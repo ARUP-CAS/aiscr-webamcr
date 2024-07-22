@@ -16,7 +16,7 @@ from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSE
     OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, RUSENI_STARE_PROJ, UDAJ_ODSTRANEN, \
     STARY_PROJEKT_ZRUSEN, PROJEKT_STAV_ZAPSANY, SCHVALENI_OZNAMENI_PROJ
 from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
-from core.models import Soubor
+from core.models import Soubor, SouborVazby
 from core.coordTransform import transform_geom_to_sjtsk
 from core.repository_connector import FedoraTransaction
 from django.db import connection, transaction
@@ -59,12 +59,11 @@ def send_notifications_enz():
         logger.error("cron.tasks.send_notifications_enz.do.error",
                      extra={"error": str(err), "traceback": traceback.format_exc()})
 
+
 @shared_task
 def send_notifications_en():
     """
      Každý den kontrola a odeslání emailů E-N-01 a E-N-02
-
-     !!! jen odděleno - nutno přepracovat - viz issue #387 !!!
     """
     try:
         logger.debug("cron.tasks.send_notifications_en.do.start")
@@ -78,6 +77,7 @@ def send_notifications_en():
     except Exception as err:
         logger.error("cron.tasks.send_notifications_en.do.error",
                      extra={"error": str(err), "traceback": traceback.format_exc()})
+
 
 @shared_task
 def pian_to_sjtsk():
@@ -183,26 +183,29 @@ def delete_reporter_data_ten_years():
      Deset let po zápisu projektu smazat související záznam z tabulky oznamovatel + odstranit projektovou dokumentaci
      a vytvořit log (jako při archivaci projektu).
     """
-    try:
-        logger.debug("core.cron.delete_reporter_data_canceled_projects.do.start")
-        today = datetime.datetime.now().date()
-        ten_years_ago = today - datetime.timedelta(days=365*10)
-        projects = Projekt.objects.filter(oznamovatel__isnull=False) \
-            .filter(typ_projektu=TYP_PROJEKTU_ZACHRANNY_ID) \
-            .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
-                    & Q(historie__historie__datum_zmeny__lt=ten_years_ago)).distinct()
-        for item in projects:
-            logger.debug("core.cron.delete_reporter_data_canceled_projects.do.project",
-                         extra={"project": item.ident_cely})
+    logger.debug("core.cron.delete_reporter_data_canceled_projects.do.start")
+    today = datetime.datetime.now().date()
+    ten_years_ago = today - datetime.timedelta(days=365*10)
+    projects = Projekt.objects.filter(oznamovatel__isnull=False) \
+        .filter(typ_projektu=TYP_PROJEKTU_ZACHRANNY_ID) \
+        .filter(Q(historie__historie__typ_zmeny__in=(ZAPSANI_PROJ, SCHVALENI_OZNAMENI_PROJ))
+                & Q(historie__historie__datum_zmeny__lt=ten_years_ago)).distinct()
+    for item in projects:
+        try:
             item.active_transaction = FedoraTransaction()
+            logger.debug("core.cron.delete_reporter_data_canceled_projects.do.project.start",
+                         extra={"project": item.ident_cely, "transaction": item.active_transaction.uid})
             item.oznamovatel.delete()
             item.archive_project_documentation()
+            item.oznamovatel = None
             item.save()
             item.close_active_transaction_when_finished = True
             item.save()
-        logger.debug("core.cron.delete_reporter_data_canceled_projects.do.end")
-    except Exception as err:
-        logger.error("core.cron.delete_reporter_data_canceled_projects.do.error", extra={"error": err})
+            logger.debug("core.cron.delete_reporter_data_canceled_projects.do.end",
+                         extra={"project": item.ident_cely, "transaction": item.active_transaction.uid})
+        except Exception as err:
+            logger.error("core.cron.delete_reporter_data_canceled_projects.do.error", extra={"error": err})
+    logger.debug("core.cron.delete_reporter_data_canceled_projects.do.end")
 
 
 @shared_task
@@ -243,19 +246,26 @@ def delete_unsubmited_projects():
     """
      Každý den smazat projekty ve stavu -1, které vznikly před více než 12 hodinami.
     """
-    try:
-        logger.debug("core.cron.delete_unsubmited_projects.do.start")
-        now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
-        projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)\
-                         .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).distinct())
-        for item in projekt_query:
-            item: Projekt
-            item.active_transaction = FedoraTransaction()
-            item.close_active_transaction_when_finished = True
+    logger.debug("core.cron.delete_unsubmited_projects.do.start")
+    now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
+    projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)\
+                     .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).distinct())
+    for item in projekt_query:
+        item: Projekt
+        fedora_transaction = FedoraTransaction()
+        item.active_transaction = fedora_transaction
+        item.close_active_transaction_when_finished = True
+        try:
+            if isinstance(item.soubory, SouborVazby):
+                for item_file in item.soubory.soubory.all():
+                    item_file.delete()
+                item.soubory.delete()
+                item.soubory = None
             item.delete()
-        logger.debug("core.cron.delete_unsubmited_projects.do.end")
-    except Exception as err:
-        logger.error("core.cron.delete_unsubmited_projects.do.error", extra={"error": err})
+        except Exception as err:
+            fedora_transaction.rollback_transaction()
+            logger.error("core.cron.delete_unsubmited_projects.do.error", extra={"error": err})
+    logger.debug("core.cron.delete_unsubmited_projects.do.end")
 
 
 @shared_task

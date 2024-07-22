@@ -116,14 +116,9 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     fedora_transaction = instance.active_transaction
     if getattr(instance, "suppress_signal", False) is not True:
         if instance.close_active_transaction_when_finished:
-            def on_commit():
+            def save_metadata():
                 instance.save_metadata(fedora_transaction, close_transaction=True)
-                if instance.ident_cely[0] == OBLAST_CECHY:
-                    Mailer.send_ep01a(project=instance)
-                else:
-                    Mailer.send_ep01b(project=instance)
-                instance.send_ep01 = False
-            transaction.on_commit(on_commit)
+            transaction.on_commit(save_metadata)
         else:
             instance.save_metadata(fedora_transaction)
     if (instance.stav == PROJEKT_STAV_ZAPSANY and hasattr(instance, "__original_stav")
