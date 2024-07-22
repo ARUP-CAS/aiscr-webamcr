@@ -1126,6 +1126,7 @@ def smazat(request, ident_cely):
                 invalidate_model(ExterniZdroj)
             for pk in az.initial_casti_dokumentu:
                 item = DokumentCast.objects.get(pk=pk)
+                item.suppress_signal_arch_z = True
                 item.active_transaction = fedora_transaction
                 item.delete()
             from arch_z.signals import invalidate_arch_z_related_models

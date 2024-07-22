@@ -577,6 +577,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         self.close_active_transaction_when_finished = False
         self.suppress_signal = False
         self.suppress_dokument_signal = False
+        self.suppress_signal_arch_z = False
 
 
 class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):
