@@ -237,7 +237,7 @@ class DocumentGenerator:
                 field_name = attribute_name.lower().replace("st_srid", "").replace("(", "").replace(")", "")
                 attribute_value = getattr(record, f"{field_name}").srid
             if attribute_value is not None and "st_asgml" in attribute_name.lower():
-                # ET.register_namespace("gml", "https://www.opengis.net/gml/3.2")
+                # ET.register_namespace("gml", "http://www.opengis.net/gml/3.2")
                 attribute_value = attribute_value.replace(">", ' xmlns:gml="http://www.opengis.net/gml/3.2">', 1)
                 attribute_value = ET.fromstring(attribute_value)
         else:
@@ -504,6 +504,6 @@ class DocumentGenerator:
     def __init__(self, document_object):
         self.document_object = document_object
         ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
-        ET.register_namespace("gml", "https://www.opengis.net/gml/3.2")
+        ET.register_namespace("gml", "http://www.opengis.net/gml/3.2")
         ET.register_namespace("amcr", AMCR_NAMESPACE_URL)
         self.document_root = ET.Element(f"{{{AMCR_NAMESPACE_URL}}}amcr", nsmap=self._nsmap)
