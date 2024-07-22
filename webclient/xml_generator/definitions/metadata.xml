@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.0/" xmlns:gml="http://www.opengis.net/gml/3.2" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.0/ https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd">
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.0/" xmlns:gml="https://www.opengis.net/gml/3.2" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.0/ https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd https://www.opengis.net/gml/3.2 https://schemas.opengis.net/gml/3.2.1/gml.xsd">
   <amcr:projekt>
     <amcr:ident_cely>C-201901234</amcr:ident_cely>
     <amcr:stav>6</amcr:stav>
