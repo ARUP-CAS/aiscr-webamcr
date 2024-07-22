@@ -47,71 +47,73 @@
         </div>
         <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
                 aria-expanded="false" rel="tooltip" data-placement="top"
-                title="{% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.dalsiNabidka.label' %}"
+                title="{% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridat.label' %}"
                 onclick="filtrAkci()">
           <span class="material-icons">add</span>
         </button>
       </div>
-      <div class="btn-group" role="group">
-        <div class="dropdown-menu" aria-labelledby="others">
-          {% if j.show_uprav_pian %}
-            <a id="pian-upravit-{{ j.pian_ident_cely }}" class="dropdown-item"
-               href="{% url 'arch_z:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
-              {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.upravitPian.label' %}
-            </a>
-          {% endif %}
-          {% if j.show_import_pian_change %}
-            <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian" data-action-id="change">
-              {% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.importovatPianChange.label" %}
-            </button>
-          {% endif %}
-          {% if j.show_change_katastr %}
-            <button id="zmenit-katastr-{{ j.ident_cely }}" class="dropdown-item zmenit-katastr-btn" type="button"
-                    name="button" href="{% url 'dj:zmenit-katastr' j.ident_cely %}" )>
-              {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.zmenitKatastr.label' %}
-            </button>
-          {% endif %}          
-          {% if j.show_remove_pian %}
-            <button id="pian-odpojit-{{ j.pian_ident_cely }}" class="dropdown-item pian-odpojit-btn" type="button"
-                    name="button" href="{% url 'pian:odpojit' j.ident_cely %}">
-              {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.odpojitPian.label' %}
-            </button>
-          {% endif %}
-          {% if j.show_approve_pian %}
-            <button id="pian-potvrdit-{{ j.pian_ident_cely }}" class="dropdown-item pian-potvrdit-btn" type="button"
-                    name="button" href="{% url 'pian:potvrdit' j.ident_cely %}">
-              {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.potvrditPian.label' %}
-            </button>
-          {% endif %}
-          {% if j.pian_ident_cely and show.stahnout_metadata %}
-            <a class="dropdown-item"
-               href="{% url 'core:stahnout_metadata' 'pian' j.pian_ident_cely %}">{% trans "arch_z.dj.partials.dj_update.download_pian_metadata" %}</a>
-          {% endif %}
-          {% if j.adb_pk and show.stahnout_metadata %}
-            <a class="dropdown-item"
-               href="{% url 'core:stahnout_metadata' 'adb' j.adb_ident_cely %}">{% trans "adb.detail.toolbar.MetadataDownload" %}</a>
-          {% endif %}
-          {% if j.show_remove_adb %}
-            <button id="adb-smazat-{{ j.adb_ident_cely }}" class="dropdown-item adb-smazat-btn" type="button"
-                    name="button"
-                    href="{% url 'adb:smazat' j.adb_ident_cely %}">
-              {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.smazatADB.label' %}
-            </button>
-          {% endif %}
-          {% if j.show_dj_smazat %}
-            <button id="dj-smazat-{{ j.ident_cely }}" class="dropdown-item dj-smazat-btn" type="button" name="button"
-                    href="{% url 'dj:smazat' j.ident_cely %}">
-              {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.smazatDJ.label' %}
-            </button>
-          {% endif %}
+      {% if j.show_uprav_pian or j.show_import_pian_change or j.show_change_katastr or j.show_remove_pian or j.show_approve_pian or j.pian_ident_cely and show.stahnout_metadata or j.adb_pk and show.stahnout_metadata or j.show_remove_adb or j.show_dj_smazat %}
+        <div class="btn-group" role="group">
+          <div class="dropdown-menu" aria-labelledby="others">
+            {% if j.show_uprav_pian %}
+              <a id="pian-upravit-{{ j.pian_ident_cely }}" class="dropdown-item"
+                 href="{% url 'arch_z:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
+                {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.upravitPian.label' %}
+              </a>
+            {% endif %}
+            {% if j.show_import_pian_change %}
+              <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian" data-action-id="change">
+                {% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.importovatPianChange.label" %}
+              </button>
+            {% endif %}
+            {% if j.show_change_katastr %}
+              <button id="zmenit-katastr-{{ j.ident_cely }}" class="dropdown-item zmenit-katastr-btn" type="button"
+                      name="button" href="{% url 'dj:zmenit-katastr' j.ident_cely %}" )>
+                {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.zmenitKatastr.label' %}
+              </button>
+            {% endif %}
+            {% if j.show_remove_pian %}
+              <button id="pian-odpojit-{{ j.pian_ident_cely }}" class="dropdown-item pian-odpojit-btn" type="button"
+                      name="button" href="{% url 'pian:odpojit' j.ident_cely %}">
+                {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.odpojitPian.label' %}
+              </button>
+            {% endif %}
+            {% if j.show_approve_pian %}
+              <button id="pian-potvrdit-{{ j.pian_ident_cely }}" class="dropdown-item pian-potvrdit-btn" type="button"
+                      name="button" href="{% url 'pian:potvrdit' j.ident_cely %}">
+                {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.potvrditPian.label' %}
+              </button>
+            {% endif %}
+            {% if j.pian_ident_cely and show.stahnout_metadata %}
+              <a class="dropdown-item"
+                 href="{% url 'core:stahnout_metadata' 'pian' j.pian_ident_cely %}">{% trans "arch_z.dj.partials.dj_update.download_pian_metadata" %}</a>
+            {% endif %}
+            {% if j.adb_pk and show.stahnout_metadata %}
+              <a class="dropdown-item"
+                 href="{% url 'core:stahnout_metadata' 'adb' j.adb_ident_cely %}">{% trans "adb.detail.toolbar.MetadataDownload" %}</a>
+            {% endif %}
+            {% if j.show_remove_adb %}
+              <button id="adb-smazat-{{ j.adb_ident_cely }}" class="dropdown-item adb-smazat-btn" type="button"
+                      name="button"
+                      href="{% url 'adb:smazat' j.adb_ident_cely %}">
+                {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.smazatADB.label' %}
+              </button>
+            {% endif %}
+            {% if j.show_dj_smazat %}
+              <button id="dj-smazat-{{ j.ident_cely }}" class="dropdown-item dj-smazat-btn" type="button" name="button"
+                      href="{% url 'dj:smazat' j.ident_cely %}">
+                {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.smazatDJ.label' %}
+              </button>
+            {% endif %}
+          </div>
+          <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
+                  aria-expanded="false" rel="tooltip" data-placement="top"
+                  title="{% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.dalsiNabidka.label' %}"
+                  onclick="filtrAkci()">
+            <span class="material-icons">more_vert</span>
+          </button>
         </div>
-        <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                aria-expanded="false" rel="tooltip" data-placement="top"
-                title="{% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.dalsiNabidka.label' %}"
-                onclick="filtrAkci()">
-          <span class="material-icons">more_vert</span>
-        </button>
-      </div>
+      {% endif %}
     </div>
   </div>
   <div class="card-body">
