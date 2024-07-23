@@ -179,8 +179,12 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 2.5.1
      - BSD License
      - https://github.com/celery/django-celery-results
+   * - django-compressor
+     - 4.5.1
+     - MIT License
+     - https://django-compressor.readthedocs.io/en/latest/
    * - django-crispy-forms
-     - 2.2
+     - 2.3
      - MIT License
      - https://github.com/django-crispy-forms/django-crispy-forms
    * - django-debug-toolbar
@@ -247,10 +251,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.5.0
      - MIT License
      - https://github.com/jazzband/django-widget-tweaks
-   * - django_compressor
-     - 4.5
-     - MIT License
-     - https://django-compressor.readthedocs.io/en/latest/
    * - djangorestframework
      - 3.15.2
      - BSD License
@@ -316,7 +316,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.0.0
+     - 2.0.1
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -404,7 +404,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 4.3.0
+     - 4.3.1
      - BSD License
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -460,7 +460,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
-     - 4.22.0
+     - 4.23.0
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
@@ -512,7 +512,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-trio/trio-websocket
    * - typing_extensions
-     - 4.12.2
+     - 4.9.0
      - Python Software Foundation License
      - https://github.com/python/typing_extensions
    * - tzdata
