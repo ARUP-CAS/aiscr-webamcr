@@ -511,7 +511,7 @@ TOKEN_EXPIRATION_HOURS = 24
 
 SKIP_RECAPTCHA = False
 
-TEST_ENV = os.getenv("TEST_ENV_SETTING", False)
+TEST_ENV = get_secret("TEST_ENV", "True") == "True"
 
 CLAMD_HOST = None
 CLAMD_PORT = None
