@@ -450,11 +450,16 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         except Exception as e:
             logger.debug(e)
             return ()
+
+    @property
+    def thumbnail_image(self):
+        if self.thumbnail_image_file:
+            return self.thumbnail_image_file.pk
         
     @property
     def thumbnail_image_file(self) -> Soubor | None:
         if self.soubory.soubory.count() > 0:
-            return self.soubory.soubory.first().pk
+            return self.soubory.soubory.first()
 
     @cached_property
     def large_thumbnail(self):
