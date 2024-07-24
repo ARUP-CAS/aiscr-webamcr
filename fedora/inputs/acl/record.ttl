@@ -1,0 +1,20 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix acl: <http://www.w3.org/ns/auth/acl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix webac: <http://fedora.info/definitions/v4/webac#> .
+ 
+<#authzReadWrite> a acl:Authorization ;
+   rdfs:label "Read & Write Authorization" ;
+   rdfs:comment "Define users authorized for full control over the container." ;
+   acl:accessTo </rest/AMCR/record> ;
+   acl:default </rest/AMCR/record> ;
+   acl:agent "AMCR" ;
+   acl:mode acl:Read, acl:Write .
+
+<#authzRead> a acl:Authorization ;
+   rdfs:label "Read Authorization" ;
+   rdfs:comment "Define users authorized for access to the container." ;
+   acl:accessTo </rest/AMCR/record> ;
+   acl:default </rest/AMCR/record> ;
+   acl:agent "Digiarchiv" ;
+   acl:mode acl:Read .

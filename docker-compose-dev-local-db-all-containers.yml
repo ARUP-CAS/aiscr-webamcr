@@ -229,6 +229,45 @@ services:
     depends_on:
       - elasticsearch
 
+  fcrepo:
+    image:  fcrepo/fcrepo:6.4.0
+    build:
+      context: .
+      dockerfile: ./fedora/Dockerfile
+    secrets:
+      - tomcat_users
+    restart: always
+    volumes:
+      - ./fedora/fcrepo-home:/opt/fcrepo/fcrepo-home
+    ports:
+      - "8081:8080"
+    environment:
+      - UMASK=002
+      - TOMCAT_USERS_FILE=/var/run/secrets/tomcat_users
+      - CATALINA_OPTS="-Dfcrepo.config.file=/opt/fcrepo/conf/fcrepo.properties"
+    container_name: fcrepo
+    logging:
+      driver: "json-file"    
+      options:
+        max-size: "100m"
+        max-file: "3"
+    depends_on:
+      fcrepo-postgres:
+        condition: service_started
+
+  fcrepo-postgres:
+    image:  postgres:12.3  
+    secrets:
+      - db_conf
+    restart: always
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_USER=fcrepo
+      - POSTGRES_PASSWORD=localdbpass1
+      - POSTGRES_DB=fcrepo
+    container_name: fcrepo-postgres
+
 volumes:
   locale_data:
   pg_admin_vol:
@@ -261,3 +300,6 @@ secrets:
     # external: true
   grafana_admin_password:
     file: ./secrets/grafana_admin_password.txt
+
+  tomcat_users:
+    file: ./secrets/tomcat-users.xml
