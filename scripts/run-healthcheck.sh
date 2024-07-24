@@ -1,7 +1,6 @@
 #!/bin/bash
 
 ram_limit=95
-disk_limit=95
 
 ram_utilization=$(free | awk '/Mem/{printf("%.2f"), $3/$2*100}')
 rounded_ram_utilization=$(printf "%.0f" "$ram_utilization")
@@ -44,6 +43,6 @@ if [ ${exit_code} -eq 0 ] ; then
     echo "Django application is running with RAM ${rounded_ram_utilization} %."
     exit 0
 else
-    echo "Django application is not running or RAM or DISK limits exceeded"
+    echo "Django application is not running or RAM limit exceeded or Fedora is not running."
     exit 1
 fi

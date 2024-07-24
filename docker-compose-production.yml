@@ -88,7 +88,7 @@ services:
     networks:
       - prod-net
     healthcheck:
-      test: ["CMD-SHELL", "bash /scripts/run-healthcheck_celery.sh"]
+      test: ["CMD-SHELL", "bash /scripts/run-healthcheck_celery.sh && bash /code/celery_redis_write.sh"]
       interval: 1m30s
       timeout: 30s
       retries: 5
@@ -113,7 +113,7 @@ services:
     networks:
       - prod-net
     healthcheck:
-      test: ["CMD-SHELL", "bash /scripts/run-healthcheck_celery.sh"]
+      test: ["CMD-SHELL", "bash /scripts/run-healthcheck_celery.sh && bash /code/celery_redis_write.sh"]
       interval: 1m30s
       timeout: 30s
       retries: 5
