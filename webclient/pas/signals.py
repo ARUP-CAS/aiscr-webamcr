@@ -89,6 +89,7 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
 @receiver(post_save, sender=UzivatelSpoluprace)
 def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.save_uzivatel_spoluprce.start", extra={"pk": instance.pk})
+    invalidate_model(UzivatelSpoluprace)
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
 
@@ -107,7 +108,7 @@ def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
 def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.start", extra={"pk": instance.pk})
     fedora_transaction = instance.active_transaction
-
+    invalidate_model(UzivatelSpoluprace)
     def save_metadata(close_transaction=False):
         Historie.save_record_deletion_record(record=instance)
         instance.vedouci.save_metadata(fedora_transaction)
