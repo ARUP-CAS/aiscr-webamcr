@@ -900,7 +900,7 @@ class FedoraRepositoryConnector:
             cls.generate_thumb_for_single_file(item)
 
     @classmethod
-    def save_single_file_from_storage(cls, record, storage_path: str, save_thumbs: bool = False) -> None:
+    def save_single_file_from_storage(cls, record, storage_path: str, save_thumbs: bool = False, disable_antivirus: bool = False ) -> None:
         from core.models import Soubor
         from xml_generator.models import ModelWithMetadata
         if isinstance(record, int):
@@ -932,7 +932,7 @@ class FedoraRepositoryConnector:
         soubor_data.seek(0)
         mimetype = Soubor.get_mime_types(soubor_data)
         soubor_data.seek(0)
-        if Soubor.check_antivirus(soubor_data) is False:
+        if disable_antivirus is False and Soubor.check_antivirus(soubor_data) is False:
             return
         soubor_data.seek(0)
         mime_extensions = Soubor.get_file_extension_by_mime(soubor_data)
@@ -959,12 +959,12 @@ class FedoraRepositoryConnector:
         fedora_transaction.mark_transaction_as_closed()
 
     @classmethod
-    def save_files_from_storage(cls, records: Union[list, range], storage_path: str, save_thumbs: bool = False) -> None:
+    def save_files_from_storage(cls, records: Union[list, range], storage_path: str,*, save_thumbs: bool = False, disable_antivirus: bool = False) -> None:
         records = list(records)
         from core.models import Soubor
         queryset = Soubor.objects.filter(pk__in=records).order_by("pk")
         for item in queryset:
-            cls.save_single_file_from_storage(item, storage_path)
+            cls.save_single_file_from_storage(item, storage_path, save_thumbs, disable_antivirus)
 
 
 class FedoraTransactionQueueClosedError(Exception):
