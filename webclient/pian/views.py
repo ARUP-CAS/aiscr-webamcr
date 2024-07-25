@@ -20,7 +20,7 @@ from core.message_constants import (
 from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
 from core.utils import (
     file_validate_epsg,
-    file_validate_geometry,
+    validate_and_split_geometry,
     get_validation_messages,
     update_all_katastr_within_akce_or_lokalita,
     get_dj_akce_for_pian,
@@ -462,46 +462,56 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
             logger.debug("pian.views.ImportovatPianView.post.label_check.fileEmpty")
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.fileEmpty."))
         try:
-            self.sheet = pd.read_csv(docfile, sep=",")
+            sheet = pd.read_csv(docfile, sep=",")
         except ValueError as err:
             logger.debug("pian.views.ImportovatPianView.post.label_check.unreadable_or_empty",
                          extra={"err": err})
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
-        if self.sheet.shape[0] == 0 or self.sheet.shape[1] == 0:
+        if sheet.shape[0] == 0 or sheet.shape[1] == 0:
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
-        if self.sheet.shape[1] != 3:
+        if sheet.shape[1] != 3:
             logger.debug("pian.views.ImportovatPianView.post.label_check.incorrect_column_count",
-                         extra={"columns": self.sheet.columns})
+                         extra={"columns": sheet.columns})
             return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.")} '
-                                          f'{self.sheet.columns}')
-        if self.sheet.shape[0] == 0:
+                                          f'{', '.join(sheet.columns)}')
+        if sheet.shape[0] == 0:
             logger.debug("pian.views.ImportovatPianView.post.label_check.no_data")
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.no_data") +
-                                          f' {self.sheet.columns}')
-        if not isinstance(self.sheet.columns[0], str) or self.sheet.columns[0].lower() != "label":
+                                          f' {', '.join(sheet.columns)}')
+        if not isinstance(sheet.columns[0], str) or sheet.columns[0].lower() != "label":
             logger.debug("pian.views.ImportovatPianView.post.label_check.column0",
-                         extra={"columns": self.sheet.columns})
+                         extra={"columns": sheet.columns})
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongColumnName.Column0") +
-                                          f'{self.sheet.columns[0]}')
-        if not isinstance(self.sheet.columns[1], str) or self.sheet.columns[1].lower() != "epsg":
+                                          f'{sheet.columns[0]}')
+        if not isinstance(sheet.columns[1], str) or sheet.columns[1].lower() != "epsg":
             logger.debug("pian.views.ImportovatPianView.post.label_check.column1",
-                         extra={"columns": self.sheet.columns})
+                         extra={"columns": sheet.columns})
             return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column1")} '
-                                          f'{self.sheet.columns[1]}')
-        if not isinstance(self.sheet.columns[2], str) or self.sheet.columns[2].lower() != "geometry":
+                                          f'{sheet.columns[1]}')
+        if not isinstance(sheet.columns[2], str) or sheet.columns[2].lower() != "geometry":
             logger.debug("pian.views.ImportovatPianView.post.label_check.column2",
-                         extra={"columns": self.sheet.columns})
+                         extra={"columns": sheet.columns})
             return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column2")} '
-                                          f'{self.sheet.columns[2]}')
+                                          f'{sheet.columns[2]}')
         try:
-            self.sheet["result"] = self.sheet.apply(self.check_save_row, axis=1)
+            new_sheet = pd.DataFrame(columns=list(sheet.columns) + ['result'])
+            for index, row in sheet.iterrows():                
+                if sheet['label'].value_counts()[row.iloc[0]] > 1:
+                    row['result'] = _("pian.views.importovatPianView.check.notUniquelabel")
+                    new_sheet = pd.concat([new_sheet, pd.DataFrame([row])], ignore_index=True)
+                elif not self.check_epsg(row.iloc[1]):
+                    row['result'] = _("pian.views.importovatPianView.check.wrongEpsg")
+                    new_sheet = pd.concat([new_sheet, pd.DataFrame([row])], ignore_index=True)
+                else:
+                    rows= validate_and_split_geometry(row)
+                    new_sheet = pd.concat([new_sheet, pd.DataFrame(rows)], ignore_index=True)
         except KeyError as err:
             logger.debug("pian.views.ImportovatPianView.post.sheet_apply.key_error",
-                         extra={"columns": self.sheet.columns, "err": err})
+                         extra={"columns": sheet.columns, "err": err})
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
         context = self.get_context_data()
-        context["table"] = self.sheet
-        cache.set(str(request.user.id) + "_geom", self.sheet, timeout=60*60)
+        context["table"] = new_sheet
+        cache.set(str(request.user.id) + "_geom", new_sheet, timeout=60*60)
         if ArcheologickyZaznam.objects.get(ident_cely=request.POST.get("arch_ident")).typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if request.POST.get("action",False) == "change":
                 context["url"] = reverse("arch_z:update-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident"),request.POST.get("pian_ident")])
@@ -514,21 +524,7 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
                 context["url"] = reverse("lokalita:create-pian", args=[request.POST.get("arch_ident"), request.POST.get("dj_ident")])
         logger.debug(context["url"])
         return self.render_to_response(context)
-    
-    def check_save_row(self, row):
-        if self.sheet['label'].value_counts()[row.iloc[0]] > 1:
-            return _("pian.views.importovatPianView.check.notUniquelabel")
-        if not self.check_geometry(row.iloc[2]):
-            return _("pian.views.importovatPianView.check.wrongGeometry")
-        if not self.check_epsg(row.iloc[1]):
-            return _("pian.views.importovatPianView.check.wrongEpsg")
-        else:
-            return True
-    
-    def check_geometry(self, geometry):
-        # @jiribartos kontrola geometrie
-        return file_validate_geometry(geometry)[0]
-        
+
     def check_epsg(self, epsg):
         # @jiribartos kontrola geometrie
         return file_validate_epsg(epsg)
