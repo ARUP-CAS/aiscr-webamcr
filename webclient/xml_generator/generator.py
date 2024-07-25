@@ -18,8 +18,7 @@ from xml_generator.models import ModelWithMetadata
 AMCR_NAMESPACE_URL = "https://api.aiscr.cz/schema/amcr/2.0/"
 AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd"
 AMCR_XSD_FILENAME = "amcr.xsd"
-SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.0/ https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd " \
-                  "http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd"
+SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.0/ https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd"
 logger = logging.getLogger(__name__)
 
 
@@ -36,7 +35,7 @@ class ParsedComment:
 class DocumentGenerator:
     _nsmap = {
         "xsi": "http://www.w3.org/2001/XMLSchema-instance",
-        "gml": "https://www.opengis.net/gml/3.2",
+        "gml": "http://www.opengis.net/gml/3.2",
         "amcr": AMCR_NAMESPACE_URL,
         "xml": "http://www.w3.org/XML/1998/namespace"
     }
@@ -237,7 +236,7 @@ class DocumentGenerator:
                 field_name = attribute_name.lower().replace("st_srid", "").replace("(", "").replace(")", "")
                 attribute_value = getattr(record, f"{field_name}").srid
             if attribute_value is not None and "st_asgml" in attribute_name.lower():
-                # ET.register_namespace("gml", "https://www.opengis.net/gml/3.2")
+                # ET.register_namespace("gml", "http://www.opengis.net/gml/3.2")
                 attribute_value = attribute_value.replace(">", ' xmlns:gml="http://www.opengis.net/gml/3.2">', 1)
                 attribute_value = ET.fromstring(attribute_value)
         else:
@@ -504,6 +503,6 @@ class DocumentGenerator:
     def __init__(self, document_object):
         self.document_object = document_object
         ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
-        ET.register_namespace("gml", "https://www.opengis.net/gml/3.2")
+        ET.register_namespace("gml", "http://www.opengis.net/gml/3.2")
         ET.register_namespace("amcr", AMCR_NAMESPACE_URL)
         self.document_root = ET.Element(f"{{{AMCR_NAMESPACE_URL}}}amcr", nsmap=self._nsmap)

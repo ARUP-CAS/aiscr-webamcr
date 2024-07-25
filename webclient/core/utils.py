@@ -23,9 +23,10 @@ from core.message_constants import (
 )
 from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 from dj.models import DokumentacniJednotka
-from django.db import connection
+from django.db import connection, transaction
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.translation import gettext as _
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from heslar.models import RuianKatastr
 from pian.models import Pian
@@ -61,36 +62,65 @@ def balanced_parentheses(expression):
         return False              
     return True
 
-def file_validate_geometry(lower_geom):
+def validate_and_split_geometry(geom):
     """
     Funkce pro validaci řetězce s WKT geometrií.
     """
-    if not isinstance(lower_geom, str):
-        return [False,'Not string']
-    geom=" ".join(lower_geom.upper().split())
-    geom=geom.replace(" (", "(")
-
-    if geom=='':
-        return [False,'Empty string']
-    elif not geom.startswith(('POINT(', 'LINESTRING(', 'POLYGON(')):
-        return [False,geom.split('(')[0]+' is not supported']
-    query = ("WITH geom_to_insert AS ( SELECT ST_GeomFromText(%s) AS geom ) "
-             "SELECT ST_IsValid(geom) AS is_valid,"
-             "ST_IsSimple(geom) AS is_simple,"
-             "ST_IsValidReason(geom) AS invalid_reason "
-             "FROM geom_to_insert;")
+    new_rows = []
+    if not isinstance(geom.iloc[2], str) or geom.iloc[2]=='':
+        geom['result'] = _("pian.views.importovatPianView.check.wrongGeometry")
+        new_rows.append(geom)
+        return new_rows
+    query = """with geom_to_insert as (
+        select ST_GeomFromText(%s) as geom),
+        geometries as ( select (ST_Dump(geom)).geom as polygon
+        from geom_to_insert),
+        ring as (
+        select 
+        ST_IsValid(polygon) AS is_valid,
+        ST_IsSimple(polygon) AS is_simple,
+        ST_IsValidReason(polygon) AS invalid_reason,
+        ST_AsText((ST_DumpRings(polygon)).geom) as rings,
+        ST_GeometryType(polygon)
+        from geometries 
+        where ST_GeometryType(polygon) = 'ST_Polygon'),
+        other as ( 
+        select 
+        ST_IsValid(polygon) AS is_valid,
+        ST_IsSimple(polygon) AS is_simple,
+        ST_IsValidReason(polygon) AS invalid_reason,
+        ST_AsText(polygon) as rings,
+        ST_GeometryType(polygon)
+        from geometries
+        where ST_GeometryType(polygon) != 'ST_Polygon')
+        select * from 	ring
+        union all
+        select *
+        from other"""
     cursor = connection.cursor()
+    sid = transaction.savepoint()
     try:
-        cursor.execute(query, [geom])
+        cursor.execute(query, [geom.iloc[2]])
+        transaction.savepoint_commit(sid)
     except Exception as e:
-        logger.debug("core.utils.file_validate_geometry.exception", extra={"e": e})
-        return [False,str(e)]
-    res = cursor.fetchone()
-    if res[0] is False:
-        return [False,res[2]]
-    if res[1] is False:
-        return [False,'Geometry is not simple']
-    return [True,'Geometry is valid']
+        transaction.savepoint_rollback(sid)
+        logger.debug("core.utils.file_validate_geometry.exception", extra={"e": e})        
+        geom['result'] = _("pian.views.importovatPianView.check.wrongGeometry")
+        new_rows.append(geom)        
+        return new_rows
+    rows = cursor.fetchall()
+    for index,row in enumerate(rows):
+        new_geom = geom.copy()
+        new_geom.iloc[2] = row[3]
+        if len(rows)>1:
+            new_geom.iloc[0]=f"{geom.iloc[0]}_{index+1}"
+        if row[0] is False or row[1] is False:
+            new_geom['result'] = _("pian.views.importovatPianView.check.wrongGeometry")
+            new_rows.append(new_geom)
+            return new_rows
+        new_geom['result'] = True
+        new_rows.append(new_geom)
+    return new_rows
 
 def get_mime_type(file_name):
     """

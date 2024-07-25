@@ -202,7 +202,7 @@ def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs)
     invalidate_model(Historie)
 
     def save_metadata(close_transaction=False):
-        if instance.initial_archeologicky_zaznam is not None:
+        if instance.initial_archeologicky_zaznam is not None and instance.suppress_signal_arch_z is False:
             instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
         if instance.initial_projekt is not None:
             instance.initial_projekt.save_metadata(fedora_transaction, skip_container_check=True)

@@ -1,6 +1,6 @@
 <tr>
     {% if d.thumbnail_image and d.small_thumbnail %}
-      <td><img src="{% url 'core:download_thumbnail' 'dokument' d.ident_cely d.thumbnail_image %}" class="image-nahled" data-fullsrc="{% url 'core:download_thumbnail_large' 'dokument' d.ident_cely d.thumbnail_image %}"></td>
+      <td><img src="{% url 'core:download_thumbnail' 'dokument' d.ident_cely d.thumbnail_image %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" data-fullsrc="{% url 'core:download_thumbnail_large' 'dokument' d.ident_cely d.thumbnail_image %}"></td>
     {% else %}
       <td></td>
     {% endif %}

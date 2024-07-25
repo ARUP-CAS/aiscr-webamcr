@@ -450,11 +450,16 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         except Exception as e:
             logger.debug(e)
             return ()
+
+    @property
+    def thumbnail_image(self):
+        if self.thumbnail_image_file:
+            return self.thumbnail_image_file.pk
         
     @property
     def thumbnail_image_file(self) -> Soubor | None:
         if self.soubory.soubory.count() > 0:
-            return self.soubory.soubory.first().pk
+            return self.soubory.soubory.first()
 
     @cached_property
     def large_thumbnail(self):
@@ -577,6 +582,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         self.close_active_transaction_when_finished = False
         self.suppress_signal = False
         self.suppress_dokument_signal = False
+        self.suppress_signal_arch_z = False
 
 
 class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):

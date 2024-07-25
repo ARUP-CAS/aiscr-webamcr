@@ -1,0 +1,18 @@
+<div class="modal fade" id="soubor-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-content-xxl" role="document">
+    <div class="modal-content">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+      <img class="modal-content" id="nahled-image">
+    </div>
+  </div>
+</div>
+<script>
+    //Show soubory modal
+    $('#soubor-modal').on('show.bs.modal', function (event) {
+        const button = $(event.relatedTarget)
+        const modalImg = document.getElementById("nahled-image");
+        modalImg.src = button.data('fullsrc');
+    })
+</script>

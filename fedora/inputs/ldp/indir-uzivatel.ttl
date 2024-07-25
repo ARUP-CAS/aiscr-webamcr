@@ -1,0 +1,6 @@
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix ore: <http://www.openarchives.org/ore/terms/> .
+
+<> ldp:membershipResource <info:fedora/AMCR/model/uzivatel> ;
+ldp:hasMemberRelation ore:aggregates ;
+ldp:insertedContentRelation ore:proxyFor .

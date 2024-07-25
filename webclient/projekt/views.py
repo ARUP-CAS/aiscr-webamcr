@@ -416,9 +416,11 @@ def create(request):
                         oznamovatel.projekt = projekt
                         oznamovatel.save()
                     if projekt.should_generate_confirmation_document:
-                        projekt.create_confirmation_document(fedora_transaction, user=request.user)
+                        rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
+                    else:
+                        rep_bin_file = True
                     messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                    projekt.send_ep01 = True
+                    projekt.send_ep01(rep_bin_file)
                     projekt.close_active_transaction_when_finished = True
                     projekt.save()
                     return redirect("projekt:detail", ident_cely=projekt.ident_cely)
@@ -709,9 +711,11 @@ def schvalit(request, ident_cely):
                                                                          "new_ident_cely": projekt.ident_cely})
         projekt.set_schvaleny(request.user, old_ident)
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
-            projekt.create_confirmation_document(fedora_transaction, user=request.user)
+            rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
+        else:
+            rep_bin_file = None
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
-        projekt.send_ep01 = True
+        projekt.send_ep01(rep_bin_file)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
         logger.debug("projekt.views.schvalit.post.done",
@@ -1369,16 +1373,19 @@ def generovat_oznameni(request, ident_cely):
     """
     Funkce pohledu pro generování oznámení projektu pomoci modalu.
     """
-    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    logger.debug("projekt.views.generovat_oznameni.start", extra={"ident_cely": ident_cely,
+                                                                  "odeslat_oznamovateli":
+                                                                      request.POST.get("odeslat_oznamovateli", False)})
+    projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     fedora_transaction = FedoraTransaction()
     projekt.active_transaction = fedora_transaction
     if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
-        logger.debug("Projekt neni typu pruzkumny")
+        logger.debug("projekt.views.generovat_oznameni.wrong_project_tpye")
         messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
         return redirect(projekt.get_absolute_url())
-    projekt.create_confirmation_document(fedora_transaction, additional=True, user=request.user)
+    rep_bin_file = projekt.create_confirmation_document(fedora_transaction, additional=True, user=request.user)
     if request.POST.get("odeslat_oznamovateli", False):
-        projekt.send_ep01 = True
+        projekt.send_ep01(rep_bin_file)
     projekt.close_active_transaction_when_finished = True
     projekt.save()
     return redirect(projekt.get_absolute_url())
@@ -1392,9 +1399,9 @@ class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
         fedora_transaction = FedoraTransaction()
         projekt.active_transaction = fedora_transaction
-        projekt.create_confirmation_document(fedora_transaction, additional=True, user=self.request.user)
+        rep_bin_file = projekt.create_confirmation_document(fedora_transaction, additional=True, user=self.request.user)
         projekt.close_active_transaction_when_finished = True
-        projekt.send_ep01 = True
+        projekt.send_ep01(rep_bin_file)
         projekt.save()
         return super().get_redirect_url(*args, **kwargs)
 

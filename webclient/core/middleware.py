@@ -95,13 +95,13 @@ class TestEnvPopupMiddleware:
         return response
     
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if getattr(settings, "TEST_ENV") and request.user.is_authenticated:
+        if settings.TEST_ENV and request.user.is_authenticated:
             cache_name = f"test_env_{request.user.pk}"
             last_test_env_popup = cache.get(cache_name)
             if last_test_env_popup is None:
                 now = datetime.now()
                 midnight = (now + timedelta(days=1)).replace(hour=0, minute = 0, second=0)
-                cache.set(cache_name,True,(midnight - now).seconds)
+                cache.set(cache_name, True, (midnight - now).seconds)
                 messages.add_message(
                                 request, messages.WARNING, NEPRODUKCNI_PROSTREDI_INFO, 'notclosing'
                             )
