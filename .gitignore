@@ -72,6 +72,7 @@ vol/web/media
 vol/web/media/emails
 vol/web/media/soubory
 vol/web
+fedora/fcrepo-home/data
 
 #logs
 logs/*
