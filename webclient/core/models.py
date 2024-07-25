@@ -115,10 +115,6 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     path = models.CharField(max_length=500, null=True)
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
     sha_512 = models.CharField(max_length=128, null=True, blank=True, db_index=True)
-    suppress_signal = False
-    active_transaction = None
-    close_active_transaction_when_finished = False
-    binary_data = None
 
     @property
     def url(self):
@@ -148,6 +144,13 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             models.Index(fields=["mimetype",],name="mimetype_idx",opclasses=["text_ops"]),
         ]
         ordering = ["nazev", ]
+
+    def __init__(self, *args, **kwargs):
+        super(Soubor, self).__init__(*args, **kwargs)
+        self.suppress_signal = False
+        self.active_transaction = None
+        self.close_active_transaction_when_finished = False
+        self.binary_data = None
 
     def __str__(self):
         return self.nazev
