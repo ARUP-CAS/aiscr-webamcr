@@ -121,7 +121,7 @@ services:
           memory: "1G"
 
   celery_exporter:
-    image: danihodovic/celery-exporter
+    image: danihodovic/celery-exporter:0.10.8
     networks:
       - prod-net
     secrets:
