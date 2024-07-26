@@ -1,3 +1,4 @@
+import copy
 import datetime
 import io
 import logging
@@ -251,7 +252,42 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         }.get(mime_type, [])
 
     @classmethod
+    def get_thumb_icon(cls, file):
+        mime_type = magic.from_buffer(file.read(), mime=True)
+        logger.debug("core.models.Soubor.get_thumb_icon.start", extra={"mime_type": mime_type})
+        icon_filename = {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx.png",
+            "text/csv": "csv.png",
+            "application/zip": "zip.png",
+            "application/zip-compressed": "zip.png",
+            "application/x-zip-compressed": "zip.png",
+            "application/vnd.rar": "rar.png",
+            "application/x-rar-compressed": "rar.png",
+            "application/x-rar": "rar.png",
+            "application/x-7z-compressed": "7z.png",
+            "application/vnd.ms-excel": "xls.png",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx.png",
+            "application/msword": "doc.png",
+            "application/rtf": "rtf.png",
+            "application/vnd.oasis.opendocument.text": "odt.png",
+            "application/vnd.oasis.opendocument.spreadsheet": "ods.png",
+        }.get(mime_type, None)
+        if icon_filename:
+            file_path = os.path.join(settings.STATICFILES_DIRS[0], "icons", icon_filename)
+            file_bytes = io.BytesIO()
+            with open(file_path, 'rb') as file:
+                file_bytes.write(file.read())
+            file_bytes.seek(0)
+            logger.debug("core.models.Soubor.get_thumb_icon.end",
+                         extra={"mime_type": mime_type, "icon_filename": icon_filename})
+            return file_bytes
+        else:
+            logger.debug("core.models.Soubor.get_thumb_icon.no_icon", extra={"mime_type": mime_type})
+            return None
+
+    @classmethod
     def get_mime_types(cls, file, check_archive=False) -> Union[set, bool, str]:
+        file = copy.deepcopy(file)
         file.seek(0)
         mime_type = magic.from_buffer(file.read(), mime=True)
         logger.debug("core.models.Soubor.get_mime_type.mime_type", extra={"mime_type": mime_type,

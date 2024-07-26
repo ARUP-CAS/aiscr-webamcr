@@ -578,6 +578,10 @@ class FedoraRepositoryConnector:
                              extra={"err": err, "file_name": file_name, "large": large})
                 return None
         else:
+            from core.models import Soubor
+            thumb_icon = Soubor.get_thumb_icon(file_content)
+            if thumb_icon is not None:
+                file_content = thumb_icon
             try:
                 thumbnail = resize_image(file_content, large)
                 logger.debug("core_repository_connector.__generate_thumb.end", extra={"file_name": file_name,
