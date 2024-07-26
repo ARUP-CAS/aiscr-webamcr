@@ -6,7 +6,7 @@ on:
       man_tag:
        description: 'Version tag for deployment [optional]'
        type: string
-       required: false
+       required: true
 
 
 env:
