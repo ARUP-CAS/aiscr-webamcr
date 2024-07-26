@@ -225,7 +225,9 @@ def change_document_accessibility():
         for item in documents:
             item: Dokument
             pristupnost_razeni = item.organizace.zverejneni_pristupnost.razeni
-            az_pristupnost_razeni = min(*[x.archeologicky_zaznam.pristupnost.razeni for x in item.casti.all()])
+            pristupnost_az = [x.archeologicky_zaznam.pristupnost.razeni for x in item.casti.all()
+                              if x.archeologicky_zaznam is not None]
+            az_pristupnost_razeni = min(pristupnost_az)
             if pristupnost_razeni < az_pristupnost_razeni:
                 pristupnost_razeni = az_pristupnost_razeni
             pristupnost = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST) \
@@ -249,7 +251,7 @@ def delete_unsubmited_projects():
     logger.debug("core.cron.delete_unsubmited_projects.do.start")
     now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
     projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)\
-                     .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).distinct())
+                     .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).distinct("id"))
     for item in projekt_query:
         item: Projekt
         fedora_transaction = FedoraTransaction()
@@ -258,9 +260,11 @@ def delete_unsubmited_projects():
         try:
             if isinstance(item.soubory, SouborVazby):
                 for item_file in item.soubory.soubory.all():
+                    item.active_transaction = fedora_transaction
                     item_file.delete()
                 item.soubory.delete()
                 item.soubory = None
+            item.record_deletion()
             item.delete()
         except Exception as err:
             fedora_transaction.rollback_transaction()

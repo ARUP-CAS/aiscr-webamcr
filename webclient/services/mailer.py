@@ -719,8 +719,8 @@ class Mailer:
             projekt__organizace=F('historie__historie__uzivatel__spoluprace_badatelu__vedouci__organizace'),
             historie__historie__uzivatel__spoluprace_badatelu__vedouci__notification_types__ident_cely='S-E-N-01',
             id__in=Subquery(subquery_sn12),
-            historie__historie__datum_zmeny__gte=previous_midnight,
-            historie__historie__datum_zmeny__lt=midnight,
+            historie__historie__datum_zmeny__gt=previous_midnight,
+            historie__historie__datum_zmeny__lte=midnight,
         ).distinct().values(
             'ident_cely',
             'historie__historie__uzivatel__spoluprace_badatelu__vedouci__email'
@@ -750,8 +750,8 @@ class Mailer:
             historie__historie__typ_zmeny='SN01',
             historie__historie__uzivatel__notification_types__ident_cely='S-E-N-02',
             id__in=Subquery(sn34_subquery),
-            historie__historie__datum_zmeny__gte=previous_midnight,
-            historie__historie__datum_zmeny__lt=midnight,
+            historie__historie__datum_zmeny__gt=previous_midnight,
+            historie__historie__datum_zmeny__lte=midnight,
 
         ).distinct().values(
             'ident_cely',
