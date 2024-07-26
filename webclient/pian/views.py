@@ -472,26 +472,26 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
         if sheet.shape[1] != 3:
             logger.debug("pian.views.ImportovatPianView.post.label_check.incorrect_column_count",
                          extra={"columns": sheet.columns})
-            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName")} '+
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongColumnName")+" "+
                                           (', '.join(sheet.columns)))
         if sheet.shape[0] == 0:
             logger.debug("pian.views.ImportovatPianView.post.label_check.no_data")
-            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.no_data")}')
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.no_data"))
         if not isinstance(sheet.columns[0], str) or sheet.columns[0].lower() != "label":
             logger.debug("pian.views.ImportovatPianView.post.label_check.column0",
                          extra={"columns": sheet.columns})
-            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column0")} ' +
-                                          f'{sheet.columns[0]}')
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongColumnName.Column0")+
+                                          f' {sheet.columns[0]}')
         if not isinstance(sheet.columns[1], str) or sheet.columns[1].lower() != "epsg":
             logger.debug("pian.views.ImportovatPianView.post.label_check.column1",
                          extra={"columns": sheet.columns})
-            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column1")} '
-                                          f'{sheet.columns[1]}')
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongColumnName.Column1")+
+                                          f' {sheet.columns[1]}')
         if not isinstance(sheet.columns[2], str) or sheet.columns[2].lower() != "geometry":
             logger.debug("pian.views.ImportovatPianView.post.label_check.column2",
                          extra={"columns": sheet.columns})
-            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column2")} '
-                                          f'{sheet.columns[2]}')
+            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongColumnName.Column2")+
+                                          f' {sheet.columns[2]}')
         try:
             new_sheet = pd.DataFrame(columns=list(sheet.columns) + ['result'])
             for index, row in sheet.iterrows():                
