@@ -225,7 +225,9 @@ def change_document_accessibility():
         for item in documents:
             item: Dokument
             pristupnost_razeni = item.organizace.zverejneni_pristupnost.razeni
-            az_pristupnost_razeni = min(*[x.archeologicky_zaznam.pristupnost.razeni for x in item.casti.all()])
+            pristupnost_az = [x.archeologicky_zaznam.pristupnost.razeni for x in item.casti.all()
+                              if x.archeologicky_zaznam is not None]
+            az_pristupnost_razeni = min(pristupnost_az)
             if pristupnost_razeni < az_pristupnost_razeni:
                 pristupnost_razeni = az_pristupnost_razeni
             pristupnost = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST) \
