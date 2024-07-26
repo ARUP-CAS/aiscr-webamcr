@@ -258,6 +258,7 @@ def delete_unsubmited_projects():
         try:
             if isinstance(item.soubory, SouborVazby):
                 for item_file in item.soubory.soubory.all():
+                    item.active_transaction = fedora_transaction
                     item_file.delete()
                 item.soubory.delete()
                 item.soubory = None
