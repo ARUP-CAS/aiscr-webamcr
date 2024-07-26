@@ -653,7 +653,7 @@ Knihovny vkládané jako statické soubory
      - MIT License
      - https://github.com/ljagis/leaflet-measure
    * - Leaflet Spin
-     -
+     - 1.1.2
      - MIT License
      - https://github.com/makinacorpus/Leaflet.Spin
    * - Leaflet TileLayer Grayscale
@@ -672,4 +672,86 @@ Knihovny vkládané jako statické soubory
      - 4.0.13
      - MIT License
      - https://github.com/select2/select2/tree/master
+   * - Spin
+     - 1.2.5
+     - MIT License
+     - https://github.com/fgnass/spin.js
+
+
+Docker image
+---------------------------------------
+
+.. list-table:: Image použité pro provoz
+   :widths: 25 25 25 25
+   :header-rows: 1
+
+   * - Název image
+     - Verze
+     - Licence
+     - Odkaz
+   * - celery-exporter
+     - 0.10.8
+     - MIT license
+     - https://github.com/danihodovic/celery-exporter
+   * - Elasticsearch
+     - 8.14.1
+     - SSPL, Elastic License 2.0, Apache License 2.0
+     - https://github.com/elastic/elasticsearch
+   * - Kibana
+     - 8.14.1
+     - SSPL, Elastic License 2.0, Apache License 2.0
+     - https://github.com/elastic/kibana
+   * - Logstash
+     - 8.14.1
+     - SSPL, Elastic License 2.0, Apache License 2.0
+     - https://github.com/elastic/logstash
+   * - eeacms/rsync:2.4
+     - 2.4
+     - 
+     - https://github.com/eea/eea.docker.rsync
+   * - Cadvisor
+     - 0.49.1
+     - Apache License 2
+     - https://github.com/google/cadvisor
+   * - Fedora
+     - 6.4.0
+     - Apache-2.0 License
+     - https://github.com/fcrepo/fcrepo
+   * - ghcr.io/osgeo/gdal:ubuntu-small
+     - 3.9.1
+     - MIT License
+     - https://github.com/OSGeo/gdal/pkgs/container/gdal  
+   * - Grafana
+     - 10.2.8
+     - AGPL-3.0 License
+     - https://github.com/grafana/grafana
+   * - docker-nginx
+     - 1.26.1
+     - BSD 2 License
+     - https://github.com/nginxinc/docker-nginx
+   * - postgis/postgis
+     - 14-3.3
+     - MIT License
+     - https://github.com/postgis/docker-postgis
+   * - Prometheus
+     - 2.45.6
+     - Apache-2.0 License
+     - https://github.com/prometheus/prometheus
+   * - Postgres-exporter
+     - 0.15.0
+     - Apache-2.0 License
+     - https://github.com/prometheus-community/postgres_exporter
+   * - Redis
+     - 7.2.5
+     - RSALv2, SSPLv1
+     - https://github.com/redis/redis
+   * - Redis exporter
+     - 1.61.0
+     - MIT license
+     - https://github.com/oliver006/redis_exporter
+   * - selenium/standalone-firefox
+     - 127.0
+     - Apache License 2.0
+     - https://github.com/SeleniumHQ/docker-selenium
+
 
