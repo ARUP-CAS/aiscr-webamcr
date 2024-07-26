@@ -249,7 +249,7 @@ def delete_unsubmited_projects():
     logger.debug("core.cron.delete_unsubmited_projects.do.start")
     now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
     projekt_query = (Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY)\
-                     .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).distinct())
+                     .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).distinct("id"))
     for item in projekt_query:
         item: Projekt
         fedora_transaction = FedoraTransaction()
@@ -262,6 +262,7 @@ def delete_unsubmited_projects():
                     item_file.delete()
                 item.soubory.delete()
                 item.soubory = None
+            item.record_deletion()
             item.delete()
         except Exception as err:
             fedora_transaction.rollback_transaction()
