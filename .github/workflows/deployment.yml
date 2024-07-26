@@ -4,7 +4,7 @@ on:
   workflow_dispatch :
     inputs:
       man_tag:
-       description: 'Version tag for deployment [optional]'
+       description: 'Version tag for deployment'
        type: string
        required: true
 
