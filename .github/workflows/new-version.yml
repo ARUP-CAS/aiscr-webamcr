@@ -1,4 +1,4 @@
-name: New version
+name: New version - production
 
 on:
   workflow_dispatch :
@@ -7,19 +7,16 @@ on:
         description: 'Tag name following vx.x.x semantics:'
         type: string
         required: true
-      pre_release:
-        description: 'Is this pre-release version?'
-        type: boolean
-        required: true
-        default: true
     
 jobs:
-  new_version:
-    name: New version job
+  update_files:
+    name: Update citation and libraries list
     runs-on: ubuntu-latest
-    environment: production
+    outputs:
+      sha: ${{ steps.set-sha.outputs.sha }}
     steps:
-      - uses: actions/create-github-app-token@v1
+      - name: Log-in as AMCR app
+        uses: actions/create-github-app-token@v1
         id: app-token
         with:
           app-id: ${{ vars.AISCR_AMCR_ACTIONS_APP_ID }}
@@ -29,28 +26,9 @@ jobs:
         with:
           ref: dev
           token: ${{ steps.app-token.outputs.token }}
-      - name: Update CITATION.cff
+      - name: Set default SHA
         run: |
-          VERSION=${{ inputs.new_tag }}
-          PRERELEASE=${{ inputs.pre_release }}
-          if [ "$PRERELEASE" == "true" ]; then
-            VERSION="$VERSION-pre-release"
-          fi
-          DATE=$(date -I)
-          sed -i '/title:/!b;n;cversion: "'"$VERSION"'"' CITATION.cff
-          sed -i "s/date-released:.*/date-released: $DATE/" CITATION.cff
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          git config --global pull.rebase true
-          git add CITATION.cff
-          if git diff --staged --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "Update CITATION.cff for release $VERSION"
-            git pull
-            git push
-            echo "sha=$(git log -1 --format='%h')" >> "$GITHUB_ENV"
-          fi    
+          echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -65,10 +43,6 @@ jobs:
       - name: Update pip package list
         run: |
           VERSION=${{ inputs.new_tag }}
-          PRERELEASE=${{ inputs.pre_release }}
-          if [ "$PRERELEASE" == "true" ]; then
-            VERSION="$VERSION-pre-release"
-          fi
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git config --global pull.rebase true
@@ -79,17 +53,50 @@ jobs:
             git commit -m "Update knihovny_read_only.rst for release $VERSION"
             git pull
             git push
-            echo "sha=$(git log -1 --format='%h')" >> "$GITHUB_ENV"
+            echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
           fi
-      - name: Show commit SHA
+      - name: Update CITATION.cff
         run: |
-          echo "Commit SHA: ${{ env.sha }}"
+          VERSION=${{ inputs.new_tag }}
+          DATE=$(date -I)
+          sed -i '/title:/!b;n;cversion: "'"$VERSION"'"' CITATION.cff
+          sed -i "s/date-released:.*/date-released: $DATE/" CITATION.cff
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git config --global pull.rebase true
+          git add CITATION.cff
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update CITATION.cff for release $VERSION"
+            git pull
+            git push
+            echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
+          fi
+      - name: Set output SHA
+        id: set-sha
+        run: |
+          echo "sha=${{ env.sha }}" >> $GITHUB_OUTPUT
+          echo "Output SHA set to: ${{ env.sha }}"
+  
+  new_version:
+    name: Create new tag
+    needs: update_files
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://amcr.aiscr.cz/
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: dev
       - name: Create tag
         uses: rickstaa/action-create-tag@v1
         id: "tag_create"
         with:
           tag: ${{ inputs.new_tag }}
-          commit_sha: ${{ env.sha }}
+          commit_sha: ${{ needs.update_files.outputs.sha }}
       - name: Check tag exists
         run: |
           echo "Tag already present: ${{ env.TAG_EXISTS }}"
