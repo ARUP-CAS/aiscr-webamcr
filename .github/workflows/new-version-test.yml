@@ -1,0 +1,102 @@
+name: New version - pre-release
+
+on:
+  workflow_dispatch :
+    inputs:
+      new_tag:
+        description: 'Tag name following vx.x.x-rcx semantics:'
+        type: string
+        required: true
+    
+jobs:
+  update_files:
+    name: Update citation and libraries list
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.set-sha.outputs.sha }}
+    steps:
+      - name: Log-in as AMCR app
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.AISCR_AMCR_ACTIONS_APP_ID }}
+          private-key: ${{ secrets.AISCR_AMCR_ACTIONS_KEY }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          token: ${{ steps.app-token.outputs.token }}
+      - name: Set default SHA
+        run: |
+          echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-licenses
+          pip install -r webclient/requirements.txt
+      - name: Run convert_to_rst.py
+        run: python docs/licenses/convert_to_rst.py
+      - name: Update pip package list
+        run: |
+          VERSION="${{ inputs.new_tag }}-pre-release"
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git config --global pull.rebase true
+          git add docs/source/knihovny_read_only.rst
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update knihovny_read_only.rst for release $VERSION"
+            git pull
+            git push
+            echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
+          fi
+      - name: Update CITATION.cff
+        run: |
+          VERSION="${{ inputs.new_tag }}-pre-release"
+          DATE=$(date -I)
+          sed -i '/title:/!b;n;cversion: "'"$VERSION"'"' CITATION.cff
+          sed -i "s/date-released:.*/date-released: $DATE/" CITATION.cff
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git config --global pull.rebase true
+          git add CITATION.cff
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update CITATION.cff for release $VERSION"
+            git pull
+            git push
+            echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
+          fi
+      - name: Set output SHA
+        id: set-sha
+        run: |
+          echo "sha=${{ env.sha }}" >> $GITHUB_OUTPUT
+          echo "Output SHA set to: ${{ env.sha }}"
+  
+  new_version:
+    name: Create new tag
+    needs: update_files
+    runs-on: ubuntu-latest
+    environment:
+      name: testing
+      url: https://amcr-test.aiscr.cz/
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+      - name: Create tag
+        uses: rickstaa/action-create-tag@v1
+        id: "tag_create"
+        with:
+          tag: ${{ inputs.new_tag }}
+          commit_sha: ${{ needs.update_files.outputs.sha }}
+      - name: Check tag exists
+        run: |
+          echo "Tag already present: ${{ env.TAG_EXISTS }}"
