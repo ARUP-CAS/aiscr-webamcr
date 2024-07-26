@@ -38,11 +38,7 @@ print_d1 "START DEPLOYMENT SCRIPT @${d_stamp}"
 print_d1 "DOCKER ROLLING OUT"
 chmod +x ${scriptpath}/prod_deploy.sh
 ${scriptpath}/prod_deploy.sh -x
-if [ ${current_deployment_tag} == "dev" ]; then
-    ${scriptpath}/prod_deploy.sh
-else
-    ${scriptpath}/prod_deploy.sh -t ${current_deployment_tag}
-fi
+${scriptpath}/prod_deploy.sh -t ${current_deployment_tag}
 
 #Status check
 print_d1 "STATUS CHECK"
@@ -63,12 +59,3 @@ print_d1 "PUTTING TAG ${current_deployment_tag} as LAST into ${path_last_tag}"
 echo "${current_deployment_tag}" > ${path_last_tag}
 
 print_d1 "EXITING"
-
-
-
-
-
-
-
-
-
