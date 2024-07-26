@@ -1,10 +1,10 @@
-name: New version - production
+name: New version - pre-release
 
 on:
   workflow_dispatch :
     inputs:
       new_tag:
-        description: 'Tag name following vx.x.x semantics:'
+        description: 'Tag name following vx.x.x-rcx semantics:'
         type: string
         required: true
     
@@ -42,7 +42,7 @@ jobs:
         run: python docs/licenses/convert_to_rst.py
       - name: Update pip package list
         run: |
-          VERSION=${{ inputs.new_tag }}
+          VERSION="${{ inputs.new_tag }}-pre-release"
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git config --global pull.rebase true
@@ -57,7 +57,7 @@ jobs:
           fi
       - name: Update CITATION.cff
         run: |
-          VERSION=${{ inputs.new_tag }}
+          VERSION="${{ inputs.new_tag }}-pre-release"
           DATE=$(date -I)
           sed -i '/title:/!b;n;cversion: "'"$VERSION"'"' CITATION.cff
           sed -i "s/date-released:.*/date-released: $DATE/" CITATION.cff
@@ -84,8 +84,8 @@ jobs:
     needs: update_files
     runs-on: ubuntu-latest
     environment:
-      name: production
-      url: https://amcr.aiscr.cz/
+      name: testing
+      url: https://amcr-test.aiscr.cz/
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
