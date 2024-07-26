@@ -530,7 +530,7 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     vb_niveleta_do = NumberFilter(
-        label=_(" "),
+        label=" ",
         method='filter_by_z_range',
         distinct=True,
     )
