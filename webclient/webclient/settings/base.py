@@ -203,6 +203,7 @@ STATICFILES_DIRS = [
     BASE_DIR / "static" / "loga",
     BASE_DIR / "static" / "img",
     BASE_DIR / "static" / "fonts",
+    BASE_DIR / "static" / "icons",
 ]
 
 TEMPLATES = [
