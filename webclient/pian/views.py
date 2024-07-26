@@ -467,21 +467,20 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
             logger.debug("pian.views.ImportovatPianView.post.label_check.unreadable_or_empty",
                          extra={"err": err})
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
-        if sheet.shape[0] == 0 or sheet.shape[1] == 0:
+        if sheet.shape[1] == 0:
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
         if sheet.shape[1] != 3:
             logger.debug("pian.views.ImportovatPianView.post.label_check.incorrect_column_count",
                          extra={"columns": sheet.columns})
-            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.")} '
-                                          f'{', '.join(sheet.columns)}')
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName")} '+
+                                          (', '.join(sheet.columns)))
         if sheet.shape[0] == 0:
             logger.debug("pian.views.ImportovatPianView.post.label_check.no_data")
-            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.no_data") +
-                                          f' {', '.join(sheet.columns)}')
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.no_data")}')
         if not isinstance(sheet.columns[0], str) or sheet.columns[0].lower() != "label":
             logger.debug("pian.views.ImportovatPianView.post.label_check.column0",
                          extra={"columns": sheet.columns})
-            return HttpResponseBadRequest(_("pian.views.importovatPianView.check.wrongColumnName.Column0") +
+            return HttpResponseBadRequest(f'{_("pian.views.importovatPianView.check.wrongColumnName.Column0")} ' +
                                           f'{sheet.columns[0]}')
         if not isinstance(sheet.columns[1], str) or sheet.columns[1].lower() != "epsg":
             logger.debug("pian.views.ImportovatPianView.post.label_check.column1",
