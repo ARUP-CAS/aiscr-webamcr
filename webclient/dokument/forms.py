@@ -645,8 +645,6 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "odkaz",
             "zeme",
             "region_extra",
-            "vyska",
-            "sirka",
         )
         widgets = {
             "format": forms.Select(
@@ -665,8 +663,6 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "odkaz": _("dokument.forms.createModelExtraDataForm.odkaz.label"),
             "zeme": _("dokument.forms.createModelExtraDataForm.zeme.label"),
             "region_extra": _("dokument.forms.createModelExtraDataForm.region_extra.label"),
-            "vyska": _("dokument.forms.createModelExtraDataForm.delka.label"),
-            "sirka": _("dokument.forms.createModelExtraDataForm.sirka.label"),
         }
         help_texts = {
             "format": _("dokument.forms.createModelExtraDataForm.format.tooltip"),
@@ -674,8 +670,6 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "odkaz": _("dokument.forms.createModelExtraDataForm.odkaz.tooltip"),
             "zeme": _("dokument.forms.createModelExtraDataForm.zeme.tooltip"),
             "region_extra": _("dokument.forms.createModelExtraDataForm.region_extra.tooltip"),
-            "vyska": _("dokument.forms.createModelExtraDataForm.vyska.tooltip"),
-            "sirka": _("dokument.forms.createModelExtraDataForm.sirka.tooltip"),
         }
 
     def __init__(
