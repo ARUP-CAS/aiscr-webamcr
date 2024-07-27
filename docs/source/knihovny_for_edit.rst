@@ -47,6 +47,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
    :widths: 25 25 25 25
    :header-rows: 1
 
+   * - Název knihovny
+     - Verze
+     - Licence
+     - Odkaz
 @licence_table
 
 Knihovny vkládané jako statické soubory
