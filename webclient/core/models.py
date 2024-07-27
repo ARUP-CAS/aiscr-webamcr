@@ -256,6 +256,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         mime_type = magic.from_buffer(file.read(), mime=True)
         logger.debug("core.models.Soubor.get_thumb_icon.start", extra={"mime_type": mime_type})
         icon_filename = {
+            "image/heic": "heic.png",
+            "image/heif": "heic.png",
+            "text/plain": "txt.png",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx.png",
             "text/csv": "csv.png",
             "application/zip": "zip.png",
@@ -271,8 +274,6 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             "application/rtf": "rtf.png",
             "application/vnd.oasis.opendocument.text": "odt.png",
             "application/vnd.oasis.opendocument.spreadsheet": "ods.png",
-            "image/heic": "heic.png",
-            "image/heif": "heic.png",
         }.get(mime_type, None)
         if icon_filename:
             file_path = os.path.join(settings.STATICFILES_DIRS[0], "icons", icon_filename)
