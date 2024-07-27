@@ -88,6 +88,7 @@ CACHEOPS = {
     "dokument.DokumentExtraData": {"ops": ("fetch", ), "timeout": 60*10},
     "historie.Historie": {"ops": ("fetch", ), "timeout": 60*10},
     "pas.SamostatnyNalez": {"ops": ("fetch", ), "timeout": 60*10},
+    "pas.UzivatelSpoluprace": {"ops": ("fetch", ), "timeout": 60*10},
     "core.Permissions": {"ops": ("fetch", ), "timeout": 60*60},
     "komponenta.Komponenta": {"ops": ("fetch", ), "timeout": 60*10},
     "pian.Pian": {"ops": ("fetch", ), "timeout": 60*10},
