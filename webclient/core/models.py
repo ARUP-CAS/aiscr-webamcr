@@ -290,7 +290,6 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def get_mime_types(cls, file, check_archive=False) -> Union[set, bool, str]:
-        file = copy.deepcopy(file)
         file.seek(0)
         mime_type = magic.from_buffer(file.read(), mime=True)
         logger.debug("core.models.Soubor.get_mime_type.mime_type", extra={"mime_type": mime_type,
@@ -300,6 +299,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             mime_types = set()
             mime_types.add(mime_type)
             if mime_type == "application/zip":
+                file = copy.deepcopy(file)
                 try:
                     with zipfile.ZipFile(file, 'r') as zip_ref:
                         for zip_info in zip_ref.infolist():
@@ -312,6 +312,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                     logger.info("core.models.Soubor.get_mime_type.cannot_unpack_zipfile", extra={"err": err})
                     return False
             elif mime_type == "application/x-7z-compressed":
+                file = copy.deepcopy(file)
                 file_input = io.BytesIO(file.read())
                 try:
                     with py7zr.SevenZipFile(file_input, mode='r') as archive:
@@ -326,6 +327,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 finally:
                     file_input.close()
             elif mime_type in ("application/x-rar-compressed", "application/x-rar"):
+                file = copy.deepcopy(file)
                 file_input = io.BytesIO(file.read())
                 try:
                     with rarfile.RarFile(file_input) as archive:

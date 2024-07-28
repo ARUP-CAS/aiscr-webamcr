@@ -4,6 +4,7 @@ import time
 import traceback
 
 import redis
+from cacheops import invalidate_model
 from celery import shared_task
 from django.db.models import Q, F, Min, Prefetch
 from django.db.models.functions import Upper, Coalesce
@@ -18,7 +19,7 @@ from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSE
 from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
 from core.models import Soubor, SouborVazby
 from core.coordTransform import transform_geom_to_sjtsk
-from core.repository_connector import FedoraTransaction
+from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector, FedoraError
 from django.db import connection, transaction
 from django.utils.translation import gettext as _
 
@@ -215,11 +216,15 @@ def change_document_accessibility():
     v hesláři organizace (podle vazby dokument.organizace), ale nikdy ne na vyšší přístupnost, než má nejlépe
     přístupný připojený archeologický záznam (tj. když mají připojené AZ C a D, bude mít dokument nejvýše C).
     """
+    invalidate_model(Dokument)
+    invalidate_model(ArcheologickyZaznam)
+    invalidate_model(Organizace)
     try:
         logger.debug("core.cron.change_document_accessibility.do.start")
         documents = Dokument.objects \
             .filter(datum_zverejneni__lte=datetime.datetime.now().date()) \
-            .annotate(min_pristupnost_razeni=Coalesce(Min(F("casti__archeologicky_zaznam__pristupnost__razeni")), PRISTUPNOST_MIN_RAZENI)) \
+            .annotate(min_pristupnost_razeni=Coalesce(Min(F("casti__archeologicky_zaznam__pristupnost__razeni")),
+                                                      PRISTUPNOST_MIN_RAZENI)) \
             .filter(Q(pristupnost__razeni__gt=F("min_pristupnost_razeni"))
                     & Q(pristupnost__razeni__gt=F('organizace__zverejneni_pristupnost__razeni'))).distinct()
         for item in documents:
@@ -257,16 +262,21 @@ def delete_unsubmited_projects():
         item: Projekt
         fedora_transaction = FedoraTransaction()
         item.active_transaction = fedora_transaction
-        item.close_active_transaction_when_finished = True
         try:
+            has_soubory = False
             if isinstance(item.soubory, SouborVazby):
                 for item_file in item.soubory.soubory.all():
                     item.active_transaction = fedora_transaction
                     item_file.delete()
+                    has_soubory = True
                 item.soubory.delete()
                 item.soubory = None
-            item.record_deletion()
+            item.suppress_signal = True
             item.delete()
+            if has_soubory:
+                con = FedoraRepositoryConnector(item, fedora_transaction)
+                con.delete_container(delete_tombstone=False)
+            fedora_transaction.mark_transaction_as_closed()
         except Exception as err:
             fedora_transaction.rollback_transaction()
             logger.error("core.cron.delete_unsubmited_projects.do.error", extra={"error": err})
