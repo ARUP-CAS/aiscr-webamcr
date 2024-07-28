@@ -112,9 +112,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         """
         Metóda pro určení práv na videní odstávky.
         """
-        if request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() == 0:
-            return False
-        return super().has_view_permission(request, obj, *args)
+        return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
     def has_add_permission(self, request, *args):
         """
@@ -122,17 +120,13 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         """
         if OdstavkaSystemu.objects.count() > 0:
             return False
-        if request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() == 0:
-            return False
-        return super().has_add_permission(request, *args)
+        return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
     def has_change_permission(self, request, obj=None, *args):
         """
         Metóda pro určení práv pro úpravu odstávky.
         """
-        if request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() == 0:
-            return False
-        return super().has_change_permission(request, obj, *args)
+        return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
     def file_handler(self, language, form):
         """
@@ -171,7 +165,6 @@ class CustomAdminSettingsAdmin(admin.ModelAdmin):
 admin.site.register(CustomAdminSettings, CustomAdminSettingsAdmin)
 
 
-@admin.register(Permissions)
 class PermissionAdmin(admin.ModelAdmin):
     """
     Třída admin panelu pro zobrazení a správu oprávnení.
