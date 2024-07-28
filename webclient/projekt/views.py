@@ -39,7 +39,7 @@ from core.constants import (
     VRACENI_ZRUSENI,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ, OBLAST_CECHY,
-    ZAPSANI_SN,
+    ZAPSANI_SN, RUSENI_STARE_PROJ,
 )
 from core.decorators import allowed_user_groups
 from core.exceptions import MaximalIdentNumberError
@@ -1436,6 +1436,9 @@ def get_history_dates(historie_vazby, request_user):
     """
     request_user: User
     anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
+    datum_zruseni = historie_vazby.get_last_transaction_date(RUSENI_PROJ, anonymized)
+    if not datum_zruseni:
+        datum_zruseni = historie_vazby.get_last_transaction_date(RUSENI_STARE_PROJ, anonymized)
     historie = {
         "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ, anonymized),
         "datum_zapsani": historie_vazby.get_last_transaction_date(
@@ -1459,7 +1462,7 @@ def get_history_dates(historie_vazby, request_user):
         "datum_navrhu_ke_zruseni": historie_vazby.get_last_transaction_date(
             NAVRZENI_KE_ZRUSENI_PROJ, anonymized
         ),
-        "datum_zruseni": historie_vazby.get_last_transaction_date(RUSENI_PROJ, anonymized),
+        "datum_zruseni": datum_zruseni,
     }
     return historie
 
