@@ -4,6 +4,7 @@ import logging
 import time
 from typing import Union, Dict
 
+from cacheops import invalidate_model
 from django.conf import settings
 from django.db.models import F, Count, OuterRef, Subquery
 from django.utils import timezone
@@ -22,7 +23,7 @@ from core.models import Soubor
 from core.repository_connector import FedoraRepositoryConnector, RepositoryBinaryFile
 from historie.models import Historie
 from oznameni.models import Oznamovatel
-from pas.models import SamostatnyNalez
+from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from .mlstripper import MLStripper
 
 logger = logging.getLogger(__name__)
@@ -705,6 +706,9 @@ class Mailer:
 
     @staticmethod
     def get_en01_data() -> Dict:
+        invalidate_model(SamostatnyNalez)
+        invalidate_model(Historie)
+        invalidate_model(UzivatelSpoluprace)
         subquery_sn12 = SamostatnyNalez.objects.filter(
             historie__historie__typ_zmeny='SN12',
             id=OuterRef('id')
@@ -737,22 +741,20 @@ class Mailer:
 
     @staticmethod
     def get_en02_data() -> Dict:
-        sn34_subquery = SamostatnyNalez.objects.filter(
-            historie__historie__typ_zmeny='SN34',
-            id=OuterRef('id')
-        ).values('id')
-
         now = timezone.now()
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
         previous_midnight = midnight + timedelta(days=-1)
+        sn34_subquery = SamostatnyNalez.objects.filter(
+            historie__historie__typ_zmeny='SN34',
+            id=OuterRef('id'),
+            historie__historie__datum_zmeny__gt=previous_midnight,
+            historie__historie__datum_zmeny__lte=midnight,
+        ).values('id')
 
         results = SamostatnyNalez.objects.filter(
             historie__historie__typ_zmeny='SN01',
             historie__historie__uzivatel__notification_types__ident_cely='S-E-N-02',
             id__in=Subquery(sn34_subquery),
-            historie__historie__datum_zmeny__gt=previous_midnight,
-            historie__historie__datum_zmeny__lte=midnight,
-
         ).distinct().values(
             'ident_cely',
             'historie__historie__uzivatel__email'

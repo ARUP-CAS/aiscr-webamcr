@@ -780,14 +780,15 @@ class FedoraRepositoryConnector:
                      extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely,
                             "transaction": self.transaction_uid})
 
-    def delete_container(self):
+    def delete_container(self, delete_tombstone=True):
         self._delete_link()
         logger.debug("core_repository_connector.delete_container.start",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.DELETE_CONTAINER)
         self._send_request(url, FedoraRequestType.DELETE_CONTAINER)
-        url = self._get_request_url(FedoraRequestType.DELETE_TOMBSTONE)
-        self._send_request(url, FedoraRequestType.DELETE_TOMBSTONE)
+        if delete_tombstone:
+            url = self._get_request_url(FedoraRequestType.DELETE_TOMBSTONE)
+            self._send_request(url, FedoraRequestType.DELETE_TOMBSTONE)
         logger.debug("core_repository_connector.delete_container.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
