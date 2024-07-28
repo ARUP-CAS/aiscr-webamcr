@@ -1679,20 +1679,16 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         akce.typ = Akce.TYP_AKCE_SAMOSTATNA
         akce.save()
         old_ident = az.ident_cely
-        if az.stav == AZ_STAV_ARCHIVOVANY:
-            az.set_akce_ident(get_akce_ident(az.hlavni_katastr.okres.kraj.rada_id))
-        else:
-            az.set_akce_ident(
-                get_temp_akce_ident(az.hlavni_katastr.okres.kraj.rada_id)
-            )
-        az.close_active_transaction_when_finished = True
-        az.save()
+        az.set_akce_ident(get_akce_ident(az.hlavni_katastr.okres.kraj.rada_id), delete_container=False)
         Historie(
             typ_zmeny=ZMENA_AZ,
             uzivatel=request.user,
             poznamka=f"{old_ident} -> {az.ident_cely}",
             vazba=az.historie,
         ).save()
+        invalidate_model(ArcheologickyZaznam)
+        az.close_active_transaction_when_finished = True
+        az.save()
         logger.debug("arch_z.views.ProjektAkceChange.post", extra={"az_ident_cely": str(az.ident_cely)})
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
 
@@ -1762,7 +1758,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             akce.save()
             old_ident = az.ident_cely
             az.active_transaction = fedora_transaction
-            az.set_akce_ident(get_project_event_ident(az.akce.projekt))
+            az.set_akce_ident(get_project_event_ident(az.akce.projekt), delete_container=False)
             az.save()
             Historie(
                 typ_zmeny=ZMENA_AZ,
@@ -1772,6 +1768,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             ).save()
             logger.debug("arch_z.views.SamostatnaAkceChange.post.valid", extra={"az_ident_cely": str(az.ident_cely)})
             az.close_active_transaction_when_finished = True
+            invalidate_model(ArcheologickyZaznam)
             az.save()
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:

@@ -344,7 +344,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 komponenta.save()
             dj.save()
 
-    def set_akce_ident(self, ident=None):
+    def set_akce_ident(self, ident=None, delete_container=True):
         """
         Metóda pro nastavení ident celý pro akci a její relace.
         Nastaví ident z předaného argumentu ident nebo z metódy get_akce_ident.
@@ -358,7 +358,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         self.ident_cely = new_ident
         self.save()
         if old_ident_cely != self.ident_cely:
-            self.record_ident_change(old_ident_cely)
+            self.record_ident_change(old_ident_cely, delete_container=delete_container)
 
     def get_absolute_url(self, dj_ident_cely=None):
         """
