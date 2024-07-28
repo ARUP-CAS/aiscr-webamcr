@@ -4,8 +4,10 @@ import time
 import traceback
 
 import redis
+import requests
 from cacheops import invalidate_model
-from celery import shared_task
+from celery import shared_task, Celery
+from django.conf import settings
 from django.db.models import Q, F, Min, Prefetch
 from django.db.models.functions import Upper, Coalesce
 from django.utils import timezone
@@ -426,3 +428,11 @@ def write_value_to_redis(key, value):
     redis_connection = r.get_connection()
     redis_connection.set(key, value)
     return key, value
+
+
+@shared_task
+def call_digiarchiv_update_task():
+    logger.debug("cron.tasks.call_digiarchiv_update_task.start")
+    url = settings.DIGIARCHIV_URL
+    requests.get(url)
+    logger.debug("cron.tasks.call_digiarchiv_update_task.end")
