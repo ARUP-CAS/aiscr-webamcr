@@ -7,3 +7,11 @@
 .datepicker {
   z-index: 2000!important;
 }
+
+.inner.show {
+  max-height: 600px!important;
+}
+
+.dropdown-menu.show {
+  max-height: 600px!important;
+}
