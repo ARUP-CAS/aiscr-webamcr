@@ -154,7 +154,7 @@ class ModelWithMetadata(models.Model):
                          extra={"transaction": getattr(fedora_transaction, "uid", "")})
             fedora_transaction.mark_transaction_as_closed()
 
-    def record_ident_change(self, old_ident_cely, fedora_transaction=None, new_ident_cely=None):
+    def record_ident_change(self, old_ident_cely, fedora_transaction=None, new_ident_cely=None, delete_container=True):
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
         elif fedora_transaction is None and self.active_transaction is None:
@@ -172,7 +172,7 @@ class ModelWithMetadata(models.Model):
             from core.repository_connector import FedoraRepositoryConnector
             connector = FedoraRepositoryConnector(self, fedora_transaction, 
                                                   skip_container_check=self.skip_container_check)
-            connector.record_ident_change(old_ident_cely)
+            connector.record_ident_change(old_ident_cely, delete_container)
             logger.debug("cron.record_ident_change.do.end",
                          extra={"record_pk": self.pk, "old_ident_cely": old_ident_cely, "new_ident_cely": new_ident_cely,
                                 "transaction": fedora_transaction.uid})
