@@ -1,6 +1,6 @@
 {% load rosetta i18n %}
 
-{% if app_list %}
+{% if app_list or request.user|can_translate%}
   {% for app in app_list %}
     <div class="app-{{ app.app_label }} module{% if app.app_url in request.path|urlencode %} current-app{% endif %}">
       <table>
@@ -35,7 +35,7 @@
       </table>
     </div>
   {% endfor %}
-  {% if app_list|length > 1 and request.user|can_translate  %}
+  {% if request.user|can_translate  %}
     <div class="app-rosetta module">
         <table>
         <caption>
@@ -47,7 +47,7 @@
             </tr>
         </tbody></table>
     </div>
-{% endif %}
+  {% endif %}
 {% else %}
   <p>{% translate 'core.templates.admin.appList.noPermissions' %}</p>  <!-- You don’t have permission to view or edit anything. -->
 {% endif %}
