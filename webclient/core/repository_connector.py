@@ -1041,6 +1041,7 @@ class FedoraTransaction:
                      extra={"transaction": self.uid, "post_commit_tasks": self.post_commit_tasks.keys()})
         self._send_transaction_request()
         self._perform_post_commit_tasks()
+        self.call_digiarchiv_update()
         logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
                      extra={"transaction": self.uid})
 
@@ -1079,3 +1080,22 @@ class FedoraTransaction:
             logger.error("core_repository_connector.FedoraTransaction.__create_transaction.no_uid",
                          extra={"response": response.text})
             raise FedoraTransactionNoIDError(response.text)
+
+    @staticmethod
+    def call_digiarchiv_update():
+        from cron.tasks import call_digiarchiv_update_task
+        logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.start")
+        app = Celery("webclient")
+        app.config_from_object("django.conf:settings", namespace="CELERY")
+        app.autodiscover_tasks()
+        i = app.control.inspect(["worker1@amcr"])
+        queues = (i.scheduled(), i.active(),)
+        for queue in queues:
+            for queue_name, queue_tasks in queue.items():
+                for task in queue_tasks:
+                    if "call_digiarchiv_update_task" in task.get("request").get("name").lower():
+                        logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update."
+                                     "already_scheduled")
+                        return
+        call_digiarchiv_update_task.apply_async()
+        logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.end")
