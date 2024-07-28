@@ -113,6 +113,7 @@ class FedoraRequestType(Enum):
     UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE = 36
     GET_TOMBSTONE = 37
     CHANGE_IDENT_CONNECT_RECORDS_5 = 38
+    CHANGE_IDENT_CONNECT_RECORDS_6 = 39
 
 
 class FedoraRepositoryConnector:
@@ -168,6 +169,9 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                               FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2):
             return f"{base_url}/record/{self.record.ident_cely}"
+        elif request_type == FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_6:
+            ident_cely = ident_cely if ident_cely else self.record.ident_cely
+            return f"{base_url}/record/{ident_cely}"
         elif request_type in (FedoraRequestType.CREATE_LINK,):
             return f"{base_url}/model/{self._get_model_name()}/member"
         elif request_type in (FedoraRequestType.GET_LINK, FedoraRequestType.DELETE_LINK_CONTAINER):
@@ -318,7 +322,8 @@ class FedoraRepositoryConnector:
         elif request_type in (FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
                               FedoraRequestType.DELETE_BINARY_FILE,
-                              FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2):
+                              FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2,
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_6):
             response = requests.patch(url, auth=auth, headers=headers, data=data)
         extra["status_code"] = response.status_code
 
@@ -830,7 +835,7 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector.record_deletion.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
-    def record_ident_change(self, ident_cely_old):
+    def record_ident_change(self, ident_cely_old, delete_container=True):
         logger.debug("core_repository_connector.record_ident_change.start",
                      extra={"ident_cely": self.record.ident_cely, "ident_cely_old": ident_cely_old,
                             "transaction": self.transaction_uid})
@@ -856,11 +861,18 @@ class FedoraRepositoryConnector:
         url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4)
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, headers=headers, data=data)
 
-        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5, ident_cely=ident_cely_old)
-        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5)
+        if delete_container:
+            url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5, ident_cely=ident_cely_old)
+            self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5)
 
-        self._delete_link(ident_cely_old)
-
+            self._delete_link(ident_cely_old)
+        else:
+            url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_6, ident_cely=ident_cely_old)
+            headers = {
+                "Content-Type": "application/sparql-update",
+            }
+            data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'deleted'}"
+            self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_6, headers=headers, data=data)
         logger.debug("core_repository_connector.record_ident_change.end", extra={"ident_cely": self.record.ident_cely,
                                                                                  "ident_cely_old": ident_cely_old,
                                                                                  "transaction": self.transaction_uid})
@@ -1093,7 +1105,7 @@ class FedoraTransaction:
         for queue in queues:
             for queue_name, queue_tasks in queue.items():
                 for task in queue_tasks:
-                    if "call_digiarchiv_update_task" in task.get("request").get("name").lower():
+                    if "request" in task and "call_digiarchiv_update_task" in task.get("request").get("name").lower():
                         logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update."
                                      "already_scheduled")
                         return
