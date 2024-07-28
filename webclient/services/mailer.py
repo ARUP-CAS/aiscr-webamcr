@@ -709,22 +709,20 @@ class Mailer:
         invalidate_model(SamostatnyNalez)
         invalidate_model(Historie)
         invalidate_model(UzivatelSpoluprace)
-        subquery_sn12 = SamostatnyNalez.objects.filter(
-            historie__historie__typ_zmeny='SN12',
-            id=OuterRef('id')
-        ).values('id')
-
         now = timezone.now()
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
         previous_midnight = midnight + timedelta(days=-1)
-
+        subquery_sn12 = SamostatnyNalez.objects.filter(
+            historie__historie__typ_zmeny='SN12',
+            historie__historie__datum_zmeny__gt=previous_midnight,
+            historie__historie__datum_zmeny__lte=midnight,
+            id=OuterRef('id')
+        ).values('id')
         results = SamostatnyNalez.objects.filter(
             historie__historie__typ_zmeny='SN01',
             projekt__organizace=F('historie__historie__uzivatel__spoluprace_badatelu__vedouci__organizace'),
             historie__historie__uzivatel__spoluprace_badatelu__vedouci__notification_types__ident_cely='S-E-N-01',
             id__in=Subquery(subquery_sn12),
-            historie__historie__datum_zmeny__gt=previous_midnight,
-            historie__historie__datum_zmeny__lte=midnight,
         ).distinct().values(
             'ident_cely',
             'historie__historie__uzivatel__spoluprace_badatelu__vedouci__email'
