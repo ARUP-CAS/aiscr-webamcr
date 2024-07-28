@@ -14,7 +14,7 @@ from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
 from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
     OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, RUSENI_STARE_PROJ, UDAJ_ODSTRANEN, \
-    STARY_PROJEKT_ZRUSEN, PROJEKT_STAV_ZAPSANY, SCHVALENI_OZNAMENI_PROJ
+    STARY_PROJEKT_ZRUSEN, PROJEKT_STAV_ZAPSANY, SCHVALENI_OZNAMENI_PROJ, PRISTUPNOST_MIN_RAZENI
 from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
 from core.models import Soubor, SouborVazby
 from core.coordTransform import transform_geom_to_sjtsk
@@ -219,7 +219,7 @@ def change_document_accessibility():
         logger.debug("core.cron.change_document_accessibility.do.start")
         documents = Dokument.objects \
             .filter(datum_zverejneni__lte=datetime.datetime.now().date()) \
-            .annotate(min_pristupnost_razeni=Coalesce(Min(F("casti__archeologicky_zaznam__pristupnost__razeni")), 1)) \
+            .annotate(min_pristupnost_razeni=Coalesce(Min(F("casti__archeologicky_zaznam__pristupnost__razeni")), PRISTUPNOST_MIN_RAZENI)) \
             .filter(Q(pristupnost__razeni__gt=F("min_pristupnost_razeni"))
                     & Q(pristupnost__razeni__gt=F('organizace__zverejneni_pristupnost__razeni'))).distinct()
         for item in documents:
@@ -227,9 +227,10 @@ def change_document_accessibility():
             pristupnost_razeni = item.organizace.zverejneni_pristupnost.razeni
             pristupnost_az = [x.archeologicky_zaznam.pristupnost.razeni for x in item.casti.all()
                               if x.archeologicky_zaznam is not None]
-            az_pristupnost_razeni = min(pristupnost_az)
-            if pristupnost_razeni < az_pristupnost_razeni:
-                pristupnost_razeni = az_pristupnost_razeni
+            if pristupnost_az:
+                az_pristupnost_razeni = min(pristupnost_az)
+                if pristupnost_razeni < az_pristupnost_razeni:
+                    pristupnost_razeni = az_pristupnost_razeni
             pristupnost = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST) \
                 .filter(razeni=pristupnost_razeni).first()
             if item.pristupnost != pristupnost:
