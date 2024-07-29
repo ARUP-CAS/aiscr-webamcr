@@ -7,6 +7,11 @@ on:
         description: 'Tag name following vx.x.x-rcx semantics:'
         type: string
         required: true
+      pip_update:
+        description: 'Skip package list update'
+        type: boolean
+        required: true
+        default: false
     
 jobs:
   update_files:
@@ -30,17 +35,21 @@ jobs:
         run: |
           echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
       - name: Set up Python
+        if: ${{ inputs.pip_update  == 'true' }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install Dependencies
+        if: ${{ inputs.pip_update  == 'true' }}
         run: |
           python -m pip install --upgrade pip
           pip install pip-licenses
           pip install -r webclient/requirements.txt
       - name: Run convert_to_rst.py
+        if: ${{ inputs.pip_update  == 'true' }}
         run: python docs/licenses/convert_to_rst.py
       - name: Update pip package list
+        if: ${{ inputs.pip_update  == 'true' }}
         run: |
           VERSION="${{ inputs.new_tag }}-pre-release"
           git config --global user.email "action@github.com"
