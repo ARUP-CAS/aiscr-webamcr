@@ -6,7 +6,7 @@
         {{ ez.ident_cely }}
       </a>
     </td>
-    <td>{{ ez.autori.all|osoby_to_list }}</td>
+    <td>{{ ez|autori_ordered_list }}</td>
     <td>{{ ez.rok_vydani_vzniku|check_if_none }}</td>
     <td>{{ ez.nazev|check_if_none }}</td>
     {% if hide_paginace != True %}

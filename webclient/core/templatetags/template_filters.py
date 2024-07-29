@@ -45,9 +45,12 @@ def hesla_to_list(value):
 
 
 @register.filter
-def osoby_to_list(value):
-    list_hesla = "; ".join(value.values_list("vypis_cely", flat=True))
-    return list_hesla
+def autori_ordered_list(value):
+    return "; ".join(
+                Osoba.objects.filter(
+            externizdrojautor__externi_zdroj=value
+        ).order_by("externizdrojautor__poradi").values_list("vypis_cely", flat=True)
+    )
 
 
 @register.filter
