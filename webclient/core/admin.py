@@ -164,7 +164,7 @@ class CustomAdminSettingsAdmin(admin.ModelAdmin):
 
 admin.site.register(CustomAdminSettings, CustomAdminSettingsAdmin)
 
-
+@admin.register(Permissions)
 class PermissionAdmin(admin.ModelAdmin):
     """
     Třída admin panelu pro zobrazení a správu oprávnení.
