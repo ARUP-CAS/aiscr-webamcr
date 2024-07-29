@@ -1567,7 +1567,6 @@ class AkceListView(SearchListView):
         self.hasOnlyVybrat_header = _("arch_z.views.AkceListView.hasOnlyVybrat_header.text")
         self.hasOnlyVlastnik_header = _("arch_z.views.AkceListView.hasOnlyVlastnik_header.text")
         self.hasOnlyArchive_header = _("arch_z.views.AkceListView.hasOnlyArchive_header.text")
-        self.hasOnlyPotvrdit_header = _("arch_z.views.AkceListView.hasOnlyPotvrdit_header.text")
         self.hasOnlyNase_header = _("arch_z.views.AkceListView.hasOnlyNase_header.text")
         self.default_header = _("arch_z.views.AkceListView.default_header.text")
         self.toolbar_name = _("arch_z.views.AkceListView.toolbar_name.text")
