@@ -222,7 +222,7 @@ div .app-right .btn-group .btn {
     max-width: 16.66667%;
   }
 
-  td:read-only {
+  td.is_readonly {
     small {
       display: none;
     }
