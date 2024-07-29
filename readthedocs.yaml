@@ -32,8 +32,8 @@ sphinx:
 # Optionally declare the Python requirements required to build your docs
 python:
   install:
-    - requirements: webclient/requirements.txt
     - method: pip
       path: .
       extra_requirements:
         - setuptools==71.1.0
+    - requirements: webclient/requirements.txt
