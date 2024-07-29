@@ -11,10 +11,10 @@
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
       {% if d.ident_cely %}
-      {{ d.ident_cely }}{% if showback %}<div id="document-back" style="display:none"><span class="app-pipe"></span><a href="" class="app-entity-color font-weight-normal"></a></div>{% endif %}
-      {% elif index%}
-      {% else %}
-      {% if is_3d %}{% trans "templates.toolbarDokument.knihovna3D.zapsat.label" %}{% else %}{% trans "templates.toolbarDokument.dokument.zapsat.label" %}{% endif %}
+        {{ d.ident_cely }}
+        {% if showback %}
+          <div id="document-back" style="display:none"><span class="app-pipe"></span><a href="" class="app-entity-color font-weight-normal"></a></div>
+        {% endif %}
       {% endif %}
     </div>
   </div>
