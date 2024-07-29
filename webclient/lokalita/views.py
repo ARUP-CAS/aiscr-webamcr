@@ -99,9 +99,6 @@ class LokalitaListView(SearchListView):
         self.hasOnlyArchive_header = _(
             "lokalita.views.lokalitaListView.header.hasOnlyArchive.text"
         )
-        self.hasOnlyPotvrdit_header = _(
-            "lokalita.views.lokalitaListView.header.hasOnlyPotvrdit.text"
-        )
         self.hasOnlyNase_header = _("lokalita.views.lokalitaListView.hasOnlyNase_header.text")
         self.default_header = _("lokalita.views.lokalitaListView.header.default.text")
         self.toolbar_name = _("lokalita.views.lokalitaListView.toolbar.title.text")
