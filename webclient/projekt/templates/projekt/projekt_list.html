@@ -10,6 +10,7 @@
       const STAV_ZAHAJEN = '{% get_value_from_heslar "projekt_stav" "zahajeny_v_terenu" %}';
       const STAV_UKONCEN = '{% get_value_from_heslar "projekt_stav" "ukonceny_v_terenu" %}';
       const STAV_UZAVREN = '{% get_value_from_heslar "projekt_stav" "uzavreny" %}';
+      const STAV_NAVRZEN_KE_ZRUSENI = '{% get_value_from_heslar "projekt_stav" "navrzen_ke_zruseni" %}';
 
       setPageHeader();
 
@@ -108,6 +109,15 @@
           }
       }
 
+      function hasOnlyZrusitProjekty(actualParams, actualValues) {
+        if (listMatch(['stav'], actualParams) && listMatch([STAV_NAVRZEN_KE_ZRUSENI], actualValues)) {
+            setHeader("{{hasOnlyZrusit_header}}")
+            return true
+        } else {
+            return false
+        }
+    }
+
       function setPageHeader() {
           const queryString = window.location.search;
           const urlParams = new URLSearchParams(queryString);
@@ -122,7 +132,8 @@
               hasOnlyUzavritProjekt(keys, [urlParams.get('stav')]) ||
               hasOnlyVybratProjekty(keys, values) ||
               hasOnlyNaseProjekty(keys, values) ||
-              hasOnlyArchivovatProjekty(keys, [urlParams.get('stav')])
+              hasOnlyArchivovatProjekty(keys, [urlParams.get('stav')]) ||
+              hasOnlyZrusitProjekty(keys, [urlParams.get('stav')])
           )) {
               setHeader("{{default_header}}")
           }

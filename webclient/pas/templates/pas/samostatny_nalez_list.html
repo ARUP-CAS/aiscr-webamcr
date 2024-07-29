@@ -33,7 +33,7 @@
           }
 
           function hasOnlyVlastnik(actualParams, actualValues) {
-              if (listMatch(['vlastnik'], actualParams) && listMatch(['{{ user.id }}'], actualValues)) {
+              if (listMatch(['historie_typ_zmeny','historie_uzivatel'], actualParams) && listMatch(['SN01','{{ user.id }}'], actualValues)) {
                   setHeader("{{hasOnlyVlastnik_header}}")
                   return true
               } else {
@@ -59,6 +59,16 @@
               }
           }
 
+          function hasOnlyNase(actualParams, actualValues) {
+            if (listMatch(['projekt_organizace'], actualParams) && listMatch(['{{ user.organizace.id }}'], actualValues))
+             {
+                setHeader("{{hasOnlyNase_header}}")
+                return true
+            } else {
+                return false
+            }
+        }
+
           function setPageHeader() {
               const queryString = window.location.search;
               const urlParams = new URLSearchParams(queryString);
@@ -68,6 +78,7 @@
               if (!(hasOnlyVlastnik(keys, values) ||
                     hasOnlyArchive(keys, values) ||
                     hasOnlyPotvrdit(keys, [urlParams.get('stav')]) ||
+                    hasOnlyNase(keys, values) ||
                     hasOnlyVybrat(keys, values)
               )) {
                 setHeader("{{default_header}}")

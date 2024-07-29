@@ -1560,6 +1560,7 @@ class AkceListView(SearchListView):
     redis_value_list_field = "archeologicky_zaznam__ident_cely"
 
     def init_translations(self):
+        super().init_translations()
         self.page_title = _("arch_z.views.AkceListView.page_title.text")
         self.search_sum = _("arch_z.views.AkceListView.search_sum.text")
         self.pick_text = _("arch_z.views.AkceListView.pick_text.text")
@@ -1567,9 +1568,9 @@ class AkceListView(SearchListView):
         self.hasOnlyVlastnik_header = _("arch_z.views.AkceListView.hasOnlyVlastnik_header.text")
         self.hasOnlyArchive_header = _("arch_z.views.AkceListView.hasOnlyArchive_header.text")
         self.hasOnlyPotvrdit_header = _("arch_z.views.AkceListView.hasOnlyPotvrdit_header.text")
+        self.hasOnlyNase_header = _("arch_z.views.AkceListView.hasOnlyNase_header.text")
         self.default_header = _("arch_z.views.AkceListView.default_header.text")
         self.toolbar_name = _("arch_z.views.AkceListView.toolbar_name.text")
-        self.toolbar_label = _("core.views.AkceListView.toolbar_label.text")
 
     @staticmethod
     def rename_field_for_ordering(field: str):

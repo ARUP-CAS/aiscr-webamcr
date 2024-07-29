@@ -941,16 +941,17 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             return response
 
     def init_translations(self):
-        self.page_title = _("core.views.AkceListView.page_title.text")
-        self.search_sum = _("core.views.AkceListView.search_sum.text")
-        self.pick_text = _("core.views.AkceListView.pick_text.text")
-        self.hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
-        self.hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
-        self.hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
-        self.hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
-        self.default_header = _("core.views.AkceListView.default_header.text")
-        self.toolbar_name = _("core.views.AkceListView.toolbar_name.text")
-        self.toolbar_label = _("core.views.AkceListView.toolbar_label.text")
+        self.page_title = ""
+        self.search_sum = ""
+        self.pick_text = ""
+        self.hasOnlyVybrat_header = ""
+        self.hasOnlyVlastnik_header = ""
+        self.hasOnlyArchive_header = ""
+        self.hasOnlyPotvrdit_header = ""
+        self.hasOnlyNase_header = ""
+        self.default_header = ""
+        self.toolbar_name = ""
+        self.toolbar_label = ""
 
     def get_paginate_by(self, queryset):
         return self.request.GET.get("per_page", self.paginate_by)
@@ -972,6 +973,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["hasOnlyVlastnik_header"] = self.hasOnlyVlastnik_header
         context["hasOnlyArchive_header"] = self.hasOnlyArchive_header
         context["hasOnlyPotvrdit_header"] = self.hasOnlyPotvrdit_header
+        context["hasOnlyNase_header"] = self.hasOnlyNase_header
         context["default_header"] = self.default_header
         context["toolbar_name"] = self.toolbar_name
         context["toolbar_label"] = self.toolbar_label

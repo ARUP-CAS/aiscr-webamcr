@@ -94,6 +94,7 @@ class ExterniZdrojListView(SearchListView):
     typ_zmeny_lookup = ZAPSANI_EXT_ZD
 
     def init_translations(self):
+        super().init_translations()
         self.page_title = _("ez.templates.ExterniZdrojListView.pageTitle.text")
         self.search_sum = _("ez.templates.ExterniZdrojListView.search_sum.text")
         self.pick_text = _("ez.templates.ExterniZdrojListView.pickText.text")
@@ -101,9 +102,9 @@ class ExterniZdrojListView(SearchListView):
         self.hasOnlyVlastnik_header = _("ez.templates.ExterniZdrojListView.hasOnlyVlastnik_header.text")
         self.hasOnlyArchive_header = _("ez.templates.ExterniZdrojListView.hasOnlyPotvrdit_header.text")
         self.hasOnlyPotvrdit_header = _("ez.templates.ExterniZdrojListView.hasOnlyPotvrdit_header.text")
+        self.hasOnlyNase_header = _("ez.views.ExterniZdrojListView.hasOnlyNase_header.text")
         self.default_header = _("ez.templates.ExterniZdrojListView.header.default_header.text")
         self.toolbar_name = _("ez.templates.ExterniZdrojListView.toolbar_name.text")
-        self.toolbar_label = _("ez.views.ExterniZdrojListView.toolbar_label.text")
 
     @staticmethod
     def rename_field_for_ordering(field: str):
