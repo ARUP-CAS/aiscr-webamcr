@@ -275,6 +275,7 @@ class Model3DListView(SearchListView):
     typ_zmeny_lookup = ZAPSANI_DOK
 
     def init_translations(self):
+        super().init_translations()
         self.page_title = _("dokument.views.Model3DListView.pageTitle.text")
         self.search_sum = _("dokument.views.Model3DListView.search_sum.text")
         self.pick_text = _("dokument.views.Model3DListView.pick_text.text")
@@ -282,9 +283,8 @@ class Model3DListView(SearchListView):
         self.hasOnlyVlastnik_header = _("dokument.views.Model3DListView.hasOnlyVlastnik_header.text")
         self.hasOnlyArchive_header = _("dokument.views.Model3DListView.hasOnlyArchive_header.text")
         self.hasOnlyPotvrdit_header = _("dokument.views.Model3DListView.hasOnlyPotvrdit_header.text")
+        self.hasOnlyNase_header = _("dokument.views.Model3DListView.hasOnlyNase_header.text")
         self.default_header = _("dokument.views.Model3DListView.default_header.text")
-        self.toolbar_name = _("dokument.views.Model3DListView.toolbar_name.text")
-        self.toolbar_label = _("dokument.views.Model3DListView.toolbar_label.text")
 
     @staticmethod
     def rename_field_for_ordering(field: str):
@@ -344,6 +344,7 @@ class DokumentListView(SearchListView):
     typ_zmeny_lookup = ZAPSANI_DOK
 
     def init_translations(self):
+        super().init_translations()
         self.page_title = _("dokument.views.DokumentListView.pageTitle.text")
         self.search_sum = _("dokument.views.DokumentListView.search_sum.text")
         self.pick_text = _("dokument.views.DokumentListView.pick_text.text")
@@ -351,9 +352,8 @@ class DokumentListView(SearchListView):
         self.hasOnlyVlastnik_header = _("dokument.views.DokumentListView.hasOnlyVlastnik_header.text")
         self.hasOnlyArchive_header = _("dokument.views.DokumentListView.hasOnlyArchive_header.text")
         self.hasOnlyPotvrdit_header = _("dokument.views.DokumentListView.hasOnlyPotvrdit_header.text")
+        self.hasOnlyNase_header = _("dokument.views.DokumentListView.hasOnlyNase_header.text")
         self.default_header = _("dokument.views.DokumentListView.default_header.text")
-        self.toolbar_name = _("dokument.views.DokumentListView.toolbar_name.text")
-        self.toolbar_label = _("dokument.views.DokumentListView.toolbar_label.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

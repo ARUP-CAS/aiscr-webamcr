@@ -623,8 +623,6 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
         self.hasOnlyVybrat_header = _("projekt.views.projektListView.header.hasOnlyVybrat")
         self.hasOnlyArchive_header = _("projekt.views.projektListView.header.hasOnlyArchive")
         self.default_header = _("projekt.views.projektListView.header.default")
-        self.toolbar_name = _("projekt.views.projektListView.toolbar.title")
-        self.toolbar_label = _("projekt.views.projektListView.toolbar_label.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -640,6 +638,7 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
             "projekt.views.projektListView.header.hasUzavritProjekt"
         )
         context["hasNaseProjekty_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
+        context["hasOnlyZrusit_header"] = _("projekt.views.projektListView.header.hasZrusitProjekty")
         context["has_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
         return context
 
