@@ -149,7 +149,7 @@ KLADYZM_KATEGORIE = (
     (KLADYZM200, "1:200 000"),
 )
 # Podporovane souradnicove systemy
-COORDINATE_SYSTEM = [(2, "S-JTSK (EPSG:5514)"), (1, "WGS-84 (EPSG:4326")]
+COORDINATE_SYSTEM = [(2, "S-JTSK (EPSG:5514)"), (1, "WGS-84 (EPSG:4326)")]
 
 DOK_MESTO = (_("core.constants.dok.mesto_praha"), _("core.constants.dok.mesto_brno"))
 DOK_VE_MESTE = (_("core.constants.dok.v_praze"), _("core.constants.dok.v_brne"))
