@@ -430,6 +430,12 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector._connect_deleted_container.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
+    def link_exists(self):
+        url = self._get_request_url(FedoraRequestType.GET_LINK)
+        result = self._send_request(url, FedoraRequestType.GET_LINK)
+        return result != 404
+
+
     def _check_container(self):
         logger.debug("core_repository_connector._check_container.start",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
@@ -445,9 +451,7 @@ class FedoraRepositoryConnector:
             logger.debug("core_repository_connector._check_container.create",
                          extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
             self._create_container()
-        url = self._get_request_url(FedoraRequestType.GET_LINK)
-        result = self._send_request(url, FedoraRequestType.GET_LINK)
-        if result.status_code == 404:
+        if not self.link_exists():
             self.create_link()
         logger.debug("core_repository_connector._check_container.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
@@ -1070,7 +1074,8 @@ class FedoraTransaction:
                 record, ident_cely, old_ident_cely = value
                 record.ident_cely = old_ident_cely
                 connector = FedoraRepositoryConnector(record, new_transaction)
-                connector.create_link(ident_cely_proxy=ident_cely)
+                if not connector.link_exists():
+                    connector.create_link(ident_cely_proxy=ident_cely)
         new_transaction.mark_transaction_as_closed()
 
     def __create_transaction(self):

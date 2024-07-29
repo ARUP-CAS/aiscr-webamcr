@@ -64,13 +64,6 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     invalidate_arch_z_related_models()
     fedora_transaction = instance.active_transaction
     if not instance.suppress_signal:
-        try:
-            if (instance.akce and instance.akce.projekt
-                    and instance.akce.projekt.ident_cely != instance.initial_projekt.ident_cely):
-                instance.akce.projekt.save_metadata(fedora_transaction)
-        except (ObjectDoesNotExist, AttributeError) as err:
-            logger.debug("arch_z.signals.create_arch_z_metadata.no_akce",
-                         extra={"record_ident_cely": instance.ident_cely, "err": err})
         if instance.initial_pristupnost is not None and instance.pristupnost.id != instance.initial_pristupnost.id:
             for dok_jednotka in instance.dokumentacni_jednotky_akce.all():
                 dok_jednotka: DokumentacniJednotka
@@ -94,10 +87,21 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                     adb: Adb = dj.adb
                     adb.save_metadata(fedora_transaction)
         close_transaction = instance.close_active_transaction_when_finished
+
+        def save_metadata(inner_close_transaction=False):
+            try:
+                if (instance.akce and instance.akce.projekt and
+                        (instance.akce.initial_projekt is None or
+                         instance.akce.projekt.ident_cely != instance.initial_projekt.ident_cely)):
+                    instance.akce.projekt.save_metadata(fedora_transaction)
+            except (ObjectDoesNotExist, AttributeError) as err:
+                logger.debug("arch_z.signals.create_arch_z_metadata.no_akce",
+                             extra={"record_ident_cely": instance.ident_cely, "err": err})
+            instance.save_metadata(fedora_transaction, close_transaction=inner_close_transaction)
         if close_transaction:
-            transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
+            transaction.on_commit(lambda: save_metadata(True))
         else:
-            instance.save_metadata(fedora_transaction)
+            save_metadata()
     logger.debug("arch_z.signals.create_arch_z_metadata.end", extra={"record_pk": instance.pk,
                                                                      "transaction": fedora_transaction.uid})
 
