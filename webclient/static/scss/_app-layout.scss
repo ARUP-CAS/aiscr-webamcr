@@ -227,4 +227,8 @@ div .app-right .btn-group .btn {
       display: none;
     }
   }
+
+  td small {
+    grid-column: span 3;
+  }
 }
