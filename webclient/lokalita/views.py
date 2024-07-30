@@ -99,9 +99,6 @@ class LokalitaListView(SearchListView):
         self.hasOnlyArchive_header = _(
             "lokalita.views.lokalitaListView.header.hasOnlyArchive.text"
         )
-        self.hasOnlyPotvrdit_header = _(
-            "lokalita.views.lokalitaListView.header.hasOnlyPotvrdit.text"
-        )
         self.hasOnlyNase_header = _("lokalita.views.lokalitaListView.hasOnlyNase_header.text")
         self.default_header = _("lokalita.views.lokalitaListView.header.default.text")
         self.toolbar_name = _("lokalita.views.lokalitaListView.toolbar.title.text")
@@ -231,6 +228,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         context["header"] = _("lokalita.views.lokalitaCreateView.formHeader.label")
         context["page_title"] = _("lokalita.views.lokalitaCreateView.pageTitle")
         context["submit_button"] = _("lokalita.views.lokalitaCreateView.submitButton")
+        context["toolbar_label"] = _("lokalita.views.lokalitaCreateView.toolbar_label.title")
         return context
 
     def form_valid(self, form):

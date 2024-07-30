@@ -22,7 +22,7 @@
 
 {% block content %}
   <div class="app-entity-lokalita">
-    {% include "toolbar_akce.html" with showbackdetail=False showcontrols=False type="lokalita" name=toolbar_name %}
+    {% include "toolbar_akce.html" with showbackdetail=False showcontrols=False type="lokalita" %}
     <form method="post" onsubmit="newEntitySubmitBtn.disabled = true; return true;">
       {% csrf_token %}
         {% include "lokalita/lokalita_detail_part.html" with create=True %} 

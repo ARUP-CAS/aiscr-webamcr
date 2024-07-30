@@ -282,7 +282,6 @@ class Model3DListView(SearchListView):
         self.hasOnlyVybrat_header = _("dokument.views.Model3DListView.hasOnlyVybrat_header.text")
         self.hasOnlyVlastnik_header = _("dokument.views.Model3DListView.hasOnlyVlastnik_header.text")
         self.hasOnlyArchive_header = _("dokument.views.Model3DListView.hasOnlyArchive_header.text")
-        self.hasOnlyPotvrdit_header = _("dokument.views.Model3DListView.hasOnlyPotvrdit_header.text")
         self.hasOnlyNase_header = _("dokument.views.Model3DListView.hasOnlyNase_header.text")
         self.default_header = _("dokument.views.Model3DListView.default_header.text")
 
@@ -351,7 +350,6 @@ class DokumentListView(SearchListView):
         self.hasOnlyVybrat_header = _("dokument.views.DokumentListView.hasOnlyVybrat_header.text")
         self.hasOnlyVlastnik_header = _("dokument.views.DokumentListView.hasOnlyVlastnik_header.text")
         self.hasOnlyArchive_header = _("dokument.views.DokumentListView.hasOnlyArchive_header.text")
-        self.hasOnlyPotvrdit_header = _("dokument.views.DokumentListView.hasOnlyPotvrdit_header.text")
         self.hasOnlyNase_header = _("dokument.views.DokumentListView.hasOnlyNase_header.text")
         self.default_header = _("dokument.views.DokumentListView.default_header.text")
 
@@ -1506,6 +1504,7 @@ def create_model_3D(request):
             "title": _("dokument.views.create_model_3D.title"),
             "header": _("dokument.views.create_model_3D.header"),
             "button": _("dokument.views.create_model_3D.submitButton.text"),
+            "toolbar_label": _("dokument.views.create_model_3D.toolbar_label")
         },
     )
 
@@ -1915,6 +1914,7 @@ def zapsat(request, zaznam=None):
             "formDokument": form_d,
             "hierarchie": get_hierarchie_dokument_typ(),
             "samostatny": True if not zaznam else False,
+            "toolbar_label": _("dokument.views.zapsat.dokument.toolbar_label")
         },
     )
 
