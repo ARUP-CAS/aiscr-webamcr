@@ -1,5 +1,6 @@
 {% load i18n %}
 {% load template_filters %}
+
 <div class="card app-card-form app-card-ext_zdroj app-table-list-container">
     <div class="card-header">
       <div class="app-fx app-left">
@@ -36,6 +37,9 @@
       })
       dokument_pripojit_modal = new Modal(options, "eo-pripojit-do-az");
     };
+    $('#modal-form').on('shown.bs.modal', function(event) {
+        $(document).off('focusin.modal');
+    });
 });
 
 </script>
