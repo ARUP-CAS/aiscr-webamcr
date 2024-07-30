@@ -1057,7 +1057,8 @@ class FedoraTransaction:
                      extra={"transaction": self.uid, "post_commit_tasks": self.post_commit_tasks.keys()})
         self._send_transaction_request()
         self._perform_post_commit_tasks()
-        self.call_digiarchiv_update()
+        if settings.DIGIARCHIV_URL != "":
+            self.call_digiarchiv_update()
         logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
                      extra={"transaction": self.uid})
 

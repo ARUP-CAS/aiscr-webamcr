@@ -518,4 +518,4 @@ TEST_ENV = get_secret("TEST_ENV", "True") == "True"
 CLAMD_HOST = None
 CLAMD_PORT = None
 
-DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "https://digiarchiv-test.aiscr.cz/api/fedora/index_update")
+DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "")
