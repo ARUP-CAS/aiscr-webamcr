@@ -368,7 +368,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/izimobil/polib/
    * - pre-commit
-     - 3.7.1
+     - 3.8.0
      - MIT License
      - https://github.com/pre-commit/pre-commit
    * - prometheus_client
@@ -464,7 +464,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
-     - 4.23.0
+     - 4.23.1
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
@@ -516,7 +516,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-trio/trio-websocket
    * - typing_extensions
-     - 4.9.0
+     - 4.12.2
      - Python Software Foundation License
      - https://github.com/python/typing_extensions
    * - tzdata
