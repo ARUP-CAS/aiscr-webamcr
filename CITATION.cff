@@ -45,7 +45,7 @@ abstract: "The Archaeological Map of the Czech Republic (AMCR) is an information
 version: "v1.0.4-rc2-pre-release"
 doi: 10.5281/zenodo.8363642
 date-released: 2024-07-29
-url: "https://aiscr-webamcr.readthedocs.io/"
+url: "https://github.com/ARUP-CAS/aiscr-webamcr"
 repository-code: "https://github.com/ARUP-CAS/aiscr-webamcr"
 license: GPL-3.0-or-later
 type: software
