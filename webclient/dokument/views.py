@@ -1504,6 +1504,7 @@ def create_model_3D(request):
             "title": _("dokument.views.create_model_3D.title"),
             "header": _("dokument.views.create_model_3D.header"),
             "button": _("dokument.views.create_model_3D.submitButton.text"),
+            "toolbar_label": _("dokument.views.create_model_3D.toolbar_label")
         },
     )
 
@@ -1913,6 +1914,7 @@ def zapsat(request, zaznam=None):
             "formDokument": form_d,
             "hierarchie": get_hierarchie_dokument_typ(),
             "samostatny": True if not zaznam else False,
+            "toolbar_label": _("dokument.views.zapsat.dokument.toolbar_label")
         },
     )
 
