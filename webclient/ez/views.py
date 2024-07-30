@@ -203,6 +203,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
         context["toolbar_name"] = _("ez.templates.ExterniZdrojCreateView.toolbar.title")
         context["page_title"] = _("ez.templates.ExterniZdrojCreateView.pageTitle")
         context["header"] = _("ez.templates.ExterniZdrojCreateView.formHeader.label")
+        context["toolbar_label"] = _("ez.templates.ExterniZdrojCreateView.toolbar_label.title")
         return context
 
     def form_valid(self, form):

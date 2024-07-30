@@ -1076,6 +1076,7 @@ def zapsat(request, projekt_ident_cely=None):
             "ostatni_vedouci_objekt_formset_readonly": True,
             "button": _("arch_z.views.zapsat.submitButton.text"),
             "toolbar_name": _("arch_z.views.zapsat.toolbarName"),
+            "toolbar_label": _("arch_z.views.zapsat.toolbar.title"),
             "heslar_specifikace_v_letech_presne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
             "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
         }

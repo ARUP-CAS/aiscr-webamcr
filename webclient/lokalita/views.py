@@ -228,6 +228,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         context["header"] = _("lokalita.views.lokalitaCreateView.formHeader.label")
         context["page_title"] = _("lokalita.views.lokalitaCreateView.pageTitle")
         context["submit_button"] = _("lokalita.views.lokalitaCreateView.submitButton")
+        context["toolbar_label"] = _("lokalita.views.lokalitaCreateView.toolbar_label.title")
         return context
 
     def form_valid(self, form):

@@ -22,7 +22,7 @@
 
 {% block content %}
   <div class="app-entity-lokalita">
-    {% include "toolbar_akce.html" with showbackdetail=False showcontrols=False type="lokalita" name=toolbar_name %}
+    {% include "toolbar_akce.html" with showbackdetail=False showcontrols=False type="lokalita" %}
     <form method="post" onsubmit="newEntitySubmitBtn.disabled = true; return true;">
       {% csrf_token %}
         {% include "lokalita/lokalita_detail_part.html" with create=True %} 
@@ -58,8 +58,6 @@
         // get value for typ
         url = '{% url "heslar:get-nadrazena-value" %}' + "?iterace=2&podrazene="
         get_vychozi_hodnota_podrazeneho("#id_druh","#id_typ_lokality",url)
-        // set toolbar title
-        document.getElementById("id-app-entity-item").innerHTML = "{% trans "lokalita.templates.create.toolbar.title" %}"
     })
     //add value from select typ to char field
     $('#id_typ_lokality').on("changed.bs.select", 
