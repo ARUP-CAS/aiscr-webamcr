@@ -128,6 +128,10 @@
   border: 0px solid #ced4da;
 }
 
+.input-osoba .input-group small {
+  grid-column: span 3;
+}
+
 table {
   font-size: $font-size-sm;
 
@@ -445,25 +449,25 @@ form {
 }
 
 a.dropdown-item span.text {
-  max-width: 100%!important;
-  white-space: normal!important;
+  max-width: 100% !important;
+  white-space: normal !important;
 }
 
 a.dropdown-item {
-   max-width: 100%!important;
+  max-width: 100% !important;
 }
 
 .dropdown-menu li {
-  max-width: 100%!important;
+  max-width: 100% !important;
 }
 
 .bootstrap-select {
-  max-width: 100%!important;
+  max-width: 100% !important;
 }
 
 .app-card-cast-dokumentu {
   @media (min-width: 576px) {
-    padding-left: 0!important;
+    padding-left: 0 !important;
   }
 }
 
@@ -525,8 +529,10 @@ a.dropdown-item {
     //top: 50%;
     top: 15px;
     //transform: translateY(-50%);
-    left: 50%; /* Center horizontally */
-    transform: translateX(-50%); /* Adjust for the element's width */
+    left: 50%;
+    /* Center horizontally */
+    transform: translateX(-50%);
+    /* Adjust for the element's width */
     z-index: 1000;
   }
 
@@ -542,14 +548,17 @@ a.dropdown-item {
     border-color: initial;
     position: fixed;
     top: 15px;
+
     @media (min-width: 768px) {
       left: calc(300px + 15%);
       width: calc(70% - 300px);
     }
+
     @media (max-width: 768px) {
       left: calc(300px + 5%);
       width: calc(90% - 300px);
     }
+
     z-index: 1000;
 
     text-align: center;
@@ -560,6 +569,7 @@ a.dropdown-item {
       left: 15%;
       width: 70%;
     }
+
     @media (max-width: 768px) {
       left: 5%;
       width: 90%;
@@ -657,6 +667,7 @@ a.dropdown-item {
 
         .table {
           @extend .table-hover; // .table-striped
+
           @media (min-width: 992px) {
             table-layout: fixed;
           }
@@ -922,6 +933,7 @@ a.dropdown-item {
 .select2-container--default .select2-selection--single .select2-selection__rendered {
   line-height: inherit !important;
 }
+
 .select2multiple .select2-selection__rendered {
   height: 1.5rem !important;
   overflow-y: auto !important;
