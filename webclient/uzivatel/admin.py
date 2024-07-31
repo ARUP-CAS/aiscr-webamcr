@@ -77,7 +77,7 @@ class UserNotificationTypeInline(admin.TabularInline):
         if not obj: #new create only
             extra = UserNotificationType.objects.filter(
                 Q(ident_cely__icontains='S-E-')
-                .count()
+            ).count()
         return extra
 
     def __init__(self, parent_model, admin_site):
