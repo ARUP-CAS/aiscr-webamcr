@@ -6,14 +6,6 @@ export DJANGO_SETTINGS_MODULE=webclient.settings.production
 
 sudo cron
 
-python3 manage.py migrate
-python3 manage.py collectstatic --noinput
-python3 manage.py compress --force
-python3 manage.py migrate
-python3 manage.py shell < data_management.py
-python3 manage.py set_database_rights
-#python3 manage.py update_snapshot_fields
-
 CONFIG_FILE="/run/secrets/db_conf"
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "Configuration file not found: $CONFIG_FILE"
@@ -55,6 +47,14 @@ else
 fi
 
 unset PGPASSWORD
+
+python3 manage.py migrate
+python3 manage.py collectstatic --noinput
+python3 manage.py compress --force
+python3 manage.py migrate
+python3 manage.py shell < data_management.py
+python3 manage.py set_database_rights
+#python3 manage.py update_snapshot_fields
 
 #Copy locale from volume, create new one/update old, copy locale to volume and remove from app. Move has permission denied.
 
