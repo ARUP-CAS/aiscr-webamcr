@@ -44,12 +44,10 @@ class UserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
 
     def __init__(self, *args, **kwargs):
         super(UserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
-        logger.debug(self.data)
         if not self.instance.pk and not self.data: 
             notification_ids = UserNotificationType.objects.filter(
                 Q(ident_cely__icontains='S-E-')
             ).values_list('id', flat=True)
-            logger.debug(self.initial)
             self.initial = []
             for id in notification_ids:
                 self.initial.append({'usernotificationtype': id, })
