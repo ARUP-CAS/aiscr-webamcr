@@ -433,7 +433,7 @@ class FedoraRepositoryConnector:
     def link_exists(self):
         url = self._get_request_url(FedoraRequestType.GET_LINK)
         result = self._send_request(url, FedoraRequestType.GET_LINK)
-        return result != 404
+        return result.status_code != 404
 
 
     def _check_container(self):
