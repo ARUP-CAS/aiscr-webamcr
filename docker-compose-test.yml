@@ -34,12 +34,15 @@ services:
 
 
   proxy:
-    image: aiscr/webamcr-proxy:latest
+    image: docker.io/library/test_proxy
     volumes:
       - static_data:/vol/static
       - nginx_data:/vol/nginx/data
     ports:
-      - "8080:8080"
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
     networks:
       - prod-net
     healthcheck:
