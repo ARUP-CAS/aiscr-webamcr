@@ -914,9 +914,9 @@ class DokumentFilter(Model3DFilter):
             Q(oznaceni_originalu__icontains=value)
             | Q(popis__icontains=value)
             | Q(poznamka__icontains=value)
-            | Q(licence__icontains=value)
+            | Q(licence__heslo__icontains=value)
             | Q(extra_data__cislo_objektu__icontains=value)
-            | Q(extra_data__region__icontains=value)
+            | Q(extra_data__region_extra__icontains=value)
             | Q(extra_data__udalost__icontains=value)
         )
 
