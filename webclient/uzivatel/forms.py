@@ -335,7 +335,7 @@ class UserPasswordResetForm(PasswordResetForm):
             status = "OK"
             exception = None
         except Exception as e:
-            logger.error("services.mailer.send.error",
+            logger.warning("uzivatel.forms.send_mail.warning",
                             extra={"from_email": from_email, "to": to_email, "subject": subject, "exception": e})
             status = "NOK"
             exception = e
