@@ -130,10 +130,8 @@ class FedoraRepositoryConnector:
             self.transaction_uid = None
         self.restored_container = False
         self.skip_container_check = skip_container_check
-        stack = inspect.stack()
-        caller = [x for x in stack]
         logger.debug("core_repository_connector.__init__.end",
-                     extra={"caller": caller, "transaction": self.transaction_uid, "ident_cely": record.ident_cely})
+                     extra={"transaction": self.transaction_uid, "ident_cely": record.ident_cely})
 
     def _get_model_name(self):
         class_name = self.record.__class__.__name__
@@ -500,12 +498,8 @@ class FedoraRepositoryConnector:
         return response.content
 
     def save_metadata(self, update=True):
-        stack = inspect.stack()
-        caller = [x for x in stack]
-
         logger.debug("core_repository_connector.save_metadata.start",
-                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid,
-                            "caller": caller})
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         if not self.skip_container_check:
             self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_METADATA)
