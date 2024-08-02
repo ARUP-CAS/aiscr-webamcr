@@ -25,8 +25,11 @@ class DateRangeField(forms.DateField):
     """
     def to_python(self, value):
         values = value.split(" - ")
-        from_date = super(DateRangeField, self).to_python(values[0])
-        to_date = super(DateRangeField, self).to_python(values[1])
+        if len(values) == 1:
+            from_date = to_date = super(DateRangeField, self).to_python(values[0])
+        else:
+            from_date = super(DateRangeField, self).to_python(values[0])
+            to_date = super(DateRangeField, self).to_python(values[1])
         # add one day to the to_date since DateRangePicker has both bounds included 12/30/2020 - 12/30/2020 must be
         # stored as 12/30/2020 - 12/31/2020, since postgres does not include upper bound to the range
         to_date += datetime.timedelta(days=1)

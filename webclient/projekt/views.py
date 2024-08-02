@@ -1618,7 +1618,7 @@ def katastr_text_to_id(request):
             logger.debug("projekt.views.katastr_text_to_id.has_numbers",
                          extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
         else:
-            logger.error("projekt.views.katastr_text_to_id.not_found",
+            logger.warning("projekt.views.katastr_text_to_id.not_found",
                          extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
         return request.POST.copy()
 
