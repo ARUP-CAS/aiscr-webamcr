@@ -53,7 +53,6 @@ python3 manage.py collectstatic --noinput
 python3 manage.py compress --force
 python3 manage.py migrate
 python3 manage.py shell < data_management.py
-python3 manage.py set_database_rights
 #python3 manage.py update_snapshot_fields
 
 #Copy locale from volume, create new one/update old, copy locale to volume and remove from app. Move has permission denied.
