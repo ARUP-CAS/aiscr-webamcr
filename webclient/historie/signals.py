@@ -8,7 +8,7 @@ from django.dispatch import receiver
 logger = logging.getLogger(__name__)
 
 
-@receiver(pre_save, sender=Historie)
+@receiver(pre_save, sender=Historie, weak=False)
 def soubor_update_metadata(sender, instance: Historie, **kwargs):
     logger.debug("historie.signals.soubor_update_metadata.start")
     if instance.uzivatel:

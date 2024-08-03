@@ -15,7 +15,7 @@ from xml_generator.models import ModelWithMetadata
 logger = logging.getLogger(__name__)
 
 
-@receiver(pre_save, sender=Soubor)
+@receiver(pre_save, sender=Soubor, weak=False)
 def soubor_get_rozsah(sender, instance, **kwargs):
     if instance.binary_data:
         if instance.nazev.lower().endswith("pdf"):
@@ -37,7 +37,7 @@ def soubor_get_rozsah(sender, instance, **kwargs):
             instance.rozsah = 1
 
 
-@receiver(post_save, sender=Soubor)
+@receiver(post_save, sender=Soubor, weak=False)
 def soubor_save_update_record_metadata(sender, instance: Soubor, **kwargs):
     logger.debug("cron.signals.soubor_save_update_record_metadata.start",
                  extra={"close_active_transaction_when_finished": instance.close_active_transaction_when_finished})
@@ -55,7 +55,7 @@ def soubor_save_update_record_metadata(sender, instance: Soubor, **kwargs):
     logger.debug("cron.signals.soubor_save_update_record_metadata.no_action")
 
 
-@receiver(pre_delete, sender=Soubor)
+@receiver(pre_delete, sender=Soubor, weak=False)
 def soubor_delete_connections(sender, instance: Soubor, **kwargs):
     logger.debug("cron.signals.soubor_delete_connections.start", extra={"instance": instance.pk})
     if instance.historie and instance.historie.pk:
@@ -63,7 +63,7 @@ def soubor_delete_connections(sender, instance: Soubor, **kwargs):
     logger.debug("cron.signals.soubor_delete_connections.end", extra={"instance": instance.pk})
 
 
-@receiver(post_delete, sender=Soubor)
+@receiver(post_delete, sender=Soubor, weak=False)
 def soubor_delete_update_metadata(sender, instance: Soubor, **kwargs):
     logger.debug("cron.signals.soubor_delete_update_metadata.start", extra={"instance": instance.pk})
     if instance.suppress_signal is True:

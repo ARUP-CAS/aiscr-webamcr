@@ -14,7 +14,7 @@ from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 logger = logging.getLogger(__name__)
 
 
-@receiver(pre_save, sender=Lokalita)
+@receiver(pre_save, sender=Lokalita, weak=False)
 def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
     logger.debug("lokalita.signals.save_lokalita_snapshot.start",
                  extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})
@@ -31,7 +31,7 @@ def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
                      extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})
 
 
-@receiver(post_save, sender=Lokalita)
+@receiver(post_save, sender=Lokalita, weak=False)
 def save_lokalita_redis_snapshot(sender, instance: Lokalita, **kwargs):
     logger.debug("lokalita.signals.save_lokalita_redis_snapshot.start",
                  extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})
@@ -41,7 +41,7 @@ def save_lokalita_redis_snapshot(sender, instance: Lokalita, **kwargs):
                  extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})
 
 
-@receiver(pre_delete, sender=Lokalita)
+@receiver(pre_delete, sender=Lokalita, weak=False)
 def delete_lokalita(sender, instance: Lokalita, **kwargs):
     logger.debug("lokalita.signals.delete_lokalita.start",
                  extra={"ident_cely": instance.archeologicky_zaznam.ident_cely})

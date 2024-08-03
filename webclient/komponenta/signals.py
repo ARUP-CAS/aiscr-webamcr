@@ -17,7 +17,7 @@ from komponenta.models import KomponentaVazby, Komponenta
 logger = logging.getLogger(__name__)
 
 
-@receiver(pre_delete, sender=KomponentaVazby)
+@receiver(pre_delete, sender=KomponentaVazby, weak=False)
 def delete_komponenta_vazby(sender, instance: KomponentaVazby, **kwargs):
     """
     Náhrada triggeru delete_connected_komponenta_vazby_relations.
@@ -31,7 +31,7 @@ def delete_komponenta_vazby(sender, instance: KomponentaVazby, **kwargs):
     logger.debug("komponenta.signals.delete_komponenta_vazby.end")
 
 
-@receiver(post_save, sender=Komponenta)
+@receiver(post_save, sender=Komponenta, weak=False)
 def komponenta_save(sender, instance: Komponenta, **kwargs):
     logger.debug("komponenta.signals.komponenta_save.start", extra={"pk": instance.pk})
     if instance.suppress_signal:
@@ -58,7 +58,7 @@ def komponenta_save(sender, instance: Komponenta, **kwargs):
                  extra={"transaction": getattr(fedora_transaction, "uid", None), "pk": instance.pk})
 
 
-@receiver(post_delete, sender=Komponenta)
+@receiver(post_delete, sender=Komponenta, weak=False)
 def komponenta_delete(sender, instance: Komponenta, **kwargs):
     logger.debug("komponenta.signals.komponenta_delete.start", extra={"pk": instance.pk})
     if instance.suppress_signal:
