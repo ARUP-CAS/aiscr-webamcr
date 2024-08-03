@@ -149,6 +149,7 @@ window.onload = function () {
             "application/x-rar, " +
             "application/x-rar-compressed, " +
             "application/x-7z-compressed, " +
+            "application/x-compressed," +
             "application/pdf, " +
             "application/msword, " +
             "application/vnd.ms-excel, " +
