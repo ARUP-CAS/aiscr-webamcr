@@ -80,7 +80,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/django/asgiref/
    * - attrs
-     - 23.2.0
+     - 24.1.0
      - MIT License
      - https://www.attrs.org/en/stable/changelog.html
    * - beautifulsoup4
