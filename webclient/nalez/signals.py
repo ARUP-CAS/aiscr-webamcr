@@ -15,7 +15,7 @@ from nalez.models import NalezObjekt, NalezPredmet
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_delete, sender=NalezObjekt)
+@receiver(post_delete, sender=NalezObjekt, weak=False)
 def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
     logger.debug("nalez.signals.delete_nalez_objekt.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
@@ -50,7 +50,7 @@ def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
                  extra={"pk": instance.pk, "transaction": fedora_transaction.uid})
 
 
-@receiver(post_delete, sender=NalezPredmet)
+@receiver(post_delete, sender=NalezPredmet, weak=False)
 def delete_nalez_predmet(sender, instance: NalezObjekt, **kwargs):
     logger.debug("nalez.signals.delete_nalez_predmet.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()

@@ -16,7 +16,7 @@ from arch_z.models import Akce, ArcheologickyZaznam
 logger = logging.getLogger(__name__)
 
 
-@receiver(pre_save, sender=Pian)
+@receiver(pre_save, sender=Pian, weak=False)
 def create_pian_vazby(sender, instance, **kwargs):
     """
     Metóda pro vytvoření historických vazeb pianu.
@@ -31,7 +31,7 @@ def create_pian_vazby(sender, instance, **kwargs):
     logger.debug("pian.signals.create_pian_vazby.end")
 
 
-@receiver(post_save, sender=Pian)
+@receiver(post_save, sender=Pian, weak=False)
 def pian_save_metadata(sender, instance: Pian, **kwargs):
     """
     Metóda pro vytvoření historických vazeb pianu.
@@ -53,7 +53,7 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
                             "close_transaction": instance.close_active_transaction_when_finished})
 
 
-@receiver(pre_delete, sender=Pian)
+@receiver(pre_delete, sender=Pian, weak=False)
 def samostatny_nalez_okres_delete_repository_container(sender, instance: Pian, **kwargs):
     logger.debug("pian.signals.samostatny_nalez_okres_delete_repository_container.start",
                  extra={"instance": instance.ident_cely})

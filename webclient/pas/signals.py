@@ -17,7 +17,7 @@ from xml_generator.models import check_if_task_queued, UPDATE_REDIS_SNAPSHOT
 logger = logging.getLogger(__name__)
 
 
-@receiver(pre_save, sender=SamostatnyNalez)
+@receiver(pre_save, sender=SamostatnyNalez, weak=False)
 def create_dokument_vazby(sender, instance, **kwargs):
     """
     Metóda pro vytvoření historických a souborových vazeb samostatnýho náleze.
@@ -34,7 +34,7 @@ def create_dokument_vazby(sender, instance, **kwargs):
     logger.debug("pas.signals.create_dokument_vazby.end", extra={"ident_cely": instance.ident_cely})
 
 
-@receiver(post_save, sender=SamostatnyNalez)
+@receiver(post_save, sender=SamostatnyNalez, weak=False)
 def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, **kwargs):
     logger.debug("pas.signals.save_metadata_samostatny_nalez.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
@@ -58,7 +58,7 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
                                                                           "transaction": fedora_transaction})
 
 
-@receiver(pre_delete, sender=SamostatnyNalez)
+@receiver(pre_delete, sender=SamostatnyNalez, weak=False)
 def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **kwargs):
     logger.debug("pas.signals.dokument_delete_container_soubor_vazby.start",
                  extra={"ident_cely": instance.ident_cely})
@@ -86,7 +86,7 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
 
 
-@receiver(post_save, sender=UzivatelSpoluprace)
+@receiver(post_save, sender=UzivatelSpoluprace, weak=False)
 def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.save_uzivatel_spoluprce.start", extra={"pk": instance.pk})
     invalidate_model(UzivatelSpoluprace)
@@ -104,7 +104,7 @@ def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.save_uzivatel_spoluprce.end", extra={"pk": instance.pk})
 
 
-@receiver(post_delete, sender=UzivatelSpoluprace)
+@receiver(post_delete, sender=UzivatelSpoluprace, weak=False)
 def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.start", extra={"pk": instance.pk})
     fedora_transaction = instance.active_transaction

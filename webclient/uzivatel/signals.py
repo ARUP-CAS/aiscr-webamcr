@@ -20,7 +20,7 @@ from core.ident_cely import get_uzivatel_ident
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender=Organizace)
+@receiver(post_save, sender=Organizace, weak=False)
 def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
     logger.debug("uzivatel.signals.orgnaizace_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
@@ -30,7 +30,7 @@ def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
                      extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction})
 
 
-@receiver(post_save, sender=Osoba)
+@receiver(post_save, sender=Osoba, weak=False)
 def osoba_save_metadata(sender, instance: Osoba, **kwargs):
     logger.debug("uzivatel.signals.osoba_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
@@ -40,7 +40,7 @@ def osoba_save_metadata(sender, instance: Osoba, **kwargs):
                      extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction})
 
 
-@receiver(pre_save, sender=User)
+@receiver(pre_save, sender=User, weak=False)
 def create_ident_cely(sender, instance: User, **kwargs):
     """
     Přidelení identu celý pro usera.
@@ -70,7 +70,7 @@ def create_ident_cely(sender, instance: User, **kwargs):
     logger.debug("uzivatel.signals.create_ident_cely.end", extra={"ident_cely": instance.ident_cely})
 
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=User, weak=False)
 def user_post_save_method(sender, instance: User, created: bool, **kwargs):
     invalidate_model(User)
     invalidate_model(Historie)
@@ -136,7 +136,7 @@ def send_account_confirmed_email(sender, instance: User, created):
     logger.debug("uzivatel.signals.send_account_confirmed_email.end", extra={"user": instance.ident_cely})
 
 
-@receiver(pre_delete, sender=User)
+@receiver(pre_delete, sender=User, weak=False)
 def delete_user_connections(sender, instance, *args, **kwargs):
     logger.debug("uzivatel.signals.delete_user_connections.start", extra={"ident_cely": instance.ident_cely})
     Historie.save_record_deletion_record(record=instance)
@@ -150,7 +150,7 @@ def delete_user_connections(sender, instance, *args, **kwargs):
                                                                         "transaction": fedora_transaction.uid})
 
 
-@receiver(post_delete, sender=User)
+@receiver(post_delete, sender=User, weak=False)
 def delete_profile(sender, instance: User, *args, **kwargs):
     """
     Signál pro zaslání emailu uživately o jeho smazání.
@@ -160,7 +160,7 @@ def delete_profile(sender, instance: User, *args, **kwargs):
     logger.debug("uzivatel.signals.delete_profile.end", extra={"ident_cely": instance.ident_cely})
 
 
-@receiver(pre_delete, sender=Osoba)
+@receiver(pre_delete, sender=Osoba, weak=False)
 def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
     logger.debug("uzivatel.signals.osoba_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
@@ -170,7 +170,7 @@ def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
 
 
-@receiver(pre_delete, sender=Organizace)
+@receiver(pre_delete, sender=Organizace, weak=False)
 def organizace_delete_repository_container(sender, instance: Organizace, **kwargs):
     logger.debug("uzivatel.signals.organizace_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
@@ -180,7 +180,7 @@ def organizace_delete_repository_container(sender, instance: Organizace, **kwarg
                  extra={"ident_cely": instance.ident_cely, "transaction": transaction})
 
 
-@receiver(user_logged_in)
+@receiver(user_logged_in, weak=False)
 def log_user_signin(sender, user, request, **kwargs):
     # Get the IP address from the request object
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')

@@ -12,7 +12,7 @@ from historie.models import HistorieVazby, Historie
 logger = logging.getLogger(__name__)
 
 
-@receiver(pre_save, sender=ExterniZdroj)
+@receiver(pre_save, sender=ExterniZdroj, weak=False)
 def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
     """
     Metóda pro vytvoření historických vazeb externího zdroje.
@@ -33,7 +33,7 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
         logger.debug("ez.signals.create_ez_vazby.end", extra={"ident_cely": instance.ident_cely})
 
 
-@receiver(post_save, sender=ExterniZdroj)
+@receiver(post_save, sender=ExterniZdroj, weak=False)
 def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
     logger.debug("ez.signals.externi_zdroj_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(ExterniZdroj)
@@ -49,7 +49,7 @@ def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
     logger.debug("ez.signals.externi_zdroj_save_metadata.end", extra={"ident_cely": instance.ident_cely})
 
 
-@receiver(pre_delete, sender=ExterniZdroj)
+@receiver(pre_delete, sender=ExterniZdroj, weak=False)
 def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **kwargs):
     logger.debug("ez.signals.delete_externi_zdroj_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
