@@ -1,5 +1,6 @@
 import logging
 
+from cacheops import invalidate_model
 from django.db import transaction
 from django.db.models.signals import post_save, post_delete, pre_save, pre_delete
 from django.dispatch import receiver
@@ -89,6 +90,8 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, created,
     Funkce pro uložení metadat heslář - hierarchie.
     """
     logger.debug("heslo.signals.save_metadata_heslar_hierarchie.start")
+    invalidate_model(HeslarHierarchie)
+    invalidate_model(Heslar)
 
     if not instance.suppress_signal:
 
