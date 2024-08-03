@@ -183,5 +183,9 @@ def organizace_delete_repository_container(sender, instance: Organizace, **kwarg
 @receiver(user_logged_in)
 def log_user_signin(sender, user, request, **kwargs):
     # Get the IP address from the request object
-    ip_address = request.META.get('REMOTE_ADDR', None)
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip_address = x_forwarded_for.split(',')[0]
+    else:
+        ip_address = request.META.get('REMOTE_ADDR')
     UzivatelPrihlaseniLog.objects.create(user=user, ip_adresa=ip_address)
