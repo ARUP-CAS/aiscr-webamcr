@@ -299,51 +299,42 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             mime_types = set()
             mime_types.add(mime_type)
             if mime_type == "application/zip":
-                file = copy.deepcopy(file)
                 try:
                     with zipfile.ZipFile(file, 'r') as zip_ref:
-                        for zip_info in zip_ref.infolist():
-                            if not zip_info.is_dir():
-                                with zip_ref.open(zip_info) as inner_file:
-                                    inner_file_bytes = inner_file.read()
-                                    inner_mime_type = magic.from_buffer(inner_file_bytes, mime=True)
-                                    mime_types.add(inner_mime_type)
+                        zip_ref.testzip()
                 except Exception as err:
                     logger.info("core.models.Soubor.get_mime_type.cannot_unpack_zipfile", extra={"err": err})
+                    if 'encrypted' in str(err):
+                        return "encrypted"
                     return False
             elif mime_type == "application/x-7z-compressed":
-                file = copy.deepcopy(file)
                 file_input = io.BytesIO(file.read())
                 try:
                     with py7zr.SevenZipFile(file_input, mode='r') as archive:
                         all_files = archive.getnames()
                         for file_name in all_files:
-                            inner_file_bytes = archive.read([file_name])[file_name].read()
-                            inner_mime_type = magic.from_buffer(inner_file_bytes, mime=True)
-                            mime_types.add(inner_mime_type)
+                            archive.read([file_name])
                 except Exception as err:
                     logger.info("core.models.Soubor.get_mime_type.cannot_unpack_7zfile", extra={"err": err})
+                    if 'Password is required' in str(err):
+                        return "encrypted"
                     return False
                 finally:
                     file_input.close()
             elif mime_type in ("application/x-rar-compressed", "application/x-rar"):
-                file = copy.deepcopy(file)
                 file_input = io.BytesIO(file.read())
                 try:
                     with rarfile.RarFile(file_input) as archive:
-                        all_files = archive.namelist()
-                        for file_name in all_files:
-                            # Extract the file as bytes
-                            with archive.open(file_name) as inner_file:
-                                inner_file_bytes = inner_file.read()
-                                inner_mime_type = magic.from_buffer(inner_file_bytes, mime=True)
-                                mime_types.add(inner_mime_type)
+                        archive.testrar()
                 except Exception as err:
+                    if 'requires password' in str(err):
+                        return "encrypted"
                     logger.info("core.models.Soubor.get_mime_type.cannot_unpack_rarfile",
                                 extra={"mime_type": mime_type, "err": err})
                     return False
                 finally:
                     file_input.close()
+            file.seek(0)
             if "application/octet-stream" in mime_types:
                 mime_types.remove("application/octet-stream")
             logger.debug("core.models.Soubor.get_mime_type.end", extra={"mime_types": mime_types,
@@ -362,7 +353,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         mime = cls.get_mime_types(file, check_archive=True)
         logger.debug("core.models.Soubor.check_mime_for_url.mime_types",
                      extra={"mime": mime})
-        if mime is False:
+        if mime == "encrypted":
+            return mime
+        elif mime is False:
             return False
         if isinstance(mime, str):
             mime_str = mime

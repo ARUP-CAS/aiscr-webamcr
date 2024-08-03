@@ -409,7 +409,12 @@ def post_upload(request):
         new_name = soubor_instance.nazev
     soubor: TemporaryUploadedFile = request.FILES.get("file")
     soubor.seek(0)
-    if not Soubor.check_mime_for_url(soubor, source_url):
+    check_meme=Soubor.check_mime_for_url(soubor, source_url)
+    if check_meme == "encrypted":
+        logger.debug("core.views.post_upload.check_mime_for_url.encrypted")
+        help_translation = _('core.views.post_upload.encrypted')
+        return JsonResponse({"error": help_translation}, status=400)
+    elif  check_meme is False:
         logger.debug("core.views.post_upload.check_mime_for_url.rejected")
         help_translation = _('core.views.post_upload.mime_check_failed')
         return JsonResponse({"error": help_translation}, status=400)
