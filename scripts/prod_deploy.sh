@@ -159,6 +159,10 @@ while getopts ":t:u:" option; do
     
    case ${option} in
         t|u|d)  #Overriding of default latest image by providing specific tag
+            if [ "$OPTARG" == "latest" ]; then
+                echo "Warning: IMAGE TAG must not be 'latest'"
+                exit 1
+            fi
             export IMAGE_TAG="${OPTARG}"
             tag_passed="yes"
             echo "IMAGE TAG FOR DOCKER IMAGES IS >>>> ${IMAGE_TAG}"
