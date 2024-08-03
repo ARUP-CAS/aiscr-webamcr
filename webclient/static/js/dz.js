@@ -131,6 +131,7 @@ window.onload = function () {
             "application/vnd.rar, " +
             "application/x-rar, " +
             "application/x-rar-compressed, " +
+            "application/x-compressed," +
             "application/x-7z-compressed"
         RejectedFileMessage = reject_dict["rejected_dokument_model"]
     } else {
