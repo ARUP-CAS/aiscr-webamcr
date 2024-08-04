@@ -436,7 +436,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://pythonhosted.org/pytz
    * - pyzstd
-     - 0.16.0
+     - 0.16.1
      - BSD License
      - https://github.com/Rogdham/pyzstd
    * - rarfile
