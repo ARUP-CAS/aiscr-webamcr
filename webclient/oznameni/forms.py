@@ -9,6 +9,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
+from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
@@ -24,15 +25,18 @@ class DateRangeField(forms.DateField):
     Třída pro správnu práci s date range.
     """
     def to_python(self, value):
-        values = value.split(" - ")
+        values = value.split("-")
         if len(values) == 1:
-            from_date = to_date = super(DateRangeField, self).to_python(values[0])
+            from_date = to_date = super(DateRangeField, self).to_python(values[0].strip())
         else:
-            from_date = super(DateRangeField, self).to_python(values[0])
-            to_date = super(DateRangeField, self).to_python(values[1])
+            from_date = super(DateRangeField, self).to_python(values[0].strip())
+            to_date = super(DateRangeField, self).to_python(values[1].strip())
         # add one day to the to_date since DateRangePicker has both bounds included 12/30/2020 - 12/30/2020 must be
         # stored as 12/30/2020 - 12/31/2020, since postgres does not include upper bound to the range
-        to_date += datetime.timedelta(days=1)
+        try:
+            to_date += datetime.timedelta(days=1)
+        except:
+            raise ValidationError(self.error_messages["invalid"], code="invalid")
         return DateRange(lower=from_date, upper=to_date)
 
 
