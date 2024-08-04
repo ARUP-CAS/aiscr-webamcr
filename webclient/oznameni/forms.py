@@ -33,6 +33,8 @@ class DateRangeField(forms.DateField):
             to_date = super(DateRangeField, self).to_python(values[1].strip())
         # add one day to the to_date since DateRangePicker has both bounds included 12/30/2020 - 12/30/2020 must be
         # stored as 12/30/2020 - 12/31/2020, since postgres does not include upper bound to the range
+        if from_date is None or to_date is None:
+            raise ValidationError(self.error_messages["invalid"], code="invalid")
         try:
             to_date += datetime.timedelta(days=1)
         except:
