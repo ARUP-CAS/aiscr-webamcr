@@ -33,6 +33,8 @@ PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI: Final = _("common.message.PROJEKT_USPESNE_NA
 PROJEKT_NELZE_UZAVRIT: Final = _("common.message.PROJEKT_NELZE_UZAVRIT.text")  # Projekt nelze uzavřít. Zkontrolujte zda má všechny náležitosti.
 PROJEKT_NELZE_ARCHIVOVAT: Final = _("common.message.PROJEKT_NELZE_ARCHIVOVAT.text")  # Projekt nelze archivovat. Zkontrolujte zda má všechny náležitosti.
 PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI: Final = _("common.message.PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI.text")  # Projekt nelze navrhnout ke zrušení. Nesmí mít žádné akce.
+PROJEKT_NELZE_ZAHAJIT_V_TERENU: Final = _("common.message.PROJEKT_NELZE_ZAHAJIT_V_TERENU.text")  # Projekt nelze zahájit v terénu.
+
 PROJEKT_NELZE_SMAZAT: Final = _("common.message.PROJEKT_NELZE_SMAZAT.text")  # Projekt nelze smazat.
 PROJEKT_NEKDO_ZMENIL_STAV: Final = _("core.message_constants.projektZmenaStavuNekymJinym.text")
 PROJEKT_NENI_TYP_PRUZKUMNY: Final = _("common.message.PROJEKT_NENI_TYP_PRUZKUMNY.text")

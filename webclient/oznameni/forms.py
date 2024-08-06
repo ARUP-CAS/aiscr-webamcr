@@ -25,6 +25,8 @@ class DateRangeField(forms.DateField):
     Třída pro správnu práci s date range.
     """
     def to_python(self, value):
+        if isinstance(value, DateRange):
+            return value
         values = value.split("-")
         if len(values) == 1:
             from_date = to_date = super(DateRangeField, self).to_python(values[0].strip())
