@@ -969,16 +969,7 @@ def uzavrit(request, ident_cely):
                 if key == "has_event":
                     request.session["temp_data"].append(item)
                 else:
-                    items = ""
-                    for i, list_items in enumerate(item):
-                        if isinstance(list_items, list):
-                            items += list_items.pop(0)
-                            items += ", ".join(list_items)
-                        else:
-                            items += list_items
-                        if i + 1 < len(item):
-                            items += ", "
-                    request.session["temp_data"].append(f"{key}: {items}")
+                    request.session["temp_data"].append(f"{key}: {item}")
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
             return JsonResponse(
                 {
