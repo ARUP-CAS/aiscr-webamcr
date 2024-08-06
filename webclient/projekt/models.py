@@ -520,7 +520,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                     logger.error("dokuments.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                     raise MaximalIdentNumberError(MAXIMUM)
                 sequence.sekvence = missing[0]
-        sequence.save()
+        sequence.save(using='urgent')
         old_ident = self.ident_cely
         self.ident_cely = (
             sequence.region + "-" + str(sequence.rok) + f"{sequence.sekvence:05}"

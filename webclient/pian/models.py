@@ -217,7 +217,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         old_ident = self.ident_cely
         self.ident_cely = perm_ident_cely
         sequence.sekvence += 1
-        sequence.save()
+        sequence.save(using='urgent')
         self.save()
         self.record_ident_change(old_ident, fedora_transaction=self.active_transaction)
 

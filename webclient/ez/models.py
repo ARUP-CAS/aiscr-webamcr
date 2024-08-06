@@ -240,7 +240,7 @@ def get_perm_ez_ident():
                 logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence=missing[0]
-    sequence.save()
+    sequence.save(using='urgent')
     return (
         prefix + f"{sequence.sekvence:07}"
     )
