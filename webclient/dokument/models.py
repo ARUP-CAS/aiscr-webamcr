@@ -395,7 +395,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                     logger.error("dokuments.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                     raise MaximalIdentNumberError(MAXIMUM)
                 sequence.sekvence=missing[0]
-        sequence.save()
+        sequence.save(using='urgent')
         perm_ident_cely = (
             sequence.region + "-" + sequence.rada.zkratka + "-" + str(sequence.rok) + "{0}".format(sequence.sekvence).zfill(5)
         )

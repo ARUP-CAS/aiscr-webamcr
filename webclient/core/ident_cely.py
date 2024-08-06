@@ -288,7 +288,7 @@ def get_adb_ident(pian: Pian) -> str:
     if sequence.sekvence < MAXIMAL_ADBS:
         ident = perm_ident_cely
         sequence.sekvence += 1
-        sequence.save()
+        sequence.save(using='urgent')
         return ident, sm5
     else:
         logger.error("core.ident_cely.get_adb_ident.max_adbs_error", extra={"maximal_adbs": MAXIMAL_ADBS})
