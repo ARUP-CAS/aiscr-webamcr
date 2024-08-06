@@ -452,6 +452,18 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                     result[_("projekt.models.projekt.checkPredUzavrenim.akce.text") + a.archeologicky_zaznam.ident_cely] = akce_warnings
         result = {k:str(v) for (k, v) in result.items()}
         return result
+    
+    def check_pred_zahajenim_v_terenu(self):
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu zahájen v terénu:
+
+            Projektu musí mít lokalizaci
+        """
+        resp = []
+        if self.geom is None or len(self.geom) < 2:
+            resp.append(_("projekt.models.projekt.checkPredZahajenim.lokalizace.text"))
+        resp = [str(x) for x in resp]
+        return resp
 
     def parse_ident_cely(self):
         """
