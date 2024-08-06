@@ -80,7 +80,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/django/asgiref/
    * - attrs
-     - 24.1.0
+     - 24.2.0
      - MIT License
      - https://www.attrs.org/en/stable/changelog.html
    * - beautifulsoup4
@@ -296,7 +296,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://pycqa.github.io/isort/
    * - kombu
-     - 5.3.7
+     - 5.4.0
      - BSD License
      - https://kombu.readthedocs.io
    * - libsass
@@ -508,7 +508,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
-     - 0.26.0
+     - 0.26.1
      - Apache Software License; MIT License
      - https://github.com/python-trio/trio
    * - trio-websocket
