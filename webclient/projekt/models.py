@@ -449,9 +449,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             if hasattr(a, "archeologicky_zaznam") and hasattr(a.archeologicky_zaznam, "check_pred_odeslanim"):
                 akce_warnings = a.archeologicky_zaznam.check_pred_odeslanim()
                 if akce_warnings:
-                    result[a.archeologicky_zaznam.ident_cely] = akce_warnings
                     result[_("projekt.models.projekt.checkPredUzavrenim.akce.akce_text") + a.archeologicky_zaznam.ident_cely] = akce_warnings
-
             else:
                 logger.error("projekt.models.check_pred_uzavrenim.check_akce_error", extra={"ident": self.ident_cely})
         result = {k:str(v) for (k, v) in result.items()}
