@@ -446,10 +446,12 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         if does_not_have_event and self.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
             result["has_event"] = _("projekt.models.projekt.checkPredUzavrenim.akce.text")
         for a in self.akce_set.all():
-            if hasattr(a, "check_pred_odeslanim"):
-                akce_warnings = a.check_pred_odeslanim()
+            if hasattr(a, "archeologicky_zaznam") and hasattr(a.archeologicky_zaznam, "check_pred_odeslanim"):
+                akce_warnings = a.archeologicky_zaznam.check_pred_odeslanim()
                 if akce_warnings:
-                    result[_("projekt.models.projekt.checkPredUzavrenim.akce.text") + a.archeologicky_zaznam.ident_cely] = akce_warnings
+                    result[_("projekt.models.projekt.checkPredUzavrenim.akce.akce_text") + a.archeologicky_zaznam.ident_cely] = akce_warnings
+            else:
+                logger.error("projekt.models.check_pred_uzavrenim.check_akce_error", extra={"ident": self.ident_cely})
         result = {k:str(v) for (k, v) in result.items()}
         return result
     
