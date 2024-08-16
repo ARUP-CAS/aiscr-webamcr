@@ -145,6 +145,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             stav=EZ_STAV_ZAPSANY, externi_odkazy_zdroje__archeologicky_zaznam=self
         )
         for ez in externi_zdroje:
+            ez.active_transaction = self.active_transaction
             ez.set_odeslany(user)
 
     def set_archivovany(self, user):
