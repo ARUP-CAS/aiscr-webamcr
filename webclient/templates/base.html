@@ -2,6 +2,8 @@
 {% load static %}
 {% load template_filters %}
 {% load i18n %}
+{% load cache %}
+{% load template_tags%}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -96,11 +98,19 @@
 </head>
 <body class="{{ request.path|url_to_classes }}">
   
-  {% block infobar %}{% endblock %}
-  
   <div class="d-flex" id="app-wrapper">
   {% block sidebar %}{% endblock %}
   <div id="app-page-wrapper">
+    {% block infobar%}
+      {% cache 600 maintenance %}
+      {% get_maintenance as action %}
+      {% if action and "accounts" not in request.path %}
+      <div class="maintenance">
+        <p class="d-block px-3 py-2 text-center text-bold text-white old-bv">{% trans "base.odstavka.text" %}</p>
+      </div>
+      {% endif %}
+      {% endcache %}
+    {% endblock%}
     {% block navbar %}{% endblock %}
 
     <div
