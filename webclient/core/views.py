@@ -693,7 +693,10 @@ def redirect_ident_view(request, ident_cely):
     """
     object = get_record_from_ident(ident_cely)
     if object:
-        return redirect(object.get_absolute_url())
+        if isinstance(object,Pian):
+            return redirect(object.get_absolute_url(request))
+        else:
+            return redirect(object.get_absolute_url())
     else:
         messages.error(
             request, _("core.views.redirectView.identnotmatchingregex.message.text")
