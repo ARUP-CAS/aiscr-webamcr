@@ -145,6 +145,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             stav=EZ_STAV_ZAPSANY, externi_odkazy_zdroje__archeologicky_zaznam=self
         )
         for ez in externi_zdroje:
+            ez.active_transaction = self.active_transaction
             ez.set_odeslany(user)
 
     def set_archivovany(self, user):
@@ -320,7 +321,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                     logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                     raise MaximalIdentNumberError(MAXIMUM)
                 sequence.sekvence=missing[0]
-        sequence.save()
+        sequence.save(using='urgent')
         old_ident = self.ident_cely
         self.ident_cely = (
             sequence.region + "-" + str(sequence.typ.zkratka) + f"{sequence.sekvence:07}"
@@ -693,7 +694,7 @@ def get_akce_ident(region):
                 logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence=missing[0]
-    sequence.save()
+    sequence.save(using='urgent')
     return (
         sequence.region + "-9" + f"{sequence.sekvence:06}" + "A"
     )

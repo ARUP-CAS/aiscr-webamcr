@@ -20,7 +20,7 @@ def get_or_create_transaction(instance):
         return FedoraTransaction()
 
 
-@receiver(pre_save, sender=Heslar)
+@receiver(pre_save, sender=Heslar, weak=False)
 def save_ident_cely(sender, instance: Heslar, **kwargs):
     """
     Funkce pro uložení metadat hesláře.
@@ -34,7 +34,7 @@ def save_ident_cely(sender, instance: Heslar, **kwargs):
     logger.debug("heslo.signals.save_ident_cely.end")
 
 
-@receiver(post_save, sender=Heslar)
+@receiver(post_save, sender=Heslar, weak=False)
 def save_metadata_heslar(sender, instance: Heslar, **kwargs):
     """
     Funkce pro uložení metadat hesláře.
@@ -47,7 +47,7 @@ def save_metadata_heslar(sender, instance: Heslar, **kwargs):
                      extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(post_save, sender=RuianKatastr)
+@receiver(post_save, sender=RuianKatastr, weak=False)
 def save_metadata_katastr(sender, instance: RuianKatastr, **kwargs):
     """
     Funkce pro uložení metadat katastru.
@@ -60,7 +60,7 @@ def save_metadata_katastr(sender, instance: RuianKatastr, **kwargs):
                      extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(post_save, sender=RuianKraj)
+@receiver(post_save, sender=RuianKraj, weak=False)
 def save_metadata_kraj(sender, instance: RuianKraj, **kwargs):
     """
     Funkce pro uložení metadat kraje.
@@ -73,7 +73,7 @@ def save_metadata_kraj(sender, instance: RuianKraj, **kwargs):
                      extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(post_save, sender=RuianOkres)
+@receiver(post_save, sender=RuianOkres, weak=False)
 def save_metadata_okres(sender, instance: RuianOkres, **kwargs):
     logger.debug("heslo.signals.save_metadata_okres.start")
     if not instance.suppress_signal:
@@ -83,7 +83,7 @@ def save_metadata_okres(sender, instance: RuianOkres, **kwargs):
                      extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(post_save, sender=HeslarHierarchie)
+@receiver(post_save, sender=HeslarHierarchie, weak=False)
 def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, created, **kwargs):
     """
     Funkce pro uložení metadat heslář - hierarchie.
@@ -108,7 +108,7 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, created,
         transaction.on_commit(save_metadata)
 
 
-@receiver(post_save, sender=HeslarDatace)
+@receiver(post_save, sender=HeslarDatace, weak=False)
 def save_metadata_heslar_hierarchie(sender, instance: HeslarDatace, created, **kwargs):
     """
     Funkce pro uložení metadat heslář - hierarchie.
@@ -128,7 +128,7 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarDatace, created, **k
                      extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(post_save, sender=HeslarDokumentTypMaterialRada)
+@receiver(post_save, sender=HeslarDokumentTypMaterialRada, weak=False)
 def save_metadata_heslar_dokument_typ_material_rada(sender, instance: HeslarDokumentTypMaterialRada, created, **kwargs):
     """
     Funkce pro uložení metadat heslář - hierarchie.
@@ -147,7 +147,7 @@ def save_metadata_heslar_dokument_typ_material_rada(sender, instance: HeslarDoku
     logger.debug("heslo.signals.save_metadata_heslar_dokument_typ_material_rada.end")
 
 
-@receiver(post_save, sender=HeslarOdkaz)
+@receiver(post_save, sender=HeslarOdkaz, weak=False)
 def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs):
     """
     Funkce pro uložení metadat heslář - odkaz.
@@ -170,7 +170,7 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
         logger.debug("heslo.signals.save_metadata_heslar_odkaz.end")
 
 
-@receiver(pre_delete, sender=Heslar)
+@receiver(pre_delete, sender=Heslar, weak=False)
 def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
     logger.debug("heslo.signals.heslar_delete_repository_container.start")
     fedora_transaction = FedoraTransaction()
@@ -179,7 +179,7 @@ def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
                  extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(pre_delete, sender=RuianKatastr)
+@receiver(pre_delete, sender=RuianKatastr, weak=False)
 def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **kwargs):
     logger.debug("heslo.signals.ruian_katastr_delete_repository_container.start")
     fedora_transaction = get_or_create_transaction(instance)
@@ -188,7 +188,7 @@ def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **
                  extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(pre_delete, sender=RuianKraj)
+@receiver(pre_delete, sender=RuianKraj, weak=False)
 def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs):
     logger.debug("heslo.signals.ruian_kraj_delete_repository_container.start")
     fedora_transaction = get_or_create_transaction(instance)
@@ -197,7 +197,7 @@ def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs
                  extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(pre_delete, sender=RuianOkres)
+@receiver(pre_delete, sender=RuianOkres, weak=False)
 def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwargs):
     logger.debug("heslo.signals.ruian_okres_delete_repository_container.start")
 
@@ -209,7 +209,7 @@ def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwar
     transaction.on_commit(save_metadata)
 
 
-@receiver(post_delete, sender=HeslarHierarchie)
+@receiver(post_delete, sender=HeslarHierarchie, weak=False)
 def delete_uppdate_related_heslar_hierarchie(sender, instance: HeslarHierarchie, **kwargs):
     """
     Funkce pro uložení metadat navázaného hesláře při smazání heslář - hierarchie.
@@ -225,7 +225,7 @@ def delete_uppdate_related_heslar_hierarchie(sender, instance: HeslarHierarchie,
                  extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(post_delete, sender=HeslarDokumentTypMaterialRada)
+@receiver(post_delete, sender=HeslarDokumentTypMaterialRada, weak=False)
 def delete_uppdate_related_heslar_dokument_typ_material_rada(sender, instance: HeslarDokumentTypMaterialRada, **kwargs):
     """
     Funkce pro uložení metadat navázaného hesláře při smazání heslář - dokument typ materiál řada.
@@ -243,7 +243,7 @@ def delete_uppdate_related_heslar_dokument_typ_material_rada(sender, instance: H
                  extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(post_delete, sender=HeslarOdkaz)
+@receiver(post_delete, sender=HeslarOdkaz, weak=False)
 def delete_uppdate_related_heslar_odkaz(sender, instance: HeslarOdkaz, **kwargs):
     """
     Funkce pro uložení metadat navázaného hesláře při smazání heslář - odkaz.
@@ -255,7 +255,7 @@ def delete_uppdate_related_heslar_odkaz(sender, instance: HeslarOdkaz, **kwargs)
                  extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(post_delete, sender=HeslarDatace)
+@receiver(post_delete, sender=HeslarDatace, weak=False)
 def delete_uppdate_related_heslar_datace(sender, instance: HeslarDatace, **kwargs):
     """
     Funkce pro uložení metadat navázaného hesláře při smazání heslář - datace.

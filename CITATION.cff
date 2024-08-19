@@ -42,9 +42,9 @@ authors:
   orcid: "https://orcid.org/0000-0001-7050-9572"
   affiliation: "Czech Academy of Sciences, Institute of Archaeology, Brno"
 title: "Archeologická mapa České republiky"
-version: "v1.0.4"
+version: "v1.0.8"
 doi: 10.5281/zenodo.8363642
-date-released: 2024-08-02
+date-released: 2024-08-13
 url: "https://github.com/ARUP-CAS/aiscr-webamcr"
 repository-code: "https://github.com/ARUP-CAS/aiscr-webamcr"
 license: GPL-3.0-or-later

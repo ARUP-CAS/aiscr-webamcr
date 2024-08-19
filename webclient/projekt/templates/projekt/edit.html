@@ -115,7 +115,12 @@
   <script src="{% static 'mapa_projekty.js' %}"></script>
   <script>
     window.addEventListener("DOMContentLoaded", function() {
+      {% if edit_geom %}
       global_map_can_edit = true;
+      {% else %}
+      global_map_can_edit = false;
+      button_map_lock.disable();
+      {% endif %}
       if (document.getElementById("id_coordinate_x2").value > 1) {
           console.log("Adding point to map.")
           addPointOnLoad(document.getElementById("id_coordinate_x2").value, document.getElementById("id_coordinate_x1").value,  '{% trans "mapa.lokalizaceProjektu" %}',"{{projekt.ident_cely}}", "{{projekt.stav}}");

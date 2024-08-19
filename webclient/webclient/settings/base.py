@@ -114,6 +114,18 @@ DATABASES = {
             'options': '-c statement_timeout=90000',         
         },
     },
+    "urgent": {
+        "ENGINE": "django_prometheus.db.backends.postgis",
+        "NAME": get_secret("DB_NAME"),
+        "USER": get_secret("DB_USER"),
+        "PASSWORD": get_secret("DB_PASS"),
+        "HOST": get_secret("DB_HOST"),
+        "PORT": get_secret("DB_PORT"),
+        "DISABLE_SERVER_SIDE_CURSORS": True,
+        'OPTIONS': {
+            'options': '-c statement_timeout=90000',
+        },
+    },
 }
 
 DEBUG = False

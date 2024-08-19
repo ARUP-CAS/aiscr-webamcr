@@ -31,7 +31,8 @@ services:
       - redis
       - celery_worker
       - celery_beat
-
+    sysctls:
+      - net.core.somaxconn=1024
 
   proxy:
     image: docker.io/library/test_proxy

@@ -18,7 +18,7 @@ from xml_generator.models import check_if_task_queued, UPDATE_REDIS_SNAPSHOT
 logger = logging.getLogger(__name__)
 
 
-@receiver(pre_save, sender=Dokument)
+@receiver(pre_save, sender=Dokument, weak=False)
 def create_dokument_vazby(sender, instance: Dokument, **kwargs):
     """
     Metóda pro vytvoření historických vazeb dokumentu.
@@ -53,7 +53,7 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
                  extra={"ident_cely": instance.ident_cely})
 
 
-@receiver(pre_save, sender=DokumentCast)
+@receiver(pre_save, sender=DokumentCast, weak=False)
 def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
     """
     Metóda pro vytvoření komponent vazeb dokument části.
@@ -72,7 +72,7 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
     logger.debug("dokument.signals.create_dokument_cast_vazby.end", extra={"record_pk": instance.pk})
 
 
-@receiver(post_save, sender=Dokument)
+@receiver(post_save, sender=Dokument, weak=False)
 def dokument_save_metadata(sender, instance: Dokument, **kwargs):
     logger.debug("dokument.signals.dokument_save_metadata.startdokument.signals.dokument_save_metadata.start",
                  extra={"ident_cely": instance.ident_cely, "record_pk": instance.pk,
@@ -106,7 +106,7 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
                                                                        "record_pk": instance.pk})
 
 
-@receiver(post_save, sender=Let)
+@receiver(post_save, sender=Let, weak=False)
 def let_save_metadata(sender, instance: Let, **kwargs):
     logger.debug("dokument.signals.let_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
@@ -117,7 +117,7 @@ def let_save_metadata(sender, instance: Let, **kwargs):
     logger.debug("dokument.signals.let_save_metadata.no_action", extra={"ident_cely": instance.ident_cely})
 
 
-@receiver(post_delete, sender=Dokument)
+@receiver(post_delete, sender=Dokument, weak=False)
 def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
     logger.debug("dokument.signals.dokument_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
@@ -148,7 +148,7 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
                  extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
 
 
-@receiver(post_delete, sender=Let)
+@receiver(post_delete, sender=Let, weak=False)
 def let_delete_repository_container(sender, instance: Let, **kwargs):
     logger.debug("dokument.signals.let_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})
@@ -158,7 +158,7 @@ def let_delete_repository_container(sender, instance: Let, **kwargs):
                  extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid")})
 
 
-@receiver(post_save, sender=DokumentCast)
+@receiver(post_save, sender=DokumentCast, weak=False)
 def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **kwargs):
     extra = {"dokument_cast": instance.pk, "signal_created": created}
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra=extra)
@@ -192,7 +192,7 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
     logger.debug("dokument.signals.dokument_cast_save_metadata.end", extra=extra)
 
 
-@receiver(post_delete, sender=DokumentCast)
+@receiver(post_delete, sender=DokumentCast, weak=False)
 def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs):
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra={"pk": instance.pk})
     fedora_transaction: FedoraTransaction = instance.active_transaction
@@ -219,7 +219,7 @@ def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs)
                                                                             "transaction": fedora_transaction})
 
 
-@receiver(post_save, sender=Tvar)
+@receiver(post_save, sender=Tvar, weak=False)
 def tvar_save(sender, instance: Tvar, created, **kwargs):
     logger.debug("dokument.signals.tvar_save.start", extra={"pk": instance.pk})
     if instance.dokument and instance.active_transaction and not instance.suppress_signal:
@@ -229,7 +229,7 @@ def tvar_save(sender, instance: Tvar, created, **kwargs):
     logger.debug("dokument.signals.tvar_save.end", extra={"pk": instance.pk, "transaction": transaction})
 
 
-@receiver(post_delete, sender=Tvar)
+@receiver(post_delete, sender=Tvar, weak=False)
 def tvar_delete(sender, instance: Tvar, **kwargs):
     logger.debug("dokument.signals.tvar_delete.start", extra={"pk": instance.pk})
     if instance.dokument:

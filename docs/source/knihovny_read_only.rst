@@ -68,7 +68,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD
      - https://github.com/Anorov/PySocks
    * - PyYAML
-     - 6.0.1
+     - 6.0.2
      - MIT License
      - https://pyyaml.org/
    * - amqp
@@ -80,7 +80,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/django/asgiref/
    * - attrs
-     - 23.2.0
+     - 24.2.0
      - MIT License
      - https://www.attrs.org/en/stable/changelog.html
    * - beautifulsoup4
@@ -92,7 +92,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/billiard
    * - black
-     - 24.4.2
+     - 24.8.0
      - MIT License
      - https://github.com/psf/black
    * - celery
@@ -136,7 +136,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.6.0
+     - 7.6.1
      - Apache Software License
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
@@ -204,7 +204,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/django-extensions/django-extensions
    * - django-filter
-     - 24.2
+     - 24.3
      - BSD License
      - https://github.com/carltongibson/django-filter/tree/main
    * - django-libsass
@@ -296,7 +296,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://pycqa.github.io/isort/
    * - kombu
-     - 5.3.7
+     - 5.4.0
      - BSD License
      - https://kombu.readthedocs.io
    * - libsass
@@ -352,7 +352,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.40
+     - 8.13.42
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -436,7 +436,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://pythonhosted.org/pytz
    * - pyzstd
-     - 0.16.0
+     - 0.16.1
      - BSD License
      - https://github.com/Rogdham/pyzstd
    * - rarfile
@@ -448,7 +448,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rcssmin/
    * - redis
-     - 5.0.7
+     - 5.0.8
      - MIT License
      - https://github.com/redis/redis-py
    * - reportlab
@@ -484,7 +484,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 2.5
+     - 2.6
      - MIT License
      - https://github.com/facelessuser/soupsieve
    * - sqlparse
@@ -508,7 +508,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
-     - 0.26.0
+     - 0.26.2
      - Apache Software License; MIT License
      - https://github.com/python-trio/trio
    * - trio-websocket
