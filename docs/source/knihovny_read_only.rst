@@ -484,7 +484,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 2.5
+     - 2.6
      - MIT License
      - https://github.com/facelessuser/soupsieve
    * - sqlparse
@@ -508,7 +508,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
-     - 0.26.1
+     - 0.26.2
      - Apache Software License; MIT License
      - https://github.com/python-trio/trio
    * - trio-websocket

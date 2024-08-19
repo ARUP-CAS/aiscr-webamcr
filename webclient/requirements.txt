@@ -31,11 +31,11 @@ django-prometheus==2.3.1
 python-logstash==0.4.8
 djangorestframework==3.15.2
 djangorestframework-xml==2.0.0
-lxml==5.2.2
+lxml==5.3.0
 python-magic==0.4.27
 pdf2image==1.17.0
-phonenumbers==8.13.42
-py7zr==0.21.0
+phonenumbers==8.13.43
+py7zr==0.22.0
 rarfile==4.2
 django-cacheops==7.0.2
 django-model-utils==4.5.1
