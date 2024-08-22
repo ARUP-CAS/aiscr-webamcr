@@ -465,7 +465,7 @@ def edit(request, ident_cely):
     edit_geom=True
     if request.user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
         if projekt.stav == PROJEKT_STAV_PRIHLASENY:
-            edit_fields = ["vedouci_projektu", "uzivatelske_oznaceni", "kulturni_pamatka", "kulturni_pamatka_cislo", "kulturni_pamatka_popis","hlavni_katastr", "coordinate_x1", "coordinate_x2"]
+            edit_fields = ["vedouci_projektu", "uzivatelske_oznaceni", "kulturni_pamatka", "kulturni_pamatka_cislo", "kulturni_pamatka_popis","hlavni_katastr", "coordinate_x1", "coordinate_x2", "katastry"]
         elif projekt.stav in [PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU]:
             edit_fields =  ["uzivatelske_oznaceni"]
         if projekt.stav>=PROJEKT_STAV_ZAHAJENY_V_TERENU:
