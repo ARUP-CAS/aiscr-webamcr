@@ -191,3 +191,19 @@ class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QueryS
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
         return qs
+
+def heslar_list(heslo_nazev,filter={}):
+    hesla = Heslar.objects.filter(nazev_heslare=heslo_nazev)
+    hesla_filtered = hesla.filter(**filter)
+    if get_language() == "en":
+        return list(
+            hesla_filtered.values_list(
+                "id", "heslo_en"
+            )
+        )
+    else:
+        return list(
+            hesla_filtered.values_list(
+                "id", "heslo"
+            )
+        )

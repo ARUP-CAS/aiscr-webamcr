@@ -157,12 +157,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         Heslar,
         through="DokumentJazyk",
         related_name="dokumenty_jazyku",
+        limit_choices_to={"nazev_heslare": HESLAR_JAZYK}
     )
     posudky = models.ManyToManyField(
         Heslar,
         through="DokumentPosudek",
         related_name="dokumenty_posudku",
         blank=True,
+        limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP}
     )
     osoby = models.ManyToManyField(
         Osoba,

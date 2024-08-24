@@ -3,6 +3,7 @@ from typing import Union, Optional
 from distlib.util import cached_property
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
+from django.utils.translation import get_language
 
 from core.constants import (
     CESKY,
@@ -108,9 +109,19 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         if self.organizace:
             retezec += f"{self.organizace})"
         return retezec
+    
+    @cached_property
+    def user_str_en(self):
+        retezec = f"{self.last_name}, {self.first_name} ({self.ident_cely}, "
+        if self.organizace:
+            retezec += f"{self.organizace})"
+        return retezec
 
     def __str__(self):
-        return self.user_str
+        if get_language() == "en":
+            return self.user_str_en
+        else:
+            return self.user_str
 
     def moje_spolupracujici_organizace(self):
         badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
@@ -352,7 +363,18 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
             super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.nazev_zkraceny
+        if get_language() == "en":
+            if self.nazev_zkraceny_en:
+                return self.nazev_zkraceny_en
+            elif self.nazev_zkraceny:
+                return self.nazev_zkraceny
+            else:
+                return ""
+        else:
+            if self.nazev_zkraceny:
+                return self.nazev_zkraceny
+            else:
+                return ""
 
     class Meta:
         db_table = "organizace"
