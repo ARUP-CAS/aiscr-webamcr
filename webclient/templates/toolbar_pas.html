@@ -6,7 +6,7 @@
       <a href="{% url 'pas:index' %}"><span class="material-icons">location_on</span><span class="app-controls-button-text">{% trans "templates.toolbarPas.toolbarName" %}</span></a>
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
-      {{ sn.ident_cely }}
+      {{ sn.ident_cely }}{% if show.backtoprojekt %}<span class="app-pipe"></span><a href="{% url 'projekt:detail' sn.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarPas.backToProjekt.label" %}</a>{% endif %}
     </div>
   </div>
   {% if showcontrols %}
