@@ -1,5 +1,5 @@
 import logging
-
+from dateutil.relativedelta import relativedelta
 from cacheops import invalidate_model
 from django.db import transaction
 
@@ -51,7 +51,7 @@ def change_termin_odevzdani_NZ(sender, instance, **kwargs):
             logger.debug("projekt.signals.change_termin_odevzdani_NZ.changed_automatic_date",
                          extra={"ident_cely": instance.ident_cely})
             instance.termin_odevzdani_nz = instance.datum_ukonceni
-            instance.termin_odevzdani_nz = instance.termin_odevzdani_nz.replace(year=instance.termin_odevzdani_nz.year + 3)
+            instance.termin_odevzdani_nz = instance.termin_odevzdani_nz + relativedelta(years=3)
 
 
 def create_projekt_vazby(sender, instance, **kwargs):
