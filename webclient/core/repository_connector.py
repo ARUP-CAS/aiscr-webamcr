@@ -1103,6 +1103,10 @@ class FedoraTransaction:
         i = app.control.inspect(["worker1@amcr"])
         queues = (i.scheduled(), i.active(),)
         for queue in queues:
+            if queue is None:
+                logger.error("core_repository_connector.FedoraTransaction.call_digiarchiv_update.error",
+                                 extra={"i": i,"queues": queues })
+                break
             for queue_name, queue_tasks in queue.items():
                 for task in queue_tasks:
                     if "request" in task and "call_digiarchiv_update_task" in task.get("request").get("name").lower():

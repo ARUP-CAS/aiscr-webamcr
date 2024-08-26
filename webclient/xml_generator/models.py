@@ -16,6 +16,10 @@ def check_if_task_queued(class_name, pk, task_name):
     i = app.control.inspect(["worker1@amcr"])
     queues = (i.scheduled(),)
     for queue in queues:
+        if queue is None:
+            logger.error("xml_generator.models.ModelWithMetadata.check_if_task_queued.error",
+                                 extra={"class_name": class_name, "pk": pk, "i": i,"queues": queues })
+            return False
         for queue_name, queue_tasks in queue.items():
             for task in queue_tasks:
                 if "request" in task and task_name in task.get("request").get("name").lower() \
