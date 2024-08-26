@@ -1097,11 +1097,16 @@ class FedoraTransaction:
     def call_digiarchiv_update():
         from cron.tasks import call_digiarchiv_update_task
         logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.start")
-        app = Celery("webclient")
-        app.config_from_object("django.conf:settings", namespace="CELERY")
-        app.autodiscover_tasks()
-        i = app.control.inspect(["worker1@amcr"])
-        queues = (i.scheduled(), i.active(),)
+        try:
+            app = Celery("webclient")
+            app.config_from_object("django.conf:settings", namespace="CELERY")
+            app.autodiscover_tasks()
+            i = app.control.inspect(["worker1@amcr"])
+            queues = (i.scheduled(), i.active(),)
+        except Exception as e:
+            logger.error("core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_error",
+                                 extra={"Exception": e, "app": app })
+            call_digiarchiv_update_task.apply_async()
         for queue in queues:
             if queue is None:
                 logger.error("core_repository_connector.FedoraTransaction.call_digiarchiv_update.error",
