@@ -43,11 +43,16 @@ map.on('click', function (e) {
                     point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0], point_global_WGS84[1]));
                     point_leaf= [...point_global_WGS84].reverse();
                     if (document.getElementById('visible_ss_combo').value == 1) {
-                        document.getElementById('visible_x1').value = point_global_WGS84[0]
-                        document.getElementById('visible_x2').value = point_global_WGS84[1]
-                    } else if (document.getElementById('visible_ss_combo').value == 2) {
-                        document.getElementById('visible_x1').value = -1*Math.abs(point_global_JTSK[0])
-                        document.getElementById('visible_x2').value = -1*Math.abs(point_global_JTSK[1])
+                        document.getElementById('visible_x1').value = point_global_WGS84[0];
+                        document.getElementById('visible_x2').value = point_global_WGS84[1];
+                    }
+                    else if (document.getElementById('visible_ss_combo').value == 3) {
+                        document.getElementById('visible_x1').value = degToDmsString(point_global_WGS84[0]);
+                        document.getElementById('visible_x2').value = degToDmsString(point_global_WGS84[1]);
+                    }
+                    else if (document.getElementById('visible_ss_combo').value == 2) {
+                        document.getElementById('visible_x1').value = -1*Math.abs(point_global_JTSK[0]);
+                        document.getElementById('visible_x2').value = -1*Math.abs(point_global_JTSK[1]);
                     }
                     replace_coor();
                     document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
@@ -181,7 +186,23 @@ var is_in_czech_republic = (x1, x2) => {
             poi_sugest.clearLayers();
             return false
         }
-    } else {
+    } 
+    else if (document.getElementById('visible_ss_combo').value == 3) {
+        x1m=dmsStringToDeg(x1);
+        x2m=dmsStringToDeg(x2);
+        if (x1m >= 12.2401111182 && x1m <= 18.8531441586 && x2m >= 48.5553052842 && x2m <= 51.1172677679) {
+            disableSaveButton(false)
+            return true;
+        } else {
+            debugText("Coordinates not inside CR");
+            disableSaveButton(true)
+            //alert("Zadané souřadnice nejsou v ČR 1")
+            point_global_WGS84 = [0, 0];
+            poi_sugest.clearLayers();
+            return false
+        }
+    } 
+    else {
         if (x1 >= -889110.16 && x1 <= -448599.79 && x2 >= -1231915.96 && x2 <= -892235.44) {
             disableSaveButton(false)
             return true
@@ -211,7 +232,14 @@ let set_numeric_coordinates = async (push=false,addComa=false) => {
         if (document.getElementById('visible_ss_combo').value == 1) {
             point_global_WGS84 = amcr_static_coordinate_precision_wgs84([cor_x1, cor_x2]);
             point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(cor_x1, cor_x2), false);
-        } else if (document.getElementById('visible_ss_combo').value == 2) {
+        }
+        else if (document.getElementById('visible_ss_combo').value == 3) {
+            cor_x1=dmsStringToDeg(cor_x1);
+            cor_x2=dmsStringToDeg(cor_x2);
+            point_global_WGS84 = amcr_static_coordinate_precision_wgs84([cor_x1, cor_x2]);
+            point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(cor_x1, cor_x2), false);
+        }
+        else if (document.getElementById('visible_ss_combo').value == 2) {
             point_global_JTSK = amcr_static_coordinate_precision_jtsk([cor_x1, cor_x2], false)
             point_global_WGS84 = amcr_static_coordinate_precision_wgs84(convertToWGS84(cor_x1, cor_x2));
         }
@@ -233,6 +261,35 @@ var switch_coordinate_system = () => {
     replace_coor();
 };
 
+var dmsStringToDeg = (dmsString) => {
+    if (dmsString.search('°')==-1)
+        return parseFloat(dmsString);
+    const dmsRegex = /(\d+)°\s*(\d+)?'?\s*([\d.,]+)?"?/;
+    const matches = dmsString.match(dmsRegex);
+    
+    if (!matches) {
+        throw new Error('Neplatný formát DMS');
+    }
+    
+    const degrees = parseFloat(matches[1]);  // Stupně jsou vždy povinné
+    const minutes = matches[2] ? parseFloat(matches[2]) : 0;  // Pokud nejsou zadané minuty, použijeme 0
+    const seconds = matches[3] ? parseFloat(matches[3].replace(',', '.')) : 0;  // Pokud nejsou zadané sekundy, použijeme 0
+
+    // Převod na desetinné stupně
+    const decimalDegrees = degrees + (minutes / 60) + (seconds / 3600);
+    return decimalDegrees;
+}
+
+var degToDmsString = (deg) => {
+    const degrees = Math.floor(deg);
+    const minutesFull = (deg - degrees) * 60;
+    const minutes = Math.floor(minutesFull);
+    const seconds = (minutesFull - minutes) * 60;
+
+    // Formátování do řetězce
+    return `${degrees}°${minutes}'${seconds.toFixed(4)}"`;
+}
+
 var switch_coor_system = (new_system) => {
     debugText("switch system: " + new_system)
      
@@ -245,7 +302,18 @@ var switch_coor_system = (new_system) => {
             document.getElementById('visible_x2').readOnly = false;
        
         }
-    } else if (new_system >1) {
+    }
+    else if (new_system == 3 ) {
+        document.getElementById('id_coordinate_system').value="4326";
+        if(point_global_WGS84[0] != 0){
+            document.getElementById('visible_x1').value = degToDmsString(point_global_WGS84[0])
+            document.getElementById('visible_x2').value = degToDmsString(point_global_WGS84[1])
+            document.getElementById('visible_x1').readOnly = false;
+            document.getElementById('visible_x2').readOnly = false;
+        
+        }
+    } 
+    else if (new_system == 2) {
         document.getElementById('id_coordinate_system').value="5514";   
          if (point_global_JTSK[0] != 0) { 
             if(Math.abs(point_global_JTSK[0])<3000000){
@@ -301,7 +369,12 @@ function showPosition(position) {
     if (document.getElementById('visible_ss_combo').value == 1) {
         document.getElementById('visible_x1').value = point_global_WGS84[0]
         document.getElementById('visible_x2').value = point_global_WGS84[1]
-    } else if (document.getElementById('visible_ss_combo').value == 2) {
+    }
+    else if (document.getElementById('visible_ss_combo').value == 3) {
+        document.getElementById('visible_x1').value = degToDmsString(point_global_WGS84[0]);
+        document.getElementById('visible_x2').value = degToDmsString(point_global_WGS84[1]);
+    }
+    else if (document.getElementById('visible_ss_combo').value == 2) {
         document.getElementById('visible_x1').value = -1*Math.abs(point_global_JTSK[0])
         document.getElementById('visible_x2').value = -1*Math.abs(point_global_JTSK[1])
     }
