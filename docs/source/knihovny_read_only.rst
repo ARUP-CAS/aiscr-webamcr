@@ -56,7 +56,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.0.7
+     - 5.0.8
      - BSD License
      - https://www.djangoproject.com/
    * - PyRTF3
@@ -304,7 +304,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://sass.github.io/libsass-python/
    * - lxml
-     - 5.2.2
+     - 5.3.0
      - BSD License
      - https://lxml.de/
    * - multivolumefile
@@ -320,7 +320,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.0.1
+     - 2.1.0
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -352,7 +352,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.42
+     - 8.13.43
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -392,7 +392,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Library or Lesser General Public License (LGPL)
      - https://psycopg.org/
    * - py7zr
-     - 0.21.0
+     - 0.22.0
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://py7zr.readthedocs.io/
    * - pybcj

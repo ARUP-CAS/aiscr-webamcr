@@ -6,6 +6,13 @@ export DJANGO_SETTINGS_MODULE=webclient.settings.production
 
 sudo cron
 
+pgq() {
+  output=$(psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '$DB_NAME' AND pid <> pg_backend_pid();")
+  text=$(echo "$output" | tail -n 1)
+  cislo=$(grep -o '[0-9]\+' <<< "$text")
+  echo $cislo
+}
+
 CONFIG_FILE="/run/secrets/db_conf"
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "Configuration file not found: $CONFIG_FILE"
@@ -32,9 +39,18 @@ if [ "$DB_EXISTS" = "1" ]; then
     echo "Database already exists: $NEW_DB_NAME"
 else
   echo "Creating new database: $NEW_DB_NAME"
-  psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c  "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '$DB_NAME' AND pid <> pg_backend_pid();" > /dev/null
-          
-  psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "CREATE DATABASE \"$NEW_DB_NAME\" WITH TEMPLATE $DB_NAME;"
+  #psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c  "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '$DB_NAME' AND pid <> pg_backend_pid();" > /dev/null
+  counter=0
+  cislo=$(pgq)
+  echo "Number of using database: $cislo"
+  while [[ $cislo -ne 0 && "$counter" -lt 10 ]]; do
+    cislo=$(pgq)
+    echo "Number of using database: $cislo"
+    counter=$((counter+1))
+    echo "Counter: $counter"
+  done
+  echo "Number of iterations: $counter"
+  psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "CREATE DATABASE \"$NEW_DB_NAME\" WITH TEMPLATE $DB_NAME strategy FILE_COPY;"
   if [ $? -eq 0 ]; then
       echo "New database created successfully: $NEW_DB_NAME"
   else
