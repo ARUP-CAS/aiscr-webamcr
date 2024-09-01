@@ -56,7 +56,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.0.8
+     - 5.1
      - BSD License
      - https://www.djangoproject.com/
    * - PyRTF3
@@ -100,7 +100,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://docs.celeryq.dev/
    * - certifi
-     - 2024.7.4
+     - 2024.8.30
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cfgv
@@ -144,7 +144,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/django-crispy-forms/crispy-bootstrap4
    * - cron-descriptor
-     - 1.4.3
+     - 1.4.5
      - MIT License
      - https://github.com/Salamek/cron-descriptor
    * - defusedxml
@@ -176,7 +176,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://github.com/Suor/django-cacheops
    * - django-celery-beat
-     - 2.6.0
+     - 2.7.0
      - BSD License
      - https://github.com/celery/django-celery-beat
    * - django-celery-results
@@ -284,7 +284,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/pre-commit/identify
    * - idna
-     - 3.7
+     - 3.8
      - BSD License
      - https://github.com/kjd/idna
    * - inflate64
@@ -352,7 +352,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.43
+     - 8.13.44
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -404,7 +404,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License; Public Domain
      - https://www.pycryptodome.org
    * - pyparsing
-     - 3.1.2
+     - 3.1.4
      - MIT License
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
@@ -468,7 +468,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
-     - 3.19.2
+     - 3.19.3
      - Academic Free License (AFL); MIT License
      - https://github.com/simplejson/simplejson
    * - six
