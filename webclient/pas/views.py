@@ -1044,6 +1044,7 @@ def get_detail_template_shows(sn, user):
         "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_pas, user, sn.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_pas, user, sn.ident_cely),
         "soubor_nahradit": check_permissions(p.actionChoices.soubor_nahradit_pas, user, sn.ident_cely),
+        "backtoprojekt": user.is_archeolog_or_more
     }
     return show
 
