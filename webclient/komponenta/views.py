@@ -37,7 +37,7 @@ from heslar.hesla import (
     HESLAR_PREDMET_SPECIFIKACE,
 )
 from heslar.models import Heslar
-from heslar.views import heslar_12
+from heslar.views import heslar_12, heslar_list
 from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta, KomponentaAktivita
@@ -102,11 +102,7 @@ def detail(request, typ_vazby, ident_cely):
         )
 
         druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
-        specifikce_predmetu_choices = list(
-            Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
-                "id", "heslo"
-            )
-        )
+        specifikce_predmetu_choices = heslar_list(HESLAR_PREDMET_SPECIFIKACE)
         NalezPredmetFormset = inlineformset_factory(
             Komponenta,
             NalezPredmet,
