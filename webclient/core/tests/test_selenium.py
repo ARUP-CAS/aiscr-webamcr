@@ -62,7 +62,7 @@ class WaitForPageLoad():
                 time.sleep(0.5)
 
 #@unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
-@override_settings(DEBUG=True)
+#@override_settings(DEBUG=True)
 class BaseSeleniumTestClass(StaticLiveServerTestCase):   
     #port = 5678   
     host = '0.0.0.0'
@@ -163,7 +163,7 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
             prod_cursor.execute(f"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{connection.settings_dict['NAME']}' AND pid <> pg_backend_pid();")
             prod_cursor.execute(f"DROP DATABASE IF EXISTS {connection.settings_dict['NAME']};")
             prod_cursor.execute(f"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{settings.TEST_DATABASE_NAME}' AND pid <> pg_backend_pid();")
-            prod_cursor.execute(f"CREATE DATABASE {connection.settings_dict['NAME']} WITH TEMPLATE {settings.TEST_DATABASE_NAME};")
+            prod_cursor.execute(f"CREATE DATABASE {connection.settings_dict['NAME']} WITH TEMPLATE {settings.TEST_DATABASE_NAME} strategy FILE_COPY;")
             prod_conn.commit()
             invalidate_all()
         except Exception as err:

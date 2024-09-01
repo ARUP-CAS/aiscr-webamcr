@@ -43,13 +43,14 @@ else
   counter=0
   cislo=$(pgq)
   echo "Number of using database: $cislo"
-  while [[ $cislo -ne 0 && $counter -lt 10 ]]; do
+  while [[ $cislo -ne 0 && "$counter" -lt 10 ]]; do
     cislo=$(pgq)
     echo "Number of using database: $cislo"
-    ((counter++))
+    counter=$((counter+1))
+    echo "Counter: $counter"
   done
   echo "Number of iterations: $counter"
-  psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "CREATE DATABASE \"$NEW_DB_NAME\" WITH TEMPLATE $DB_NAME;"
+  psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "CREATE DATABASE \"$NEW_DB_NAME\" WITH TEMPLATE $DB_NAME strategy FILE_COPY;"
   if [ $? -eq 0 ]; then
       echo "New database created successfully: $NEW_DB_NAME"
   else
