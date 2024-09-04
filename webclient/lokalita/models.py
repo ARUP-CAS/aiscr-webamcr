@@ -83,11 +83,13 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         """
         Metóda na kontrolu prerekvizit pred archivací:
 
+            kontrola jako před odesláním a navíc
+
             všechny pripojené dokumenty jsou archivované.
 
             všechny DJ mají potvrzený pian
         """
-        result = []
+        result = self.check_pred_odeslanim()
         for dc in self.archeologicky_zaznam.casti_dokumentu.all():
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
                 result.append(
