@@ -21,6 +21,7 @@ from heslar.hesla import (
     HESLAR_JAZYK,
     HESLAR_LETFOTO_TVAR,
     HESLAR_POSUDEK_TYP, HESLAR_LICENCE,
+    HESLAR_POSUDEK_TYP_KAT,
 )
 from heslar.hesla_dynamicka import (
     ALLOWED_DOKUMENT_TYPES,
@@ -31,7 +32,7 @@ from heslar.hesla_dynamicka import (
 from heslar.models import Heslar
 from uzivatel.models import Osoba
 from core.forms import BaseFilterForm
-from heslar.views import heslar_list
+from heslar.views import heslar_12, heslar_list
 
 logger = logging.getLogger(__name__)
 
@@ -413,6 +414,7 @@ class EditDokumentForm(forms.ModelForm):
         super(EditDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
+        self.fields["posudky"].choices = heslar_12(HESLAR_POSUDEK_TYP, HESLAR_POSUDEK_TYP_KAT)[1:]
         if not readonly:
             self.fields["typ_dokumentu"].choices = [("", "")] + heslar_list(HESLAR_DOKUMENT_TYP,{"id__in":ALLOWED_DOKUMENT_TYPES})
             autori_div = Div(
