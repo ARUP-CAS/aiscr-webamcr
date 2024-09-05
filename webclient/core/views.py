@@ -13,7 +13,6 @@ from rosetta import get_version as get_rosetta_version
 from rosetta.access import can_translate_language
 from polib import pofile
 from django_prometheus.exports import ExportToDjangoView
-
 import pandas
 from PIL import Image
 
@@ -28,7 +27,8 @@ from django.views.decorators.csrf import csrf_protect
 from django.views import View
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
-
+from django.views.i18n import set_language
+from django.core.cache import cache
 
 from django.conf import settings
 from django.contrib import messages
@@ -1389,3 +1389,21 @@ class ApplicationRestartView(LoginRequiredMixin, View):
             referer = fallback_url
         # Redirect to referer or fallback URL
         return redirect(referer)
+
+def set_language_with_cache(request):
+    prefix = 'maintenance_cache_key.'
+    redis_client = cache._cache.get_client()
+    cursor = 0
+    matched_keys = []
+
+    while True:
+        cursor, keys = redis_client.scan(cursor, match=f'*{prefix}*')
+        
+        matched_keys.extend([key.decode('utf-8') for key in keys])
+        
+        if cursor == 0:
+            break
+
+    cache.delete(matched_keys[0].split(":")[-1])
+    
+    return set_language(request)
