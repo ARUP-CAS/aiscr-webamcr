@@ -102,7 +102,7 @@
   {% block sidebar %}{% endblock %}
   <div id="app-page-wrapper">
     {% block infobar%}
-      {% cache 600 maintenance %}
+      {% cache 600 maintenance_cache_key maintenance %}
       {% get_maintenance as action %}
       {% if action and "accounts" not in request.path %}
       <div class="maintenance">
@@ -201,7 +201,7 @@
       $('#czech').attr("disabled", "disabled"); 
       $.ajax({
         type: "POST",
-        url: "{% url 'set_language' %}",
+        url: "{% url 'core:set_language' %}",
         data: {'language': 'en', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
         success: function(response) {
              location.reload();
@@ -216,7 +216,7 @@
       $('#english').attr("disabled", "disabled"); 
       $.ajax({
         type: "POST",
-        url: "{% url 'set_language' %}",
+        url: "{% url 'core:set_language' %}",
         data: {'language': 'cs', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
         success: function(response) {
              location.reload();
