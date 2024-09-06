@@ -1619,7 +1619,7 @@ def katastr_text_to_id(request):
         return request.POST.copy()
     try:
         kod=hlavni_katastr[hlavni_katastr.find(';')+1:hlavni_katastr.find(')')].strip()
-    except Exception as e:
+    except (ValueError, IndexError) as e:
         logger.warning("projekt.views.katastr_text_to_id.wrong_format",
                          extra={"hlavni_katastr": hlavni_katastr, "error":e })
         return request.POST.copy()
