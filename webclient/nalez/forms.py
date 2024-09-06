@@ -46,8 +46,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                 label=_("nalez.forms.nalezObjekt.druh.label"),
                 widget=forms.Select(
                     choices=druh_objekt_choices,
-                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                           "data-container": ".content-with-table-responsive-container"},
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
                 ),
                 help_text=_("nalez.forms.nalezObjekt.druh.tooltip"),
             )
@@ -55,8 +54,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                 label=_("nalez.forms.nalezObjekt.specifikace.label"),
                 widget=forms.Select(
                     choices=specifikace_objekt_choices,
-                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                           "data-container": ".content-with-table-responsive-container"},
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
                 ),
                 help_text=_("nalez.forms.nalezObjekt.specifikace.tooltip"),
             )
@@ -109,8 +107,7 @@ def create_nalez_predmet_form(
                 label=_("nalez.forms.nalezPredmet.druh.label"),
                 widget=forms.Select(
                     choices=druh_projekt_choices,
-                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                           "data-container": ".content-with-table-responsive-container"},
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
                 ),
                 help_text=_("nalez.forms.nalezPredmet.druh.tooltip"),
             )
