@@ -49,7 +49,7 @@
             {% elif field|is_file and use_custom_control  %}
                 {% include 'bootstrap4/layout/field_file.html' %}
             {% else %}
-                <div{% if not "akce_vedouci" in field.id_for_label and  "vedouci" in field.id_for_label and not form.readonly%} class="input-group"{% elif field_class %}class="{{ field_class }} "{% endif %}>
+                <div{% if not "akce_vedouci" in field.id_for_label and  "vedouci" in field.id_for_label and not  "vedouci_projektu" in field.id_for_label and not form.readonly%} class="input-group"{% elif field_class %}class="{{ field_class }} "{% endif %}>
                     {% if field|is_file %}
                         {% if field.errors %}                 
                             {% crispy_field field 'class' 'form-control-file is-invalid' %}
@@ -62,7 +62,7 @@
                         {% else %}
                             {% crispy_field field 'class' 'form-control' %}
                         {% endif %}
-                        {% if not "akce_vedouci" in field.id_for_label and "vedouci" in field.id_for_label and not form.readonly%}
+                        {% if not "akce_vedouci" in field.id_for_label and "vedouci" in field.id_for_label and not  "vedouci_projektu" in field.id_for_label and not form.readonly%}
                         <div class="input-group-append{% if active %} active{% endif %}">
                             <span class="input-group-text"><button id="create-vedouci-{{field.id_for_label}}" ref="{{field.id_for_label}}" class="btn btn-sm app-btn-in-form create-vedouci" type="button" name="button"><span class="material-icons">add</span></button></span>
                         </div>
