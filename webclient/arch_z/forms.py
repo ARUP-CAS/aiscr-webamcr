@@ -77,8 +77,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
                         attrs={
                             "class": "selectpicker",
                             "data-multiple-separator": "; ",
-                            "data-live-search": "true",
-                            "data-container": ".content-with-table-responsive-container"
+                            "data-live-search": "true"
                         }
                     ),
                 }

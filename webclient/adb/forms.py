@@ -62,11 +62,9 @@ class CreateADBForm(forms.ModelForm):
         }
         widgets = {
             "typ_sondy": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ",
-                                             "data-live-search": "true",
-                                             "data-container": ".content-with-table-responsive-container"}),
+                                             "data-live-search": "true"}),
             "podnet": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ",
-                                          "data-live-search": "true",
-                                          "data-container": ".content-with-table-responsive-container"}),
+                                          "data-live-search": "true"}),
             "uzivatelske_oznaceni_sondy": forms.TextInput(),
             "trat": forms.TextInput(),
             "cislo_popisne": forms.TextInput(),
