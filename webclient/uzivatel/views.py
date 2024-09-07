@@ -18,6 +18,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import get_language
 from django.views.decorators.http import require_http_methods
 from django.views.generic.edit import UpdateView
 from django_registration.backends.activation.views import RegistrationView
@@ -72,7 +73,10 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
     """
 
     def get_result_label(self, result):
-        return f"{result.last_name}, {result.first_name} ({result.ident_cely}, {result.organizace.nazev_zkraceny})"
+        if get_language() == "en":
+            return f"{result.last_name}, {result.first_name} ({result.ident_cely}, {result.organizace.nazev_zkraceny_en})"    
+        else:
+            return f"{result.last_name}, {result.first_name} ({result.ident_cely}, {result.organizace.nazev_zkraceny})"
     
     def get_queryset(self):
         qs = User.objects.all().order_by("last_name")
@@ -116,7 +120,10 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
 
 class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     def get_result_label(self, result):
-        return f"{result.ident_cely} ({result.organizace.nazev_zkraceny})"
+        if get_language() == "en":
+            return f"{result.ident_cely} ({result.organizace.nazev_zkraceny_en})"
+        else:
+            return f"{result.ident_cely} ({result.organizace.nazev_zkraceny})"
     def get_queryset(self):
         qs = User.objects.all().order_by("ident_cely")
         if self.q:

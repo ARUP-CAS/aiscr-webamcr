@@ -22,7 +22,7 @@
 
 {% block content %}
   <div class="app-entity-lokalita">
-    {% include "toolbar_akce.html" with showbackdetail=False showcontrols=False type="lokalita" name=toolbar_name %}
+    {% include "toolbar_akce.html" with showbackdetail=False showcontrols=False type="lokalita" %}
     <form method="post" onsubmit="newEntitySubmitBtn.disabled = true; return true;">
       {% csrf_token %}
         {% include "lokalita/lokalita_detail_part.html" with create=True %} 
@@ -48,7 +48,7 @@
   <script>
     $(document).ready(function () {
         var sel = document.getElementById('id_katastry');
-        if (sel) {
+        if (sel && "options" in sel) {
           for(var i = 0; i < sel.options.length; i++){
             if(sel.options[i].value === ""){
             sel.remove(i--);//decrease i to preserve future index references after removal

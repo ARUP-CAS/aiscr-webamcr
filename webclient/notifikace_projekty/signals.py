@@ -11,7 +11,7 @@ from notifikace_projekty.models import Pes
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender=Pes)
+@receiver(post_save, sender=Pes, weak=False)
 def pes_save(sender, instance: Pes, **kwargs):
     if instance.user and not getattr(instance, "suppress_signal", False):
         fedora_transaction = FedoraTransaction()
@@ -20,7 +20,7 @@ def pes_save(sender, instance: Pes, **kwargs):
                      extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(pre_delete, sender=Pes)
+@receiver(pre_delete, sender=Pes, weak=False)
 def pes_delete(sender, instance: Pes, **kwargs):
     if instance.user and not getattr(instance, "suppress_signal", False):
         fedora_transaction = FedoraTransaction()

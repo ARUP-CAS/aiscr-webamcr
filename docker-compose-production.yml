@@ -29,6 +29,8 @@ services:
       - redis
       - celery_worker
       - celery_beat
+    sysctls:
+      - net.core.somaxconn=1024
 
   sidecar:
     image: eeacms/rsync:2.4

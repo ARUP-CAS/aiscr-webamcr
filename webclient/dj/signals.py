@@ -22,7 +22,7 @@ from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender=DokumentacniJednotka)
+@receiver(post_save, sender=DokumentacniJednotka, weak=False)
 def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, **kwargs):
     """
         Metóda pro vytvoření pianu z katastru arch záznamu.
@@ -100,7 +100,7 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
                         "close_transaction": instance.close_active_transaction_when_finished})
 
 
-@receiver(pre_delete, sender=DokumentacniJednotka)
+@receiver(pre_delete, sender=DokumentacniJednotka, weak=False)
 def pre_delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
     logger.debug("dj.signals.pre_delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
@@ -133,7 +133,7 @@ def pre_delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **k
     logger.debug("dj.signals.pre_delete_dokumentacni_jednotka.end", extra={"ident_cely": instance.ident_cely})
 
 
-@receiver(post_delete, sender=DokumentacniJednotka)
+@receiver(post_delete, sender=DokumentacniJednotka, weak=False)
 def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
     logger.debug("dj.signals.delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     if instance.suppress_signal:

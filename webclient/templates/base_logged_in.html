@@ -4,18 +4,7 @@
 {% load static %}
 {% load l10n %}
 {% load template_tags%}
-{% load cache %}
 
-{% block infobar%}
-{% cache 600 maintenance %}
-{% get_maintenance as action %}
-{% if action %}
-<div class="maintenance">
-  <p class="d-block px-3 py-2 text-center text-bold text-white old-bv">{% trans "base.odstavka.text" %}</p>
-</div>
-{% endif %}
-{% endcache %}
-{% endblock%}
 
 {% block sidebar %}
   <!-- {% compress css %}

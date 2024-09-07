@@ -1,5 +1,5 @@
 import logging
-
+from dateutil.relativedelta import relativedelta
 from cacheops import invalidate_model
 from django.db import transaction
 
@@ -23,7 +23,7 @@ from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 logger = logging.getLogger(__name__)
 
 
-@receiver(pre_save, sender=Projekt)
+@receiver(pre_save, sender=Projekt, weak=False)
 def projekt_pre_save(sender, instance, **kwargs):
     """
         Metóda pro volání dílčích metod pro nastavení projektu pred uložením.
@@ -51,7 +51,7 @@ def change_termin_odevzdani_NZ(sender, instance, **kwargs):
             logger.debug("projekt.signals.change_termin_odevzdani_NZ.changed_automatic_date",
                          extra={"ident_cely": instance.ident_cely})
             instance.termin_odevzdani_nz = instance.datum_ukonceni
-            instance.termin_odevzdani_nz = instance.termin_odevzdani_nz.replace(year=instance.termin_odevzdani_nz.year + 3)
+            instance.termin_odevzdani_nz = instance.termin_odevzdani_nz + relativedelta(years=3)
 
 
 def create_projekt_vazby(sender, instance, **kwargs):
@@ -72,7 +72,7 @@ def create_projekt_vazby(sender, instance, **kwargs):
         instance.soubory = sv
 
 
-@receiver(post_delete, sender=Projekt)
+@receiver(post_delete, sender=Projekt, weak=False)
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     logger.debug("projekt.signals.projekt_pre_delete.start",
                  extra={"ident_cely": instance.ident_cely, "initial_dokumenty": instance.initial_dokumenty})
@@ -100,7 +100,7 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
                  extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(post_save, sender=Projekt)
+@receiver(post_save, sender=Projekt, weak=False)
 def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
         Metóda pro odeslání emailu hlídacího psa pri založení projektu.

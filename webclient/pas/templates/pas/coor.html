@@ -223,7 +223,7 @@
             $('[readonly]').addClass("disabled");
             switch_coordinate_system();
 
-            $('input').on('input', function () {
+            $('#visible_x1, #visible_x2').on('input', function () {
 
               this.value = this.value.replace(".",",")
 

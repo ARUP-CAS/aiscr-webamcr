@@ -86,6 +86,7 @@ class LokalitaListView(SearchListView):
     typ_zmeny_lookup = ZAPSANI_AZ
 
     def init_translations(self):
+        super().init_translations()
         self.page_title = _("lokalita.views.lokalitaListView.pageTitle.text")
         self.search_sum = _("lokalita.views.lokalitaListView.pocetVyhledanych.text")
         self.pick_text = _("lokalita.views.lokalitaListView.pickText.text")
@@ -98,12 +99,9 @@ class LokalitaListView(SearchListView):
         self.hasOnlyArchive_header = _(
             "lokalita.views.lokalitaListView.header.hasOnlyArchive.text"
         )
-        self.hasOnlyPotvrdit_header = _(
-            "lokalita.views.lokalitaListView.header.hasOnlyPotvrdit.text"
-        )
+        self.hasOnlyNase_header = _("lokalita.views.lokalitaListView.hasOnlyNase_header.text")
         self.default_header = _("lokalita.views.lokalitaListView.header.default.text")
         self.toolbar_name = _("lokalita.views.lokalitaListView.toolbar.title.text")
-        self.toolbar_label = _("lokalita.views.lokalitaListView.toolbar_label.text")
 
     @staticmethod
     def rename_field_for_ordering(field: str):
@@ -230,6 +228,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         context["header"] = _("lokalita.views.lokalitaCreateView.formHeader.label")
         context["page_title"] = _("lokalita.views.lokalitaCreateView.pageTitle")
         context["submit_button"] = _("lokalita.views.lokalitaCreateView.submitButton")
+        context["toolbar_label"] = _("lokalita.views.lokalitaCreateView.toolbar_label.title")
         return context
 
     def form_valid(self, form):

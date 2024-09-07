@@ -280,7 +280,7 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
         verbose_name_plural = "Ruian katastry"
 
     def __str__(self):
-        return self.nazev + " (" + self.okres.nazev + ")"
+        return f"{self.nazev} ({self.okres.nazev}; {self.kod})"
 
     @property
     def ident_cely(self):

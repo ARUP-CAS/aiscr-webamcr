@@ -35,7 +35,6 @@ echo_dec ()
     echo "---------------------------------------"
 }
 
-
 er () {
     echo_dec "${1}"
     eval "${1}"
@@ -65,9 +64,18 @@ check_stack_exists ()
 }
 
 run_default ()
-{  
+{
+   echo_dec "# DEPLOYMENT in SWARM MODE (i.e. host has to be joined or initiated as SWARM NODE) @${start_time}"
+
+   #CHECK SWARM ACTIVATED
+   docker node ls
+   status_swarm=$?
+
+   if [ $status_swarm -ne 0 ]; then
+        echo_dec "SWARM not initiated or joined at this HOST. Exiting"
+        exit 1
+   fi
    in_args="${1}"
-   echo_dec "${msg_default_case}"
    
    #DISCLAIMER about DEFAULT CASE triggering
    if [ ${SKIP_ALL_CHECKS} -eq 0 ] && [ "${in_args}" == "" ]; then
@@ -88,60 +96,45 @@ run_default ()
 	exit
    fi
 
-   if [ -n "${include_db}" ] && [ ${include_db} -eq 1 ]; then
-      er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
-      ${cmd_deploy_base} ${compose_prod} ${stack_name} && \
-      ${cmd_deploy_base} ${compose_db} ${stack_name}" && \
-      echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
-   else
       er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
       ${cmd_deploy_base} ${compose_prod} ${stack_name}" && \
       echo_dec "$msg_success" || echo_dec "${msg_fail_build}"
-   fi
 }
 
 Help ()
 {
     cat <<EOF
     !!!MUST BE RUN from REPOSIOTRY root like =>
-    usage: ./scrips/${script_name} [-x|b|u|t <tag_name>], 
+    usage: ./scrips/${script_name} [-x|-u <tag_name>|-t <tag_name>|-i], 
     ---
        PURPOSE: manage deployment/run of production docker images build from GIT repository for AIS CR project in SWARM mode
     ----
-    DEFAULT CASE: 
-      #just call the script without any args => deploy and run all services.
-      $./scripts/${script_name}
 
     Examples on options:
     1) Remove complete docker stack, i.e all services
     
          $./scripts/${script_name} -x  
-             
-    ---
-    2) Deploy or redeploy all services in swarm mode
-       
-       $./scripts/${script_name} -b
     
-    3) Update all services with new images
+    2) Update all services with new images
        
-       $./scripts/${script_name} -u
+       $./scripts/${script_name} -u <tag_name>
 
-    4) Provide docker image tag (insted of default "latest")
+    3) Deploy or redeploy all services in swarm mode with image tag (version number or "latest")
        
        $./scripts/${script_name} -t <tag_name>
 
-    5) Deploy stack with database
+    4) Get information about available versions.
 
-       $./scripts/${script_name} -d
+       $./scripts/${script_name} -i
 
     -----
     Summnary:
     -h help
     -x remove docker stack (all services)
-    -b (re)deploy all services in swarm mode (DEFAULT CASE)
-    -u update all services using rolling approach 
-    -t provide docker image tag name <tag_name>
-    -d deploy stack with database
+    -u update all services using rolling approach with tag name <tag_name>
+    -t deploy all services in swarm mode with tag name <tag_name>
+    -i information about available versions
+
 EOF
 }
 
@@ -158,25 +151,26 @@ do_manual_checks ()
     fi
 }
 
-
 script_name=$(basename ${0})
 passed_args="$@"
-export IMAGE_TAG="latest"
+#export IMAGE_TAG="latest"
 
-while getopts ":t:" option; do
+while getopts ":t:u:" option; do
     
    case ${option} in
-        t)  #Overriding of default latest image by providing specific tag
+        t|u|d)  #Overriding of default latest image by providing specific tag
+            if [ "$OPTARG" == "latest" ]; then
+                echo "Warning: IMAGE TAG must not be 'latest'"
+                exit 1
+            fi
             export IMAGE_TAG="${OPTARG}"
             tag_passed="yes"
-            echo "OPTION: -t with ${IMAGE_TAG}"
+            echo "IMAGE TAG FOR DOCKER IMAGES IS >>>> ${IMAGE_TAG}"
             ;;
 	 *)
             ;;
     esac
 done
-
-echo "IMAGE TAG FOR DOCKER IMAGES IS >>>> ${IMAGE_TAG}"
 
 #INPUTS
 dockerhub_account="aiscr"
@@ -188,13 +182,11 @@ network_name="prod-net" #MUST MATCH WITH COMPOSE FILES!!!
 
 compose_proxy="docker-compose-production-proxy.yml"
 compose_prod="docker-compose-production.yml"
-compose_db="docker-compose-production-database.yml"
 
 msg_fail_build="!! DEPLOYMENT not successfull"
 msg_pull_fail="!! PULL not successfull"
 msg_pull_success="PULL success"
 msg_success="DEPLOYED in SWARM MODE ---> APPLICATION ACCESSIBLE on: port 8080"
-msg_default_case="DISCLAIMER: DEFAULT CASE will RE-DEPLOY ALL services again."
 
 #TRANSLATION backups path
 tr_path="$HOME/translations_backup"
@@ -212,34 +204,25 @@ OPTIND=1
 exec > >(tee "${log_dir}/${log_file}" )
 exec 2>&1
 
-echo_dec "# DEPLOYMENT in SWARM MODE (i.e. host has to be joined or initiated as SWARM NODE) @${start_time}"
-
-#CHECK SWARM ACTIVATED
-docker node ls
-status_swarm=$?
-
-if [ $status_swarm -ne 0 ]; then
-    echo_dec "SWARM not initiated or joined at this HOST. Exiting"
-    exit 1
-fi
-
 #Build commands
 cmd_stack_rm="docker stack rm ${stack_name}"
 cmd_pull_images="docker pull ${proxy_image_name} && docker pull ${prod_image_name}"
 cmd_deploy_base="docker stack deploy --compose-file"
 
+prune_images (){
 #Cleaning old images
 echo "Pruning unused Docker images..."
 docker image prune -f
+}
 
-while getopts "hxbut:d" option; do
-   option_passed="yes"
+while getopts "hxu:t:i" option; do
    case ${option} in
       h) # display Help
          echo "OPTION: -h"
          Help
          exit;;
       x) echo "OPTION: -x" 
+         prune_images
          echo_dec "Remove docker stack: ${stack_name}"
          if check_stack_exists; then
             er "${cmd_stack_rm}" && \
@@ -248,14 +231,12 @@ while getopts "hxbut:d" option; do
          else
              echo_dec "STACK ${stack_name} doesn't exist so can't be removed!!!"
         fi
+        echo sleep 20 second to wait before network is really removed.
         sleep 20 # Need to wait before network is really removed.
          ;;
-      b) #deploy stack 
-        echo "OPTION: -b"
-        run_default b
-        ;;
       u) #update services
-        echo "OPTION: -u"
+        echo "OPTION: -u with ${IMAGE_TAG}"
+        prune_images
         echo_dec "Update services with new images!"
         if check_stack_exists ; then
             do_manual_checks
@@ -267,14 +248,14 @@ while getopts "hxbut:d" option; do
         fi
         ;;
       t)
-        echo "OPTION: -t"
+        echo "OPTION: -t with ${IMAGE_TAG}"
+        prune_images
         run_default b
 	      ;;
-      d)  # Include database compose file in deployment
-          echo "OPTION: -d"
-          include_db=1
-          run_default
-          ;;
+      i)
+        echo 10 last available versions
+        curl -s https://hub.docker.com/v2/repositories/aiscr/webamcr/tags/ | jq '."results"[0:10] | .[]["name"]'
+	      ;;
      \?) # Invalid option
          echo_dec "OPTION: INVALID"
          echo "Error: Invalid option ${option}"
@@ -282,10 +263,8 @@ while getopts "hxbut:d" option; do
    esac
 done
 
-# RUN docker compose [default option]
 if [ -z ${option_passed+x} ]; then
-   echo_dec "NO option passed as ARG so default case is called,"
-   run_default
+   echo_dec "No option is passed as ARG, you have to specify a parameter, for help use -h."
 fi
 
 exit 0

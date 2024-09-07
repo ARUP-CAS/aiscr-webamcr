@@ -145,7 +145,7 @@ class Mailer:
                 status = "OK"
                 exception = None
             except Exception as e:
-                logger.error("services.mailer.send.error",
+                logger.warning("services.mailer.send.warning",
                              extra={"from_email": from_email, "to": to, "subject": subject, "exception": e})
                 status = "NOK"
                 exception = e
@@ -531,10 +531,11 @@ class Mailer:
         history_log = Historie.objects.filter(
             vazba__projekt_historie__ident_cely=project.ident_cely, typ_zmeny=NAVRZENI_KE_ZRUSENI_PROJ)\
             .order_by("datum_zmeny").last()
-        user = history_log.uzivatel
-        if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
-            cls.__send(subject=subject, to=user.email, html_content=html, notification_type=notification_type,
-                       user=user)
+        if history_log is not None:
+            user = history_log.uzivatel
+            if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
+                cls.__send(subject=subject, to=user.email, html_content=html, notification_type=notification_type,
+                        user=user)
 
     @classmethod
     def _send_ep06(cls, project, notification_type, reason):

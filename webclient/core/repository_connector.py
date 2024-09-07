@@ -127,10 +127,8 @@ class FedoraRepositoryConnector:
             self.transaction_uid = None
         self.restored_container = False
         self.skip_container_check = skip_container_check
-        stack = inspect.stack()
-        caller = [x for x in stack]
         logger.debug("core_repository_connector.__init__.end",
-                     extra={"caller": caller, "transaction": self.transaction_uid, "ident_cely": record.ident_cely})
+                     extra={"transaction": self.transaction_uid, "ident_cely": record.ident_cely})
 
     def _get_model_name(self):
         class_name = self.record.__class__.__name__
@@ -427,6 +425,12 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector._connect_deleted_container.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
+    def link_exists(self):
+        url = self._get_request_url(FedoraRequestType.GET_LINK)
+        result = self._send_request(url, FedoraRequestType.GET_LINK)
+        return result.status_code != 404
+
+
     def _check_container(self):
         logger.debug("core_repository_connector._check_container.start",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
@@ -442,9 +446,7 @@ class FedoraRepositoryConnector:
             logger.debug("core_repository_connector._check_container.create",
                          extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
             self._create_container()
-        url = self._get_request_url(FedoraRequestType.GET_LINK)
-        result = self._send_request(url, FedoraRequestType.GET_LINK)
-        if result.status_code == 404:
+        if not self.link_exists():
             self.create_link()
         logger.debug("core_repository_connector._check_container.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
@@ -493,12 +495,8 @@ class FedoraRepositoryConnector:
         return response.content
 
     def save_metadata(self, update=True):
-        stack = inspect.stack()
-        caller = [x for x in stack]
-
         logger.debug("core_repository_connector.save_metadata.start",
-                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid,
-                            "caller": caller})
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         if not self.skip_container_check:
             self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_METADATA)
@@ -1050,7 +1048,8 @@ class FedoraTransaction:
                      extra={"transaction": self.uid, "post_commit_tasks": self.post_commit_tasks.keys()})
         self._send_transaction_request()
         self._perform_post_commit_tasks()
-        self.call_digiarchiv_update()
+        if settings.DIGIARCHIV_URL != "":
+            self.call_digiarchiv_update()
         logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
                      extra={"transaction": self.uid})
 
@@ -1067,7 +1066,8 @@ class FedoraTransaction:
                 record, ident_cely, old_ident_cely = value
                 record.ident_cely = old_ident_cely
                 connector = FedoraRepositoryConnector(record, new_transaction)
-                connector.create_link(ident_cely_proxy=ident_cely)
+                if not connector.link_exists():
+                    connector.create_link(ident_cely_proxy=ident_cely)
         new_transaction.mark_transaction_as_closed()
 
     def __create_transaction(self):
@@ -1094,12 +1094,21 @@ class FedoraTransaction:
     def call_digiarchiv_update():
         from cron.tasks import call_digiarchiv_update_task
         logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.start")
-        app = Celery("webclient")
-        app.config_from_object("django.conf:settings", namespace="CELERY")
-        app.autodiscover_tasks()
-        i = app.control.inspect(["worker1@amcr"])
-        queues = (i.scheduled(), i.active(),)
+        try:
+            app = Celery("webclient")
+            app.config_from_object("django.conf:settings", namespace="CELERY")
+            app.autodiscover_tasks()
+            i = app.control.inspect(["worker1@amcr"])
+            queues = (i.scheduled(), i.active(),)
+        except Exception as e:
+            logger.error("core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_error",
+                                 extra={"Exception": e, "app": app })
+            call_digiarchiv_update_task.apply_async()
         for queue in queues:
+            if queue is None:
+                logger.error("core_repository_connector.FedoraTransaction.call_digiarchiv_update.error",
+                                 extra={"i": i,"queues": queues })
+                break
             for queue_name, queue_tasks in queue.items():
                 for task in queue_tasks:
                     if "request" in task and "call_digiarchiv_update_task" in task.get("request").get("name").lower():

@@ -403,11 +403,6 @@ class NavrhnoutZruseniProjektForm(forms.Form):
     """
     Formulář pro navržení zrušení projektu.
     """
-    reason = forms.CharField(
-        label=_("projekt.forms.navrhZruseniProj.reason.label"),
-        required=True,
-        help_text=_("projekt.forms.navrhZruseniProj.reason.tooltip"),
-    )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
     CHOICES = [
         ("option1", _("projekt.forms.navrhzruseni.duvod1.text")),

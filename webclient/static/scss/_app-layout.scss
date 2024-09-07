@@ -10,10 +10,22 @@ body {
 
   overflow-x: hidden;
 
-  &.app-accounts,
-  &.app-oznameni {
+  &.app-accounts {
     &:not(.app-edit) {
       padding: $spacer-3 $spacer-3 $spacer-4 $spacer-3;
+
+      #app-page-wrapper {
+        min-width: auto;
+
+        .container-fluid {
+          max-width: $container-max-width-xl;
+        }
+      }
+    }
+  }
+
+  &.app-oznameni {
+    &:not(.app-edit) {
 
       #app-page-wrapper {
         min-width: auto;
@@ -29,7 +41,10 @@ body {
 .maintenance {
   font-size: 20px;
   background-color: #322348;
-  padding-left: 300px;
+
+  p {
+    margin-bottom: 0px !important;
+  }
 
 }
 
@@ -222,9 +237,13 @@ div .app-right .btn-group .btn {
     max-width: 16.66667%;
   }
 
-  td:read-only {
+  td.is_readonly {
     small {
       display: none;
     }
+  }
+
+  td small {
+    grid-column: span 3;
   }
 }

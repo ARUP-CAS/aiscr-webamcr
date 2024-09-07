@@ -114,6 +114,18 @@ DATABASES = {
             'options': '-c statement_timeout=90000',         
         },
     },
+    "urgent": {
+        "ENGINE": "django_prometheus.db.backends.postgis",
+        "NAME": get_secret("DB_NAME"),
+        "USER": get_secret("DB_USER"),
+        "PASSWORD": get_secret("DB_PASS"),
+        "HOST": get_secret("DB_HOST"),
+        "PORT": get_secret("DB_PORT"),
+        "DISABLE_SERVER_SIDE_CURSORS": True,
+        'OPTIONS': {
+            'options': '-c statement_timeout=90000',
+        },
+    },
 }
 
 DEBUG = False
@@ -518,4 +530,7 @@ TEST_ENV = get_secret("TEST_ENV", "True") == "True"
 CLAMD_HOST = None
 CLAMD_PORT = None
 
-DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "https://digiarchiv-test.aiscr.cz/api/fedora/index_update")
+DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "")
+
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

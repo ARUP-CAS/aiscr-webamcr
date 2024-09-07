@@ -119,7 +119,7 @@ from heslar.hesla_dynamicka import (
     TYP_PROJEKTU_PRUZKUM_ID,
 )
 from heslar.models import Heslar, HeslarHierarchie
-from heslar.views import heslar_12
+from heslar.views import heslar_12, heslar_list
 from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta, KomponentaAktivita, KomponentaVazby
@@ -191,11 +191,7 @@ def detail_model_3D(request, ident_cely):
     specifikace_objekt_choices = heslar_12(
         HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
     )
-    specifikce_predmetu_choices = list(
-        Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
-            "id", "heslo"
-        )
-    )
+    specifikce_predmetu_choices = heslar_list(HESLAR_PREDMET_SPECIFIKACE)
     NalezObjektFormset = inlineformset_factory(
         Komponenta,
         NalezObjekt,
@@ -275,16 +271,15 @@ class Model3DListView(SearchListView):
     typ_zmeny_lookup = ZAPSANI_DOK
 
     def init_translations(self):
+        super().init_translations()
         self.page_title = _("dokument.views.Model3DListView.pageTitle.text")
         self.search_sum = _("dokument.views.Model3DListView.search_sum.text")
         self.pick_text = _("dokument.views.Model3DListView.pick_text.text")
         self.hasOnlyVybrat_header = _("dokument.views.Model3DListView.hasOnlyVybrat_header.text")
         self.hasOnlyVlastnik_header = _("dokument.views.Model3DListView.hasOnlyVlastnik_header.text")
         self.hasOnlyArchive_header = _("dokument.views.Model3DListView.hasOnlyArchive_header.text")
-        self.hasOnlyPotvrdit_header = _("dokument.views.Model3DListView.hasOnlyPotvrdit_header.text")
+        self.hasOnlyNase_header = _("dokument.views.Model3DListView.hasOnlyNase_header.text")
         self.default_header = _("dokument.views.Model3DListView.default_header.text")
-        self.toolbar_name = _("dokument.views.Model3DListView.toolbar_name.text")
-        self.toolbar_label = _("dokument.views.Model3DListView.toolbar_label.text")
 
     @staticmethod
     def rename_field_for_ordering(field: str):
@@ -344,16 +339,15 @@ class DokumentListView(SearchListView):
     typ_zmeny_lookup = ZAPSANI_DOK
 
     def init_translations(self):
+        super().init_translations()
         self.page_title = _("dokument.views.DokumentListView.pageTitle.text")
         self.search_sum = _("dokument.views.DokumentListView.search_sum.text")
         self.pick_text = _("dokument.views.DokumentListView.pick_text.text")
         self.hasOnlyVybrat_header = _("dokument.views.DokumentListView.hasOnlyVybrat_header.text")
         self.hasOnlyVlastnik_header = _("dokument.views.DokumentListView.hasOnlyVlastnik_header.text")
         self.hasOnlyArchive_header = _("dokument.views.DokumentListView.hasOnlyArchive_header.text")
-        self.hasOnlyPotvrdit_header = _("dokument.views.DokumentListView.hasOnlyPotvrdit_header.text")
+        self.hasOnlyNase_header = _("dokument.views.DokumentListView.hasOnlyNase_header.text")
         self.default_header = _("dokument.views.DokumentListView.default_header.text")
-        self.toolbar_name = _("dokument.views.DokumentListView.toolbar_name.text")
-        self.toolbar_label = _("dokument.views.DokumentListView.toolbar_label.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1248,6 +1242,7 @@ def edit_model_3D(request, ident_cely):
             instance=dokument.get_komponenta(),
             required=required_fields,
             required_next=required_fields_next,
+            prefix="komponenta_",
         )
         geom = None
         x1 = None
@@ -1313,6 +1308,7 @@ def edit_model_3D(request, ident_cely):
             instance=dokument.get_komponenta(),
             required=get_required_fields_model3D(dokument),
             required_next=get_required_fields_model3D(dokument, 1),
+            prefix="komponenta_",
         )
         if dokument.extra_data.geom:
             geom = (
@@ -1403,6 +1399,7 @@ def create_model_3D(request):
             request.POST,
             required=required_fields,
             required_next=required_fields_next,
+            prefix="komponenta_",
         )
         geom = None
         x1 = None
@@ -1494,6 +1491,7 @@ def create_model_3D(request):
             areal_choices,
             required=required_fields,
             required_next=required_fields_next,
+            prefix="komponenta_",
         )
     return render(
         request,
@@ -1506,6 +1504,7 @@ def create_model_3D(request):
             "title": _("dokument.views.create_model_3D.title"),
             "header": _("dokument.views.create_model_3D.header"),
             "button": _("dokument.views.create_model_3D.submitButton.text"),
+            "toolbar_label": _("dokument.views.create_model_3D.toolbar_label")
         },
     )
 
@@ -1915,6 +1914,7 @@ def zapsat(request, zaznam=None):
             "formDokument": form_d,
             "hierarchie": get_hierarchie_dokument_typ(),
             "samostatny": True if not zaznam else False,
+            "toolbar_label": _("dokument.views.zapsat.dokument.toolbar_label")
         },
     )
 
@@ -2198,11 +2198,7 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
         NalezPredmet,
         form=create_nalez_predmet_form(
             heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
-            list(
-                Heslar.objects.filter(
-                    nazev_heslare=HESLAR_PREDMET_SPECIFIKACE
-                ).values_list("id", "heslo")
-            ),
+            heslar_list(HESLAR_PREDMET_SPECIFIKACE),
             not_readonly=show["editovat"],
         ),
         extra=1 if show["editovat"] else 0,

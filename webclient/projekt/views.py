@@ -39,7 +39,7 @@ from core.constants import (
     VRACENI_ZRUSENI,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ, OBLAST_CECHY,
-    ZAPSANI_SN,
+    ZAPSANI_SN, RUSENI_STARE_PROJ,
 )
 from core.decorators import allowed_user_groups
 from core.exceptions import MaximalIdentNumberError
@@ -51,6 +51,7 @@ from core.message_constants import (
     PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI,
     PROJEKT_NELZE_SMAZAT,
     PROJEKT_NELZE_UZAVRIT,
+    PROJEKT_NELZE_ZAHAJIT_V_TERENU,
     PROJEKT_NENI_TYP_PRUZKUMNY,
     PROJEKT_NENI_TYP_ZACHRANNY, 
     PROJEKT_USPESNE_ARCHIVOVAN,
@@ -461,13 +462,17 @@ def edit(request, ident_cely):
     required_fields = get_required_fields(projekt)
     required_fields_next = get_required_fields(projekt, 1)
     edit_fields = None
+    edit_geom=True
     if request.user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
         if projekt.stav == PROJEKT_STAV_PRIHLASENY:
-            edit_fields = ["vedouci_projektu", "uzivatelske_oznaceni", "kulturni_pamatka", "kulturni_pamatka_cislo", "kulturni_pamatka_popis"]
+            edit_fields = ["vedouci_projektu", "uzivatelske_oznaceni", "kulturni_pamatka", "kulturni_pamatka_cislo", "kulturni_pamatka_popis","hlavni_katastr", "coordinate_x1", "coordinate_x2", "katastry"]
         elif projekt.stav in [PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU]:
             edit_fields =  ["uzivatelske_oznaceni"]
+        if projekt.stav>=PROJEKT_STAV_ZAHAJENY_V_TERENU:
+            edit_geom=False
     if request.method == "POST":
-        request.POST = katastr_text_to_id(request)
+        if request.POST.get("hlavni_katastr") is not None:
+            request.POST = katastr_text_to_id(request)
         form = EditProjektForm(
             request.POST,
             instance=projekt,
@@ -477,8 +482,13 @@ def edit(request, ident_cely):
         )
         if form.is_valid():
             logger.debug("projekt.views.edit.form_valid")
-            x1 = form.cleaned_data["coordinate_x1"]
-            x2 = form.cleaned_data["coordinate_x2"]
+            if (form.fields["coordinate_x1"].disabled or form.fields["coordinate_x2"].disabled) and\
+                (projekt.geom is not None and len(projekt.geom)>0):
+                x1 = projekt.geom.coords[0]
+                x2 = projekt.geom.coords[1]
+            else:
+                x1 = form.cleaned_data["coordinate_x1"]
+                x2 = form.cleaned_data["coordinate_x2"]
             # Workaroud to not check if long and lat has been changed, only geom is interesting
             form.fields["coordinate_x1"].initial = x1
             form.fields["coordinate_x2"].initial = x2
@@ -526,7 +536,7 @@ def edit(request, ident_cely):
     return render(
         request,
         "projekt/edit.html",
-        {"form_projekt": form, "projekt": projekt},
+        {"form_projekt": form, "projekt": projekt, "edit_geom":edit_geom},
     )
 
 
@@ -623,8 +633,6 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
         self.hasOnlyVybrat_header = _("projekt.views.projektListView.header.hasOnlyVybrat")
         self.hasOnlyArchive_header = _("projekt.views.projektListView.header.hasOnlyArchive")
         self.default_header = _("projekt.views.projektListView.header.default")
-        self.toolbar_name = _("projekt.views.projektListView.toolbar.title")
-        self.toolbar_label = _("projekt.views.projektListView.toolbar_label.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -640,6 +648,7 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
             "projekt.views.projektListView.header.hasUzavritProjekt"
         )
         context["hasNaseProjekty_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
+        context["hasOnlyZrusit_header"] = _("projekt.views.projektListView.header.hasZrusitProjekty")
         context["has_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
         return context
 
@@ -818,6 +827,18 @@ def zahajit_v_terenu(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
+    warnings = projekt.check_pred_zahajenim_v_terenu()
+    if warnings:
+        request.session["temp_data"] = warnings
+        messages.add_message(request, messages.ERROR, PROJEKT_NELZE_ZAHAJIT_V_TERENU)
+        return JsonResponse(
+            {
+                "redirect": reverse(
+                    "projekt:detail", kwargs={"ident_cely": ident_cely}
+                )
+            },
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
         return JsonResponse(
@@ -970,16 +991,7 @@ def uzavrit(request, ident_cely):
                 if key == "has_event":
                     request.session["temp_data"].append(item)
                 else:
-                    items = ""
-                    for i, list_items in enumerate(item):
-                        if isinstance(list_items, list):
-                            items += list_items.pop(0)
-                            items += ", ".join(list_items)
-                        else:
-                            items += list_items
-                        if i + 1 < len(item):
-                            items += ", "
-                    request.session["temp_data"].append(f"{key}: {items}")
+                    request.session["temp_data"].append(f"{key}: {item}")
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
             return JsonResponse(
                 {
@@ -1436,6 +1448,9 @@ def get_history_dates(historie_vazby, request_user):
     """
     request_user: User
     anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
+    datum_zruseni = historie_vazby.get_last_transaction_date(RUSENI_PROJ, anonymized)
+    if not datum_zruseni:
+        datum_zruseni = historie_vazby.get_last_transaction_date(RUSENI_STARE_PROJ, anonymized)
     historie = {
         "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ, anonymized),
         "datum_zapsani": historie_vazby.get_last_transaction_date(
@@ -1459,7 +1474,7 @@ def get_history_dates(historie_vazby, request_user):
         "datum_navrhu_ke_zruseni": historie_vazby.get_last_transaction_date(
             NAVRZENI_KE_ZRUSENI_PROJ, anonymized
         ),
-        "datum_zruseni": historie_vazby.get_last_transaction_date(RUSENI_PROJ, anonymized),
+        "datum_zruseni": datum_zruseni,
     }
     return historie
 
@@ -1600,6 +1615,8 @@ def katastr_text_to_id(request):
     Funkce podlehu pro získaní ID katastru podle názvu katastru.
     """
     hlavni_katastr: str = request.POST.get("hlavni_katastr")
+    if hlavni_katastr is None or hlavni_katastr.strip() == "":
+        return request.POST.copy()
     hlavni_katastr_name = hlavni_katastr[: hlavni_katastr.find("(")].strip()
     okres_name = (
         (hlavni_katastr[hlavni_katastr.find("(") + 1 :]).replace(")", "").strip()
@@ -1616,7 +1633,7 @@ def katastr_text_to_id(request):
             logger.debug("projekt.views.katastr_text_to_id.has_numbers",
                          extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
         else:
-            logger.error("projekt.views.katastr_text_to_id.not_found",
+            logger.warning("projekt.views.katastr_text_to_id.not_found",
                          extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
         return request.POST.copy()
 

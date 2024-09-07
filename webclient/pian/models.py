@@ -1,4 +1,6 @@
 import logging
+
+from django.urls import reverse
 from core.constants import (
     KLADYZM10,
     KLADYZM50,
@@ -9,6 +11,7 @@ from core.constants import (
     POTVRZENI_PIAN,
 )
 from django.contrib.gis.db import models as pgmodels
+from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -134,11 +137,18 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     def __str__(self):
         return self.ident_cely + " (" + self.get_stav_display() + ")"
     
-    def get_absolute_url(self):
+    def get_absolute_url(self,request):
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
-        for dok_jednotka in dok_jednotky:
-            if dok_jednotka.archeologicky_zaznam is not None:
-                return dok_jednotka.get_absolute_url()
+        if dok_jednotky:
+            for dok_jednotka in dok_jednotky:
+                if dok_jednotka.archeologicky_zaznam is not None:
+                    return dok_jednotka.get_absolute_url()
+        else:
+            logger.debug("pian without connection to DJ")
+            messages.error(
+            request, _("pian.models.Pian.get_absolute_url.noDJ.message.text")
+        )
+            return reverse("core:home")
             
     def get_permission_object(self):
         return self
@@ -217,7 +227,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         old_ident = self.ident_cely
         self.ident_cely = perm_ident_cely
         sequence.sekvence += 1
-        sequence.save()
+        sequence.save(using='urgent')
         self.save()
         self.record_ident_change(old_ident, fedora_transaction=self.active_transaction)
 

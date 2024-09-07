@@ -264,14 +264,28 @@ $('#export-progress-modal').on('show.bs.modal', (event) => {
       }
 
       function hasOnlyVlastnik(actualParams, actualValues) {
-          if ((listMatch(['vlastnik'], actualParams) && listMatch(['{{ user.id }}'], actualValues)) ||
-          (listMatch(['vlastnik',"zahrnout_projektove"], actualParams) && listMatch(['{{ user.id }}',"False"], actualValues))) {
+          if ((listMatch(['historie_typ_zmeny','historie_uzivatel'], actualParams) && listMatch(['AZ01','{{ user.id }}'], actualValues)) ||
+          (listMatch(['historie_typ_zmeny','historie_uzivatel'], actualParams) && listMatch(['D01','{{ user.id }}'], actualValues)) ||
+          (listMatch(['historie_typ_zmeny','historie_uzivatel'], actualParams) && listMatch(['EZ01','{{ user.id }}'], actualValues)) ||
+          (listMatch(["zahrnout_projektove",'historie_typ_zmeny','historie_uzivatel'], actualParams) && listMatch(["False",'AZ01','{{ user.id }}'], actualValues))) {
               setHeader("{{hasOnlyVlastnik_header}}")
               return true
           } else {
               return false
           }
       }
+
+      function hasOnlyNase(actualParams, actualValues) {
+        if ((listMatch(['historie_typ_zmeny','historie_uzivatel_organizace'], actualParams) && listMatch(['AZ01','{{ user.organizace.id }}'], actualValues)) ||
+        (listMatch(['historie_typ_zmeny','historie_uzivatel_organizace'], actualParams) && listMatch(['D01','{{ user.organizace.id }}'], actualValues)) ||
+        (listMatch(['historie_typ_zmeny','historie_uzivatel_organizace'], actualParams) && listMatch(['EZ01','{{ user.organizace.id }}'], actualValues)) ||
+        (listMatch(["zahrnout_projektove",'historie_typ_zmeny','historie_uzivatel_organizace'], actualParams) && listMatch(["False",'AZ01','{{ user.organizace.id }}'], actualValues))) {
+            setHeader("{{hasOnlyNase_header}}")
+            return true
+        } else {
+            return false
+        }
+    }
 
       function hasOnlyArchive(actualParams, actualValues) {
           if ((listMatch(['stav'], actualParams) && listMatch([STAV_DVA], actualValues)) ||
@@ -300,6 +314,7 @@ $('#export-progress-modal').on('show.bs.modal', (event) => {
           const values = Array.from(urlParams.values());
           if (!(hasOnlyVlastnik(keys, values) ||
                 hasOnlyArchive(keys, values) ||
+                hasOnlyNase(keys, values) ||
                 hasOnlyPotvrdit(keys, [urlParams.get('stav')]) ||
                 hasOnlyVybrat(keys, values)
           )) {

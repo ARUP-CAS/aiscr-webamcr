@@ -6,13 +6,12 @@ export DJANGO_SETTINGS_MODULE=webclient.settings.production
 
 sudo cron
 
-python3 manage.py migrate
-python3 manage.py collectstatic --noinput
-python3 manage.py compress --force
-python3 manage.py migrate
-python3 manage.py shell < data_management.py
-python3 manage.py set_database_rights
-#python3 manage.py update_snapshot_fields
+pgq() {
+  output=$(psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '$DB_NAME' AND pid <> pg_backend_pid();")
+  text=$(echo "$output" | tail -n 1)
+  cislo=$(grep -o '[0-9]\+' <<< "$text")
+  echo $cislo
+}
 
 CONFIG_FILE="/run/secrets/db_conf"
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -32,9 +31,7 @@ if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASS" ] || [ -z "$DB_HOST
 fi
 
 export PGPASSWORD=$DB_PASS
-
-IMAGE_TAG=$(curl -s "https://hub.docker.com/v2/repositories/aiscr/webamcr/tags/" | jq -r '.results[1].name')
-NEW_DB_NAME="${DB_NAME}_backup_${IMAGE_TAG}_$(date +%Y%m%d)"
+NEW_DB_NAME="${DB_NAME}_backup_${VERSION}"
 
 DB_EXISTS=$(psql -h $DB_HOST -p $DB_PORT -U $DB_USER  -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = '$NEW_DB_NAME'")
 
@@ -42,8 +39,18 @@ if [ "$DB_EXISTS" = "1" ]; then
     echo "Database already exists: $NEW_DB_NAME"
 else
   echo "Creating new database: $NEW_DB_NAME"
-  psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "CREATE DATABASE \"$NEW_DB_NAME\" OWNER \"$DB_USER\";"
-
+  #psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c  "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '$DB_NAME' AND pid <> pg_backend_pid();" > /dev/null
+  counter=0
+  cislo=$(pgq)
+  echo "Number of using database: $cislo"
+  while [[ $cislo -ne 0 && "$counter" -lt 10 ]]; do
+    cislo=$(pgq)
+    echo "Number of using database: $cislo"
+    counter=$((counter+1))
+    echo "Counter: $counter"
+  done
+  echo "Number of iterations: $counter"
+  psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "CREATE DATABASE \"$NEW_DB_NAME\" WITH TEMPLATE $DB_NAME strategy FILE_COPY;"
   if [ $? -eq 0 ]; then
       echo "New database created successfully: $NEW_DB_NAME"
   else
@@ -51,17 +58,16 @@ else
       exit 1
   fi
 
-  pg_dump -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME | psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d "$NEW_DB_NAME"
-
-  if [ $? -eq 0 ]; then
-      echo "Database duplicated successfully into: $NEW_DB_NAME"
-  else
-      echo "Failed to duplicate database into: $NEW_DB_NAME"
-      exit 1
-  fi
 fi
 
 unset PGPASSWORD
+
+python3 manage.py migrate
+python3 manage.py collectstatic --noinput
+python3 manage.py compress --force
+python3 manage.py migrate
+python3 manage.py shell < data_management.py
+#python3 manage.py update_snapshot_fields
 
 #Copy locale from volume, create new one/update old, copy locale to volume and remove from app. Move has permission denied.
 

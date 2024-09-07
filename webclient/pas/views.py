@@ -639,6 +639,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     typ_zmeny_lookup = ZAPSANI_SN
 
     def init_translations(self):
+        super().init_translations()
         self.page_title = _("pas.views.samostatnyNalezListView.pageTitle")
         self.search_sum = _("pas.views.samostatnyNalezListView.pocetVyhledanych")
         self.pick_text = _("pas.views.samostatnyNalezListView.pickText")
@@ -646,9 +647,8 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         self.hasOnlyVlastnik_header = _("pas.views.samostatnyNalezListView.header.hasOnlyVlastnik")
         self.hasOnlyArchive_header = _("pas.views.samostatnyNalezListView.header.hasOnlyArchive")
         self.hasOnlyPotvrdit_header = _("pas.views.samostatnyNalezListView.header.hasOnlyPotvrdit")
+        self.hasOnlyNase_header = _("pas.views.samostatnyNalezListView.hasOnlyNase_header.text")
         self.default_header = _("pas.views.samostatnyNalezListView.header.default")
-        self.toolbar_name = _("pas.views.samostatnyNalezListView.toolbar.title")
-        self.toolbar_label = _("pas.views.samostatnyNalezListView.toolbar_label.text")
 
     @staticmethod
     def rename_field_for_ordering(field: str):
@@ -844,7 +844,6 @@ class UzivatelSpolupraceListView(SearchListView):
         self.search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")
         self.pick_text = _("pas.views.uzivatelSpolupraceListView.pickText")
         self.toolbar_name = _("pas.views.uzivatelSpolupraceListView.toolbar.title")
-        self.toolbar_label = _("pas.views.uzivatelSpolupraceListView.toolbar_label.text")
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -1045,6 +1044,7 @@ def get_detail_template_shows(sn, user):
         "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_pas, user, sn.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_pas, user, sn.ident_cely),
         "soubor_nahradit": check_permissions(p.actionChoices.soubor_nahradit_pas, user, sn.ident_cely),
+        "backtoprojekt": user.is_archeolog_or_more
     }
     return show
 

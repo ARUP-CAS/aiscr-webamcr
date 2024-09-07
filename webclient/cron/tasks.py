@@ -1,19 +1,16 @@
 import datetime
 import logging
-import time
 import traceback
 
-import redis
 import requests
 from cacheops import invalidate_model
-from celery import shared_task, Celery
+from celery import shared_task
 from django.conf import settings
 from django.db.models import Q, F, Min, Prefetch
 from django.db.models.functions import Upper, Coalesce
 from django.utils import timezone
 
-from adb.models import Adb
-from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
+from arch_z.models import ArcheologickyZaznam, Akce
 from core.connectors import RedisConnector
 from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
     OZNAMENI_PROJ, ZAPSANI_PROJ, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, RUSENI_STARE_PROJ, UDAJ_ODSTRANEN, \

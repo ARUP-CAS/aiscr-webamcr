@@ -131,8 +131,7 @@ class CreateDJForm(forms.ModelForm):
             "typ": _("dj.forms.createDjForm.typ.tooltip"),
             "negativni_jednotka": _("dj.forms.createDjForm.negativni_jednotka.tooltip"),
             "nazev": _("dj.forms.createDjForm.nazev.tooltip"),
-            "pian": _("dj.forms.createDjForm.pian.tooltip"),
-            "pian_text": _("dj.forms.createDjForm.pianText.tooltip"),
+            "pian": _("dj.forms.createDjForm.pian.tooltip")
         }
 
     def __init__(

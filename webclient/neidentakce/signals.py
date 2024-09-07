@@ -11,7 +11,7 @@ from neidentakce.models import NeidentAkce
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender=NeidentAkce)
+@receiver(post_save, sender=NeidentAkce, weak=False)
 def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
     if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
@@ -21,7 +21,7 @@ def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
                      extra={"transaction": getattr(fedora_transaction, "uid", None)})
 
 
-@receiver(post_delete, sender=NeidentAkce)
+@receiver(post_delete, sender=NeidentAkce, weak=False)
 def neident_akce_post_delete(sender, instance: NeidentAkce, **kwargs):
     if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()

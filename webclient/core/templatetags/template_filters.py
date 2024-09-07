@@ -45,9 +45,12 @@ def hesla_to_list(value):
 
 
 @register.filter
-def osoby_to_list(value):
-    list_hesla = "; ".join(value.values_list("vypis_cely", flat=True))
-    return list_hesla
+def autori_ordered_list(value):
+    return "; ".join(
+                Osoba.objects.filter(
+            externizdrojautor__externi_zdroj=value
+        ).order_by("externizdrojautor__poradi").values_list("vypis_cely", flat=True)
+    )
 
 
 @register.filter
@@ -173,6 +176,7 @@ def get_value_from_heslar(nazev_heslare, hodnota):
         ("projekt_stav", "zahajeny_v_terenu"): constants.PROJEKT_STAV_ZAHAJENY_V_TERENU,
         ("projekt_stav", "ukonceny_v_terenu"): constants.PROJEKT_STAV_UKONCENY_V_TERENU,
         ("projekt_stav", "uzavreny"): constants.PROJEKT_STAV_UZAVRENY,
+        ("projekt_stav", "navrzen_ke_zruseni"): constants.PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
         ("az_stav", "odeslany"): constants.AZ_STAV_ODESLANY,
         ("samostatny_nalez_stav", "odeslany"): constants.SN_ODESLANY,
         ("samostatny_nalez_stav", "potvrzeny"): constants.SN_POTVRZENY,

@@ -157,12 +157,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         Heslar,
         through="DokumentJazyk",
         related_name="dokumenty_jazyku",
+        limit_choices_to={"nazev_heslare": HESLAR_JAZYK}
     )
     posudky = models.ManyToManyField(
         Heslar,
         through="DokumentPosudek",
         related_name="dokumenty_posudku",
         blank=True,
+        limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP}
     )
     osoby = models.ManyToManyField(
         Osoba,
@@ -395,7 +397,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                     logger.error("dokuments.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                     raise MaximalIdentNumberError(MAXIMUM)
                 sequence.sekvence=missing[0]
-        sequence.save()
+        sequence.save(using='urgent')
         perm_ident_cely = (
             sequence.region + "-" + sequence.rada.zkratka + "-" + str(sequence.rok) + "{0}".format(sequence.sekvence).zfill(5)
         )

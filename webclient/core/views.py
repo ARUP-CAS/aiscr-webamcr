@@ -13,7 +13,6 @@ from rosetta import get_version as get_rosetta_version
 from rosetta.access import can_translate_language
 from polib import pofile
 from django_prometheus.exports import ExportToDjangoView
-
 import pandas
 from PIL import Image
 
@@ -28,7 +27,8 @@ from django.views.decorators.csrf import csrf_protect
 from django.views import View
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
-
+from django.views.i18n import set_language
+from django.core.cache import cache
 
 from django.conf import settings
 from django.contrib import messages
@@ -409,7 +409,12 @@ def post_upload(request):
         new_name = soubor_instance.nazev
     soubor: TemporaryUploadedFile = request.FILES.get("file")
     soubor.seek(0)
-    if not Soubor.check_mime_for_url(soubor, source_url):
+    check_meme=Soubor.check_mime_for_url(soubor, source_url)
+    if check_meme == "encrypted":
+        logger.debug("core.views.post_upload.check_mime_for_url.encrypted")
+        help_translation = _('core.views.post_upload.encrypted')
+        return JsonResponse({"error": help_translation}, status=400)
+    elif  check_meme is False:
         logger.debug("core.views.post_upload.check_mime_for_url.rejected")
         help_translation = _('core.views.post_upload.mime_check_failed')
         return JsonResponse({"error": help_translation}, status=400)
@@ -688,7 +693,10 @@ def redirect_ident_view(request, ident_cely):
     """
     object = get_record_from_ident(ident_cely)
     if object:
-        return redirect(object.get_absolute_url())
+        if isinstance(object,Pian):
+            return redirect(object.get_absolute_url(request))
+        else:
+            return redirect(object.get_absolute_url())
     else:
         messages.error(
             request, _("core.views.redirectView.identnotmatchingregex.message.text")
@@ -941,16 +949,17 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             return response
 
     def init_translations(self):
-        self.page_title = _("core.views.AkceListView.page_title.text")
-        self.search_sum = _("core.views.AkceListView.search_sum.text")
-        self.pick_text = _("core.views.AkceListView.pick_text.text")
-        self.hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
-        self.hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
-        self.hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
-        self.hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
-        self.default_header = _("core.views.AkceListView.default_header.text")
-        self.toolbar_name = _("core.views.AkceListView.toolbar_name.text")
-        self.toolbar_label = _("core.views.AkceListView.toolbar_label.text")
+        self.page_title = ""
+        self.search_sum = ""
+        self.pick_text = ""
+        self.hasOnlyVybrat_header = ""
+        self.hasOnlyVlastnik_header = ""
+        self.hasOnlyArchive_header = ""
+        self.hasOnlyPotvrdit_header = ""
+        self.hasOnlyNase_header = ""
+        self.default_header = ""
+        self.toolbar_name = ""
+        self.toolbar_label = ""
 
     def get_paginate_by(self, queryset):
         return self.request.GET.get("per_page", self.paginate_by)
@@ -972,6 +981,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["hasOnlyVlastnik_header"] = self.hasOnlyVlastnik_header
         context["hasOnlyArchive_header"] = self.hasOnlyArchive_header
         context["hasOnlyPotvrdit_header"] = self.hasOnlyPotvrdit_header
+        context["hasOnlyNase_header"] = self.hasOnlyNase_header
         context["default_header"] = self.default_header
         context["toolbar_name"] = self.toolbar_name
         context["toolbar_label"] = self.toolbar_label
@@ -1379,3 +1389,21 @@ class ApplicationRestartView(LoginRequiredMixin, View):
             referer = fallback_url
         # Redirect to referer or fallback URL
         return redirect(referer)
+
+def set_language_with_cache(request):
+    prefix = 'maintenance_cache_key.'
+    redis_client = cache._cache.get_client()
+    cursor = 0
+    matched_keys = []
+
+    while True:
+        cursor, keys = redis_client.scan(cursor, match=f'*{prefix}*')
+        
+        matched_keys.extend([key.decode('utf-8') for key in keys])
+        
+        if cursor == 0:
+            break
+
+    cache.delete(matched_keys[0].split(":")[-1])
+    
+    return set_language(request)
