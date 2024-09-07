@@ -23,7 +23,7 @@ class Model3DTable(SearchTable):
     """
     ident_cely = tables.Column(linkify=True, verbose_name=_("dokument.tables.modelTable.ident_cely.label"))
     typ_dokumentu = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.typ_dokumentu.label"))
-    organizace__nazev_zkraceny = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.organizace.label"))
+    organizace = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.organizace.label"), order_by="organizace__nazev_zkraceny")
     popis = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.popis.label"))
     rok_vzniku = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.rok_vzniku.label"))
     extra_data__format = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.extra_data__format.label"))
@@ -54,7 +54,7 @@ class Model3DTable(SearchTable):
             "ident_cely",
             "stav",
             "typ_dokumentu",
-            "organizace__nazev_zkraceny",
+            "organizace",
             "popis",
             "rok_vzniku",
             "extra_data__format",
@@ -69,7 +69,7 @@ class Model3DTable(SearchTable):
             "stav",
             "typ_dokumentu",
             "autori",
-            "organizace__nazev_zkraceny",
+            "organizace",
             "rok_vzniku",
             "popis",
             "extra_data__format",
@@ -108,8 +108,8 @@ class DokumentTable(SearchTable):
     """
     ident_cely = tables.Column(linkify=True, verbose_name=_("dokument.tables.dokumentTable.ident_cely.label"))
     typ_dokumentu = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.typ_dokumentu.label"))
-    organizace__nazev_zkraceny = tables.columns.Column(
-        default="", verbose_name=_("dokument.tables.dokumentTable.organizace.label")
+    organizace = tables.columns.Column(
+        default="", verbose_name=_("dokument.tables.dokumentTable.organizace.label"), order_by="organizace__nazev_zkraceny"
     )
     rok_vzniku = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.rok_vzniku.label"))
     autori = tables.Column(default="", accessor="autori_snapshot", verbose_name=_("dokument.tables.dokumentTable.autori.label"))
@@ -209,7 +209,7 @@ class DokumentTable(SearchTable):
             "nahled",
             "ident_cely",
             "stav",
-            "organizace__nazev_zkraceny",
+            "organizace",
             "autori",
             "rok_vzniku",
             "typ_dokumentu",
@@ -249,7 +249,7 @@ class DokumentTable(SearchTable):
             "datum_zverejneni",
             "oznaceni_originalu",
             "autori",
-            "organizace__nazev_zkraceny",
+            "organizace",
             "rok_vzniku",
             "extra_data__datum_vzniku",
             "popis",
