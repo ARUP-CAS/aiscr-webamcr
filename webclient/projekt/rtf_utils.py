@@ -117,7 +117,7 @@ class ExpertniListCreator(DocumentCreator):
             ("Datum přijetí oznámení:", self.historie.datum_zmeny.strftime("%d. %m. %Y") if self.historie else ""),
             ("Interní označení:", self.projekt.uzivatelske_oznaceni),
             ("Výzkum provedla organizace:",
-             Paragraph(self.stylesheet.ParagraphStyles.BoldText, self._convert_text(self.projekt.organizace))),
+             Paragraph(self.stylesheet.ParagraphStyles.BoldText, self._convert_text(self.projekt.organizace.nazev))),
             ("",
              f"{self.projekt.organizace.adresa}"),
             ("", f"E-mail: {self.projekt.organizace.email}"),

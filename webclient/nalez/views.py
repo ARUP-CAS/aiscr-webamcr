@@ -31,7 +31,7 @@ from heslar.hesla import (
     HESLAR_PREDMET_SPECIFIKACE,
 )
 from heslar.models import Heslar
-from heslar.views import heslar_12
+from heslar.views import heslar_12, heslar_list
 from komponenta.models import Komponenta
 from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
@@ -113,11 +113,7 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
     )
 
     druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
-    specifikce_predmetu_choices = list(
-        Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
-            "id", "heslo"
-        )
-    )
+    specifikce_predmetu_choices = heslar_list(HESLAR_PREDMET_SPECIFIKACE)
     NalezPredmetFormset = inlineformset_factory(
         Komponenta,
         NalezPredmet,

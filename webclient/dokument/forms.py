@@ -31,6 +31,7 @@ from heslar.hesla_dynamicka import (
 from heslar.models import Heslar
 from uzivatel.models import Osoba
 from core.forms import BaseFilterForm
+from heslar.views import heslar_list
 
 logger = logging.getLogger(__name__)
 
@@ -412,20 +413,8 @@ class EditDokumentForm(forms.ModelForm):
         super(EditDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
-        self.fields["jazyky"].choices = list(
-            Heslar.objects.filter(nazev_heslare=HESLAR_JAZYK).values_list("id", "heslo")
-        )
-        self.fields["posudky"].choices = list(
-            Heslar.objects.filter(nazev_heslare=HESLAR_POSUDEK_TYP).values_list(
-                "id", "heslo"
-            )
-        )
         if not readonly:
-            self.fields["typ_dokumentu"].choices = [("", "")] + list(
-                Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
-                .filter(id__in=ALLOWED_DOKUMENT_TYPES)
-                .values_list("id", "heslo")
-            )
+            self.fields["typ_dokumentu"].choices = [("", "")] + heslar_list(HESLAR_DOKUMENT_TYP,{"id__in":ALLOWED_DOKUMENT_TYPES})
             autori_div = Div(
                 AppendedText(
                     "autori",
@@ -568,11 +557,7 @@ class CreateModelDokumentForm(forms.ModelForm):
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
-        self.fields["typ_dokumentu"].choices = [("", "")] + list(
-            Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
-            .filter(id__in=MODEL_3D_DOKUMENT_TYPES)
-            .values_list("id", "heslo")
-        )
+        self.fields["typ_dokumentu"].choices = [("", "")] + heslar_list(HESLAR_DOKUMENT_TYP,{"id__in":MODEL_3D_DOKUMENT_TYPES})
         self.fields["rok_vzniku"].required = True
         if readonly:
             autori_div = Div(
@@ -680,11 +665,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
         # Disabled hodnoty se neposilaji na server
         self.fields["visible_x1"].widget.attrs["disabled"] = "disabled"
         self.fields["visible_x2"].widget.attrs["disabled"] = "disabled"
-        self.fields["format"].choices = [("", "")] + list(
-            Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT)
-            .filter(heslo__startswith="3D")
-            .values_list("id", "heslo")
-        )
+        self.fields["format"].choices = [("", "")] + heslar_list(HESLAR_DOKUMENT_FORMAT,{"heslo__startswith":"3D"})
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):

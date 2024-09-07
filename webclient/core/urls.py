@@ -4,6 +4,7 @@ from . import views
 
 from core.views import (
     post_ajax_get_pas_and_pian_limit,
+    set_language_with_cache
 )
 
 app_name = "core"
@@ -83,5 +84,6 @@ urlpatterns = [
         name="rosetta-smazat-file",
     ),
     path("metrics", views.PrometheusMetricsView.as_view(), name="prometheus-django-metrics"),
-    path("application-restart", views.ApplicationRestartView.as_view(), name="application-restart",)
+    path("application-restart", views.ApplicationRestartView.as_view(), name="application-restart",),
+    path("i18n/setlang/", set_language_with_cache, name="set_language"),
 ]
