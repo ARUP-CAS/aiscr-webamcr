@@ -6,6 +6,8 @@ from PyRTF.Elements import Renderer, Document, Section, StyleSheet, ParagraphSty
 from PyRTF.PropertySets import TabPropertySet, ParagraphPropertySet
 from PyRTF.Styles import TextStyle, TextPropertySet
 from PyRTF.document.paragraph import Cell, Paragraph, Table
+from django.utils.translation import gettext
+
 from historie.models import Historie
 from projekt.doc_utils import DocumentCreator
 
@@ -65,9 +67,14 @@ class ExpertniListCreator(DocumentCreator):
         text = " ".join(text.split())
         return self._convert_text(text.replace("\n", ""))
 
-    def _generate_text(self):
-        from projekt.forms import TYP_VYZKUMU_CHOICES, VYSLEDEK_CHOICES
+    def _get_typ_vyzkumu_text(self):
+        return {
+            "predstihovy": "projekt.forms.GenerovatExpertniListForm.vysledek.pozitivni.text",
+            "zachranny": "projekt.forms.GenerovatExpertniListForm.vysledek.negativni.text",
+            "dohled": "projekt.forms.GenerovatExpertniListForm.vysledek.jine.text",
+        }.get(gettext(self.popup_parametry["typ_vyzkumu"]))
 
+    def _generate_text(self):
         result = StyleSheet()
         normal_text = TextStyle(TextPropertySet(result.Fonts.Arial, 22))
         normal_text_par_style = ParagraphStyle('NormalText', normal_text.Copy(),
@@ -133,13 +140,12 @@ class ExpertniListCreator(DocumentCreator):
                 ("Označení stavby:", self.projekt.oznaceni_stavby),
             ]
 
-        typ_vyzkumu = [x[1] for x in TYP_VYZKUMU_CHOICES if x[0] == self.popup_parametry["typ_vyzkumu"]][0]
         table_texts += [
             ("Oznamovatel:", self.projekt.oznamovatel.oznamovatel if self.projekt.has_oznamovatel() else ""),
             ("Zástupce oznamovatele / dodavatel:",
              f"{self.projekt.oznamovatel.odpovedna_osoba} ({self.projekt.oznamovatel.telefon}; {self.projekt.oznamovatel.email})" if self.projekt.has_oznamovatel() else ""),
             ("Datum výzkumu:", f"{self.projekt.datum_zahajeni} - {self.projekt.datum_ukonceni}"),
-            ("Typ výzkumu:", typ_vyzkumu),
+            ("Typ výzkumu:", self._get_typ_vyzkumu_text()),
         ]
 
         if self.projekt.akce_set.count() > 0:
