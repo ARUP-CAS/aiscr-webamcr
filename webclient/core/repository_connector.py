@@ -6,18 +6,15 @@ import os
 import re
 from enum import Enum
 from io import BytesIO
-from os import path
-
-from PIL import Image
-from typing import Union, Optional
+from typing import Optional, Union
 
 import requests
 from celery import Celery
+from core.utils import get_mime_type, replace_last
 from django.conf import settings
 from pdf2image import convert_from_bytes
+from PIL import Image
 from requests.auth import HTTPBasicAuth
-
-from core.utils import get_mime_type, replace_last
 from xml_generator.generator import DocumentGenerator
 
 logger = logging.getLogger(__name__)

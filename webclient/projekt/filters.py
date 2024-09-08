@@ -363,8 +363,8 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         distinct=True,
     )
 
-    akce_vedouci_organizace = MultipleChoiceFilter(
-        choices=Organizace.objects.all().values_list("id", "nazev_zkraceny"),
+    akce_vedouci_organizace = ModelMultipleChoiceFilter(
+        queryset=Organizace.objects.all(),
         label=_("projekt.filters.projektFilter.akceVedouciOrganizace.label"),
         method="filtr_akce_organizace",
         widget=SelectMultiple(
@@ -660,9 +660,12 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metóda pro filtrování podle organizace akce.
         """
-        return queryset.filter(
-            Q(akce__organizace__in=value) | Q(akce__akcevedouci__organizace__in=value)
-        ).distinct()
+        if value:
+            return queryset.filter(
+                Q(akce__organizace__in=value) | Q(akce__akcevedouci__organizace__in=value)
+            ).distinct()
+        else:
+            return queryset
 
     def filtr_dokumenty_ident(self, queryset, name, value):
         """
