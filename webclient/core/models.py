@@ -666,6 +666,7 @@ class Permissions(models.Model):
         projekt_prihlasit = "projekt_prihlasit", _("core.models.permissions.actionChoices.projekt_prihlasit")
         projekt_schvalit = "projekt_schvalit", _("core.models.permissions.actionChoices.projekt_schvalit")
         projekt_ukoncit_v_terenu = "projekt_ukoncit_v_terenu", _("core.models.permissions.actionChoices.projekt_ukoncit_v_terenu")
+        projekt_upravit_datum_oznameni = "projekt_upravit_datum_oznameni", _("core.models.permissions.actionChoices.projekt_upravit_datum_oznameni")
         projekt_uzavrit = "projekt_uzavrit", _("core.models.permissions.actionChoices.projekt_uzavrit")
         projekt_vratit_navrh_zruseni = "projekt_vratit_navrh_zruseni", _("core.models.permissions.actionChoices.projekt_vratit_navrh_zruseni")
         projekt_vratit = "projekt_vratit", _("core.models.permissions.actionChoices.projekt_vratit")

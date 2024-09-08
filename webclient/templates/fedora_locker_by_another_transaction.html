@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "templates.404.title" %}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<h2>{% trans "templates.fedora_locker_by_another_transaction.header" %}</h2>
+<p class="display-4">{% trans "templates.fedora_locker_by_another_transaction.text" %}</p>
+<p>{% trans "templates.fedora_locker_by_another_transaction.text.part2" %}</p>
+{% endblock %}

@@ -342,10 +342,8 @@ class FedoraRepositoryConnector:
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
             else:
-                stack = inspect.stack()
-                caller = [x for x in stack]
                 extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
-                         "transaction": self.transaction_uid, "url": url, "caller": caller}
+                         "transaction": self.transaction_uid, "url": url}
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
                 fedora_transaction = FedoraTransaction(self.transaction_uid)
                 fedora_transaction.rollback_transaction()
@@ -1007,15 +1005,24 @@ class FedoraTransactionPostCommitTasks(Enum):
     CREATE_LINK = 1
 
 
+class FedoraTransactionState(Enum):
+    ACTIVE = 1
+    COMMITED = 2
+    FAILED = 3
+    ABORTED = 4
+
+
 class FedoraTransaction:
 
-    def __init__(self, uid=None):
+    def __init__(self, uid=None, request=None):
         self.post_commit_tasks = {}
         if uid is None:
             self.__create_transaction()
         else:
             self.uid = uid
             logger.debug("core_repository_connector.FedoraTransaction.__init__", extra={"uid": self.uid})
+        self.state = FedoraTransactionState.ACTIVE
+        self.request = request
 
     def __str__(self):
         return self.uid
@@ -1043,6 +1050,7 @@ class FedoraTransaction:
         logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.start",
                      extra={"transaction": self.uid})
         self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
+        self.state = FedoraTransactionState.ABORTED
         logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
                      extra={"transaction": self.uid})
 
@@ -1050,6 +1058,7 @@ class FedoraTransaction:
         logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.start",
                      extra={"transaction": self.uid, "post_commit_tasks": self.post_commit_tasks.keys()})
         self._send_transaction_request()
+        self.state = FedoraTransactionState.COMMITED
         self._perform_post_commit_tasks()
         if settings.DIGIARCHIV_URL != "":
             self.call_digiarchiv_update()

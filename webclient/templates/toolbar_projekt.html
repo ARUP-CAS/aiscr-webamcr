@@ -97,6 +97,9 @@
           {% if show.stahnout_metadata%}
             <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'projekt' projekt.ident_cely %}">{% trans "templates.toolbarProjekt.metadataDownload.label" %}</a>
           {% endif %}
+          {% if show.upravit_datum_oznameni %}
+            <button id="upravit-datum-oznameni" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.upravitDatumOznameni.label" %}</button>
+          {% endif %}
         </div>
       </div>
     </div>
