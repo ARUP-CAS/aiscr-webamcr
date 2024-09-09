@@ -1,18 +1,18 @@
 import logging
 
+from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
+from core.forms import BaseFilterForm
+from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from dal import autocomplete
 from django import forms
 from django.db import utils
+from django.db.models import IntegerField, Value
 from django.forms import HiddenInput
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
-from django.db.models import Value, IntegerField
-from crispy_forms.bootstrap import AppendedText
-
-from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
+from django.utils.translation import gettext_lazy as _
 from dokument.models import Dokument, DokumentCast, DokumentExtraData, Let, Tvar
 from heslar.hesla import (
     HESLAR_DOKUMENT_FORMAT,
@@ -20,19 +20,20 @@ from heslar.hesla import (
     HESLAR_DOKUMENT_ULOZENI,
     HESLAR_JAZYK,
     HESLAR_LETFOTO_TVAR,
-    HESLAR_POSUDEK_TYP, HESLAR_LICENCE,
+    HESLAR_LICENCE,
+    HESLAR_POSUDEK_TYP,
     HESLAR_POSUDEK_TYP_KAT,
 )
 from heslar.hesla_dynamicka import (
     ALLOWED_DOKUMENT_TYPES,
-    MODEL_3D_DOKUMENT_TYPES,
     JAZYK_CS,
+    MODEL_3D_DOKUMENT_FORMATS,
+    MODEL_3D_DOKUMENT_TYPES,
     PRIMARNE_DIGITALNI,
 )
 from heslar.models import Heslar
-from uzivatel.models import Osoba
-from core.forms import BaseFilterForm
 from heslar.views import heslar_12, heslar_list
+from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
     """
     Třída pro správne zaobcházení s autormi, tak aby jejich uložení pořadí bylo stejné jako zadané uživatelem.
     """
+
     def clean(self, value):
         qs = super().clean(value)
         if value:
@@ -48,11 +50,11 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
             logger.debug("dokument.forms.AutoriField.clean", extra={"value": value})
             for item in value:
                 part_qs = qs.filter(pk=item).annotate(qs_order=Value(i, IntegerField()))
-                if i ==1:
+                if i == 1:
                     new_qs = part_qs
                 else:
                     new_qs = part_qs.union(new_qs)
-                i = i+1
+                i = i + 1
             qs = new_qs.order_by("qs_order")
         return qs
 
@@ -61,6 +63,7 @@ class CoordinatesDokumentForm(forms.Form):
     """
     Hlavní formulář pro editaci souřadnic v modelu 3D a PAS.
     """
+
     visible_ss_combo = forms.ChoiceField(
         label=_("pas.forms.coordinates.detector.label"),
         choices=COORDINATE_SYSTEM,
@@ -82,16 +85,19 @@ class CoordinatesDokumentForm(forms.Form):
     coordinate_wgs84_x2 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_sjtsk_x1 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_sjtsk_x2 = forms.FloatField(required=False, widget=HiddenInput())
-    coordinate_system = forms.CharField(
-        required=False, widget=HiddenInput(), initial="4326"
-    )
+    coordinate_system = forms.CharField(required=False, widget=HiddenInput(), initial="4326")
 
 
 class EditDokumentExtraDataForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení Extra dat u dokumentu a modelu 3D.
     """
-    rada = forms.CharField(label=_("dokument.forms.editDokumentExtraDataForm.rada.label"), required=False, help_text=_("dokument.forms.editDokumentExtraDataForm.rada.tooltip"),)
+
+    rada = forms.CharField(
+        label=_("dokument.forms.editDokumentExtraDataForm.rada.label"),
+        required=False,
+        help_text=_("dokument.forms.editDokumentExtraDataForm.rada.tooltip"),
+    )
 
     class Meta:
         model = DokumentExtraData
@@ -116,32 +122,60 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         )
         widgets = {
             "zachovalost": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                       "data-container": ".content-with-table-responsive-container",}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
+                }
             ),
             "nahrada": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                       "data-container": ".content-with-table-responsive-container",}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
+                }
             ),
             "format": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                       "data-container": ".content-with-table-responsive-container",}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
+                }
             ),
             "zeme": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                       "data-container": ".content-with-table-responsive-container",}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
+                }
             ),
             "udalost_typ": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                       "data-container": ".content-with-table-responsive-container",}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
+                }
             ),
             "meritko": forms.TextInput(),
             "cislo_objektu": forms.TextInput(),
             "region_extra": forms.TextInput(),
             "udalost": forms.TextInput(),
             "odkaz": forms.TextInput(),
-            "rok_od":forms.DateInput(attrs={"class": "dateinput form-control date_roky",}),
-            "rok_do":forms.DateInput(attrs={"class": "dateinput form-control date_roky",}),
+            "rok_od": forms.DateInput(
+                attrs={
+                    "class": "dateinput form-control date_roky",
+                }
+            ),
+            "rok_do": forms.DateInput(
+                attrs={
+                    "class": "dateinput form-control date_roky",
+                }
+            ),
         }
         labels = {
             "datum_vzniku": _("dokument.forms.editDokumentExtraDataForm.datumVzniku.label"),
@@ -166,9 +200,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "datum_vzniku": _("dokument.forms.editDokumentExtraDataForm.datumVzniku.tooltip"),
             "zachovalost": _("dokument.forms.editDokumentExtraDataForm.zachovalost.tooltip"),
             "nahrada": _("dokument.forms.editDokumentExtraDataForm.nahrada.tooltip"),
-            "pocet_variant_originalu": _(
-                "dokument.forms.editDokumentExtraDataForm.pocetVariantOriginalu.tooltip"
-            ),
+            "pocet_variant_originalu": _("dokument.forms.editDokumentExtraDataForm.pocetVariantOriginalu.tooltip"),
             "odkaz": _("dokument.forms.editDokumentExtraDataForm.odkaz.tooltip"),
             "format": _("dokument.forms.editDokumentExtraDataForm.format.tooltip"),
             "meritko": _("dokument.forms.editDokumentExtraDataForm.meritko.tooltip"),
@@ -184,9 +216,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "duveryhodnost": _("dokument.forms.editDokumentExtraDataForm.duveryhodnost.tooltip"),
         }
 
-    def __init__(
-        self, *args, readonly=False, required=None, required_next=None, **kwargs
-    ):
+    def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         rada = kwargs.pop("rada", None)
         let = kwargs.pop("let", "")
         dok_osoby = kwargs.pop("dok_osoby", None)
@@ -201,9 +231,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 help_text=_("dokument.forms.editDokumentExtraDataForm.dokumentOsoba.tooltip"),
             )
             self.fields["let"] = forms.ChoiceField(
-                choices=tuple(
-                    [("", "")] + list(Let.objects.all().values_list("id", "ident_cely"))
-                ),
+                choices=tuple([("", "")] + list(Let.objects.all().values_list("id", "ident_cely"))),
                 label=_("dokument.forms.editDokumentExtraDataForm.let.label"),
                 required=False,
                 widget=forms.Select(
@@ -235,7 +263,9 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             dok_osoby_div = Div(
                 AppendedText(
                     "dokument_osoba",
-                    mark_safe('<button id="create-dok-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                    mark_safe(
+                        '<button id="create-dok-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
+                    ),
                 ),
                 css_class="col-sm-2 input-osoba select2-input",
             )
@@ -247,6 +277,9 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         self.fields["rada"].initial = rada
         self.fields["let"].initial = let
         self.fields["dokument_osoba"].initial = dok_osoby
+        self.fields["format"].choices = [("", "")] + heslar_list(
+            HESLAR_DOKUMENT_FORMAT, {"id__in": MODEL_3D_DOKUMENT_FORMATS}, True
+        )
         self.helper.layout = Layout(
             Div(
                 Div("rada", css_class="col-sm-2"),
@@ -288,13 +321,11 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             if required:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"] = str(
-                        self.fields[key].widget.attrs["class"]
-                    ) + (" required-next" if key in required_next else "")
-                else:
-                    self.fields[key].widget.attrs["class"] = (
-                        "required-next" if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (
+                        " required-next" if key in required_next else ""
                     )
+                else:
+                    self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
         self.fields["rada"].disabled = edit_prohibited
 
 
@@ -302,17 +333,28 @@ class EditDokumentForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu.
     """
-    autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
-                url="heslar:osoba-autocomplete",
-            ),
-            help_text= _("dokument.forms.editDokumentForm.autori.tooltip"),
-            label = _("dokument.forms.editDokumentForm.autori.label"),)
-    region = forms.ChoiceField(choices=[(None,""),("C-",_("dokument.forms.editDokumentForm.region.C.option")),("M-",_("dokument.forms.editDokumentForm.region.M.option"))],
-                label=_("dokument.forms.editDokumentForm.region.label"),
-                widget=forms.Select(
-                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
-                ),
-                help_text= _("dokument.forms.editDokumentForm.region.tooltip"),)
+
+    autori = AutoriField(
+        Osoba.objects.all(),
+        widget=autocomplete.Select2Multiple(
+            url="heslar:osoba-autocomplete",
+        ),
+        help_text=_("dokument.forms.editDokumentForm.autori.tooltip"),
+        label=_("dokument.forms.editDokumentForm.autori.label"),
+    )
+    region = forms.ChoiceField(
+        choices=[
+            (None, ""),
+            ("C-", _("dokument.forms.editDokumentForm.region.C.option")),
+            ("M-", _("dokument.forms.editDokumentForm.region.M.option")),
+        ],
+        label=_("dokument.forms.editDokumentForm.region.label"),
+        widget=forms.Select(
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+        ),
+        help_text=_("dokument.forms.editDokumentForm.region.tooltip"),
+    )
+
     class Meta:
         model = Dokument
         fields = (
@@ -333,7 +375,12 @@ class EditDokumentForm(forms.ModelForm):
         )
         widgets = {
             "typ_dokumentu": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true", "required": ""}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                    "required": "",
+                }
             ),
             "material_originalu": forms.Select(
                 attrs={
@@ -358,14 +405,16 @@ class EditDokumentForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "oznaceni_originalu": forms.TextInput(),
-            "licence":  forms.Select(
+            "licence": forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "popis": forms.TextInput(),
             "poznamka": forms.TextInput(),
-            "rok_vzniku":forms.DateInput(attrs={
-                "class": "dateinput form-control date_roky",
-            }),
+            "rok_vzniku": forms.DateInput(
+                attrs={
+                    "class": "dateinput form-control date_roky",
+                }
+            ),
         }
         labels = {
             "organizace": _("dokument.forms.editDokumentForm.organizace.label"),
@@ -385,29 +434,21 @@ class EditDokumentForm(forms.ModelForm):
         help_texts = {
             "organizace": _("dokument.forms.editDokumentForm.organizace.tooltip"),
             "rok_vzniku": _("dokument.forms.editDokumentForm.rokVzniku.tooltip"),
-            "material_originalu": _(
-                "dokument.forms.editDokumentForm.materialOriginalu.tooltip"
-            ),
+            "material_originalu": _("dokument.forms.editDokumentForm.materialOriginalu.tooltip"),
             "typ_dokumentu": _("dokument.forms.editDokumentForm.typDokumentu.tooltip"),
             "popis": _("dokument.forms.editDokumentForm.popis.tooltip"),
             "poznamka": _("dokument.forms.editDokumentForm.poznamka.tooltip"),
-            "ulozeni_originalu": _(
-                "dokument.forms.editDokumentForm.ulozeniOriginalu.tooltip"
-            ),
-            "oznaceni_originalu": _(
-                "dokument.forms.editDokumentForm.oznaceniOriginalu.tooltip"
-            ),
+            "ulozeni_originalu": _("dokument.forms.editDokumentForm.ulozeniOriginalu.tooltip"),
+            "oznaceni_originalu": _("dokument.forms.editDokumentForm.oznaceniOriginalu.tooltip"),
             "pristupnost": _("dokument.forms.editDokumentForm.pristupnost.tooltip"),
-            "datum_zverejneni": _(
-                "dokument.forms.editDokumentForm.datumZverejneni.tooltip"
-            ),
+            "datum_zverejneni": _("dokument.forms.editDokumentForm.datumZverejneni.tooltip"),
             "licence": _("dokument.forms.editDokumentForm.licence.tooltip"),
             "jazyky": _("dokument.forms.editDokumentForm.jazyky.tooltip"),
             "posudky": _("dokument.forms.editDokumentForm.posudky.tooltip"),
         }
 
     def __init__(
-        self, *args, readonly=False, required=None, required_next=None, can_edit_datum_zverejneni=False,**kwargs
+        self, *args, readonly=False, required=None, required_next=None, can_edit_datum_zverejneni=False, **kwargs
     ):
         create = kwargs.pop("create", None)
         region_not_required = kwargs.pop("region_not_required", None)
@@ -416,11 +457,15 @@ class EditDokumentForm(forms.ModelForm):
         self.fields["poznamka"].widget.attrs["rows"] = 1
         self.fields["posudky"].choices = heslar_12(HESLAR_POSUDEK_TYP, HESLAR_POSUDEK_TYP_KAT)[1:]
         if not readonly:
-            self.fields["typ_dokumentu"].choices = [("", "")] + heslar_list(HESLAR_DOKUMENT_TYP,{"id__in":ALLOWED_DOKUMENT_TYPES})
+            self.fields["typ_dokumentu"].choices = [("", "")] + heslar_list(
+                HESLAR_DOKUMENT_TYP, {"id__in": ALLOWED_DOKUMENT_TYPES}
+            )
             autori_div = Div(
                 AppendedText(
                     "autori",
-                    mark_safe('<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                    mark_safe(
+                        '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
+                    ),
                 ),
                 css_class="col-sm-2 input-osoba select2-input",
             )
@@ -430,17 +475,16 @@ class EditDokumentForm(forms.ModelForm):
                 css_class="col-sm-2",
             )
         if create:
-            self.fields["jazyky"].initial = [
-                Heslar.objects.get(nazev_heslare=HESLAR_JAZYK, id=JAZYK_CS).pk
-            ]
+            self.fields["jazyky"].initial = [Heslar.objects.get(nazev_heslare=HESLAR_JAZYK, id=JAZYK_CS).pk]
             self.fields["ulozeni_originalu"].initial = [
                 Heslar.objects.get(
                     nazev_heslare=HESLAR_DOKUMENT_ULOZENI,
                     id=PRIMARNE_DIGITALNI,
                 ).pk
             ]
-            self.fields["licence"].initial = (Heslar.objects.filter(nazev_heslare=HESLAR_LICENCE)
-                                                  .order_by("razeni").first())
+            self.fields["licence"].initial = (
+                Heslar.objects.filter(nazev_heslare=HESLAR_LICENCE).order_by("razeni").first()
+            )
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
@@ -472,9 +516,7 @@ class EditDokumentForm(forms.ModelForm):
                 if self.fields[key].disabled is True:
                     if key == "autori":
                         self.fields[key].widget = forms.widgets.SelectMultiple()
-                        self.fields[key].widget.attrs.update(
-                            {"name_id": str(key) + ";" + str(self.instance)}
-                        )
+                        self.fields[key].widget.attrs.update({"name_id": str(key) + ";" + str(self.instance)})
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
@@ -482,18 +524,18 @@ class EditDokumentForm(forms.ModelForm):
             if required:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"] = str(
-                        self.fields[key].widget.attrs["class"]
-                    ) + (" required-next" if key in required_next else "")
-                else:
-                    self.fields[key].widget.attrs["class"] = (
-                        "required-next" if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (
+                        " required-next" if key in required_next else ""
                     )
+                else:
+                    self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
         if not can_edit_datum_zverejneni:
             self.fields["datum_zverejneni"].disabled = True
-        self.fields["autori"].widget.choices = list(Osoba.objects.filter(
-            dokumentautor__dokument__pk=self.instance.pk
-        ).order_by("dokumentautor__poradi").values_list("id","vypis_cely"))
+        self.fields["autori"].widget.choices = list(
+            Osoba.objects.filter(dokumentautor__dokument__pk=self.instance.pk)
+            .order_by("dokumentautor__poradi")
+            .values_list("id", "vypis_cely")
+        )
         if region_not_required is True:
             self.fields["region"].required = False
         elif create:
@@ -504,11 +546,16 @@ class CreateModelDokumentForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení modelu 3D.
     """
-    autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
-                url="heslar:osoba-autocomplete",
-            ),
-            help_text= _("dokument.forms.createModelDokumentForm.autori.tooltip"),
-            label = _("dokument.forms.createModelDokumentForm.autori.label"),)
+
+    autori = AutoriField(
+        Osoba.objects.all(),
+        widget=autocomplete.Select2Multiple(
+            url="heslar:osoba-autocomplete",
+        ),
+        help_text=_("dokument.forms.createModelDokumentForm.autori.tooltip"),
+        label=_("dokument.forms.createModelDokumentForm.autori.label"),
+    )
+
     class Meta:
         model = Dokument
         fields = (
@@ -530,9 +577,11 @@ class CreateModelDokumentForm(forms.ModelForm):
             "oznaceni_originalu": forms.TextInput(),
             "popis": forms.TextInput(),
             "poznamka": forms.TextInput(),
-            "rok_vzniku":forms.DateInput(attrs={
-                "class": "dateinput form-control date_roky",
-            }),
+            "rok_vzniku": forms.DateInput(
+                attrs={
+                    "class": "dateinput form-control date_roky",
+                }
+            ),
         }
         labels = {
             "typ_dokumentu": _("dokument.forms.createModelDokumentForm.typDokumentu.label"),
@@ -545,35 +594,20 @@ class CreateModelDokumentForm(forms.ModelForm):
         help_texts = {
             "typ_dokumentu": _("dokument.forms.createModelDokumentForm.typDokumentu.tooltip"),
             "organizace": _("dokument.forms.createModelDokumentForm.organizace.tooltip"),
-            "oznaceni_originalu": _(
-                "dokument.forms.createModelDokumentForm.oznaceniOriginalu.tooltip"
-            ),
+            "oznaceni_originalu": _("dokument.forms.createModelDokumentForm.oznaceniOriginalu.tooltip"),
             "popis": _("dokument.forms.createModelDokumentForm.popis.tooltip"),
             "poznamka": _("dokument.forms.createModelDokumentForm.poznamka.tooltip"),
             "rok_vzniku": _("dokument.forms.createModelDokumentForm.rokVzniku.tooltip"),
         }
 
-    def __init__(
-        self, *args, readonly=False, required=None, required_next=None, **kwargs
-    ):
+    def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
-        self.fields["typ_dokumentu"].choices = [("", "")] + heslar_list(HESLAR_DOKUMENT_TYP,{"id__in":MODEL_3D_DOKUMENT_TYPES})
+        self.fields["typ_dokumentu"].choices = [("", "")] + heslar_list(
+            HESLAR_DOKUMENT_TYP, {"id__in": MODEL_3D_DOKUMENT_TYPES}
+        )
         self.fields["rok_vzniku"].required = True
-        if readonly:
-            autori_div = Div(
-                "autori",
-                css_class="col-sm-6",
-            )
-        else:
-            autori_div = Div(
-                AppendedText(
-                    "autori",
-                    mark_safe('<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
-                ),
-                css_class="col-sm-6 input-osoba select2-input",
-            )
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
@@ -584,9 +618,7 @@ class CreateModelDokumentForm(forms.ModelForm):
                 if self.fields[key].disabled is True:
                     if key == "autori":
                         self.fields[key].widget = forms.widgets.SelectMultiple()
-                        self.fields[key].widget.attrs.update(
-                            {"name_id": str(key) + ";" + str(self.instance)}
-                        )
+                        self.fields[key].widget.attrs.update({"name_id": str(key) + ";" + str(self.instance)})
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
@@ -594,22 +626,23 @@ class CreateModelDokumentForm(forms.ModelForm):
             if required:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"] = str(
-                        self.fields[key].widget.attrs["class"]
-                    ) + (" required-next" if key in required_next else "")
-                else:
-                    self.fields[key].widget.attrs["class"] = (
-                        "required-next" if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (
+                        " required-next" if key in required_next else ""
                     )
-        self.fields["autori"].widget.choices = list(Osoba.objects.filter(
-            dokumentautor__dokument__pk=self.instance.pk
-        ).order_by("dokumentautor__poradi").values_list("id","vypis_cely"))
+                else:
+                    self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
+        self.fields["autori"].widget.choices = list(
+            Osoba.objects.filter(dokumentautor__dokument__pk=self.instance.pk)
+            .order_by("dokumentautor__poradi")
+            .values_list("id", "vypis_cely")
+        )
 
 
 class CreateModelExtraDataForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení extra dat modelu 3D.
     """
+
     coordinate_wgs84_x1 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_wgs84_x2 = forms.FloatField(required=False, widget=HiddenInput())
 
@@ -659,15 +692,15 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "region_extra": _("dokument.forms.createModelExtraDataForm.region_extra.tooltip"),
         }
 
-    def __init__(
-        self, *args, readonly=False, required=None, required_next=None, **kwargs
-    ):
+    def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         # self.fields["format"].required = True
         # Disabled hodnoty se neposilaji na server
         self.fields["visible_x1"].widget.attrs["disabled"] = "disabled"
         self.fields["visible_x2"].widget.attrs["disabled"] = "disabled"
-        self.fields["format"].choices = [("", "")] + heslar_list(HESLAR_DOKUMENT_FORMAT,{"heslo__startswith":"3D"})
+        self.fields["format"].choices = [("", "")] + heslar_list(
+            HESLAR_DOKUMENT_FORMAT, {"id__in": MODEL_3D_DOKUMENT_FORMATS}
+        )
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
@@ -680,32 +713,27 @@ class CreateModelExtraDataForm(forms.ModelForm):
             if required:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"] = str(
-                        self.fields[key].widget.attrs["class"]
-                    ) + (" required-next" if key in required_next else "")
-                else:
-                    self.fields[key].widget.attrs["class"] = (
-                        "required-next" if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (
+                        " required-next" if key in required_next else ""
                     )
+                else:
+                    self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
 
 
 class PripojitDokumentForm(forms.Form):
     """
     Hlavní formulář připojení dokumentu do projektu nebo arch záznamu.
     """
+
     def __init__(self, projekt=None, *args, **kwargs):
         super(PripojitDokumentForm, self).__init__(projekt, *args, **kwargs)
         self.fields["dokument"] = forms.MultipleChoiceField(
             label=_("dokument.forms.pripojitDokumentForm.dokument.label"),
             choices=list(
-                Dokument.objects.filter(
-                    stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY)
-                ).values_list("id", "ident_cely")
+                Dokument.objects.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY)).values_list("id", "ident_cely")
             ),
-            widget=autocomplete.Select2Multiple(
-                url=reverse("dokument:dokument-autocomplete")
-            ),
-            help_text=_("dokument.forms.pripojitDokumentForm.dokument.tooltip")
+            widget=autocomplete.Select2Multiple(url=reverse("dokument:dokument-autocomplete")),
+            help_text=_("dokument.forms.pripojitDokumentForm.dokument.tooltip"),
         )
         self.fields["dokument"].required = True
         self.helper = FormHelper(self)
@@ -716,11 +744,13 @@ class DokumentCastForm(forms.ModelForm):
     """
     Hlavní formulář pro zobrazení Dokument části.
     """
+
     poznamka = forms.CharField(
         help_text=_("dokument.forms.dokumentCastForm.poznamka.tooltip"),
         label=_("dokument.forms.dokumentCastForm.poznamka.label"),
         required=False,
     )
+
     class Meta:
         model = DokumentCast
         fields = ("poznamka",)
@@ -741,6 +771,7 @@ class DokumentCastCreateForm(forms.Form):
     """
     Hlavní formulář pro vytvoření, editaci Dokument části.
     """
+
     poznamka = forms.CharField(
         help_text=_("dokument.forms.dokumentCastCreateForm.poznamka.tooltip"),
         label=_("dokument.forms.dokumentCastCreateForm.poznamka.label"),
@@ -758,11 +789,15 @@ def create_tvar_form(not_readonly=True):
     Funkce která vrací formulář Tvar pro formset.
     Pomocí ní je možné předat výběr formuláři.
     """
+
     class TvarForm(forms.ModelForm):
         class Meta:
             model = Tvar
             fields = ["tvar", "poznamka"]
-            labels = {"tvar": _("dokument.forms.tvarForm.tvar.label"), "poznamka": _("dokument.forms.tvarForm.poznamka.label")}
+            labels = {
+                "tvar": _("dokument.forms.tvarForm.tvar.label"),
+                "poznamka": _("dokument.forms.tvarForm.poznamka.label"),
+            }
             widgets = {
                 "poznamka": forms.TextInput(),
                 "tvar": forms.Select(
@@ -782,17 +817,13 @@ def create_tvar_form(not_readonly=True):
             super(TvarForm, self).__init__(*args, **kwargs)
             self.fields["tvar"].required = True
             self.fields["tvar"].choices = [("", "")] + list(
-                Heslar.objects.filter(nazev_heslare=HESLAR_LETFOTO_TVAR).values_list(
-                    "id", "heslo"
-                )
+                Heslar.objects.filter(nazev_heslare=HESLAR_LETFOTO_TVAR).values_list("id", "heslo")
             )
             for key in self.fields.keys():
                 self.fields[key].disabled = not not_readonly
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled is True:
                     if isinstance(self.fields[key].widget, forms.widgets.Select):
-                        self.fields[
-                            key
-                        ].widget.template_name = "core/select_to_text.html"
+                        self.fields[key].widget.template_name = "core/select_to_text.html"
                     self.fields[key].help_text = ""
 
     return TvarForm
@@ -802,11 +833,13 @@ class TvarFormSetHelper(FormHelper):
     """
     Form helper pro správne vykreslení formuláře tvarů.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
         self.form_id = "tvar"
 
+
 class DokumentFilterForm(BaseFilterForm):
-    list_to_check = ["historie_datum_zmeny_od","datum_vzniku","let_datum","datum_zverejneni"]
+    list_to_check = ["historie_datum_zmeny_od", "datum_vzniku", "let_datum", "datum_zverejneni"]
