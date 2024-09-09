@@ -1,29 +1,27 @@
 import logging
 
 import crispy_forms
+from arch_z.models import ArcheologickyZaznam
+from core.constants import EXTERNI_ZDROJ_RELATION_TYPE
+from core.forms import SelectMultipleSeparator
+from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
-from crispy_forms.layout import Div, Layout, HTML
-from django.db.models import Q, OuterRef, Subquery, F
+from django.db.models import Q
 from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
     CharFilter,
+    FilterSet,
     ModelMultipleChoiceFilter,
-    MultipleChoiceFilter, FilterSet,
+    MultipleChoiceFilter,
 )
-
-from core.constants import ZAPSANI_EXT_ZD, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, EXTERNI_ZDROJ_RELATION_TYPE
-from heslar.hesla import (
-    HESLAR_DOKUMENT_TYP,
-    HESLAR_EXTERNI_ZDROJ_TYP,
-)
-from heslar.models import Heslar
 from dokument.filters import HistorieFilter
+from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_EXTERNI_ZDROJ_TYP
+from heslar.models import Heslar
 from historie.models import Historie
-from core.forms import SelectMultipleSeparator
-from arch_z.models import ArcheologickyZaznam
+from uzivatel.models import Osoba, User
+
 from .models import ExterniZdroj
-from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +91,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
     )
 
     historie_typ_zmeny = MultipleChoiceFilter(
-        choices=filter(lambda x: x[0].startswith("EZ"), Historie.CHOICES),
+        choices=list(filter(lambda x: x[0].startswith("EZ"), Historie.CHOICES)),
         label=_("historie.filter.typZmeny.label"),
         field_name="historie__historie__typ_zmeny",
         widget=SelectMultiple(
@@ -134,8 +132,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
             if "uzivatel" in historie:
                 queryset_history &= Q(historie__historie__uzivatel__in=historie["uzivatel"])
             if "uzivatel_organizace" in historie:
-                queryset_history &= Q(historie__historie__organizace_snapshot__in
-                                      =historie["uzivatel_organizace"])
+                queryset_history &= Q(historie__historie__organizace_snapshot__in=historie["uzivatel_organizace"])
             if "datum_zmeny__gte" in historie:
                 queryset_history &= Q(historie__historie__datum_zmeny__gte=historie["datum_zmeny__gte"])
             if "datum_zmeny__lte" in historie:
@@ -208,13 +205,15 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
     """
     Třída pro správne zobrazení filtru.
     """
+
     form_method = "GET"
+
     def __init__(self, form=None):
-        history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"ez.filters.history.divider.label")
+        history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("ez.filters.history.divider.label")
         }
-        souvis_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"ez.filters.souvisejiciZaznamy.divider.label")
+        souvis_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("ez.filters.souvisejiciZaznamy.divider.label")
         }
         self.layout = Layout(
             Div(
@@ -242,9 +241,7 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div(
-                        "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
-                    ),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
                     Div("historie_uzivatel", css_class="col-sm-3"),
                     Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                     id="historieCollapse",
