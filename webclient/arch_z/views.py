@@ -1324,8 +1324,13 @@ def post_akce2kat(request):
     body = json.loads(request.body.decode("utf-8"))
     logger.debug("arch_z.views.post_akce2kat.start", extra={"body": body})
     katastr_name = body["cadastre"]
-    katastr_nazev, okres_nazev = [x.strip(")").strip() for x in katastr_name.split("(")]
-    katastr = RuianKatastr.objects.get(nazev__iexact=katastr_nazev, okres__nazev__iexact=okres_nazev)
+    try:
+        kod=katastr_name[katastr_name.find(';')+1:katastr_name.find(')')].strip()
+    except (ValueError, IndexError) as e:
+        logger.error("arch_z.views.post_akce2kat.katastr_name_error",
+                         extra={"katastr_name": katastr_name, "error":e })
+        return JsonResponse({ "pians": [], "count": 0,    }, status=200)
+    katastr = RuianKatastr.objects.get(kod=kod)
     akce_ident_cely = body["akce_ident_cely"]
 
     if len(katastr_name) > 0:
