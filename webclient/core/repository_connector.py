@@ -1019,7 +1019,7 @@ class FedoraTransaction:
 
     def _send_transaction_request(self, operation=FedoraTransactionOperation.COMMIT):
         logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.start",
-                     extra={"transaction_uid": self.uid})
+                     extra={"transaction": self.uid})
         url = (f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}"
                f"/rest/fcr:tx/{self.uid}")
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
@@ -1037,10 +1037,10 @@ class FedoraTransaction:
                      extra={"transaction": self.uid})
 
     def rollback_transaction(self):
-        logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.start",
+        logger.debug("core_repository_connector.FedoraTransaction.rollback_transaction.start",
                      extra={"transaction": self.uid})
         self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
-        logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
+        logger.debug("core_repository_connector.FedoraTransaction.rollback_transaction.end",
                      extra={"transaction": self.uid})
 
     def mark_transaction_as_closed(self):
@@ -1084,7 +1084,7 @@ class FedoraTransaction:
         if match:
             self.uid = match.group()
             logger.debug("core_repository_connector.FedoraTransaction.__create_transaction",
-                         extra={"uid": self.uid})
+                         extra={"transaction": self.uid})
         else:
             logger.error("core_repository_connector.FedoraTransaction.__create_transaction.no_uid",
                          extra={"response": response.text})
