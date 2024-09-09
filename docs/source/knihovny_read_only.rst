@@ -268,7 +268,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.15.4
+     - 3.16.0
      - The Unlicense (Unlicense)
      - https://github.com/tox-dev/py-filelock
    * - funcy
@@ -320,7 +320,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.1.0
+     - 2.1.1
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -360,7 +360,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Historical Permission Notice and Disclaimer (HPND)
      - https://python-pillow.org
    * - platformdirs
-     - 4.2.2
+     - 4.3.2
      - MIT License
      - https://github.com/platformdirs/platformdirs
    * - polib
@@ -464,7 +464,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
-     - 4.23.1
+     - 4.24.0
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
@@ -536,7 +536,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.26.3
+     - 20.26.4
      - MIT License
      - https://github.com/pypa/virtualenv
    * - websocket-client
