@@ -56,7 +56,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.1
+     - 5.1.1
      - BSD License
      - https://www.djangoproject.com/
    * - PyRTF3
@@ -216,7 +216,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/tjwalch/django-livereload-server
    * - django-model-utils
-     - 4.5.1
+     - 5.0.0
      - BSD License
      - https://github.com/jazzband/django-model-utils
    * - django-object-actions
@@ -352,7 +352,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.44
+     - 8.13.45
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
