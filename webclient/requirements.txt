@@ -38,7 +38,7 @@ phonenumbers==8.13.45
 py7zr==0.22.0
 rarfile==4.2
 django-cacheops==7.0.2
-django-model-utils==4.5.1
+django-model-utils==5.0.0
 pandas==2.2.2
 tablib[all]==3.6.1
 # DEV requirements
