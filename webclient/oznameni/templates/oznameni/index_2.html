@@ -109,7 +109,7 @@
   </form>
   <small class="form-text text-muted">{% trans "oznameni.templates.oznameni.index_2.file_upload.tooltip" %}</small>
 
-  <form method="post" onSubmit="return confirm('{% trans "oznameni.templates.oznameni.index_2.nahraliSteVsechnyDokumenty" %}') ">
+  <form method="post">
     {% csrf_token %}
     <input name="ident_cely" type="hidden" value="{{ confirm.ident_cely }}">
     <a href="{% url 'oznameni:index' %}?ident_cely={{confirm.ident_cely}}" class="btn btn-secondary">{% trans "oznameni.templates.oznameni.index_2.upravitOznameni" %}</a>
@@ -162,12 +162,15 @@
   }
   $(document).ready(function() {
     $('form').on('submit', function() {
-        var submitButton = $(this).find('button[type=submit]');
-        submitButton.prop('disabled', true); // Zablokuje tlačítko
-        submitButton.find('.spinner-border').show(); // Zobrazí spinner
-        $(".submit-remove").hide();
+        if (confirm('{% trans "oznameni.templates.oznameni.index_2.nahraliSteVsechnyDokumenty" %}')) {
+          var submitButton = $(this).find('button[type=submit]');
+          submitButton.prop('disabled', true); // Zablokuje tlačítko
+          submitButton.find('.spinner-border').show(); // Zobrazí spinner
+          $(".submit-remove").hide();
+        }
+        else return false;
     });
   });
   </script>
-  <script src="{% static 'dz.js' %}"></script>
+  <script src="{% static 'dz.js' %}?v1"></script>
 {% endblock %}
