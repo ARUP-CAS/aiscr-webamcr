@@ -76,7 +76,8 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
             po_file.save_as_mofile(po_filepath + ".mo")
             self.file_handler(code, form)
         cache.delete("last_maintenance")
-        cache.delete(make_template_fragment_key("maintenance"))
+        cache.delete(make_template_fragment_key("maintenance_cache_key",[""]))
+        cache.delete(make_template_fragment_key("maintenance_cache_key",["true"]))
         should_try_wsgi_reload = (
             settings.ROSETTA_WSGI_AUTO_RELOAD
             and "mod_wsgi.process_group" in request.environ
@@ -133,7 +134,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         Pomocní metóda pro úpravu template zobrazených počas odstávky.
         """
         with open("/vol/web/nginx/data/" + language + "/custom_50x.html") as fp:
-            soup = BeautifulSoup(fp)
+            soup = BeautifulSoup(fp, "html.parser")
             soup.find("h1").string.replace_with(
                 form.cleaned_data["error_text_" + language]
             )
@@ -142,7 +143,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         with open(
             "/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html"
         ) as fp:
-            soup = BeautifulSoup(fp)
+            soup = BeautifulSoup(fp, "html.parser")
             soup.find("h1").string.replace_with(
                 form.cleaned_data["error_text_oznam_" + language]
             )
