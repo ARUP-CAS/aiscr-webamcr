@@ -257,11 +257,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         """
         Metóda na kontrolu prerekvizit pred archivací:
 
+            kontrola jako před odesláním a navíc
+
             všechny pripojené dokumenty jsou archivované.
 
             všechny DJ mají potvrzený pian
         """
-        result = []
+        result = self.check_pred_odeslanim()
         for dc in self.casti_dokumentu.all():
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
                 result.append(
