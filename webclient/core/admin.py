@@ -75,9 +75,8 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
             po_filepath, ext = os.path.splitext(path)
             po_file.save_as_mofile(po_filepath + ".mo")
             self.file_handler(code, form)
+            cache.delete(make_template_fragment_key("maintenance_cache_key",[code]))
         cache.delete("last_maintenance")
-        cache.delete(make_template_fragment_key("maintenance_cache_key",[""]))
-        cache.delete(make_template_fragment_key("maintenance_cache_key",["true"]))
         should_try_wsgi_reload = (
             settings.ROSETTA_WSGI_AUTO_RELOAD
             and "mod_wsgi.process_group" in request.environ
