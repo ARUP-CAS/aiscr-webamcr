@@ -201,6 +201,9 @@ window.onload = function () {
                 } else {
                     show_upload_successful_message(file, result, message);
                 }
+                var submitButton = $(".btn-disable-when-running-upload");
+                submitButton.prop('disabled', false); 
+                submitButton.removeClass("disabled"); 
             });
             this.on("removedfile", function (file) {
                 if (file.id) {
@@ -212,6 +215,11 @@ window.onload = function () {
             });
             this.on("sending", function (file) {
                 file.previewElement.lastChild.style.display = "none"
+            });
+            this.on("addedfile", function (file) {
+                var submitButton = $(".btn-disable-when-running-upload");
+                submitButton.prop('disabled', true);
+                submitButton.addClass("disabled"); 
             });
 
         },

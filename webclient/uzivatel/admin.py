@@ -155,6 +155,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                     "first_name",
                     "last_name",
                     "telefon",
+                    "osoba",
                     "groups",
                 )
             },
@@ -175,6 +176,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                     "first_name",
                     "last_name",
                     "telefon",
+                    "osoba",
                     "groups",
                 ),
             },
