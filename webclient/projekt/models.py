@@ -392,10 +392,12 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def check_pred_archivaci(self):
         """
         Metóda na kontrolu prerekvizit pred posunem do stavu archivovaný:
-            
+
+            kontrola jako před uzavřením a navíc
+
             Připojení akce musejí být ve stavu archivovaná.
         """
-        result = {}
+        result = self.check_pred_uzavrenim()
         for akce in self.akce_set.all():
             if akce.archeologicky_zaznam.stav != AZ_STAV_ARCHIVOVANY:
                 result[akce.archeologicky_zaznam.ident_cely] = _(

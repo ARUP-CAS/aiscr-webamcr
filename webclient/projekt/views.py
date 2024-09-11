@@ -1617,25 +1617,24 @@ def katastr_text_to_id(request):
     hlavni_katastr: str = request.POST.get("hlavni_katastr")
     if hlavni_katastr is None or hlavni_katastr.strip() == "":
         return request.POST.copy()
-    hlavni_katastr_name = hlavni_katastr[: hlavni_katastr.find("(")].strip()
-    okres_name = (
-        (hlavni_katastr[hlavni_katastr.find("(") + 1 :]).replace(")", "").strip()
-    )
-    katastr_query = RuianKatastr.objects.filter(
-        Q(nazev=hlavni_katastr_name) & Q(okres__nazev=okres_name)
-    )
+    try:
+        kod=hlavni_katastr[hlavni_katastr.find(';')+1:hlavni_katastr.find(')')].strip()
+    except (ValueError, IndexError) as e:
+        logger.warning("projekt.views.katastr_text_to_id.wrong_format",
+                         extra={"hlavni_katastr": hlavni_katastr, "error":e })
+        return request.POST.copy()
+    if not kod.isnumeric():
+        logger.warning("projekt.views.katastr_text_to_id.not_numeric",
+                         extra={"hlavni_katastr": hlavni_katastr})
+        return request.POST.copy()
+    katastr_query = RuianKatastr.objects.filter(kod=kod)
     if katastr_query.count() > 0:
         post = request.POST.copy()
         post["hlavni_katastr"] = katastr_query.first().id
         return post
-    else:
-        if hlavni_katastr_name.isnumeric() and okres_name.isnumeric():
-            logger.debug("projekt.views.katastr_text_to_id.has_numbers",
-                         extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
-        else:
-            logger.warning("projekt.views.katastr_text_to_id.not_found",
-                         extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
-        return request.POST.copy()
+    logger.warning("projekt.views.katastr_text_to_id.not_found",
+                         extra={"hlavni_katastr": hlavni_katastr})
+    return request.POST.copy()
 
 
 class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektPermissionFilterMixin):
