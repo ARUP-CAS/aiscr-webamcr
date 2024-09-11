@@ -110,7 +110,7 @@ def get_katastr_name(value):
         return list_hesla
     else:
         katastr = RuianKatastr.objects.get(pk=value)
-    return katastr.nazev + " (" + katastr.okres.nazev + ")"
+    return str(katastr)
 
 
 @register.filter
