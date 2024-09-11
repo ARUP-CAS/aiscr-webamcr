@@ -296,7 +296,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://pycqa.github.io/isort/
    * - kombu
-     - 5.4.0
+     - 5.4.1
      - BSD License
      - https://kombu.readthedocs.io
    * - libsass
@@ -432,7 +432,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://github.com/ahupp/python-magic
    * - pytz
-     - 2024.1
+     - 2024.2
      - MIT License
      - http://pythonhosted.org/pytz
    * - pyzstd
