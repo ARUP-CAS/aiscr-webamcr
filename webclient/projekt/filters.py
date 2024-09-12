@@ -1,53 +1,53 @@
 import logging
 
 import crispy_forms
-from dal import autocomplete
-import django_filters as filters
-
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
     OBLAST_CECHY,
     OBLAST_CHOICES,
     OBLAST_MORAVA,
     OZNAMENI_PROJ,
-    SCHVALENI_OZNAMENI_PROJ, PROJEKT_RELATION_TYPE,
+    PROJEKT_RELATION_TYPE,
+    SCHVALENI_OZNAMENI_PROJ,
 )
+from core.forms import SelectMultipleSeparator
 from crispy_forms.layout import HTML, Div, Layout
-from django.db.models import Q, QuerySet, OuterRef, Subquery
+from dal import autocomplete
+from django.db.models import Q, QuerySet
 from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
     CharFilter,
     DateFromToRangeFilter,
+    FilterSet,
     ModelMultipleChoiceFilter,
-    MultipleChoiceFilter, FilterSet,
+    MultipleChoiceFilter,
 )
 from django_filters.widgets import DateRangeWidget
-
-from core.forms import SelectMultipleSeparator
+from dokument.filters import HistorieFilter
 from heslar.hesla import (
     HESLAR_AKCE_TYP,
+    HESLAR_AKCE_TYP_KAT,
     HESLAR_PAMATKOVA_OCHRANA,
     HESLAR_PRISTUPNOST,
     HESLAR_PROJEKT_TYP,
-    HESLAR_AKCE_TYP_KAT,
 )
 from heslar.models import Heslar, RuianKatastr, RuianKraj, RuianOkres
+from heslar.views import heslar_12
+from historie.models import Historie
+from projekt.forms import ProjektFilterForm
 from projekt.models import Projekt
 from psycopg2._range import DateRange
 from uzivatel.models import Organizace, Osoba, User
-from historie.models import Historie
-from dokument.filters import HistorieFilter
-from heslar.views import heslar_12
-from projekt.forms import ProjektFilterForm
 
 logger = logging.getLogger(__name__)
 
 
 class MyAutocompleteWidget(autocomplete.ModelSelect2):
     """
-    Override na třídu atocomplete widgetu pro nevrácení media objektů - js scriptů. 
+    Override na třídu atocomplete widgetu pro nevrácení media objektů - js scriptů.
     """
+
     def media(self):
         return ()
 
@@ -62,6 +62,7 @@ class KatastrFilterMixin(FilterSet):
     Třída pro filtrování záznamu podle katastru, kraje, okresu a popisních údajů.
     Třída je prepoužita v dalších filtrech.
     """
+
     kraj = MultipleChoiceFilter(
         choices=RuianKraj.objects.all().values_list("id", "nazev"),
         label=_("projekt.filters.katastrFilter.kraj.label"),
@@ -109,28 +110,20 @@ class KatastrFilterMixin(FilterSet):
         Metóda pro filtrování podle názvu hlavního a dalších katastrů.
         """
         if value:
-            return queryset.filter(
-                Q(hlavni_katastr__in=value)
-                | Q(katastry__in=value)
-            ).distinct()
+            return queryset.filter(Q(hlavni_katastr__in=value) | Q(katastry__in=value)).distinct()
         return queryset
 
     def filtr_katastr_kraj(self, queryset, name, value):
         """
         Metóda pro filtrování podle názvu okresu hlavního a dalších katastrů.
         """
-        return queryset.filter(
-            Q(hlavni_katastr__okres__kraj__in=value)
-            | Q(katastry__okres__kraj__in=value)
-        ).distinct()
+        return queryset.filter(Q(hlavni_katastr__okres__kraj__in=value) | Q(katastry__okres__kraj__in=value)).distinct()
 
     def filtr_katastr_okres(self, queryset, name, value):
         """
         Metóda pro filtrování podle názvu kraje hlavního a dalších katastrů.
         """
-        return queryset.filter(
-            Q(hlavni_katastr__okres__in=value) | Q(katastry__okres__in=value)
-        ).distinct()
+        return queryset.filter(Q(hlavni_katastr__okres__in=value) | Q(katastry__okres__in=value)).distinct()
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
@@ -156,9 +149,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     """
     Třída pro filtrování projektů.
     """
+
     HISTORIE_TYP_ZMENY_STARTS_WITH = "P"
     TYP_VAZBY = PROJEKT_RELATION_TYPE
-
 
     ident_cely = CharFilter(
         lookup_expr="icontains",
@@ -275,9 +268,11 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     # Filters by historie
     historie_typ_zmeny = MultipleChoiceFilter(
-        choices=filter(
-            lambda x: x[0].startswith("P") and not x[0].startswith("PI") or x[0].startswith("KAT"),
-            Historie.CHOICES,
+        choices=list(
+            filter(
+                lambda x: x[0].startswith("P") and not x[0].startswith("PI") or x[0].startswith("KAT"),
+                Historie.CHOICES,
+            )
         ),
         label=_("projekt.filters.projektFilter.historieTypeZmeny.label"),
         field_name="historie__historie__typ_zmeny",
@@ -302,7 +297,10 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     akce_zjisteni = MultipleChoiceFilter(
         method="filter_has_positive_find",
         label=_("projekt.filters.projektFilter.akceZjisteni.label"),
-        choices=[("True",_("projekt.filters.projektFilter.akceZjisteni.choice.pozitivni")), ("False", _("projekt.filters.projektFilter.akceZjisteni.choice.negativni"))],
+        choices=[
+            ("True", _("projekt.filters.projektFilter.akceZjisteni.choice.pozitivni")),
+            ("False", _("projekt.filters.projektFilter.akceZjisteni.choice.negativni")),
+        ],
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -324,7 +322,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         queryset=RuianKatastr.objects.all(),
         field_name="katastr",
         label=_("projekt.filters.projektFilter.akceKatastr.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete")
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
     )
 
     akce_kraj = MultipleChoiceFilter(
@@ -389,7 +387,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         widget=DateRangeWidget(attrs={"type": "text", "max": "2100-12-31"}),
         distinct=True,
     )
-    
+
     pristupnost_akce = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
         field_name="akce__archeologicky_zaznam__pristupnost",
@@ -417,7 +415,10 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         distinct=True,
     )
     akce_je_nz = MultipleChoiceFilter(
-        choices=[("True", _("projekt.filters.projektFilter.akceJeNz.choice.ano")), ("False", _("projekt.filters.projektFilter.akceJeNz.choice.ne"))],
+        choices=[
+            ("True", _("projekt.filters.projektFilter.akceJeNz.choice.ano")),
+            ("False", _("projekt.filters.projektFilter.akceJeNz.choice.ne")),
+        ],
         field_name="akce__je_nz",
         lookup_expr="iexact",
         label=_("projekt.filters.projektFilter.akceJeNz.label"),
@@ -469,32 +470,32 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     )
 
     typ_akce = MultipleChoiceFilter(
-            choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
-            method="filter_akce_typ",
-            label=_("projekt.filters.projektFilter.akceTyp.label"),
-            widget=SelectMultiple(
-                attrs={
-                    "class": "selectpicker",
-                    "data-multiple-separator": "; ",
-                    "data-live-search": "true",
-                }
-            ),
-            distinct=True,
-        )
-    
+        choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
+        method="filter_akce_typ",
+        label=_("projekt.filters.projektFilter.akceTyp.label"),
+        widget=SelectMultiple(
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
+        ),
+        distinct=True,
+    )
+
     oblast = MultipleChoiceFilter(
-            choices=OBLAST_CHOICES,
-            label=_("projekt.filters.projektFilter.oblast.label"),
-            method="filter_by_oblast",
-            widget=SelectMultiple(
-                attrs={
-                    "class": "selectpicker",
-                    "data-multiple-separator": "; ",
-                    "data-live-search": "true",
-                }
-            ),
-            distinct=True,
-        )
+        choices=OBLAST_CHOICES,
+        label=_("projekt.filters.projektFilter.oblast.label"),
+        method="filter_by_oblast",
+        widget=SelectMultiple(
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
+        ),
+        distinct=True,
+    )
 
     def filter_queryset(self, queryset):
         logger.debug("projekt.filters.AkceFilter.filter_queryset.start")
@@ -505,8 +506,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
             if "uzivatel" in historie:
                 queryset_history &= Q(historie__historie__uzivatel__in=historie["uzivatel"])
             if "uzivatel_organizace" in historie:
-                queryset_history &= Q(historie__historie__organizace_snapshot__in
-                                      =historie["uzivatel_organizace"])
+                queryset_history &= Q(historie__historie__organizace_snapshot__in=historie["uzivatel_organizace"])
             if "datum_zmeny__gte" in historie:
                 queryset_history &= Q(historie__historie__datum_zmeny__gte=historie["datum_zmeny__gte"])
             if "datum_zmeny__lte" in historie:
@@ -596,25 +596,23 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metóda pro filtrování podle datumu schválení od.
         """
-        return queryset.filter(
-            historie__historie__typ_zmeny=SCHVALENI_OZNAMENI_PROJ
-        ).filter(historie__historie__datum_zmeny__gte=value)
+        return queryset.filter(historie__historie__typ_zmeny=SCHVALENI_OZNAMENI_PROJ).filter(
+            historie__historie__datum_zmeny__gte=value
+        )
 
     def filter_approved_before(self, queryset, name, value):
         """
         Metóda pro filtrování podle datumu schválení do.
         """
-        return queryset.filter(
-            historie__historie__typ_zmeny=SCHVALENI_OZNAMENI_PROJ
-        ).filter(historie__historie__datum_zmeny__lte=value)
+        return queryset.filter(historie__historie__typ_zmeny=SCHVALENI_OZNAMENI_PROJ).filter(
+            historie__historie__datum_zmeny__lte=value
+        )
 
     def filter_akce_typ(self, queryset, name, value):
         """
         Metóda pro filtrování podle typu akce.
         """
-        return queryset.filter(
-            Q(akce__hlavni_typ__in=value) | Q(akce__vedlejsi_typ__in=value)
-        ).distinct()
+        return queryset.filter(Q(akce__hlavni_typ__in=value) | Q(akce__vedlejsi_typ__in=value)).distinct()
 
     def filtr_akce_katastr(self, queryset, name, value):
         """
@@ -651,10 +649,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         if not value:
             return queryset
-        return queryset.filter(
-            Q(akce__hlavni_vedouci__in=value)
-            | Q(akce__akcevedouci__vedouci__in=value)
-        ).distinct()
+        return queryset.filter(Q(akce__hlavni_vedouci__in=value) | Q(akce__akcevedouci__vedouci__in=value)).distinct()
 
     def filtr_akce_organizace(self, queryset, name, value):
         """
@@ -672,9 +667,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         Metóda pro filtrování podle identu dokumentu.
         """
         return queryset.filter(
-            Q(
-                akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely__icontains=value
-            )
+            Q(akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely__icontains=value)
             | Q(casti_dokumentu__dokument__ident_cely__icontains=value)
         ).distinct()
 
@@ -691,7 +684,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         user: User = kwargs.get("request").user
         self.filters["typ_akce"].extra["choices"] = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:]
         self.filters["oblast"].extra["choices"] = OBLAST_CHOICES
-        
+
         self.helper = ProjektFilterFormHelper()
         self.set_filter_fields(user)
 
@@ -700,16 +693,18 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
     """
     Třída pro správne zobrazení filtru.
     """
+
     form_method = "GET"
+
     def __init__(self, form=None):
-        history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"projekt.filters.history.divider.label")
+        history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("projekt.filters.history.divider.label")
         }
-        akce_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"projekt.filters.akce.divider.label")
+        akce_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("projekt.filters.akce.divider.label")
         }
-        dok_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"projekt.filters.dok.divider.label")
+        dok_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("projekt.filters.dok.divider.label")
         }
         self.layout = Layout(
             Div(
@@ -744,9 +739,7 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div(
-                        "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
-                    ),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
                     Div("historie_uzivatel", css_class="col-sm-3"),
                     Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                     id="historieCollapse",

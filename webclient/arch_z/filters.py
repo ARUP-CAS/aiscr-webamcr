@@ -1,25 +1,33 @@
 import logging
 
 import crispy_forms
+from arch_z.forms import ArchzFilterForm
+from arch_z.models import ArcheologickyZaznam
+from core.constants import (
+    ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE,
+    ROLE_ADMIN_ID,
+    ROLE_ARCHIVAR_ID,
+)
+from core.forms import SelectMultipleSeparator
+from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
-from crispy_forms.layout import Div, Layout, HTML
-from django.db.models import Q, OuterRef, Subquery
-from django.forms import SelectMultiple, Select, NumberInput
+from dj.models import DokumentacniJednotka
+from django.db.models import Q
+from django.forms import NumberInput, Select, SelectMultiple
 from django.utils.translation import gettext_lazy as _
 from django_filters import (
     CharFilter,
+    ChoiceFilter,
+    DateFromToRangeFilter,
+    FilterSet,
     ModelMultipleChoiceFilter,
     MultipleChoiceFilter,
-    DateFromToRangeFilter,
+    NumberFilter,
     RangeFilter,
-    ChoiceFilter, FilterSet,
-    NumberFilter
 )
-from django_filters.widgets import DateRangeWidget, SuffixedMultiWidget
 from django_filters.fields import RangeField
-
-from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
-from dj.models import DokumentacniJednotka
+from django_filters.widgets import DateRangeWidget, SuffixedMultiWidget
+from dokument.filters import HistorieFilter
 from heslar.hesla import (
     HESLAR_ADB_PODNET,
     HESLAR_ADB_TYP,
@@ -43,18 +51,14 @@ from heslar.hesla import (
     HESLAR_PRISTUPNOST,
     HESLAR_VYSKOVY_BOD_TYP,
 )
-from heslar.models import Heslar, RuianKraj, RuianOkres, RuianKatastr
+from heslar.models import Heslar
+from heslar.views import heslar_12
 from historie.filters import HistorieOrganizaceMultipleChoiceFilter
 from historie.models import Historie
 from projekt.filters import KatastrFilterMixin
-from core.forms import SelectMultipleSeparator
-from arch_z.forms import ArchzFilterForm
-from .models import Akce
-from arch_z.models import ArcheologickyZaznam
 from uzivatel.models import Organizace, Osoba, User
-from dokument.filters import HistorieFilter
-from heslar.views import heslar_12
 
+from .models import Akce
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +89,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     """
     Třída pro zakladní filtrování archeologických záznamů a jejich potomků.
     """
+
     # Filters by historie
 
     TYP_VAZBY = ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
@@ -115,7 +120,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     # Historie
     historie_typ_zmeny = MultipleChoiceFilter(
-        choices=filter(lambda x: x[0].startswith("AZ") or x[0].startswith("KAT"), Historie.CHOICES),
+        choices=list(filter(lambda x: x[0].startswith("AZ") or x[0].startswith("KAT"), Historie.CHOICES)),
         label=_("arch_z.filters.ArchZaznamFilter.historie_typ_zmeny.label"),
         field_name="archeologicky_zaznam__historie__historie__typ_zmeny",
         widget=SelectMultipleSeparator(),
@@ -141,7 +146,10 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     dj_zjisteni = MultipleChoiceFilter(
         method="filter_dj_zjisteni",
         label=_("arch_z.filters.ArchZaznamFilter.dj_zjisteni.label"),
-        choices=[("True", _("arch_z.filters.ArchZaznamFilter.dj_zjisteni.pozitivni")), ("False", _("arch_z.filters.ArchZaznamFilter.dj_zjisteni.negativni"))],
+        choices=[
+            ("True", _("arch_z.filters.ArchZaznamFilter.dj_zjisteni.pozitivni")),
+            ("False", _("arch_z.filters.ArchZaznamFilter.dj_zjisteni.negativni")),
+        ],
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
@@ -226,15 +234,13 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         distinct=True,
     )
 
-
     def filtr_katastr(self, queryset, name, value):
         """
         Metóda pro filtrování podle hlavního i vedlejšího katastru.
         """
         if value:
             return queryset.filter(
-                Q(archeologicky_zaznam__hlavni_katastr__in=value)
-                | Q(archeologicky_zaznam__katastry__in=value)
+                Q(archeologicky_zaznam__hlavni_katastr__in=value) | Q(archeologicky_zaznam__katastry__in=value)
             ).distinct()
         return queryset
 
@@ -262,21 +268,15 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         if "True" in value and "False" in value:
             return queryset.filter(
-                Q(
-                    archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
-                )
-                | Q(
-                    archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=True
-                )
+                Q(archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False)
+                | Q(archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=True)
             ).distinct()
         elif "True" in value:
             return queryset.filter(
                 archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
             ).distinct()
         elif "False" in value:
-            return queryset.filter(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=True
-            ).distinct()
+            return queryset.filter(archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=True).distinct()
 
     def filter_predmet_pozn_pocet(self, queryset, name, value):
         """
@@ -390,7 +390,10 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     zahrnout_projektove = ChoiceFilter(
-        choices=[("False", _("arch_z.filters.AkceFilter.zahrnout_projektove.ne")), ("True", _("arch_z.filters.AkceFilter.zahrnout_projektove.ano"))],
+        choices=[
+            ("False", _("arch_z.filters.AkceFilter.zahrnout_projektove.ne")),
+            ("True", _("arch_z.filters.AkceFilter.zahrnout_projektove.ano")),
+        ],
         label=_("arch_z.filters.AkceFilter.zahrnout_projektove.label"),
         method="filtr_zahrnout_projektove",
         empty_label=None,
@@ -432,7 +435,10 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     odlozena_nz = MultipleChoiceFilter(
-        choices=[(False, _("arch_z.filters.AkceFilter.odlozena_nz.ne")), (True, _("arch_z.filters.AkceFilter.odlozena_nz.ano"))],
+        choices=[
+            (False, _("arch_z.filters.AkceFilter.odlozena_nz.ne")),
+            (True, _("arch_z.filters.AkceFilter.odlozena_nz.ano")),
+        ],
         label=_("arch_z.filters.AkceFilter.odlozena_nz.label"),
         field_name="odlozena_nz",
         widget=SelectMultiple(
@@ -448,7 +454,10 @@ class AkceFilter(ArchZaznamFilter):
     has_positive_find = MultipleChoiceFilter(
         method="filter_has_positive_find",
         label=_("arch_z.filters.AkceFilter.has_positive_find.label"),
-        choices=[("True", _("arch_z.filters.AkceFilter.has_positive_find.pozitivni")), ("False", _("arch_z.filters.AkceFilter.has_positive_find.negativni"))],
+        choices=[
+            ("True", _("arch_z.filters.AkceFilter.has_positive_find.pozitivni")),
+            ("False", _("arch_z.filters.AkceFilter.has_positive_find.negativni")),
+        ],
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -525,13 +534,13 @@ class AkceFilter(ArchZaznamFilter):
 
     vb_niveleta_od = NumberFilter(
         label=_("arch_z.filters.AkceFilter.vb_niveleta.label"),
-        method='filter_by_z_range',
+        method="filter_by_z_range",
         distinct=True,
     )
 
     vb_niveleta_do = NumberFilter(
         label=" ",
-        method='filter_by_z_range',
+        method="filter_by_z_range",
         distinct=True,
     )
 
@@ -552,9 +561,7 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metóda pro filtrování podle typu akce.
         """
-        return queryset.filter(
-            Q(hlavni_typ__in=value) | Q(vedlejsi_typ__in=value)
-        ).distinct()
+        return queryset.filter(Q(hlavni_typ__in=value) | Q(vedlejsi_typ__in=value)).distinct()
 
     def filtr_vedouci(self, queryset, name, value):
         """
@@ -562,9 +569,7 @@ class AkceFilter(ArchZaznamFilter):
         """
         if not value:
             return queryset
-        return queryset.filter(
-            Q(hlavni_vedouci__in=value) | Q(akcevedouci__vedouci__in=value)
-        ).distinct()
+        return queryset.filter(Q(hlavni_vedouci__in=value) | Q(akcevedouci__vedouci__in=value)).distinct()
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
@@ -598,8 +603,9 @@ class AkceFilter(ArchZaznamFilter):
         queryset = queryset.filter(archeologicky_zaznam__dokumentacni_jednotky_akce__isnull=False)
         if "True" in value and "False" in value:
             return queryset
-        doumentacni_jednotka_subquery = DokumentacniJednotka.objects \
-            .filter(negativni_jednotka=False).values_list("archeologicky_zaznam__pk", flat=True)
+        doumentacni_jednotka_subquery = DokumentacniJednotka.objects.filter(negativni_jednotka=False).values_list(
+            "archeologicky_zaznam__pk", flat=True
+        )
         if "True" in value:
             return queryset.filter(pk__in=doumentacni_jednotka_subquery).distinct()
         if "False" in value:
@@ -610,21 +616,11 @@ class AkceFilter(ArchZaznamFilter):
         Metóda pro filtrování podle popisných údajů ADB.
         """
         return queryset.filter(
-            Q(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__uzivatelske_oznaceni_sondy__icontains=value
-            )
-            | Q(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__cislo_popisne__icontains=value
-            )
-            | Q(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__trat__icontains=value
-            )
-            | Q(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__parcelni_cislo__icontains=value
-            )
-            | Q(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__poznamka__icontains=value
-            )
+            Q(archeologicky_zaznam__dokumentacni_jednotky_akce__adb__uzivatelske_oznaceni_sondy__icontains=value)
+            | Q(archeologicky_zaznam__dokumentacni_jednotky_akce__adb__cislo_popisne__icontains=value)
+            | Q(archeologicky_zaznam__dokumentacni_jednotky_akce__adb__trat__icontains=value)
+            | Q(archeologicky_zaznam__dokumentacni_jednotky_akce__adb__parcelni_cislo__icontains=value)
+            | Q(archeologicky_zaznam__dokumentacni_jednotky_akce__adb__poznamka__icontains=value)
         ).distinct()
 
     def filtr_adb_autori(self, queryset, name, value):
@@ -634,12 +630,8 @@ class AkceFilter(ArchZaznamFilter):
         if not value:
             return queryset
         return queryset.filter(
-            Q(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__autor_popisu__in=value
-            )
-            | Q(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__autor_revize__in=value
-            )
+            Q(archeologicky_zaznam__dokumentacni_jednotky_akce__adb__autor_popisu__in=value)
+            | Q(archeologicky_zaznam__dokumentacni_jednotky_akce__adb__autor_revize__in=value)
         ).distinct()
 
     def filter_adb_roky(self, queryset, name, value):
@@ -668,33 +660,36 @@ class AkceFilter(ArchZaznamFilter):
 
     def filter_by_z_range(self, queryset, name, value):
         if value:
-            if name ==  'vb_niveleta_od':
-                queryset = queryset.extra(where=["ST_Z(geom) >= %s"],params=[value])
-            if name ==  'vb_niveleta_do':
-                queryset = queryset.extra(where=["ST_Z(geom) <= %s"],params=[value])
+            if name == "vb_niveleta_od":
+                queryset = queryset.extra(where=["ST_Z(geom) >= %s"], params=[value])
+            if name == "vb_niveleta_do":
+                queryset = queryset.extra(where=["ST_Z(geom) <= %s"], params=[value])
         return queryset
 
     def filter_queryset(self, queryset):
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(AkceFilter, self).filter_queryset(queryset)
-        if 'vb_niveleta_od' in self.request.GET or 'vb_niveleta_do' in self.request.GET:
+        if "vb_niveleta_od" in self.request.GET or "vb_niveleta_do" in self.request.GET:
             queryset = queryset.filter(
-                    archeologicky_zaznam__dokumentacni_jednotky_akce__adb__vyskove_body__geom__isnull=False
-                )            
+                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__vyskove_body__geom__isnull=False
+            )
         if historie:
             queryset_history = Q(archeologicky_zaznam__historie__typ_vazby=historie["typ_vazby"])
             if "uzivatel" in historie:
                 queryset_history &= Q(archeologicky_zaznam__historie__historie__uzivatel__in=historie["uzivatel"])
             if "uzivatel_organizace" in historie:
-                queryset_history &= Q(archeologicky_zaznam__historie__historie__organizace_snapshot__in
-                                      =historie["uzivatel_organizace"])
+                queryset_history &= Q(
+                    archeologicky_zaznam__historie__historie__organizace_snapshot__in=historie["uzivatel_organizace"]
+                )
             if "datum_zmeny__gte" in historie:
-                queryset_history &= Q(archeologicky_zaznam__historie__historie__datum_zmeny__gte
-                                      =historie["datum_zmeny__gte"])
+                queryset_history &= Q(
+                    archeologicky_zaznam__historie__historie__datum_zmeny__gte=historie["datum_zmeny__gte"]
+                )
             if "datum_zmeny__lte" in historie:
-                queryset_history &= Q(archeologicky_zaznam__historie__historie__datum_zmeny__lte
-                                      =historie["datum_zmeny__lte"])
+                queryset_history &= Q(
+                    archeologicky_zaznam__historie__historie__datum_zmeny__lte=historie["datum_zmeny__lte"]
+                )
             if "typ_zmeny" in historie:
                 queryset_history &= Q(archeologicky_zaznam__historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             queryset = queryset.filter(queryset_history)
@@ -709,7 +704,7 @@ class AkceFilter(ArchZaznamFilter):
 
     def __init__(self, *args, **kwargs):
         super(AkceFilter, self).__init__(*args, **kwargs)
-        self.filters["typ"].extra["choices"] =heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:]
+        self.filters["typ"].extra["choices"] = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:]
         self.filters["historie_uzivatel_organizace"] = HistorieOrganizaceMultipleChoiceFilter(
             label=_("arch_z.filters.ArchZaznamFilter.historie_uzivatel_organizace.label"),
             widget=SelectMultipleSeparator(),
@@ -722,22 +717,24 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
     """
     Class pro form helper pro zobrazení formuláře.
     """
+
     form_method = "GET"
+
     def __init__(self, form=None):
-        dj_pian_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+        dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("arch_z.filters.AkceFilterFormHelper.djPian.divider.label")
         }
-        history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"arch_z.filters.AkceFilterFormHelper.history.divider.label")
+        history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("arch_z.filters.AkceFilterFormHelper.history.divider.label")
         }
-        komponenta_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"arch_z.filters.AkceFilterFormHelper.komponenta.divider.label")
+        komponenta_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("arch_z.filters.AkceFilterFormHelper.komponenta.divider.label")
         }
-        dok_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"arch_z.filters.AkceFilterFormHelper.dok.divider.label")
+        dok_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("arch_z.filters.AkceFilterFormHelper.dok.divider.label")
         }
-        adb_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"arch_z.filters.AkceFilterFormHelper.adb.divider.label")
+        adb_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("arch_z.filters.AkceFilterFormHelper.adb.divider.label")
         }
         self.layout = Layout(
             Div(
@@ -773,9 +770,7 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div(
-                        "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
-                    ),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
                     Div("historie_uzivatel", css_class="col-sm-3"),
                     Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                     id="historieCollapse",
