@@ -1,7 +1,8 @@
 import logging
-from cacheops import invalidate_model
 
-from arch_z.models import ArcheologickyZaznam, Akce
+from arch_z.models import Akce, ArcheologickyZaznam
+from cacheops import invalidate_model
+from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_komponenta_ident
 from core.message_constants import (
@@ -23,6 +24,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
+from dokument.models import Dokument, DokumentCast
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
@@ -36,15 +38,12 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PREDMET_SPECIFIKACE,
 )
-from heslar.models import Heslar
 from heslar.views import heslar_12, heslar_list
 from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
-from komponenta.models import Komponenta, KomponentaAktivita
+from komponenta.models import Komponenta
 from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
-from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
-from dokument.models import DokumentCast, Dokument
 
 logger = logging.getLogger(__name__)
 
@@ -86,34 +85,24 @@ def detail(request, typ_vazby, ident_cely):
 
     if "nalez_edit_nalez" in request.POST:
         druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
-        specifikace_objekt_choices = heslar_12(
-            HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
-        )
+        specifikace_objekt_choices = heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT)
         NalezObjektFormset = inlineformset_factory(
             Komponenta,
             NalezObjekt,
-            form=create_nalez_objekt_form(
-                druh_objekt_choices, specifikace_objekt_choices
-            ),
-            extra=1,
+            form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
+            extra=3,
         )
-        formset_objekt = NalezObjektFormset(
-            request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_o"
-        )
+        formset_objekt = NalezObjektFormset(request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_o")
 
         druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
         specifikce_predmetu_choices = heslar_list(HESLAR_PREDMET_SPECIFIKACE)
         NalezPredmetFormset = inlineformset_factory(
             Komponenta,
             NalezPredmet,
-            form=create_nalez_predmet_form(
-                druh_predmet_choices, specifikce_predmetu_choices
-            ),
-            extra=1,
+            form=create_nalez_predmet_form(druh_predmet_choices, specifikce_predmetu_choices),
+            extra=3,
         )
-        formset_predmet = NalezPredmetFormset(
-            request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p"
-        )
+        formset_predmet = NalezPredmetFormset(request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p")
         if formset_objekt.is_valid() and formset_predmet.is_valid():
             logger.debug("komponenta.views.detail.form_valid_2")
             formset_predmet.save()
@@ -122,9 +111,13 @@ def detail(request, typ_vazby, ident_cely):
                 logger.debug("Form data was changed")
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
-            logger.debug("komponenta.views.detail.form_not_valid_2",
-                         extra={"formset_predmet_errors": formset_predmet.errors,
-                                "formset_objekt_errors": formset_objekt.errors})
+            logger.debug(
+                "komponenta.views.detail.form_not_valid_2",
+                extra={
+                    "formset_predmet_errors": formset_predmet.errors,
+                    "formset_objekt_errors": formset_objekt.errors,
+                },
+            )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
             request.session["_old_nalez_post"] = request.POST
             request.session["komp_ident_cely"] = ident_cely
@@ -160,12 +153,8 @@ def detail(request, typ_vazby, ident_cely):
             ],
         )
     response = redirect(url)
-    response.set_cookie(
-        "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
-    )
-    response.set_cookie(
-        "set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000
-    )
+    response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
+    response.set_cookie("set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000)
     komponenta.close_active_transaction_when_finished = True
     komponenta.save()
     return response
@@ -211,10 +200,7 @@ def zapsat(request, typ_vazby, dj_ident_cely):
 
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
         if dj:
-            if (
-                dj.archeologicky_zaznam.typ_zaznamu
-                == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
-            ):
+            if dj.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
                 url = reverse(
                     "arch_z:update-komponenta",
                     args=[
@@ -252,9 +238,7 @@ def zapsat(request, typ_vazby, dj_ident_cely):
             )
     response = redirect(url)
     if komp_ident_cely:
-        response.set_cookie(
-            "show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000
-        )
+        response.set_cookie("show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000)
         response.set_cookie(
             "set-active",
             f"el_komponenta_{komp_ident_cely.replace('-', '_')}",
@@ -313,9 +297,7 @@ def smazat(request, typ_vazby, ident_cely):
                     {"redirect": dj.get_absolute_url()},
                     status=403,
                 )
-                response.set_cookie(
-                    "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
-                )
+                response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
             else:
                 response = JsonResponse(
                     {
