@@ -66,7 +66,8 @@ class WaitForPageLoad():
 class BaseSeleniumTestClass(StaticLiveServerTestCase):   
     #port = 5678   
     host = '0.0.0.0'
-
+    del settings.DATABASES["test_db"]
+    
     @classmethod
     def get_base_test_data(cls):
         pass    

@@ -56,7 +56,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.1
+     - 5.1.1
      - BSD License
      - https://www.djangoproject.com/
    * - PyRTF3
@@ -216,7 +216,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/tjwalch/django-livereload-server
    * - django-model-utils
-     - 4.5.1
+     - 5.0.0
      - BSD License
      - https://github.com/jazzband/django-model-utils
    * - django-object-actions
@@ -268,7 +268,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.15.4
+     - 3.16.0
      - The Unlicense (Unlicense)
      - https://github.com/tox-dev/py-filelock
    * - funcy
@@ -296,7 +296,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://pycqa.github.io/isort/
    * - kombu
-     - 5.4.0
+     - 5.4.1
      - BSD License
      - https://kombu.readthedocs.io
    * - libsass
@@ -320,7 +320,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.1.0
+     - 2.1.1
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -352,7 +352,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.44
+     - 8.13.45
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -360,7 +360,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Historical Permission Notice and Disclaimer (HPND)
      - https://python-pillow.org
    * - platformdirs
-     - 4.2.2
+     - 4.3.2
      - MIT License
      - https://github.com/platformdirs/platformdirs
    * - polib
@@ -432,7 +432,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://github.com/ahupp/python-magic
    * - pytz
-     - 2024.1
+     - 2024.2
      - MIT License
      - http://pythonhosted.org/pytz
    * - pyzstd
@@ -464,7 +464,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
-     - 4.23.1
+     - 4.24.0
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
@@ -536,7 +536,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.26.3
+     - 20.26.4
      - MIT License
      - https://github.com/pypa/virtualenv
    * - websocket-client
