@@ -395,8 +395,7 @@ def create(request):
                             "button": _("projekt.views.create.submitButton.text"),
                         },
                     )
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            fedora_transaction = projekt.create_transaction(request.user)
             if x1 and x2:
                 projekt.geom = Point(x1, x2)
             try:
@@ -492,9 +491,8 @@ def edit(request, ident_cely):
             # Workaroud to not check if long and lat has been changed, only geom is interesting
             form.fields["coordinate_x1"].initial = x1
             form.fields["coordinate_x2"].initial = x2
-            fedora_trasnaction = FedoraTransaction()
+            projekt.create_transaction(request.user)
             projekt = form.save(commit=False)
-            projekt.active_transaction = fedora_trasnaction
             projekt.save()
             old_geom = projekt.geom
             new_geom = Point(x1, x2)
@@ -508,7 +506,6 @@ def edit(request, ident_cely):
                 logger.warning("projekt.views.edit.form_valid.geom_not_updated")
             if form.changed_data or geom_changed:
                 logger.debug("projekt.views.edit.form_valid.form_changed", extra={"changed_data": form.changed_data})
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             form.save_m2m()
