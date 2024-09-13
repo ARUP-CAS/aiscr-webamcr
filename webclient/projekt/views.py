@@ -41,7 +41,7 @@ from core.constants import (
     VRACENI_ZRUSENI,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ, OBLAST_CECHY,
-    ZAPSANI_SN, RUSENI_STARE_PROJ,
+    ZAPSANI_SN, RUSENI_STARE_PROJ, OZNAMENI_PROJ_MANUALNI,
 )
 from core.decorators import allowed_user_groups
 from core.exceptions import MaximalIdentNumberError
@@ -1699,7 +1699,7 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def _get_existing_record(self, projekt):
-        historie_objects = Historie.objects.filter(vazba=projekt.historie, typ_zmeny=OZNAMENI_PROJ)
+        historie_objects = Historie.objects.filter(vazba=projekt.historie, typ_zmeny=OZNAMENI_PROJ_MANUALNI)
         if historie_objects.exists():
             return historie_objects.last()
 
@@ -1742,13 +1742,15 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
             else:
                 histore = form.save(commit=False)
                 histore: Historie
-                histore.typ_zmeny = OZNAMENI_PROJ
+                histore.typ_zmeny = OZNAMENI_PROJ_MANUALNI
                 histore.uzivatel = self.request.user
                 histore.vazba = projekt.historie
                 histore.save()
                 histore.datum_zmeny = datetime.combine(form.cleaned_data["datum_oznameni"],
                                                        form.cleaned_data["cas_oznameni"])
             histore.save()
+            projekt.active_transaction = FedoraTransaction()
+            projekt.save_metadata(close_transaction=True)
         else:
             logger.debug("projekt.views.UpravitDatumOznameniView.form_invalid",
                          extra={"errors": form.errors, "ident_cely": projekt.ident_cely})
