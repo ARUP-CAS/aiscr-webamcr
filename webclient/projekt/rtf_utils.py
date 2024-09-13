@@ -68,11 +68,8 @@ class ExpertniListCreator(DocumentCreator):
         return self._convert_text(text.replace("\n", ""))
 
     def _get_typ_vyzkumu_text(self):
-        return {
-            "predstihovy": "projekt.forms.GenerovatExpertniListForm.vysledek.pozitivni.text",
-            "zachranny": "projekt.forms.GenerovatExpertniListForm.vysledek.negativni.text",
-            "dohled": "projekt.forms.GenerovatExpertniListForm.vysledek.jine.text",
-        }.get(gettext(self.popup_parametry["typ_vyzkumu"]))
+        from projekt.forms import TYP_VYZKUMU_CHOICES
+        return str(dict(TYP_VYZKUMU_CHOICES).get(self.popup_parametry["typ_vyzkumu"]))
 
     def _generate_text(self):
         result = StyleSheet()

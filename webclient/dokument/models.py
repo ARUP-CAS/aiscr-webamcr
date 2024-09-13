@@ -334,12 +334,11 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Metóda na kontrolu prerekvizit pred archivací:
 
-            Dokument má aspoň jeden dokument.
+            kontrola jako před odesláním 
+
         """
         # At least one soubor must be attached to the dokument
-        result = []
-        if self.soubory.soubory.all().count() == 0:
-            result.append(str(_("dokument.models.formCheckArchivace.missingSoubor.text")))
+        result = self.check_pred_odeslanim()
         return result
 
     def has_extra_data(self):

@@ -102,9 +102,10 @@
   {% block sidebar %}{% endblock %}
   <div id="app-page-wrapper">
     {% block infobar%}
-      {% cache 600 maintenance_cache_key maintenance %}
+      {% get_current_language as LANGUAGE_CODE %}
+      {% cache 600 maintenance_cache_key LANGUAGE_CODE %}
       {% get_maintenance as action %}
-      {% if action and "accounts" not in request.path %}
+      {% if action %}
       <div class="maintenance">
         <p class="d-block px-3 py-2 text-center text-bold text-white old-bv">{% trans "base.odstavka.text" %}</p>
       </div>

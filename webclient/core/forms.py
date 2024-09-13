@@ -177,16 +177,16 @@ class OdstavkaSystemuForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(OdstavkaSystemuForm, self).__init__(*args, **kwargs)
         with open("/vol/web/nginx/data/cs/custom_50x.html") as fp:
-            soup = BeautifulSoup(fp)
+            soup = BeautifulSoup(fp, "html.parser")
         self.fields["error_text_cs"].initial = soup.find("h1").string
         with open("/vol/web/nginx/data/en/custom_50x.html") as fp:
-            soup = BeautifulSoup(fp)
+            soup = BeautifulSoup(fp, "html.parser")
         self.fields["error_text_en"].initial = soup.find("h1").string
         with open("/vol/web/nginx/data/cs/oznameni/custom_50x.html") as fp:
-            soup = BeautifulSoup(fp)
+            soup = BeautifulSoup(fp, "html.parser")
         self.fields["error_text_oznam_cs"].initial = soup.find("h1").string
         with open("/vol/web/nginx/data/en/oznameni/custom_50x.html") as fp:
-            soup = BeautifulSoup(fp)
+            soup = BeautifulSoup(fp, "html.parser")
         self.fields["error_text_oznam_en"].initial = soup.find("h1").string
         locale_path = settings.LOCALE_PATHS[0]
         languages = settings.LANGUAGES
