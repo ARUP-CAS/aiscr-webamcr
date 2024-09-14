@@ -306,7 +306,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence += 1
         except ObjectDoesNotExist:
-            sequence = LokalitaSekvence.objects.create(region=region, typ=typ, sekvence=1)
+            sequence = LokalitaSekvence.objects.using('urgent').create(region=region, typ=typ, sekvence=1)
         finally:
             prefix = f"{region}-{typ.zkratka}"
             lokality = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{prefix}").order_by("-ident_cely")
@@ -678,7 +678,7 @@ def get_akce_ident(region):
             raise MaximalIdentNumberError(MAXIMUM)
         sequence.sekvence += 1
     except ObjectDoesNotExist:
-        sequence = AkceSekvence.objects.create(region=region, sekvence=1)
+        sequence = AkceSekvence.objects.using('urgent').create(region=region, sekvence=1)
     finally:
         prefix = str(region + "-9")
         akce = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{prefix}",ident_cely__endswith="A").order_by("-ident_cely")
