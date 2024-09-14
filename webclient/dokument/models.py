@@ -379,7 +379,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence += 1
         except ObjectDoesNotExist:
-            sequence = DokumentSekvence.objects.create(region=region, rada=rada, rok=current_year,sekvence=1)
+            sequence = DokumentSekvence.objects.using('urgent').create(region=region, rada=rada, rok=current_year, sekvence=1)
         finally:
             prefix = f"{region}-{rada.zkratka}-{str(current_year)}"
             docs = Dokument.objects.filter(ident_cely__startswith=prefix).order_by("-ident_cely")
