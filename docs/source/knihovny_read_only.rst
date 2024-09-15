@@ -284,7 +284,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/pre-commit/identify
    * - idna
-     - 3.8
+     - 3.9
      - BSD License
      - https://github.com/kjd/idna
    * - inflate64
@@ -360,9 +360,9 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Historical Permission Notice and Disclaimer (HPND)
      - https://python-pillow.org
    * - platformdirs
-     - 4.3.2
+     - 4.3.3
      - MIT License
-     - https://github.com/platformdirs/platformdirs
+     - https://github.com/tox-dev/platformdirs
    * - polib
      - 1.2.0
      - MIT License
@@ -528,7 +528,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU General Public License v2 or later (GPLv2+)
      - https://uwsgi-docs.readthedocs.io/en/latest/
    * - urllib3
-     - 2.2.2
+     - 2.2.3
      - MIT License
      - https://github.com/urllib3/urllib3/blob/main/CHANGES.rst
    * - vine
