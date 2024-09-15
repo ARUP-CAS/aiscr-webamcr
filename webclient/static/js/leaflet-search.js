@@ -81,10 +81,9 @@ L.Control.Search = L.Control.extend({
 		autoResize: true,				//autoresize on input change
 		collapsed: true,				//collapse search control at startup
 		autoCollapse: false,			//collapse search control after submit(on button or on tips if enabled tipAutoSubmit)
-		autoCollapseTime: 1200,			//delay for autoclosing alert and collapse after blur
+		autoCollapseTime: 1500,			//delay for autoclosing alert and collapse after blur
 		textErr: 'Location not found',	//error message
 		textCancel: 'Cancel',		    //title in cancel button
-		textPlaceholder: 'Search...',   //placeholder value
 		hideMarkerOnCollapse: false,    //remove circle and marker on search control collapsed
 		position: 'topleft',
 		marker: {						//custom L.Marker or false for hide
@@ -97,7 +96,9 @@ L.Control.Search = L.Control.extend({
 				stroke: true,
 				fill: false
 			}
-		}
+		},
+		translations: null,
+		layerKN: null
 	},
 
 	_getPath: function(obj, prop) {
@@ -121,7 +122,6 @@ L.Control.Search = L.Control.extend({
 
 	initialize: function(options) {
 		L.Util.setOptions(this, options || {});
-		this._inputMinSize = this.options.textPlaceholder ? this.options.textPlaceholder.length : 10;
 		this._layer = this.options.layer || new L.LayerGroup();
 		this._filterData = this.options.filterData || this._defaultFilterData;
 		this._formatData = this.options.formatData || this._defaultFormatData;
@@ -130,15 +130,64 @@ L.Control.Search = L.Control.extend({
 		this._countertips = 0;		//number of tips items
 		this._recordsCache = {};	//key,value table! to store locations! format: key,latlng
 		this._curReq = null;
+		this._url={}
+		this._url["KU"]={name:this.options.translations.KatastralniUzemi,
+			urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/7/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
+				urlService:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/7/findAddressCandidates?outSR={"wkid":4326}&f=json',
+                zoom:13
+            };
+		this._url["okresy"]={name:this.options.translations.Okres,
+			urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/15/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
+				urlService:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/15/findAddressCandidates?outSR={"wkid":4326}&f=json',
+                zoom:10
+            };
+		this._url["obce"]={name:this.options.translations.Obec,
+				urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/12/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
+					urlService:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/12/findAddressCandidates?outSR={"wkid":4326}&f=json',
+					zoom:14
+				};
+		this._url["adresy"]={name:this.options.translations.Adresa,
+			urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/1/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
+				urlService:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/1/findAddressCandidates?outSR={"wkid":4326}&f=json',
+                zoom:19
+            };
+		this._url["ulice"]={name:this.options.translations.Ulice,
+			urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/4/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
+				urlService:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/4/findAddressCandidates?outSR={"wkid":4326}&f=json',
+                zoom:17
+            };
+		this._url["geonames"]={name:this.options.translations.Geonames,
+			urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/GEONAMES/Vyhledavaci_sluzba_nad_daty_GEONAMES/MapServer/exts/GeocodeSOE/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
+				urlService:'https://ags.cuzk.cz/arcgis/rest/services/GEONAMES/Vyhledavaci_sluzba_nad_daty_GEONAMES/MapServer/exts/GeocodeSOE/findAddressCandidates?outSR={"wkid":4326}&f=json',
+                zoom:15
+		};
+		this._url["parcely"]={name:this.options.translations.Parcela, name_place:this.options.translations.KatastralniUzemi,
+			urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/7/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
+            urlService:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/7/findAddressCandidates?outSR={"wkid":4326}&f=json',
+			urlServiceKU:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Prohlizeci_sluzba_nad_daty_RUIAN/MapServer/7/query/query?f=json&outFields=kod&returnGeometry=false&spatialRel=esriSpatialRelIntersects',
+            urlServiceParcela:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Prohlizeci_sluzba_nad_daty_RUIAN/MapServer/5/query?f=json&outSR=4326',
+                zoom:15
+            };
+        this._currentUrl=this._url["okresy"];
+		this._inputMinSize= this._currentUrl.name.length;
+		this.options.textCancel=this.options.translations.SearchTextCancel;
+		this.options.textErr=this.options.translations.SearchTextError;
+		this._parcela={};
+		this._parcela.mode=false;
+		this._parcela.codeKU=null;
+		this._parcela.nameKU="";
+
 	},
 
 	onAdd: function (map) {
 		this._map = map;
 		this._container = L.DomUtil.create('div', 'leaflet-control-search');
-		this._input = this._createInput(this.options.textPlaceholder, 'search-input');
-		this._tooltip = this._createTooltip('search-tooltip');
+		this._button_sel = this._createSelButton(this._currentUrl.name, 'sel-button bi bi-caret-down');		
+		this._input = this._createInput(this._currentUrl.name, 'search-input');
+		this._button = this._createButton(this._currentUrl.name, 'search-button');
 		this._cancel = this._createCancel(this.options.textCancel, 'search-cancel');
-		this._button = this._createButton(this.options.textPlaceholder, 'search-button');
+		this._input_parcela = this._createInputParcela(this.options.translations.Parcela, 'search-input-parcela');
+		this._tooltip = this._createTooltip('search-tooltip');	
 		this._alert = this._createAlert('search-alert');
 
 		if(this.options.collapsed===false)
@@ -224,10 +273,17 @@ L.Control.Search = L.Control.extend({
 	},
 
 	cancel: function() {
-		this._input.value = '';
+		if(this._parcela.mode==true ){
+			this._input_parcela.input.value = '';
+		}
+		else{
+			this._input.value = '';
+			this._input_parcela.input.disabled=true;
+			this._input.focus();
+		}
 		this._handleKeypress({ keyCode: 8 });//simulate backspace keypress
 		this._input.size = this._inputMinSize;
-		this._input.focus();
+		
 		this._cancel.style.display = 'none';
 		this._hideTooltip();
 		this.fire('search:cancel');
@@ -237,10 +293,13 @@ L.Control.Search = L.Control.extend({
 	expand: function(toggle) {
 		toggle = typeof toggle === 'boolean' ? toggle : true;
 		this._input.style.display = 'block';
+		this._button_sel.style.display = 'block';		
+		if(this._parcela.mode) this._input_parcela.style.display = 'block';
 		L.DomUtil.addClass(this._container, 'search-exp');
 		if ( toggle !== false ) {
 			this._input.focus();
 			this._map.on('dragstart click', this.collapse, this);
+			//L.DomEvent.disableClickPropagation(this._container)
 		}
 		this.fire('search:expanded');
 		return this;
@@ -255,6 +314,9 @@ L.Control.Search = L.Control.extend({
 		{
 			this._input.style.display = 'none';
 			this._cancel.style.display = 'none';
+			this._button_sel.style.display = 'none';
+			this._input_parcela.style.display = 'none';
+			this._sel_tool.style.display = 'none';
 			L.DomUtil.removeClass(this._container, 'search-exp');
 			if (this.options.hideMarkerOnCollapse) {
 				this._map.removeLayer(this._markerSearch);
@@ -325,6 +387,64 @@ L.Control.Search = L.Control.extend({
 		return input;
 	},
 
+	_createInputParcela: function (text, className) {
+		var self = this;
+        var form = L.DomUtil.create('form', className, this._container);
+		var input = L.DomUtil.create('input', className, form);
+        form.id="parcela-form";
+		input.type = 'text';
+		input.size = this._inputMinSize;
+		input.value = '';
+		input.autocomplete = 'off';
+		input.autocorrect = 'off';
+		input.autocapitalize = 'off';
+		input.placeholder = text;
+		input.role = 'search';
+		input.id = "searchtext2" ;
+        var div = L.DomUtil.create('div', "radio-inline", form);
+		var divR1 = L.DomUtil.create('div', "radio-box", div);
+		var divR2 = L.DomUtil.create('div', "radio-box", div);
+        var radio1 = L.DomUtil.create('input', className, divR1);
+        var label1 = L.DomUtil.create('label', className, divR1);
+        var radio2 = L.DomUtil.create('input', className, divR2);
+        var label2 = L.DomUtil.create('label', className, divR2);
+        radio1.type=radio2.type="radio";
+        radio1.name=radio2.name="radio-parcela-typ"
+        radio1.id="radio-parcela-stavebni"
+        radio1.value=1;
+        radio2.value=2;
+        radio1.id="radio-parcela-pozemkova"
+        radio2.checked=true;
+		label1.htmlFor = radio1.id;
+		label1.innerHTML = this.options.translations.Stavebni;
+        label2.htmlFor = radio1.id;
+		label2.innerHTML = this.options.translations.Pozemkova;
+        input.disabled=true;
+        form.input=input;
+		form.radio=radio1;
+        L.DomEvent
+			.disableClickPropagation(radio1)
+			.on(radio1, 'change', () => {console.log('radio clicked');this._getParcela()}, this);
+        L.DomEvent
+			.disableClickPropagation(radio2)
+			.on(radio2, 'change', () => {console.log('radio clicked');this._getParcela()}, this);
+		L.DomEvent
+			.disableClickPropagation(input)
+			.on(input, 'keyup', this._handleKeypressParcela, this)
+			.on(input, 'paste', function(e) {
+				setTimeout(function(e) {
+					self._handleKeypressParcela(e);
+				},10,e);
+			}, this)
+			.on(input, 'focus', function(e) {
+				this._input.value=this._parcela.nameKU;
+				this._hideTooltip();
+			}, this);
+			//.on(input, 'blur', this.collapseDelayed, this)
+
+		return form;
+	},
+
 	_createCancel: function (title, className) {
 		var cancel = L.DomUtil.create('a', className, this._container);
 		cancel.href = '#';
@@ -352,6 +472,61 @@ L.Control.Search = L.Control.extend({
 
 		return button;
 	},
+
+	_createSelButton: function (title, className) {
+		var button = L.DomUtil.create('a', className, this._container);
+		button.href = '#';
+		button.title = title;
+		this._sel_tool = L.DomUtil.create('ul', "sel-tool", this._container);
+        for (const [k, v] of Object.entries(this._url)) {
+            this._sel_tool.appendChild( this._createChooseTip(k,v) );
+          }
+		L.DomEvent
+			.on(button, 'click', L.DomEvent.stop, this)
+			.on(button, 'click', this._handleChoose, this);
+			//.on(button, 'focus', this.collapseDelayedStop, this)
+			//.on(button, 'blur', this.collapseDelayed, this);
+
+		return button;
+	},
+
+	_createChooseTip: function(key,text) {//val is object in recordCache, usually is Latlng
+		var tip;
+		tip = L.DomUtil.create('li', '');
+		L.DomUtil.addClass(tip, 'search-tool-choose');
+		tip.innerHTML = text.name;
+		tip._text =  text.name; 		
+		L.DomEvent
+			.disableClickPropagation(tip)
+			.on(tip, 'click', L.DomEvent.stop, this)
+			.on(tip, 'click', function(e) {
+				//this._input.value = text;
+				this._handleChoose()
+				/*this._handleAutoresize();
+				this._input.focus();
+				this._hideTooltip();
+				this._handleSubmit();*/
+				
+                this._currentUrl=this._url[key];
+                this.cancel();
+				if(key=="parcely") {
+					this._input_parcela.style.display = 'block';
+					this._parcela.mode = true;
+                    this._input.placeholder= text.name_place;
+					this._inputMinSize= text.name_place.length;
+				}
+	  			else {
+					this._input_parcela.style.display = 'none';
+					this._parcela.mode = false;
+                    this._input.placeholder= text.name;
+					this._inputMinSize= text.name.length;
+				}
+				//this._input.label.value = text;
+			}, this);
+
+		return tip;
+	},
+
 
 	_createTooltip: function(className) {
 		var self = this;
@@ -681,7 +856,7 @@ L.Control.Search = L.Control.extend({
 
 	_handleKeypress: function (e) {	//run _input keyup event
 		var self = this;
-
+		this._sel_tool.style.display = 'none';
 		switch(e.keyCode)
 		{
 			case 27://Esc
@@ -735,6 +910,58 @@ L.Control.Search = L.Control.extend({
 		this._handleAutoresize();
 	},
 
+	_handleKeypressParcela: function (e) {	//run _input keyup event
+		var self = this;
+		this._sel_tool.style.display = 'none';
+		switch(e.keyCode)
+		{
+			case 27://Esc
+				this.collapse();
+			break;
+			case 13://Enter
+				if(this._countertips == 1 || (this.options.firstTipSubmit && this._countertips > 0)) {
+          			if(this._tooltip.currentSelection == -1) {
+						this._handleArrowSelect(1);
+          			}
+				}
+				this._handleSubmit();	//do search
+			break;
+			case 38://Up
+			case 40://Down
+			case  8://Backspace
+			case 45://Insert
+			case 46://Delete
+				this._autoTypeTmp = false;//disable temporarily autoType
+			break;
+			case 37://Left
+			case 39://Right
+			case 16://Shift
+			case 17://Ctrl
+			case 35://End
+			case 36://Home
+			break;
+			default://All keys
+				if(this._input.value.length)
+					this._cancel.style.display = 'block';
+				else
+					this._cancel.style.display = 'none';
+
+				if(this._input.value.length >= 1)
+				{
+					clearTimeout(this.timerKeypress);	//cancel last search request while type in
+					this.timerKeypress = setTimeout(function() {	//delay before request, for limit jsonp/ajax request
+
+						self._getParcela();
+
+					}, this.options.delayType);
+				}
+				else
+					this._hideTooltip();
+		}
+
+		this._handleAutoresize();
+	},
+
 	searchText: function(text) {
 		var code = text.charCodeAt(text.length);
 
@@ -771,29 +998,84 @@ L.Control.Search = L.Control.extend({
 			L.DomUtil.removeClass(this._container, 'search-load');
 		}
 		else
-		{
-			if(this.options.sourceData)
-				this._retrieveData = this.options.sourceData;
-
-			else if(this.options.url)	//jsonp or ajax
-				this._retrieveData = this.options.jsonpParam ? this._recordsFromJsonp : this._recordsFromAjax;
-
-			this._curReq = this._retrieveData.call(this, inputText, function(data) {
-
-				self._recordsCache = self._formatData.call(self, data);
-
-				//TODO refact!
-				if(self.options.sourceData)
-					records = self._filterData( self._input.value, self._recordsCache );
-				else
-					records = self._recordsCache;
-
-				self.showTooltip( records );
-
-				L.DomUtil.removeClass(self._container, 'search-load');
-			});
+		{			
+			this._curReq = this._retrieveData( inputText);
 		}
 	},
+
+	_searchCodeKU: function(nameKU) {
+		
+		if(this._curReq && this._curReq.abort)
+			this._curReq.abort();
+		//abort previous requests
+
+		L.DomUtil.addClass(this._container, 'search-load');
+
+		$.ajax({
+			url: this._url["parcely"].urlServiceKU,
+			type: 'GET',
+			data: { where: `lower(nazev) = lower('${nameKU}')` },
+			dataType: 'json',
+			context: this,
+			success: function (json) {   
+				this._parcela.codeKU=json.features[0].attributes.kod;
+				this._input_parcela.input.disabled=false;
+				this._parcela.nameKU=this._input.value;
+				L.DomUtil.removeClass(this._container, 'search-load');
+			}
+		})
+		
+	},
+	_getParcela: function() {
+		if(this._input_parcela.input.value=="") return;
+		var inputText = this._input_parcela.input.value, records;
+		records = inputText.split("/");
+		if(this._curReq && this._curReq.abort)
+			this._curReq.abort();
+		//abort previous requests
+
+		var condition,parcelaTyp;
+		if(this._input_parcela.radio.checked) parcelaTyp=1;
+		else parcelaTyp=2
+
+		condition=`katastralniuzemi=${this._parcela.codeKU} AND kmenovecislo=${records[0]} AND druhcislovanikod=${parcelaTyp}`;
+		if(records.length>1)
+			condition=condition+` AND poddelenicisla=${records[1]}`
+		L.DomUtil.addClass(this._input_parcela.input, 'search-load');
+		$.ajax({//GeoNames
+			url: this._url["parcely"].urlServiceParcela,
+			type: 'GET',
+			data: { where: condition },
+			dataType: 'json',
+			context: this,
+			success: function (json) { 
+				L.DomUtil.removeClass(this._input_parcela.input, 'search-load'); 
+				if (json.hasOwnProperty("error") || json.features.length == 0 )
+					this.showAlert();
+				else {
+					let swappedCoordinates = json.features[0].geometry.rings[0].map(coord => [coord[1], coord[0]]);
+					if(!this._map.hasLayer(this.options.layerKN))	this._map.addLayer(this.options.layerKN)
+					this._map.fitBounds(L.latLngBounds(swappedCoordinates));
+				}
+			}
+		})
+		
+	},
+
+    _showTips: function(data) {
+
+        this._recordsCache = this._formatData( data);
+
+        //TODO refact!
+        if(this.options.sourceData)
+            records = this._filterData( this._input.value, this._recordsCache );
+        else
+            records = this._recordsCache;
+
+        this.showTooltip( records );
+
+        L.DomUtil.removeClass(this._container, 'search-load');
+    },
 
 	_handleAutoresize: function() {
 	    var maxWidth;
@@ -877,6 +1159,15 @@ L.Control.Search = L.Control.extend({
 		}
 	},
 
+	_handleChoose: function() {	
+	  if(this._sel_tool.style.display == 'block')
+			this._sel_tool.style.display = 'none';
+	  else {
+		this._hideTooltip();
+		this._sel_tool.style.display = 'block';
+	  }
+	},
+
 	_getLocation: function(key) {	//extract latlng from _recordsCache
 
 		if( this._recordsCache.hasOwnProperty(key) )
@@ -887,25 +1178,24 @@ L.Control.Search = L.Control.extend({
 
 	_defaultMoveToLocation: function(latlng, title, map) {
 		if(this.options.propertyMagicKey){
-			if(latlng.split(":")[1]=='GEONAMES')
-				addr = 'https://ags.cuzk.cz/arcgis/rest/services/GEONAMES/Vyhledavaci_sluzba_nad_daty_GEONAMES/MapServer/exts/GeocodeSOE/findAddressCandidates?outSR={"wkid":4258}&f=json'
-			else			
-				addr = 'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/15/findAddressCandidates?outSR={"wkid":4258}&f=json'
-			$.ajax({
+			addr=this._currentUrl.urlService;
+			L.DomUtil.addClass(this._container, 'search-load');
+            $.ajax({
 			url:addr,
 			type: 'GET',
 			data: {magicKey: latlng.split(":")[0]},
 			dataType: 'json',
+            context:this,
 			success: function(json) {
-			if(json.candidates.length){
-				posX=[json.candidates[0].location.y,json.candidates[0].location.x]
+				L.DomUtil.removeClass(this._container, 'search-load');
+				if(json.candidates.length ){
+					posX=[json.candidates[0].location.y,json.candidates[0].location.x]
+					map.setView(posX,this._currentUrl.zoom);
+					if(this._parcela.mode==true ){
 
-				if(latlng.split(":")[1]=='GEONAMES'){
-					map.setView(posX,15);
-				}else{
-					map.setView(posX,10);
-				}
-			}
+						this._searchCodeKU(json.candidates[0].address)
+					}
+				} 
 			//console.log("Nalezeno")
 			}
 			}
@@ -936,7 +1226,31 @@ L.Control.Search = L.Control.extend({
 			self.collapse();
 
 		return self;
-	}
+	},
+    _compareSearchResult: function ( a, b ) {
+        if ( a.text < b.text ){
+          return -1;
+        }
+        if ( a.text > b.text ){
+          return 1;
+        }
+        return 0;
+    },
+	_retrieveData: function (text){
+		L.DomUtil.addClass(this._container, 'search-load');
+		$.ajax({
+				url: this._currentUrl.urlSuggestions,
+				type: 'GET',
+				data: { text: text },
+				dataType: 'json',
+				context: this,
+				success: function (json) {  
+					 this._showTips(json.suggestions.sort( this._compareSearchResult ));
+					 L.DomUtil.removeClass(this._container, 'search-load');
+					}
+			})
+         
+    }
 });
 
 L.Control.Search.Marker = L.Marker.extend({
@@ -1030,7 +1344,8 @@ L.Control.Search.Marker = L.Marker.extend({
 		}
 
 		return this;
-	}
+	},
+
 });
 
 L.Map.addInitHook(function () {
