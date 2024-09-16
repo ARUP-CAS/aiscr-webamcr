@@ -148,7 +148,7 @@ def get_cadastre_from_point(point):
         )
         return katastr
     except IndexError:
-        logger.error("core.utils.get_cadastre_from_point.error", extra={"point": point})
+        logger.error("core.utils.get_cadastre_from_point.error", extra={"point_0": point[0], "point_1": point[1]})
         return None
 
 
