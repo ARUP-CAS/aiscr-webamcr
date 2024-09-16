@@ -21,7 +21,7 @@
   {% compress css %}
   <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="screen">
   {% endcompress %}
-  {% if user.is_authenticated and request.path != '/oznameni/' and request.path != '/accounts/login/' %}
+  {% if user.is_authenticated and request.path != '/oznameni/' and '/accounts' not in request.path %}
   {% compress css %}
   <link type="text/x-scss" href="{% static '_app-sidebar.scss' %}" rel="stylesheet" media="screen">
   {% endcompress %}
@@ -115,7 +115,7 @@
     {% block navbar %}{% endblock %}
 
     <div
-        class="container-fluid {% if user.is_authenticated and request.path != '/oznameni/' and request.path != '/accounts/login/' %}app-content-wrapper{% endif %}">
+        class="container-fluid {% if user.is_authenticated and request.path != '/oznameni/' and '/accounts/' not in request.path %}app-content-wrapper{% endif %}">
       {% block content %}{% endblock %}
     </div>
 
