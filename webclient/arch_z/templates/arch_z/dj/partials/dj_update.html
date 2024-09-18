@@ -118,12 +118,12 @@
   </div>
   <div class="card-body">
     {% if not j.adb_form %}
-      <form class="mb-3" method="POST" action="{% url 'dj:detail' 'akce_dj_zakladni' j.ident_cely %}" id="djEditForm"
-            onsubmit="editDjSubmitButton.disabled = true; return true;">
+      <form class="mb-3 submit-spinner" method="POST" action="{% url 'dj:detail' 'akce_dj_zakladni' j.ident_cely %}" id="djEditForm">
         {% crispy j.form %}
         {% if show.editovat %}
-          <button type="submit" id="editDjSubmitButton"
-                  class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.ulozitZmeny.label" %}
+          <button type="submit" id="editDjSubmitButton" class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.ulozitZmeny.label" %}
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+            style="display: none"></span>
           </button>
         {% endif %}
       </form>

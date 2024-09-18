@@ -118,6 +118,7 @@ class Modal {
             beforeSend: function () {
                 $("#loader-spinner").show()
                 $("#submit-btn").prop("disabled", true);
+                $("#submit-btn").siblings('button').prop("disabled", true);
             },
             success: function (response) {
                 if ($(response).find(settings.errorClass).length > 0) {
@@ -130,6 +131,7 @@ class Modal {
                     settings.formErrorFunction(settings,response);
                     $("#loader-spinner").hide()
                     $("#submit-btn").prop("disabled", false);
+                    $("#submit-btn").siblings('button').prop("disabled", false);
                 } else if ($(response).find(".alert-block").length > 0) {
                     // Form is not valid, update it with errors
                     $(settings.modalIDD).find(settings.modalContent).html(response);
@@ -140,6 +142,7 @@ class Modal {
                     settings.formErrorFunction(settings,response);
                     $("#loader-spinner").hide()
                     $("#submit-btn").prop("disabled", false);
+                    $("#submit-btn").siblings('button').prop("disabled", false);
                 }
                  else {
                      // Form is valid

@@ -10,8 +10,7 @@
 
 {% block content %}
     <div class="card app-card-form">
-        <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;"
-              action="{% url 'uzivatel:update-uzivatel' %}">
+        <form method="post" action="{% url 'uzivatel:update-uzivatel' %}" class="submit-spinner">
             <div class="card-header">
                 <div class="app-fx app-left">
                     {% trans "uzivatel.templates.updateUser.header" %}
@@ -32,7 +31,10 @@
                         </li>
                     {% endfor %}
                 </ul>
-                <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{% trans "uzivatel.templates.updateUser.submitButton" %}</button>
+                <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{% trans "uzivatel.templates.updateUser.submitButton" %}
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                    style="display: none"></span>
+                </button>
                 <a class="btn btn-secondary mt-3" href="{% url 'historie:uzivatel' user.ident_cely %}">{% trans "uzivatel.templates.updateUser.historieUzivatele" %}</a>
             </div>
         </form>
@@ -49,10 +51,13 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3">
-                    <form method="post" action="{% url 'uzivatel:update-notifications' %}">
+                    <form method="post" action="{% url 'uzivatel:update-notifications' %}" class="submit-spinner">
                         {% csrf_token %}
                         {{ form_notifications|crispy }}
-                        <input type="submit" value="{% trans 'uzivatel.templates.updateUser.submitButton.notifikace' %}" class="btn btn-primary mt-2">
+                        <button type="submit" class="btn btn-primary mt-2">{% trans 'uzivatel.templates.updateUser.submitButton.notifikace' %}
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                            style="display: none"></span>
+                        </button>
                     </form>
                 </div>
             </div>

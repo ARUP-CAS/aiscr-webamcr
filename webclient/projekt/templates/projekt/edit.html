@@ -55,12 +55,14 @@
 {% block content %}
 	<div class="app-entity-projekt">
 		{% include "toolbar_projekt.html" with projekt=projekt %}
-		<form method="post">
+		<form method="post" class="submit-spinner">
 			{% crispy form_projekt %}
       <div class="mt-3">
         <div class="form-group">
-          <input type="submit" name="save" value="{% trans 'projekt.templates.edit.submitButton.text' %}"
-                 class="btn btn-primary app-entity-projekt-btn" id="submit-id-save">
+          <button type="submit" id="submit-id-save" class="btn btn-primary app-entity-projekt-btn">{% trans 'projekt.templates.edit.submitButton.text' %}
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                style="display: none"></span>
+          </button>
           <a type="button" class="btn btn-secondary" href="{% url 'projekt:detail' projekt.ident_cely %}">{% trans "projekt.templates.edit.backButton.text" %}</a>
         </div>
       </div>

@@ -14,7 +14,7 @@
     {% include toolbar with name=toolbar_name %}
 
     {% if filter %}
-      <form method="get" id="filter-form">
+      <form method="get" id="filter-form" class="submit-spinner">
         <div class="mb-1 d-flex flex-row align-items-center justify-content-between">
           <div class="app-left">
             {% if  app == "spoluprace" and show_zadost %} <a class="btn btn-primary mb-1 mt-1" href="{% url 'pas:spoluprace_zadost' %}">{% trans 'templates.searchList.zadostOSpolupraci' %}</a> {% endif %}
@@ -105,6 +105,8 @@
               {% endfor %}
               <button type="submit" class="btn btn-primary">
                 <span class="material-icons">check</span> {{pick_text}}
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                style="display: none"></span>
               </button>
             </div>
           </div>

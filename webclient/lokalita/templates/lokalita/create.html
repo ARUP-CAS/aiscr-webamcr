@@ -23,12 +23,15 @@
 {% block content %}
   <div class="app-entity-lokalita">
     {% include "toolbar_akce.html" with showbackdetail=False showcontrols=False type="lokalita" %}
-    <form method="post" onsubmit="newEntitySubmitBtn.disabled = true; return true;">
+    <form method="post" class="submit-spinner">
       {% csrf_token %}
         {% include "lokalita/lokalita_detail_part.html" with create=True %} 
         <div class="mt-3">
           <div class="form-group">
-            <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary">{{submit_button}}</button>
+            <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary">{{submit_button}}
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+              style="display: none"></span>
+            </button>
             {% if zaznam and zaznam.ident_cely %}
               <a type="button" class="btn btn-secondary" href="{% url 'lokalita:detail' zaznam.ident_cely %}">{% trans "lokalita.templates.create.backButton" %}</a>
             {% else %}

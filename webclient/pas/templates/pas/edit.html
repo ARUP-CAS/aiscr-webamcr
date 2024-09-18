@@ -13,7 +13,7 @@
   <div class="app-entity-samostatny_nalez">
     {% include "toolbar_pas.html" %}
 
-    <form method="post">
+    <form method="post" class="submit-spinner">
       {% csrf_token %}
       <div class="card app-card-form">
         <div class="card-header">
@@ -26,7 +26,10 @@
         </div>
       </div>      
     <div>
-      <input type="submit" name="save" value="{% translate 'pas.templates.edit.submitButton' %}" class="btn btn-primary" id="submit-id-save">
+      <button type="submit" id="submit-id-save" class="btn btn-primary">{% translate 'pas.templates.edit.submitButton' %}
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+        style="display: none"></span>
+      </button>
       {% if sn %}
         <a type="button" class="btn btn-secondary" href="{% url 'pas:detail' sn.ident_cely %}">{% trans "pas.templates.edit.backButton" %}</a>
       {% else %}
