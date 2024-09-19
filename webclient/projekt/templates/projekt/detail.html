@@ -864,8 +864,14 @@
       })
       var schvalit_modal = new Modal(options, "projekt-pridat-oznamovatele");
       }
+      if ("{{show.zadost_udaje_oznamovatel}}" != "False") {
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        formURL: "{% url 'projekt:zadost-udaje-oznamovatel' projekt.ident_cely %}",
+        formID: "zadost-udaje-oznamovatel-form",
+        modalFormID: "#zadost-udaje-oznamovatel-form",
+      })
+      var zadost_udaje_oznamovatel_modal = new Modal(options, "zadost-udaje-oznamovatel");
+      }
     });
-
-
     </script>
 {% endblock %}

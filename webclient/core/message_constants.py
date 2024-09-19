@@ -39,6 +39,8 @@ PROJEKT_NELZE_SMAZAT: Final = _("common.message.PROJEKT_NELZE_SMAZAT.text")  # P
 PROJEKT_NEKDO_ZMENIL_STAV: Final = _("core.message_constants.projektZmenaStavuNekymJinym.text")
 PROJEKT_NENI_TYP_PRUZKUMNY: Final = _("common.message.PROJEKT_NENI_TYP_PRUZKUMNY.text")
 PROJEKT_NENI_TYP_ZACHRANNY: Final = _("common.message.PROJEKT_NENI_TYP_ZACHRANNY.text")
+PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS: Final = _("common.message.PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS.text")
+PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR: Final = _("common.message.PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR.text")
 
 AKCE_USPESNE_ZAPSANA: Final = _("common.message.AKCE_USPESNE_ZAPSANA.text")  # Akce úspěšně zapsána.
 AKCE_USPESNE_ODESLANA: Final = _("common.message.AKCE_USPESNE_ODESLANA.text")  # Akce úspěšně odeslána.

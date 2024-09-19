@@ -1,0 +1,14 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% load template_tags %}
+{% block content %}
+    <p>Dobrý den,</p>
+    <p>
+        projekt <a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a> zadost o oznamovatele.
+    </p>
+    <p><b>Důvod:</b> {{ reason }}</p>
+    <p>Detaily o projektu zjistíte po přihlášení do AMČR.</p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
+{% endblock %}
