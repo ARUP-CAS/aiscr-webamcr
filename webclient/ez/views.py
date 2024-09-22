@@ -209,7 +209,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         ez = form.save(commit=False)
         ez: ExterniZdroj
-        fedora_transaction = FedoraTransaction()
+        fedora_transaction = ez.create_transaction(self.request.user)
         ez.stav = EZ_STAV_ZAPSANY
         ez.ident_cely = get_temp_ez_ident()
         repository_connector = FedoraRepositoryConnector(ez, skip_container_check=False)
@@ -261,7 +261,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
-        self.object.active_transaction = FedoraTransaction()
+        self.object.active_transaction = self.object.create_transaction(self.request.user)
         self.object.autori.clear()
         self.object.editori.clear()
         self.object.close_active_transaction_when_finished = True
@@ -338,7 +338,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
-        zaznam.active_transaction = FedoraTransaction()
+        zaznam.create_transaction(request.user)
         zaznam.close_active_transaction_when_finished = True
         getattr(ExterniZdroj, self.action)(zaznam, request.user)
         messages.add_message(request, messages.SUCCESS, self.success_message)
@@ -390,7 +390,7 @@ class ExterniZdrojSmazatView(TransakceView):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
         zaznam.deleted_by_user = request.user
-        zaznam.active_transaction = FedoraTransaction()
+        zaznam.create_transaction(request.user)
         zaznam.close_active_transaction_when_finished = True
         try:
             zaznam.delete()
@@ -428,7 +428,7 @@ class ExterniZdrojVratitView(TransakceView):
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
-        zaznam.active_transaction = FedoraTransaction()
+        zaznam.create_transaction(request.user)
         zaznam.close_active_transaction_when_finished = True
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -478,9 +478,9 @@ class ExterniOdkazOdpojitView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = FedoraTransaction()
         self.init_translation()
         ez = self.get_zaznam()
+        self.active_transaction = ez.create_transaction(request.user)
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.active_transaction = self.active_transaction
         eo.close_active_transaction_when_finished = True
@@ -518,8 +518,8 @@ class ExterniOdkazPripojitView(TransakceView):
         form = PripojitArchZaznamForm(data=request.POST, type_arch=context["type"])
         if form.is_valid():
             logger.debug("ez.views.ExterniOdkazPripojitView.post.form_valid")
-            self.active_transaction = FedoraTransaction()
             ez = self.get_zaznam()
+            self.active_transaction = ez.create_transaction(request.user)
             arch_z_id = form.cleaned_data["arch_z"]
             arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
             eo = ExterniOdkaz(
@@ -597,7 +597,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         return object
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = FedoraTransaction()
+        self.active_transaction = self.object.create_transaction(request.user)
         super().post(request, *args, **kwargs)
         self.active_transaction = None
         return JsonResponse({"redirect": self.get_success_url()})
@@ -660,8 +660,8 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = FedoraTransaction()
         az = self.get_zaznam()
+        self.active_transaction = az.create_transaction(request.user)
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.active_transaction = self.active_transaction
         eo.close_active_transaction_when_finished = True
@@ -737,8 +737,8 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = FedoraTransaction()
         az = self.get_zaznam()
+        self.active_transaction = az.create_transaction(request.user)
         form = PripojitExterniOdkazForm(data=request.POST)
         if form.is_valid():
             ez_id = form.cleaned_data["ez"]

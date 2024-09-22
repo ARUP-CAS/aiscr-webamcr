@@ -236,12 +236,11 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         logger.debug(CreateArchZForm(self.request.POST))
         form_az = CreateArchZForm(self.request.POST)
         if form_az.is_valid():
-            fedora_transaction = FedoraTransaction()
-            logger.debug("lokalita.views.LokalitaCreateView.form_valid.true",
-                         extra={"transaction": getattr(fedora_transaction, "uid", None)})
             az = form_az.save(commit=False)
             az: ArcheologickyZaznam
-            az.active_transaction = fedora_transaction
+            fedora_transaction = az.create_transaction(self.request.user)
+            logger.debug("lokalita.views.LokalitaCreateView.form_valid.true",
+                         extra={"transaction": getattr(fedora_transaction, "uid", None)})
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
             lokalita = form.save(commit=False)
@@ -318,8 +317,9 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         )
         if form_az.is_valid():
             logger.debug("Lokalita.EditFormAz is valid")
-            fedora_transaction = FedoraTransaction()
             az = form_az.save(commit=False)
+            az: ArcheologickyZaznam
+            fedora_transaction = az.create_transaction(self.request.user)
             az.active_transaction = fedora_transaction
             az.close_active_transaction_when_finished = True
             az.save()

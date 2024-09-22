@@ -637,7 +637,6 @@ def edit(request, ident_cely):
             and form_akce.is_valid()
             and ostatni_vedouci_objekt_formset.is_valid()
         ):
-            fedora_trasnaction = FedoraTransaction()
             logger.debug("arch_z.views.edit.form_valid")
             az = form_az.save(commit=False)
             az.create_transaction(request.user)
