@@ -1704,7 +1704,7 @@ class ProjectTableRowView(LoginRequiredMixin, View):
 
 class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
     """
-    Třida pohledu pro odeslání žádosti o údaje o oznamovately.
+    Třida pohledu pro odeslání žádosti o údaje o oznamovateli.
     """
     template_name = "core/transakce_modal.html"
 
