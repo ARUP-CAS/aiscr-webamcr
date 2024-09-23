@@ -65,7 +65,7 @@ def smazat_nalez(request, typ_vazby, typ, ident_cely):
         return
     if request.method == "POST" and zaznam:
         zaznam: Union[NalezObjekt, NalezPredmet]
-        zaznam.active_transaction = FedoraTransaction()
+        zaznam.active_transaction = FedoraTransaction(transaction_user=request.user)
         zaznam.close_active_transaction_when_finished = True
         resp = zaznam.delete()
         next_url = request.POST.get("next")
@@ -133,7 +133,7 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
         if formset_objekt.has_changed() or formset_predmet.has_changed():
             if komponenta.komponenta_vazby.typ_vazby == DOKUMENT_CAST_RELATION_TYPE:
                 navazany_objekt: Dokument = komponenta.komponenta_vazby.casti_dokumentu
-                navazany_objekt.active_transaction = FedoraTransaction()
+                navazany_objekt.create_transaction(request.user)
                 logger.debug("nalez.views.edit_nalez.form_valid.save_metadata_dokument",
                              extra={"ident_cely": navazany_objekt.ident_cely,
                                     "fedora_transaction": navazany_objekt.active_transaction.uid})

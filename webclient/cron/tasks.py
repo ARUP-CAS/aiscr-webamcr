@@ -422,7 +422,7 @@ def update_materialized_views():
 @shared_task
 def write_value_to_redis(key, value):
     r = RedisConnector()
-    redis_connection = r.get_connection()
+    redis_connection = RedisConnector.get_connection()
     redis_connection.set(key, value)
     return key, value
 

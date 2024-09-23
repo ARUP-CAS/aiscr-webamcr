@@ -105,6 +105,14 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
         else:
             return self.komponenta_vazby.casti_dokumentu.get_permission_object()
 
+    def create_transaction(self, transaction_user):
+        from core.repository_connector import FedoraTransaction
+        from uzivatel.models import User
+        user: User
+        self.active_transaction = FedoraTransaction(self.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam,
+                                                    transaction_user)
+        return self.active_transaction
+
 
 class KomponentaAktivita(ExportModelOperationsMixin("komponenta_aktivita"), models.Model):
     """

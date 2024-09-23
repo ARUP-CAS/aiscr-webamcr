@@ -632,7 +632,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         return self.object
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = FedoraTransaction()
+        self.active_transaction = self.object.create_transaction(request.user)
         super().post(request, *args, **kwargs)
         self.active_transaction.mark_transaction_as_closed()
         return JsonResponse({"redirect": self.get_success_url()})
@@ -740,7 +740,8 @@ class TvarEditView(LoginRequiredMixin, View):
             logger.debug("dokument.views.TvarEditView.form_valid")
             formset.save()
             if formset.has_changed():
-                dokument.save_metadata(FedoraTransaction(), close_transaction=True)
+                fedora_transaction = dokument.create_transaction(self.request.user)
+                dokument.save_metadata(fedora_transaction, close_transaction=True)
                 logger.debug("dokument.views.TvarEditView.form_data_changed")
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
@@ -789,8 +790,8 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        zaznam = self.get_zaznam()
-        zaznam.active_transaction = FedoraTransaction()
+        zaznam: Tvar = self.get_zaznam()
+        zaznam.active_transaction = zaznam.create_transaction(request.user)
         zaznam.close_active_transaction_when_finished = True
         dokument = zaznam.dokument
         zaznam.delete()
@@ -830,10 +831,10 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        zaznam = self.get_zaznam()
+        zaznam: Dokument = self.get_zaznam()
         form = DokumentCastCreateForm(data=request.POST)
         if form.is_valid():
-            fedora_transaction = FedoraTransaction()
+            fedora_transaction = zaznam.create_transaction(self.request.user)
             zaznam.active_transaction = fedora_transaction
             dc_ident = get_cast_dokumentu_ident(zaznam)
             dc = DokumentCast(
@@ -955,7 +956,7 @@ class DokumentCastPripojitAkciView(TransakceView):
         form = PripojitArchZaznamForm(data=request.POST, type_arch=type_arch, dok=True)
         if form.is_valid():
             logger.debug("dokument.views.DokumentCastPripojitAkciView.post.form_valid")
-            fedora_transaction = FedoraTransaction()
+            fedora_transaction = cast.create_transaction(self.request.user)
             cast.active_transaction = fedora_transaction
             arch_z_id = form.cleaned_data["arch_z"]
             arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
@@ -994,7 +995,7 @@ class DokumentCastPripojitProjektView(TransakceView):
         form = PripojitProjektForm(data=request.POST, dok=True)
         if form.is_valid():
             projekt = form.cleaned_data["projekt"]
-            cast.active_transaction = FedoraTransaction()
+            cast.create_transaction(self.request.user)
             cast.close_active_transaction_when_finished = True
             cast.archeologicky_zaznam = None
             cast.projekt = Projekt.objects.get(id=projekt)
@@ -1034,7 +1035,7 @@ class DokumentCastOdpojitView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         cast = self.get_zaznam()
-        cast.active_transaction = FedoraTransaction()
+        cast.create_transaction(request.user)
         cast.close_active_transaction_when_finished = True
         cast.archeologicky_zaznam = None
         cast.projekt = None
@@ -1055,9 +1056,8 @@ class DokumentCastSmazatView(TransakceView):
         self.success_message = DOKUMENT_CAST_USPESNE_SMAZANA
 
     def post(self, request, *args, **kwargs):
-        fedora_transaction = FedoraTransaction()
         cast = self.get_zaznam()
-        cast.active_transaction = fedora_transaction
+        cast.create_transaction(request.user)
         dokument = cast.dokument
         if cast.komponenty:
             komps = cast.komponenty
@@ -1126,8 +1126,7 @@ def edit(request, ident_cely):
     required_fields = get_required_fields_dokument(dokument)
     required_fields_next = get_required_fields_dokument(dokument, next=1)
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        dokument.active_transaction = fedora_transaction
+        fedora_transaction = dokument.create_transaction(request.user)
         form_d = EditDokumentForm(
             request.POST,
             instance=dokument,
@@ -1256,7 +1255,7 @@ def edit_model_3D(request, ident_cely):
             logger.debug("dokument.views.edit_model_3D.coord_error", extra={"x1": x1, "x2": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             # save autors with order
-            fedora_transaction = FedoraTransaction()
+            fedora_transaction = dokument.create_transaction(request.user)
             dokument_from_form = form_d.save(commit=False)
             dokument_from_form.active_transaction = fedora_transaction
             dokument_from_form.autori.clear()
@@ -1413,11 +1412,9 @@ def create_model_3D(request):
             logger.debug("dokument.views.create_model_3D.coord_error", extra={"x1": x1, "x2": x2})
 
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
-            fedora_transaction = FedoraTransaction()
-            logger.debug("dokument.views.create_model_3D.forms_valid",
-                         extra={"fedora_transaction": fedora_transaction.uid})
+            logger.debug("dokument.views.create_model_3D.forms_valid")
             dokument = form_d.save(commit=False)
-            dokument.active_transaction = fedora_transaction
+            fedora_transaction = dokument.create_transaction(request.user)
             dokument.rada = Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D)
             dokument.material_originalu = Heslar.objects.get(
                 id=MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR
@@ -1528,8 +1525,7 @@ def odeslat(request, ident_cely):
 
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        dokument.active_transaction = fedora_transaction
+        fedora_transaction = dokument.create_transaction(request.user)
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
         returned_value = Dokument.set_permanent_identificator(dokument, request, messages, fedora_transaction)
@@ -1580,7 +1576,7 @@ def archivovat(request, ident_cely):
         logger.debug("dokument.views.archivovat.check_stav_changed", extra={"ident_cely": ident_cely})
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
+        fedora_transaction = dokument.create_transaction(request.user)
         dokument.active_transaction = fedora_transaction
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
@@ -1640,8 +1636,7 @@ def vratit(request, ident_cely):
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
-            fedora_transaction = FedoraTransaction()
-            dokument.active_transaction = fedora_transaction
+            dokument.create_transaction(request.user)
             duvod = form.cleaned_data["reason"]
             if dokument.stav == D_STAV_ODESLANY:
                 Mailer.send_ek02(document=dokument, reason=duvod)
@@ -1678,8 +1673,7 @@ def smazat(request, ident_cely):
     if check_stav_changed(request, dokument):
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        dokument.active_transaction = fedora_transaction
+        fedora_transaction = dokument.create_transaction(request.user)
         dokument.save_record_deletion_record(fedora_transaction, request.user)
         for item in dokument.casti.all():
             if hasattr(item, "neident_akce"):
@@ -1817,10 +1811,9 @@ def zapsat(request, zaznam=None):
         )
         if form_d.is_valid():
             logger.debug("dokument.views.zapsat.valid")
-            fedora_transaction = FedoraTransaction()
             dokument = form_d.save(commit=False)
             dokument: Dokument
-            dokument.active_transaction = fedora_transaction
+            fedora_transaction = dokument.create_transaction(request.user)
             dokument.rada = get_dokument_rada(
                 dokument.typ_dokumentu, dokument.material_originalu
             )
@@ -1947,8 +1940,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
                 request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM
             )
             return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=404)
-        fedora_transaction = FedoraTransaction()
-        dokument_cast[0].active_transaction = fedora_transaction
+        fedora_transaction = dokument_cast[0].create_transaction(request.user)
         resp = dokument_cast[0].delete()
         logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
         if remove_orphan:
@@ -2012,7 +2004,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
 
         for dokument_id in dokument_ids:
             dokument = get_object_or_404(Dokument, id=dokument_id)
-            fedora_transaction = FedoraTransaction()
+            fedora_transaction = zaznam.create_transaction(request.user)
             dokument.active_transaction = fedora_transaction
             relace = casti_zaznamu.filter(dokument__id=dokument_id)
             if not relace.exists():

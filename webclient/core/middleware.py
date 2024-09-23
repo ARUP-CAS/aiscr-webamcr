@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime, timedelta
 from django.core.exceptions import PermissionDenied
 from django.core.cache import cache
@@ -6,9 +7,11 @@ from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import render
 from django.db.utils import OperationalError
+
+from core.connectors import RedisConnector
 from core.models import Permissions
-from core.message_constants import NEPRODUKCNI_PROSTREDI_INFO
-from core.repository_connector import FedoraError
+from core.message_constants import NEPRODUKCNI_PROSTREDI_INFO, ZAZNAM_USPESNE_EDITOVAN, ZAZNAM_SE_NEPOVEDLO_EDITOVAT
+from core.repository_connector import FedoraError, FedoraTransactionResult, FedoraTransaction
 
 logger = logging.getLogger(__name__)
 
@@ -105,3 +108,33 @@ class TestEnvPopupMiddleware:
                 messages.add_message(
                                 request, messages.WARNING, NEPRODUKCNI_PROSTREDI_INFO, 'notclosing'
                             )
+
+
+class StatusMessageMiddleware:
+    pattern = re.compile(r"[\w-]+\d+[A-Z]?")
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        r = RedisConnector()
+        self.redis_connection = r.get_connection()
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        return response
+
+    def _show_message(self, value, request, redis_key):
+        value = int(value.decode("utf-8"))
+        if value == FedoraTransactionResult.COMMITED.value:
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        else:
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+        self.redis_connection.delete(redis_key)
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        regex_result = self.pattern.findall(request.path)
+        for item in regex_result:
+            redis_key = FedoraTransaction.get_transaction_redis_key(item, request.user.id)
+            value = self.redis_connection.get(redis_key)
+            if value:
+                self._show_message(value, request, redis_key)
+                break

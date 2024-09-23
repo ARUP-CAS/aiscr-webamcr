@@ -48,8 +48,7 @@ def zapsat(request, dj_ident_cely):
             messages.add_message(request, messages.ERROR, e.message)
         else:
             if FedoraRepositoryConnector.check_container_deleted_or_not_exists(adb.ident_cely, "adb"):
-                fedora_transaction = FedoraTransaction()
-                adb.active_transaction = fedora_transaction
+                adb.create_transaction(request.user)
                 adb.close_active_transaction_when_finished = True
                 adb.dokumentacni_jednotka = dj
                 adb.sm5 = sm5
@@ -84,8 +83,7 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         dj: DokumentacniJednotka = adb.dokumentacni_jednotka
         dj_ident_cely = dj.ident_cely
-        fedora_transaction = FedoraTransaction()
-        adb.active_transaction = fedora_transaction
+        fedora_transaction = adb.create_transaction(request.user)
         adb.close_active_transaction_when_finished = True
         for vb in adb.vyskove_body.all():
             vb.active_transaction = fedora_transaction
@@ -139,7 +137,7 @@ def smazat_vb(request, ident_cely):
         "button": _("adb.views.smazat_vb.modalForm.submit.button"),
     }
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
+        fedora_transaction = FedoraTransaction(zaznam.adb, request.user)
         zaznam.active_transaction = fedora_transaction
         zaznam.close_active_transaction_when_finished = True
         resp = zaznam.delete()

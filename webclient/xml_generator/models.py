@@ -49,6 +49,13 @@ class ModelWithMetadata(models.Model):
         if not hasattr(self, "soubory"):
             self.soubory = None
 
+    def create_transaction(self, transaction_user):
+        from core.repository_connector import FedoraTransaction
+        from uzivatel.models import User
+        user: User
+        self.active_transaction = FedoraTransaction(self, transaction_user)
+        return self.active_transaction
+
     @property
     def metadata(self):
         from core.repository_connector import FedoraRepositoryConnector
