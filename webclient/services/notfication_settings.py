@@ -184,7 +184,7 @@ notification_settings = {
     },
     "E-P-08": {
         "zasilat_neaktivnim": True,
-        "predmet": "AMČR: projekt {ident_cely} - žádost o udaje oznamovatele | AMCR: project {ident_cely} - request for data of requestor",
+        "predmet": "AMČR: projekt {ident_cely} - žádost o údaje oznamovatele | AMCR: project {ident_cely} - request for announcer data",
         "cesta_sablony": "emails/E-P-08.html"
     },
 }
