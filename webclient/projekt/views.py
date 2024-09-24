@@ -8,7 +8,7 @@ import simplejson as json
 from django.db.models.functions import Length
 from django.template.loader import render_to_string
 from dal import autocomplete
-from django.views.generic import RedirectView
+from django.views.generic import RedirectView, TemplateView
 
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
@@ -63,6 +63,8 @@ from core.message_constants import (
     PROJEKT_USPESNE_VRACEN,
     PROJEKT_USPESNE_ZAHAJEN_V_TERENU,
     PROJEKT_USPESNE_ZRUSEN,
+    PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR,
+    PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
@@ -108,6 +110,7 @@ from projekt.forms import (
     NavrhnoutZruseniProjektForm,
     PrihlaseniProjektForm,
     UkoncitVTerenuForm,
+    ZadostUdajeOznamovatelForm,
     ZahajitVTerenuForm,
     ZruseniProjektForm,
 )
@@ -1498,22 +1501,28 @@ def get_detail_template_shows(projekt, user):
         elif user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
             if projekt.stav == PROJEKT_STAV_ZAPSANY:
                 show_oznamovatel = True
+            elif projekt.organizace == user.organizace:
+                if projekt.stav in [
+                        PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU, 
+                        PROJEKT_STAV_UKONCENY_V_TERENU]:
+                    show_oznamovatel = True
+                elif projekt.stav == PROJEKT_STAV_UZAVRENY:
+                    last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
+                    if last_uzavreni and last_uzavreni["datum"] >= datetime.now(last_uzavreni["datum"].tzinfo) - timedelta(days=90):
+                        show_oznamovatel = True
             elif (
-                projekt.stav in [PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU] 
-                and projekt.organizace == user.organizace
+                projekt.stav in [
+                    PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU, 
+                    PROJEKT_STAV_UKONCENY_V_TERENU, PROJEKT_STAV_UZAVRENY]
                 ):
-                show_oznamovatel = True
-            elif (
-                projekt.stav == PROJEKT_STAV_UZAVRENY
-                and projekt.organizace == user.organizace
-                ):
-                last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
-                if last_uzavreni and last_uzavreni["datum"] >= datetime.now(last_uzavreni["datum"].tzinfo) - timedelta(days=90):
+                last_prihlaseni = projekt.historie.get_last_transaction_date(PRIHLASENI_PROJ)
+                if last_prihlaseni and last_prihlaseni["datum"] >= datetime.now(last_prihlaseni["datum"].tzinfo) - timedelta(days=30):
                     show_oznamovatel = True
     show_samostatne_nalezy = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
     show_pridat_akci = False
     show_pridat_sam_nalez = False
     show_pridat_oznamovatele = False
+    show_zadost_udaje_oznamovatel = False
     if projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
         show_pridat_akci = check_permissions(p.actionChoices.archz_pripojit_do_proj, user, projekt.ident_cely)
     else:
@@ -1521,6 +1530,8 @@ def get_detail_template_shows(projekt, user):
     if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
         if not projekt.has_oznamovatel():
             show_pridat_oznamovatele = check_permissions(p.actionChoices.projekt_oznamovatel_zapsat, user, projekt.ident_cely)
+        elif not show_oznamovatel:
+            show_zadost_udaje_oznamovatel = check_permissions(p.actionChoices.projekt_zadost_udaje_oznamovatel, user, projekt.ident_cely)
     show_dokumenty = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
     show_arch_links = projekt.stav == PROJEKT_STAV_ARCHIVOVANY
     show_akce = projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID
@@ -1555,6 +1566,7 @@ def get_detail_template_shows(projekt, user):
         "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_projekt, user, projekt.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_projekt, user, projekt.ident_cely),
         "soubor_nahrat": check_permissions(p.actionChoices.soubor_nahrat_projekt, user, projekt.ident_cely),
+        "zadost_udaje_oznamovatel": show_zadost_udaje_oznamovatel
     }
     return show
 
@@ -1689,3 +1701,40 @@ class ProjectTableRowView(LoginRequiredMixin, View):
     def get(self, request):
         context = {"p": Projekt.objects.get(id=request.GET.get("id", ""))}
         return HttpResponse(render_to_string("projekt/projekt_table_row.html", context))
+
+class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro odeslání žádosti o údaje o oznamovateli.
+    """
+    template_name = "core/transakce_modal.html"
+
+    def get_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        zaznam = get_object_or_404(
+            Projekt,
+            ident_cely=ident_cely,
+        )
+        return zaznam
+
+    def get(self, request, *args, **kwargs):
+        zaznam = self.get_zaznam()
+        context = {
+            "object": zaznam,
+            "title": "projekt.views.ZadostUdajeOznamovatelView.title.text",
+            "id_tag": "zadost-udaje-oznamovatel-form",
+            "button": "projekt.views.ZadostUdajeOznamovatelView.submitButton.text"
+        }
+        form = ZadostUdajeOznamovatelForm()
+        context["form"] = form
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        form = ZadostUdajeOznamovatelForm(request.POST)
+        if form.is_valid():
+            duvod = form.cleaned_data["reason"]
+            zaznam = self.get_zaznam()
+            Mailer.send_ep08(zaznam, duvod, request.user)
+            messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS)
+        else:
+            messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR)
+        return JsonResponse({"redirect": zaznam.get_absolute_url()})

@@ -181,5 +181,10 @@ notification_settings = {
         "zasilat_neaktivnim": False,
         "predmet": "AMČR - Knihovna 3D: dokument {ident_cely} vrácen k doplnění | AMCR - 3D Library: document {ident_cely} returned for completion",
         "cesta_sablony": "emails/E-K-02.html"
-    }
+    },
+    "E-P-08": {
+        "zasilat_neaktivnim": True,
+        "predmet": "AMČR: projekt {ident_cely} - žádost o údaje oznamovatele | AMCR: project {ident_cely} - request for announcer data",
+        "cesta_sablony": "emails/E-P-08.html"
+    },
 }
