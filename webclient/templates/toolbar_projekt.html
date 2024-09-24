@@ -87,6 +87,9 @@
           {% if projekt.has_oznamovatel and show.generovat_potvrzeni %}
             <a class="dropdown-item" data-toggle="modal" data-target="#nove_potvrzeni">{% trans "templates.toolbarProjekt.generovatNovePotvrzeni.label" %}</a>
           {% endif %}
+          {% if show.upravit_datum_oznameni %}
+            <button id="upravit-datum-oznameni" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.upravitDatumOznameni.label" %}</button>
+          {% endif %}
           {% if projekt.expert_list_can_be_created and show.generovat_exp_list %}
             <a class="dropdown-item" data-toggle="modal" data-target="#expertni_list">{% trans "templates.toolbarProjekt.expertniList.label" %}</a>
           {% endif %}          
@@ -96,9 +99,6 @@
           <a class="dropdown-item" href="{{OAPI_link|add:projekt.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarProjekt.OAIAPI.label" %}</a>
           {% if show.stahnout_metadata%}
             <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'projekt' projekt.ident_cely %}">{% trans "templates.toolbarProjekt.metadataDownload.label" %}</a>
-          {% endif %}
-          {% if show.upravit_datum_oznameni %}
-            <button id="upravit-datum-oznameni" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.upravitDatumOznameni.label" %}</button>
           {% endif %}
         </div>
       </div>

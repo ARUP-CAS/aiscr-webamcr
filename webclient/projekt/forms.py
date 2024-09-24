@@ -804,25 +804,24 @@ class ProjektFilterForm(BaseFilterForm):
 
 class UpravitDatumOznameniForm(forms.ModelForm):
     datum_oznameni = forms.DateField(
+        label=_("projekt.forms.upravitDatumOznameni.datumOznameni.label"),
         widget=forms.DateInput(
             attrs={"data-provide": "datepicker", "autocomplete": "off"}
         ),
-        help_text=_("projekt.forms.editProjekt.datumZahajeni.tooltip"),
+        help_text=_("projekt.forms.upravitDatumOznameni.datumOznameni.tooltip"),
     )
 
     cas_oznameni = forms.TimeField(
+        label=_("projekt.forms.upravitDatumOznameni.casOznameni.label"),
         widget=forms.TimeInput(attrs={"type": "time", "autocomplete": "off"}),  # Type "time" provides a time picker
-        help_text=_("projekt.forms.editProjekt.casOznameni.tooltip"),
+        help_text=_("projekt.forms.upravitDatumOznameni.casOznameni.tooltip"),
     )
 
     class Meta:
         model = Historie
         fields = ("datum_oznameni", "cas_oznameni", "poznamka")
-        labels = {
-            "datum_ukonceni": _("projekt.forms.ukoncitVTerenu.datumUkonceni.label"),
-        }
         help_texts = {
-            "poznamka": _("projekt.forms.editProjekt.poznamka.tooltip"),
+            "poznamka": _("projekt.forms.upravitDatumOznameni.poznamka.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):

@@ -42,7 +42,7 @@ EZ_STAV_POTVRZENY: Final = 3  # EZ3
 # Transakce historie
 # Projekty
 OZNAMENI_PROJ: Final = "PX0"  # 0
-OZNAMENI_PROJ_MANUALNI: Final = "PXM0"  # 0
+OZNAMENI_PROJ_MANUALNI: Final = "PX0M"  # 0
 SCHVALENI_OZNAMENI_PROJ: Final = "P01"  # 1
 ZAPSANI_PROJ: Final = "PX1"  # 1
 PRIHLASENI_PROJ: Final = "P12"  # 2

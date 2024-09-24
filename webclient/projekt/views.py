@@ -1708,9 +1708,9 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
         context = {
             "object": projekt,
-            "title": _("oznameni.views.oznamovatelCreateView.title"),
+            "title": _("projekt.views.upravitDatumOznameniView.title"),
             "id_tag": "upravit-datum-oznameni-form",
-            "button": _("oznameni.views.oznamovatelCreateView.submitButton"),
+            "button": _("projekt.views.upravitDatumOznameniView.submitButton"),
         }
         return context
 
