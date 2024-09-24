@@ -1497,7 +1497,7 @@ def get_detail_template_shows(projekt, user):
     show_oznamovatel = False
     if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
         if user.is_archiver_or_more:
-            show_oznamovatel = False
+            show_oznamovatel = True
         elif user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
             if projekt.stav == PROJEKT_STAV_ZAPSANY:
                 show_oznamovatel = True
@@ -1733,7 +1733,7 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
             zaznam = self.get_zaznam()
-            Mailer.send_ep08(zaznam,duvod)
+            Mailer.send_ep08(zaznam, duvod, request.user)
             messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS)
         else:
             messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR)

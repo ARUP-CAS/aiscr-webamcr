@@ -770,7 +770,7 @@ class Mailer:
         return results_dict
 
     @classmethod
-    def send_ep08(cls, project: 'projekt.models.Projekt', reason):
+    def send_ep08(cls, project: 'projekt.models.Projekt', reason, user):
         IDENT_CELY = 'E-P-08'
         logger.debug("services.mailer.send_ep08", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -779,5 +779,12 @@ class Mailer:
             "title": subject,
             "ident_cely": project.ident_cely,
             "reason": reason,
+            "auth_user": user
         })
-        cls.__send(subject=subject, to=settings.EMAIL_ZADOST_UDAJE_OZNAMOVATELE, html_content=html, notification_type=notification_type)
+        cls.__send(
+            subject=subject,
+            to=settings.EMAIL_ZADOST_UDAJE_OZNAMOVATELE,
+            html_content=html,
+            notification_type=notification_type,
+            from_email=user.email
+        )
