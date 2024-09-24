@@ -201,6 +201,10 @@
       this.disabled=true;
       $('#czech').attr("disabled", "disabled"); 
       $.ajax({
+        beforeSend: function (xhr){ 
+          xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded; charset=UTF-8");
+          xhr.setRequestHeader("Accept","application/json");
+        }, 
         type: "POST",
         url: "{% url 'core:set_language' %}",
         data: {'language': 'en', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
@@ -216,6 +220,10 @@
       this.disabled=true;
       $('#english').attr("disabled", "disabled"); 
       $.ajax({
+        beforeSend: function (xhr){ 
+          xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded; charset=UTF-8");
+          xhr.setRequestHeader("Accept","application/json");
+        }, 
         type: "POST",
         url: "{% url 'core:set_language' %}",
         data: {'language': 'cs', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
