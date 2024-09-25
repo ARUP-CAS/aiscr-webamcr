@@ -379,7 +379,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence += 1
         except ObjectDoesNotExist:
-            sequence = DokumentSekvence.objects.create(region=region, rada=rada, rok=current_year,sekvence=1)
+            sequence = DokumentSekvence.objects.using('urgent').create(region=region, rada=rada, rok=current_year, sekvence=1)
         finally:
             prefix = f"{region}-{rada.zkratka}-{str(current_year)}"
             docs = Dokument.objects.filter(ident_cely__startswith=prefix).order_by("-ident_cely")
@@ -585,6 +585,13 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         self.suppress_dokument_signal = False
         self.suppress_signal_arch_z = False
 
+    def create_transaction(self, transaction_user):
+        from core.repository_connector import FedoraTransaction
+        from uzivatel.models import User
+        user: User
+        self.active_transaction = FedoraTransaction(self.dokument, transaction_user)
+        return self.active_transaction
+
 
 class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):
     """
@@ -762,6 +769,13 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
         self.active_transaction = None
         self.close_active_transaction_when_finished = None
         self.suppress_signal = False
+
+    def create_transaction(self, transaction_user):
+        from core.repository_connector import FedoraTransaction
+        from uzivatel.models import User
+        user: User
+        self.active_transaction = FedoraTransaction(self.dokument, transaction_user)
+        return self.active_transaction
 
 
 class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.Model):

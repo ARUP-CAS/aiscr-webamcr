@@ -519,7 +519,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence += 1
         except ObjectDoesNotExist:
-            sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=1)
+            sequence = ProjektSekvence.objects.using('urgent').create(region=region, rok=current_year, sekvence=1)
         finally:
             prefix = f"{region}-{str(current_year)}"
             projekts = Projekt.objects.filter(ident_cely__startswith=prefix).order_by("-ident_cely")
