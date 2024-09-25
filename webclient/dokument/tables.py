@@ -92,13 +92,13 @@ class Model3DTable(SearchTable):
             soubor = None
         if soubor is not None:
             soubor: Soubor
-            if soubor.small_thumbnail:
-                thumbnail_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely ,soubor.id,))
-                soubor_url = reverse("core:download_file", args=('model3d', record.ident_cely, soubor.id,))
-                return format_html(
-                    '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" loading="lazy" data-fullsrc="{}">',
-                    thumbnail_url, soubor_url
-                )
+            thumbnail_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely ,soubor.id,))
+            soubor_url = reverse("core:download_file", args=('model3d', record.ident_cely, soubor.id,))
+            return format_html(
+                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" loading="lazy" data-fullsrc="{}" '
+                'style="opacity:0" onload="this.style.opacity=100">',
+                thumbnail_url, soubor_url
+            )
         return ""
 
 
@@ -193,14 +193,13 @@ class DokumentTable(SearchTable):
             soubor = None
         if soubor is not None:
             soubor: Soubor
-            if soubor.small_thumbnail:
-                thumbnail_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely, soubor.id,))
-                thumbnail_large_url = reverse("core:download_thumbnail_large", args=('model3d', record.ident_cely, soubor.id,))
-                return format_html(
-                    '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
-                    'loading="lazy" data-fullsrc="{}">',
-                    thumbnail_url, thumbnail_large_url,
-                )
+            thumbnail_url = reverse("core:download_thumbnail", args=('model3d', record.ident_cely, soubor.id,))
+            thumbnail_large_url = reverse("core:download_thumbnail_large", args=('model3d', record.ident_cely, soubor.id,))
+            return format_html(
+                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
+                'loading="lazy" data-fullsrc="{}" style="opacity:0" onload="this.style.opacity=100">',
+                thumbnail_url, thumbnail_large_url,
+            )
         return ""
 
     class Meta:
