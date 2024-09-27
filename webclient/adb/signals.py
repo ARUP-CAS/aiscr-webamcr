@@ -15,7 +15,7 @@ from historie.models import Historie
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender=Adb)
+@receiver(post_save, sender=Adb, weak=False)
 def adb_save_metadata(sender, instance: Adb, created, **kwargs):
     logger.debug("adb.signals.adb_save_metadata.start",
                  extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal})
@@ -33,7 +33,7 @@ def adb_save_metadata(sender, instance: Adb, created, **kwargs):
     logger.debug("adb.signals.adb_save_metadata.end", extra={"ident_cely": instance.ident_cely})
 
 
-@receiver(post_save, sender=VyskovyBod)
+@receiver(post_save, sender=VyskovyBod, weak=False)
 def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
     logger.debug("adb.signals.vyskovy_bod_save_metadata.start",
                  extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal})
@@ -47,7 +47,7 @@ def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
                  extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal})
 
 
-@receiver(post_delete, sender=Adb)
+@receiver(post_delete, sender=Adb, weak=False)
 def adb_delete_repository_container(sender, instance: Adb, **kwargs):
     logger.debug("adb.signals.adb_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     invalidate_arch_z_related_models()
@@ -69,7 +69,7 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
                  extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid})
 
 
-@receiver(post_delete, sender=VyskovyBod)
+@receiver(post_delete, sender=VyskovyBod, weak=False)
 def vyskovy_bod_delete_repository_container(sender, instance: VyskovyBod, **kwargs):
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.start",
                  extra={"ident_cely": instance.ident_cely})

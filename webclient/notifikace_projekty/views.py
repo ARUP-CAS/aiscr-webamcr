@@ -122,7 +122,7 @@ class PesCreateView(LoginRequiredMixin, View):
                 request, messages.SUCCESS, HLIDACI_PES_USPESNE_VYTVOREN
             )
             user: User = request.user
-            user.active_transaction = FedoraTransaction()
+            user.active_transaction = FedoraTransaction(user, self.request.user)
             user.close_active_transaction_when_finished = True
             user.save()
         else:

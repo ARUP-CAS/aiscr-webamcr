@@ -6,19 +6,19 @@ import os
 import re
 from enum import Enum
 from io import BytesIO
-from os import path
-
-from PIL import Image
-from typing import Union, Optional
+from typing import Optional, Union
 
 import requests
 from celery import Celery
+
+from core.connectors import RedisConnector
+from core.utils import get_mime_type, replace_last
 from django.conf import settings
 from pdf2image import convert_from_bytes
+from PIL import Image
 from requests.auth import HTTPBasicAuth
-
-from core.utils import get_mime_type, replace_last
 from xml_generator.generator import DocumentGenerator
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -130,10 +130,8 @@ class FedoraRepositoryConnector:
             self.transaction_uid = None
         self.restored_container = False
         self.skip_container_check = skip_container_check
-        stack = inspect.stack()
-        caller = [x for x in stack]
         logger.debug("core_repository_connector.__init__.end",
-                     extra={"caller": caller, "transaction": self.transaction_uid, "ident_cely": record.ident_cely})
+                     extra={"transaction": self.transaction_uid, "ident_cely": record.ident_cely})
 
     def _get_model_name(self):
         class_name = self.record.__class__.__name__
@@ -349,7 +347,7 @@ class FedoraRepositoryConnector:
                 extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
                          "transaction": self.transaction_uid, "url": url, "caller": caller}
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
-                fedora_transaction = FedoraTransaction(self.transaction_uid)
+                fedora_transaction = FedoraTransaction(uid=self.transaction_uid)
                 fedora_transaction.rollback_transaction()
                 raise FedoraError(url, response.text, response.status_code)
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
@@ -433,7 +431,7 @@ class FedoraRepositoryConnector:
     def link_exists(self):
         url = self._get_request_url(FedoraRequestType.GET_LINK)
         result = self._send_request(url, FedoraRequestType.GET_LINK)
-        return result != 404
+        return result.status_code != 404
 
 
     def _check_container(self):
@@ -500,12 +498,8 @@ class FedoraRepositoryConnector:
         return response.content
 
     def save_metadata(self, update=True):
-        stack = inspect.stack()
-        caller = [x for x in stack]
-
         logger.debug("core_repository_connector.save_metadata.start",
-                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid,
-                            "caller": caller})
+                     extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         if not self.skip_container_check:
             self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_METADATA)
@@ -1013,9 +1007,18 @@ class FedoraTransactionPostCommitTasks(Enum):
     CREATE_LINK = 1
 
 
+class FedoraTransactionResult(Enum):
+    COMMITED = 1
+    ABORTED = 2
+
+
 class FedoraTransaction:
 
-    def __init__(self, uid=None):
+    def __init__(self, main_record: ModelWithMetadata = None, transaction_user = None, *, uid=None):
+        from uzivatel.models import User
+        self.main_record = main_record
+        self.transaction_user = transaction_user
+        transaction_user: User
         self.post_commit_tasks = {}
         if uid is None:
             self.__create_transaction()
@@ -1026,16 +1029,32 @@ class FedoraTransaction:
     def __str__(self):
         return self.uid
 
+    @staticmethod
+    def get_transaction_redis_key(ident_cely: str, transaction_user_id: int):
+        return f"fedora-transaction-result-{ident_cely}-{transaction_user_id}"
+
+    @property
+    def _transaction_redis_key(self):
+        return self.get_transaction_redis_key(self.main_record.ident_cely, self.transaction_user.id)
+
+    def _save_transaction_result_to_redis(self, result: FedoraTransactionResult):
+        if self.main_record and self.transaction_user:
+            r = RedisConnector()
+            redis_connection = r.get_connection()
+            redis_connection.set(self._transaction_redis_key, result.value)
+
     def _send_transaction_request(self, operation=FedoraTransactionOperation.COMMIT):
         logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.start",
-                     extra={"transaction_uid": self.uid})
+                     extra={"transaction": self.uid})
         url = (f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}"
                f"/rest/fcr:tx/{self.uid}")
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         if operation == FedoraTransactionOperation.COMMIT:
             response = requests.put(url, auth=auth, verify=False)
+            self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
         elif operation == FedoraTransactionOperation.ROLLBACK:
             response = requests.delete(url, auth=auth, verify=False)
+            self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)
         else:
             raise FedoraTransactionUnsupportedOperationError(operation)
         if not str(response.status_code).startswith("2"):
@@ -1046,10 +1065,10 @@ class FedoraTransaction:
                      extra={"transaction": self.uid})
 
     def rollback_transaction(self):
-        logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.start",
+        logger.debug("core_repository_connector.FedoraTransaction.rollback_transaction.start",
                      extra={"transaction": self.uid})
         self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
-        logger.debug("core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
+        logger.debug("core_repository_connector.FedoraTransaction.rollback_transaction.end",
                      extra={"transaction": self.uid})
 
     def mark_transaction_as_closed(self):
@@ -1093,7 +1112,7 @@ class FedoraTransaction:
         if match:
             self.uid = match.group()
             logger.debug("core_repository_connector.FedoraTransaction.__create_transaction",
-                         extra={"uid": self.uid})
+                         extra={"transaction": self.uid})
         else:
             logger.error("core_repository_connector.FedoraTransaction.__create_transaction.no_uid",
                          extra={"response": response.text})
@@ -1103,12 +1122,21 @@ class FedoraTransaction:
     def call_digiarchiv_update():
         from cron.tasks import call_digiarchiv_update_task
         logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.start")
-        app = Celery("webclient")
-        app.config_from_object("django.conf:settings", namespace="CELERY")
-        app.autodiscover_tasks()
-        i = app.control.inspect(["worker1@amcr"])
-        queues = (i.scheduled(), i.active(),)
+        try:
+            app = Celery("webclient")
+            app.config_from_object("django.conf:settings", namespace="CELERY")
+            app.autodiscover_tasks()
+            i = app.control.inspect(["worker1@amcr"])
+            queues = (i.scheduled(), i.active(),)
+        except Exception as e:
+            logger.error("core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_error",
+                                 extra={"Exception": e, "app": app })
+            call_digiarchiv_update_task.apply_async()
         for queue in queues:
+            if queue is None:
+                logger.error("core_repository_connector.FedoraTransaction.call_digiarchiv_update.error",
+                                 extra={"i": i,"queues": queues })
+                break
             for queue_name, queue_tasks in queue.items():
                 for task in queue_tasks:
                     if "request" in task and "call_digiarchiv_update_task" in task.get("request").get("name").lower():

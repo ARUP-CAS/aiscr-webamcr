@@ -51,6 +51,7 @@ from core.message_constants import (
     PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI,
     PROJEKT_NELZE_SMAZAT,
     PROJEKT_NELZE_UZAVRIT,
+    PROJEKT_NELZE_ZAHAJIT_V_TERENU,
     PROJEKT_NENI_TYP_PRUZKUMNY,
     PROJEKT_NENI_TYP_ZACHRANNY, 
     PROJEKT_USPESNE_ARCHIVOVAN,
@@ -394,8 +395,7 @@ def create(request):
                             "button": _("projekt.views.create.submitButton.text"),
                         },
                     )
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            fedora_transaction = projekt.create_transaction(request.user)
             if x1 and x2:
                 projekt.geom = Point(x1, x2)
             try:
@@ -461,13 +461,17 @@ def edit(request, ident_cely):
     required_fields = get_required_fields(projekt)
     required_fields_next = get_required_fields(projekt, 1)
     edit_fields = None
+    edit_geom=True
     if request.user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
         if projekt.stav == PROJEKT_STAV_PRIHLASENY:
-            edit_fields = ["vedouci_projektu", "uzivatelske_oznaceni", "kulturni_pamatka", "kulturni_pamatka_cislo", "kulturni_pamatka_popis"]
+            edit_fields = ["vedouci_projektu", "uzivatelske_oznaceni", "kulturni_pamatka", "kulturni_pamatka_cislo", "kulturni_pamatka_popis","hlavni_katastr", "coordinate_x1", "coordinate_x2", "katastry"]
         elif projekt.stav in [PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU]:
             edit_fields =  ["uzivatelske_oznaceni"]
+        if projekt.stav>=PROJEKT_STAV_ZAHAJENY_V_TERENU:
+            edit_geom=False
     if request.method == "POST":
-        request.POST = katastr_text_to_id(request)
+        if request.POST.get("hlavni_katastr") is not None:
+            request.POST = katastr_text_to_id(request)
         form = EditProjektForm(
             request.POST,
             instance=projekt,
@@ -477,14 +481,18 @@ def edit(request, ident_cely):
         )
         if form.is_valid():
             logger.debug("projekt.views.edit.form_valid")
-            x1 = form.cleaned_data["coordinate_x1"]
-            x2 = form.cleaned_data["coordinate_x2"]
+            if (form.fields["coordinate_x1"].disabled or form.fields["coordinate_x2"].disabled) and\
+                (projekt.geom is not None and len(projekt.geom)>0):
+                x1 = projekt.geom.coords[0]
+                x2 = projekt.geom.coords[1]
+            else:
+                x1 = form.cleaned_data["coordinate_x1"]
+                x2 = form.cleaned_data["coordinate_x2"]
             # Workaroud to not check if long and lat has been changed, only geom is interesting
             form.fields["coordinate_x1"].initial = x1
             form.fields["coordinate_x2"].initial = x2
-            fedora_trasnaction = FedoraTransaction()
+            projekt.create_transaction(request.user)
             projekt = form.save(commit=False)
-            projekt.active_transaction = fedora_trasnaction
             projekt.save()
             old_geom = projekt.geom
             new_geom = Point(x1, x2)
@@ -498,7 +506,6 @@ def edit(request, ident_cely):
                 logger.warning("projekt.views.edit.form_valid.geom_not_updated")
             if form.changed_data or geom_changed:
                 logger.debug("projekt.views.edit.form_valid.form_changed", extra={"changed_data": form.changed_data})
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             form.save_m2m()
@@ -526,7 +533,7 @@ def edit(request, ident_cely):
     return render(
         request,
         "projekt/edit.html",
-        {"form_projekt": form, "projekt": projekt},
+        {"form_projekt": form, "projekt": projekt, "edit_geom":edit_geom},
     )
 
 
@@ -544,9 +551,8 @@ def smazat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_trasnaction = FedoraTransaction()
+        projekt.create_transaction(request.user)
         projekt.initial_dokumenty = list(projekt.casti_dokumentu.all().values_list("dokument__id", flat=True))
-        projekt.active_transaction = fedora_trasnaction
         projekt.close_active_transaction_when_finished = True
         projekt.deleted_by_user = request.user
         projekt.record_deletion()
@@ -684,8 +690,7 @@ def schvalit(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        projekt.active_transaction = fedora_transaction
+        fedora_transaction = projekt.create_transaction(request.user)
         logger.debug("projekt.views.schvalit.post.start", extra={"ident_cely": ident_cely,
                                                                  "transaction": fedora_transaction.uid})
         old_ident = projekt.ident_cely
@@ -771,8 +776,7 @@ def prihlasit(request, ident_cely):
             form = PrihlaseniProjektForm(request.POST, instance=projekt)
         if form.is_valid():
             projekt = form.save(commit=False)
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_prihlaseny(request.user)
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN)
             if projekt.ident_cely[0] == OBLAST_CECHY:
@@ -817,6 +821,18 @@ def zahajit_v_terenu(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
+    warnings = projekt.check_pred_zahajenim_v_terenu()
+    if warnings:
+        request.session["temp_data"] = warnings
+        messages.add_message(request, messages.ERROR, PROJEKT_NELZE_ZAHAJIT_V_TERENU)
+        return JsonResponse(
+            {
+                "redirect": reverse(
+                    "projekt:detail", kwargs={"ident_cely": ident_cely}
+                )
+            },
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
         return JsonResponse(
@@ -828,8 +844,7 @@ def zahajit_v_terenu(request, ident_cely):
 
         if form.is_valid():
             projekt = form.save(commit=False)
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_zahajeny_v_terenu(request.user)
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_ZAHAJEN_V_TERENU
@@ -883,8 +898,7 @@ def ukoncit_v_terenu(request, ident_cely):
         form = UkoncitVTerenuForm(request.POST, instance=projekt)
         if form.is_valid():
             projekt = form.save(commit=False)
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_ukoncen_v_terenu(request.user)
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_UKONCEN_V_TERENU
@@ -936,8 +950,7 @@ def uzavrit(request, ident_cely):
         )
     if request.method == "POST":
         # Move all events to state A2
-        fedora_transaction = FedoraTransaction()
-        projekt.active_transaction = fedora_transaction
+        fedora_transaction = projekt.create_transaction(request.user)
         akce_query = Akce.objects.filter(projekt=projekt)
         for akce in akce_query:
             if akce.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
@@ -969,16 +982,7 @@ def uzavrit(request, ident_cely):
                 if key == "has_event":
                     request.session["temp_data"].append(item)
                 else:
-                    items = ""
-                    for i, list_items in enumerate(item):
-                        if isinstance(list_items, list):
-                            items += list_items.pop(0)
-                            items += ", ".join(list_items)
-                        else:
-                            items += list_items
-                        if i + 1 < len(item):
-                            items += ", "
-                    request.session["temp_data"].append(f"{key}: {items}")
+                    request.session["temp_data"].append(f"{key}: {item}")
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
             return JsonResponse(
                 {
@@ -1029,8 +1033,7 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        projekt.active_transaction = fedora_transaction
+        projekt.create_transaction(request.user)
         projekt.set_archivovany(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
@@ -1108,8 +1111,7 @@ def navrhnout_ke_zruseni(request, ident_cely):
                 duvod_to_save = form.cleaned_data["reason_text"]
             else:
                 duvod_to_save = duvod_to_save
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_navrzen_ke_zruseni(request.user, duvod_to_save)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
@@ -1175,8 +1177,7 @@ def zrusit(request, ident_cely):
         form = ZruseniProjektForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason_text"]
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_zruseny(request.user, duvod)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
@@ -1247,8 +1248,7 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
@@ -1300,8 +1300,7 @@ def vratit_navrh_zruseni(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_znovu_zapsan(request.user, duvod)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
@@ -1376,8 +1375,7 @@ def generovat_oznameni(request, ident_cely):
                                                                   "odeslat_oznamovateli":
                                                                       request.POST.get("odeslat_oznamovateli", False)})
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    fedora_transaction = FedoraTransaction()
-    projekt.active_transaction = fedora_transaction
+    fedora_transaction = projekt.create_transaction(request.user)
     if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
         logger.debug("projekt.views.generovat_oznameni.wrong_project_tpye")
         messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
@@ -1396,8 +1394,7 @@ class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         ident_cely = kwargs['ident_cely']
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-        fedora_transaction = FedoraTransaction()
-        projekt.active_transaction = fedora_transaction
+        fedora_transaction = projekt.create_transaction(self.request.user)
         rep_bin_file = projekt.create_confirmation_document(fedora_transaction, additional=True, user=self.request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.send_ep01(rep_bin_file)
@@ -1602,25 +1599,26 @@ def katastr_text_to_id(request):
     Funkce podlehu pro získaní ID katastru podle názvu katastru.
     """
     hlavni_katastr: str = request.POST.get("hlavni_katastr")
-    hlavni_katastr_name = hlavni_katastr[: hlavni_katastr.find("(")].strip()
-    okres_name = (
-        (hlavni_katastr[hlavni_katastr.find("(") + 1 :]).replace(")", "").strip()
-    )
-    katastr_query = RuianKatastr.objects.filter(
-        Q(nazev=hlavni_katastr_name) & Q(okres__nazev=okres_name)
-    )
+    if hlavni_katastr is None or hlavni_katastr.strip() == "":
+        return request.POST.copy()
+    try:
+        kod=hlavni_katastr[hlavni_katastr.find(';')+1:hlavni_katastr.find(')')].strip()
+    except (ValueError, IndexError) as e:
+        logger.warning("projekt.views.katastr_text_to_id.wrong_format",
+                         extra={"hlavni_katastr": hlavni_katastr, "error":e })
+        return request.POST.copy()
+    if not kod.isnumeric():
+        logger.warning("projekt.views.katastr_text_to_id.not_numeric",
+                         extra={"hlavni_katastr": hlavni_katastr})
+        return request.POST.copy()
+    katastr_query = RuianKatastr.objects.filter(kod=kod)
     if katastr_query.count() > 0:
         post = request.POST.copy()
         post["hlavni_katastr"] = katastr_query.first().id
         return post
-    else:
-        if hlavni_katastr_name.isnumeric() and okres_name.isnumeric():
-            logger.debug("projekt.views.katastr_text_to_id.has_numbers",
-                         extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
-        else:
-            logger.error("projekt.views.katastr_text_to_id.not_found",
-                         extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
-        return request.POST.copy()
+    logger.warning("projekt.views.katastr_text_to_id.not_found",
+                         extra={"hlavni_katastr": hlavni_katastr})
+    return request.POST.copy()
 
 
 class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektPermissionFilterMixin):

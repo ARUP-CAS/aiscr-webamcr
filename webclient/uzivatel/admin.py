@@ -39,6 +39,19 @@ class UserNotificationTypeInlineForm(forms.ModelForm):
             |Q(ident_cely='E-U-04')
         )
 
+class UserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
+    model = UserNotificationType.user.through
+
+    def __init__(self, *args, **kwargs):
+        super(UserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
+        if not self.instance.pk and not self.data: 
+            notification_ids = UserNotificationType.objects.filter(
+                Q(ident_cely__icontains='S-E-')
+            ).values_list('id', flat=True)
+            self.initial = []
+            for id in notification_ids:
+                self.initial.append({'usernotificationtype': id, })
+
 
 class UserNotificationTypeInline(admin.TabularInline):
     """
@@ -46,6 +59,7 @@ class UserNotificationTypeInline(admin.TabularInline):
     """
     model = UserNotificationType.user.through
     form = UserNotificationTypeInlineForm
+    formset = UserNotificationTypeInlineFormset
 
     def get_queryset(self, request):
         logger.debug(self.model._default_manager)
@@ -55,6 +69,14 @@ class UserNotificationTypeInline(admin.TabularInline):
             |Q(usernotificationtype__ident_cely='E-U-04')
         )
         return queryset
+    
+    def get_extra(self, request, obj=None, **kwargs):
+        extra = 1  #default 0
+        if not obj: #new create only
+            extra = UserNotificationType.objects.filter(
+                Q(ident_cely__icontains='S-E-')
+            ).count()
+        return extra
 
     def __init__(self, parent_model, admin_site):
         super(UserNotificationTypeInline, self).__init__(parent_model, admin_site)
@@ -133,6 +155,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                     "first_name",
                     "last_name",
                     "telefon",
+                    "osoba",
                     "groups",
                 )
             },
@@ -153,6 +176,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                     "first_name",
                     "last_name",
                     "telefon",
+                    "osoba",
                     "groups",
                 ),
             },

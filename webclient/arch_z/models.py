@@ -145,6 +145,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             stav=EZ_STAV_ZAPSANY, externi_odkazy_zdroje__archeologicky_zaznam=self
         )
         for ez in externi_zdroje:
+            ez.active_transaction = self.active_transaction
             ez.set_odeslany(user)
 
     def set_archivovany(self, user):
@@ -256,11 +257,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         """
         Metóda na kontrolu prerekvizit pred archivací:
 
+            kontrola jako před odesláním a navíc
+
             všechny pripojené dokumenty jsou archivované.
 
             všechny DJ mají potvrzený pian
         """
-        result = []
+        result = self.check_pred_odeslanim()
         for dc in self.casti_dokumentu.all():
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
                 result.append(
@@ -303,7 +306,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence += 1
         except ObjectDoesNotExist:
-            sequence = LokalitaSekvence.objects.create(region=region, typ=typ, sekvence=1)
+            sequence = LokalitaSekvence.objects.using('urgent').create(region=region, typ=typ, sekvence=1)
         finally:
             prefix = f"{region}-{typ.zkratka}"
             lokality = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{prefix}").order_by("-ident_cely")
@@ -320,7 +323,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                     logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                     raise MaximalIdentNumberError(MAXIMUM)
                 sequence.sekvence=missing[0]
-        sequence.save()
+        sequence.save(using='urgent')
         old_ident = self.ident_cely
         self.ident_cely = (
             sequence.region + "-" + str(sequence.typ.zkratka) + f"{sequence.sekvence:07}"
@@ -675,7 +678,7 @@ def get_akce_ident(region):
             raise MaximalIdentNumberError(MAXIMUM)
         sequence.sekvence += 1
     except ObjectDoesNotExist:
-        sequence = AkceSekvence.objects.create(region=region, sekvence=1)
+        sequence = AkceSekvence.objects.using('urgent').create(region=region, sekvence=1)
     finally:
         prefix = str(region + "-9")
         akce = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{prefix}",ident_cely__endswith="A").order_by("-ident_cely")
@@ -693,7 +696,7 @@ def get_akce_ident(region):
                 logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence=missing[0]
-    sequence.save()
+    sequence.save(using='urgent')
     return (
         sequence.region + "-9" + f"{sequence.sekvence:06}" + "A"
     )

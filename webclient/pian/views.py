@@ -109,9 +109,8 @@ def detail(request, ident_cely):
         )
     elif form.is_valid():
         logger.debug("pian.views.detail.form.valid", extra={"pian_ident_cely": pian.ident_cely})
-        fedora_transaction = FedoraTransaction()
         pian = form.save(commit=False)
-        pian.active_transaction = fedora_transaction
+        fedora_transaction = pian.create_transaction(request.user)
         pian.save()
         djs=DokumentacniJednotka.objects.filter(pian__ident_cely=ident_cely)
         for fdj in djs:
@@ -151,7 +150,7 @@ def odpojit(request, dj_ident_cely):
     pian = dj.pian
     pian: Pian
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
+        fedora_transaction = dj.archeologicky_zaznam.create_transaction(request.user)
         dj.archeologicky_zaznam.get_absolute_url()
         dj.pian = None
         dj.active_transaction = fedora_transaction
@@ -214,8 +213,7 @@ def potvrdit(request, dj_ident_cely):
         raise PermissionDenied
     if request.method == "POST":
         redirect_view = dj.archeologicky_zaznam.get_absolute_url(dj_ident_cely)
-        fedora_transaction = FedoraTransaction()
-        pian.active_transaction = fedora_transaction
+        fedora_transaction = pian.create_transaction(request.user)
         try:
             old_ident = pian.ident_cely
             pian.set_permanent_ident_cely()
@@ -325,8 +323,7 @@ def create(request, dj_ident_cely):
                 messages.add_message(request, messages.ERROR, e.message)
             else:
                 if FedoraRepositoryConnector.check_container_deleted_or_not_exists(pian.ident_cely, "pian"):
-                    fedora_transaction = FedoraTransaction()
-                    pian.active_transaction = fedora_transaction
+                    fedora_transaction = pian.create_transaction(request.user)
                     pian.save()
                     pian.set_vymezeny(request.user)
                     dj.active_transaction = fedora_transaction

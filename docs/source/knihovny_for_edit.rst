@@ -85,7 +85,7 @@ Knihovny vkládané jako statické soubory
      - MIT License
      - https://github.com/yourlabs/django-autocomplete-light
    * - Dropzone
-     -
+     - 5.7.0
      - MIT License
      - https://www.dropzone.dev/
    * - Easytimer

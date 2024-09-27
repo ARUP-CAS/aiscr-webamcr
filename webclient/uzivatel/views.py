@@ -18,6 +18,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import get_language
 from django.views.decorators.http import require_http_methods
 from django.views.generic.edit import UpdateView
 from django_registration.backends.activation.views import RegistrationView
@@ -72,7 +73,10 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
     """
 
     def get_result_label(self, result):
-        return f"{result.last_name}, {result.first_name} ({result.ident_cely}, {result.organizace.nazev_zkraceny})"
+        if get_language() == "en":
+            return f"{result.last_name}, {result.first_name} ({result.ident_cely}, {result.organizace.nazev_zkraceny_en})"    
+        else:
+            return f"{result.last_name}, {result.first_name} ({result.ident_cely}, {result.organizace.nazev_zkraceny})"
     
     def get_queryset(self):
         qs = User.objects.all().order_by("last_name")
@@ -116,7 +120,10 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
 
 class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     def get_result_label(self, result):
-        return f"{result.ident_cely} ({result.organizace.nazev_zkraceny})"
+        if get_language() == "en":
+            return f"{result.ident_cely} ({result.organizace.nazev_zkraceny_en})"
+        else:
+            return f"{result.ident_cely} ({result.organizace.nazev_zkraceny})"
     def get_queryset(self):
         qs = User.objects.all().order_by("ident_cely")
         if self.q:
@@ -287,7 +294,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         if form.is_valid() and has_changed:
             obj = form.save(commit=False)
             obj: User
-            obj.active_transaction = FedoraTransaction()
+            obj.active_transaction = FedoraTransaction(obj, request.user)
             obj.save(update_fields=("telefon",))
             poznamka = ", ".join([f"{fieldname}: {form.cleaned_data[fieldname]}" for fieldname in form.changed_data])
             if len(poznamka) > 0:
@@ -327,7 +334,7 @@ def update_notifications(request):
     if form.is_valid():
         notifications = form.cleaned_data.get('notification_types')
         user: User = request.user
-        user.active_transaction = FedoraTransaction()
+        user.active_transaction = FedoraTransaction(user, request.user)
         notification_group_idents = {x.ident_cely: x for x in notifications.all()}
         for group_ident in NOTIFICATION_GROUPS.keys():
             if group_ident in notification_group_idents:

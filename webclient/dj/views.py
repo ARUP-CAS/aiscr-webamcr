@@ -49,8 +49,8 @@ def detail(request, typ_vazby, ident_cely):
     Funkce pohledu pro editaci dokumentační jednotky a ADB.
     """
     logger.debug("dj.views.detail.start")
-    dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
-    fedora_transaction = FedoraTransaction()
+    dj: DokumentacniJednotka = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
+    fedora_transaction = dj.archeologicky_zaznam.create_transaction(request.user)
     pian_db: Pian = dj.pian
     if pian_db is not None:
         pian_db.active_transaction = fedora_transaction
@@ -239,7 +239,7 @@ def zapsat(request, arch_z_ident_cely):
         else:
             dj.komponenty = vazba
             dj.archeologicky_zaznam = az
-            fedora_transaction = FedoraTransaction()
+            fedora_transaction = az.create_transaction(request.user)
             dj.active_transaction = fedora_transaction
             dj.close_active_transaction_when_finished = True
             resp = dj.save()
@@ -258,11 +258,12 @@ def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání dokumentační jednotky.
     """
-    dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
+    dj: DokumentacniJednotka \
+        = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if request.method == "POST":
         try:
             dj.deleted_by_user = request.user
-            fedora_transaction = FedoraTransaction()
+            fedora_transaction = dj.archeologicky_zaznam.create_transaction(request.user)
             dj.active_transaction = fedora_transaction
             resp = dj.delete()
             update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
@@ -328,10 +329,9 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         zaznam: DokumentacniJednotka = self.get_zaznam()
         form = ChangeKatastrForm(data=request.POST)
         if form.is_valid():
-            fedora_transaction = FedoraTransaction()
             az = zaznam.archeologicky_zaznam
             az: ArcheologickyZaznam
-            az.active_transaction = fedora_transaction
+            fedora_transaction = az.create_transaction(request.user)
             az.hlavni_katastr = form.cleaned_data["katastr"]
             az.save()
             zaznam.active_transaction = fedora_transaction

@@ -43,6 +43,7 @@ from heslar.hesla import (
     HESLAR_OBJEKT_SPECIFIKACE_KAT,
     HESLAR_POCASI,
     HESLAR_POSUDEK_TYP,
+    HESLAR_POSUDEK_TYP_KAT,
     HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PRISTUPNOST,
     HESLAR_UDALOST_TYP,
@@ -445,6 +446,19 @@ class Model3DFilter(HistorieFilter, FilterSet):
             ),
             distinct=True,
         )
+        self.filters["posudky"] = MultipleChoiceFilter(
+            field_name="posudky",
+            label=_("dokument.filters.dokumentFilter.posudky.label"),
+            choices=heslar_12(HESLAR_POSUDEK_TYP, HESLAR_POSUDEK_TYP_KAT)[1:],
+            widget=SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            distinct=True,
+        )
         self.set_filter_fields(user)
         self.helper = Model3DFilterFormHelper()
 
@@ -563,11 +577,7 @@ class DokumentFilter(Model3DFilter):
         label=_("dokument.filters.dokumentFilter.ulozeniOriginalu.label"),
         widget=SelectMultipleSeparator(),
     )
-    posudky = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_POSUDEK_TYP),
-        label=_("dokument.filters.dokumentFilter.posudky.label"),
-        widget=SelectMultipleSeparator(),
-    )
+    
     pristupnost = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
         label=_("dokument.filters.dokumentFilter.pristupnost.label"),
@@ -914,9 +924,9 @@ class DokumentFilter(Model3DFilter):
             Q(oznaceni_originalu__icontains=value)
             | Q(popis__icontains=value)
             | Q(poznamka__icontains=value)
-            | Q(licence__icontains=value)
+            | Q(licence__heslo__icontains=value)
             | Q(extra_data__cislo_objektu__icontains=value)
-            | Q(extra_data__region__icontains=value)
+            | Q(extra_data__region_extra__icontains=value)
             | Q(extra_data__udalost__icontains=value)
         )
 

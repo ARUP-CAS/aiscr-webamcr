@@ -131,6 +131,7 @@ window.onload = function () {
             "application/vnd.rar, " +
             "application/x-rar, " +
             "application/x-rar-compressed, " +
+            "application/x-compressed," +
             "application/x-7z-compressed"
         RejectedFileMessage = reject_dict["rejected_dokument_model"]
     } else {
@@ -149,6 +150,7 @@ window.onload = function () {
             "application/x-rar, " +
             "application/x-rar-compressed, " +
             "application/x-7z-compressed, " +
+            "application/x-compressed," +
             "application/pdf, " +
             "application/msword, " +
             "application/vnd.ms-excel, " +
@@ -199,6 +201,9 @@ window.onload = function () {
                 } else {
                     show_upload_successful_message(file, result, message);
                 }
+                var submitButton = $(".btn-disable-when-running-upload");
+                submitButton.prop('disabled', false); 
+                submitButton.removeClass("disabled"); 
             });
             this.on("removedfile", function (file) {
                 if (file.id) {
@@ -210,6 +215,11 @@ window.onload = function () {
             });
             this.on("sending", function (file) {
                 file.previewElement.lastChild.style.display = "none"
+            });
+            this.on("addedfile", function (file) {
+                var submitButton = $(".btn-disable-when-running-upload");
+                submitButton.prop('disabled', true);
+                submitButton.addClass("disabled"); 
             });
 
         },

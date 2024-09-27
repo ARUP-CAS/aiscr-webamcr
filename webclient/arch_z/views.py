@@ -637,10 +637,9 @@ def edit(request, ident_cely):
             and form_akce.is_valid()
             and ostatni_vedouci_objekt_formset.is_valid()
         ):
-            fedora_trasnaction = FedoraTransaction()
             logger.debug("arch_z.views.edit.form_valid")
             az = form_az.save(commit=False)
-            az.active_transaction = fedora_trasnaction
+            az.create_transaction(request.user)
             az.save()
             form_az.save_m2m()
             akce = form_akce.save()
@@ -722,8 +721,7 @@ def odeslat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_trasnaction = FedoraTransaction()
-        az.active_transaction = fedora_trasnaction
+        az.create_transaction(request.user)
         az.set_odeslany(request.user, request, messages)
         az.save()
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -788,8 +786,7 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_trasnaction = FedoraTransaction()
-        az.active_transaction = fedora_trasnaction
+        az.create_transaction(request.user)
         az.set_archivovany(request.user)
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
@@ -852,8 +849,7 @@ def vratit(request, ident_cely):
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
-            fedora_trasnaction = FedoraTransaction()
-            az.active_transaction = fedora_trasnaction
+            fedora_trasnaction = az.create_transaction(request.user)
             duvod = form.cleaned_data["reason"]
             projekt = None
             if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -976,8 +972,7 @@ def zapsat(request, projekt_ident_cely=None):
             logger.debug("arch_z.views.zapsat.form_valid", extra={"projekt_ident_cely": projekt_ident_cely})
             az = form_az.save(commit=False)
             az: ArcheologickyZaznam
-            fedora_transaction = FedoraTransaction()
-            az.active_transaction = fedora_transaction
+            fedora_transaction = az.create_transaction(request.user)
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
             try:
@@ -1076,6 +1071,7 @@ def zapsat(request, projekt_ident_cely=None):
             "ostatni_vedouci_objekt_formset_readonly": True,
             "button": _("arch_z.views.zapsat.submitButton.text"),
             "toolbar_name": _("arch_z.views.zapsat.toolbarName"),
+            "toolbar_label": _("arch_z.views.zapsat.toolbar.title"),
             "heslar_specifikace_v_letech_presne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
             "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
         }
@@ -1106,9 +1102,8 @@ def smazat(request, ident_cely):
     else:
         projekt = None
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
+        fedora_transaction = az.create_transaction(request.user)
         try:
-            az.active_transaction = fedora_transaction
             az.skip_container_check = True
             az.close_active_transaction_when_finished = True
             az.deleted_by_user = request.user
@@ -1323,8 +1318,13 @@ def post_akce2kat(request):
     body = json.loads(request.body.decode("utf-8"))
     logger.debug("arch_z.views.post_akce2kat.start", extra={"body": body})
     katastr_name = body["cadastre"]
-    katastr_nazev, okres_nazev = [x.strip(")").strip() for x in katastr_name.split("(")]
-    katastr = RuianKatastr.objects.get(nazev__iexact=katastr_nazev, okres__nazev__iexact=okres_nazev)
+    try:
+        kod=katastr_name[katastr_name.find(';')+1:katastr_name.find(')')].strip()
+    except (ValueError, IndexError) as e:
+        logger.error("arch_z.views.post_akce2kat.katastr_name_error",
+                         extra={"katastr_name": katastr_name, "error":e })
+        return JsonResponse({ "pians": [], "count": 0,    }, status=200)
+    katastr = RuianKatastr.objects.get(kod=kod)
     akce_ident_cely = body["akce_ident_cely"]
 
     if len(katastr_name) > 0:
@@ -1480,7 +1480,7 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
             messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
             return JsonResponse({"redirect": az.get_absolute_url()}, status=403)
         zaznam.delete()
-        fedora_transaction = FedoraTransaction()
+        fedora_transaction = az.create_transaction(request.user)
         az.save_metadata(fedora_transaction, close_transaction=True)
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         logger.debug("arch_z.views.smazat_akce_vedoucí.success", extra={"ident_cely": ident_cely,
@@ -1567,7 +1567,6 @@ class AkceListView(SearchListView):
         self.hasOnlyVybrat_header = _("arch_z.views.AkceListView.hasOnlyVybrat_header.text")
         self.hasOnlyVlastnik_header = _("arch_z.views.AkceListView.hasOnlyVlastnik_header.text")
         self.hasOnlyArchive_header = _("arch_z.views.AkceListView.hasOnlyArchive_header.text")
-        self.hasOnlyPotvrdit_header = _("arch_z.views.AkceListView.hasOnlyPotvrdit_header.text")
         self.hasOnlyNase_header = _("arch_z.views.AkceListView.hasOnlyNase_header.text")
         self.default_header = _("arch_z.views.AkceListView.default_header.text")
         self.toolbar_name = _("arch_z.views.AkceListView.toolbar_name.text")
@@ -1666,16 +1665,16 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         Uživatel je presmerován na detail akce.
         """
         context = self.get_context_data(**kwargs)
-        fedora_transaction = FedoraTransaction()
         az = context["object"]
         if check_stav_changed(request, az):
             return JsonResponse(
                 {"redirect": az.get_absolute_url()},
                 status=403,
             )
+        az: ArcheologickyZaznam
+        fedora_transaction = az.create_transaction(request.user)
         akce: Akce = az.akce
         akce.active_transaction = fedora_transaction
-        az.active_transaction = fedora_transaction
         akce.projekt = None
         akce.typ = Akce.TYP_AKCE_SAMOSTATNA
         akce.save()
@@ -1750,7 +1749,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             )
         form = PripojitProjektForm(data=request.POST)
         if form.is_valid():
-            fedora_transaction = FedoraTransaction()
+            fedora_transaction = az.create_transaction(request.user)
             projekt = form.cleaned_data["projekt"]
             akce = az.akce
             akce.active_transaction = fedora_transaction
@@ -1758,7 +1757,6 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             akce.typ = Akce.TYP_AKCE_PROJEKTOVA
             akce.save()
             old_ident = az.ident_cely
-            az.active_transaction = fedora_transaction
             az.set_akce_ident(get_project_event_ident(az.akce.projekt), delete_container=False)
             az.save()
             Historie(

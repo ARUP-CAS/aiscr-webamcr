@@ -25,7 +25,7 @@
     <small class="form-text text-muted">{% trans "core.templates.upload_file.tooltip" %}</small>
     <div class="mt-3">
       <div class="form-group">
-        <a class="btn btn-primary app-entity-soubor-btn"
+        <a class="btn btn-primary app-entity-soubor-btn btn-disable-when-running-upload"
            href="{{ back_url }}">{% trans "core.templates.upload_file.submitButton.text" %}</a>
       </div>
     </div>
@@ -76,5 +76,5 @@
       maxFilesExceeded: '{% trans "core.templates.core.upload_file.dz.maxFilesExceeded" %}',
     }
   </script>
-  <script src="{% static 'dz.js' %}"></script>
+  <script src="{% static 'dz.js' %}?v2"></script>
 {% endblock %}

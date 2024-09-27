@@ -392,10 +392,12 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def check_pred_archivaci(self):
         """
         Metóda na kontrolu prerekvizit pred posunem do stavu archivovaný:
-            
+
+            kontrola jako před uzavřením a navíc
+
             Připojení akce musejí být ve stavu archivovaná.
         """
-        result = {}
+        result = self.check_pred_uzavrenim()
         for akce in self.akce_set.all():
             if akce.archeologicky_zaznam.stav != AZ_STAV_ARCHIVOVANY:
                 result[akce.archeologicky_zaznam.ident_cely] = _(
@@ -446,12 +448,26 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         if does_not_have_event and self.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
             result["has_event"] = _("projekt.models.projekt.checkPredUzavrenim.akce.text")
         for a in self.akce_set.all():
-            if hasattr(a, "check_pred_odeslanim"):
-                akce_warnings = a.check_pred_odeslanim()
+            if hasattr(a, "archeologicky_zaznam") and hasattr(a.archeologicky_zaznam, "check_pred_odeslanim"):
+                akce_warnings = a.archeologicky_zaznam.check_pred_odeslanim()
                 if akce_warnings:
-                    result[_("projekt.models.projekt.checkPredUzavrenim.akce.text") + a.archeologicky_zaznam.ident_cely] = akce_warnings
+                    result[_("projekt.models.projekt.checkPredUzavrenim.akce.akce_text") + a.archeologicky_zaznam.ident_cely] = akce_warnings
+            else:
+                logger.error("projekt.models.check_pred_uzavrenim.check_akce_error", extra={"ident": self.ident_cely})
         result = {k:str(v) for (k, v) in result.items()}
         return result
+    
+    def check_pred_zahajenim_v_terenu(self):
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu zahájen v terénu:
+
+            Projektu musí mít lokalizaci
+        """
+        resp = []
+        if self.geom is None or len(self.geom) < 2:
+            resp.append(_("projekt.models.projekt.checkPredZahajenim.lokalizace.text"))
+        resp = [str(x) for x in resp]
+        return resp
 
     def parse_ident_cely(self):
         """
@@ -503,7 +519,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence += 1
         except ObjectDoesNotExist:
-            sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=1)
+            sequence = ProjektSekvence.objects.using('urgent').create(region=region, rok=current_year, sekvence=1)
         finally:
             prefix = f"{region}-{str(current_year)}"
             projekts = Projekt.objects.filter(ident_cely__startswith=prefix).order_by("-ident_cely")
@@ -520,7 +536,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                     logger.error("dokuments.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                     raise MaximalIdentNumberError(MAXIMUM)
                 sequence.sekvence = missing[0]
-        sequence.save()
+        sequence.save(using='urgent')
         old_ident = self.ident_cely
         self.ident_cely = (
             sequence.region + "-" + str(sequence.rok) + f"{sequence.sekvence:05}"

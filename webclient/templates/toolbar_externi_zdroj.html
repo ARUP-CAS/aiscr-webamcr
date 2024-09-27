@@ -6,6 +6,7 @@
       <a href="{% url 'ez:index' %}"><span class="material-icons">menu_book</span><span class="app-controls-button-text"> {{toolbar_name}}</span></a>
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
+      {% if toolbar_label %}{{toolbar_label}}{%endif%}
       {{zaznam.ident_cely}}
     </div>
   </div>

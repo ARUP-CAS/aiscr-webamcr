@@ -224,7 +224,7 @@ def get_perm_ez_ident():
             raise MaximalIdentNumberError(MAXIMUM)
         sequence.sekvence += 1
     except ObjectDoesNotExist:
-        sequence = ExterniZdrojSekvence.objects.create(sekvence=1)
+        sequence = ExterniZdrojSekvence.objects.using('urgent').create(sekvence=1)
     finally:
         ezs = ExterniZdroj.objects.filter(ident_cely__startswith=f"{prefix}").order_by("-ident_cely")
         if ezs.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:07}").count()>0:
@@ -240,7 +240,7 @@ def get_perm_ez_ident():
                 logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence=missing[0]
-    sequence.save()
+    sequence.save(using='urgent')
     return (
         prefix + f"{sequence.sekvence:07}"
     )

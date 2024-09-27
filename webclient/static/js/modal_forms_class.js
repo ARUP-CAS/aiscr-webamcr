@@ -149,8 +149,8 @@ class Modal {
                         }
                      }
                      settings.succesFunction(settings,response)
-                     $("#loader-spinner").hide()
-                    $("#submit-btn").prop("disabled", false);
+                    // $("#loader-spinner").hide()
+                    //$("#submit-btn").prop("disabled", false);
                 }
             },
             error: function (response) {

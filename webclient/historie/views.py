@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Value, CharField, F
 from django.db.models.functions import Concat
 from django.views.generic import ListView
+from django.utils.translation import get_language
 from django_tables2 import SingleTableMixin
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
@@ -40,7 +41,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
                     Value(" ("),
                     F("uzivatel__ident_cely"),
                     Value(", "),
-                    F("uzivatel__organizace__nazev_zkraceny"),
+                    F("uzivatel__organizace__nazev_zkraceny_en") if get_language() == "en" else F("uzivatel__organizace__nazev_zkraceny"),
                     Value(")"),
                     output_field=CharField(),
                 ))
@@ -48,7 +49,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
             return queryset.annotate(uzivatel_custom=Concat(
                 F("uzivatel__ident_cely"),
                 Value(" ("),
-                F("uzivatel__organizace__nazev_zkraceny"),
+                F("uzivatel__organizace__nazev_zkraceny_en") if get_language() == "en" else F("uzivatel__organizace__nazev_zkraceny"),
                 Value(")"),
                 output_field=CharField(),
             ))

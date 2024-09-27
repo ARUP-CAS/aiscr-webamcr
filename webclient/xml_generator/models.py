@@ -1,4 +1,3 @@
-import inspect
 import logging
 from typing import Optional
 
@@ -11,12 +10,21 @@ UPDATE_REDIS_SNAPSHOT = 20
 
 
 def check_if_task_queued(class_name, pk, task_name):
-    app = Celery("webclient")
-    app.config_from_object("django.conf:settings", namespace="CELERY")
-    app.autodiscover_tasks()
-    i = app.control.inspect(["worker1@amcr"])
-    queues = (i.scheduled(),)
+    try:
+        app = Celery("webclient")
+        app.config_from_object("django.conf:settings", namespace="CELERY")
+        app.autodiscover_tasks()
+        i = app.control.inspect(["worker1@amcr"])
+        queues = (i.scheduled(),)
+    except Exception as e:
+            logger.error("xml_generator.models.ModelWithMetadata.check_if_task_queued.Celery_error",
+                                 extra={"Exception": e, "app": app })
+            return False
     for queue in queues:
+        if queue is None:
+            logger.error("xml_generator.models.ModelWithMetadata.check_if_task_queued.error",
+                                 extra={"class_name": class_name, "pk": pk, "i": i,"queues": queues })
+            return False
         for queue_name, queue_tasks in queue.items():
             for task in queue_tasks:
                 if "request" in task and task_name in task.get("request").get("name").lower() \
@@ -41,6 +49,13 @@ class ModelWithMetadata(models.Model):
         if not hasattr(self, "soubory"):
             self.soubory = None
 
+    def create_transaction(self, transaction_user):
+        from core.repository_connector import FedoraTransaction
+        from uzivatel.models import User
+        user: User
+        self.active_transaction = FedoraTransaction(self, transaction_user)
+        return self.active_transaction
+
     @property
     def metadata(self):
         from core.repository_connector import FedoraRepositoryConnector
@@ -50,21 +65,17 @@ class ModelWithMetadata(models.Model):
     def save_metadata(self, fedora_transaction=None, include_files=False, close_transaction=False,
                       skip_container_check=False):
         from core.repository_connector import FedoraTransaction
-        stack = inspect.stack()
-        caller = stack[1]
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
         if not self.ident_cely:
             logger.warning("xml_generator.models.ModelWithMetadata.save_metadata.no_ident",
                            extra={"ident_cely": self.ident_cely, "record_pk": self.pk,
                                   "record_class": self.__class__.__name__, "transaction": fedora_transaction.uid,
-                                  "close_transaction": close_transaction, "caller": [f"{caller}\n"
-                                                                                     for caller in stack]})
+                                  "close_transaction": close_transaction})
             return
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.start",
                      extra={"ident_cely": self.ident_cely, "record_pk": self.pk,
                             "record_class": self.__class__.__name__, "transaction":
-                                getattr(fedora_transaction, "uid", ""), "close_transaction": close_transaction,
-                            "caller": caller})
+                                getattr(fedora_transaction, "uid", ""), "close_transaction": close_transaction})
         fedora_transaction: Optional[FedoraTransaction]
         from core.repository_connector import FedoraRepositoryConnector
         connector = FedoraRepositoryConnector(self, fedora_transaction, skip_container_check=self.skip_container_check)
@@ -78,7 +89,7 @@ class ModelWithMetadata(models.Model):
         connector.save_metadata(True)
         if close_transaction is True:
             logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.mark_transaction_as_closed",
-                         extra={"transaction": getattr(fedora_transaction, "uid", ""), "caller": caller})
+                         extra={"transaction": getattr(fedora_transaction, "uid", "")})
             transaction.on_commit(lambda: fedora_transaction.mark_transaction_as_closed())
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.end",
                      extra={"transaction": getattr(fedora_transaction, "uid", ""),

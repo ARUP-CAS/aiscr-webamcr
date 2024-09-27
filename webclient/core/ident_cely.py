@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from django.db import connection
+from django.db import connection, connections
 import re
 
 from django.shortcuts import get_object_or_404
@@ -36,7 +36,7 @@ def get_next_sequence(sequence_name: str) -> str:
     query = (
         "select nextval(%s)"
     )
-    cursor = connection.cursor()
+    cursor = connections['urgent'].cursor()
     cursor.execute(query,[sequence_name])
     return cursor.fetchone()[0]
 
@@ -272,7 +272,7 @@ def get_adb_ident(pian: Pian) -> str:
     try:
         sequence = AdbSekvence.objects.get(kladysm5=sm5)
     except AdbSekvence.DoesNotExist:
-        sequence = AdbSekvence.objects.create(kladysm5=sm5, sekvence=1)
+        sequence = AdbSekvence.objects.using('urgent').create(kladysm5=sm5, sekvence=1)
     perm_ident_cely = record_list + "-" + f"{sequence.sekvence:06}"
     # Loop through all of the idents that have been imported
     while True:
@@ -288,7 +288,7 @@ def get_adb_ident(pian: Pian) -> str:
     if sequence.sekvence < MAXIMAL_ADBS:
         ident = perm_ident_cely
         sequence.sekvence += 1
-        sequence.save()
+        sequence.save(using='urgent')
         return ident, sm5
     else:
         logger.error("core.ident_cely.get_adb_ident.max_adbs_error", extra={"maximal_adbs": MAXIMAL_ADBS})
