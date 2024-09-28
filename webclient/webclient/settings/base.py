@@ -272,9 +272,7 @@ TIME_ZONE = "Europe/Prague"
 
 USE_I18N = True
 
-USE_L10N = False
-DATE_FORMAT = "d.m.Y"
-DATE_INPUT_FORMATS = ["%-d.%-m.%Y","%d.%m.%Y", "%d/%m/%Y", "%Y-%m-%d"]
+FORMAT_MODULE_PATH = ['webclient.formats']
 
 USE_TZ = True
 
