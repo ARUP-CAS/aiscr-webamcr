@@ -204,6 +204,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
         context["page_title"] = _("ez.templates.ExterniZdrojCreateView.pageTitle")
         context["header"] = _("ez.templates.ExterniZdrojCreateView.formHeader.label")
         context["toolbar_label"] = _("ez.templates.ExterniZdrojCreateView.toolbar_label.title")
+        context["submit_button"] = _("ez.templates.ExterniZdrojCreateView.ulozitButton.label")
         return context
 
     def form_valid(self, form):
@@ -257,6 +258,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
         context["toolbar_name"] = _("ez.templates.ExterniZdrojEditView.toolbar.title")
         context["page_title"] = _("ez.templates.ExterniZdrojEditView.pageTitle")
         context["header"] = _("ez.templates.ExterniZdrojEditView.formHeader.label")
+        context["submit_button"] = _("ez.templates.ExterniZdrojEditView.ulozitButton.label")
         return context
 
     def form_valid(self, form):

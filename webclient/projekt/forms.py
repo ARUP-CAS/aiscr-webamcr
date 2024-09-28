@@ -799,3 +799,15 @@ class PripojitProjektForm(forms.Form):
 
 class ProjektFilterForm(BaseFilterForm):
     list_to_check = ["historie_datum_zmeny_od","planovane_zahajeni", "termin_odevzdani_nz","datum_ukonceni","datum_zahajeni","akce_datum_zahajeni","akce_datum_ukonceni"]
+
+class ZadostUdajeOznamovatelForm(forms.Form):
+    reason = forms.CharField(
+        label=_("projekt.forms.zadostUdajeOznamovatel.duvod.label"),
+        required=True,
+        help_text=_("projekt.forms.zadostUdajeOznamovatel.duvod.tooltip"),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(ZadostUdajeOznamovatelForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False

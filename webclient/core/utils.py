@@ -1113,11 +1113,11 @@ class SearchTable(ColumnShiftTableBootstrap4):
                     soubor.id,
                 ),
             )
-            if soubor.small_thumbnail:
-                return format_html(
-                    '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
-                    soubor_url,
-                )
+            return format_html(
+                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
+                'style="opacity:0" onload="this.style.opacity=100">',
+                soubor_url,
+            )
         return ""
 
 
