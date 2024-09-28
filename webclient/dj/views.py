@@ -76,7 +76,6 @@ def detail(request, typ_vazby, ident_cely):
             dj.save()
         if form.changed_data:
             logger.debug("dj.views.detail.changed", extra={"ident_cely": dj.ident_cely})
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
         if dj.typ.id == TYP_DJ_CELEK:
             logger.debug("dj.views.detail.celek_akce", extra={"ident_cely": dj.ident_cely})
@@ -152,8 +151,6 @@ def detail(request, typ_vazby, ident_cely):
             adb = form.save(commit=False)
             adb.active_transaction = fedora_transaction
             adb.save()
-            if form.changed_data:
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
             logger.debug("dj.views.detail.adb_detail.form_is_not_valid",
                          extra={"errors": form.errors, "ident_cely": ident_cely, "adb_ident_cely": ident_cely})
@@ -195,10 +192,6 @@ def detail(request, typ_vazby, ident_cely):
         if formset.is_valid():
             logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid",
                          extra={"ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely})
-            if (
-                formset.has_changed()
-            ):  # TODO tady to hazi porad ze se zmenila kvuli specifikaci a druhu
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
             logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_not_valid",
                          extra={"errors": formset.errors, "ident_cely": dj.ident_cely,
@@ -239,12 +232,12 @@ def zapsat(request, arch_z_ident_cely):
         else:
             dj.komponenty = vazba
             dj.archeologicky_zaznam = az
-            fedora_transaction = az.create_transaction(request.user)
+            fedora_transaction = az.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN,
+                                                       ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
             dj.active_transaction = fedora_transaction
             dj.close_active_transaction_when_finished = True
             resp = dj.save()
             logger.debug("dj.views.detail.zapsat.dj_resp", {"resp": resp})
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
     else:
         logger.debug("dj.views.detail.zapsat.form_not_valid", {"errors": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
@@ -263,18 +256,18 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         try:
             dj.deleted_by_user = request.user
-            fedora_transaction = dj.archeologicky_zaznam.create_transaction(request.user)
+            fedora_transaction = dj.archeologicky_zaznam.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN,
+                                                                            ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             dj.active_transaction = fedora_transaction
             resp = dj.delete()
             update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
-            fedora_transaction.mark_transaction_as_closed()
             if resp:
+                fedora_transaction.mark_transaction_as_closed()
                 logger.debug("dj.views.detail.smazat.deleted", extra={"resp": resp})
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
                 return JsonResponse({"redirect": dj.archeologicky_zaznam.get_absolute_url()})
             else:
+                fedora_transaction.rollback_transaction()
                 logger.warning("dj.views.detail.smazat.not_deleted", extra={"ident_cely": ident_cely})
-                messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
                 return JsonResponse(
                     {"redirect": dj.archeologicky_zaznam.get_absolute_url()},
                     status=403,
@@ -343,8 +336,6 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
                 zaznam.pian = vytvor_pian(form.cleaned_data["katastr"], fedora_transaction)
                 zaznam.save()
             zaznam.refresh_from_db()
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
             logger.debug("dj.views.ChangeKatastrView.post.form_not_valid", {"errors": form.errors})
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         return JsonResponse({"redirect": zaznam.get_absolute_url()})

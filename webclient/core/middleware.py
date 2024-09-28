@@ -125,16 +125,18 @@ class StatusMessageMiddleware:
     def _show_message(self, value, request, redis_key):
         value = int(value.decode("utf-8"))
         if value == FedoraTransactionResult.COMMITED.value:
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            success_message = self.redis_connection.hget(redis_key, "success_message") or ZAZNAM_USPESNE_EDITOVAN
+            messages.add_message(request, messages.SUCCESS, success_message)
         else:
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+            error_message = self.redis_connection.hget(redis_key, "error_message") or ZAZNAM_SE_NEPOVEDLO_EDITOVAT
+            messages.add_message(request, messages.ERROR, error_message)
         self.redis_connection.delete(redis_key)
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         regex_result = self.pattern.findall(request.path)
         for item in regex_result:
             redis_key = FedoraTransaction.get_transaction_redis_key(item, request.user.id)
-            value = self.redis_connection.get(redis_key)
-            if value:
-                self._show_message(value, request, redis_key)
+            status = self.redis_connection.hget(redis_key, "status")
+            if status:
+                self._show_message(status, request, redis_key)
                 break

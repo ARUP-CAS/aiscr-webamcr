@@ -210,7 +210,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         ez = form.save(commit=False)
         ez: ExterniZdroj
-        fedora_transaction = ez.create_transaction(self.request.user)
+        fedora_transaction = ez.create_transaction(self.request.user, EZ_USPESNE_ZAPSAN)
         ez.stav = EZ_STAV_ZAPSANY
         ez.ident_cely = get_temp_ez_ident()
         repository_connector = FedoraRepositoryConnector(ez, skip_container_check=False)
@@ -221,7 +221,6 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
             ez.set_zapsany(self.request.user)
             ez.close_active_transaction_when_finished = True
             ez.save()
-            messages.add_message(self.request, messages.SUCCESS, EZ_USPESNE_ZAPSAN)
             return HttpResponseRedirect(ez.get_absolute_url())
         else:
             logger.debug("ez.views.ExterniZdrojCreateView.form_valid.check_container_deleted_or_not_exists.incorrect",
@@ -340,10 +339,9 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
-        zaznam.create_transaction(request.user)
+        zaznam.create_transaction(request.user, self.success_message)
         zaznam.close_active_transaction_when_finished = True
         getattr(ExterniZdroj, self.action)(zaznam, request.user)
-        messages.add_message(request, messages.SUCCESS, self.success_message)
 
         return JsonResponse({"redirect": zaznam.get_absolute_url()})
 
@@ -392,14 +390,13 @@ class ExterniZdrojSmazatView(TransakceView):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
         zaznam.deleted_by_user = request.user
-        zaznam.create_transaction(request.user)
+        zaznam.create_transaction(request.user, error_message=ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
         zaznam.close_active_transaction_when_finished = True
         try:
             zaznam.delete()
         except RestrictedError as err:
             logger.debug("ez.views.ExterniZdrojSmazatView.error", extra={"ident_cely": zaznam.ident_cely,
                                                                          "err": err})
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
             return JsonResponse(
                 {"redirect": zaznam.get_absolute_url()},
                 status=403,
@@ -430,7 +427,7 @@ class ExterniZdrojVratitView(TransakceView):
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
-        zaznam.create_transaction(request.user)
+        zaznam.create_transaction(request.user, self.success_message)
         zaznam.close_active_transaction_when_finished = True
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -438,8 +435,6 @@ class ExterniZdrojVratitView(TransakceView):
             getattr(ExterniZdroj, self.action)(
                 zaznam, request.user, zaznam.stav - 1, duvod
             )
-            messages.add_message(request, messages.SUCCESS, self.success_message)
-
             return JsonResponse({"redirect": zaznam.get_absolute_url()})
         else:
             logger.debug("ez.views.ExterniZdrojVratitView.form_invalid", extra={"form_errors": form.errors})
@@ -482,12 +477,11 @@ class ExterniOdkazOdpojitView(TransakceView):
     def post(self, request, *args, **kwargs):
         self.init_translation()
         ez = self.get_zaznam()
-        self.active_transaction = ez.create_transaction(request.user)
+        self.active_transaction = ez.create_transaction(request.user, self.success_message)
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.active_transaction = self.active_transaction
         eo.close_active_transaction_when_finished = True
         eo.delete()
-        messages.add_message(request, messages.SUCCESS, self.success_message)
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
 
@@ -521,9 +515,9 @@ class ExterniOdkazPripojitView(TransakceView):
         if form.is_valid():
             logger.debug("ez.views.ExterniOdkazPripojitView.post.form_valid")
             ez = self.get_zaznam()
-            self.active_transaction = ez.create_transaction(request.user)
             arch_z_id = form.cleaned_data["arch_z"]
             arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
+            self.active_transaction = ez.create_transaction(request.user, get_message(arch_z, "EO_USPESNE_PRIPOJEN"))
             eo = ExterniOdkaz(
                 externi_zdroj=ez,
                 paginace=form.cleaned_data["paginace"],
@@ -532,9 +526,6 @@ class ExterniOdkazPripojitView(TransakceView):
             eo.active_transaction = self.active_transaction
             eo.close_active_transaction_when_finished = True
             eo.save()
-            messages.add_message(
-                request, messages.SUCCESS, get_message(arch_z, "EO_USPESNE_PRIPOJEN")
-            )
         else:
             logger.debug("ez.views.ExterniOdkazPripojitView.post.form_error", extra={"form_errors": form.errors})
         return JsonResponse({"redirect": ez.get_absolute_url()})
@@ -663,14 +654,11 @@ class ExterniOdkazOdpojitAZView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         az = self.get_zaznam()
-        self.active_transaction = az.create_transaction(request.user)
+        self.active_transaction = az.create_transaction(request.user, get_message(az, "EO_USPESNE_ODPOJEN"))
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.active_transaction = self.active_transaction
         eo.close_active_transaction_when_finished = True
         eo.delete()
-        messages.add_message(
-            request, messages.SUCCESS, get_message(az, "EO_USPESNE_ODPOJEN")
-        )
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 
@@ -740,7 +728,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         az = self.get_zaznam()
-        self.active_transaction = az.create_transaction(request.user)
+        self.active_transaction = az.create_transaction(request.user, get_message(az, "EO_USPESNE_PRIPOJEN"))
         form = PripojitExterniOdkazForm(data=request.POST)
         if form.is_valid():
             ez_id = form.cleaned_data["ez"]
@@ -755,9 +743,6 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
             eo.close_active_transaction_when_finished = True
             eo.suppress_signal=False
             eo.save()
-            messages.add_message(
-                request, messages.SUCCESS, get_message(az, "EO_USPESNE_PRIPOJEN")
-            )
         else:
             logger.debug("ez.views.ExterniOdkazPripojitDoAzView.form_invalid", extra={"errors": form.errors})
         return JsonResponse({"redirect": az.get_absolute_url()})
