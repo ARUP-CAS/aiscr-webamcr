@@ -10,11 +10,12 @@
     </div>
   </div>
   <div class="card-body">
-    <form method="POST" action="{% url 'dj:zapsat' zaznam.ident_cely %}"
-          onsubmit="newDjSubmitButton.disabled = true; return true;">
+    <form method="POST" action="{% url 'dj:zapsat' zaznam.ident_cely %}" class="submit-spinner">
       {% crispy dj_form_create %}
       <button type="submit" id="newDjSubmitButton"
               class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.dj_create.button.vytovritDJ.label" %}
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+              style="display: none"></span>
       </button>
     </form>
   </div>

@@ -69,7 +69,7 @@
     </div>
   </div>
 
-  <form method="post">
+  <form method="post" class="submit-spinner">
     <div class="row mb-4">
       <div class="col-sm-12">
         {% crispy form_oznamovatel %}
@@ -119,7 +119,7 @@
       <div class="col-sm-3 text-right">
         <button type="submit" name="save" id="submit-id-save" class="btn btn-primary mt-0">
           {% trans 'oznameni.templates.oznameni.index.dalsiKrok' %} <span class="material-icons submit-remove">arrow_forward</span>
-          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" id="loader-spinner"
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
           style="display: none"></span>
         </button>
       </div>
@@ -194,14 +194,6 @@
         addPointToPoiLayer([x2, x1], 'Vámi vybraná poloha záměru');
       }
     };
-    $(document).ready(function() {
-      $('form').on('submit', function() {
-          var submitButton = $(this).find('button[type=submit]');
-          submitButton.prop('disabled', true); // Zablokuje tlačítko
-          submitButton.find('.spinner-border').show(); // Zobrazí spinner
-          $(".submit-remove").hide();
-      });
-    });
 
   </script>
 {% endblock %}

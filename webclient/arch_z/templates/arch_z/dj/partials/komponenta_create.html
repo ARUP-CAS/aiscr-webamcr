@@ -10,12 +10,13 @@
     </div>
   </div>
   <div class="card-body">
-    <form method="POST" action="{% url 'komponenta:zapsat' type j.ident_cely %}" id="create_komponenta_form_id"
-          onsubmit="createCompotSubmitButton.disabled = true; return true;">
+    <form method="POST" action="{% url 'komponenta:zapsat' type j.ident_cely %}" id="create_komponenta_form_id" class="submit-spinner">
       <!-- Action is filled using javascript -->
       {% crispy komponenta_form_create %}
       <button type="submit" id="createCompotSubmitButton"
               class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.button.vytovritKomponentu.label" %}
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+              style="display: none"></span>
       </button>
     </form>
   </div>

@@ -138,8 +138,7 @@
       </div>
       <div class="card-body formset-table">
         <h5>{% trans "dokument.templates.detail_model_3D.predmetyObjekty.Objekty" %}</h5>
-        <form class="mb-3" method="POST" action="{% url 'nalez:edit_nalez' 'dokument' komponenta.ident_cely %}"
-              onsubmit="editNalezSubmitButton.disabled = true; return true;">
+        <form class="mb-3 submit-spinner" method="POST" action="{% url 'nalez:edit_nalez' 'dokument' komponenta.ident_cely %}">
           {% if formset.objekt.forms %}
           <div class="content-with-table-responsive-container">
             <div class="content-with-table-responsive">
@@ -166,8 +165,10 @@
           </div>
           {% endif %}
           {% if show.editovat %}
-          <button type="submit" id="editNalezSubmitButton"
-                  class="btn btn-primary">{% trans "dokument.templates.detail_model_3D.predmetyObjekty.submitButton.text" %}</button>
+          <button type="submit" id="editNalezSubmitButton" class="btn btn-primary">{% trans "dokument.templates.detail_model_3D.predmetyObjekty.submitButton.text" %}
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+            style="display: none"></span>
+          </button>
           {% endif %}
         </form>
       </div>
