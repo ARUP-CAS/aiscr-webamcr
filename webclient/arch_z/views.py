@@ -1793,7 +1793,7 @@ class ArchZAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pe
 
     def get_result_label(self, result):
         if self.lookup_type == "akce":
-            return f"{result.ident_cely} ({result.hlavni_katastr}; {result.akce.hlavni_vedouci}; {result.akce.datum_zahajeni}-{result.akce.datum_ukonceni})"
+            return f"{result.ident_cely} ({result.hlavni_katastr}; {result.akce.hlavni_vedouci}; {result.akce.datum_zahajeni} - {result.akce.datum_ukonceni})"
         else:
             return f"{result.ident_cely} ({result.lokalita.nazev})"
 
