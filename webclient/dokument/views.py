@@ -1735,6 +1735,9 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
 
     typ_zmeny_lookup = ZAPSANI_DOK
 
+    def get_result_label(self, result):
+        return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vzniku})" 
+
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
