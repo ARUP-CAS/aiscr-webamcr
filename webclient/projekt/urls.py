@@ -125,7 +125,7 @@ urlpatterns = [
         "zadost-udaje-oznamovatel/<str:ident_cely>",
         ZadostUdajeOznamovatelView.as_view(),
         name="zadost-udaje-oznamovatel"
-    )
+    ),
     path(
         "upravit-datum-oznameni/<str:ident_cely>",
         UpravitDatumOznameniView.as_view(),
