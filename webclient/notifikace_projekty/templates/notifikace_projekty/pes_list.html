@@ -21,10 +21,11 @@
         <div class="card app-card-form app-card-inner">
             <div class="card-body formset-table">
               <h5>{{formset.name}}</h5>
-                <form class="mb-3" method="POST" action="{% url 'notifikace_projekty:zapsat' %}?model-typ={{formset.model_typ}}" onsubmit="editPesSubmitButton.disabled = true; return true;">
+                <form class="mb-3 submit-spinner" method="POST" action="{% url 'notifikace_projekty:zapsat' %}?model-typ={{formset.model_typ}}">
                     {% crispy formset.form pes_helper %}
-                  <button type="submit" id="editPesSubmitButton"
-                          class="btn btn-primary">{% trans "notifikaceProjekty.templates.pesList.submitButton" %}
+                  <button type="submit" id="editPesSubmitButton" class="btn btn-primary">{% trans "notifikaceProjekty.templates.pesList.submitButton" %}
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                    style="display: none"></span>
                   </button>
                 </form>
             </div>

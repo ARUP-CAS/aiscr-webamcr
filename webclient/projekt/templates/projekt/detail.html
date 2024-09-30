@@ -399,13 +399,23 @@
 	              projektyP78: '{% trans "mapa.projektyP78" %}',
 	              projektyPAS: '{% trans "mapa.projektyPAS" %}',
 	              projektyPIAN: '{% trans "mapa.projektyPIAN" %}',
-	              SearchText: '{% trans "mapa.SearchText" %}',
-	              SearchTextCancel: '{% trans "mapa.SearchTextCancel" %}',
-	              SearchTextError: '{% trans "mapa.SearchTextError" %}',
 	              SelectedLocation: '{% trans "mapa.SelectedLocation" %}',
 	              zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
 	              zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
               };
+              var leaflet_search_translations = {
+                KatastralniUzemi: '{% trans "leaflet_search.KatastralniUzemi" %}',
+                Okres: '{% trans "leaflet_search.Okres" %}',
+                Obec: '{% trans "leaflet_search.Obec" %}',
+                Adresa: '{% trans "leaflet_search.Adresa" %}',
+                Ulice: '{% trans "leaflet_search.Ulice" %}',
+                Geonames: '{% trans "leaflet_search.Geonames" %}',
+                Parcela: '{% trans "leaflet_search.Parcela" %}',
+                Stavebni: '{% trans "leaflet_search.Stavebni" %}',
+                Pozemkova: '{% trans "leaflet_search.Pozemkova" %}',
+                SearchTextCancel: '{% trans "leaflet_search.SearchTextCancel" %}',
+                SearchTextError: '{% trans "leaflet_search.SearchTextError" %}'
+            };
             </script>
             <script src="{% static 'mapa_pins.js' %}"></script>
             <script src="{% static 'coor_precision.js' %}"></script>
@@ -689,7 +699,7 @@
               <tr>
                 <td>
                   {% if nalez.nahled_soubor and nalez.small_thumbnail %}
-                    <img src="{% url 'core:download_thumbnail' 'pas' nalez.ident_cely nalez.nahled_soubor.pk %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" data-fullsrc="{% url 'core:download_thumbnail_large' 'pas' nalez.ident_cely nalez.nahled_soubor.pk %}">
+                    <img src="{% url 'core:download_thumbnail' 'pas' nalez.ident_cely nalez.nahled_soubor.pk %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" data-fullsrc="{% url 'core:download_thumbnail_large' 'pas' nalez.ident_cely nalez.nahled_soubor.pk %}" loading="lazy">
                   {% endif %}
                 </td>
                 <td class="app-ident-cely">
@@ -862,8 +872,14 @@
       })
       const upravit_datum_oznameni = new Modal(options, "upravit-datum-oznameni");
       }
+      if ("{{show.zadost_udaje_oznamovatel}}" != "False") {
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        formURL: "{% url 'projekt:zadost-udaje-oznamovatel' projekt.ident_cely %}",
+        formID: "zadost-udaje-oznamovatel-form",
+        modalFormID: "#zadost-udaje-oznamovatel-form",
+      })
+      var zadost_udaje_oznamovatel_modal = new Modal(options, "zadost-udaje-oznamovatel");
+      }
     });
-
-
     </script>
 {% endblock %}

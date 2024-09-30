@@ -55,12 +55,14 @@
 {% block content %}
 	<div class="app-entity-projekt">
 		{% include "toolbar_projekt.html" with projekt=projekt %}
-		<form method="post">
+		<form method="post" class="submit-spinner">
 			{% crispy form_projekt %}
       <div class="mt-3">
         <div class="form-group">
-          <input type="submit" name="save" value="{% trans 'projekt.templates.edit.submitButton.text' %}"
-                 class="btn btn-primary app-entity-projekt-btn" id="submit-id-save">
+          <button type="submit" id="submit-id-save" class="btn btn-primary app-entity-projekt-btn">{% trans 'projekt.templates.edit.submitButton.text' %}
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                style="display: none"></span>
+          </button>
           <a type="button" class="btn btn-secondary" href="{% url 'projekt:detail' projekt.ident_cely %}">{% trans "projekt.templates.edit.backButton.text" %}</a>
         </div>
       </div>
@@ -95,13 +97,23 @@
 	projektyP78: '{% trans "mapa.projektyP78" %}',
 	projektyPAS: '{% trans "mapa.projektyPAS" %}',
 	projektyPIAN: '{% trans "mapa.projektyPIAN" %}',
-	SearchText: '{% trans "mapa.SearchText" %}',
-	SearchTextCancel: '{% trans "mapa.SearchTextCancel" %}',
-	SearchTextError: '{% trans "mapa.SearchTextError" %}',
 	SelectedLocation: '{% trans "mapa.SelectedLocation" %}',
 	zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
 	zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
     };
+  var leaflet_search_translations = {
+      KatastralniUzemi: '{% trans "leaflet_search.KatastralniUzemi" %}',
+      Okres: '{% trans "leaflet_search.Okres" %}',
+      Obec: '{% trans "leaflet_search.Obec" %}',
+      Adresa: '{% trans "leaflet_search.Adresa" %}',
+      Ulice: '{% trans "leaflet_search.Ulice" %}',
+      Geonames: '{% trans "leaflet_search.Geonames" %}',
+      Parcela: '{% trans "leaflet_search.Parcela" %}',
+      Stavebni: '{% trans "leaflet_search.Stavebni" %}',
+      Pozemkova: '{% trans "leaflet_search.Pozemkova" %}',
+      SearchTextCancel: '{% trans "leaflet_search.SearchTextCancel" %}',
+      SearchTextError: '{% trans "leaflet_search.SearchTextError" %}'
+  };
   </script>
   <script >
     var static_url = "{% get_static_prefix %}";

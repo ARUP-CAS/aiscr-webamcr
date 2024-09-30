@@ -83,7 +83,7 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         dj: DokumentacniJednotka = adb.dokumentacni_jednotka
         dj_ident_cely = dj.ident_cely
-        fedora_transaction = adb.create_transaction(request.user)
+        fedora_transaction = adb.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
         adb.close_active_transaction_when_finished = True
         for vb in adb.vyskove_body.all():
             vb.active_transaction = fedora_transaction
@@ -92,7 +92,6 @@ def smazat(request, ident_cely):
 
         if resp:
             logger.debug("adb.views.smazat.resp", extra={"resp": str(resp)})
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             response = JsonResponse(
                 {
                     "redirect": dj.get_absolute_url()
@@ -100,7 +99,6 @@ def smazat(request, ident_cely):
             )
         else:
             logger.warning("adb.views.smazat.error", extra={"ident_cely": str(ident_cely)})
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             response = JsonResponse(
                 {
                     "redirect": dj.get_absolute_url()

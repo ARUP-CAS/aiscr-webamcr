@@ -661,6 +661,7 @@ class Permissions(models.Model):
         projekt_generovat_exp_list = "projekt_generovat_exp_list", _("core.models.permissions.actionChoices.projekt_generovat_exp_list")
         projekt_generovat_oznameni = "projekt_generovat_oznameni", _("core.models.permissions.actionChoices.projekt_generovat_oznameni")
         projekt_oznamovatel_zapsat = "projekt_oznamovatel_zapsat", _("core.models.permissions.actionChoices.projekt_oznamovatel_zapsat")
+        projekt_zadost_udaje_oznamovatel = "projekt_zadost_udaje_oznamovatel", _("core.models.permissions.actionChoices.projekt_zadost_udaje_oznamovatel")
         projekt_smazat = "projekt_smazat", _("core.models.permissions.actionChoices.projekt_smazat")
         projekt_navrh_ke_zruseni = "projekt_navrh_ke_zruseni", _("core.models.permissions.actionChoices.projekt_navrh_ke_zruseni")
         projekt_prihlasit = "projekt_prihlasit", _("core.models.permissions.actionChoices.projekt_prihlasit")

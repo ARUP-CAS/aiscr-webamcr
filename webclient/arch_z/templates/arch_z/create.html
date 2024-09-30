@@ -22,7 +22,7 @@
 {% block content %}
 <div class="app-entity-akce">
   {% include "toolbar_akce.html" with type="akce" %}
-  <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;">
+  <form method="post" class="submit-spinner">
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
@@ -120,7 +120,10 @@
     </div>
     <div class="mt-3">
       <div class="form-group">
-        <button type="submit" id="actionSubmitBtn" class="btn btn-primary">{{ button }}</button>
+        <button type="submit" id="actionSubmitBtn" class="btn btn-primary">{{ button }}
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+          style="display: none"></span>
+        </button>
           {% if zaznam %}
             <a type="button" class="btn btn-secondary" href="{% url 'arch_z:detail' zaznam.ident_cely %}">{% trans "arch_z.templates.arch_z.create.detailForm.button.zpet.label" %}</a>
           {% else %}

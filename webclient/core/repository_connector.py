@@ -10,6 +10,7 @@ from typing import Optional, Union
 
 import requests
 from celery import Celery
+from django.utils.translation import gettext_lazy
 
 from core.connectors import RedisConnector
 from core.utils import get_mime_type, replace_last
@@ -130,6 +131,7 @@ class FedoraRepositoryConnector:
             self.transaction_uid = None
         self.restored_container = False
         self.skip_container_check = skip_container_check
+        self.transaction = transaction
         logger.debug("core_repository_connector.__init__.end",
                      extra={"transaction": self.transaction_uid, "ident_cely": record.ident_cely})
 
@@ -345,8 +347,11 @@ class FedoraRepositoryConnector:
                 extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
                          "transaction": self.transaction_uid, "url": url}
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
-                fedora_transaction = FedoraTransaction(uid=self.transaction_uid)
-                fedora_transaction.rollback_transaction()
+                if self.transaction:
+                    self.transaction.rollback_transaction()
+                else:
+                    fedora_transaction = FedoraTransaction(uid=self.transaction_uid)
+                    fedora_transaction.rollback_transaction()
                 raise FedoraError(url, response.text, response.status_code)
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
                               FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE):
@@ -1011,10 +1016,13 @@ class FedoraTransactionResult(Enum):
 
 
 class FedoraTransaction:
-    def __init__(self, main_record: ModelWithMetadata = None, transaction_user = None, *, uid=None, request=None):
+    def __init__(self, main_record: ModelWithMetadata = None, transaction_user = None, success_message = None,
+                 error_message = None, *, uid=None, request=None):
         from uzivatel.models import User
         self.main_record = main_record
         self.transaction_user = transaction_user
+        self.success_message = success_message
+        self.error_message = error_message
         transaction_user: User
         self.post_commit_tasks = {}
         if uid is None:
@@ -1039,7 +1047,11 @@ class FedoraTransaction:
         if self.main_record and self.transaction_user:
             r = RedisConnector()
             redis_connection = r.get_connection()
-            redis_connection.set(self._transaction_redis_key, result.value)
+            redis_connection.hset(self._transaction_redis_key, "status", str(result.value))
+            if self.success_message:
+                redis_connection.hset(self._transaction_redis_key, "success_message", str(self.success_message))
+            if self.error_message:
+                redis_connection.hset(self._transaction_redis_key, "error_message", str(self.error_message))
 
     def _send_transaction_request(self, operation=FedoraTransactionOperation.COMMIT):
         logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.start",

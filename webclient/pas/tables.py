@@ -114,15 +114,14 @@ class SamostatnyNalezTable(SearchTable):
         soubor = record.nahled_soubor
         if soubor is not None:
             soubor: Soubor
-            if soubor.small_thumbnail:
-                thumbnail_url = reverse("core:download_thumbnail", args=('pas', record.ident_cely, soubor.id,))
-                thumbnail_large_url \
-                    = reverse("core:download_thumbnail_large", args=('pas', record.ident_cely, soubor.id,))
-                return format_html(
-                    '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
-                    'loading="lazy" data-fullsrc="{}">',
-                    thumbnail_url, thumbnail_large_url,
-                )
+            thumbnail_url = reverse("core:download_thumbnail", args=('pas', record.ident_cely, soubor.id,))
+            thumbnail_large_url \
+                = reverse("core:download_thumbnail_large", args=('pas', record.ident_cely, soubor.id,))
+            return format_html(
+                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
+                'loading="lazy" data-fullsrc="{}" style="opacity:0" onload="this.style.opacity=100">',
+                thumbnail_url, thumbnail_large_url,
+            )
         return ""
 
     def __init__(self, *args, **kwargs):

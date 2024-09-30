@@ -9,7 +9,7 @@
 
 {% block content %}
   <div class="app-entity-samostatny_nalez">
-    <form method="post" onsubmit="newEntitySubmitBtn.disabled = true; return true;">
+    <form method="post" class="submit-spinner">
       <div class="card app-card-form">
         <div class="card-header">
           <div class="app-fx app-left">
@@ -21,7 +21,10 @@
         </div>
       </div>
       <div>
-        <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary mt-3">{% trans "pas.templates.zadost.submitButton" %}</button>
+        <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary mt-3">{% trans "pas.templates.zadost.submitButton" %}
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+          style="display: none"></span>
+        </button>
         <a type="button" class="btn btn-secondary mt-3" href="{% url 'pas:spoluprace_list' %}">{% trans "pas.templates.zadost.backButton" %}</a>
       </div>
     </form>

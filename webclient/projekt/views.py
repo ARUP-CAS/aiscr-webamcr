@@ -65,6 +65,8 @@ from core.message_constants import (
     PROJEKT_USPESNE_VRACEN,
     PROJEKT_USPESNE_ZAHAJEN_V_TERENU,
     PROJEKT_USPESNE_ZRUSEN,
+    PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR,
+    PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
@@ -100,7 +102,7 @@ from dokument.views import odpojit, pripojit
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie
-from oznameni.forms import OznamovatelForm
+from oznameni.forms import OznamovatelProjektForm
 from projekt.filters import ProjektFilter
 from projekt.forms import (
     CreateProjektForm,
@@ -110,6 +112,7 @@ from projekt.forms import (
     NavrhnoutZruseniProjektForm,
     PrihlaseniProjektForm,
     UkoncitVTerenuForm,
+    ZadostUdajeOznamovatelForm,
     ZahajitVTerenuForm,
     ZruseniProjektForm, UpravitDatumOznameniForm,
 )
@@ -376,7 +379,7 @@ def create(request):
             required = True
         else:
             required = False
-        form_oznamovatel = OznamovatelForm(request.POST, required=required)
+        form_oznamovatel = OznamovatelProjektForm(request.POST, required=required)
         if form_projekt.is_valid():
             logger.debug("projekt.views.create.form_valid")
             x2 = form_projekt.cleaned_data["coordinate_x2"]
@@ -439,7 +442,7 @@ def create(request):
         form_projekt = CreateProjektForm(
             required=required_fields, required_next=required_fields_next
         )
-        form_oznamovatel = OznamovatelForm(uzamknout_formular=True)
+        form_oznamovatel = OznamovatelProjektForm(uzamknout_formular=True)
     return render(
         request,
         "projekt/create.html",
@@ -553,13 +556,12 @@ def smazat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        projekt.create_transaction(request.user)
+        projekt.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN)
         projekt.initial_dokumenty = list(projekt.casti_dokumentu.all().values_list("dokument__id", flat=True))
         projekt.close_active_transaction_when_finished = True
         projekt.deleted_by_user = request.user
         projekt.record_deletion()
         projekt.delete()
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         return JsonResponse({"redirect": reverse("projekt:index")})
     else:
         warnings = projekt.check_pred_smazanim()
@@ -692,18 +694,14 @@ def schvalit(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_transaction = projekt.create_transaction(request.user)
-        logger.debug("projekt.views.schvalit.post.start", extra={"ident_cely": ident_cely,
-                                                                 "transaction": fedora_transaction.uid})
+        logger.debug("projekt.views.schvalit.post.start", extra={"ident_cely": ident_cely})
         old_ident = projekt.ident_cely
         if projekt.ident_cely[0] == "X":
             try:
                 projekt.set_permanent_ident_cely()
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
-                fedora_transaction.rollback_transaction()
-                logger.debug("projekt.views.schvalit.post.max_error",
-                             extra={"ident_cely": ident_cely, "transaction": fedora_transaction.uid})
+                logger.debug("projekt.views.schvalit.post.max_error", extra={"ident_cely": ident_cely})
                 return JsonResponse(
                     {
                         "redirect": reverse(
@@ -715,12 +713,12 @@ def schvalit(request, ident_cely):
             else:
                 logger.debug("projekt.views.schvalit.perm_ident", extra={"old_ident": old_ident,
                                                                          "new_ident_cely": projekt.ident_cely})
+        fedora_transaction = projekt.create_transaction(request.user, PROJEKT_USPESNE_SCHVALEN)
         projekt.set_schvaleny(request.user, old_ident)
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
         else:
             rep_bin_file = None
-        messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
         projekt.send_ep01(rep_bin_file)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
@@ -952,7 +950,7 @@ def uzavrit(request, ident_cely):
         )
     if request.method == "POST":
         # Move all events to state A2
-        fedora_transaction = projekt.create_transaction(request.user)
+        fedora_transaction = projekt.create_transaction(request.user, PROJEKT_USPESNE_UZAVREN)
         akce_query = Akce.objects.filter(projekt=projekt)
         for akce in akce_query:
             if akce.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
@@ -969,7 +967,6 @@ def uzavrit(request, ident_cely):
         projekt.set_uzavreny(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
-        messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
         return JsonResponse(
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}
         )
@@ -1035,11 +1032,10 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        projekt.create_transaction(request.user)
+        projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
         projekt.set_archivovany(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
-        messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ARCHIVOVAN)
         return JsonResponse(
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}
         )
@@ -1113,13 +1109,10 @@ def navrhnout_ke_zruseni(request, ident_cely):
                 duvod_to_save = form.cleaned_data["reason_text"]
             else:
                 duvod_to_save = duvod_to_save
-            projekt.create_transaction(request.user)
+            projekt.create_transaction(request.user, PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI)
             projekt.set_navrzen_ke_zruseni(request.user, duvod_to_save)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
-            messages.add_message(
-                request, messages.SUCCESS, PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI
-            )
             return JsonResponse(
                 {
                     "redirect": reverse(
@@ -1179,11 +1172,10 @@ def zrusit(request, ident_cely):
         form = ZruseniProjektForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason_text"]
-            projekt.create_transaction(request.user)
+            projekt.create_transaction(request.user, PROJEKT_USPESNE_ZRUSEN)
             projekt.set_zruseny(request.user, duvod)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
             Mailer.send_ep04(project=projekt, reason=duvod)
             if projekt.ident_cely[0] == OBLAST_CECHY:
                 Mailer.send_ep06a(project=projekt, reason=duvod)
@@ -1250,11 +1242,10 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            projekt.create_transaction(request.user)
+            projekt.create_transaction(request.user, PROJEKT_USPESNE_VRACEN)
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
             return JsonResponse(
                 {
                     "redirect": reverse(
@@ -1302,11 +1293,10 @@ def vratit_navrh_zruseni(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            projekt.create_transaction(request.user)
+            projekt.create_transaction(request.user, PROJEKT_USPESNE_VRACEN)
             projekt.set_znovu_zapsan(request.user, duvod)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
             Mailer.send_ep05(project=projekt)
             return JsonResponse(
                 {
@@ -1377,11 +1367,11 @@ def generovat_oznameni(request, ident_cely):
                                                                   "odeslat_oznamovateli":
                                                                       request.POST.get("odeslat_oznamovateli", False)})
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    fedora_transaction = projekt.create_transaction(request.user)
     if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
         logger.debug("projekt.views.generovat_oznameni.wrong_project_tpye")
         messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
         return redirect(projekt.get_absolute_url())
+    fedora_transaction = projekt.create_transaction(request.user)
     rep_bin_file = projekt.create_confirmation_document(fedora_transaction, additional=True, user=request.user)
     if request.POST.get("odeslat_oznamovateli", False):
         projekt.send_ep01(rep_bin_file)
@@ -1484,22 +1474,28 @@ def get_detail_template_shows(projekt, user):
         elif user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
             if projekt.stav == PROJEKT_STAV_ZAPSANY:
                 show_oznamovatel = True
+            elif projekt.organizace == user.organizace:
+                if projekt.stav in [
+                        PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                        PROJEKT_STAV_UKONCENY_V_TERENU]:
+                    show_oznamovatel = True
+                elif projekt.stav == PROJEKT_STAV_UZAVRENY:
+                    last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
+                    if last_uzavreni and last_uzavreni["datum"] >= datetime.now(last_uzavreni["datum"].tzinfo) - timedelta(days=90):
+                        show_oznamovatel = True
             elif (
-                projekt.stav in [PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU] 
-                and projekt.organizace == user.organizace
+                projekt.stav in [
+                    PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                    PROJEKT_STAV_UKONCENY_V_TERENU, PROJEKT_STAV_UZAVRENY]
                 ):
-                show_oznamovatel = True
-            elif (
-                projekt.stav == PROJEKT_STAV_UZAVRENY
-                and projekt.organizace == user.organizace
-                ):
-                last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
-                if last_uzavreni and last_uzavreni["datum"] >= datetime.now(last_uzavreni["datum"].tzinfo) - timedelta(days=90):
+                last_prihlaseni = projekt.historie.get_last_transaction_date(PRIHLASENI_PROJ)
+                if last_prihlaseni and last_prihlaseni["datum"] >= datetime.now(last_prihlaseni["datum"].tzinfo) - timedelta(days=30):
                     show_oznamovatel = True
     show_samostatne_nalezy = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
     show_pridat_akci = False
     show_pridat_sam_nalez = False
     show_pridat_oznamovatele = False
+    show_zadost_udaje_oznamovatel = False
     if projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
         show_pridat_akci = check_permissions(p.actionChoices.archz_pripojit_do_proj, user, projekt.ident_cely)
     else:
@@ -1507,6 +1503,8 @@ def get_detail_template_shows(projekt, user):
     if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
         if not projekt.has_oznamovatel():
             show_pridat_oznamovatele = check_permissions(p.actionChoices.projekt_oznamovatel_zapsat, user, projekt.ident_cely)
+        elif not show_oznamovatel:
+            show_zadost_udaje_oznamovatel = check_permissions(p.actionChoices.projekt_zadost_udaje_oznamovatel, user, projekt.ident_cely)
     show_dokumenty = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
     show_arch_links = projekt.stav == PROJEKT_STAV_ARCHIVOVANY
     show_akce = projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID
@@ -1541,6 +1539,7 @@ def get_detail_template_shows(projekt, user):
         "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_projekt, user, projekt.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_projekt, user, projekt.ident_cely),
         "soubor_nahrat": check_permissions(p.actionChoices.soubor_nahrat_projekt, user, projekt.ident_cely),
+        "zadost_udaje_oznamovatel": show_zadost_udaje_oznamovatel,
         "upravit_datum_oznameni": check_permissions(p.actionChoices.projekt_upravit_datum_oznameni, user, projekt.ident_cely),
     }
     return show
@@ -1629,6 +1628,9 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
     Třída pohledu získaní projektů pro autocomplete pro připojení do dokumentu.
     """
     typ_zmeny_lookup = ZAPSANI_PROJ
+
+    def get_result_label(self, result):
+        return f"{result.ident_cely} ({result.hlavni_katastr}; {result.vedouci_projektu})"
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -1739,3 +1741,40 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
                          extra={"errors": form.errors, "ident_cely": projekt.ident_cely})
 
         return JsonResponse({"redirect": projekt.get_absolute_url()})
+
+class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro odeslání žádosti o údaje o oznamovateli.
+    """
+    template_name = "core/transakce_modal.html"
+
+    def get_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        zaznam = get_object_or_404(
+            Projekt,
+            ident_cely=ident_cely,
+        )
+        return zaznam
+
+    def get(self, request, *args, **kwargs):
+        zaznam = self.get_zaznam()
+        context = {
+            "object": zaznam,
+            "title": "projekt.views.ZadostUdajeOznamovatelView.title.text",
+            "id_tag": "zadost-udaje-oznamovatel-form",
+            "button": "projekt.views.ZadostUdajeOznamovatelView.submitButton.text"
+        }
+        form = ZadostUdajeOznamovatelForm()
+        context["form"] = form
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        form = ZadostUdajeOznamovatelForm(request.POST)
+        if form.is_valid():
+            duvod = form.cleaned_data["reason"]
+            zaznam = self.get_zaznam()
+            Mailer.send_ep08(zaznam, duvod, request.user)
+            messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS)
+        else:
+            messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR)
+        return JsonResponse({"redirect": zaznam.get_absolute_url()})

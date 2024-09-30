@@ -84,6 +84,18 @@ var overlays = {
 
 var global_map_layers = L.control.layers(baseLayers,overlays).addTo(map);
 L.control.scale(metric = "true").addTo(map);
+
+var searchControl=new L.Control.Search({
+    position:'topleft',
+    initial: false,
+    marker: false,
+    propertyName: 'text',
+    propertyMagicKey:'magicKey',
+    minLength:3,
+    translations:leaflet_search_translations,
+    layerKN:cuzkWMS
+}).addTo(map);
+
 map.addControl(new L.Control.Fullscreen({
     title: {
         'false': [map_translations['FullscreenTitle']],
@@ -97,21 +109,6 @@ map.addControl(new L.control.zoom(
         zoomOutText: '-',
         zoomOutTitle: [map_translations['zoomOutTitle']]
     }))
-
-var searchControl=new L.Control.Search({
-    position:'topleft',
-    sourceData: searchByAjax,
-    initial: false,
-    zoom: 12,
-    marker: false,
-    textPlaceholder: [map_translations['SearchText']],
-    textCancel: [map_translations['SearchTextCancel']],
-    propertyName: 'text',
-    propertyMagicKey:'magicKey',
-    propertyMagicKeyUrl:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/{*}/findAddressCandidates?outSR={"wkid":4258}&f=json',
-    textErr: [map_translations['SearchTextError']],
-    minLength:3
-}).addTo(map);
 
 let global_measuring_toolbox=new L.control.measure(
     {
@@ -140,39 +137,4 @@ function getLocation() {
     } else {
         x.innerHTML = [map_translations['CurrentLocationError']]; // "Geolocation is not supported by this browser."
     }
-}
-
-function compareSearchResult( a, b ) {
-    if ( a.text < b.text ){
-      return -1;
-    }
-    if ( a.text > b.text ){
-      return 1;
-    }
-    return 0;
-}
-
-function searchByAjax(text, callResponse){
-	let items1=[];
-	let items2=[];
-
-	let ajaxCall=[
-    $.ajax({//GeoNames
-            url: 'https://ags.cuzk.cz/arcgis/rest/services/GEONAMES/Vyhledavaci_sluzba_nad_daty_GEONAMES/MapServer/exts/GeocodeSOE/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
-            type: 'GET',
-            data: { text: text },
-            dataType: 'json',
-            success: function (json) { items1 = json.suggestions.sort( compareSearchResult );/*addLogText("Vyhledany GeoNames");*/ }
-        }),
-	$.ajax({//okres
-		url:
-		'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/15/suggest?maxSuggestions=10&outSR={"latestWkid":5514,"wkid":102067}&f=json',
-		type: 'GET',
-		data: {text: text},
-		dataType: 'json',
-        success: function (json) { items2 = json.suggestions.sort( compareSearchResult );/*addLogText("Vyhledany Okresy");*/ }
-		}),
-
-	];
-	Promise.all(ajaxCall).then(() => {/*console.log("Vyhledani ukonceno");*/callResponse( [...items2, ...items1]);})
 }

@@ -148,7 +148,7 @@ def get_cadastre_from_point(point):
         )
         return katastr
     except IndexError:
-        logger.error("core.utils.get_cadastre_from_point.error", extra={"point": point})
+        logger.error("core.utils.get_cadastre_from_point.error", extra={"point_0": point[0], "point_1": point[1]})
         return None
 
 
@@ -1113,11 +1113,11 @@ class SearchTable(ColumnShiftTableBootstrap4):
                     soubor.id,
                 ),
             )
-            if soubor.small_thumbnail:
-                return format_html(
-                    '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
-                    soubor_url,
-                )
+            return format_html(
+                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
+                'style="opacity:0" onload="this.style.opacity=100">',
+                soubor_url,
+            )
         return ""
 
 

@@ -39,6 +39,8 @@ PROJEKT_NELZE_SMAZAT: Final = _("common.message.PROJEKT_NELZE_SMAZAT.text")  # P
 PROJEKT_NEKDO_ZMENIL_STAV: Final = _("core.message_constants.projektZmenaStavuNekymJinym.text")
 PROJEKT_NENI_TYP_PRUZKUMNY: Final = _("common.message.PROJEKT_NENI_TYP_PRUZKUMNY.text")
 PROJEKT_NENI_TYP_ZACHRANNY: Final = _("common.message.PROJEKT_NENI_TYP_ZACHRANNY.text")
+PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS: Final = _("common.message.PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS.text")
+PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR: Final = _("common.message.PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR.text")
 
 AKCE_USPESNE_ZAPSANA: Final = _("common.message.AKCE_USPESNE_ZAPSANA.text")  # Akce úspěšně zapsána.
 AKCE_USPESNE_ODESLANA: Final = _("common.message.AKCE_USPESNE_ODESLANA.text")  # Akce úspěšně odeslána.
@@ -51,6 +53,7 @@ AKCE_NEKDO_ZMENIL_STAV: Final = _("core.message_constants.akceZmenaStavuNekymJin
 DOKUMENT_USPESNE_ODESLAN: Final = _("common.message.DOKUMENT_USPESNE_ODESLAN.text")  # Dokument úspěšně odeslán.
 DOKUMENT_USPESNE_ARCHIVOVAN: Final = _("common.message.DOKUMENT_USPESNE_ARCHIVOVAN.text")  # Dokument úspěšně archivován.
 DOKUMENT_USPESNE_VRACEN: Final = _("common.message.DOKUMENT_USPESNE_VRACEN.text")  # Dokument úspěšně vrácen.
+DOKUMENT_SE_NEPODARILO_VRATIT: Final = _("common.message.DOKUMENT_SE_NEPODARILO_VRATIT.text")  # Dokument se nepodařilo vrátit.
 DOKUMENT_NELZE_ODESLAT: Final = _("common.message.DOKUMENT_NELZE_ODESLAT.text")  # Dokument nelze odeslat.
 DOKUMENT_NELZE_ARCHIVOVAT: Final = _("common.message.DOKUMENT_NELZE_ARCHIVOVAT.text")  # Dokument nelze archivovat.
 DOKUMENT_NELZE_ARCHIVOVAT_CHYBY_SOUBOR: Final = _("core.message_constants.dokumentNelzeArchivovatChybaSouboru.text")

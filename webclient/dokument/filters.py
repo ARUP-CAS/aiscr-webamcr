@@ -1,35 +1,44 @@
-import pickle
-from functools import reduce
 import logging
 import operator
+from functools import reduce
 
 import crispy_forms
-import django_filters as filters
+from core.constants import (
+    DOKUMENT_RELATION_TYPE,
+    ROLE_ADMIN_ID,
+    ROLE_ARCHIVAR_ID,
+    ZMENA_KATASTRU,
+)
+from core.forms import SelectMultipleSeparator
+from core.models import Soubor
+from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django.db import models
-from django_filters.widgets import DateRangeWidget
-from crispy_forms.layout import Div, Layout, HTML
-from django.forms import SelectMultiple, NumberInput
+from django.db.models import Q
+from django.forms import NumberInput, SelectMultiple
+from django.utils.translation import gettext_lazy as _
 from django_filters import (
     CharFilter,
+    DateFromToRangeFilter,
+    FilterSet,
     ModelMultipleChoiceFilter,
     MultipleChoiceFilter,
     NumberFilter,
-    DateFromToRangeFilter, FilterSet, RangeFilter,
+    RangeFilter,
 )
-
-from core.connectors import RedisConnector
-from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_DOK, ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, \
-    DOKUMENT_RELATION_TYPE, ZMENA_KATASTRU
+from django_filters.widgets import DateRangeWidget
+from dokument.forms import DokumentFilterForm
 from dokument.models import Dokument, DokumentCast, Tvar
-from historie.models import Historie
-from django.db.models import Q, OuterRef, Subquery, F, QuerySet
 from heslar.hesla import (
+    HESLAR_AKTIVITA,
+    HESLAR_AREAL,
     HESLAR_AREAL_KAT,
     HESLAR_DOHLEDNOST,
+    HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_MATERIAL,
     HESLAR_DOKUMENT_NAHRADA,
     HESLAR_DOKUMENT_RADA,
+    HESLAR_DOKUMENT_TYP,
     HESLAR_DOKUMENT_ULOZENI,
     HESLAR_DOKUMENT_ZACHOVALOST,
     HESLAR_JAZYK,
@@ -37,36 +46,28 @@ from heslar.hesla import (
     HESLAR_LETISTE,
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
-    HESLAR_DOKUMENT_TYP,
-    HESLAR_DOKUMENT_FORMAT,
+    HESLAR_OBJEKT_DRUH,
     HESLAR_OBJEKT_DRUH_KAT,
+    HESLAR_OBJEKT_SPECIFIKACE,
     HESLAR_OBJEKT_SPECIFIKACE_KAT,
     HESLAR_POCASI,
     HESLAR_POSUDEK_TYP,
     HESLAR_POSUDEK_TYP_KAT,
+    HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_DRUH_KAT,
+    HESLAR_PREDMET_SPECIFIKACE,
     HESLAR_PRISTUPNOST,
     HESLAR_UDALOST_TYP,
     HESLAR_ZEME,
-    HESLAR_AREAL,
-    HESLAR_AKTIVITA,
-    HESLAR_OBJEKT_DRUH,
-    HESLAR_OBJEKT_SPECIFIKACE,
-    HESLAR_PREDMET_DRUH,
-    HESLAR_PREDMET_SPECIFIKACE,
 )
-from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES, MODEL_3D_DOKUMENT_FORMATS
+from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_FORMATS, MODEL_3D_DOKUMENT_TYPES
 from heslar.models import Heslar, RuianKatastr
-from uzivatel.models import Organizace, User, Osoba
-from django.utils.translation import gettext_lazy as _
-
 from heslar.views import heslar_12
-from neidentakce.models import NeidentAkce
+from historie.models import Historie
 from komponenta.models import Komponenta
 from nalez.models import NalezObjekt
-from core.models import Soubor
-from core.forms import SelectMultipleSeparator
-from dokument.forms import DokumentFilterForm
+from neidentakce.models import NeidentAkce
+from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -107,10 +108,16 @@ class HistorieFilter(FilterSet):
                 distinct=True,
             )
         self.filters["historie_typ_zmeny"] = MultipleChoiceFilter(
-            choices=filter(lambda x: (x[0].startswith(self.HISTORIE_TYP_ZMENY_STARTS_WITH)
-                                      or (self.INCLUDE_KAT_TYP_ZMENY and x[0] == ZMENA_KATASTRU)) and
-                                     not (self.HISTORIE_TYP_ZMENY_STARTS_WITH == "P" and x[0].startswith("PI")),
-                           Historie.CHOICES),
+            choices=list(
+                filter(
+                    lambda x: (
+                        x[0].startswith(self.HISTORIE_TYP_ZMENY_STARTS_WITH)
+                        or (self.INCLUDE_KAT_TYP_ZMENY and x[0] == ZMENA_KATASTRU)
+                    )
+                    and not (self.HISTORIE_TYP_ZMENY_STARTS_WITH == "P" and x[0].startswith("PI")),
+                    Historie.CHOICES,
+                )
+            ),
             label=_("dokument.filters.historieFilter.historieTypZmeny.label"),
             field_name="historie__historie__typ_zmeny",
             widget=SelectMultiple(
@@ -173,22 +180,17 @@ class Model3DFilter(HistorieFilter, FilterSet):
     INCLUDE_KAT_TYP_ZMENY = False
     HISTORIE_TYP_ZMENY_STARTS_WITH = "D"
 
-    ident_cely = CharFilter(
-        lookup_expr="icontains",
-        label=_("dokument.filters.dokumentFilter.ident_cely.label")
-    )
+    ident_cely = CharFilter(lookup_expr="icontains", label=_("dokument.filters.dokumentFilter.ident_cely.label"))
 
     typ_dokumentu = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP) \
-        .filter(id__in=MODEL_3D_DOKUMENT_TYPES),
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(id__in=MODEL_3D_DOKUMENT_TYPES),
         label=_("dokument.filters.dokumentFilter.typDokumentu.label"),
         field_name="typ_dokumentu",
         widget=SelectMultipleSeparator(),
     )
 
     format = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT) \
-        .filter(id__in=MODEL_3D_DOKUMENT_FORMATS),
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(id__in=MODEL_3D_DOKUMENT_FORMATS),
         label=_("dokument.filters.dokumentFilter.format.label"),
         field_name="extra_data__format",
         widget=SelectMultipleSeparator(),
@@ -305,8 +307,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
             if "uzivatel" in historie:
                 queryset_history &= Q(historie__historie__uzivatel__in=historie["uzivatel"])
             if "uzivatel_organizace" in historie:
-                queryset_history &= Q(historie__historie__organizace_snapshot__in
-                                      =historie["uzivatel_organizace"])
+                queryset_history &= Q(historie__historie__organizace_snapshot__in=historie["uzivatel_organizace"])
             if "datum_zmeny__gte" in historie:
                 queryset_history &= Q(historie__historie__datum_zmeny__gte=historie["datum_zmeny__gte"])
             if "datum_zmeny__lte" in historie:
@@ -329,7 +330,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
             | Q(casti__komponenty__komponenty__objekty__poznamka__icontains=value)
             | Q(casti__komponenty__komponenty__predmety__poznamka__icontains=value)
         )
-    
+
     def filter_roky(self, queryset, name, value):
         """
         Metóda pro filtrování podle roku revize a popisu ADB.
@@ -349,7 +350,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
             self.lookup_expr,
         )
         return queryset.filter(**{lookup1: value}).distinct()
-    
+
     def filter_roky_range(self, queryset, name, value):
         """
         Metóda pro filtrování podle roku revize a popisu ADB.
@@ -467,10 +468,12 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
     """
     Třída pro správne zobrazení filtru.
     """
+
     form_method = "GET"
+
     def __init__(self, form=None):
-        history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"dokument.filters.model3DFilterFormHelper.historyDivider.label")
+        history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("dokument.filters.model3DFilterFormHelper.historyDivider.label")
         }
         self.layout = Layout(
             Div(
@@ -510,9 +513,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div(
-                        "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
-                    ),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
                     Div("historie_uzivatel", css_class="col-sm-3"),
                     Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                     id="historieCollapse",
@@ -538,8 +539,7 @@ class DokumentFilter(Model3DFilter):
         widget=SelectMultipleSeparator(),
     )
     typ_dokumentu = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP) \
-        .exclude(id__in=MODEL_3D_DOKUMENT_TYPES),
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).exclude(id__in=MODEL_3D_DOKUMENT_TYPES),
         label=_("dokument.filters.dokumentFilter.typDokumentu.label"),
         field_name="typ_dokumentu",
         widget=SelectMultipleSeparator(),
@@ -577,7 +577,6 @@ class DokumentFilter(Model3DFilter):
         label=_("dokument.filters.dokumentFilter.ulozeniOriginalu.label"),
         widget=SelectMultipleSeparator(),
     )
-    
     pristupnost = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
         label=_("dokument.filters.dokumentFilter.pristupnost.label"),
@@ -624,7 +623,7 @@ class DokumentFilter(Model3DFilter):
             }
         ),
         distinct=True,
-        field_name=["extra_data__rok_od","extra_data__rok_do"]
+        field_name=["extra_data__rok_od", "extra_data__rok_do"],
     )
 
     osoby = ModelMultipleChoiceFilter(
@@ -638,12 +637,13 @@ class DokumentFilter(Model3DFilter):
         lookup_expr="gte",
     )
 
-    duveryhodnost_do = NumberFilter(
-        field_name="extra_data__duveryhodnost", label=" ", lookup_expr="lte"
-    )
+    duveryhodnost_do = NumberFilter(field_name="extra_data__duveryhodnost", label=" ", lookup_expr="lte")
 
     jistota = MultipleChoiceFilter(
-        choices=[("True", _("dokument.filters.dokumentFilter.true.option")), ("False", _("dokument.filters.dokumentFilter.false.option"))],
+        choices=[
+            ("True", _("dokument.filters.dokumentFilter.true.option")),
+            ("False", _("dokument.filters.dokumentFilter.false.option")),
+        ],
         method="filter_jistota",
         label=_("dokument.filters.dokumentFilter.jistota.label"),
         widget=SelectMultiple(
@@ -656,8 +656,7 @@ class DokumentFilter(Model3DFilter):
         distinct=True,
     )
     format = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT) \
-        .exclude(id__in=MODEL_3D_DOKUMENT_FORMATS),
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).exclude(id__in=MODEL_3D_DOKUMENT_FORMATS),
         label=_("dokument.filters.dokumentFilter.format.label"),
         field_name="extra_data__format",
         widget=SelectMultipleSeparator(),
@@ -682,7 +681,7 @@ class DokumentFilter(Model3DFilter):
         distinct=True,
     )
 
-    neident_katastr =ModelMultipleChoiceFilter(
+    neident_katastr = ModelMultipleChoiceFilter(
         queryset=RuianKatastr.objects.all(),
         label=_("dokument.filters.dokumentFilter.neidentAkceKatastr.label"),
         field_name="casti__neident_akce__katastr",
@@ -707,7 +706,7 @@ class DokumentFilter(Model3DFilter):
             }
         ),
         distinct=True,
-        field_name=["casti__neident_akce__rok_zahajeni", "casti__neident_akce__rok_ukonceni"]
+        field_name=["casti__neident_akce__rok_zahajeni", "casti__neident_akce__rok_ukonceni"],
     )
 
     neident_poznamka = CharFilter(
@@ -839,7 +838,10 @@ class DokumentFilter(Model3DFilter):
     )
 
     exist_neident_akce = MultipleChoiceFilter(
-        choices=[("True", _("dokument.filters.dokumentFilter.existNeidentAkce.true.option")), ("False", _("dokument.filters.dokumentFilter.existNeidentAkce.false.option"))],
+        choices=[
+            ("True", _("dokument.filters.dokumentFilter.existNeidentAkce.true.option")),
+            ("False", _("dokument.filters.dokumentFilter.existNeidentAkce.false.option")),
+        ],
         method="filter_exist_neident_akce",
         label=_("dokument.filters.dokumentFilter.existNeidentAkce.label"),
         widget=SelectMultiple(
@@ -853,7 +855,10 @@ class DokumentFilter(Model3DFilter):
     )
 
     exist_komponenty = MultipleChoiceFilter(
-        choices=[("True", _("dokument.filters.dokumentFilter.existKomponenta.true.option")), ("False", _("dokument.filters.dokumentFilter.existKomponenta.false.option"))],
+        choices=[
+            ("True", _("dokument.filters.dokumentFilter.existKomponenta.true.option")),
+            ("False", _("dokument.filters.dokumentFilter.existKomponenta.false.option")),
+        ],
         method="filter_exist_komponenty",
         label=_("dokument.filters.dokumentFilter.existKomponenta.label"),
         widget=SelectMultiple(
@@ -867,7 +872,10 @@ class DokumentFilter(Model3DFilter):
     )
 
     exist_nalezy = MultipleChoiceFilter(
-        choices=[("True", _("dokument.filters.dokumentFilter.existNalezy.true.option")), ("False", _("dokument.filters.dokumentFilter.existNalezy.false.option"))],
+        choices=[
+            ("True", _("dokument.filters.dokumentFilter.existNalezy.true.option")),
+            ("False", _("dokument.filters.dokumentFilter.existNalezy.false.option")),
+        ],
         method="filter_exist_nalezy",
         label=_("dokument.filters.dokumentFilter.existNalezy.label"),
         widget=SelectMultiple(
@@ -881,7 +889,10 @@ class DokumentFilter(Model3DFilter):
     )
 
     exist_tvary = MultipleChoiceFilter(
-        choices=[("True", _("dokument.filters.dokumentFilter.existTvary.true.option")), ("False", _("dokument.filters.dokumentFilter.existTvary.false.option"))],
+        choices=[
+            ("True", _("dokument.filters.dokumentFilter.existTvary.true.option")),
+            ("False", _("dokument.filters.dokumentFilter.existTvary.false.option")),
+        ],
         method="filter_exist_tvary",
         label=_("dokument.filters.dokumentFilter.existTvary.label"),
         widget=SelectMultiple(
@@ -895,7 +906,10 @@ class DokumentFilter(Model3DFilter):
     )
 
     exist_soubory = MultipleChoiceFilter(
-        choices=[("True", _("dokument.filters.dokumentFilter.existSoubory.true.option")), ("False", _("dokument.filters.dokumentFilter.existSoubory.false.option"))],
+        choices=[
+            ("True", _("dokument.filters.dokumentFilter.existSoubory.true.option")),
+            ("False", _("dokument.filters.dokumentFilter.existSoubory.false.option")),
+        ],
         method="filter_exist_soubory",
         label=_("dokument.filters.dokumentFilter.existSoubory.label"),
         widget=SelectMultiple(
@@ -955,13 +969,9 @@ class DokumentFilter(Model3DFilter):
         if "True" in value and "False" in value:
             return queryset.distinct()
         elif "True" in value:
-            return queryset.filter(
-                casti__komponenty__komponenty__jistota=True
-            ).distinct()
+            return queryset.filter(casti__komponenty__komponenty__jistota=True).distinct()
         elif "False" in value:
-            return queryset.exclude(
-                casti__komponenty__komponenty__jistota=True
-            ).distinct()
+            return queryset.exclude(casti__komponenty__komponenty__jistota=True).distinct()
         else:
             return queryset.distinct()
 
@@ -992,8 +1002,7 @@ class DokumentFilter(Model3DFilter):
         Metóda pro filtrování podle id vazby.
         """
         return queryset.filter(
-            Q(casti__archeologicky_zaznam__ident_cely__icontains=value)
-            | Q(casti__projekt__ident_cely__icontains=value)
+            Q(casti__archeologicky_zaznam__ident_cely__icontains=value) | Q(casti__projekt__ident_cely__icontains=value)
         ).distinct()
 
     def filter_exist_neident_akce(self, queryset, name, value):
@@ -1018,9 +1027,7 @@ class DokumentFilter(Model3DFilter):
         Metóda pro filtrování podle existence komponenty.
         """
         if len(value) == 1:
-            komponenty = Komponenta.objects.filter(
-                komponenta_vazby__casti_dokumentu=models.OuterRef("pk")
-            )
+            komponenty = Komponenta.objects.filter(komponenta_vazby__casti_dokumentu=models.OuterRef("pk"))
             casti = DokumentCast.objects.filter(models.Exists(komponenty))
             if "True" in value:
                 return queryset.filter(casti__in=casti).distinct()
@@ -1036,23 +1043,15 @@ class DokumentFilter(Model3DFilter):
         Metóda pro filtrování podle existence nálezu.
         """
         if len(value) == 1:
-            objekty = NalezObjekt.objects.filter(
-                komponenta__komponenta_vazby__casti_dokumentu=models.OuterRef("pk")
-            )
+            objekty = NalezObjekt.objects.filter(komponenta__komponenta_vazby__casti_dokumentu=models.OuterRef("pk"))
             casti_objekty = DokumentCast.objects.filter(models.Exists(objekty))
-            predmety = NalezObjekt.objects.filter(
-                komponenta__komponenta_vazby__casti_dokumentu=models.OuterRef("pk")
-            )
+            predmety = NalezObjekt.objects.filter(komponenta__komponenta_vazby__casti_dokumentu=models.OuterRef("pk"))
             casti_predmety = DokumentCast.objects.filter(models.Exists(predmety))
             if "True" in value:
-                return queryset.filter(
-                    Q(casti__in=casti_objekty) | Q(casti__in=casti_predmety)
-                ).distinct()
+                return queryset.filter(Q(casti__in=casti_objekty) | Q(casti__in=casti_predmety)).distinct()
             else:
                 bez_casti_objekty = casti_objekty.filter(dokument=models.OuterRef("pk"))
-                bez_casti_predmety = casti_predmety.filter(
-                    dokument=models.OuterRef("pk")
-                )
+                bez_casti_predmety = casti_predmety.filter(dokument=models.OuterRef("pk"))
                 return (
                     queryset.exclude(models.Exists(bez_casti_objekty))
                     .exclude(models.Exists(bez_casti_predmety))
@@ -1081,9 +1080,7 @@ class DokumentFilter(Model3DFilter):
         Metóda pro filtrování podle existence souboru.
         """
         if len(value) == 1:
-            soubor = Soubor.objects.filter(
-                vazba__dokument_souboru=models.OuterRef("pk")
-            )
+            soubor = Soubor.objects.filter(vazba__dokument_souboru=models.OuterRef("pk"))
             if "True" in value:
                 return queryset.filter(models.Exists(soubor)).distinct()
             else:
@@ -1101,28 +1098,30 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
     """
     Třída pro správne zobrazení filtru.
     """
+
     form_method = "GET"
+
     def __init__(self, form=None):
-        history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"dokument.filters.dokumentFilterFormHelper.historyDivider.label")
+        history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("dokument.filters.dokumentFilterFormHelper.historyDivider.label")
         }
-        extra_data_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"dokument.filters.dokumentFilterFormHelper.extraDataDivider.label")
+        extra_data_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("dokument.filters.dokumentFilterFormHelper.extraDataDivider.label")
         }
-        komponenta_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"dokument.filters.dokumentFilterFormHelper.komponentaNalezDivider.label")
+        komponenta_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("dokument.filters.dokumentFilterFormHelper.komponentaNalezDivider.label")
         }
-        neident_akce_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"dokument.filters.dokumentFilterFormHelper.neidentAkceDivider.label")
+        neident_akce_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("dokument.filters.dokumentFilterFormHelper.neidentAkceDivider.label")
         }
-        lety_tvary_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"dokument.filters.dokumentFilterFormHelper.letyTvaryDivider.label")
+        lety_tvary_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("dokument.filters.dokumentFilterFormHelper.letyTvaryDivider.label")
         }
-        soubory_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"dokument.filters.dokumentFilterFormHelper.souboryDivider.label")
+        soubory_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("dokument.filters.dokumentFilterFormHelper.souboryDivider.label")
         }
-        vazby_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"dokument.filters.dokumentFilterFormHelper.vazbyDivider.label")
+        vazby_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("dokument.filters.dokumentFilterFormHelper.vazbyDivider.label")
         }
         self.layout = Layout(
             Div(
@@ -1162,9 +1161,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div(
-                        "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
-                    ),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
                     Div("historie_uzivatel", css_class="col-sm-3"),
                     Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                     id="historieCollapse",
@@ -1189,7 +1186,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     Div("zeme", css_class="col-sm-2"),
                     Div("udalost_typ", css_class="col-sm-2"),
                     Div("rok_udalosti", css_class="col-sm-4 app-daterangepicker"),
-                    #Div("rok_udalosti_do", css_class="col-sm-2"),
+                    # Div("rok_udalosti_do", css_class="col-sm-2"),
                     Div("osoby", css_class="col-sm-2"),
                     Div("duveryhodnost_od", css_class="col-sm-2"),
                     Div("duveryhodnost_do", css_class="col-sm-2"),

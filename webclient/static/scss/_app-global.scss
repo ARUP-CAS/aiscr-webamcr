@@ -403,6 +403,7 @@ form {
 
       #projectMap {
         @extend .w-100, .rounded, .h-100;
+        min-height: 320px;
 
         @media (max-width: 768px) {
           min-height: 70vh;

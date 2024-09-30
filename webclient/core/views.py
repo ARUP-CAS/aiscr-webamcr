@@ -1403,7 +1403,8 @@ def set_language_with_cache(request):
         
         if cursor == 0:
             break
-
-    cache.delete(matched_keys[0].split(":")[-1])
+    
+    if matched_keys:
+        cache.delete(matched_keys[0].split(":")[-1])
     
     return set_language(request)

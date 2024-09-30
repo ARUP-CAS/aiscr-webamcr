@@ -20,7 +20,7 @@
 {% block content %}
   <div class="app-entity-knihovna_3d">
     {% include "toolbar_dokument.html" with is_3d=True is_edit=True d=object %}
-    <form method="post" onsubmit="newDocumentSubmitBtn.disabled = true; return true;">
+    <form method="post" class="submit-spinner">
       {% csrf_token %}
       <div class="card app-card-form">
         <div class="card-header">
@@ -85,7 +85,10 @@
         </div>
       </div>
       <div class="form-group">
-        <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary">{{ button }}</button>
+        <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary">{{ button }}
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+          style="display: none"></span>
+        </button>
         {% if object %}
           <a type="button" class="btn btn-secondary" href="{% url 'dokument:detail-model-3D' object.ident_cely %}">{% trans "dokument.templates.dokument.create.detailForm.button.zpet.label" %}</a>
         {% else %}

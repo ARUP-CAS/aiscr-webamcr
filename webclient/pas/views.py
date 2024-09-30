@@ -145,7 +145,6 @@ def create(request, ident_cely=None):
                     extra={"geom": geom, "geom_sjtsk": geom_sjtsk},
                 )
             sn: SamostatnyNalez = form.save(commit=False)
-            fedora_transaction = sn.create_transaction(request.user)
             try:
                 sn.ident_cely = get_sn_ident(sn.projekt)
             except MaximalIdentNumberError:
@@ -153,6 +152,7 @@ def create(request, ident_cely=None):
             else:
                 repository_connector = FedoraRepositoryConnector(sn)
                 if repository_connector.check_container_deleted_or_not_exists(sn.ident_cely, "samostatny_nalez"):
+                    sn.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN)
                     sn.stav = SN_ZAPSANY
                     sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
                     sn.predano_organizace = sn.projekt.organizace
@@ -167,7 +167,6 @@ def create(request, ident_cely=None):
                     form.save_m2m()
                     sn.close_active_transaction_when_finished = True
                     sn.save()
-                    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                     return redirect("pas:detail", ident_cely=sn.ident_cely)
                 else:
                     logger.info("pas.views.create.check_container_deleted_or_not_exists.incorrect",
@@ -299,7 +298,6 @@ def edit(request, ident_cely):
                     "pas.views.edit.form_changed_data",
                     extra={"changed_data": form.changed_data},
                 )
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("pas:detail", ident_cely=ident_cely)
         else:
             logger.info(
@@ -363,7 +361,6 @@ def edit_ulozeni(request, ident_cely):
                     "pas.views.edit_ulozeni.form_changed_data",
                     extra={"changed_data": form.changed_data},
                 )
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
             )
@@ -412,12 +409,11 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            sn.create_transaction(request.user)
+            sn.create_transaction(request.user, SAMOSTATNY_NALEZ_VRACEN)
             sn.set_vracen(request.user, sn.stav - 1, duvod)
             sn.close_active_transaction_when_finished = True
             sn.save()
             Mailer.send_en03_en04(samostatny_nalez=sn, reason=duvod)
-            messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_VRACEN)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
             )
@@ -529,14 +525,13 @@ def potvrdit(request, ident_cely):
         form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True)
         if form.is_valid():
             form_obj: SamostatnyNalez = form.save(commit=False)
-            form_obj.create_transaction(request.user)
+            form_obj.create_transaction(request.user, SAMOSTATNY_NALEZ_POTVRZEN)
             form_obj.set_potvrzeny(request.user)
             form_obj.predano_organizace = get_object_or_404(
                 Organizace, id=sn.projekt.organizace_id
             )
             form_obj.close_active_transaction_when_finished = True
             form_obj.save()
-            messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_POTVRZEN)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
             )
@@ -585,11 +580,10 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        sn.create_transaction(request.user)
+        sn.create_transaction(request.user, SAMOSTATNY_NALEZ_ARCHIVOVAN)
         sn.set_archivovany(request.user)
         sn.close_active_transaction_when_finished = True
         sn.save()
-        messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ARCHIVOVAN)
         return JsonResponse(
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
         )
@@ -691,7 +685,7 @@ def smazat(request, ident_cely):
         )
     if request.method == "POST":
         nalez.deleted_by_user = request.user
-        nalez.create_transaction(request.user)
+        nalez.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
         nalez.close_active_transaction_when_finished = True
         nalez.record_deletion(nalez.active_transaction)
         resp1 = nalez.delete()
@@ -700,13 +694,11 @@ def smazat(request, ident_cely):
                 "pas.views.smazat.deleted",
                 extra={"resp1": resp1},
             )
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             return JsonResponse({"redirect": reverse("pas:index")})
         else:
             logger.warning(
                 "pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely}
             )
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
                 status=403,
@@ -1049,7 +1041,7 @@ def post_point_position_2_katastre(request):
     Funkce pro získaní názvu katastru z bodu.
     """
     body = json.loads(request.body.decode("utf-8"))
-    logger.warning("pas.views.post_point_position_2_katastre", extra={"body": body})
+    logger.debug("pas.views.post_point_position_2_katastre", extra={"body": body})
     katastr_name = get_cadastre_from_point(Point(body["x1"], body["x2"]))
     if katastr_name is not None:
         return JsonResponse(

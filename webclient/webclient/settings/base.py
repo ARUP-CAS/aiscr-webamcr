@@ -273,9 +273,7 @@ TIME_ZONE = "Europe/Prague"
 
 USE_I18N = True
 
-USE_L10N = False
-DATE_FORMAT = "d.m.Y"
-DATE_INPUT_FORMATS = ["%-d.%-m.%Y","%d.%m.%Y", "%d/%m/%Y", "%Y-%m-%d"]
+FORMAT_MODULE_PATH = ['webclient.formats']
 
 USE_TZ = True
 
@@ -535,3 +533,5 @@ DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "")
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+EMAIL_ZADOST_UDAJE_OZNAMOVATELE = "info@amapa.cz"

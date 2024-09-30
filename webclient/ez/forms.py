@@ -261,12 +261,14 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
                     typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
                 ).values_list("id", "ident_cely")
             )
+            arch_z_width = "col-sm-10"
         else:
             new_choices = list(
                 ArcheologickyZaznam.objects.filter(
                     typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
                 ).values_list("id", "ident_cely")
             )
+            arch_z_width = "col-sm-6"
         self.fields["arch_z"] = forms.ChoiceField(
             label=ez_label,
             choices=new_choices,
@@ -278,7 +280,7 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("arch_z", css_class="col-sm-2"),
+                Div("arch_z", css_class=arch_z_width),
                 pagin,
                 css_class="row",
             ),

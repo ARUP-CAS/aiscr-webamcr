@@ -585,11 +585,11 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         self.suppress_dokument_signal = False
         self.suppress_signal_arch_z = False
 
-    def create_transaction(self, transaction_user):
+    def create_transaction(self, transaction_user, success_message=None, error_message=None):
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
         user: User
-        self.active_transaction = FedoraTransaction(self.dokument, transaction_user)
+        self.active_transaction = FedoraTransaction(self.dokument, transaction_user, success_message, error_message)
         return self.active_transaction
 
 

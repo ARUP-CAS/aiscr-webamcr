@@ -46,7 +46,7 @@
 {% block content %}
   <div class="app-entity-projekt">
     {% include "toolbar_projekt.html" %}
-    <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;" action="{% url 'projekt:create' %}">
+    <form method="post" action="{% url 'projekt:create' %}" class="submit-spinner">
       <div class="card app-card-form app-card-in-clean-shadow">
         <div class="card-header">
           <div class="app-fx app-left">
@@ -60,7 +60,10 @@
           </div>
         </div>
       </div>
-      <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{{ button }}</button>
+      <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{{ button }}
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+        style="display: none"></span>
+      </button>
       <a class="btn btn-secondary mt-3" href="{% url 'projekt:index' %}">{% trans "projekt.templates.create.backButton.text" %}</a>
     </form>
   </div>
@@ -95,13 +98,24 @@
       projektyP78: '{% trans "mapa.projektyP78" %}',
       projektyPAS: '{% trans "mapa.projektyPAS" %}',
       projektyPIAN: '{% trans "mapa.projektyPIAN" %}',
-      SearchText: '{% trans "mapa.SearchText" %}',
-      SearchTextCancel: '{% trans "mapa.SearchTextCancel" %}',
-      SearchTextError: '{% trans "mapa.SearchTextError" %}',
       SelectedLocation: '{% trans "mapa.SelectedLocation" %}',
       zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
       zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
     };
+
+    var leaflet_search_translations = {
+      KatastralniUzemi: '{% trans "leaflet_search.KatastralniUzemi" %}',
+      Okres: '{% trans "leaflet_search.Okres" %}',
+      Obec: '{% trans "leaflet_search.Obec" %}',
+      Adresa: '{% trans "leaflet_search.Adresa" %}',
+      Ulice: '{% trans "leaflet_search.Ulice" %}',
+      Geonames: '{% trans "leaflet_search.Geonames" %}',
+      Parcela: '{% trans "leaflet_search.Parcela" %}',
+      Stavebni: '{% trans "leaflet_search.Stavebni" %}',
+      Pozemkova: '{% trans "leaflet_search.Pozemkova" %}',
+      SearchTextCancel: '{% trans "leaflet_search.SearchTextCancel" %}',
+      SearchTextError: '{% trans "leaflet_search.SearchTextError" %}'
+  };
   </script>
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>

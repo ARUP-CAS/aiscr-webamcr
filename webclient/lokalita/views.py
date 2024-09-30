@@ -238,7 +238,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         if form_az.is_valid():
             az = form_az.save(commit=False)
             az: ArcheologickyZaznam
-            fedora_transaction = az.create_transaction(self.request.user)
+            fedora_transaction = az.create_transaction(self.request.user, LOKALITA_USPESNE_ZAPSANA)
             logger.debug("lokalita.views.LokalitaCreateView.form_valid.true",
                          extra={"transaction": getattr(fedora_transaction, "uid", None)})
             az.stav = AZ_STAV_ZAPSANY
@@ -258,9 +258,6 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
             az.close_active_transaction_when_finished = True
             az.save()
 
-            messages.add_message(
-                self.request, messages.SUCCESS, LOKALITA_USPESNE_ZAPSANA
-            )
             logger.debug(
                 f"arch_z.views.zapsat: {LOKALITA_USPESNE_ZAPSANA}, ID akce: {lokalita.pk}."
             )
@@ -324,9 +321,6 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
             az.close_active_transaction_when_finished = True
             az.save()
             form_az.save_m2m()
-            messages.add_message(
-                self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN
-            )
         else:
             logger.debug("AZ form is invalid")
             logger.debug(form_az.errors)

@@ -69,7 +69,7 @@
     </div>
   </div>
 
-  <form method="post">
+  <form method="post" class="submit-spinner">
     <div class="row mb-4">
       <div class="col-sm-12">
         {% crispy form_oznamovatel %}
@@ -119,7 +119,7 @@
       <div class="col-sm-3 text-right">
         <button type="submit" name="save" id="submit-id-save" class="btn btn-primary mt-0">
           {% trans 'oznameni.templates.oznameni.index.dalsiKrok' %} <span class="material-icons submit-remove">arrow_forward</span>
-          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" id="loader-spinner"
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
           style="display: none"></span>
         </button>
       </div>
@@ -138,32 +138,44 @@
   </script>
   <script>
     var map_translations = {
-        CurrentLocationError: '{% trans "mapa.CurrentLocationError" %}',
-	cuzkKatastralniMapa: '{% trans "mapa.cuzkKatastralniMapa" %}',
-	cuzkKatastralniUzemi: '{% trans "mapa.cuzkKatastralniUzemi" %}',
-	cuzkOrtofotomapa: '{% trans "mapa.cuzkOrtofotomapa" %}',
-	cuzkStinovanyeelief5G: '{% trans "mapa.cuzkStinovanyeelief5G" %}',
-	cuzkzakladniMapyCr: '{% trans "mapa.cuzkzakladniMapyCr" %}',
-  npuPamatkovaOchrana: '{% trans "mapa.npuPamatkovaOchrana" %}',
-	DefaultTitle: '{% trans "mapa.DefaultTitle" %}',
-	EditTurnOff: '{% trans "mapa.EditTurnOff" %}',
-    	EditTurnOn: '{% trans "mapa.EditTurnOn" %}',
-    	FullscreenTitle: '{% trans "mapa.FullscreenTitle" %}',
-    	FullscreenTitleClose: '{% trans "mapa.FullscreenTitleClose" %}',
-    	lokalizaceProjektu: '{% trans "mapa.lokalizaceProjektu" %}',
-    	lokalizace: '{% trans "mapa.lokalizaceOznameni" %}',
-    	MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
-    	openStreetMap: '{% trans "mapa.openStreetMap" %}',
-	openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
-    	SearchText: '{% trans "mapa.SearchText" %}',
-    	SearchTextCancel: '{% trans "mapa.SearchTextCancel" %}',
-    	SearchTextError: '{% trans "mapa.SearchTextError" %}',
-    	SelectedLocation: '{% trans "mapa.SelectedLocation" %}',
-    	zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
-    	zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}',
-        lokalizaceZamer: '{% trans "mapa.lokalizaceZamer" %}',
-        mimoCR: '{% trans "mapa.mimoCR" %}'
+      CurrentLocationError: '{% trans "mapa.CurrentLocationError" %}',
+      cuzkKatastralniMapa: '{% trans "mapa.cuzkKatastralniMapa" %}',
+      cuzkKatastralniUzemi: '{% trans "mapa.cuzkKatastralniUzemi" %}',
+      cuzkOrtofotomapa: '{% trans "mapa.cuzkOrtofotomapa" %}',
+      cuzkStinovanyeelief5G: '{% trans "mapa.cuzkStinovanyeelief5G" %}',
+      cuzkzakladniMapyCr: '{% trans "mapa.cuzkzakladniMapyCr" %}',
+      npuPamatkovaOchrana: '{% trans "mapa.npuPamatkovaOchrana" %}',
+      DefaultTitle: '{% trans "mapa.DefaultTitle" %}',
+      EditTurnOff: '{% trans "mapa.EditTurnOff" %}',
+      EditTurnOn: '{% trans "mapa.EditTurnOn" %}',
+      FullscreenTitle: '{% trans "mapa.FullscreenTitle" %}',
+      FullscreenTitleClose: '{% trans "mapa.FullscreenTitleClose" %}',
+      lokalizaceProjektu: '{% trans "mapa.lokalizaceProjektu" %}',
+      lokalizace: '{% trans "mapa.lokalizaceOznameni" %}',
+      MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
+      openStreetMap: '{% trans "mapa.openStreetMap" %}',
+      openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
+      SelectedLocation: '{% trans "mapa.SelectedLocation" %}',
+      zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
+      zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}',
+      lokalizaceZamer: '{% trans "mapa.lokalizaceZamer" %}',
+      mimoCR: '{% trans "mapa.mimoCR" %}'
     };
+
+    var leaflet_search_translations = {
+      KatastralniUzemi: '{% trans "leaflet_search.KatastralniUzemi" %}',
+      Okres: '{% trans "leaflet_search.Okres" %}',
+      Obec: '{% trans "leaflet_search.Obec" %}',
+      Adresa: '{% trans "leaflet_search.Adresa" %}',
+      Ulice: '{% trans "leaflet_search.Ulice" %}',
+      Geonames: '{% trans "leaflet_search.Geonames" %}',
+      Parcela: '{% trans "leaflet_search.Parcela" %}',
+      Stavebni: '{% trans "leaflet_search.Stavebni" %}',
+      Pozemkova: '{% trans "leaflet_search.Pozemkova" %}',
+      SearchTextCancel: '{% trans "leaflet_search.SearchTextCancel" %}',
+      SearchTextError: '{% trans "leaflet_search.SearchTextError" %}'
+  };
+
   </script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'mapa_basic_grey.js' %}"></script>
@@ -182,14 +194,6 @@
         addPointToPoiLayer([x2, x1], 'Vámi vybraná poloha záměru');
       }
     };
-    $(document).ready(function() {
-      $('form').on('submit', function() {
-          var submitButton = $(this).find('button[type=submit]');
-          submitButton.prop('disabled', true); // Zablokuje tlačítko
-          submitButton.find('.spinner-border').show(); // Zobrazí spinner
-          $(".submit-remove").hide();
-      });
-    });
 
   </script>
 {% endblock %}

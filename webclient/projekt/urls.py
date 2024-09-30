@@ -5,6 +5,7 @@ from .views import (
     ProjectTableRowView,
     ProjektAutocompleteBezZrusenych,
     ProjektListView,
+    ZadostUdajeOznamovatelView,
     archivovat,
     create,
     detail,
@@ -119,6 +120,11 @@ urlpatterns = [
         "oznamovatel/zapsat/<str:ident_cely>",
         OznamovatelCreateView.as_view(),
         name="pridat-oznamovatele",
+    ),
+    path(
+        "zadost-udaje-oznamovatel/<str:ident_cely>",
+        ZadostUdajeOznamovatelView.as_view(),
+        name="zadost-udaje-oznamovatel"
     ),
     path(
         "upravit-datum-oznameni/<str:ident_cely>",

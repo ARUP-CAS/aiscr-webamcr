@@ -25,7 +25,7 @@
     {% endif %}
   </div>
   <div class="card-body">
-    <form class="mb-3" method="POST" action="{% url 'komponenta:detail' typ_vazby k.ident_cely %}" onsubmit="editKompSubmitButton.disabled = true; return true;">
+    <form class="mb-3 submit-spinner" method="POST" action="{% url 'komponenta:detail' typ_vazby k.ident_cely %}" >
       {% crispy k.form %}
 
     <div class="card app-card-form app-card-inner">
@@ -59,8 +59,10 @@
       </div>
     </div>
     {% if show.editovat %}
-      <button type="submit" id="editKompSubmitButton"
-              class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.ulozitZmeny.label" %}</button>
+      <button type="submit" id="editKompSubmitButton" class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.ulozitZmeny.label" %}
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+        style="display: none"></span>
+      </button>
     {% endif %}
     </form>
   </div>
