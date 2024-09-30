@@ -1729,11 +1729,10 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
                 histore.typ_zmeny = OZNAMENI_PROJ_MANUALNI
                 histore.uzivatel = self.request.user
                 histore.vazba = projekt.historie
-                histore.save()
                 histore.datum_zmeny = datetime.combine(form.cleaned_data["datum_oznameni"],
                                                        form.cleaned_data["cas_oznameni"])
             histore.save()
-            projekt.active_transaction = FedoraTransaction()
+            projekt.active_transaction = projekt.create_transaction(request.user)
             projekt.save_metadata(close_transaction=True)
         else:
             logger.debug("projekt.views.UpravitDatumOznameniView.form_invalid",

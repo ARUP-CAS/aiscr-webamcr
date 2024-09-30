@@ -1011,7 +1011,7 @@ class FedoraTransactionResult(Enum):
 
 
 class FedoraTransaction:
-    def __init__(self, main_record: ModelWithMetadata = None, transaction_user = None, *, uid=None):
+    def __init__(self, main_record: ModelWithMetadata = None, transaction_user = None, *, uid=None, request=None):
         from uzivatel.models import User
         self.main_record = main_record
         self.transaction_user = transaction_user

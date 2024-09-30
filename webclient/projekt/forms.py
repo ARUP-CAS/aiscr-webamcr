@@ -823,6 +823,7 @@ class UpravitDatumOznameniForm(forms.ModelForm):
         help_texts = {
             "poznamka": _("projekt.forms.upravitDatumOznameni.poznamka.tooltip"),
         }
+        labels = {"poznamka": _("projekt.forms.upravitDatumOznameni.poznamka.label"),}
 
     def __init__(self, *args, **kwargs):
         super(UpravitDatumOznameniForm, self).__init__(*args, **kwargs)
