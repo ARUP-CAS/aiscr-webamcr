@@ -1639,6 +1639,9 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
     """
     typ_zmeny_lookup = ZAPSANI_PROJ
 
+    def get_result_label(self, result):
+        return f"{result.ident_cely} ({result.hlavni_katastr}; {result.vedouci_projektu})"
+
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Projekt.objects.none()

@@ -791,7 +791,7 @@ class PripojitProjektForm(forms.Form):
             Div(
                 Div(
                     "projekt",
-                    css_class="col-sm-2",
+                    css_class="col-sm-8",
                 ),
                 css_class="row",
             ),

@@ -680,6 +680,9 @@ class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetV
     """
     typ_zmeny_lookup = ZAPSANI_EXT_ZD
 
+    def get_result_label(self, result):
+        return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vydani_vzniku}: {result.nazev})" 
+
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return ExterniZdroj.objects.none()

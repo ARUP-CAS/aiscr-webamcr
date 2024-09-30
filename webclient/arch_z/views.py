@@ -1784,17 +1784,29 @@ class ArchZAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pe
     """
     typ_zmeny_lookup = ZAPSANI_AZ
 
+    def get_result_label(self, result):
+        if self.lookup_type == "akce":
+            return f"{result.ident_cely} ({result.hlavni_katastr}; {result.akce.hlavni_vedouci}; {result.akce.datum_zahajeni} - {result.akce.datum_ukonceni})"
+        else:
+            return f"{result.ident_cely} ({result.lokalita.nazev})"
+
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return ArcheologickyZaznam.objects.none()
-        type = self.kwargs.get("type")
-        if type == "akce":
+        self.lookup_type = self.kwargs.get("type")
+        if self.lookup_type == "akce":
             qs = ArcheologickyZaznam.objects.filter(
                 typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
+            ).select_related(
+                "hlavni_katastr",
+                "akce__hlavni_vedouci",
+                "akce"
             )
         else:
             qs = ArcheologickyZaznam.objects.filter(
                 typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+            ).select_related(
+                "lokalita"
             )
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
