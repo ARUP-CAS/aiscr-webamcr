@@ -76,11 +76,11 @@ def get_project_event_ident(project: Projekt) -> Optional[str]:
                     return project.ident_cely + "A"
             else:
                 logger.error("core.ident_cely.get_project_event_ident.error",
-                             extra={"message": "Maximal number of project events is 26."})
+                             extra={"error": "Maximal number of project events is 26."})
                 raise MaximalEventCount(MAXIMAL_PROJECT_EVENTS)
     else:
         logger.error("core.ident_cely.get_project_event_ident.error",
-                     extra={"message": "Project is missing ident_cely"})
+                     extra={"error": "Project is missing ident_cely"})
         return None
 
 
@@ -95,7 +95,7 @@ def get_dokument_rada(typ, material):
         return instances[0].dokument_rada
     else:
         logger.error("core.ident_cely.get_dokument_rada.error",
-                     extra={"message": "Nelze priradit radu k dokumentu. Neznama/nejednoznacna kombinace "
+                     extra={"error": "Nelze priradit radu k dokumentu. Neznama/nejednoznacna kombinace "
                                        f"typu {typ.id} a materialu. {material.id}"})
         raise NelzeZjistitRaduError()
 

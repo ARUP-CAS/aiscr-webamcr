@@ -50,6 +50,7 @@ from core.constants import (
     ZMENA_AZ,
     ZMENA_HLAVNI_ROLE,
     ZMENA_UDAJU_ADMIN, ZMENA_UDAJU_UZIVATEL, ZMENA_HESLA_UZIVATEL, ZMENA_HESLA_ADMIN, RUSENI_STARE_PROJ, ZMENA_KATASTRU,
+    OZNAMENI_PROJ_MANUALNI,
 )
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -65,6 +66,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     CHOICES = (
         # Project related choices
         (OZNAMENI_PROJ, _("historie.models.historieStav.projekt.Px0")),
+        (OZNAMENI_PROJ_MANUALNI, _("historie.models.historieStav.projekt.Px0M")),
         (SCHVALENI_OZNAMENI_PROJ, _("historie.models.historieStav.projekt.P01")),
         (ZAPSANI_PROJ, _("historie.models.historieStav.projekt.Px1")),
         (PRIHLASENI_PROJ, _("historie.models.historieStav.projekt.P12")),

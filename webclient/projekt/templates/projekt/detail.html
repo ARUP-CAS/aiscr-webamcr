@@ -854,6 +854,14 @@
       })
       var schvalit_modal = new Modal(options, "projekt-pridat-oznamovatele");
       }
+      if ("{{show.upravit_datum_oznameni}}" != "False") {
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        formURL: "{% url 'projekt:upravit-datum-oznameni' projekt.ident_cely %}",
+        formID: "upravit-datum-oznameni-form",
+        modalFormID: "#upravit-datum-oznameni-form",
+      })
+      const upravit_datum_oznameni = new Modal(options, "upravit-datum-oznameni");
+      }
     });
 
 
