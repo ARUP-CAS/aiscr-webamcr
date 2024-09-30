@@ -1813,7 +1813,7 @@ class ArchZAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pe
             qs = ArcheologickyZaznam.objects.filter(
                 typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
             ).select_related(
-                "akce"
+                "lokalita"
             )
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
