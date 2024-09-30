@@ -102,7 +102,7 @@ from dokument.views import odpojit, pripojit
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie
-from oznameni.forms import OznamovatelForm
+from oznameni.forms import OznamovatelProjektForm
 from projekt.filters import ProjektFilter
 from projekt.forms import (
     CreateProjektForm,
@@ -379,7 +379,7 @@ def create(request):
             required = True
         else:
             required = False
-        form_oznamovatel = OznamovatelForm(request.POST, required=required)
+        form_oznamovatel = OznamovatelProjektForm(request.POST, required=required)
         if form_projekt.is_valid():
             logger.debug("projekt.views.create.form_valid")
             x2 = form_projekt.cleaned_data["coordinate_x2"]
@@ -442,7 +442,7 @@ def create(request):
         form_projekt = CreateProjektForm(
             required=required_fields, required_next=required_fields_next
         )
-        form_oznamovatel = OznamovatelForm(uzamknout_formular=True)
+        form_oznamovatel = OznamovatelProjektForm(uzamknout_formular=True)
     return render(
         request,
         "projekt/create.html",

@@ -168,6 +168,22 @@ class OznamovatelForm(forms.ModelForm):
                     self.fields[key].widget.attrs["class"] = "required-next"
 
 
+class OznamovatelProjektForm(OznamovatelForm):
+    """
+    Hlavní formulář pro vytvoření oznámení.
+    """
+    telefon = forms.CharField(
+        help_text=_("oznameni.forms.oznamovatelForm.telefon.tooltip"),
+        label=_("oznameni.forms.oznamovatelForm.telefon.label"),
+        widget=forms.TextInput(),
+    )
+    email = forms.CharField(
+        help_text=_("oznameni.forms.oznamovatelForm.email.tooltip"),
+        label=_("oznameni.forms.oznamovatelForm.email.label"),
+        widget=forms.TextInput(),
+    )
+
+
 class ProjektOznameniForm(forms.ModelForm):
     """
     Hlavní formulář pro editaci a doplňení oznamovatele do projektu.
