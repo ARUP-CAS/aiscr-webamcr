@@ -1,5 +1,6 @@
 import logging
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from core.constants import (
     DOKUMENT_CAST_RELATION_TYPE,
@@ -109,9 +110,15 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
         user: User
-        self.active_transaction = FedoraTransaction(self.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam,
-                                                    transaction_user)
+        self.active_transaction = FedoraTransaction(transaction_user=transaction_user)
         return self.active_transaction
+
+    def set_transaction_main_record(self):
+        try:
+            related_model = self.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam
+            self.active_transaction.main_record = related_model
+        except ObjectDoesNotExist:
+            pass
 
 
 class KomponentaAktivita(ExportModelOperationsMixin("komponenta_aktivita"), models.Model):

@@ -49,11 +49,11 @@ class ModelWithMetadata(models.Model):
         if not hasattr(self, "soubory"):
             self.soubory = None
 
-    def create_transaction(self, transaction_user):
+    def create_transaction(self, transaction_user, success_message=None, error_message=None):
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
         user: User
-        self.active_transaction = FedoraTransaction(self, transaction_user)
+        self.active_transaction = FedoraTransaction(self, transaction_user, success_message, error_message)
         return self.active_transaction
 
     @property

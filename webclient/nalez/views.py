@@ -139,7 +139,6 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
                 navazany_objekt.close_active_transaction_when_finished = True
                 navazany_objekt.save()
             logger.debug("Form data was changed")
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
         logger.debug(
             "nalez.views.edit_nalez.form_not_valid",

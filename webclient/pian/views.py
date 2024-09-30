@@ -170,9 +170,9 @@ def odpojit(request, dj_ident_cely):
                 logger.debug("pian.views.odpojit.error", extra={"pian_ident_cely": pian.ident_cely,
                                                                 "transaction": fedora_transaction.uid, "err": err})
 
-            messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_SMAZAN)
+            fedora_transaction.success_message = PIAN_USPESNE_SMAZAN
         else:
-            messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_ODPOJEN)
+            fedora_transaction.success_message = PIAN_USPESNE_ODPOJEN
         dj.close_active_transaction_when_finished = True
         dj.save()
         logger.debug("pian.views.odpojit.finished", extra={"transaction": fedora_transaction.uid})

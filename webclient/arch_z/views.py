@@ -1,12 +1,8 @@
 import logging
-from io import BytesIO
 
-import pandas
-import redis
 import simplejson as json
 from cacheops import invalidate_model
 from django.db.models import RestrictedError
-from django_tables2.export import TableExport
 
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
@@ -56,6 +52,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY, ZAZNAM_NELZE_SMAZAT_FEDORA,
+    ZAZNAM_SE_NEPOVEDLO_SMAZAT,
 )
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
@@ -644,8 +641,6 @@ def edit(request, ident_cely):
             form_az.save_m2m()
             akce = form_akce.save()
             ostatni_vedouci_objekt_formset.save()
-            if form_az.changed_data or form_akce.changed_data:
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             akce.set_snapshots()
             az.close_active_transaction_when_finished = True
             az.save()
@@ -721,7 +716,7 @@ def odeslat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        az.create_transaction(request.user)
+        fedora_transaction = az.create_transaction(request.user)
         az.set_odeslany(request.user, request, messages)
         az.save()
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -730,9 +725,7 @@ def odeslat(request, ident_cely):
             )
             if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UKONCENY_V_TERENU:
                 request.session["arch_projekt_link_uzavrit"] = True
-        messages.add_message(
-            request, messages.SUCCESS, get_message(az, "USPESNE_ODESLANA")
-        )
+        fedora_transaction.success_message = get_message(az, "USPESNE_ODESLANA")
         logger.debug("arch_z.views.odeslat.akce_uspesne_odeslana",
                      extra={"info": get_message(az, "USPESNE_ODESLANA")})
         az.close_active_transaction_when_finished = True
@@ -786,7 +779,7 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        az.create_transaction(request.user)
+        fedora_transaction = az.create_transaction(request.user)
         az.set_archivovany(request.user)
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
@@ -794,9 +787,7 @@ def archivovat(request, ident_cely):
             )
             if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
                 request.session["arch_projekt_link"] = True
-        messages.add_message(
-            request, messages.SUCCESS, get_message(az, "USPESNE_ARCHIVOVANA")
-        )
+        fedora_transaction.success_message = get_message(az, "USPESNE_ARCHIVOVANA")
         Mailer.send_ea02(arch_z=az)
         az.close_active_transaction_when_finished = True
         az.save()
@@ -880,9 +871,7 @@ def vratit(request, ident_cely):
             az.save()
             if before_save_state == AZ_STAV_ODESLANY:
                 Mailer.send_ev01(zaznam=az, reason=duvod)
-            messages.add_message(
-                request, messages.SUCCESS, get_message(az, "USPESNE_VRACENA")
-            )
+            fedora_trasnaction.success_message = get_message(az, "USPESNE_VRACENA")
             return JsonResponse({"redirect": az.get_absolute_url()})
         else:
             logger.debug("arch_z.views.vratit.not_valid", extra={"errors": form.errors})
@@ -1024,20 +1013,17 @@ def zapsat(request, projekt_ident_cely=None):
                         logger.debug("arch_z.views.zapsat.form_not_valid",
                                      extra={"errors": ostatni_vedouci_objekt_formset.errors})
                     akce.set_snapshots()
-                    messages.add_message(
-                        request, messages.SUCCESS, get_message(az, "USPESNE_ZAPSANA")
-                    )
+                    fedora_transaction.success_message = get_message(az, "USPESNE_ZAPSANA")
                     logger.debug("arch_z.views.zapsat.success", extra={"akce": akce.pk, "projekt": projekt_ident_cely})
                     az.close_active_transaction_when_finished = True
                     az.save()
                     return redirect("arch_z:detail", az.ident_cely)
                 else:
+                    fedora_transaction.error_message = _("arch_z.views.zapsat.samostatnaAkce."
+                                                         "check_container_deleted_or_not_exists_error")
                     fedora_transaction.rollback_transaction()
                     logger.debug("arch_z.views.zapsat.check_container_deleted_or_not_exists.incorrect",
                                  extra={"ident_cely": az.ident_cely})
-                    messages.add_message(
-                        request, messages.ERROR, _("arch_z.views.zapsat.samostatnaAkce."
-                                                   "check_container_deleted_or_not_exists_error"))
         else:
             logger.debug("arch_z.views.zapsat.not_valid", extra={"form_az_errors": form_az,
                                                                  "form_akce_errors": form_akce.errors})
@@ -1102,7 +1088,7 @@ def smazat(request, ident_cely):
     else:
         projekt = None
     if request.method == "POST":
-        fedora_transaction = az.create_transaction(request.user)
+        fedora_transaction = az.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN)
         try:
             az.skip_container_check = True
             az.close_active_transaction_when_finished = True
@@ -1129,7 +1115,6 @@ def smazat(request, ident_cely):
             az.delete()
             logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely,
                                                                "transaction": fedora_transaction})
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         except RestrictedError as err:
             logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "err": err})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
@@ -1480,9 +1465,8 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
             messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
             return JsonResponse({"redirect": az.get_absolute_url()}, status=403)
         zaznam.delete()
-        fedora_transaction = az.create_transaction(request.user)
+        fedora_transaction = az.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
         az.save_metadata(fedora_transaction, close_transaction=True)
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         logger.debug("arch_z.views.smazat_akce_vedoucí.success", extra={"ident_cely": ident_cely,
                                                                       "akce_vedouci_id": akce_vedouci_id})
         return JsonResponse(
@@ -1672,7 +1656,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
                 status=403,
             )
         az: ArcheologickyZaznam
-        fedora_transaction = az.create_transaction(request.user)
+        fedora_transaction = az.create_transaction(request.user, ZAZNAM_USPESNE_EDITOVAN)
         akce: Akce = az.akce
         akce.active_transaction = fedora_transaction
         akce.projekt = None
@@ -1690,8 +1674,6 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         az.close_active_transaction_when_finished = True
         az.save()
         logger.debug("arch_z.views.ProjektAkceChange.post", extra={"az_ident_cely": str(az.ident_cely)})
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 
@@ -1749,7 +1731,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             )
         form = PripojitProjektForm(data=request.POST)
         if form.is_valid():
-            fedora_transaction = az.create_transaction(request.user)
+            fedora_transaction = az.create_transaction(request.user, ZAZNAM_USPESNE_EDITOVAN)
             projekt = form.cleaned_data["projekt"]
             akce = az.akce
             akce.active_transaction = fedora_transaction
@@ -1769,7 +1751,6 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             az.close_active_transaction_when_finished = True
             invalidate_model(ArcheologickyZaznam)
             az.save()
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
             logger.debug("arch_z.views.SamostatnaAkceChange.post.not_valid", extra={"errors": form.errors, 
                                                                                     "form_non_field_errors": form.non_field_errors})

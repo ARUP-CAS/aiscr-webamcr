@@ -556,13 +556,12 @@ def smazat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        projekt.create_transaction(request.user)
+        projekt.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN)
         projekt.initial_dokumenty = list(projekt.casti_dokumentu.all().values_list("dokument__id", flat=True))
         projekt.close_active_transaction_when_finished = True
         projekt.deleted_by_user = request.user
         projekt.record_deletion()
         projekt.delete()
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         return JsonResponse({"redirect": reverse("projekt:index")})
     else:
         warnings = projekt.check_pred_smazanim()
@@ -695,18 +694,14 @@ def schvalit(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_transaction = projekt.create_transaction(request.user)
-        logger.debug("projekt.views.schvalit.post.start", extra={"ident_cely": ident_cely,
-                                                                 "transaction": fedora_transaction.uid})
+        logger.debug("projekt.views.schvalit.post.start", extra={"ident_cely": ident_cely})
         old_ident = projekt.ident_cely
         if projekt.ident_cely[0] == "X":
             try:
                 projekt.set_permanent_ident_cely()
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
-                fedora_transaction.rollback_transaction()
-                logger.debug("projekt.views.schvalit.post.max_error",
-                             extra={"ident_cely": ident_cely, "transaction": fedora_transaction.uid})
+                logger.debug("projekt.views.schvalit.post.max_error", extra={"ident_cely": ident_cely})
                 return JsonResponse(
                     {
                         "redirect": reverse(
@@ -718,12 +713,12 @@ def schvalit(request, ident_cely):
             else:
                 logger.debug("projekt.views.schvalit.perm_ident", extra={"old_ident": old_ident,
                                                                          "new_ident_cely": projekt.ident_cely})
+        fedora_transaction = projekt.create_transaction(request.user, PROJEKT_USPESNE_SCHVALEN)
         projekt.set_schvaleny(request.user, old_ident)
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
         else:
             rep_bin_file = None
-        messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
         projekt.send_ep01(rep_bin_file)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
@@ -955,7 +950,7 @@ def uzavrit(request, ident_cely):
         )
     if request.method == "POST":
         # Move all events to state A2
-        fedora_transaction = projekt.create_transaction(request.user)
+        fedora_transaction = projekt.create_transaction(request.user, PROJEKT_USPESNE_UZAVREN)
         akce_query = Akce.objects.filter(projekt=projekt)
         for akce in akce_query:
             if akce.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
@@ -972,7 +967,6 @@ def uzavrit(request, ident_cely):
         projekt.set_uzavreny(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
-        messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
         return JsonResponse(
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}
         )
@@ -1038,11 +1032,10 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        projekt.create_transaction(request.user)
+        projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
         projekt.set_archivovany(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
-        messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ARCHIVOVAN)
         return JsonResponse(
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}
         )
@@ -1116,13 +1109,10 @@ def navrhnout_ke_zruseni(request, ident_cely):
                 duvod_to_save = form.cleaned_data["reason_text"]
             else:
                 duvod_to_save = duvod_to_save
-            projekt.create_transaction(request.user)
+            projekt.create_transaction(request.user, PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI)
             projekt.set_navrzen_ke_zruseni(request.user, duvod_to_save)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
-            messages.add_message(
-                request, messages.SUCCESS, PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI
-            )
             return JsonResponse(
                 {
                     "redirect": reverse(
@@ -1182,11 +1172,10 @@ def zrusit(request, ident_cely):
         form = ZruseniProjektForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason_text"]
-            projekt.create_transaction(request.user)
+            projekt.create_transaction(request.user, PROJEKT_USPESNE_ZRUSEN)
             projekt.set_zruseny(request.user, duvod)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
             Mailer.send_ep04(project=projekt, reason=duvod)
             if projekt.ident_cely[0] == OBLAST_CECHY:
                 Mailer.send_ep06a(project=projekt, reason=duvod)
@@ -1253,11 +1242,10 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            projekt.create_transaction(request.user)
+            projekt.create_transaction(request.user, PROJEKT_USPESNE_VRACEN)
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
             return JsonResponse(
                 {
                     "redirect": reverse(
@@ -1305,11 +1293,10 @@ def vratit_navrh_zruseni(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            projekt.create_transaction(request.user)
+            projekt.create_transaction(request.user, PROJEKT_USPESNE_VRACEN)
             projekt.set_znovu_zapsan(request.user, duvod)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
             Mailer.send_ep05(project=projekt)
             return JsonResponse(
                 {
@@ -1380,11 +1367,11 @@ def generovat_oznameni(request, ident_cely):
                                                                   "odeslat_oznamovateli":
                                                                       request.POST.get("odeslat_oznamovateli", False)})
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    fedora_transaction = projekt.create_transaction(request.user)
     if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
         logger.debug("projekt.views.generovat_oznameni.wrong_project_tpye")
         messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
         return redirect(projekt.get_absolute_url())
+    fedora_transaction = projekt.create_transaction(request.user)
     rep_bin_file = projekt.create_confirmation_document(fedora_transaction, additional=True, user=request.user)
     if request.POST.get("odeslat_oznamovateli", False):
         projekt.send_ep01(rep_bin_file)
