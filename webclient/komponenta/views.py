@@ -65,22 +65,18 @@ def detail(request, typ_vazby, ident_cely):
         instance=komponenta,
         prefix=ident_cely,
     )
-    fedora_transcation = komponenta.create_transaction(request.user)
     if form.is_valid():
         logger.debug("komponenta.views.detail.form_valid", extra={"ident_cely": ident_cely})
         komponenta = form.save(commit=False)
-        komponenta.active_transaction = fedora_transcation
+        komponenta.create_transaction(request.user)
         komponenta.save()
         form.save_m2m()
         invalidate_model(Akce)
         invalidate_model(ArcheologickyZaznam)
         invalidate_model(Dokument)
         invalidate_model(Historie)
-        if form.changed_data:
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
         logger.debug("komponenta.views.detail.not_valid", extra={"errors": form.errors, "ident_cely": ident_cely})
-        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     if "nalez_edit_nalez" in request.POST:
         druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
@@ -154,6 +150,7 @@ def detail(request, typ_vazby, ident_cely):
     response = redirect(url)
     response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
     response.set_cookie("set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000)
+    komponenta.set_transaction_main_record()
     komponenta.close_active_transaction_when_finished = True
     komponenta.save()
     return response
@@ -179,7 +176,6 @@ def zapsat(request, typ_vazby, dj_ident_cely):
         logger.debug("komponenta.views.zapsat.form_valid")
         komponenta = form.save(commit=False)
         fedora_transcation = komponenta.create_transaction(request.user)
-        komponenta.active_transaction = fedora_transcation
         try:
             if dj:
                 komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam, fedora_transcation)

@@ -10,6 +10,7 @@ from typing import Optional, Union
 
 import requests
 from celery import Celery
+from django.utils.translation import gettext_lazy
 
 from core.connectors import RedisConnector
 from core.utils import get_mime_type, replace_last
@@ -1048,9 +1049,9 @@ class FedoraTransaction:
             redis_connection = r.get_connection()
             redis_connection.hset(self._transaction_redis_key, "status", str(result.value))
             if self.success_message:
-                redis_connection.hset(self._transaction_redis_key, "success_message", self.success_message)
+                redis_connection.hset(self._transaction_redis_key, "success_message", str(self.success_message))
             if self.error_message:
-                redis_connection.hset(self._transaction_redis_key, "error_message", self.error_message)
+                redis_connection.hset(self._transaction_redis_key, "error_message", str(self.error_message))
 
     def _send_transaction_request(self, operation=FedoraTransactionOperation.COMMIT):
         logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.start",
