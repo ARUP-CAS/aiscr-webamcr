@@ -28,7 +28,7 @@ from .views import (
     zahajit_v_terenu,
     zrusit,
     ProjectPasFromEnvelopeView,
-    ProjectPianFromEnvelopeView,
+    ProjectPianFromEnvelopeView, UpravitDatumOznameniView,
 )
 
 app_name = "projekt"
@@ -125,5 +125,10 @@ urlpatterns = [
         "zadost-udaje-oznamovatel/<str:ident_cely>",
         ZadostUdajeOznamovatelView.as_view(),
         name="zadost-udaje-oznamovatel"
-    )
+    ),
+    path(
+        "upravit-datum-oznameni/<str:ident_cely>",
+        UpravitDatumOznameniView.as_view(),
+        name="upravit-datum-oznameni",
+    ),
 ]

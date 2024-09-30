@@ -94,7 +94,7 @@ class CheckStavNotChangedForm(forms.Form):
             logger.debug(
                 "core.forms.CheckStavNotChangedForm.clean.ValidationError",
                 extra={
-                    "message": "Stav zaznamu se zmenil mezi posunutim stavu.",
+                    "message_content": "Stav zaznamu se zmenil mezi posunutim stavu.",
                     "db_stav": self.db_stav,
                     "old_stav": old_stav,
                 },
