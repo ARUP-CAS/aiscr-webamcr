@@ -398,8 +398,7 @@ def create(request):
                             "button": _("projekt.views.create.submitButton.text"),
                         },
                     )
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            fedora_transaction = projekt.create_transaction(request.user)
             if x1 and x2:
                 projekt.geom = Point(x1, x2)
             try:
@@ -495,9 +494,8 @@ def edit(request, ident_cely):
             # Workaroud to not check if long and lat has been changed, only geom is interesting
             form.fields["coordinate_x1"].initial = x1
             form.fields["coordinate_x2"].initial = x2
-            fedora_trasnaction = FedoraTransaction()
+            projekt.create_transaction(request.user)
             projekt = form.save(commit=False)
-            projekt.active_transaction = fedora_trasnaction
             projekt.save()
             old_geom = projekt.geom
             new_geom = Point(x1, x2)
@@ -511,7 +509,6 @@ def edit(request, ident_cely):
                 logger.warning("projekt.views.edit.form_valid.geom_not_updated")
             if form.changed_data or geom_changed:
                 logger.debug("projekt.views.edit.form_valid.form_changed", extra={"changed_data": form.changed_data})
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             form.save_m2m()
@@ -557,9 +554,8 @@ def smazat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_trasnaction = FedoraTransaction()
+        projekt.create_transaction(request.user)
         projekt.initial_dokumenty = list(projekt.casti_dokumentu.all().values_list("dokument__id", flat=True))
-        projekt.active_transaction = fedora_trasnaction
         projekt.close_active_transaction_when_finished = True
         projekt.deleted_by_user = request.user
         projekt.record_deletion()
@@ -697,8 +693,7 @@ def schvalit(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        projekt.active_transaction = fedora_transaction
+        fedora_transaction = projekt.create_transaction(request.user)
         logger.debug("projekt.views.schvalit.post.start", extra={"ident_cely": ident_cely,
                                                                  "transaction": fedora_transaction.uid})
         old_ident = projekt.ident_cely
@@ -784,8 +779,7 @@ def prihlasit(request, ident_cely):
             form = PrihlaseniProjektForm(request.POST, instance=projekt)
         if form.is_valid():
             projekt = form.save(commit=False)
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_prihlaseny(request.user)
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN)
             if projekt.ident_cely[0] == OBLAST_CECHY:
@@ -853,8 +847,7 @@ def zahajit_v_terenu(request, ident_cely):
 
         if form.is_valid():
             projekt = form.save(commit=False)
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_zahajeny_v_terenu(request.user)
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_ZAHAJEN_V_TERENU
@@ -908,8 +901,7 @@ def ukoncit_v_terenu(request, ident_cely):
         form = UkoncitVTerenuForm(request.POST, instance=projekt)
         if form.is_valid():
             projekt = form.save(commit=False)
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_ukoncen_v_terenu(request.user)
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_UKONCEN_V_TERENU
@@ -961,8 +953,7 @@ def uzavrit(request, ident_cely):
         )
     if request.method == "POST":
         # Move all events to state A2
-        fedora_transaction = FedoraTransaction()
-        projekt.active_transaction = fedora_transaction
+        fedora_transaction = projekt.create_transaction(request.user)
         akce_query = Akce.objects.filter(projekt=projekt)
         for akce in akce_query:
             if akce.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
@@ -1045,8 +1036,7 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        projekt.active_transaction = fedora_transaction
+        projekt.create_transaction(request.user)
         projekt.set_archivovany(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
@@ -1124,8 +1114,7 @@ def navrhnout_ke_zruseni(request, ident_cely):
                 duvod_to_save = form.cleaned_data["reason_text"]
             else:
                 duvod_to_save = duvod_to_save
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_navrzen_ke_zruseni(request.user, duvod_to_save)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
@@ -1191,8 +1180,7 @@ def zrusit(request, ident_cely):
         form = ZruseniProjektForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason_text"]
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_zruseny(request.user, duvod)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
@@ -1263,8 +1251,7 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
@@ -1316,8 +1303,7 @@ def vratit_navrh_zruseni(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            fedora_transaction = FedoraTransaction()
-            projekt.active_transaction = fedora_transaction
+            projekt.create_transaction(request.user)
             projekt.set_znovu_zapsan(request.user, duvod)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
@@ -1392,8 +1378,7 @@ def generovat_oznameni(request, ident_cely):
                                                                   "odeslat_oznamovateli":
                                                                       request.POST.get("odeslat_oznamovateli", False)})
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    fedora_transaction = FedoraTransaction()
-    projekt.active_transaction = fedora_transaction
+    fedora_transaction = projekt.create_transaction(request.user)
     if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
         logger.debug("projekt.views.generovat_oznameni.wrong_project_tpye")
         messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
@@ -1412,8 +1397,7 @@ class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         ident_cely = kwargs['ident_cely']
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-        fedora_transaction = FedoraTransaction()
-        projekt.active_transaction = fedora_transaction
+        fedora_transaction = projekt.create_transaction(self.request.user)
         rep_bin_file = projekt.create_confirmation_document(fedora_transaction, additional=True, user=self.request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.send_ep01(rep_bin_file)

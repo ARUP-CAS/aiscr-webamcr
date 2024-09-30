@@ -23,7 +23,7 @@ beautifulsoup4==4.12.3
 django-extensions==3.2.3
 celery==5.4.0
 django-add-default-value==0.10.0
-selenium==4.24.0
+selenium==4.25.0
 redis==5.0.8
 django-celery-beat==2.7.0
 django-celery-results==2.5.1
@@ -39,7 +39,7 @@ py7zr==0.22.0
 rarfile==4.2
 django-cacheops==7.0.2
 django-model-utils==5.0.0
-pandas==2.2.2
+pandas==2.2.3
 tablib[all]==3.6.1
 # DEV requirements
 pre-commit==3.8.0
@@ -50,8 +50,8 @@ black==24.8.0
 django-livereload-server==0.5.1
 django-debug-toolbar-template-profiler==2.1.0
 psycopg2==2.9.9
-django-object-actions==4.2.0
+django-object-actions==4.3.0
 
 
 
-uWSGI==2.0.26
+uWSGI==2.0.27

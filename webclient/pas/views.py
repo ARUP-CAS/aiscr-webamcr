@@ -145,8 +145,7 @@ def create(request, ident_cely=None):
                     extra={"geom": geom, "geom_sjtsk": geom_sjtsk},
                 )
             sn: SamostatnyNalez = form.save(commit=False)
-            fedora_transaction = FedoraTransaction()
-            sn.active_transaction = fedora_transaction
+            fedora_transaction = sn.create_transaction(request.user)
             try:
                 sn.ident_cely = get_sn_ident(sn.projekt)
             except MaximalIdentNumberError:
@@ -292,8 +291,7 @@ def edit(request, ident_cely):
             if geom_sjtsk is not None:
                 sn.geom_sjtsk = geom_sjtsk
             sn: SamostatnyNalez = form.save(commit=False)
-            fedora_transaction = FedoraTransaction()
-            sn.active_transaction = fedora_transaction
+            sn.create_transaction(request.user)
             sn.close_active_transaction_when_finished = True
             sn.save()
             if form.changed_data:
@@ -353,12 +351,11 @@ def edit_ulozeni(request, ident_cely):
         )
         if form.is_valid():
             logger.debug("pas.views.edit_ulozeni.form_valid")
-            fedora_transaction = FedoraTransaction()
             sn: SamostatnyNalez = form.save(commit=False)
+            sn.create_transaction(request.user)
             sn.predano_organizace = get_object_or_404(
                 Organizace, id=sn.projekt.organizace_id
             )
-            sn.active_transaction = fedora_transaction
             sn.close_active_transaction_when_finished = True
             sn.save()
             if form.changed_data:
@@ -415,8 +412,7 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            fedora_transaction = FedoraTransaction()
-            sn.active_transaction = fedora_transaction
+            sn.create_transaction(request.user)
             sn.set_vracen(request.user, sn.stav - 1, duvod)
             sn.close_active_transaction_when_finished = True
             sn.save()
@@ -472,8 +468,7 @@ def odeslat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        sn.active_transaction = fedora_transaction
+        sn.create_transaction(request.user)
         sn.set_odeslany(request.user)
         sn.close_active_transaction_when_finished = True
         sn.save()
@@ -534,8 +529,7 @@ def potvrdit(request, ident_cely):
         form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True)
         if form.is_valid():
             form_obj: SamostatnyNalez = form.save(commit=False)
-            fedora_transaction = FedoraTransaction()
-            form_obj.active_transaction = fedora_transaction
+            form_obj.create_transaction(request.user)
             form_obj.set_potvrzeny(request.user)
             form_obj.predano_organizace = get_object_or_404(
                 Organizace, id=sn.projekt.organizace_id
@@ -591,8 +585,7 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        sn.active_transaction = fedora_transaction
+        sn.create_transaction(request.user)
         sn.set_archivovany(request.user)
         sn.close_active_transaction_when_finished = True
         sn.save()
@@ -698,7 +691,7 @@ def smazat(request, ident_cely):
         )
     if request.method == "POST":
         nalez.deleted_by_user = request.user
-        nalez.active_transaction = FedoraTransaction()
+        nalez.create_transaction(request.user)
         nalez.close_active_transaction_when_finished = True
         nalez.record_deletion(nalez.active_transaction)
         resp1 = nalez.delete()

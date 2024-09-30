@@ -198,6 +198,7 @@ MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusAfterMiddleware',
     'core.middleware.PermissionMiddleware',
     'core.middleware.ErrorMiddleware',
+    'core.middleware.StatusMessageMiddleware',
 ]
 
 CRON_CLASSES = [

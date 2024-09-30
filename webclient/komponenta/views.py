@@ -65,8 +65,7 @@ def detail(request, typ_vazby, ident_cely):
         instance=komponenta,
         prefix=ident_cely,
     )
-    fedora_transcation = FedoraTransaction()
-    komponenta.active_transaction = fedora_transcation
+    fedora_transcation = komponenta.create_transaction(request.user)
     if form.is_valid():
         logger.debug("komponenta.views.detail.form_valid", extra={"ident_cely": ident_cely})
         komponenta = form.save(commit=False)
@@ -178,8 +177,8 @@ def zapsat(request, typ_vazby, dj_ident_cely):
     komp_ident_cely = None
     if form.is_valid():
         logger.debug("komponenta.views.zapsat.form_valid")
-        fedora_transcation = FedoraTransaction()
         komponenta = form.save(commit=False)
+        fedora_transcation = komponenta.create_transaction(request.user)
         komponenta.active_transaction = fedora_transcation
         try:
             if dj:
@@ -261,8 +260,7 @@ def smazat(request, typ_vazby, ident_cely):
     else:
         cast = komponenta.komponenta_vazby.casti_dokumentu
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        komponenta.active_transaction = fedora_transaction
+        komponenta.create_transaction(request.user)
         komponenta.close_active_transaction_when_finished = True
         resp = komponenta.delete()
 

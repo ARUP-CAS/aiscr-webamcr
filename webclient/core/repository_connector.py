@@ -10,12 +10,15 @@ from typing import Optional, Union
 
 import requests
 from celery import Celery
+
+from core.connectors import RedisConnector
 from core.utils import get_mime_type, replace_last
 from django.conf import settings
 from pdf2image import convert_from_bytes
 from PIL import Image
 from requests.auth import HTTPBasicAuth
 from xml_generator.generator import DocumentGenerator
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -344,7 +347,7 @@ class FedoraRepositoryConnector:
                 extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
                          "transaction": self.transaction_uid, "url": url, "caller": caller}
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
-                fedora_transaction = FedoraTransaction(self.transaction_uid)
+                fedora_transaction = FedoraTransaction(uid=self.transaction_uid)
                 fedora_transaction.rollback_transaction()
                 raise FedoraError(url, response.text, response.status_code)
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
@@ -1004,9 +1007,18 @@ class FedoraTransactionPostCommitTasks(Enum):
     CREATE_LINK = 1
 
 
+class FedoraTransactionResult(Enum):
+    COMMITED = 1
+    ABORTED = 2
+
+
 class FedoraTransaction:
 
-    def __init__(self, uid=None):
+    def __init__(self, main_record: ModelWithMetadata = None, transaction_user = None, *, uid=None):
+        from uzivatel.models import User
+        self.main_record = main_record
+        self.transaction_user = transaction_user
+        transaction_user: User
         self.post_commit_tasks = {}
         if uid is None:
             self.__create_transaction()
@@ -1017,6 +1029,20 @@ class FedoraTransaction:
     def __str__(self):
         return self.uid
 
+    @staticmethod
+    def get_transaction_redis_key(ident_cely: str, transaction_user_id: int):
+        return f"fedora-transaction-result-{ident_cely}-{transaction_user_id}"
+
+    @property
+    def _transaction_redis_key(self):
+        return self.get_transaction_redis_key(self.main_record.ident_cely, self.transaction_user.id)
+
+    def _save_transaction_result_to_redis(self, result: FedoraTransactionResult):
+        if self.main_record and self.transaction_user:
+            r = RedisConnector()
+            redis_connection = r.get_connection()
+            redis_connection.set(self._transaction_redis_key, result.value)
+
     def _send_transaction_request(self, operation=FedoraTransactionOperation.COMMIT):
         logger.debug("core_repository_connector.FedoraTransaction.commit_transaction.start",
                      extra={"transaction": self.uid})
@@ -1025,8 +1051,10 @@ class FedoraTransaction:
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         if operation == FedoraTransactionOperation.COMMIT:
             response = requests.put(url, auth=auth, verify=False)
+            self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
         elif operation == FedoraTransactionOperation.ROLLBACK:
             response = requests.delete(url, auth=auth, verify=False)
+            self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)
         else:
             raise FedoraTransactionUnsupportedOperationError(operation)
         if not str(response.status_code).startswith("2"):
