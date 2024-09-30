@@ -169,6 +169,9 @@
             }
           }
           show_form(`create_dj_form`);
+          $('#modal-form').on('shown.bs.modal', function(event) {
+              $(document).off('focusin.modal');
+          });
       });
       function show_form(form_id, form_to_show_next) {
           document.getElementById("karta-dokumentacni-cast").scrollIntoView();
