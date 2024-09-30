@@ -342,10 +342,8 @@ class FedoraRepositoryConnector:
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
             else:
-                stack = inspect.stack()
-                caller = [x for x in stack]
                 extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
-                         "transaction": self.transaction_uid, "url": url, "caller": caller}
+                         "transaction": self.transaction_uid, "url": url}
                 logger.error("core_repository_connector._send_request.response.error", extra=extra)
                 fedora_transaction = FedoraTransaction(uid=self.transaction_uid)
                 fedora_transaction.rollback_transaction()
@@ -1013,8 +1011,7 @@ class FedoraTransactionResult(Enum):
 
 
 class FedoraTransaction:
-
-    def __init__(self, main_record: ModelWithMetadata = None, transaction_user = None, *, uid=None):
+    def __init__(self, main_record: ModelWithMetadata = None, transaction_user = None, *, uid=None, request=None):
         from uzivatel.models import User
         self.main_record = main_record
         self.transaction_user = transaction_user
@@ -1025,6 +1022,7 @@ class FedoraTransaction:
         else:
             self.uid = uid
             logger.debug("core_repository_connector.FedoraTransaction.__init__", extra={"uid": self.uid})
+        self.request = request
 
     def __str__(self):
         return self.uid

@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 import logging
+
+import pytz
 from django.views import View
 from cacheops import invalidate_model
 
@@ -39,7 +41,7 @@ from core.constants import (
     VRACENI_ZRUSENI,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ, OBLAST_CECHY,
-    ZAPSANI_SN, RUSENI_STARE_PROJ,
+    ZAPSANI_SN, RUSENI_STARE_PROJ, OZNAMENI_PROJ_MANUALNI,
 )
 from core.decorators import allowed_user_groups
 from core.exceptions import MaximalIdentNumberError
@@ -112,7 +114,7 @@ from projekt.forms import (
     UkoncitVTerenuForm,
     ZadostUdajeOznamovatelForm,
     ZahajitVTerenuForm,
-    ZruseniProjektForm,
+    ZruseniProjektForm, UpravitDatumOznameniForm,
 )
 from projekt.models import Projekt
 from projekt.tables import ProjektTable
@@ -1487,7 +1489,7 @@ def get_detail_template_shows(projekt, user):
                 show_oznamovatel = True
             elif projekt.organizace == user.organizace:
                 if projekt.stav in [
-                        PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU, 
+                        PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU,
                         PROJEKT_STAV_UKONCENY_V_TERENU]:
                     show_oznamovatel = True
                 elif projekt.stav == PROJEKT_STAV_UZAVRENY:
@@ -1496,7 +1498,7 @@ def get_detail_template_shows(projekt, user):
                         show_oznamovatel = True
             elif (
                 projekt.stav in [
-                    PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU, 
+                    PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU,
                     PROJEKT_STAV_UKONCENY_V_TERENU, PROJEKT_STAV_UZAVRENY]
                 ):
                 last_prihlaseni = projekt.historie.get_last_transaction_date(PRIHLASENI_PROJ)
@@ -1551,6 +1553,7 @@ def get_detail_template_shows(projekt, user):
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_projekt, user, projekt.ident_cely),
         "soubor_nahrat": check_permissions(p.actionChoices.soubor_nahrat_projekt, user, projekt.ident_cely),
         "zadost_udaje_oznamovatel": show_zadost_udaje_oznamovatel
+        "upravit_datum_oznameni": check_permissions(p.actionChoices.projekt_upravit_datum_oznameni, user, projekt.ident_cely),
     }
     return show
 
@@ -1688,6 +1691,69 @@ class ProjectTableRowView(LoginRequiredMixin, View):
     def get(self, request):
         context = {"p": Projekt.objects.get(id=request.GET.get("id", ""))}
         return HttpResponse(render_to_string("projekt/projekt_table_row.html", context))
+
+
+
+class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
+    template_name = "core/transakce_modal.html"
+
+    def _get_existing_record(self, projekt):
+        historie_objects = Historie.objects.filter(vazba=projekt.historie, typ_zmeny=OZNAMENI_PROJ_MANUALNI)
+        if historie_objects.exists():
+            return historie_objects.last()
+
+    def get_context_data(self, **kwargs):
+        ident_cely = self.kwargs.get("ident_cely")
+        projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+        context = {
+            "object": projekt,
+            "title": _("projekt.views.upravitDatumOznameniView.title"),
+            "id_tag": "upravit-datum-oznameni-form",
+            "button": _("projekt.views.upravitDatumOznameniView.submitButton"),
+        }
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        projekt: Projekt = context["object"]
+        instance = self._get_existing_record(projekt)
+        if instance:
+            prague_timezone = pytz.timezone('Europe/Prague')
+            form = UpravitDatumOznameniForm(instance=instance, initial={"datum_oznameni": instance.datum_zmeny,
+                                                                        "cas_oznameni": instance.datum_zmeny
+                                            .astimezone(prague_timezone)})
+        else:
+            form = UpravitDatumOznameniForm()
+        context["form"] = form
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        projekt: Projekt = context["object"]
+        form = UpravitDatumOznameniForm(request.POST)
+        if form.is_valid():
+            histore = self._get_existing_record(projekt)
+            if histore:
+                prague_timezone = pytz.timezone('Europe/Prague')
+                histore.poznamka = form.cleaned_data["poznamka"]
+                histore.datum_zmeny = datetime.combine(form.cleaned_data["datum_oznameni"],
+                                                       form.cleaned_data["cas_oznameni"]).astimezone(prague_timezone)
+            else:
+                histore = form.save(commit=False)
+                histore: Historie
+                histore.typ_zmeny = OZNAMENI_PROJ_MANUALNI
+                histore.uzivatel = self.request.user
+                histore.vazba = projekt.historie
+                histore.datum_zmeny = datetime.combine(form.cleaned_data["datum_oznameni"],
+                                                       form.cleaned_data["cas_oznameni"])
+            histore.save()
+            projekt.active_transaction = projekt.create_transaction(request.user)
+            projekt.save_metadata(close_transaction=True)
+        else:
+            logger.debug("projekt.views.UpravitDatumOznameniView.form_invalid",
+                         extra={"errors": form.errors, "ident_cely": projekt.ident_cely})
+
+        return JsonResponse({"redirect": projekt.get_absolute_url()})
 
 class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
     """

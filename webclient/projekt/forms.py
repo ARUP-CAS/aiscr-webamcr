@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
 
 from arch_z import validators
+from historie.models import Historie
 from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
 from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_ZRUSENY
@@ -810,4 +811,47 @@ class ZadostUdajeOznamovatelForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(ZadostUdajeOznamovatelForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class UpravitDatumOznameniForm(forms.ModelForm):
+    datum_oznameni = forms.DateField(
+        label=_("projekt.forms.upravitDatumOznameni.datumOznameni.label"),
+        widget=forms.DateInput(
+            attrs={"data-provide": "datepicker", "autocomplete": "off"}
+        ),
+        help_text=_("projekt.forms.upravitDatumOznameni.datumOznameni.tooltip"),
+    )
+
+    cas_oznameni = forms.TimeField(
+        label=_("projekt.forms.upravitDatumOznameni.casOznameni.label"),
+        widget=forms.TimeInput(attrs={"type": "time", "autocomplete": "off"}),  # Type "time" provides a time picker
+        help_text=_("projekt.forms.upravitDatumOznameni.casOznameni.tooltip"),
+    )
+
+    class Meta:
+        model = Historie
+        fields = ("datum_oznameni", "cas_oznameni", "poznamka")
+        help_texts = {
+            "poznamka": _("projekt.forms.upravitDatumOznameni.poznamka.tooltip"),
+        }
+        labels = {"poznamka": _("projekt.forms.upravitDatumOznameni.poznamka.label"),}
+
+    def __init__(self, *args, **kwargs):
+        super(UpravitDatumOznameniForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    Div(
+                        Div("datum_oznameni", css_class="col-sm-6"),
+                        Div("cas_oznameni", css_class="col-sm-6"),
+                        Div("poznamka", css_class="col-sm-12"),
+                        css_class="row",
+                    ),
+                    css_class="card-body",
+                ),
+                css_class="card app-card-form",
+            )
+        )
         self.helper.form_tag = False
