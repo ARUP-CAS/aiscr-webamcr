@@ -13,7 +13,7 @@ django-libsass==0.9
 django-autocomplete-light==3.11.0
 django-widget-tweaks==1.5.0
 distlib==0.3.8
-django-rosetta==0.10.0
+django-rosetta==0.10.1
 django-auto-logout==0.5.1
 reportlab==4.2.4
 PyRTF3==0.47.5
