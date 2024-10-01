@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import logging
 from typing import Optional
@@ -63,45 +64,54 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
 
     invalidate_arch_z_related_models()
     fedora_transaction = instance.active_transaction
-    if not instance.suppress_signal:
-        if instance.initial_pristupnost is not None and instance.pristupnost.id != instance.initial_pristupnost.id:
-            for dok_jednotka in instance.dokumentacni_jednotky_akce.all():
-                dok_jednotka: DokumentacniJednotka
-                if dok_jednotka.pian:
-                    initial_pristupnost \
-                        = dok_jednotka.pian.evaluate_pristupnost_change(instance.initial_pristupnost.id, instance.id)
-                    pristupnost = dok_jednotka.pian.evaluate_pristupnost_change(instance.pristupnost.id, instance.id)
-                    if initial_pristupnost.id != pristupnost.id and dok_jednotka.pian:
-                        logger.debug("arch_z.signals.create_arch_z_metadata.update_pian_metadata",
-                                     extra={"pian": dok_jednotka.pian.ident_cely,
-                                            "initial_pripustnost": initial_pristupnost.pk,
-                                            "pripustnost": pristupnost.pk})
-                        dok_jednotka.pian.save_metadata(fedora_transaction)
-                if dok_jednotka.has_adb() and (instance.initial_stav != instance.stav
-                                               or instance.initial_pristupnost != instance.pristupnost):
-                    dok_jednotka.adb.save_metadata(fedora_transaction)
-        if instance.initial_stav != instance.stav:
-            for dj in instance.dokumentacni_jednotky_akce.all():
-                dj: DokumentacniJednotka
-                if dj.has_adb():
-                    adb: Adb = dj.adb
-                    adb.save_metadata(fedora_transaction)
-        close_transaction = instance.close_active_transaction_when_finished
-
-        def save_metadata(inner_close_transaction=False):
+    if instance.initial_pristupnost is not None and instance.pristupnost.id != instance.initial_pristupnost.id:
+        dj_list = list(instance.dokumentacni_jednotky_akce.all())
+    else:
+        dj_list = []
+    if instance.initial_stav != instance.stav:
+        adb_list = [x.adb for x in instance.dokumentacni_jednotky_akce.all() if x.has_adb()]
+    else:
+        adb_list = []
+    async def run_save_metadata_tasks():
+        tasks = []
+        if not instance.suppress_signal:
+            if instance.initial_pristupnost is not None and instance.pristupnost.id != instance.initial_pristupnost.id:
+                for dok_jednotka in dj_list:
+                    dok_jednotka: DokumentacniJednotka
+                    if dok_jednotka.pian:
+                        initial_pristupnost \
+                            = dok_jednotka.pian.evaluate_pristupnost_change(instance.initial_pristupnost.id, instance.id)
+                        pristupnost = dok_jednotka.pian.evaluate_pristupnost_change(instance.pristupnost.id, instance.id)
+                        if initial_pristupnost.id != pristupnost.id and dok_jednotka.pian:
+                            logger.debug("arch_z.signals.create_arch_z_metadata.update_pian_metadata",
+                                         extra={"pian": dok_jednotka.pian.ident_cely,
+                                                "initial_pripustnost": initial_pristupnost.pk,
+                                                "pripustnost": pristupnost.pk})
+                            tasks.append(dok_jednotka.pian.save_metadata(fedora_transaction))
+                    if dok_jednotka.has_adb() and (instance.initial_stav != instance.stav
+                                                   or instance.initial_pristupnost != instance.pristupnost):
+                        tasks.append(dok_jednotka.adb.save_metadata(fedora_transaction))
+            if instance.initial_stav != instance.stav:
+                for adb in adb_list:
+                    tasks.append(adb.save_metadata(fedora_transaction))
             try:
                 if (instance.akce and instance.akce.projekt and
                         (instance.akce.initial_projekt is None or
                          instance.akce.projekt.ident_cely != instance.initial_projekt.ident_cely)):
-                    instance.akce.projekt.save_metadata(fedora_transaction)
+                    tasks.append(instance.akce.projekt.save_metadata(fedora_transaction))
             except (ObjectDoesNotExist, AttributeError) as err:
                 logger.debug("arch_z.signals.create_arch_z_metadata.no_akce",
                              extra={"record_ident_cely": instance.ident_cely, "err": err})
-            instance.save_metadata(fedora_transaction, close_transaction=inner_close_transaction)
-        if close_transaction:
-            transaction.on_commit(lambda: save_metadata(True))
-        else:
-            save_metadata()
+        await asyncio.gather(*tasks)
+    close_transaction = instance.close_active_transaction_when_finished
+
+    def save_metadata(inner_close_transaction=False):
+        asyncio.run(run_save_metadata_tasks())
+        asyncio.run(instance.save_metadata(fedora_transaction, close_transaction=inner_close_transaction))
+    if close_transaction:
+        transaction.on_commit(lambda: save_metadata(True))
+    else:
+        save_metadata()
     logger.debug("arch_z.signals.create_arch_z_metadata.end", extra={"record_pk": instance.pk,
                                                                      "transaction": fedora_transaction.uid})
 

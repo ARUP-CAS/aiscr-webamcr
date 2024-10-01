@@ -51,7 +51,7 @@ django-livereload-server==0.5.1
 django-debug-toolbar-template-profiler==2.1.0
 psycopg2==2.9.9
 django-object-actions==4.3.0
-
+aiohttp==3.10.8
 
 
 uWSGI==2.0.27

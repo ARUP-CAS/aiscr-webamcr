@@ -1552,7 +1552,7 @@ def get_detail_template_shows(projekt, user):
         "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_projekt, user, projekt.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_projekt, user, projekt.ident_cely),
         "soubor_nahrat": check_permissions(p.actionChoices.soubor_nahrat_projekt, user, projekt.ident_cely),
-        "zadost_udaje_oznamovatel": show_zadost_udaje_oznamovatel
+        "zadost_udaje_oznamovatel": show_zadost_udaje_oznamovatel,
         "upravit_datum_oznameni": check_permissions(p.actionChoices.projekt_upravit_datum_oznameni, user, projekt.ident_cely),
     }
     return show

@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 
+from asgiref.sync import sync_to_async
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from celery import Celery
@@ -62,7 +63,7 @@ class ModelWithMetadata(models.Model):
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
 
-    def save_metadata(self, fedora_transaction=None, include_files=False, close_transaction=False,
+    async def save_metadata(self, fedora_transaction=None, include_files=False, close_transaction=False,
                       skip_container_check=False):
         from core.repository_connector import FedoraTransaction
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
@@ -86,11 +87,13 @@ class ModelWithMetadata(models.Model):
                     from core.models import Soubor
                     soubor: Soubor
                     connector.migrate_binary_file(soubor, include_content=False)
-        connector.save_metadata(True)
+        await connector.save_metadata(True)
         if close_transaction is True:
             logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.mark_transaction_as_closed",
                          extra={"transaction": getattr(fedora_transaction, "uid", "")})
-            transaction.on_commit(lambda: fedora_transaction.mark_transaction_as_closed())
+            async def async_function():
+                await sync_to_async(transaction.on_commit)(lambda: fedora_transaction.mark_transaction_as_closed())
+            await async_function()
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.end",
                      extra={"transaction": getattr(fedora_transaction, "uid", ""),
                             "transaction_mark_closed": self.close_active_transaction_when_finished})

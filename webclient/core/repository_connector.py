@@ -8,7 +8,10 @@ from enum import Enum
 from io import BytesIO
 from typing import Optional, Union
 
+import aiohttp
 import requests
+from aiohttp import BasicAuth
+from asgiref.sync import sync_to_async
 from celery import Celery
 
 from core.connectors import RedisConnector
@@ -122,8 +125,10 @@ class FedoraRepositoryConnector:
 
         record: ModelWithMetadata
         self.record = record
+        self.transaction = None
         if isinstance(transaction, FedoraTransaction):
             self.transaction_uid = transaction.uid
+            self.transaction = transaction
         elif isinstance(transaction, str):
             self.transaction_uid = transaction
         else:
@@ -232,7 +237,7 @@ class FedoraRepositoryConnector:
 
         def send_request(url, request_type):
             auth = cls._get_auth(request_type)
-            response = requests.get(url, auth=auth, verify=False)
+            response = requests.get(url, auth=auth)
             return response
 
         result = send_request(f"{cls.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
@@ -245,16 +250,16 @@ class FedoraRepositoryConnector:
         regex = re.compile(r"dcterms:type *\"deleted\" *;")
         is_deleted = hasattr(result_4, "text") and regex.search(result_4.text)
 
-        if result.status_code == 200:
+        if result.status == 200:
             if is_deleted:
-                if result_2.status_code == 200:
+                if result_2.status == 200:
                     logger.debug("core_repository_connector.check_container_is_deleted.true",
                                  extra={"ident_cely": ident_cely, "result_text": result.text})
-                    if result_3.status_code == 200:
+                    if result_3.status == 200:
                         logger.debug("core_repository_connector.check_container_is_deleted.true",
                                      extra={"ident_cely": ident_cely, "result_text": result.text})
                         return True
-        elif result.status_code == 404 and result_2.status_code == 404:
+        elif result.status == 404 and result_2.status == 404:
             logger.debug("core_repository_connector.check_container_is_deleted.true",
                          extra={"ident_cely": ident_cely, "result_text": result.text})
             return True
@@ -266,12 +271,12 @@ class FedoraRepositoryConnector:
     def _get_auth(cls, request_type: FedoraRequestType):
         if request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
                             FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE):
-            auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
+            auth = BasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         else:
-            auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
+            auth = BasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
         return auth
 
-    def _send_request(self, url: str, request_type: FedoraRequestType, *,
+    async def _send_request(self, url: str, request_type: FedoraRequestType, *,
                       headers=None, data=None) -> requests.Response | None:
         extra = {"url": url, "request_type": request_type, "transaction": self.transaction_uid}
         if isinstance(data, str) and len(data) < 1000:
@@ -287,79 +292,84 @@ class FedoraRepositoryConnector:
             else:
                 headers["Atomic-ID"] = (f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}"
                                         f":{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx/{self.transaction_uid}")
-        if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
-            response = requests.post(url, headers=headers, auth=auth, verify=False)
-        elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
-                              FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
-                              FedoraRequestType.GET_LINK, FedoraRequestType.GET_DELETED_LINK,
-                              FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
-                              FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE, FedoraRequestType.GET_TOMBSTONE):
-            try:
-                response = requests.get(url, headers=headers, auth=auth, verify=False)
-            except requests.exceptions.RequestException:
-                return None
-        elif request_type in (FedoraRequestType.CREATE_METADATA, FedoraRequestType.RECORD_DELETION_ADD_MARK,
-                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
-                              FedoraRequestType.CREATE_LINK):
-            response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
-        elif request_type in (FedoraRequestType.CREATE_BINARY_FILE_CONTENT, FedoraRequestType.CREATE_BINARY_FILE_THUMB,
-                              FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE):
-            response = requests.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=10)
-        elif request_type in (FedoraRequestType.UPDATE_METADATA, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT,
-                              FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
-                              FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE):
-            response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
-        elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
-            response = requests.post(url, headers=headers, auth=auth, verify=False)
-        elif request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
-                              FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE,
-                              FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY,
-                              FedoraRequestType.CONNECT_DELETED_RECORD_3, FedoraRequestType.CONNECT_DELETED_RECORD_4,
-                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5):
-            response = requests.delete(url, headers=headers, auth=auth)
-        elif request_type in (FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
-                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
-                              FedoraRequestType.DELETE_BINARY_FILE,
-                              FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2,
-                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_6):
-            response = requests.patch(url, auth=auth, headers=headers, data=data)
-        extra["status_code"] = response.status_code
+        async with aiohttp.ClientSession() as session:
+            if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
+                response = session.post(url, headers=headers, auth=auth)
+            elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
+                                  FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
+                                  FedoraRequestType.GET_LINK, FedoraRequestType.GET_DELETED_LINK,
+                                  FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
+                                  FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE, FedoraRequestType.GET_TOMBSTONE):
+                try:
+                    response = await session.get(url, headers=headers, auth=auth)
+                except requests.exceptions.RequestException:
+                    return None
+            elif request_type in (FedoraRequestType.CREATE_METADATA, FedoraRequestType.RECORD_DELETION_ADD_MARK,
+                                  FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
+                                  FedoraRequestType.CREATE_LINK):
+                response = await session.post(url, headers=headers, data=data, auth=auth)
+            elif request_type in (FedoraRequestType.CREATE_BINARY_FILE_CONTENT, FedoraRequestType.CREATE_BINARY_FILE_THUMB,
+                                  FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE):
+                response = await session.post(url, headers=headers, data=data, auth=auth, timeout=10)
+            elif request_type in (FedoraRequestType.UPDATE_METADATA, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT,
+                                  FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
+                                  FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE):
+                response = await session.put(url, headers=headers, data=data, auth=auth)
+            elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
+                response = await session.post(url, headers=headers, auth=auth)
+            elif request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
+                                  FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE,
+                                  FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY,
+                                  FedoraRequestType.CONNECT_DELETED_RECORD_3, FedoraRequestType.CONNECT_DELETED_RECORD_4,
+                                  FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5):
+                response = await session.delete(url, headers=headers, auth=auth)
+            elif request_type in (FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
+                                  FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
+                                  FedoraRequestType.DELETE_BINARY_FILE,
+                                  FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2,
+                                  FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_6):
+                response = await session.patch(url, auth=auth, headers=headers, data=data)
+            extra["status"] = response.status
 
-        if request_type in (FedoraRequestType.CONNECT_DELETED_RECORD_4,
-                            FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5):
-            extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
-                     "transaction": self.transaction_uid, "url": url}
-            if str(response.status_code)[0] == "2":
-                logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
-            else:
-                logger.warning("core_repository_connector._send_request.error", extra=extra)
-        elif request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
-                                  FedoraRequestType.GET_BINARY_FILE_CONTAINER,
-                                  FedoraRequestType.GET_BINARY_FILE_CONTENT,
-                                  FedoraRequestType.GET_LINK, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
-                                  FedoraRequestType.GET_DELETED_LINK, FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
-                                  FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE):
-            if str(response.status_code)[0] == "2":
-                logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
-            else:
-                extra = {"status_code": response.status_code, "request_type": request_type, "response": response.text,
+            if request_type in (FedoraRequestType.CONNECT_DELETED_RECORD_4,
+                                FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5):
+                extra = {"status": response.status, "request_type": request_type, "response": response.text,
                          "transaction": self.transaction_uid, "url": url}
-                logger.error("core_repository_connector._send_request.response.error", extra=extra)
-                fedora_transaction = FedoraTransaction(uid=self.transaction_uid)
-                fedora_transaction.rollback_transaction()
-                raise FedoraError(url, response.text, response.status_code)
-        elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
-                              FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE):
-            if str(response.status_code)[0] == "2":
-                return response
+                if str(response.status)[0] == "2":
+                    logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
+                else:
+                    logger.warning("core_repository_connector._send_request.error", extra=extra)
+            elif request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
+                                      FedoraRequestType.GET_BINARY_FILE_CONTAINER,
+                                      FedoraRequestType.GET_BINARY_FILE_CONTENT,
+                                      FedoraRequestType.GET_LINK, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
+                                      FedoraRequestType.GET_DELETED_LINK, FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
+                                      FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE):
+                if str(response.status)[0] == "2":
+                    logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
+                else:
+                    response_content = await response.content.read()
+                    extra = {"status": response.status, "request_type": request_type, "response": response_content,
+                             "transaction": self.transaction_uid, "url": url}
+                    logger.error("core_repository_connector._send_request.response.error", extra=extra)
+                    if self.transaction:
+                        self.transaction.rollback_transaction()
+                    else:
+                        fedora_transaction = FedoraTransaction(uid=self.transaction_uid)
+                        fedora_transaction.rollback_transaction()
+                    raise FedoraError(url, response.content, response.status)
+            elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
+                                  FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE):
+                if str(response.status)[0] == "2":
+                    return response
+                else:
+                    return None
             else:
-                return None
-        else:
-            logger.debug("core_repository_connector._send_request.response", extra=extra)
-            if (request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
-                                 FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE) and
-                    str(response.status_code)[0] != "2"):
-                return None
+                logger.debug("core_repository_connector._send_request.response", extra=extra)
+                if (request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
+                                     FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE) and
+                        str(response.status)[0] != "2"):
+                    return None
         return response
 
     def _create_container(self):
@@ -395,7 +405,7 @@ class FedoraRepositoryConnector:
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_CONTAINER)
-        if result is None or result.status_code == 404:
+        if result is None or result.status == 404:
             logger.debug("core_repository_connector._container_exists.false",
                          extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
             return False
@@ -429,7 +439,7 @@ class FedoraRepositoryConnector:
     def link_exists(self):
         url = self._get_request_url(FedoraRequestType.GET_LINK)
         result = self._send_request(url, FedoraRequestType.GET_LINK)
-        return result.status_code != 404
+        return result.status != 404
 
 
     def _check_container(self):
@@ -443,7 +453,7 @@ class FedoraRepositoryConnector:
                          extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
             self._connect_deleted_container()
             self.restored_container = True
-        elif result.status_code == 404:
+        elif result.status == 404:
             logger.debug("core_repository_connector._check_container.create",
                          extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
             self._create_container()
@@ -470,7 +480,7 @@ class FedoraRepositoryConnector:
             self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTAINER)
-        if result.status_code == 404:
+        if result.status == 404:
             self._create_binary_file_container()
         logger.debug("core_repository_connector._check_binary_file_container.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
@@ -495,13 +505,13 @@ class FedoraRepositoryConnector:
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         return response.content
 
-    def save_metadata(self, update=True):
+    async def save_metadata(self, update=True):
         logger.debug("core_repository_connector.save_metadata.start",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
-        if not self.skip_container_check:
-            self._check_container()
+        # if not self.skip_container_check:
+        #     self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_METADATA)
-        result = self._send_request(url, FedoraRequestType.GET_METADATA)
+        result = await self._send_request(url, FedoraRequestType.GET_METADATA)
 
         def generate_metadata():
             document_func, hash512 = self._generate_metadata()
@@ -512,15 +522,16 @@ class FedoraRepositoryConnector:
             }
             return document_func, headers_func
 
-        if result.status_code == 404:
+        if result.status == 404:
             document, headers = generate_metadata()
             headers["slug"] = "metadata"
             url = self._get_request_url(FedoraRequestType.CREATE_METADATA)
-            self._send_request(url, FedoraRequestType.CREATE_METADATA, headers=headers, data=document)
+            await self._send_request(url, FedoraRequestType.CREATE_METADATA, headers=headers, data=document)
         elif update is True:
-            document, headers = generate_metadata()
+            async_function = sync_to_async(generate_metadata)
+            document, headers = await async_function()
             url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
-            self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
+            await self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
         logger.debug("core_repository_connector.save_metadata.end",
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
 
@@ -808,7 +819,7 @@ class FedoraRepositoryConnector:
                      extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         url = self._get_request_url(FedoraRequestType.GET_DELETED_LINK, ident_cely=self.record.ident_cely)
         result = self._send_request(url, FedoraRequestType.GET_DELETED_LINK)
-        if result is not None and result.status_code != 404:
+        if result is not None and result.status != 404:
             logger.debug("core_repository_connector.record_deletion.already_exists",
                          extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid})
         else:
@@ -1100,7 +1111,7 @@ class FedoraTransaction:
         logger.debug("core_repository_connector.FedoraTransaction.__create_transaction.start")
         url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx"
         auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
-        response = requests.post(url, auth=auth, verify=False)
+        response = requests.post(url, auth=auth)
         if not str(response.status_code).startswith("2"):
             logger.error("core_repository_connector.FedoraTransaction.__create_transaction.failed",
                          extra={"response": response.text})
