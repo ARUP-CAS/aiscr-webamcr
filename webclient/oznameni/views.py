@@ -30,7 +30,7 @@ from core.views import check_stav_changed
 from historie.models import Historie
 from core.decorators import odstavka_in_progress
 
-from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
+from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm, OznamovatelProjektForm
 from .models import Oznamovatel
 from services.mailer import Mailer
 from django.conf import settings
@@ -202,7 +202,7 @@ def edit(request, ident_cely):
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if request.method == "POST":
-        form = OznamovatelForm(request.POST, instance=oznameni, required_next=True)
+        form = OznamovatelProjektForm(request.POST, instance=oznameni, required_next=True)
         if form.is_valid():
             oznameni = form.save(commit=False)
             oznameni.projekt = projekt
@@ -219,7 +219,7 @@ def edit(request, ident_cely):
             logger.debug(form.errors)
 
     else:
-        form = OznamovatelForm(instance=oznameni, required_next=True)
+        form = OznamovatelProjektForm(instance=oznameni, required_next=True)
 
     return render(request, "oznameni/edit.html", {"form": form, "oznameni": oznameni})
 
@@ -267,7 +267,7 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
                 {"redirect": context["object"].get_absolute_url()},
                 status=403,
             )
-        form = OznamovatelForm(required_next=True, add_oznamovatel=True)
+        form = OznamovatelProjektForm(required_next=True, add_oznamovatel=True)
         context["form"] = form
         return self.render_to_response(context)
 
@@ -279,7 +279,7 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
                 {"redirect": projekt.get_absolute_url()},
                 status=403,
             )
-        form = OznamovatelForm(request.POST, required_next=True, add_oznamovatel=True)
+        form = OznamovatelProjektForm(request.POST, required_next=True, add_oznamovatel=True)
         if form.is_valid():
             ozn = form.save(commit=False)
             ozn.projekt = projekt

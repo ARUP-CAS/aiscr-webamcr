@@ -825,7 +825,7 @@ class UpravitDatumOznameniForm(forms.ModelForm):
 
     cas_oznameni = forms.TimeField(
         label=_("projekt.forms.upravitDatumOznameni.casOznameni.label"),
-        widget=forms.TimeInput(attrs={"type": "time", "autocomplete": "off"}),  # Type "time" provides a time picker
+        widget=forms.TimeInput(format='%H:%M', attrs={"type": "time", "autocomplete": "off"}),  # Type "time" provides a time picker
         help_text=_("projekt.forms.upravitDatumOznameni.casOznameni.tooltip"),
     )
 
