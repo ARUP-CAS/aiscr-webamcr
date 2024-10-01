@@ -7,7 +7,7 @@
         uživatel {{auth_user.first_name}} {{auth_user.last_name}} ({{auth_user.ident_cely}}) z organizace {{auth_user.organizace}} žádá o zpřístupnění osobních údajů oznamovatele pro projekt <a href="{% get_site_url %}{% url 'projekt:detail' ident_cely %}">{{ ident_cely }}</a>.
     </p>
     <p><b>Zdůvodnění žádosti:</b> {{ reason }}</p>
-    <p>Po vyhodnocení žádosti lze Údaje uživateli odeslat v odpovědi na tento email.</p>
+    <p>Po vyhodnocení žádosti lze údaje uživateli odeslat v odpovědi na tento email.</p>
 {% endblock %}
 {% block content_en %}
   <!-- add English version -->
