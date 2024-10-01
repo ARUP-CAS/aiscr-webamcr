@@ -1641,17 +1641,21 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
                 Projekt.objects.exclude(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
                 .annotate(ident_len=Length("ident_cely"))
                 .filter(ident_len__gt=0)
-            )
+            ).order_by("ident_cely")
         elif self.typ == "dokument":
             qs = (
                 Projekt.objects.filter(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
                 .annotate(ident_len=Length("ident_cely"))
                 .filter(ident_len__gt=0)
-            )
+            ).order_by("ident_cely")
         else:
             return Projekt.objects.none()
         if self.q:
-            qs = qs.filter(ident_cely__icontains=self.q)
+            qs = qs.filter(
+                Q(ident_cely__icontains=self.q)
+                | Q(hlavni_katastr__nazev__icontains=self.q)
+                | Q(vedouci_projektu__vypis_cely__icontains=self.q)
+                )
         return self.check_filter_permission(qs)
     
     def check_filter_permission(self, qs):

@@ -65,7 +65,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db.models import OuterRef, Prefetch, Subquery
+from django.db.models import OuterRef, Prefetch, Subquery, Q
 from django.forms import inlineformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -1726,9 +1726,13 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
-        qs = Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
+        qs = Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES).order_by("ident_cely")
         if self.q:
-            qs = qs.filter(ident_cely__icontains=self.q)
+            qs = qs.filter(
+                Q(ident_cely__icontains=self.q)
+                | Q(autori_snapshot__icontains=self.q)
+                | Q(rok_vzniku__icontains=self.q)
+                )
         return self.check_filter_permission(qs)
 
 
