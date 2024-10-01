@@ -45,15 +45,13 @@
             {{ formAZ.hlavni_katastr_show|as_crispy_field }}
           </div>
           {% endif %}
-          {% if katastry_edit %}
           <div class="form-group col-sm-4" >
-            {{ formAZ.katastry|as_crispy_field }}
+            {% if formAZ.katastry %}
+              {{ formAZ.katastry|as_crispy_field }}
+            {% elif formAZ.katastry_show %}
+                {{ formAZ.katastry_show|as_crispy_field }}
+            {% endif %}
           </div>
-          {% else %}
-          <div class="form-group col-sm-4">
-            {{ formAZ.katastry_show|as_crispy_field }}
-          </div>
-          {% endif %}
           <div class="input-osoba form-group col-sm-2 select2-input">
             {% crispy_addon formAkce.hlavni_vedouci append='<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>' %}
           </div>
