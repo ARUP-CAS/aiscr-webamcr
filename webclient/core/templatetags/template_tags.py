@@ -130,6 +130,8 @@ def get_maintenance():
         if odstavka:
             last_maintenance = odstavka[0]
             cache.set("last_maintenance", last_maintenance, 600)
+        else:
+            cache.set("last_maintenance", False, 600)
     if last_maintenance is not None:
         if last_maintenance.datum_odstavky != date.today():
             return True

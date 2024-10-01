@@ -1390,21 +1390,3 @@ class ApplicationRestartView(LoginRequiredMixin, View):
         # Redirect to referer or fallback URL
         return redirect(referer)
 
-def set_language_with_cache(request):
-    prefix = 'maintenance_cache_key.'
-    redis_client = cache._cache.get_client()
-    cursor = 0
-    matched_keys = []
-
-    while True:
-        cursor, keys = redis_client.scan(cursor, match=f'*{prefix}*')
-        
-        matched_keys.extend([key.decode('utf-8') for key in keys])
-        
-        if cursor == 0:
-            break
-    
-    if matched_keys:
-        cache.delete(matched_keys[0].split(":")[-1])
-    
-    return set_language(request)

@@ -2,7 +2,6 @@
 {% load static %}
 {% load template_filters %}
 {% load i18n %}
-{% load cache %}
 {% load template_tags%}
 
 <!DOCTYPE html>
@@ -103,15 +102,12 @@
   {% block sidebar %}{% endblock %}
   <div id="app-page-wrapper">
     {% block infobar%}
-      {% get_current_language as LANGUAGE_CODE %}
-      {% cache 600 maintenance_cache_key LANGUAGE_CODE %}
       {% get_maintenance as action %}
       {% if action %}
       <div class="maintenance">
         <p class="d-block px-3 py-2 text-center text-bold text-white old-bv">{% trans "base.odstavka.text" %}</p>
       </div>
       {% endif %}
-      {% endcache %}
     {% endblock%}
     {% block navbar %}{% endblock %}
 
@@ -207,7 +203,7 @@
           xhr.setRequestHeader("Accept","application/json");
         }, 
         type: "POST",
-        url: "{% url 'core:set_language' %}",
+        url: "{% url 'set_language' %}",
         data: {'language': 'en', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
         success: function(response) {
              location.reload();
@@ -226,7 +222,7 @@
           xhr.setRequestHeader("Accept","application/json");
         }, 
         type: "POST",
-        url: "{% url 'core:set_language' %}",
+        url: "{% url 'set_language' %}",
         data: {'language': 'cs', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
         success: function(response) {
              location.reload();
