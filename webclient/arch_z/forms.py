@@ -190,7 +190,9 @@ class CreateArchZForm(forms.ModelForm):
                 self.fields["hlavni_katastr_show"].disabled = True
             else:
                 pass
-            if self.instance.dokumentacni_jednotky_akce.count()==1 and self.instance.dokumentacni_jednotky_akce.first().typ.id==TYP_DJ_KATASTR:
+            if self.instance.dokumentacni_jednotky_akce.count()==1 and\
+               self.instance.dokumentacni_jednotky_akce.first().typ.id==TYP_DJ_KATASTR and\
+               readonly is False:
                 self.fields.pop('katastry_show')
             else:
                 self.fields.pop('katastry')

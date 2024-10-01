@@ -39,16 +39,14 @@
         <div class="col-sm-2" style="display:none">
           {{ arch_z_form.hlavni_katastr|as_crispy_field }}
         </div>
-        {% endif %}
-        {% if katastry_edit %}
+        {% endif %}        
         <div class="form-group col-sm-4" >
-          {{ arch_z_form.katastry|as_crispy_field }}
+          {% if arch_z_form.katastry %}
+            {{ arch_z_form.katastry|as_crispy_field }}
+          {% elif arch_z_form.katastry_show %}
+            {{ arch_z_form.katastry_show|as_crispy_field }}
+          {% endif %}
         </div>
-        {% else %}
-        <div class="col-sm-4">
-          {{ arch_z_form.katastry_show|as_crispy_field }}
-        </div>
-        {% endif %}
         <div class="col-sm-2" style="pointer-events: none; display: none">
           {{ form.typ_lokality|as_crispy_field }}
         </div>
