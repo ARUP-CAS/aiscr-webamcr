@@ -56,7 +56,7 @@ from .forms import (
     PripojitArchZaznamForm,
     PripojitExterniOdkazForm,
 )
-from django.db.models import Prefetch, RestrictedError
+from django.db.models import Prefetch, RestrictedError, Q
 
 from uzivatel.models import Osoba, User
 
@@ -675,9 +675,13 @@ class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetV
         if not self.request.user.is_authenticated:
             return ExterniZdroj.objects.none()
 
-        qs = ExterniZdroj.objects.filter()
+        qs = ExterniZdroj.objects.filter().order_by("ident_cely")
         if self.q:
-            qs = qs.filter(ident_cely__icontains=self.q)
+            qs = qs.filter(Q(ident_cely__icontains=self.q)
+                | Q(autori_snapshot__icontains=self.q)
+                | Q(rok_vydani_vzniku__icontains=self.q)
+                | Q(nazev__icontains=self.q)
+                )
         return self.check_filter_permission(qs)
     
     def add_accessibility_lookup(self,permission, qs):

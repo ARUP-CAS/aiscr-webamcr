@@ -806,6 +806,7 @@ class ZadostUdajeOznamovatelForm(forms.Form):
         label=_("projekt.forms.zadostUdajeOznamovatel.duvod.label"),
         required=True,
         help_text=_("projekt.forms.zadostUdajeOznamovatel.duvod.tooltip"),
+        widget = forms.Textarea(attrs={"rows": 5, "cols": 40})
     )
 
     def __init__(self, *args, **kwargs):

@@ -2,7 +2,7 @@ import logging
 
 import simplejson as json
 from cacheops import invalidate_model
-from django.db.models import RestrictedError
+from django.db.models import RestrictedError, Q
 
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
@@ -1782,15 +1782,24 @@ class ArchZAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pe
                 "hlavni_katastr",
                 "akce__hlavni_vedouci",
                 "akce"
-            )
+            ).order_by("ident_cely")
+            if self.q:
+                qs = qs.filter(
+                    Q(ident_cely__icontains=self.q)
+                    | Q(hlavni_katastr__nazev__icontains=self.q)
+                    | Q(akce__hlavni_vedouci__vypis_cely__icontains=self.q)
+                    )
         else:
             qs = ArcheologickyZaznam.objects.filter(
                 typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
             ).select_related(
                 "lokalita"
-            )
-        if self.q:
-            qs = qs.filter(ident_cely__icontains=self.q)
+            ).order_by("ident_cely")
+            if self.q:
+                qs = qs.filter(
+                    Q(ident_cely__icontains=self.q)
+                    | Q(lokalita__nazev__icontains=self.q)
+                    )
         return self.check_filter_permission(qs)
 
 
