@@ -1735,6 +1735,8 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
                 histore.typ_zmeny = OZNAMENI_PROJ_MANUALNI
                 histore.uzivatel = self.request.user
                 histore.vazba = projekt.historie
+                # Must be called otherwise the datum is rewritten by SQL to current date and time
+                histore.save()
                 histore.datum_zmeny = datetime.combine(form.cleaned_data["datum_oznameni"],
                                                        form.cleaned_data["cas_oznameni"])
             histore.save()
