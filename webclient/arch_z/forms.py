@@ -11,7 +11,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.utils import formats
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
-from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, SPECIFIKACE_DATA_PRESNE
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, SPECIFIKACE_DATA_PRESNE, TYP_DJ_KATASTR
 from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
@@ -190,6 +190,12 @@ class CreateArchZForm(forms.ModelForm):
                 self.fields["hlavni_katastr_show"].disabled = True
             else:
                 pass
+            if self.instance.dokumentacni_jednotky_akce.count()==1 and\
+               self.instance.dokumentacni_jednotky_akce.first().typ.id==TYP_DJ_KATASTR and\
+               readonly is False:
+                self.fields.pop('katastry_show')
+            else:
+                self.fields.pop('katastry')
         except Exception as e:
             logger.debug(e)
 

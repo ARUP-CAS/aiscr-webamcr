@@ -304,7 +304,6 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         context["header"] = _("lokalita.views.lokalitaEditView.formHeader.label")
         context["zaznam"] = self.object.archeologicky_zaznam
         context["submit_button"] = _("lokalita.views.LokalitaEditView.submitButton")
-        context["katastry_edit"]= self.object.archeologicky_zaznam.dokumentacni_jednotky_akce.count()==1 and  self.object.archeologicky_zaznam.dokumentacni_jednotky_akce.first().typ.id==TYP_DJ_KATASTR
         return context
 
     def form_valid(self, form):

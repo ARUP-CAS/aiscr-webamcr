@@ -806,6 +806,7 @@ class ZadostUdajeOznamovatelForm(forms.Form):
         label=_("projekt.forms.zadostUdajeOznamovatel.duvod.label"),
         required=True,
         help_text=_("projekt.forms.zadostUdajeOznamovatel.duvod.tooltip"),
+        widget = forms.Textarea(attrs={"rows": 5, "cols": 40})
     )
 
     def __init__(self, *args, **kwargs):
@@ -825,7 +826,7 @@ class UpravitDatumOznameniForm(forms.ModelForm):
 
     cas_oznameni = forms.TimeField(
         label=_("projekt.forms.upravitDatumOznameni.casOznameni.label"),
-        widget=forms.TimeInput(attrs={"type": "time", "autocomplete": "off"}),  # Type "time" provides a time picker
+        widget=forms.TimeInput(format='%H:%M', attrs={"type": "time", "autocomplete": "off"}),  # Type "time" provides a time picker
         help_text=_("projekt.forms.upravitDatumOznameni.casOznameni.tooltip"),
     )
 

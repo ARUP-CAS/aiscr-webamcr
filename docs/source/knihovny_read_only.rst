@@ -88,7 +88,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://www.crummy.com/software/BeautifulSoup/bs4/
    * - billiard
-     - 4.2.0
+     - 4.2.1
      - BSD License
      - https://github.com/celery/billiard
    * - black
@@ -220,7 +220,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/jazzband/django-model-utils
    * - django-object-actions
-     - 4.2.0
+     - 4.3.0
      - Apache Software License
      - https://github.com/crccheck/django-object-actions
    * - django-prometheus
@@ -268,7 +268,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.16.0
+     - 3.16.1
      - The Unlicense (Unlicense)
      - https://github.com/tox-dev/py-filelock
    * - funcy
@@ -280,11 +280,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.6.0
+     - 2.6.1
      - MIT License
      - https://github.com/pre-commit/identify
    * - idna
-     - 3.9
+     - 3.10
      - BSD License
      - https://github.com/kjd/idna
    * - inflate64
@@ -296,7 +296,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://pycqa.github.io/isort/
    * - kombu
-     - 5.4.1
+     - 5.4.2
      - BSD License
      - https://kombu.readthedocs.io
    * - libsass
@@ -340,7 +340,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/pypa/packaging
    * - pandas
-     - 2.2.2
+     - 2.2.3
      - BSD License
      - https://pandas.pydata.org
    * - pathspec
@@ -360,7 +360,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Historical Permission Notice and Disclaimer (HPND)
      - https://python-pillow.org
    * - platformdirs
-     - 4.3.3
+     - 4.3.6
      - MIT License
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -372,11 +372,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/pre-commit/pre-commit
    * - prometheus_client
-     - 0.20.0
+     - 0.21.0
      - Apache Software License
      - https://github.com/prometheus/client_python
    * - prompt_toolkit
-     - 3.0.47
+     - 3.0.48
      - BSD License
      - https://github.com/prompt-toolkit/python-prompt-toolkit
    * - psutil
@@ -464,7 +464,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
-     - 4.24.0
+     - 4.25.0
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
@@ -520,11 +520,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Python Software Foundation License
      - https://github.com/python/typing_extensions
    * - tzdata
-     - 2024.1
+     - 2024.2
      - Apache Software License
      - https://github.com/python/tzdata
    * - uWSGI
-     - 2.0.26
+     - 2.0.27
      - GNU General Public License v2 or later (GPLv2+)
      - https://uwsgi-docs.readthedocs.io/en/latest/
    * - urllib3
@@ -536,7 +536,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.26.4
+     - 20.26.6
      - MIT License
      - https://github.com/pypa/virtualenv
    * - websocket-client
