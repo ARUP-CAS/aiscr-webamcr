@@ -609,7 +609,7 @@ Knihovny vkládané jako statické soubory
      - MIT License
      - https://www.patrick-wied.at/static/heatmapjs/
    * - jQuery
-     - 3.5.1
+     - 3.7.1
      - MIT License
      - https://jquery.com/
    * - Leaflet
