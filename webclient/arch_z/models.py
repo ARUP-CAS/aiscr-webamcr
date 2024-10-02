@@ -682,10 +682,8 @@ def get_akce_ident(region):
     finally:
         prefix = str(region + "-9")
         akce = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{prefix}",ident_cely__endswith="A").order_by("-ident_cely")
-        count_archz = akce.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:06}").count()
-        if count_archz>0:
+        if akce.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:06}").count():
             #number from empty spaces
-            logger.debug(f"current sequence ID: {sequence.sekvence:06}")
             idents = list(akce.values_list("ident_cely", flat=True).order_by("ident_cely"))
             idents = [sub.replace(prefix, "") for sub in idents]
             idents = [sub.replace("A", "") for sub in idents]
@@ -693,7 +691,7 @@ def get_akce_ident(region):
             idents = [eval(i) for i in idents]
             missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
             logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
-            logger.debug(f"new sequence ID: {missing[0]}")
+            logger.debug(missing[0])
             if missing[0] >= MAXIMUM:
                 logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                 raise MaximalIdentNumberError(MAXIMUM)
