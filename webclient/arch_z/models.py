@@ -682,7 +682,7 @@ def get_akce_ident(region):
     finally:
         prefix = str(region + "-9")
         akce = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{prefix}",ident_cely__endswith="A").order_by("-ident_cely")
-        if akce.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:06}").count():
+        if akce.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:06}").count()>0:
             #number from empty spaces
             idents = list(akce.values_list("ident_cely", flat=True).order_by("ident_cely"))
             idents = [sub.replace(prefix, "") for sub in idents]
