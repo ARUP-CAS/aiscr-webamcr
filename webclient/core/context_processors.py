@@ -81,7 +81,9 @@ def auto_logout_client(request):
         if odstavka:
             last_maintenance = odstavka[0]
             cache.set("last_maintenance", last_maintenance, 600)
-    if last_maintenance is not None:
+        else:
+            cache.set("last_maintenance", False, 600)
+    if last_maintenance is not None and last_maintenance is not False:
         if (
             last_maintenance.datum_odstavky == date.today()
             and last_maintenance.cas_odstavky
