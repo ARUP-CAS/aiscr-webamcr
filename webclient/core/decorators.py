@@ -48,7 +48,9 @@ def odstavka_in_progress(view_func):
             if odstavka.count():
                 last_maintenance = odstavka[0]
                 cache.set("last_maintenance", last_maintenance, 600)
-        if last_maintenance is not None:
+            else:
+                cache.set("last_maintenance", False, 600)
+        if last_maintenance is not None and last_maintenance is not False:
             if (last_maintenance.datum_odstavky == date.today() and \
                 datetime.now().time() > last_maintenance.cas_odstavky) or \
                 date.today() > last_maintenance.datum_odstavky:

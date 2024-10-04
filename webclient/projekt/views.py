@@ -696,12 +696,14 @@ def schvalit(request, ident_cely):
     if request.method == "POST":
         logger.debug("projekt.views.schvalit.post.start", extra={"ident_cely": ident_cely})
         old_ident = projekt.ident_cely
+        fedora_transaction = projekt.create_transaction(request.user, PROJEKT_USPESNE_SCHVALEN)
         if projekt.ident_cely[0] == "X":
             try:
                 projekt.set_permanent_ident_cely()
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
                 logger.debug("projekt.views.schvalit.post.max_error", extra={"ident_cely": ident_cely})
+                fedora_transaction.rollback_transaction()
                 return JsonResponse(
                     {
                         "redirect": reverse(
@@ -713,7 +715,6 @@ def schvalit(request, ident_cely):
             else:
                 logger.debug("projekt.views.schvalit.perm_ident", extra={"old_ident": old_ident,
                                                                          "new_ident_cely": projekt.ident_cely})
-        fedora_transaction = projekt.create_transaction(request.user, PROJEKT_USPESNE_SCHVALEN)
         projekt.set_schvaleny(request.user, old_ident)
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
@@ -1766,9 +1767,9 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
         zaznam = self.get_zaznam()
         context = {
             "object": zaznam,
-            "title": "projekt.views.ZadostUdajeOznamovatelView.title.text",
+            "title": _("projekt.views.ZadostUdajeOznamovatelView.title.text"),
             "id_tag": "zadost-udaje-oznamovatel-form",
-            "button": "projekt.views.ZadostUdajeOznamovatelView.submitButton.text"
+            "button": _("projekt.views.ZadostUdajeOznamovatelView.submitButton.text")
         }
         form = ZadostUdajeOznamovatelForm()
         context["form"] = form

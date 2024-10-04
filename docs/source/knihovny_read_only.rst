@@ -236,7 +236,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ubernostrum/django-registration/
    * - django-rosetta
-     - 0.10.0
+     - 0.10.1
      - MIT License
      - https://github.com/mbi/django-rosetta
    * - django-tables2
@@ -352,7 +352,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.45
+     - 8.13.46
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -400,8 +400,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://codeberg.org/miurahr/pybcj
    * - pycryptodomex
-     - 3.20.0
-     - Apache Software License; BSD License; Public Domain
+     - 3.21.0
+     - BSD License; Public Domain
      - https://www.pycryptodome.org
    * - pyparsing
      - 3.1.4
@@ -448,11 +448,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rcssmin/
    * - redis
-     - 5.0.8
+     - 5.1.0
      - MIT License
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.2.2
+     - 4.2.4
      - BSD License
      - https://www.reportlab.com/
    * - requests
@@ -609,7 +609,7 @@ Knihovny vkládané jako statické soubory
      - MIT License
      - https://www.patrick-wied.at/static/heatmapjs/
    * - jQuery
-     - 3.5.1
+     - 3.7.1
      - MIT License
      - https://jquery.com/
    * - Leaflet
