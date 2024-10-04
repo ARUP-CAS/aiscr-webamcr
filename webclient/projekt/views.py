@@ -1766,9 +1766,9 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
         zaznam = self.get_zaznam()
         context = {
             "object": zaznam,
-            "title": "projekt.views.ZadostUdajeOznamovatelView.title.text",
+            "title": _("projekt.views.ZadostUdajeOznamovatelView.title.text"),
             "id_tag": "zadost-udaje-oznamovatel-form",
-            "button": "projekt.views.ZadostUdajeOznamovatelView.submitButton.text"
+            "button": _("projekt.views.ZadostUdajeOznamovatelView.submitButton.text")
         }
         form = ZadostUdajeOznamovatelForm()
         context["form"] = form
