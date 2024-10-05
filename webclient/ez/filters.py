@@ -9,12 +9,7 @@ from dal import autocomplete
 from django.db.models import Q
 from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
-from django_filters import (
-    CharFilter,
-    FilterSet,
-    ModelMultipleChoiceFilter,
-    MultipleChoiceFilter,
-)
+from django_filters import CharFilter, FilterSet, ModelMultipleChoiceFilter, MultipleChoiceFilter
 from dokument.filters import HistorieFilter
 from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_EXTERNI_ZDROJ_TYP
 from heslar.models import Heslar

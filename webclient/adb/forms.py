@@ -1,16 +1,14 @@
 import logging
-import logstash
 
 from adb.models import Adb, VyskovyBod
+from core.coordTransform import convertToJTSK
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
-from core.coordTransform import convertToJTSK
-from django import forms
-from django.utils.translation import gettext_lazy as _
-from django.utils.safestring import mark_safe
 from dal import autocomplete
-
+from django import forms
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
@@ -29,6 +27,7 @@ class CreateADBForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení ADB.
     """
+
     class Meta:
         model = Adb
         fields = (
@@ -61,10 +60,12 @@ class CreateADBForm(forms.ModelForm):
             "poznamka": _("adb.forms.createAdbForm.label.poznamka"),
         }
         widgets = {
-            "typ_sondy": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ",
-                                             "data-live-search": "true"}),
-            "podnet": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ",
-                                          "data-live-search": "true"}),
+            "typ_sondy": forms.Select(
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            ),
+            "podnet": forms.Select(
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            ),
             "uzivatelske_oznaceni_sondy": forms.TextInput(),
             "trat": forms.TextInput(),
             "cislo_popisne": forms.TextInput(),
@@ -73,19 +74,21 @@ class CreateADBForm(forms.ModelForm):
             "poznamka": forms.TextInput(),
             "autor_popisu": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
             "autor_revize": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
-            "rok_popisu": forms.DateInput(attrs={
-                "class": "dateinput form-control date_roky",
-            }),
-            "rok_revize": forms.DateInput(attrs={
-                "class": "dateinput form-control date_roky",
-            }),
+            "rok_popisu": forms.DateInput(
+                attrs={
+                    "class": "dateinput form-control date_roky",
+                }
+            ),
+            "rok_revize": forms.DateInput(
+                attrs={
+                    "class": "dateinput form-control date_roky",
+                }
+            ),
         }
 
         help_texts = {
             "typ_sondy": _("adb.forms.createAdbForm.tooltip.typSondy"),
-            "uzivatelske_oznaceni_sondy": _(
-                "adb.forms.createAdbForm.tooltip.uzivatelske_oznaceni_sondy"
-            ),
+            "uzivatelske_oznaceni_sondy": _("adb.forms.createAdbForm.tooltip.uzivatelske_oznaceni_sondy"),
             "trat": _("adb.forms.createAdbForm.tooltip.trat"),
             "cislo_popisne": _("adb.forms.createAdbForm.tooltip.cislo_popisne"),
             "parcelni_cislo": _("adb.forms.createAdbForm.tooltip.parcelni_cislo"),
@@ -144,7 +147,9 @@ class CreateADBForm(forms.ModelForm):
                     Div(
                         AppendedText(
                             "autor_popisu",
-                            mark_safe('<button id="create-autor-popisu" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                            mark_safe(
+                                '<button id="create-autor-popisu" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
+                            ),
                         ),
                         css_class="col-sm-2 input-osoba select2-input",
                     ),
@@ -153,7 +158,9 @@ class CreateADBForm(forms.ModelForm):
                     Div(
                         AppendedText(
                             "autor_revize",
-                            mark_safe('<button id="create-autor-revize" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                            mark_safe(
+                                '<button id="create-autor-revize" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
+                            ),
                         ),
                         css_class="col-sm-2 input-osoba select2-input",
                     ),
@@ -166,7 +173,7 @@ class CreateADBForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
-            if self.fields[key].disabled == True:
+            if self.fields[key].disabled is True:
                 if isinstance(self.fields[key].widget, forms.widgets.Select):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
                 self.fields[key].help_text = ""
@@ -176,6 +183,7 @@ class VyskovyBodFormSetHelper(FormHelper):
     """
     Form helper pro správne vykreslení formuláře výškovího bodu.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
@@ -191,31 +199,35 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
         pian (pian): pian objeckt.
 
         niveleta (niveleta): niveleta objekt.
-        
+
         not_readonly (boolean): nastavuje formulář na readonly.
-    
+
     Returns:
         CreateVysovyBodForm: django model formulář VB
     """
-    
+
     class CreateVyskovyBodForm(forms.ModelForm):
         """
         Hlavní formulář pro vytvoření, editaci a zobrazení VB.
         """
+
         northing = forms.FloatField(
             label=_("adb.forms.createVyskovyBodForm.label.northing"),
             help_text=_("adb.forms.createVyskovyBodForm.tooltip.northing"),
-            min_value=-905000.0, max_value=-400000.0,
+            min_value=-905000.0,
+            max_value=-400000.0,
         )
         easting = forms.FloatField(
             label=_("adb.forms.createVyskovyBodForm.label.easting"),
             help_text=_("adb.forms.createVyskovyBodForm.tooltip.easting"),
-             min_value=-1230000.0, max_value=-930000.0,
+            min_value=-1230000.0,
+            max_value=-930000.0,
         )
         niveleta = forms.FloatField(
             label=_("adb.forms.createVyskovyBodForm.label.niveleta"),
             help_text=_("adb.forms.createVyskovyBodForm.tooltip.niveleta"),
-            min_value=100.0, max_value=1610.0,
+            min_value=100.0,
+            max_value=1610.0,
         )
 
         class Meta:
@@ -233,7 +245,9 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
             widgets = {
                 "ident_cely": forms.TextInput(),
-                "typ": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}),
+                "typ": forms.Select(
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                ),
             }
             help_texts = {
                 "ident_cely": _("adb.forms.createVyskovyBodForm.tooltip.ident_cely"),
@@ -256,15 +270,23 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             has_initial_values = False
             if pian:
                 [x, y] = convertToJTSK(pian.geom.centroid.x, pian.geom.centroid.y)
-                has_initial_values = cleaned_data.get("northing", None) == round(x, 2) and cleaned_data.get("easting", None) == round(y, 2)
-                logger.debug("adb.forms.create_vyskovy_bod_form.pian",
-                             extra={"cleaned_data": cleaned_data, "x": x, "y": y,
-                                      "has_initial_values": has_initial_values})
+                has_initial_values = cleaned_data.get("northing", None) == round(x, 2) and cleaned_data.get(
+                    "easting", None
+                ) == round(y, 2)
+                logger.debug(
+                    "adb.forms.create_vyskovy_bod_form.pian",
+                    extra={"cleaned_data": cleaned_data, "x": x, "y": y, "has_initial_values": has_initial_values},
+                )
             if has_initial_values and niveleta:
                 has_initial_values = cleaned_data.get("niveleta", None) == niveleta
-                logger.debug("adb.forms.create_vyskovy_bod_form.has_initial_values", extra={
-                    "cleaned_data": cleaned_data, "niveleta": niveleta,
-                    "has_initial_values": has_initial_values})
+                logger.debug(
+                    "adb.forms.create_vyskovy_bod_form.has_initial_values",
+                    extra={
+                        "cleaned_data": cleaned_data,
+                        "niveleta": niveleta,
+                        "has_initial_values": has_initial_values,
+                    },
+                )
             elif "niveleta" in cleaned_data:
                 has_initial_values = False
             if "typ" in cleaned_data and cleaned_data["typ"] is not None:
@@ -312,11 +334,9 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
             for key in self.fields.keys():
                 self.fields[key].disabled = not not_readonly
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled is True:
                     if isinstance(self.fields[key].widget, forms.widgets.Select):
-                        self.fields[
-                            key
-                        ].widget.template_name = "core/select_to_text.html"
+                        self.fields[key].widget.template_name = "core/select_to_text.html"
                     self.fields[key].help_text = ""
             self.fields["ident_cely"].disabled = True
 

@@ -2,9 +2,7 @@ import glob
 import os
 from pathlib import Path
 
-files = glob.glob(
-    str(Path(__file__).resolve().parent.parent / "webclient/*/migrations/*.py")
-)
+files = glob.glob(str(Path(__file__).resolve().parent.parent / "webclient/*/migrations/*.py"))
 for f in files:
     try:
         if not str(f).endswith("__init__.py"):

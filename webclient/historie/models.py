@@ -10,13 +10,14 @@ from core.constants import (
     ARCHIVACE_SN,
     DOKUMENT_RELATION_TYPE,
     EXTERNI_ZDROJ_RELATION_TYPE,
-    ODESLANI_EXT_ZD,
     NAHRANI_SBR,
     NAVRZENI_KE_ZRUSENI_PROJ,
     ODESLANI_AZ,
     ODESLANI_DOK,
+    ODESLANI_EXT_ZD,
     ODESLANI_SN,
     OZNAMENI_PROJ,
+    OZNAMENI_PROJ_MANUALNI,
     PIAN_RELATION_TYPE,
     POTVRZENI_EXT_ZD,
     POTVRZENI_PIAN,
@@ -24,6 +25,7 @@ from core.constants import (
     PRIHLASENI_PROJ,
     PROJEKT_RELATION_TYPE,
     RUSENI_PROJ,
+    RUSENI_STARE_PROJ,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     SCHVALENI_OZNAMENI_PROJ,
     SPOLUPRACE_AKTIVACE,
@@ -36,8 +38,10 @@ from core.constants import (
     VRACENI_AZ,
     VRACENI_DOK,
     VRACENI_EXT_ZD,
+    VRACENI_NAVRHU_ZRUSENI,
     VRACENI_PROJ,
     VRACENI_SN,
+    VRACENI_ZRUSENI,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_AZ,
     ZAPSANI_DOK,
@@ -45,24 +49,27 @@ from core.constants import (
     ZAPSANI_PIAN,
     ZAPSANI_PROJ,
     ZAPSANI_SN,
-    VRACENI_NAVRHU_ZRUSENI,
-    VRACENI_ZRUSENI,
     ZMENA_AZ,
+    ZMENA_HESLA_ADMIN,
+    ZMENA_HESLA_UZIVATEL,
     ZMENA_HLAVNI_ROLE,
-    ZMENA_UDAJU_ADMIN, ZMENA_UDAJU_UZIVATEL, ZMENA_HESLA_UZIVATEL, ZMENA_HESLA_ADMIN, RUSENI_STARE_PROJ, ZMENA_KATASTRU,
-    OZNAMENI_PROJ_MANUALNI,
+    ZMENA_KATASTRU,
+    ZMENA_UDAJU_ADMIN,
+    ZMENA_UDAJU_UZIVATEL,
 )
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from uzivatel.models import User, Organizace
 from django_prometheus.models import ExportModelOperationsMixin
+from uzivatel.models import Organizace, User
 
 logger = logging.getLogger(__name__)
+
 
 class Historie(ExportModelOperationsMixin("historie"), models.Model):
     """
     Class pro db model historie.
     """
+
     CHOICES = (
         # Project related choices
         (OZNAMENI_PROJ, _("historie.models.historieStav.projekt.Px0")),
@@ -122,20 +129,24 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         (NAHRANI_SBR, _("historie.models.historieStav.soubor.SBR0")),
     )
 
-    datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("historie.models.historie.datumZmeny.label"),
-                                       db_index=True)
-    typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("historie.models.historie.typZmeny.label"),
-                                 db_index=True)
+    datum_zmeny = models.DateTimeField(
+        auto_now_add=True, verbose_name=_("historie.models.historie.datumZmeny.label"), db_index=True
+    )
+    typ_zmeny = models.TextField(
+        choices=CHOICES, verbose_name=_("historie.models.historie.typZmeny.label"), db_index=True
+    )
     uzivatel = models.ForeignKey(
-        User, on_delete=models.RESTRICT, db_column="uzivatel", verbose_name=_("historie.models.historie.uzivatel.label"),
-        db_index=True
+        User,
+        on_delete=models.RESTRICT,
+        db_column="uzivatel",
+        verbose_name=_("historie.models.historie.uzivatel.label"),
+        db_index=True,
     )
     organizace_snapshot = models.ForeignKey(Organizace, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
-    poznamka = models.TextField(blank=True, null=True, verbose_name=_("historie.models.historie.poznamka.label"),
-                                db_index=True)
-    vazba = models.ForeignKey(
-        "HistorieVazby", on_delete=models.CASCADE, db_column="vazba", db_index=True
+    poznamka = models.TextField(
+        blank=True, null=True, verbose_name=_("historie.models.historie.poznamka.label"), db_index=True
     )
+    vazba = models.ForeignKey("HistorieVazby", on_delete=models.CASCADE, db_column="vazba", db_index=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -151,6 +162,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     def save_record_deletion_record(cls, record):
         logger.debug("history.models.save_record_deletion_record.start")
         from arch_z.models import ArcheologickyZaznam
+
         record: Union[ArcheologickyZaznam]
         if hasattr(record, "deleted_by_user") and record.deleted_by_user is not None:
             uzivatel = record.deleted_by_user
@@ -177,7 +189,9 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     class Meta:
         db_table = "historie"
         verbose_name = "historie"
-        ordering = ["datum_zmeny", ]
+        ordering = [
+            "datum_zmeny",
+        ]
         indexes = [
             models.Index(fields=["typ_zmeny", "uzivatel", "vazba"]),
             models.Index(fields=["typ_zmeny", "uzivatel"]),
@@ -192,6 +206,7 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
     Class pro db model historie vazby.
     Model se používa k napojení na jednotlivé záznamy.
     """
+
     CHOICES = (
         (PROJEKT_RELATION_TYPE, _("historie.models.historieVazby.projekt")),
         (DOKUMENT_RELATION_TYPE, _("historie.models.historieVazby.dokument")),
@@ -219,15 +234,11 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
         resp = {}
         if isinstance(transaction_type, list):
             transakce_list = (
-                self.historie_set.filter(typ_zmeny__in=transaction_type)
-                .only("datum_zmeny")
-                .order_by("-datum_zmeny")
+                self.historie_set.filter(typ_zmeny__in=transaction_type).only("datum_zmeny").order_by("-datum_zmeny")
             )
         else:
             transakce_list = (
-                self.historie_set.filter(typ_zmeny=transaction_type)
-                .only("datum_zmeny")
-                .order_by("-datum_zmeny")
+                self.historie_set.filter(typ_zmeny=transaction_type).only("datum_zmeny").order_by("-datum_zmeny")
             )
         if len(transakce_list) > 0:
             resp["datum"] = transakce_list[0].datum_zmeny

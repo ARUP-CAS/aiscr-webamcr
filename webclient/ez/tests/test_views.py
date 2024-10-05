@@ -1,6 +1,3 @@
-from django.test import TestCase
-from django.urls import reverse
-
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 from core.constants import EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY
 from core.tests.runner import (
@@ -11,6 +8,8 @@ from core.tests.runner import (
     EXISTING_EZ_ODESLANY,
     EZ_TYP,
 )
+from django.test import TestCase
+from django.urls import reverse
 from ez.models import ExterniZdroj
 from uzivatel.models import User
 
@@ -31,7 +30,7 @@ class UrlTests(TestCase):
 
     def test_get_ez_zapsat(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(f"/ext-zdroj/zapsat")
+        response = self.client.get("/ext-zdroj/zapsat")
         self.assertEqual(200, response.status_code)
 
     def test_post_ez_zapsat(self):
@@ -44,7 +43,7 @@ class UrlTests(TestCase):
             "autori": str(EL_CHEFE_ID),
         }
         self.client.force_login(self.existing_user)
-        response = self.client.post(f"/ext-zdroj/zapsat", data, follow=True)
+        response = self.client.post("/ext-zdroj/zapsat", data, follow=True)
         ez = ExterniZdroj.objects.get(pk=ez_last.pk + 1)
         self.assertEqual(200, response.status_code)
         self.assertEqual(ez.typ.pk, EZ_TYP)
@@ -72,9 +71,7 @@ class UrlTests(TestCase):
             "old_stav": str(EZ_STAV_ZAPSANY),
         }
         self.client.force_login(self.existing_user)
-        response = self.client.post(
-            f"/ext-zdroj/stav/odeslat/{EXISTING_EZ_IDENT}", data, follow=True
-        )
+        response = self.client.post(f"/ext-zdroj/stav/odeslat/{EXISTING_EZ_IDENT}", data, follow=True)
         ez = ExterniZdroj.objects.get(ident_cely=EXISTING_EZ_IDENT)
         ez.refresh_from_db()
         self.assertEqual(200, response.status_code)
@@ -98,9 +95,7 @@ class UrlTests(TestCase):
             "old_stav": str(EZ_STAV_ODESLANY),
         }
         self.client.force_login(self.existing_user)
-        response = self.client.post(
-            f"/ext-zdroj/stav/potvrdit/{EXISTING_EZ_ODESLANY}", data, follow=True
-        )
+        response = self.client.post(f"/ext-zdroj/stav/potvrdit/{EXISTING_EZ_ODESLANY}", data, follow=True)
         ez.refresh_from_db()
         self.assertEqual(200, response.status_code)
         self.assertEqual(ez.stav, EZ_STAV_POTVRZENY)
@@ -124,9 +119,7 @@ class UrlTests(TestCase):
             "reason": "vraceni",
         }
         self.client.force_login(self.existing_user)
-        response = self.client.post(
-            f"/ext-zdroj/stav/vratit/{EXISTING_EZ_ODESLANY}", data, follow=True
-        )
+        response = self.client.post(f"/ext-zdroj/stav/vratit/{EXISTING_EZ_ODESLANY}", data, follow=True)
         ez.refresh_from_db()
         self.assertEqual(200, response.status_code)
         self.assertEqual(ez.stav, EZ_STAV_ZAPSANY)
@@ -143,15 +136,13 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_post_ez_smazat(self):
-        ez = ExterniZdroj.objects.get(ident_cely=EXISTING_EZ_ODESLANY)
+        ExterniZdroj.objects.get(ident_cely=EXISTING_EZ_ODESLANY)
         data = {
             "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
             "old_stav": str(EZ_STAV_ODESLANY),
         }
         self.client.force_login(self.existing_user)
-        response = self.client.post(
-            f"/ext-zdroj/smazat/{EXISTING_EZ_ODESLANY}", data, follow=True
-        )
+        response = self.client.post(f"/ext-zdroj/smazat/{EXISTING_EZ_ODESLANY}", data, follow=True)
         self.assertEqual(200, response.status_code)
         with self.assertRaises(ExterniZdroj.DoesNotExist):
             ExterniZdroj.objects.get(ident_cely=EXISTING_EZ_ODESLANY)

@@ -1,18 +1,17 @@
 import logging
 from math import fabs
 
-from django.core.exceptions import ObjectDoesNotExist
-from model_utils import FieldTracker
-
 from core.exceptions import MaximalIdentNumberError
 from dj.models import DokumentacniJednotka
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.geos import Point
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_TYP
 from heslar.models import Heslar
+from model_utils import FieldTracker
 from uzivatel.models import Osoba
 from xml_generator.models import ModelWithMetadata
 
@@ -77,10 +76,7 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         related_name="adb_autori_popisu",
         db_index=True,
     )
-    rok_popisu = models.IntegerField(
-        validators=[MinValueValidator(1900), MaxValueValidator(2050)],
-        db_index=True
-    )
+    rok_popisu = models.IntegerField(validators=[MinValueValidator(1900), MaxValueValidator(2050)], db_index=True)
     autor_revize = models.ForeignKey(
         Osoba, models.RESTRICT, db_column="autor_revize", blank=True, null=True, db_index=True
     )
@@ -98,7 +94,7 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
 
     def get_absolute_url(self):
         return self.dokumentacni_jednotka.get_absolute_url()
-    
+
     def get_permission_object(self):
         return self.dokumentacni_jednotka.get_permission_object()
 
@@ -106,7 +102,7 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         super(Adb, self).__init__(*args, **kwargs)
         try:
             self.initial_dokumentacni_jednotka = self.dokumentacni_jednotka
-        except ObjectDoesNotExist as err:
+        except ObjectDoesNotExist:
             self.initial_dokumentacni_jednotka = None
         self.close_active_transaction_when_finished = False
         self.active_transaction = None
@@ -152,9 +148,7 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
     Obsahuje vazbu na ADB.
     """
 
-    adb = models.ForeignKey(
-        Adb, on_delete=models.CASCADE, db_column="adb", related_name="vyskove_body"
-    )
+    adb = models.ForeignKey(Adb, on_delete=models.CASCADE, db_column="adb", related_name="vyskove_body")
     ident_cely = models.TextField(unique=True)
     typ = models.ForeignKey(
         Heslar,
@@ -181,9 +175,7 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
                 y=-1 * fabs(easting),
                 z=fabs(niveleta),
             )
-            logger.debug(
-                "adb.models.VyskovyBod.set_geom.point", extra={"point": self.geom}
-            )
+            logger.debug("adb.models.VyskovyBod.set_geom.point", extra={"point": self.geom})
 
     def save(self, *args, **kwargs):
         """
@@ -214,14 +206,15 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
 
     class Meta:
         db_table = "vyskovy_bod"
-        ordering = ["ident_cely", ]
+        ordering = [
+            "ident_cely",
+        ]
 
     def get_absolute_url(self):
         return self.adb.dokumentacni_jednotka.get_absolute_url()
-    
+
     def get_permission_object(self):
         return self.adb.get_permission_object()
-    
 
 
 class AdbSekvence(ExportModelOperationsMixin("adb_sekvence"), models.Model):

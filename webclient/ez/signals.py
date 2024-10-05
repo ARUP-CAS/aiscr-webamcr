@@ -1,13 +1,13 @@
 import logging
 
 from cacheops import invalidate_model
+from core.constants import EXTERNI_ZDROJ_RELATION_TYPE
 from django.db import transaction
+from django.db.models.signals import post_save, pre_delete, pre_save
+from django.dispatch import receiver
+from historie.models import Historie, HistorieVazby
 
 from .models import ExterniZdroj
-from core.constants import EXTERNI_ZDROJ_RELATION_TYPE
-from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
-from django.dispatch import receiver
-from historie.models import HistorieVazby, Historie
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +27,7 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
     try:
         instance.set_snapshots()
     except ValueError as err:
-        logger.debug("ez.signals.create_ez_vazby.type_error", extra={"ident_cely": instance.ident_cely,
-                                                                     "err": err})
+        logger.debug("ez.signals.create_ez_vazby.type_error", extra={"ident_cely": instance.ident_cely, "err": err})
     else:
         logger.debug("ez.signals.create_ez_vazby.end", extra={"ident_cely": instance.ident_cely})
 
@@ -44,15 +43,18 @@ def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
             transaction.on_commit(lambda: instance.save_metadata(fedora_transaction, close_transaction=True))
         else:
             instance.save_metadata(fedora_transaction)
-        logger.debug("ez.signals.externi_zdroj_save_metadata.save_medata",
-                     extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)})
+        logger.debug(
+            "ez.signals.externi_zdroj_save_metadata.save_medata",
+            extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)},
+        )
     logger.debug("ez.signals.externi_zdroj_save_metadata.end", extra={"ident_cely": instance.ident_cely})
 
 
 @receiver(pre_delete, sender=ExterniZdroj, weak=False)
 def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **kwargs):
-    logger.debug("ez.signals.delete_externi_zdroj_repository_container.start",
-                 extra={"ident_cely": instance.ident_cely})
+    logger.debug(
+        "ez.signals.delete_externi_zdroj_repository_container.start", extra={"ident_cely": instance.ident_cely}
+    )
     fedora_transaction = instance.active_transaction
     invalidate_model(ExterniZdroj)
     invalidate_model(Historie)
@@ -64,5 +66,7 @@ def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **
         instance.historie.delete()
     if instance.soubory and instance.soubory.pk:
         instance.soubory.delete()
-    logger.debug("ez.signals.delete_externi_zdroj_repository_container.end",
-                 extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)})
+    logger.debug(
+        "ez.signals.delete_externi_zdroj_repository_container.end",
+        extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)},
+    )

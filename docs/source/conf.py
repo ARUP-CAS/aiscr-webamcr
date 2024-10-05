@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.abspath("../../webclient"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webclient.settings.docs")
 
 # Setup Django
-import django
+import django  # noqa: E402
 
 django.setup()
 

@@ -1,13 +1,6 @@
 import logging
-from django.db import models
-from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 
 from core.connectors import RedisConnector
-from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_EXTERNI_ZDROJ_TYP
-from heslar.models import Heslar
-from historie.models import Historie, HistorieVazby
-from uzivatel.models import Organizace, Osoba
 from core.constants import (
     EZ_STAV_ODESLANY,
     EZ_STAV_POTVRZENY,
@@ -20,8 +13,14 @@ from core.constants import (
 )
 from core.exceptions import MaximalIdentNumberError
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
-
+from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_EXTERNI_ZDROJ_TYP
+from heslar.models import Heslar
+from historie.models import Historie, HistorieVazby
+from uzivatel.models import Osoba
 from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
@@ -31,6 +30,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
     """
     Class pro db model externí zdroj.
     """
+
     STATES = (
         (EZ_STAV_ZAPSANY, _("ez.models.externiZdroj.states.zapsany.label")),
         (EZ_STAV_ODESLANY, _("ez.models.externiZdroj.states.odeslany.label")),
@@ -74,9 +74,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
     historie = models.OneToOneField(
         HistorieVazby, on_delete=models.SET_NULL, db_column="historie", blank=True, null=True
     )
-    autori = models.ManyToManyField(
-        Osoba, through="ExterniZdrojAutor", related_name="ez_autori"
-    )
+    autori = models.ManyToManyField(Osoba, through="ExterniZdrojAutor", related_name="ez_autori")
     editori = models.ManyToManyField(
         Osoba,
         through="ExterniZdrojEditor",
@@ -109,12 +107,12 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         Metóda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
         """
         self.stav = EZ_STAV_ODESLANY
-        historie_poznamka=self.check_set_permanent_ident()
+        historie_poznamka = self.check_set_permanent_ident()
         Historie(
             typ_zmeny=ODESLANI_EXT_ZD,
             uzivatel=user,
             vazba=self.historie,
-            poznamka = historie_poznamka,
+            poznamka=historie_poznamka,
         ).save()
         self.close_active_transaction_when_finished = True
         self.save()
@@ -143,7 +141,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             typ_zmeny=POTVRZENI_EXT_ZD,
             uzivatel=user,
             vazba=self.historie,
-            poznamka = historie_poznamka,
+            poznamka=historie_poznamka,
         ).save()
         self.close_active_transaction_when_finished = True
         self.save()
@@ -162,7 +160,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def get_permission_object(self):
         return self
-    
+
     def get_create_user(self):
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_EXT_ZD)[0].uzivatel,)
@@ -181,26 +179,30 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         if not self.externizdrojautor_set.all():
             self.autori_snapshot = None
         else:
-            self.autori_snapshot = "; ".join([x.autor.vypis_cely
-                                          for x in self.externizdrojautor_set.order_by("poradi").all()])
+            self.autori_snapshot = "; ".join(
+                [x.autor.vypis_cely for x in self.externizdrojautor_set.order_by("poradi").all()]
+            )
         if not self.externizdrojeditor_set.all():
             self.editori_snapshot = None
         else:
-            self.editori_snapshot = "; ".join([x.editor.vypis_cely
-                                          for x in self.externizdrojeditor_set.order_by("poradi").all()])
+            self.editori_snapshot = "; ".join(
+                [x.editor.vypis_cely for x in self.externizdrojeditor_set.order_by("poradi").all()]
+            )
 
     @property
     def redis_snapshot_id(self):
         from ez.views import ExterniZdrojListView
+
         return f"{ExterniZdrojListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
         from ez.tables import ExterniZdrojTable
+
         data = ExterniZdroj.objects.filter(pk=self.pk)
         table = ExterniZdrojTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
         return self.redis_snapshot_id, data
-    
+
     def check_set_permanent_ident(self):
         historie_poznamka = None
         if self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
@@ -210,6 +212,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             self.save_metadata()
             self.record_ident_change(old_ident)
         return historie_poznamka
+
 
 def get_perm_ez_ident():
     """
@@ -224,11 +227,11 @@ def get_perm_ez_ident():
             raise MaximalIdentNumberError(MAXIMUM)
         sequence.sekvence += 1
     except ObjectDoesNotExist:
-        sequence = ExterniZdrojSekvence.objects.using('urgent').create(sekvence=1)
+        sequence = ExterniZdrojSekvence.objects.using("urgent").create(sekvence=1)
     finally:
         ezs = ExterniZdroj.objects.filter(ident_cely__startswith=f"{prefix}").order_by("-ident_cely")
-        if ezs.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:07}").count()>0:
-            #number from empty spaces
+        if ezs.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:07}").count() > 0:
+            # number from empty spaces
             idents = list(ezs.values_list("ident_cely", flat=True).order_by("ident_cely"))
             idents = [sub.replace(prefix, "") for sub in idents]
             idents = [sub.lstrip("0") for sub in idents]
@@ -239,19 +242,17 @@ def get_perm_ez_ident():
             if missing[0] >= MAXIMUM:
                 logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                 raise MaximalIdentNumberError(MAXIMUM)
-            sequence.sekvence=missing[0]
-    sequence.save(using='urgent')
-    return (
-        prefix + f"{sequence.sekvence:07}"
-    )
+            sequence.sekvence = missing[0]
+    sequence.save(using="urgent")
+    return prefix + f"{sequence.sekvence:07}"
 
 
 class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), models.Model):
     """
     Class pro db model autora externího zdroje, zohledňuje pořadí zadání.
     """
-    externi_zdroj = models.ForeignKey(
-        ExterniZdroj, models.CASCADE, db_column="externi_zdroj")
+
+    externi_zdroj = models.ForeignKey(ExterniZdroj, models.CASCADE, db_column="externi_zdroj")
     autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
     poradi = models.IntegerField()
 
@@ -267,9 +268,8 @@ class ExterniZdrojEditor(ExportModelOperationsMixin("externi_zdroj_editor"), mod
     """
     Class pro db model editora externího zdroje, zohledňuje pořadí zadání.
     """
-    externi_zdroj = models.ForeignKey(
-        ExterniZdroj, models.CASCADE, db_column="externi_zdroj"
-    )
+
+    externi_zdroj = models.ForeignKey(ExterniZdroj, models.CASCADE, db_column="externi_zdroj")
     editor = models.ForeignKey(Osoba, models.RESTRICT, db_column="editor")
     poradi = models.IntegerField()
 
@@ -283,18 +283,15 @@ class ExterniZdrojEditor(ExportModelOperationsMixin("externi_zdroj_editor"), mod
             ("poradi", "externi_zdroj"),
         )
 
+
 class ExterniZdrojSekvence(models.Model):
     """
     Model pro tabulku se sekvencemi externích zdrojů.
     """
-    id = models.SmallIntegerField(default=1,primary_key=True)
+
+    id = models.SmallIntegerField(default=1, primary_key=True)
     sekvence = models.IntegerField()
 
     class Meta:
         db_table = "externi_zdroj_sekvence"
-        constraints = [
-            models.CheckConstraint(
-                name="constraint_only_one_sekvence",
-                check=models.Q(id=1)
-            )
-        ]
+        constraints = [models.CheckConstraint(name="constraint_only_one_sekvence", check=models.Q(id=1))]

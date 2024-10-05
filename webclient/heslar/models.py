@@ -1,20 +1,14 @@
 import logging
 
-from django.contrib.gis.db import models as pgmodels
+from core.mixins import ManyToManyRestrictedClassMixin
 from django.contrib.gis.db import models as pgmodels
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.db.models import CheckConstraint, Q
-from django.utils.translation import gettext_lazy as _
 from django.utils.translation import get_language
+from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
-
-from core.mixins import ManyToManyRestrictedClassMixin
-from heslar.hesla import (
-    HESLAR_DOKUMENT_MATERIAL,
-    HESLAR_DOKUMENT_RADA,
-    HESLAR_DOKUMENT_TYP, HESLAR_OBDOBI,
-)
+from heslar.hesla import HESLAR_DOKUMENT_MATERIAL, HESLAR_DOKUMENT_RADA, HESLAR_DOKUMENT_TYP, HESLAR_OBDOBI
 from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
@@ -24,6 +18,7 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
     """
     Class pro db model heslar.
     """
+
     # TextFields should be changed to CharField if no long text is expected to be written in
     ident_cely = models.TextField(unique=True, verbose_name=_("heslar.models.Heslar.ident_cely"))
     nazev_heslare = models.ForeignKey(
@@ -76,9 +71,11 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     def save(self, *args, **kwargs):
         from core.repository_connector import FedoraRepositoryConnector
+
         super().save(*args, **kwargs)
-        if (self._state.adding and
-                not FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "heslar")):
+        if self._state.adding and not FedoraRepositoryConnector.check_container_deleted_or_not_exists(
+            self.ident_cely, "heslar"
+        ):
             raise ValidationError(_("heslar.models.Heslar.save.check_container_deleted_or_not_exists.invalid"))
 
 
@@ -86,6 +83,7 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
     """
     Class pro db model heslar datace.
     """
+
     obdobi = models.OneToOneField(
         Heslar,
         models.CASCADE,
@@ -119,6 +117,7 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
     """
     Class pro db model heslar dokument typ materialu.
     """
+
     dokument_rada = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -146,9 +145,7 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
 
     class Meta:
         db_table = "heslar_dokument_typ_material_rada"
-        unique_together = (
-            ("dokument_typ", "dokument_material"),
-        )
+        unique_together = (("dokument_typ", "dokument_material"),)
         verbose_name_plural = "Heslář dokument typ materiál řada"
 
     def __init__(self, *args, **kwargs):
@@ -163,10 +160,11 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
     """
     Class pro db model heslar hierarchie.
     """
+
     TYP_CHOICES = [
-        ('podřízenost', _('heslar.models.HeslarHierarchie.TYP_CHOICES.podrizenost')),
-        ('uplatnění', _('heslar.models.HeslarHierarchie.TYP_CHOICES.uplatneni')),
-        ('výchozí hodnota', _('heslar.models.HeslarHierarchie.TYP_CHOICES.vychozi_hodnota')),
+        ("podřízenost", _("heslar.models.HeslarHierarchie.TYP_CHOICES.podrizenost")),
+        ("uplatnění", _("heslar.models.HeslarHierarchie.TYP_CHOICES.uplatneni")),
+        ("výchozí hodnota", _("heslar.models.HeslarHierarchie.TYP_CHOICES.vychozi_hodnota")),
     ]
 
     heslo_podrazene = models.ForeignKey(
@@ -174,10 +172,14 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
         models.CASCADE,
         db_column="heslo_podrazene",
         related_name="hierarchie",
-        verbose_name=_("heslar.models.HeslarHierarchie.heslo_podrazene")
+        verbose_name=_("heslar.models.HeslarHierarchie.heslo_podrazene"),
     )
     heslo_nadrazene = models.ForeignKey(
-        Heslar, models.RESTRICT, db_column="heslo_nadrazene", related_name="nadrazene", verbose_name=_("heslar.models.HeslarHierarchie.heslo_nadrazene")
+        Heslar,
+        models.RESTRICT,
+        db_column="heslo_nadrazene",
+        related_name="nadrazene",
+        verbose_name=_("heslar.models.HeslarHierarchie.heslo_nadrazene"),
     )
     typ = models.TextField(verbose_name=_("heslar.models.HeslarHierarchie.typ"), choices=TYP_CHOICES)
 
@@ -188,7 +190,7 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
         constraints = [
             CheckConstraint(
                 check=(Q(typ__in=["podřízenost", "uplatnění", "výchozí hodnota"])),
-                name='heslar_hierarchie_typ_check',
+                name="heslar_hierarchie_typ_check",
             ),
         ]
 
@@ -207,6 +209,7 @@ class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
     """
     Class pro db model heslar nazev.
     """
+
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.HeslarNazev.nazev"))
     povolit_zmeny = models.BooleanField(default=True, verbose_name=_("heslar.models.HeslarNazev.povolit_zmeny"))
 
@@ -231,14 +234,22 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
         ("skos:relatedMatch", _("heslar.models.HeslarOdkaz.skos_mapping_relation_choices.relatedMatch")),
     ]
 
-    heslo = models.ForeignKey(Heslar, models.CASCADE, db_column="heslo", verbose_name=_("heslar.models.HeslarOdkaz.heslo"), related_name="heslar_odkaz")
+    heslo = models.ForeignKey(
+        Heslar,
+        models.CASCADE,
+        db_column="heslo",
+        verbose_name=_("heslar.models.HeslarOdkaz.heslo"),
+        related_name="heslar_odkaz",
+    )
     zdroj = models.CharField(max_length=255, verbose_name=_("heslar.models.HeslarOdkaz.zdroj"))
     nazev_kodu = models.CharField(max_length=100, verbose_name=_("heslar.models.HeslarOdkaz.nazev_kodu"))
     kod = models.CharField(max_length=100, verbose_name=_("heslar.models.HeslarOdkaz.kod"))
     uri = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.HeslarOdkaz.uri"))
-    skos_mapping_relation = models.CharField(max_length=20,
-                                             verbose_name=_("heslar.models.HeslarOdkaz.skos_mapping_relation"),
-                                             choices=SKOS_MAPPING_RELATION_CHOICES)
+    skos_mapping_relation = models.CharField(
+        max_length=20,
+        verbose_name=_("heslar.models.HeslarOdkaz.skos_mapping_relation"),
+        choices=SKOS_MAPPING_RELATION_CHOICES,
+    )
 
     class Meta:
         db_table = "heslar_odkaz"
@@ -258,14 +269,21 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
     """
     Class pro db model ruian katastr.
     """
-    okres = models.ForeignKey("RuianOkres", models.RESTRICT, db_column="okres", db_index=True,
-                              verbose_name=_("heslar.models.RuianKatastr.okres"))
+
+    okres = models.ForeignKey(
+        "RuianOkres",
+        models.RESTRICT,
+        db_column="okres",
+        db_index=True,
+        verbose_name=_("heslar.models.RuianKatastr.okres"),
+    )
     nazev = models.TextField(verbose_name=_("heslar.models.RuianKatastr.nazev"), db_index=True)
     kod = models.IntegerField(verbose_name=_("heslar.models.RuianKatastr.kod"), db_index=True)
     definicni_bod = pgmodels.PointField(verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326)
     hranice = pgmodels.MultiPolygonField(verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
-    pian = models.OneToOneField("pian.Pian", models.SET_NULL, verbose_name=_("heslar.models.RuianKatastr.pian"),
-                                null=True, blank=True)
+    pian = models.OneToOneField(
+        "pian.Pian", models.SET_NULL, verbose_name=_("heslar.models.RuianKatastr.pian"), null=True, blank=True
+    )
 
     @property
     def pian_ident_cely(self):
@@ -288,8 +306,10 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
     def save(self, *args, **kwargs):
         from core.repository_connector import FedoraRepositoryConnector
-        if (not self._state.adding or
-                FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "ruian_katastr")):
+
+        if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
+            self.ident_cely, "ruian_katastr"
+        ):
             super().save(*args, **kwargs)
         else:
             raise ValidationError(_("heslar.models.RuianKatastr.save.check_container_deleted_or_not_exists.invalid"))
@@ -299,12 +319,14 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
     """
     Class pro db model ruian kraj.
     """
+
     nazev = models.CharField(unique=True, max_length=100, verbose_name=_("heslar.models.RuianKraj.nazev"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKraj.kod"))
     rada_id = models.CharField(max_length=1, verbose_name=_("heslar.models.RuianKraj.rada_id"))
     nazev_en = models.CharField(unique=True, max_length=100)
-    definicni_bod = pgmodels.PointField(null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"),
-                                        srid=4326)
+    definicni_bod = pgmodels.PointField(
+        null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326
+    )
     hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
 
     class Meta:
@@ -321,8 +343,10 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
 
     def save(self, *args, **kwargs):
         from core.repository_connector import FedoraRepositoryConnector
-        if (not self._state.adding or
-                FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "ruian_kraj")):
+
+        if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
+            self.ident_cely, "ruian_kraj"
+        ):
             super().save(*args, **kwargs)
         else:
             raise ValidationError(_("heslar.models.RuianKraj.save.check_container_deleted_or_not_exists.invalid"))
@@ -332,13 +356,17 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
     """
     Class pro db model ruian okres.
     """
+
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianOkres.nazev"))
-    kraj = models.ForeignKey(RuianKraj, models.RESTRICT, db_column="kraj", verbose_name=_("heslar.models.RuianOkres.kraj"))
+    kraj = models.ForeignKey(
+        RuianKraj, models.RESTRICT, db_column="kraj", verbose_name=_("heslar.models.RuianOkres.kraj")
+    )
     spz = models.CharField(unique=True, max_length=3, verbose_name=_("heslar.models.RuianOkres.spz"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianOkres.kod"))
     nazev_en = models.TextField(verbose_name=_("heslar.models.RuianOkres.nazev_en"))
-    definicni_bod = pgmodels.PointField(null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"),
-                                        srid=4326)
+    definicni_bod = pgmodels.PointField(
+        null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326
+    )
     hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
 
     class Meta:
@@ -355,8 +383,10 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
 
     def save(self, *args, **kwargs):
         from core.repository_connector import FedoraRepositoryConnector
-        if (not self._state.adding or
-                FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "ruian_okres")):
+
+        if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
+            self.ident_cely, "ruian_okres"
+        ):
             super().save(*args, **kwargs)
         else:
             raise ValidationError(_("heslar.models.RuianOkres.save.check_container_deleted_or_not_exists.invalid"))

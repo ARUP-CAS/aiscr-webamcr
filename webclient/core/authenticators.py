@@ -13,8 +13,6 @@ class AMCRAuthUser(ModelBackend):
             return True
         else:
             raise ValidationError(
-                (
-                    _("core.authenticators.user_can_authenticate")
-                ),
+                (_("core.authenticators.user_can_authenticate")),
                 code="inactive",
             )
