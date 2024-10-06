@@ -140,7 +140,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
-     - 2024.1
+     - 2024.10
      - MIT License
      - https://github.com/django-crispy-forms/crispy-bootstrap4
    * - cron-descriptor
@@ -320,7 +320,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.1.1
+     - 2.1.2
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -524,7 +524,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/python/tzdata
    * - uWSGI
-     - 2.0.27
+     - 2.0.26
      - GNU General Public License v2 or later (GPLv2+)
      - https://uwsgi-docs.readthedocs.io/en/latest/
    * - urllib3
