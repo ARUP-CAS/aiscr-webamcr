@@ -3,7 +3,7 @@ name: Deployment to DEV environment
 on:
   workflow_dispatch :
     inputs:
-      man_tag:
+      tag:
        description: 'Version tag for deployment'
        type: string
        required: true
@@ -12,16 +12,16 @@ env:
   log_name: deployment_vpn.log
   branch: dev
   server_deploy_root: /home/amcr/aiscr-webamcr
-  dep_script_dev: scripts/ci_deployment/deploy_server_dev.sh
+  dep_script: scripts/ci_deployment/deploy_server_dev.sh
 
 jobs:
-  deployment_dev:
+  deployment:
     name: Connect to VPN, do deployment actions on DEV SERVER, Kill VPN
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.man_tag }}
+          ref: ${{ inputs.tag }}
       - name: Install OpenVPN
         run: |
           sudo apt-get update
@@ -55,11 +55,11 @@ jobs:
           ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << EOF
           sudo su - root << AOF
           cd ${{ env.server_deploy_root }}
-          git stash push -m "CI_autostash_${{ inputs.man_tag }}_${{ env.date_stamp }}"
+          git stash push -m "CI_autostash_${{ inputs.tag }}_${{ env.date_stamp }}"
           git checkout ${{ env.branch }}
           git pull
-          chmod +x ${{ env.dep_script_dev }}
-          ./${{ env.dep_script_dev }} ${{ inputs.man_tag }} ${{ env.server_deploy_root }} ${{ env.branch }}
+          chmod +x ${{ env.dep_script }}
+          ./${{ env.dep_script }} ${{ inputs.tag }} ${{ env.server_deploy_root }} ${{ env.branch }}
           AOF
           EOF
 
