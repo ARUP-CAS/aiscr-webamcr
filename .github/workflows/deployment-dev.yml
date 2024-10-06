@@ -12,7 +12,7 @@ env:
   log_name: deployment_vpn.log
   branch: dev
   server_deploy_root: /home/amcr/aiscr-webamcr
-  dep_script: scripts/ci_deployment/deploy_server_dev.sh
+  dep_script: scripts/ci_deployment/deploy_server.sh
 
 jobs:
   deployment:
