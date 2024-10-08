@@ -44,10 +44,10 @@ jobs:
       - name: SSH connection DEPLOYMENT_SERVER_TEST
         run: |
           eval $(ssh-agent -s)
-          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_TEST }}" | tr -d '\r' | ssh-add -
+          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_KNOWN_HOST_TEST }}" >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
           sleep 30
           ping -c 10 ${{ secrets.DEPLOYMENT_SERVER_TEST }}
