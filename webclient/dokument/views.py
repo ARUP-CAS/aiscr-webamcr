@@ -20,11 +20,7 @@ from core.constants import (
 )
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
 from core.forms import CheckStavNotChangedForm, VratitForm
-from core.ident_cely import (
-    get_cast_dokumentu_ident,
-    get_dokument_rada,
-    get_temp_dokument_ident,
-)
+from core.ident_cely import get_cast_dokumentu_ident, get_dokument_rada, get_temp_dokument_ident
 from core.message_constants import (
     DOKUMENT_AZ_USPESNE_PRIPOJEN,
     DOKUMENT_CAST_USPESNE_ODPOJEN,
@@ -48,14 +44,14 @@ from core.message_constants import (
     VYBERTE_PROSIM_POLOHU,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
+    ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.models import Permissions as p
 from core.models import Soubor, check_permissions
-from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.repository_connector import FedoraRepositoryConnector
 from core.utils import get_3d_from_envelope
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
@@ -65,7 +61,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db.models import OuterRef, Prefetch, Subquery, Q
+from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.forms import inlineformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -90,14 +86,7 @@ from dokument.forms import (
     TvarFormSetHelper,
     create_tvar_form,
 )
-from dokument.models import (
-    Dokument,
-    DokumentAutor,
-    DokumentCast,
-    DokumentExtraData,
-    Let,
-    Tvar,
-)
+from dokument.models import Dokument, DokumentAutor, DokumentCast, DokumentExtraData, Let, Tvar
 from dokument.tables import DokumentTable, Model3DTable
 from ez.forms import PripojitArchZaznamForm
 from heslar.hesla import (
@@ -126,11 +115,7 @@ from heslar.views import heslar_12, heslar_list
 from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta, KomponentaAktivita, KomponentaVazby
-from nalez.forms import (
-    NalezFormSetHelper,
-    create_nalez_objekt_form,
-    create_nalez_predmet_form,
-)
+from nalez.forms import NalezFormSetHelper, create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
 from neidentakce.forms import NeidentAkceForm
 from neidentakce.models import NeidentAkce
@@ -963,7 +948,7 @@ class DokumentCastPripojitAkciView(TransakceView):
         form = PripojitArchZaznamForm(data=request.POST, type_arch=type_arch, dok=True)
         if form.is_valid():
             logger.debug("dokument.views.DokumentCastPripojitAkciView.post.form_valid")
-            fedora_transaction = cast.create_transaction(self.request.user,  self.success_message)
+            fedora_transaction = cast.create_transaction(self.request.user, self.success_message)
             cast.active_transaction = fedora_transaction
             arch_z_id = form.cleaned_data["arch_z"]
             arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
@@ -1676,8 +1661,9 @@ def smazat(request, ident_cely):
     if check_stav_changed(request, dokument):
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
-        fedora_transaction = dokument.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN,
-                                                         ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+        fedora_transaction = dokument.create_transaction(
+            request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT
+        )
         dokument.save_record_deletion_record(fedora_transaction, request.user)
         for item in dokument.casti.all():
             if hasattr(item, "neident_akce"):
@@ -1721,7 +1707,7 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
     typ_zmeny_lookup = ZAPSANI_DOK
 
     def get_result_label(self, result):
-        return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vzniku})" 
+        return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vzniku})"
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -1729,10 +1715,8 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         qs = Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES).order_by("ident_cely")
         if self.q:
             qs = qs.filter(
-                Q(ident_cely__icontains=self.q)
-                | Q(autori_snapshot__icontains=self.q)
-                | Q(rok_vzniku__icontains=self.q)
-                )
+                Q(ident_cely__icontains=self.q) | Q(autori_snapshot__icontains=self.q) | Q(rok_vzniku__icontains=self.q)
+            )
         return self.check_filter_permission(qs)
 
 
@@ -1824,11 +1808,10 @@ def zapsat(request, zaznam=None):
             logger.debug("dokument.views.zapsat.valid")
             dokument = form_d.save(commit=False)
             dokument: Dokument
-            fedora_transaction = dokument.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN,
-                                                             ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-            dokument.rada = get_dokument_rada(
-                dokument.typ_dokumentu, dokument.material_originalu
+            fedora_transaction = dokument.create_transaction(
+                request.user, ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
             )
+            dokument.rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
             if isinstance(zaznam, Projekt):
                 dokument.datum_zverejneni = datetime.now().date() + timedelta(days=365 * 100)
             try:
@@ -2009,8 +1992,9 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
 
         for dokument_id in dokument_ids:
             dokument = get_object_or_404(Dokument, id=dokument_id)
-            fedora_transaction = zaznam.create_transaction(request.user, DOKUMENT_USPESNE_PRIPOJEN,
-                                                           DOKUMENT_JIZ_BYL_PRIPOJEN)
+            fedora_transaction = zaznam.create_transaction(
+                request.user, DOKUMENT_USPESNE_PRIPOJEN, DOKUMENT_JIZ_BYL_PRIPOJEN
+            )
             dokument.active_transaction = fedora_transaction
             relace = casti_zaznamu.filter(dokument__id=dokument_id)
             if not relace.exists():
@@ -2029,9 +2013,10 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                     dc.save()
                 dokument.close_active_transaction_when_finished = True
                 dokument.save()
-                logger.debug("dokument.views.pripojit.pripojit",
-                             extra={"debug_name": debug_name, "ident_zaznam": ident_zaznam,
-                                    "ident_cely": dokument.ident_cely})
+                logger.debug(
+                    "dokument.views.pripojit.pripojit",
+                    extra={"debug_name": debug_name, "ident_zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
+                )
             else:
                 messages.add_message(request, messages.WARNING, DOKUMENT_JIZ_BYL_PRIPOJEN)
                 fedora_transaction.rollback_transaction()

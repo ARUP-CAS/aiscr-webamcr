@@ -1,18 +1,15 @@
-
-
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse
-from django.views.generic.edit import UpdateView
-from django.urls import reverse
-from django.contrib import messages
-from django.utils.translation import gettext as _
+import logging
 
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse
+from django.urls import reverse
+from django.utils.translation import gettext as _
+from django.views.generic.edit import UpdateView
+
 from .forms import NeidentAkceForm
-
 from .models import NeidentAkce
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +18,7 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
     """
     Třída pohledu pro editaci neident akce pomocí modalu.
     """
+
     model = NeidentAkce
     template_name = "core/transakce_modal.html"
     id_tag = "edit-neident-form"

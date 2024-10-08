@@ -3,11 +3,7 @@ import logging
 import crispy_forms
 from arch_z.forms import ArchzFilterForm
 from arch_z.models import ArcheologickyZaznam
-from core.constants import (
-    ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE,
-    ROLE_ADMIN_ID,
-    ROLE_ARCHIVAR_ID,
-)
+from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
 from core.forms import SelectMultipleSeparator
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete

@@ -8,9 +8,9 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
+    ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
+from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.contrib import messages
@@ -20,7 +20,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +54,10 @@ def zapsat(request, dj_ident_cely):
                 adb.save()
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
             else:
-                logger.debug("adb.views.zapsat.check_container_deleted_or_not_exists.incorrect",
-                             extra={"ident_cely": adb.ident_cely})
+                logger.debug(
+                    "adb.views.zapsat.check_container_deleted_or_not_exists.incorrect",
+                    extra={"ident_cely": adb.ident_cely},
+                )
                 messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
     else:
         logger.debug("adb.views.zapsat.not_valid", extra={"errors": form.errors})
@@ -92,17 +93,11 @@ def smazat(request, ident_cely):
 
         if resp:
             logger.debug("adb.views.smazat.resp", extra={"resp": str(resp)})
-            response = JsonResponse(
-                {
-                    "redirect": dj.get_absolute_url()
-                }
-            )
+            response = JsonResponse({"redirect": dj.get_absolute_url()})
         else:
             logger.warning("adb.views.smazat.error", extra={"ident_cely": str(ident_cely)})
             response = JsonResponse(
-                {
-                    "redirect": dj.get_absolute_url()
-                },
+                {"redirect": dj.get_absolute_url()},
                 status=403,
             )
         response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000)

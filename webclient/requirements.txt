@@ -41,7 +41,6 @@ django-cacheops==7.0.2
 django-model-utils==5.0.0
 pandas==2.2.3
 tablib[all]==3.6.1
-# DEV requirements
 pre-commit==3.8.0
 isort==5.13.2
 coverage==7.6.1
@@ -52,3 +51,8 @@ django-debug-toolbar-template-profiler==2.1.0
 psycopg2==2.9.9
 django-object-actions==4.3.0
 uWSGI==2.0.26
+requests==2.32.3
+polib==1.2.0
+pytz==2024.1
+python-dateutil==2.9.0.post0
+setuptools==75.1.0

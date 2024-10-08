@@ -1,11 +1,10 @@
 import logging
+from datetime import date, datetime
 from functools import wraps
-from datetime import datetime, date
-
-from django.shortcuts import render
 
 from core.models import OdstavkaSystemu
 from django.core.cache import cache
+from django.shortcuts import render
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ def odstavka_in_progress(view_func):
 
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
-        last_maintenance = cache.get("last_maintenance") 
+        last_maintenance = cache.get("last_maintenance")
         if last_maintenance is None:
             odstavka = OdstavkaSystemu.objects.filter(
                 info_od__lte=datetime.today(),
@@ -51,13 +50,14 @@ def odstavka_in_progress(view_func):
             else:
                 cache.set("last_maintenance", False, 600)
         if last_maintenance is not None and last_maintenance is not False:
-            if (last_maintenance.datum_odstavky == date.today() and \
-                datetime.now().time() > last_maintenance.cas_odstavky) or \
-                date.today() > last_maintenance.datum_odstavky:
+            if (
+                last_maintenance.datum_odstavky == date.today()
+                and datetime.now().time() > last_maintenance.cas_odstavky
+            ) or date.today() > last_maintenance.datum_odstavky:
                 try:
                     language = request.LANGUAGE_CODE
-                except Exception as e:
-                    language = "cs" 
+                except Exception:
+                    language = "cs"
                 if "oznameni" in request.path:
                     return render(
                         request,

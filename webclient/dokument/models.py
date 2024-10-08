@@ -7,6 +7,22 @@ from functools import cached_property
 from string import ascii_uppercase as letters
 from typing import Optional
 
+from arch_z.models import ArcheologickyZaznam
+from core.connectors import RedisConnector
+from core.constants import (
+    ARCHIVACE_DOK,
+    D_STAV_ARCHIVOVANY,
+    D_STAV_ODESLANY,
+    D_STAV_ZAPSANY,
+    IDENTIFIKATOR_DOCASNY_PREFIX,
+    OBLAST_CECHY,
+    OBLAST_MORAVA,
+    ODESLANI_DOK,
+    VRACENI_DOK,
+    ZAPSANI_DOK,
+)
+from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
+from core.models import ModelWithMetadata, Soubor, SouborVazby
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -16,22 +32,8 @@ from django.http import JsonResponse
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
-
-from core.connectors import RedisConnector
-from projekt.models import Projekt
-from arch_z.models import ArcheologickyZaznam
-from core.constants import (
-    ARCHIVACE_DOK,
-    D_STAV_ARCHIVOVANY,
-    D_STAV_ODESLANY,
-    D_STAV_ZAPSANY,
-    ODESLANI_DOK,
-    VRACENI_DOK,
-    ZAPSANI_DOK, OBLAST_CECHY, OBLAST_MORAVA, IDENTIFIKATOR_DOCASNY_PREFIX,
-)
-from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
-from core.models import SouborVazby, ModelWithMetadata, Soubor
 from heslar.hesla import (
+    HESLAR_DOHLEDNOST,
     HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_MATERIAL,
     HESLAR_DOKUMENT_NAHRADA,
@@ -40,17 +42,18 @@ from heslar.hesla import (
     HESLAR_DOKUMENT_ULOZENI,
     HESLAR_DOKUMENT_ZACHOVALOST,
     HESLAR_JAZYK,
+    HESLAR_LETISTE,
+    HESLAR_LICENCE,
+    HESLAR_POCASI,
     HESLAR_POSUDEK_TYP,
     HESLAR_PRISTUPNOST,
     HESLAR_UDALOST_TYP,
     HESLAR_ZEME,
-    HESLAR_DOHLEDNOST,
-    HESLAR_LETISTE,
-    HESLAR_POCASI, HESLAR_LICENCE,
 )
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
+from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba
 
 logger = logging.getLogger(__name__)
@@ -60,22 +63,21 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     """
     Class pro db model dokument.
     """
+
     STATES = (
         (D_STAV_ZAPSANY, _("dokument.models.dokument.states.D1")),
         (D_STAV_ODESLANY, _("dokument.models.dokument.states.D2")),
         (D_STAV_ARCHIVOVANY, _("dokument.models.dokument.states.D3")),
     )
 
-    let = models.ForeignKey(
-        "Let", models.RESTRICT, db_column="let", blank=True, null=True
-    )
+    let = models.ForeignKey("Let", models.RESTRICT, db_column="let", blank=True, null=True)
     rada = models.ForeignKey(
         Heslar,
         models.RESTRICT,
         db_column="rada",
         related_name="dokumenty_rady",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
-        db_index=True
+        db_index=True,
     )
     typ_dokumentu = models.ForeignKey(
         Heslar,
@@ -83,16 +85,11 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         db_column="typ_dokumentu",
         related_name="dokumenty_typu_dokumentu",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
-        db_index=True
+        db_index=True,
     )
-    organizace = models.ForeignKey(
-        Organizace, models.RESTRICT, db_column="organizace", db_index=True
-    )
+    organizace = models.ForeignKey(Organizace, models.RESTRICT, db_column="organizace", db_index=True)
     rok_vzniku = models.PositiveIntegerField(
-        blank=True,
-        null=True,
-        validators=[MinValueValidator(1900), MaxValueValidator(2050)],
-        db_index=True
+        blank=True, null=True, validators=[MinValueValidator(1900), MaxValueValidator(2050)], db_index=True
     )
     pristupnost = models.ForeignKey(
         Heslar,
@@ -102,7 +99,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
         blank=False,
         null=False,
-        db_index=True
+        db_index=True,
     )
     material_originalu = models.ForeignKey(
         Heslar,
@@ -151,32 +148,30 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         models.RESTRICT,
         related_name="dokumenty_licence",
         limit_choices_to={"nazev_heslare": HESLAR_LICENCE},
-        null=True, blank=False, db_index=True
+        null=True,
+        blank=False,
+        db_index=True,
     )
     jazyky = models.ManyToManyField(
         Heslar,
         through="DokumentJazyk",
         related_name="dokumenty_jazyku",
-        limit_choices_to={"nazev_heslare": HESLAR_JAZYK}
+        limit_choices_to={"nazev_heslare": HESLAR_JAZYK},
     )
     posudky = models.ManyToManyField(
         Heslar,
         through="DokumentPosudek",
         related_name="dokumenty_posudku",
         blank=True,
-        limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP}
+        limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP},
     )
     osoby = models.ManyToManyField(
         Osoba,
         through="DokumentOsoba",
         related_name="dokumenty_osob",
     )
-    autori = models.ManyToManyField(
-        Osoba, through="DokumentAutor", related_name="dokumenty_autoru"
-    )
-    tvary = models.ManyToManyField(
-        Heslar, through="Tvar", related_name="dokumenty_tvary"
-    )
+    autori = models.ManyToManyField(Osoba, through="DokumentAutor", related_name="dokumenty_autoru")
+    tvary = models.ManyToManyField(Heslar, through="Tvar", related_name="dokumenty_tvary")
     autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
     osoby_snapshot = models.CharField(max_length=5000, null=True, blank=True)
 
@@ -202,9 +197,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         Metóda pro získaní absolut url záznamu podle typu dokumentu.
         """
         if "3D" in self.ident_cely:
-            return reverse(
-                "dokument:detail-model-3D", kwargs={"ident_cely": self.ident_cely}
-            )
+            return reverse("dokument:detail-model-3D", kwargs={"ident_cely": self.ident_cely})
         return reverse("dokument:detail", kwargs={"ident_cely": self.ident_cely})
 
     def set_zapsany(self, user):
@@ -223,10 +216,12 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     def set_permanent_identificator(dokument, request, messages, fedora_transaction) -> Optional[JsonResponse]:
         from core.message_constants import MAXIMUM_IDENT_DOSAZEN
         from dokument.views import get_detail_json_view
+
         dokument: Dokument
         ident_cely = dokument.ident_cely
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             from core.ident_cely import get_dokument_rada
+
             rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
             try:
                 dokument.set_permanent_ident_cely(dokument.ident_cely[2], rada)
@@ -234,9 +229,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
                 fedora_transaction.rollback_transaction()
                 dokument.close_active_transaction_when_finished = True
-                return JsonResponse(
-                    {"redirect": get_detail_json_view(ident_cely)}, status=403
-                )
+                return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
             else:
                 dokument.save()
                 logger.debug("dokument.views.odeslat.permanent", extra={"ident_cely": dokument.ident_cely})
@@ -295,9 +288,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:
 
             polia: format, popis, duveryhodnost, obdobi, areal jsou vyplněna pro model 3D.
-            
+
             polia: pristupnost, popis, ulozeni_originalu jsou vyplněna pro model 3D.
-            
+
             Dokument má aspoň jeden dokument.
         """
         result = []
@@ -319,9 +312,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             if not self.popis:
                 result.append(_("dokument.models.formCheckOdeslani.missingPopis.text"))
             if not self.ulozeni_originalu:
-                result.append(
-                    _("dokument.models.formCheckOdeslani.missingUlozeniOriginalu.text")
-                )
+                result.append(_("dokument.models.formCheckOdeslani.missingUlozeniOriginalu.text"))
             if self.jazyky.all().count() == 0:
                 result.append(_("dokument.models.formCheckOdeslani.missingJazyky.text"))
         # At least one soubor must be attached to the dokument
@@ -334,7 +325,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Metóda na kontrolu prerekvizit pred archivací:
 
-            kontrola jako před odesláním 
+            kontrola jako před odesláním
 
         """
         # At least one soubor must be attached to the dokument
@@ -379,12 +370,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence += 1
         except ObjectDoesNotExist:
-            sequence = DokumentSekvence.objects.using('urgent').create(region=region, rada=rada, rok=current_year, sekvence=1)
+            sequence = DokumentSekvence.objects.using("urgent").create(
+                region=region, rada=rada, rok=current_year, sekvence=1
+            )
         finally:
             prefix = f"{region}-{rada.zkratka}-{str(current_year)}"
             docs = Dokument.objects.filter(ident_cely__startswith=prefix).order_by("-ident_cely")
-            if docs.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:05}").count()>0:
-                #number from empty spaces
+            if docs.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:05}").count() > 0:
+                # number from empty spaces
                 idents = list(docs.values_list("ident_cely", flat=True).order_by("ident_cely"))
                 idents = [sub.replace(prefix, "") for sub in idents]
                 idents = [sub.lstrip("0") for sub in idents]
@@ -395,10 +388,15 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 if missing[0] >= MAXIMUM:
                     logger.error("dokuments.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                     raise MaximalIdentNumberError(MAXIMUM)
-                sequence.sekvence=missing[0]
-        sequence.save(using='urgent')
+                sequence.sekvence = missing[0]
+        sequence.save(using="urgent")
         perm_ident_cely = (
-            sequence.region + "-" + sequence.rada.zkratka + "-" + str(sequence.rok) + "{0}".format(sequence.sekvence).zfill(5)
+            sequence.region
+            + "-"
+            + sequence.rada.zkratka
+            + "-"
+            + str(sequence.rok)
+            + "{0}".format(sequence.sekvence).zfill(5)
         )
         old_ident_cely = self.ident_cely
         self.ident_cely = perm_ident_cely
@@ -412,13 +410,17 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 komponenta.ident_cely = perm_ident_cely + komponenta.ident_cely[-5:]
                 komponenta.active_transaction = self.active_transaction
                 komponenta.save()
-                logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_components",
-                               extra={"ident_cely": komponenta.ident_cely})
+                logger.debug(
+                    "dokument.models.Dokument.set_permanent_ident_cely.renamed_components",
+                    extra={"ident_cely": komponenta.ident_cely},
+                )
             dc.ident_cely = perm_ident_cely + dc.ident_cely[-5:]
             dc.active_transaction = self.active_transaction
             dc.save()
-            logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_dokumentacni_casti",
-                         extra={"ident_cely": dc.ident_cely})
+            logger.debug(
+                "dokument.models.Dokument.set_permanent_ident_cely.renamed_dokumentacni_casti",
+                extra={"ident_cely": dc.ident_cely},
+            )
         self.save()
 
     def set_datum_zverejneni(self):
@@ -437,14 +439,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def get_permission_object(self):
         return self
-    
+
     def get_create_user(self):
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel,)
         except Exception as e:
             logger.debug(e)
             return ()
-        
+
     def get_create_org(self):
         try:
             return (self.get_create_user()[0].organizace,)
@@ -456,7 +458,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     def thumbnail_image(self):
         if self.thumbnail_image_file:
             return self.thumbnail_image_file.pk
-        
+
     @property
     def thumbnail_image_file(self) -> Soubor | None:
         if self.soubory.soubory.count() > 0:
@@ -480,23 +482,30 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         if not self.dokumentautor_set.all():
             self.autori_snapshot = None
         else:
-            self.autori_snapshot = "; ".join([x.autor.vypis_cely for x in self.dokumentautor_set.order_by("poradi").all()])
+            self.autori_snapshot = "; ".join(
+                [x.autor.vypis_cely for x in self.dokumentautor_set.order_by("poradi").all()]
+            )
         if not self.dokumentosoba_set.all():
             self.osoby_snapshot = None
         else:
-            self.osoby_snapshot = "; ".join([x.osoba.vypis_cely for x in self.dokumentosoba_set.order_by("osoba__vypis_cely").all()])
+            self.osoby_snapshot = "; ".join(
+                [x.osoba.vypis_cely for x in self.dokumentosoba_set.order_by("osoba__vypis_cely").all()]
+            )
 
     @property
     def redis_snapshot_id(self):
         if self.ident_cely.startswith("3D"):
             from dokument.views import Model3DListView
+
             return f"{Model3DListView.redis_snapshot_prefix}_{self.ident_cely}"
         else:
             from dokument.views import DokumentListView
+
             return f"{DokumentListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
         from dokument.tables import DokumentTable, Model3DTable
+
         if self.ident_cely.startswith("3D"):
             data = Dokument.objects.filter(pk=self.pk)
             table = Model3DTable(data=data)
@@ -513,6 +522,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     """
     Class pro db model dokument část.
     """
+
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
         models.SET_NULL,
@@ -530,9 +540,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         related_name="casti_dokumentu",
     )
     poznamka = models.TextField(blank=True, null=True)
-    dokument = models.ForeignKey(
-        Dokument, on_delete=models.CASCADE, db_column="dokument", related_name="casti"
-    )
+    dokument = models.ForeignKey(Dokument, on_delete=models.CASCADE, db_column="dokument", related_name="casti")
     ident_cely = models.TextField(unique=True)
     komponenty = models.OneToOneField(
         KomponentaVazby,
@@ -548,7 +556,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         constraints = [
             CheckConstraint(
                 check=(~(Q(archeologicky_zaznam__isnull=False) & Q(projekt__isnull=False))),
-                name='dokument_cast_vazba_check',
+                name="dokument_cast_vazba_check",
             ),
         ]
         indexes = [
@@ -571,7 +579,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
                 "cast_ident_cely": self.ident_cely,
             },
         )
-    
+
     def get_permission_object(self):
         return self.dokument.get_permission_object()
 
@@ -588,7 +596,8 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     def create_transaction(self, transaction_user, success_message=None, error_message=None):
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
-        user: User
+
+        transaction_user: User
         self.active_transaction = FedoraTransaction(self.dokument, transaction_user, success_message, error_message)
         return self.active_transaction
 
@@ -597,6 +606,7 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
     """
     Class pro db model dokument extra data.
     """
+
     dokument = models.OneToOneField(
         Dokument,
         on_delete=models.CASCADE,
@@ -660,9 +670,7 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
     )
     rok_od = models.PositiveIntegerField(blank=True, null=True)
     rok_do = models.PositiveIntegerField(blank=True, null=True)
-    duveryhodnost = models.PositiveIntegerField(
-        blank=True, null=True, validators=[MaxValueValidator(100)]
-    )
+    duveryhodnost = models.PositiveIntegerField(blank=True, null=True, validators=[MaxValueValidator(100)])
     geom = PointField(blank=True, null=True, srid=4326)
 
     class Meta:
@@ -670,7 +678,7 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
         constraints = [
             CheckConstraint(
                 check=Q(duveryhodnost__gte=0) & Q(duveryhodnost__lte=100),
-                name='duveryhodnost_check',
+                name="duveryhodnost_check",
             ),
         ]
 
@@ -679,6 +687,7 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
     """
     Class pro db model dokument autori. Obsahuje pořadí.
     """
+
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
     poradi = models.IntegerField(db_index=True)
@@ -693,6 +702,7 @@ class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
     """
     Class pro db model dokument jazyky.
     """
+
     dokument = models.ForeignKey(
         Dokument,
         models.CASCADE,
@@ -717,6 +727,7 @@ class DokumentOsoba(ExportModelOperationsMixin("dokument_osoba"), models.Model):
     """
     Class pro db model dokument osoby.
     """
+
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     osoba = models.ForeignKey(Osoba, models.RESTRICT, db_column="osoba")
 
@@ -729,6 +740,7 @@ class DokumentPosudek(ExportModelOperationsMixin("dokument_posudek"), models.Mod
     """
     Class pro db model dokument posudky.
     """
+
     dokument = models.ForeignKey(
         Dokument,
         models.CASCADE,
@@ -753,9 +765,8 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     """
     Class pro db model tvary.
     """
-    dokument = models.ForeignKey(
-        Dokument, on_delete=models.CASCADE, db_column="dokument"
-    )
+
+    dokument = models.ForeignKey(Dokument, on_delete=models.CASCADE, db_column="dokument")
     tvar = models.ForeignKey(Heslar, models.RESTRICT, db_column="tvar")
     poznamka = models.TextField(blank=True, null=True)
 
@@ -773,7 +784,8 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     def create_transaction(self, transaction_user):
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
-        user: User
+
+        transaction_user: User
         self.active_transaction = FedoraTransaction(self.dokument, transaction_user)
         return self.active_transaction
 
@@ -782,7 +794,12 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
     """
     Class pro db model dokument sekvence. Obsahuje sekvenci po roku a řade.
     """
-    rada = models.ForeignKey(Heslar,models.RESTRICT,limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},)
+
+    rada = models.ForeignKey(
+        Heslar,
+        models.RESTRICT,
+        limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
+    )
     region = models.CharField(max_length=1, choices=[(OBLAST_MORAVA, "Morava"), (OBLAST_CECHY, "Cechy")])
     rok = models.IntegerField()
     sekvence = models.IntegerField()
@@ -790,7 +807,7 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
     class Meta:
         db_table = "dokument_sekvence"
         constraints = [
-            models.UniqueConstraint(fields=['rada', 'region','rok'], name='unique_sekvence_dokument'),
+            models.UniqueConstraint(fields=["rada", "region", "rok"], name="unique_sekvence_dokument"),
         ]
 
 
@@ -798,6 +815,7 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
     """
     Class pro db model let.
     """
+
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     datum = models.DateField(blank=True, null=True)
     pilot = models.TextField(blank=True, null=True)
@@ -840,7 +858,10 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
     )
     fotoaparat = models.TextField(blank=True, null=True)
     organizace = models.ForeignKey(
-        Organizace, models.RESTRICT, db_column="organizace", null=True,
+        Organizace,
+        models.RESTRICT,
+        db_column="organizace",
+        null=True,
     )
     ident_cely = models.TextField(unique=True)
 
@@ -854,8 +875,10 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
 
     def save(self, *args, **kwargs):
         from core.repository_connector import FedoraRepositoryConnector
-        if (not self._state.adding or
-                FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, "let")):
+
+        if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
+            self.ident_cely, "let"
+        ):
             super().save(*args, **kwargs)
         else:
             raise ValidationError(_("dokument.models.Let.save.check_container_deleted_or_not_exists.invalid"))
@@ -865,8 +888,10 @@ def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
     """
     Funkce pro získaní správného jména souboru.
     """
-    logger.debug("dokument.models.get_dokument_soubor_name.start",
-                 extra={"ident_cely": dokument.ident_cely, "add_to_index": add_to_index})
+    logger.debug(
+        "dokument.models.get_dokument_soubor_name.start",
+        extra={"ident_cely": dokument.ident_cely, "add_to_index": add_to_index},
+    )
     files = dokument.soubory.soubory.all().filter(nazev__icontains=dokument.ident_cely.replace("-", ""))
     logger.debug("dokument.models.get_dokument_soubor_name", extra={"files": files})
     if not files.exists():
@@ -887,13 +912,10 @@ def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
                     + os.path.splitext(filename)[1]
                 )
             else:
-                logger.warning("dokument.models.get_dokument_soubor_name.cannot_be_loaded",
-                               extra={"last_char": last_char})
+                logger.warning(
+                    "dokument.models.get_dokument_soubor_name.cannot_be_loaded", extra={"last_char": last_char}
+                )
                 return False
 
         else:
-            return (
-                dokument.ident_cely.replace("-", "")
-                + "A"
-                + os.path.splitext(filename)[1]
-            )
+            return dokument.ident_cely.replace("-", "") + "A" + os.path.splitext(filename)[1]

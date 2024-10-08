@@ -1,14 +1,9 @@
 import re
 
+from arch_z.models import ArcheologickyZaznam
+from core.tests.runner import EXISTING_LOKALITA_IDENT, LOKALITA_DRUH, LOKALITA_TYP_NEW
 from django.test import TestCase
 from django.urls import reverse
-
-from arch_z.models import ArcheologickyZaznam
-from core.tests.runner import (
-    EXISTING_LOKALITA_IDENT,
-    LOKALITA_DRUH,
-    LOKALITA_TYP_NEW,
-)
 from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID
 from heslar.models import RuianKatastr
 from uzivatel.models import User
@@ -30,7 +25,7 @@ class UrlTests(TestCase):
 
     def test_get_lokalita_zapsat(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(f"/arch-z/lokalita/zapsat")
+        response = self.client.get("/arch-z/lokalita/zapsat")
         self.assertEqual(200, response.status_code)
 
     def test_post_zapsat(self):
@@ -78,17 +73,10 @@ class UrlTests(TestCase):
             "poznamka": "",
         }
         self.client.force_login(self.existing_user)
-        response = self.client.post(
-            f"/arch-z/lokalita/edit/{EXISTING_LOKALITA_IDENT}", data, follow=True
-        )
-        az = ArcheologickyZaznam.objects.filter(
-            ident_cely=EXISTING_LOKALITA_IDENT
-        ).first()
+        response = self.client.post(f"/arch-z/lokalita/edit/{EXISTING_LOKALITA_IDENT}", data, follow=True)
+        az = ArcheologickyZaznam.objects.filter(ident_cely=EXISTING_LOKALITA_IDENT).first()
         az.refresh_from_db()
         self.assertEqual(200, response.status_code)
         self.assertEqual(az.lokalita.typ_lokality.pk, LOKALITA_TYP_NEW)
         self.assertEqual(az.pristupnost.pk, PRISTUPNOST_ARCHEOLOG_ID)
-        self.assertTrue(
-            len(ArcheologickyZaznam.objects.filter(ident_cely=EXISTING_LOKALITA_IDENT))
-            == 1
-        )
+        self.assertTrue(len(ArcheologickyZaznam.objects.filter(ident_cely=EXISTING_LOKALITA_IDENT)) == 1)

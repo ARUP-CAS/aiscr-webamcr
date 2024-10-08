@@ -1,31 +1,29 @@
 import logging
 
-from django.test import TestCase
-from django.urls import reverse
-
 from arch_z.models import ArcheologickyZaznam
 from core.constants import D_STAV_ODESLANY
 from core.tests.runner import (
     AMCR_TESTOVACI_ORGANIZACE_ID,
     ARCHEOLOGICKY_POSUDEK_ID,
+    ARCHIV_ARUB,
     AREAL_HRADISTE_ID,
+    DOCUMENT_NALEZOVA_ZPRAVA_IDENT,
     DOKUMENT_CAST_IDENT,
     DOKUMENT_CAST_IDENT2,
-    DOKUMENT_KOMPONENTA_IDENT,
+    EL_CHEFE_ID,
+    EXISTING_DOCUMENT_ID,
     EXISTING_EVENT_IDENT2,
     EXISTING_PROJECT_IDENT_PRUZKUMNY,
     JAZYK_DOKUMENTU_CESTINA_ID,
     LETFOTO_TVAR_ID,
     MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
     OBDOBI_STREDNI_PALEOLIT_ID,
+    TESTOVACI_DOKUMENT_IDENT,
     TYP_DOKUMENTU_PLAN_SONDY_ID,
     ZACHOVALOST_30_80_ID,
-    EL_CHEFE_ID,
-    ARCHIV_ARUB,
-    TESTOVACI_DOKUMENT_IDENT,
-    DOCUMENT_NALEZOVA_ZPRAVA_IDENT,
-    EXISTING_DOCUMENT_ID,
 )
+from django.test import TestCase
+from django.urls import reverse
 from dokument.models import Dokument, DokumentCast, Tvar
 from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
@@ -48,9 +46,7 @@ class UrlTests(TestCase):
 
     def test_get_detail_cast(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(
-            f"/dokument/detail/{self.existing_dokument}/cast/{DOKUMENT_CAST_IDENT}"
-        )
+        response = self.client.get(f"/dokument/detail/{self.existing_dokument}/cast/{DOKUMENT_CAST_IDENT}")
 
         self.assertEqual(200, response.status_code)
 
@@ -65,21 +61,15 @@ class UrlTests(TestCase):
             "poznamka": "test poznamka",
         }
         self.client.force_login(self.existing_user)
-        response = self.client.post(
-            f"/dokument/edit-cast/{DOKUMENT_CAST_IDENT}", data, follow=True
-        )
+        response = self.client.post(f"/dokument/edit-cast/{DOKUMENT_CAST_IDENT}", data, follow=True)
         dok_cast = DokumentCast.objects.filter(ident_cely=DOKUMENT_CAST_IDENT).first()
         self.assertEqual(200, response.status_code)
         self.assertEqual(dok_cast.poznamka, "test poznamka")
-        self.assertTrue(
-            len(DokumentCast.objects.filter(ident_cely=DOKUMENT_CAST_IDENT)) == 1
-        )
+        self.assertTrue(len(DokumentCast.objects.filter(ident_cely=DOKUMENT_CAST_IDENT)) == 1)
 
     def test_get_cast_zapsat(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(
-            f"/dokument/cast/zapsat/{TESTOVACI_DOKUMENT_IDENT}"
-        )
+        response = self.client.get(f"/dokument/cast/zapsat/{TESTOVACI_DOKUMENT_IDENT}")
         self.assertEqual(200, response.status_code)
 
     def test_post_cast_zapsat(self):
@@ -177,9 +167,7 @@ class UrlTests(TestCase):
 
     def test_get_pripojit_archz(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(
-            f"/dokument/cast/pripojit-arch-z/{DOKUMENT_CAST_IDENT}?type=akce"
-        )
+        response = self.client.get(f"/dokument/cast/pripojit-arch-z/{DOKUMENT_CAST_IDENT}?type=akce")
         self.assertEqual(200, response.status_code)
 
     def test_post_pripojit_archz(self):
@@ -272,9 +260,7 @@ class UrlTests(TestCase):
 
     def test_get_smazat_neident_akce(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(
-            f"/dokument/neident-akce/smazat/{DOKUMENT_CAST_IDENT2}"
-        )
+        response = self.client.get(f"/dokument/neident-akce/smazat/{DOKUMENT_CAST_IDENT2}")
         self.assertEqual(200, response.status_code)
 
     def test_post_smazat_neident_akce(self):
@@ -288,7 +274,6 @@ class UrlTests(TestCase):
             data,
             follow=True,
         )
-        cast = DokumentCast.objects.get(ident_cely=DOKUMENT_CAST_IDENT2)
         self.assertEqual(200, response.status_code)
 
     def test_get_create_model3D(self):
@@ -352,8 +337,7 @@ class UrlTests(TestCase):
         logger.info("Zachovalost: " + str(updated_dokument.extra_data.zachovalost))
         self.assertTrue(
             updated_dokument.rok_vzniku == 2019
-            and updated_dokument.extra_data.zachovalost
-            == Heslar.objects.get(id=ZACHOVALOST_30_80_ID)
+            and updated_dokument.extra_data.zachovalost == Heslar.objects.get(id=ZACHOVALOST_30_80_ID)
         )
 
     def test_get_table_row(self):

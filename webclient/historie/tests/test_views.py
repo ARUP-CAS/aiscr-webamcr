@@ -1,22 +1,14 @@
 import logging
 
-from django.urls import reverse
-
 from core.tests.runner import (
     EXISTING_EVENT_IDENT,
+    EXISTING_LOKALITA_IDENT,
     EXISTING_PROJECT_IDENT,
     TESTOVACI_DOKUMENT_IDENT,
     TESTOVACI_SOUBOR_ID,
-    EXISTING_LOKALITA_IDENT,
 )
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.test import RequestFactory, TestCase
-from historie.views import (
-    AkceHistorieListView,
-    DokumentHistorieListView,
-    LokalitaHistorieListView,
-    ProjektHistorieListView,
-)
+from django.test import TestCase
+from django.urls import reverse
 from uzivatel.models import User
 
 logger = logging.getLogger(__name__)

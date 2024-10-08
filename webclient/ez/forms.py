@@ -1,22 +1,18 @@
-from django.urls import reverse
-
-
-from django import forms
-from django.utils.translation import gettext_lazy as _
-from django.utils.safestring import mark_safe
-from crispy_forms.helper import FormHelper
-from crispy_forms.bootstrap import AppendedText
-from crispy_forms.layout import Div, Layout
-from dal import autocomplete
+import logging
 
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+from crispy_forms.bootstrap import AppendedText
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Div, Layout
+from dal import autocomplete
+from django import forms
+from django.urls import reverse
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 from dokument.forms import AutoriField
 from uzivatel.models import Osoba
 
 from .models import ExterniZdroj
-
-import logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,17 +21,24 @@ class ExterniZdrojForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení externího zdroju.
     """
-    autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
-                url="heslar:osoba-autocomplete",
-            ),
-            label=_("ez.forms.externiZdrojForm.autori.label"),
-            help_text=_("ez.forms.externiZdrojForm.autori.tooltip"),
-            )
-    editori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
-                url="heslar:osoba-autocomplete",
-            ),
-            label=_("ez.forms.externiZdrojForm.editori.label"),
-            help_text=_("ez.forms.externiZdrojForm.editori.tooltip"),)
+
+    autori = AutoriField(
+        Osoba.objects.all(),
+        widget=autocomplete.Select2Multiple(
+            url="heslar:osoba-autocomplete",
+        ),
+        label=_("ez.forms.externiZdrojForm.autori.label"),
+        help_text=_("ez.forms.externiZdrojForm.autori.tooltip"),
+    )
+    editori = AutoriField(
+        Osoba.objects.all(),
+        widget=autocomplete.Select2Multiple(
+            url="heslar:osoba-autocomplete",
+        ),
+        label=_("ez.forms.externiZdrojForm.editori.label"),
+        help_text=_("ez.forms.externiZdrojForm.editori.tooltip"),
+    )
+
     class Meta:
         model = ExterniZdroj
         fields = (
@@ -82,12 +85,18 @@ class ExterniZdrojForm(forms.ModelForm):
 
         widgets = {
             "typ": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true",
-                       "data-container": ".content-with-table-responsive-container"}
+                attrs={
+                    "class": "selectpicker",
+                    "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
+                }
             ),
             "typ_dokumentu": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true",
-                       "data-container": ".content-with-table-responsive-container"}
+                attrs={
+                    "class": "selectpicker",
+                    "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
+                }
             ),
             "rok_vydani_vzniku": forms.TextInput(),
             "nazev": forms.Textarea(attrs={"rows": 1}),
@@ -126,9 +135,7 @@ class ExterniZdrojForm(forms.ModelForm):
             "poznamka": _("ez.forms.externiZdrojForm.poznamka.tooltip"),
         }
 
-    def __init__(
-        self, *args, required=None, required_next=None, readonly=False, **kwargs
-    ):
+    def __init__(self, *args, required=None, required_next=None, readonly=False, **kwargs):
         super(ExterniZdrojForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         if readonly:
@@ -141,14 +148,18 @@ class ExterniZdrojForm(forms.ModelForm):
             autori = Div(
                 AppendedText(
                     "autori",
-                    mark_safe('<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                    mark_safe(
+                        '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
+                    ),
                 ),
                 css_class="col-sm-4 input-osoba select2-input",
             )
             editori = Div(
                 AppendedText(
                     "editori",
-                    mark_safe('<button id="create-editor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                    mark_safe(
+                        '<button id="create-editor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
+                    ),
                 ),
                 css_class="col-sm-4 input-osoba select2-input",
             )
@@ -181,46 +192,50 @@ class ExterniZdrojForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
-        self.fields["autori"].widget.choices = list(Osoba.objects.filter(
-            externizdrojautor__externi_zdroj__pk=self.instance.pk
-        ).order_by("externizdrojautor__poradi").values_list("id", "vypis_cely"))
-        self.fields["editori"].widget.choices = list(Osoba.objects.filter(
-            externizdrojeditor__externi_zdroj__pk=self.instance.pk
-        ).order_by("externizdrojeditor__poradi").values_list("id", "vypis_cely"))
+        self.fields["autori"].widget.choices = list(
+            Osoba.objects.filter(externizdrojautor__externi_zdroj__pk=self.instance.pk)
+            .order_by("externizdrojautor__poradi")
+            .values_list("id", "vypis_cely")
+        )
+        self.fields["editori"].widget.choices = list(
+            Osoba.objects.filter(externizdrojeditor__externi_zdroj__pk=self.instance.pk)
+            .order_by("externizdrojeditor__poradi")
+            .values_list("id", "vypis_cely")
+        )
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if required or required_next:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"] = str(
-                        self.fields[key].widget.attrs["class"]
-                    ) + (" required-next" if key in required_next else "")
-                else:
-                    self.fields[key].widget.attrs["class"] = (
-                        "required-next" if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (
+                        " required-next" if key in required_next else ""
                     )
+                else:
+                    self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     if key in ["autori", "editori"]:
                         self.fields[key].widget = forms.widgets.SelectMultiple()
-                        self.fields[key].widget.attrs.update(
-                            {"name_id": str(key) + ";" + str(self.instance) + ";ez"}
-                        )
+                        self.fields[key].widget.attrs.update({"name_id": str(key) + ";" + str(self.instance) + ";ez"})
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
         for key in self.fields.keys():
             # logger.info(key=self.fields[key], widget=self.fields[key].widget)
-            if isinstance(self.fields[key].widget, forms.widgets.Textarea) \
-                    and hasattr(self.fields[key].widget.attrs, "class"):
-                self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) \
-                                                         + " disabled-text-area"
+            if isinstance(self.fields[key].widget, forms.widgets.Textarea) and hasattr(
+                self.fields[key].widget.attrs, "class"
+            ):
+                self.fields[key].widget.attrs["class"] = (
+                    str(self.fields[key].widget.attrs["class"]) + " disabled-text-area"
+                )
+
 
 class ExterniOdkazForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci externího odkazu.
     """
+
     class Meta:
         model = ExterniOdkaz
         fields = ("paginace",)
@@ -244,6 +259,7 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
     """
     Hlavní formulář pro připojení archeologického záznamu.
     """
+
     def __init__(self, type_arch=None, dok=False, *args, **kwargs):
         super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
         self.fields["paginace"].required = False
@@ -257,24 +273,22 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
             pagin = Div("paginace", css_class="col-sm-4")
         if type_arch == "akce":
             new_choices = list(
-                ArcheologickyZaznam.objects.filter(
-                    typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
-                ).values_list("id", "ident_cely")
+                ArcheologickyZaznam.objects.filter(typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE).values_list(
+                    "id", "ident_cely"
+                )
             )
             arch_z_width = "col-sm-10"
         else:
             new_choices = list(
-                ArcheologickyZaznam.objects.filter(
-                    typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-                ).values_list("id", "ident_cely")
+                ArcheologickyZaznam.objects.filter(typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA).values_list(
+                    "id", "ident_cely"
+                )
             )
             arch_z_width = "col-sm-6"
         self.fields["arch_z"] = forms.ChoiceField(
             label=ez_label,
             choices=new_choices,
-            widget=autocomplete.ListSelect2(
-                url=reverse("arch_z:arch-z-autocomplete", kwargs={"type": type_arch})
-            ),
+            widget=autocomplete.ListSelect2(url=reverse("arch_z:arch-z-autocomplete", kwargs={"type": type_arch})),
             help_text=ez_tooltip,
         )
         self.helper = FormHelper(self)
@@ -292,12 +306,11 @@ class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
     """
     Hlavní formulář pro připojení externího zdroju.
     """
+
     def __init__(self, *args, **kwargs):
         super(PripojitExterniOdkazForm, self).__init__(*args, **kwargs)
         self.fields["paginace"].required = False
-        new_choices = list(
-            ExterniZdroj.objects.filter().values_list("id", "ident_cely")
-        )
+        new_choices = list(ExterniZdroj.objects.filter().values_list("id", "ident_cely"))
         self.fields["ez"] = forms.ChoiceField(
             label=_("ez.forms.pripojitExterniOdkazForm.vyberEZ.label"),
             help_text=_("ez.forms.pripojitExterniOdkazForm.vyberEZ.tooltip"),

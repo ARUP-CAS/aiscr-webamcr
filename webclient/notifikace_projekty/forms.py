@@ -1,14 +1,15 @@
 import logging
+
+from crispy_forms.helper import FormHelper
+from dal import autocomplete
 from django import forms
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import CharField, Value
+from django.db.models.functions import Concat
+from django.utils.translation import gettext_lazy as _
+from heslar.models import RuianKatastr, RuianKraj, RuianOkres
 
 from .models import Pes
-from heslar.models import RuianKatastr, RuianKraj, RuianOkres
-from django.contrib.contenttypes.models import ContentType
-from django.db.models.functions import Concat
-from django.db.models import Value, CharField
-from django.utils.translation import gettext_lazy as _
-from dal import autocomplete
-from crispy_forms.helper import FormHelper
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +23,10 @@ def create_pes_form(not_readonly=True, model_typ=None):
     """
     Funkce která vrací formulář hlídacího psa pro formset.
     """
+
     class PesForm(forms.ModelForm):
         admin_app = False
+
         class Meta:
             model = Pes
             fields = ["object_id"]
@@ -94,11 +97,9 @@ def create_pes_form(not_readonly=True, model_typ=None):
                 )
             for key in self.fields.keys():
                 self.fields[key].disabled = not not_readonly
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled:
                     if isinstance(self.fields[key].widget, forms.widgets.Select):
-                        self.fields[
-                            key
-                        ].widget.template_name = "core/select_to_text.html"
+                        self.fields[key].widget.template_name = "core/select_to_text.html"
                     self.fields[key].help_text = ""
 
         def save(self, commit=True):
@@ -128,9 +129,7 @@ def create_pes_form(not_readonly=True, model_typ=None):
             ):  # if the instance is already in the database, make sure to exclude self from list of duplicates
                 duplicates = duplicates.exclude(pk=self.instance.pk)
             if duplicates.exists():
-                raise forms.ValidationError(
-                    _("notifikaceProjekty.forms.pesForm.stejnaJendotka.error")
-                )
+                raise forms.ValidationError(_("notifikaceProjekty.forms.pesForm.stejnaJendotka.error"))
 
     return PesForm
 

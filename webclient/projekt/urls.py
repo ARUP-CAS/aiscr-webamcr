@@ -2,9 +2,12 @@ from django.urls import path
 from oznameni.views import OznamovatelCreateView
 
 from .views import (
+    ProjectPasFromEnvelopeView,
+    ProjectPianFromEnvelopeView,
     ProjectTableRowView,
     ProjektAutocompleteBezZrusenych,
     ProjektListView,
+    UpravitDatumOznameniView,
     ZadostUdajeOznamovatelView,
     archivovat,
     create,
@@ -27,8 +30,6 @@ from .views import (
     vratit_navrh_zruseni,
     zahajit_v_terenu,
     zrusit,
-    ProjectPasFromEnvelopeView,
-    ProjectPianFromEnvelopeView, UpravitDatumOznameniView,
 )
 
 app_name = "projekt"
@@ -124,7 +125,7 @@ urlpatterns = [
     path(
         "zadost-udaje-oznamovatel/<str:ident_cely>",
         ZadostUdajeOznamovatelView.as_view(),
-        name="zadost-udaje-oznamovatel"
+        name="zadost-udaje-oznamovatel",
     ),
     path(
         "upravit-datum-oznameni/<str:ident_cely>",

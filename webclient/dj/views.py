@@ -1,41 +1,36 @@
 import logging
 
-
 from adb.forms import CreateADBForm, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
-from arch_z.models import ArcheologickyZaznam, get_akce_ident
-from core.constants import AZ_STAV_ARCHIVOVANY, DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
+from arch_z.models import ArcheologickyZaznam
+from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from core.exceptions import MaximalIdentNumberError
-from core.ident_cely import get_dj_ident, get_temp_akce_ident
+from core.ident_cely import get_dj_ident
 from core.message_constants import (
     MAXIMUM_DJ_DOSAZENO,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
+    ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
-    ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY,
+    ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.repository_connector import FedoraTransaction
-from core.utils import (
-    update_all_katastr_within_akce_or_lokalita,
-    update_main_katastr_within_ku,
-)
+from core.utils import update_all_katastr_within_akce_or_lokalita
 from dj.forms import ChangeKatastrForm, CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q, RestrictedError
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from heslar.hesla import HESLAR_DJ_TYP
-from heslar.hesla_dynamicka import TYP_DJ_CAST, TYP_DJ_KATASTR, TYP_DJ_LOKALITA, TYP_DJ_SONDA_ID, TYP_DJ_CELEK
-from heslar.models import Heslar, RuianKatastr
+from heslar.hesla_dynamicka import TYP_DJ_CAST, TYP_DJ_CELEK, TYP_DJ_KATASTR, TYP_DJ_LOKALITA, TYP_DJ_SONDA_ID
+from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
 from pian.models import Pian, vytvor_pian
 
@@ -62,9 +57,12 @@ def detail(request, typ_vazby, ident_cely):
         dj.active_transaction = fedora_transaction
         if dj.pian is None:
             logger.debug("dj.views.detail.empty_pian", {"ident_cely": dj.ident_cely})
-            if pian_db is not None and not(old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR):
-                logger.debug("dj.views.detail.added_pian_from_db", extra={"pian_db": pian_db,
-                                                                          "ident_cely": dj.ident_cely})
+            if pian_db is not None and not (
+                old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR
+            ):
+                logger.debug(
+                    "dj.views.detail.added_pian_from_db", extra={"pian_db": pian_db, "ident_cely": dj.ident_cely}
+                )
                 dj.pian = pian_db
             dj.save()
         elif old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR:
@@ -81,8 +79,7 @@ def detail(request, typ_vazby, ident_cely):
             logger.debug("dj.views.detail.celek_akce", extra={"ident_cely": dj.ident_cely})
             typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(id=TYP_DJ_CAST)).first()
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
-                Q(archeologicky_zaznam=dj.archeologicky_zaznam)
-                & ~Q(ident_cely=dj.ident_cely) & ~Q(typ=typ)
+                Q(archeologicky_zaznam=dj.archeologicky_zaznam) & ~Q(ident_cely=dj.ident_cely) & ~Q(typ=typ)
             )
             for dokumentacni_jednotka in dokumentacni_jednotka_query:
                 dokumentacni_jednotka.typ = typ
@@ -92,8 +89,7 @@ def detail(request, typ_vazby, ident_cely):
             logger.debug("dj.views.detail.sonda", extra={"ident_cely": dj.ident_cely})
             typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(id=TYP_DJ_SONDA_ID)).first()
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
-                Q(archeologicky_zaznam=dj.archeologicky_zaznam)
-                & ~Q(ident_cely=dj.ident_cely) & ~Q(typ=typ)
+                Q(archeologicky_zaznam=dj.archeologicky_zaznam) & ~Q(ident_cely=dj.ident_cely) & ~Q(typ=typ)
             )
             for dokumentacni_jednotka in dokumentacni_jednotka_query:
                 dokumentacni_jednotka.typ = typ
@@ -102,8 +98,7 @@ def detail(request, typ_vazby, ident_cely):
         elif dj.typ.id == TYP_DJ_LOKALITA:
             logger.debug("dj.views.detail.lokalita", extra={"ident_cely": dj.ident_cely})
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
-                Q(archeologicky_zaznam=dj.archeologicky_zaznam)
-                & Q(ident_cely=dj.ident_cely)
+                Q(archeologicky_zaznam=dj.archeologicky_zaznam) & Q(ident_cely=dj.ident_cely)
             )
             for dokumentacni_jednotka in dokumentacni_jednotka_query:
                 dokumentacni_jednotka.typ = Heslar.objects.filter(
@@ -112,16 +107,21 @@ def detail(request, typ_vazby, ident_cely):
                 dokumentacni_jednotka.active_transaction = fedora_transaction
                 dokumentacni_jednotka.save()
         elif dj.typ.id == TYP_DJ_KATASTR:
-            logger.debug("dj.views.detail.katastr", extra={"ident_cely": dj.ident_cely})            
+            logger.debug("dj.views.detail.katastr", extra={"ident_cely": dj.ident_cely})
             if dj.archeologicky_zaznam.hlavni_katastr.pian:
                 dj.pian = dj.archeologicky_zaznam.hlavni_katastr.pian
             else:
                 dj.pian = vytvor_pian(dj.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
-            dj.save()            
+            dj.save()
         if dj.pian is not None and (pian_db is None or pian_db.pk != dj.pian.pk):
-            logger.debug("dj.views.detail.update_pian_metadata",
-                         extra={"pian_db": pian_db.ident_cely if pian_db else "None",
-                                "instance_pian": dj.pian.ident_cely, "ident_cely": dj.ident_cely})
+            logger.debug(
+                "dj.views.detail.update_pian_metadata",
+                extra={
+                    "pian_db": pian_db.ident_cely if pian_db else "None",
+                    "instance_pian": dj.pian.ident_cely,
+                    "ident_cely": dj.ident_cely,
+                },
+            )
             dj.pian.active_transaction = fedora_transaction
             dj.pian.update_all_azs = False
             dj.pian.save()
@@ -131,37 +131,41 @@ def detail(request, typ_vazby, ident_cely):
             if dj.typ != Heslar.objects.get(id=TYP_DJ_KATASTR):
                 pian_db.save()
     else:
-        logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors,
-                                                                   "ident_cely": dj.ident_cely})
+        logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors, "ident_cely": dj.ident_cely})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     if "adb_detail" in request.POST:
         ident_cely = request.POST.get("adb_detail")
-        logger.debug("dj.views.detail.adb_detail", extra={"ident_cely": dj.ident_cely,
-                                                          "adb_ident_cely": ident_cely})
+        logger.debug("dj.views.detail.adb_detail", extra={"ident_cely": dj.ident_cely, "adb_ident_cely": ident_cely})
         adb = get_object_or_404(Adb, ident_cely=ident_cely)
         form = CreateADBForm(
             request.POST,
             instance=adb,
-            #prefix=ident_cely,
+            # prefix=ident_cely,
         )
         if form.is_valid():
-            logger.debug("dj.views.detail.adb_detail.form_is_valid", extra={"ident_cely": dj.ident_cely,
-                                                                            "adb_ident_cely": ident_cely})
+            logger.debug(
+                "dj.views.detail.adb_detail.form_is_valid",
+                extra={"ident_cely": dj.ident_cely, "adb_ident_cely": ident_cely},
+            )
             adb = form.save(commit=False)
             adb.active_transaction = fedora_transaction
             adb.save()
         else:
-            logger.debug("dj.views.detail.adb_detail.form_is_not_valid",
-                         extra={"errors": form.errors, "ident_cely": ident_cely, "adb_ident_cely": ident_cely})
+            logger.debug(
+                "dj.views.detail.adb_detail.form_is_not_valid",
+                extra={"errors": form.errors, "ident_cely": ident_cely, "adb_ident_cely": ident_cely},
+            )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
             request.session["_old_adb_post"] = request.POST
             request.session["adb_ident_cely"] = ident_cely
 
     if "adb_zapsat_vyskove_body" in request.POST:
         adb_ident_cely = request.POST.get("adb_zapsat_vyskove_body")
-        logger.debug("dj.views.detail.adb_zapsat_vyskove_body", extra={"ident_cely": dj.ident_cely,
-                                                                       "adb_ident_cely": adb_ident_cely})
+        logger.debug(
+            "dj.views.detail.adb_zapsat_vyskove_body",
+            extra={"ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely},
+        )
         adb = get_object_or_404(Adb, ident_cely=adb_ident_cely)
         vyskovy_bod_formset = inlineformset_factory(
             Adb,
@@ -169,12 +173,12 @@ def detail(request, typ_vazby, ident_cely):
             form=create_vyskovy_bod_form(pian=pian_db),
             extra=3,
         )
-        formset = vyskovy_bod_formset(
-            request.POST, instance=adb, prefix=adb.ident_cely + "_vb"
-        )
+        formset = vyskovy_bod_formset(request.POST, instance=adb, prefix=adb.ident_cely + "_vb")
         if formset.is_valid():
-            logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid",
-                         extra={"ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely})
+            logger.debug(
+                "dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid",
+                extra={"ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely},
+            )
             instances = formset.save(commit=False)
             for i in range(0, len(instances)):
                 vyskovy_bod = instances[i]
@@ -182,20 +186,26 @@ def detail(request, typ_vazby, ident_cely):
                 vyskovy_bod: VyskovyBod
                 vyskovy_bod.active_transaction = fedora_transaction
                 if isinstance(vyskovy_bod, VyskovyBod):
-                    logger.debug("dj.views.detail.adb_zapsat_vyskove_body.save",
-                                 extra={"vyskovy_bod": vyskovy_bod.__dict__,
-                                        "vyskovy_bod_form": vyskovy_bod_form.__dict__})
-                    vyskovy_bod.set_geom(vyskovy_bod_form.cleaned_data.get("northing", 0),
-                                         vyskovy_bod_form.cleaned_data.get("easting", 0),
-                                         vyskovy_bod_form.cleaned_data.get("niveleta", 0))
+                    logger.debug(
+                        "dj.views.detail.adb_zapsat_vyskove_body.save",
+                        extra={"vyskovy_bod": vyskovy_bod.__dict__, "vyskovy_bod_form": vyskovy_bod_form.__dict__},
+                    )
+                    vyskovy_bod.set_geom(
+                        vyskovy_bod_form.cleaned_data.get("northing", 0),
+                        vyskovy_bod_form.cleaned_data.get("easting", 0),
+                        vyskovy_bod_form.cleaned_data.get("niveleta", 0),
+                    )
                 vyskovy_bod.save()
         if formset.is_valid():
-            logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid",
-                         extra={"ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely})
+            logger.debug(
+                "dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid",
+                extra={"ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely},
+            )
         else:
-            logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_not_valid",
-                         extra={"errors": formset.errors, "ident_cely": dj.ident_cely,
-                                "adb_ident_cely": adb_ident_cely})
+            logger.debug(
+                "dj.views.detail.adb_zapsat_vyskove_body.form_set_is_not_valid",
+                extra={"errors": formset.errors, "ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely},
+            )
             messages.add_message(
                 request,
                 messages.ERROR,
@@ -232,8 +242,9 @@ def zapsat(request, arch_z_ident_cely):
         else:
             dj.komponenty = vazba
             dj.archeologicky_zaznam = az
-            fedora_transaction = az.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN,
-                                                       ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
+            fedora_transaction = az.create_transaction(
+                request.user, ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
+            )
             dj.active_transaction = fedora_transaction
             dj.close_active_transaction_when_finished = True
             resp = dj.save()
@@ -251,13 +262,13 @@ def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání dokumentační jednotky.
     """
-    dj: DokumentacniJednotka \
-        = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
+    dj: DokumentacniJednotka = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if request.method == "POST":
         try:
             dj.deleted_by_user = request.user
-            fedora_transaction = dj.archeologicky_zaznam.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN,
-                                                                            ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+            fedora_transaction = dj.archeologicky_zaznam.create_transaction(
+                request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT
+            )
             dj.active_transaction = fedora_transaction
             resp = dj.delete()
             update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
@@ -288,10 +299,12 @@ def smazat(request, ident_cely):
         }
         return render(request, "core/transakce_modal.html", context)
 
+
 class ChangeKatastrView(LoginRequiredMixin, TemplateView):
     """
     Třída pohledu pro editaci katastru dokumentační jednotky.
     """
+
     template_name = "core/transakce_modal.html"
     id_tag = "zmenit-katastr-form"
 
@@ -304,7 +317,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         zaznam = self.get_zaznam()
-        form = ChangeKatastrForm(initial={"katastr":zaznam.archeologicky_zaznam.hlavni_katastr})
+        form = ChangeKatastrForm(initial={"katastr": zaznam.archeologicky_zaznam.hlavni_katastr})
         context = {
             "object": zaznam,
             "form": form,
@@ -332,7 +345,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
             if form.cleaned_data["katastr"].pian is not None:
                 zaznam.pian = form.cleaned_data["katastr"].pian
                 zaznam.save()
-            else: 
+            else:
                 zaznam.pian = vytvor_pian(form.cleaned_data["katastr"], fedora_transaction)
                 zaznam.save()
             zaznam.refresh_from_db()

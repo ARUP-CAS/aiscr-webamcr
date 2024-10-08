@@ -1,21 +1,12 @@
-from django.db import models
-from django.utils.translation import gettext_lazy as _
+import logging
+
 from arch_z.models import ArcheologickyZaznam
 from core.connectors import RedisConnector
-from heslar.models import Heslar
+from django.db import models
 from django.urls import reverse
-
-from heslar.hesla import (
-    HESLAR_JISTOTA_URCENI,
-    HESLAR_LOKALITA_TYP,
-    HESLAR_LOKALITA_DRUH,
-    HESLAR_STAV_DOCHOVANI,
-)
-from heslar.hesla_dynamicka import TYP_DOKUMENTU_NALEZOVA_ZPRAVA
-from core.constants import D_STAV_ARCHIVOVANY, PIAN_POTVRZEN
 from django_prometheus.models import ExportModelOperationsMixin
-
-import logging
+from heslar.hesla import HESLAR_JISTOTA_URCENI, HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_TYP, HESLAR_STAV_DOCHOVANI
+from heslar.models import Heslar
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +15,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
     """
     Class pro db model lokalita.
     """
+
     druh = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -83,17 +75,21 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         if not self.archeologicky_zaznam.katastry.all():
             self.dalsi_katastry_snapshot = None
         else:
-            self.dalsi_katastry_snapshot = "; ".join([x.nazev for x in
-                                                  self.archeologicky_zaznam.katastry.order_by("nazev").all()]) \
-            if self.archeologicky_zaznam.katastry.count() > 0 else None
+            self.dalsi_katastry_snapshot = (
+                "; ".join([x.nazev for x in self.archeologicky_zaznam.katastry.order_by("nazev").all()])
+                if self.archeologicky_zaznam.katastry.count() > 0
+                else None
+            )
 
     @property
     def redis_snapshot_id(self):
         from lokalita.views import LokalitaListView
+
         return f"{LokalitaListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}"
 
     def generate_redis_snapshot(self):
         from lokalita.tables import LokalitaTable
+
         data = Lokalita.objects.filter(pk=self.pk)
         table = LokalitaTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)

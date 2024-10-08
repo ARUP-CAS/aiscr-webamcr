@@ -1,14 +1,15 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from uzivatel.models import User
 from django_prometheus.models import ExportModelOperationsMixin
+from uzivatel.models import User
 
 
 class Pes(ExportModelOperationsMixin("pes"), models.Model):
     """
     Class pro db model hlídací pes.
     """
+
     user = models.ForeignKey(User, models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
@@ -28,9 +29,7 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
         ]
         db_table = "notifikace_projekty_pes"
         constraints = [
-            models.UniqueConstraint(
-                fields=["user", "content_type", "object_id"], name="unique_pes"
-            ),
+            models.UniqueConstraint(fields=["user", "content_type", "object_id"], name="unique_pes"),
         ]
 
     def get_create_user(self):
