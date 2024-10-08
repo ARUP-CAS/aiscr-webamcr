@@ -2,7 +2,6 @@ import json
 import os
 from pathlib import Path
 
-
 from core.message_constants import AUTOLOGOUT_AFTER_LOGOUT
 from django.core.exceptions import ImproperlyConfigured
 
@@ -40,9 +39,7 @@ def get_mail_secret(setting, default_value=None):
         if os.path.exists("/run/secrets/mail_conf")
         # else path will be used in case a docker secret is not used during instantiation.
         # Doesn't catch case where docker secrets points to missing file on local disk.
-        else os.path.join(
-            BASE_DIR, "webclient/settings/sample_secrets_mail_client.json"
-        )
+        else os.path.join(BASE_DIR, "webclient/settings/sample_secrets_mail_client.json")
     )
     with open(file_mail_path, "r") as file:
         secrets_mail = json.load(file)
@@ -73,29 +70,30 @@ def get_redis_pass(default_value=""):
     else:
         return default_value
 
+
 REDIS_HOST = get_secret("REDIS_HOST", "redis")
 REDIS_PORT = get_secret("REDIS_PORT", 6379)
 
 CACHEOPS_REDIS = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}"
 
 CACHEOPS = {
-    "adb.Adb": {"ops": ("fetch", ), "timeout": 60*10},
-    "arch_z.Akce": {"ops": ("fetch", ), "timeout": 60*10},
-    "arch_z.ArcheologickyZaznam": {"ops": ("fetch", ), "timeout": 60*10},
-    "projekt.Projekt": {"ops": ("fetch", ), "timeout": 60*10},
-    "ez.ExterniZdroj": {"ops": ("fetch", ), "timeout": 60*10},
-    "dokument.Dokument": {"ops": ("fetch", ), "timeout": 60*10},
-    "dokument.DokumentExtraData": {"ops": ("fetch", ), "timeout": 60*10},
-    "historie.Historie": {"ops": ("fetch", ), "timeout": 60*10},
-    "pas.SamostatnyNalez": {"ops": ("fetch", ), "timeout": 60*10},
-    "pas.UzivatelSpoluprace": {"ops": ("fetch", ), "timeout": 60*10},
-    "core.Permissions": {"ops": ("fetch", ), "timeout": 60*60},
-    "komponenta.Komponenta": {"ops": ("fetch", ), "timeout": 60*10},
-    "pian.Pian": {"ops": ("fetch", ), "timeout": 60*10},
-    "nalez.*": {"ops": ("fetch", ), "timeout": 60*10},
-    "lokalita.Lokalita": {"ops": ("fetch", ), "timeout": 60*10},
-    "dj.DokumentacniJednotka": {"ops": ("fetch", ), "timeout": 60*10},
-    "uzivatel.User": {"ops": ("fetch", ), "timeout": 60},
+    "adb.Adb": {"ops": ("fetch",), "timeout": 60 * 10},
+    "arch_z.Akce": {"ops": ("fetch",), "timeout": 60 * 10},
+    "arch_z.ArcheologickyZaznam": {"ops": ("fetch",), "timeout": 60 * 10},
+    "projekt.Projekt": {"ops": ("fetch",), "timeout": 60 * 10},
+    "ez.ExterniZdroj": {"ops": ("fetch",), "timeout": 60 * 10},
+    "dokument.Dokument": {"ops": ("fetch",), "timeout": 60 * 10},
+    "dokument.DokumentExtraData": {"ops": ("fetch",), "timeout": 60 * 10},
+    "historie.Historie": {"ops": ("fetch",), "timeout": 60 * 10},
+    "pas.SamostatnyNalez": {"ops": ("fetch",), "timeout": 60 * 10},
+    "pas.UzivatelSpoluprace": {"ops": ("fetch",), "timeout": 60 * 10},
+    "core.Permissions": {"ops": ("fetch",), "timeout": 60 * 60},
+    "komponenta.Komponenta": {"ops": ("fetch",), "timeout": 60 * 10},
+    "pian.Pian": {"ops": ("fetch",), "timeout": 60 * 10},
+    "nalez.*": {"ops": ("fetch",), "timeout": 60 * 10},
+    "lokalita.Lokalita": {"ops": ("fetch",), "timeout": 60 * 10},
+    "dj.DokumentacniJednotka": {"ops": ("fetch",), "timeout": 60 * 10},
+    "uzivatel.User": {"ops": ("fetch",), "timeout": 60},
 }
 
 SECRET_KEY = get_secret("SECRET_KEY")
@@ -110,8 +108,8 @@ DATABASES = {
         "PORT": get_secret("DB_PORT"),
         "ATOMIC_REQUESTS": True,
         "DISABLE_SERVER_SIDE_CURSORS": True,
-        'OPTIONS': {
-            'options': '-c statement_timeout=90000',         
+        "OPTIONS": {
+            "options": "-c statement_timeout=90000",
         },
     },
     "urgent": {
@@ -122,8 +120,8 @@ DATABASES = {
         "HOST": get_secret("DB_HOST"),
         "PORT": get_secret("DB_PORT"),
         "DISABLE_SERVER_SIDE_CURSORS": True,
-        'OPTIONS': {
-            'options': '-c statement_timeout=90000',
+        "OPTIONS": {
+            "options": "-c statement_timeout=90000",
         },
     },
 }
@@ -175,16 +173,16 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_celery_beat",
     "django_celery_results",
-    'django_prometheus',
+    "django_prometheus",
     "cron",
-    'rest_framework',
-    'rest_framework.authtoken',
+    "rest_framework",
+    "rest_framework.authtoken",
     "django_object_actions",
     "cacheops",
 ]
 
 MIDDLEWARE = [
-    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -195,10 +193,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_auto_logout.middleware.auto_logout",
     "django.middleware.locale.LocaleMiddleware",
-    'django_prometheus.middleware.PrometheusAfterMiddleware',
-    'core.middleware.PermissionMiddleware',
-    'core.middleware.ErrorMiddleware',
-    'core.middleware.StatusMessageMiddleware',
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
+    "core.middleware.PermissionMiddleware",
+    "core.middleware.ErrorMiddleware",
+    "core.middleware.StatusMessageMiddleware",
 ]
 
 CRON_CLASSES = [
@@ -273,7 +271,7 @@ TIME_ZONE = "Europe/Prague"
 
 USE_I18N = True
 
-FORMAT_MODULE_PATH = ['webclient.formats']
+FORMAT_MODULE_PATH = ["webclient.formats"]
 
 USE_TZ = True
 
@@ -318,19 +316,19 @@ LOGGING = {
         },
     },
     "handlers": {
-        'logstash': {
-            'level': 'DEBUG',
-            'class': 'logstash.TCPLogstashHandler',
-            'host': 'logstash',
-            'port': 5959,
-            'version': 1,
-            'message_type': 'logstash',
-            'fqdn': False,
+        "logstash": {
+            "level": "DEBUG",
+            "class": "logstash.TCPLogstashHandler",
+            "host": "logstash",
+            "port": 5959,
+            "version": 1,
+            "message_type": "logstash",
+            "fqdn": False,
         },
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "timestamp",
-        }
+        },
     },
     "loggers": {
         "django": {
@@ -464,7 +462,7 @@ AUTHENTICATION_BACKENDS = ["core.authenticators.AMCRAuthUser"]
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}" ,
+        "LOCATION": f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}",
     }
 }
 
@@ -515,9 +513,9 @@ FEDORA_TRANSACTION_URL = get_secret("FEDORA_TRANSACTION_URL", "")
 DIGIARCHIV_SERVER_URL = get_secret("DIGIARCHIV_SERVER_URL", "https://digiarchiv.aiscr.cz/")
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
     ]
 }
 TOKEN_EXPIRATION_HOURS = 24
@@ -532,6 +530,6 @@ CLAMD_PORT = None
 DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "")
 
 USE_X_FORWARDED_HOST = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 EMAIL_ZADOST_UDAJE_OZNAMOVATELE = "info@amapa.cz"

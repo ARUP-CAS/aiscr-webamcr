@@ -1,23 +1,15 @@
 import logging
 
-from django.urls import reverse
-
 from core.constants import SN_ZAPSANY
-from core.models import Soubor
-from core.message_constants import PROJEKT_NELZE_SMAZAT
 from django.contrib.gis.geos import Point
-from django.contrib.messages.middleware import MessageMiddleware
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.http import Http404
-from django.test import RequestFactory, TestCase
+from django.test import TestCase
+from django.urls import reverse
 from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from oznameni.models import Oznamovatel
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
-from projekt.views import create, detail, edit, smazat
-from uzivatel.models import User, UserNotificationType
-
+from uzivatel.models import User
 
 logger = logging.getLogger("tests")
 
@@ -134,5 +126,3 @@ class UrlTests(TestCase):
         self.client.force_login(self.existing_user)
         response = self.client.get(reverse("projekt:create"))
         self.assertEqual(200, response.status_code)
-
-

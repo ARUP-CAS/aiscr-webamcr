@@ -1,6 +1,5 @@
-from django.test import TestCase
-
 from core.constants import OBLAST_CECHY, OBLAST_MORAVA
+from django.test import TestCase
 from projekt.models import Projekt
 
 

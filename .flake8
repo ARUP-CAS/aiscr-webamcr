@@ -9,5 +9,7 @@ exclude =
 	dev.py,
 	local_test.py,
 	production.py,
+	dev_test.py,
+	docs.py,
 	apps.py,
 	*/migrations/*

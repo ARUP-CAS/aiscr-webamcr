@@ -1,31 +1,30 @@
 import logging
 
-from django.urls import reverse
 from core.constants import (
     KLADYZM10,
     KLADYZM50,
     KLADYZM_KATEGORIE,
     PIAN_NEPOTVRZEN,
     PIAN_POTVRZEN,
-    ZAPSANI_PIAN,
     POTVRZENI_PIAN,
+    ZAPSANI_PIAN,
 )
-from django.contrib.gis.db import models as pgmodels
+from core.coordTransform import transform_geom_to_sjtsk
+from core.exceptions import MaximalIdentNumberError
 from django.contrib import messages
+from django.contrib.gis.db import models as pgmodels
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import CheckConstraint, Q
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
 from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR
 from heslar.models import Heslar
-from historie.models import HistorieVazby, Historie
-from core.exceptions import MaximalIdentNumberError
-from core.coordTransform import transform_geom_to_sjtsk
+from historie.models import Historie, HistorieVazby
 from uzivatel.models import User
-from django.db.models import Q, CheckConstraint
-from django_prometheus.models import ExportModelOperationsMixin
-from django.contrib.gis.geos import GEOSGeometry
-
 from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
@@ -35,6 +34,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     """
     Class pro db model pian.
     """
+
     STATES = (
         (PIAN_NEPOTVRZEN, _("pian.models.pian.states.nepotvrzen")),
         (PIAN_POTVRZEN, _("pian.models.pian.states.potvrzen")),
@@ -96,15 +96,17 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
             pristupnosti_ids = set()
             for dok_jednotka in dok_jednotky:
-                if dok_jednotka.archeologicky_zaznam is not None \
-                        and dok_jednotka.archeologicky_zaznam.pristupnost is not None:
+                if (
+                    dok_jednotka.archeologicky_zaznam is not None
+                    and dok_jednotka.archeologicky_zaznam.pristupnost is not None
+                ):
                     pristupnosti_ids.add(dok_jednotka.archeologicky_zaznam.pristupnost.id)
             if len(pristupnosti_ids) > 0:
                 return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
         except ValueError as err:
             logger.debug("pian.models.Pian.pristupnost_pom.value_error", extra={"err": err})
         return Heslar.objects.get(ident_cely="HES-000865")
-    
+
     @property
     def pristupnost(self):
         return self.pristupnost_pom
@@ -113,9 +115,11 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         pristupnosti_ids = set()
         for dok_jednotka in dok_jednotky:
-            if dok_jednotka.archeologicky_zaznam is not None \
-                    and dok_jednotka.archeologicky_zaznam.pristupnost is not None\
-                    and (skip_zaznam_id is None or skip_zaznam_id != dok_jednotka.archeologicky_zaznam.id):
+            if (
+                dok_jednotka.archeologicky_zaznam is not None
+                and dok_jednotka.archeologicky_zaznam.pristupnost is not None
+                and (skip_zaznam_id is None or skip_zaznam_id != dok_jednotka.archeologicky_zaznam.id)
+            ):
                 pristupnosti_ids.add(dok_jednotka.archeologicky_zaznam.pristupnost.id)
         if added_pristupnost_id is not None:
             pristupnosti_ids.add(added_pristupnost_id)
@@ -127,17 +131,19 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         db_table = "pian"
         constraints = [
             CheckConstraint(
-                check=((Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
-                       | (Q(geom_system="4326") & Q(geom__isnull=False))
-                       | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
-                name='pian_geom_check',
+                check=(
+                    (Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
+                    | (Q(geom_system="4326") & Q(geom__isnull=False))
+                    | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))
+                ),
+                name="pian_geom_check",
             ),
         ]
 
     def __str__(self):
         return self.ident_cely + " (" + self.get_stav_display() + ")"
-    
-    def get_absolute_url(self,request):
+
+    def get_absolute_url(self, request):
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         if dok_jednotky:
             for dok_jednotka in dok_jednotky:
@@ -145,14 +151,12 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
                     return dok_jednotka.get_absolute_url()
         else:
             logger.debug("pian without connection to DJ")
-            messages.error(
-            request, _("pian.models.Pian.get_absolute_url.noDJ.message.text")
-        )
+            messages.error(request, _("pian.models.Pian.get_absolute_url.noDJ.message.text"))
             return reverse("core:home")
-            
+
     def get_permission_object(self):
         return self
-    
+
     def get_create_user(self):
         try:
             my_list = []
@@ -168,7 +172,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         except Exception as e:
             logger.debug(e)
             return ()
-    
+
     def get_create_org(self):
         try:
             our_list = []
@@ -194,16 +198,9 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         """
         katastr = True if self.presnost.zkratka == "4" else False
         maximum: int = 999999 if katastr else 899999
-        sequence = PianSekvence.objects.filter(kladyzm50=self.zm50).filter(
-            katastr=katastr
-        )[0]
+        sequence = PianSekvence.objects.filter(kladyzm50=self.zm50).filter(katastr=katastr)[0]
         if sequence.sekvence < maximum:
-            perm_ident_cely = (
-                "P-"
-                + str(self.zm50.cislo).replace("-", "").zfill(4)
-                + "-"
-                + f"{sequence.sekvence:06}"
-            )
+            perm_ident_cely = "P-" + str(self.zm50.cislo).replace("-", "").zfill(4) + "-" + f"{sequence.sekvence:06}"
         else:
             raise MaximalIdentNumberError(maximum)
         # Loop through all of the idents that have been imported
@@ -211,23 +208,17 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             if Pian.objects.filter(ident_cely=perm_ident_cely).exists():
                 sequence.sekvence += 1
                 logger.warning(
-                    "Ident "
-                    + perm_ident_cely
-                    + " already exists, trying next number "
-                    + str(sequence.sekvence)
+                    "Ident " + perm_ident_cely + " already exists, trying next number " + str(sequence.sekvence)
                 )
                 perm_ident_cely = (
-                    "P-"
-                    + str(self.zm50.cislo).replace("-", "").zfill(4)
-                    + "-"
-                    + f"{sequence.sekvence:06}"
+                    "P-" + str(self.zm50.cislo).replace("-", "").zfill(4) + "-" + f"{sequence.sekvence:06}"
                 )
             else:
                 break
         old_ident = self.ident_cely
         self.ident_cely = perm_ident_cely
         sequence.sekvence += 1
-        sequence.save(using='urgent')
+        sequence.save(using="urgent")
         self.save()
         self.record_ident_change(old_ident, fedora_transaction=self.active_transaction)
 
@@ -243,7 +234,9 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         Metóda pro nastavení stavu potvrzený.
         """
         self.stav = PIAN_POTVRZEN
-        Historie(typ_zmeny=POTVRZENI_PIAN, uzivatel=user, vazba=self.historie, poznamka=f"{old_ident} -> {self.ident_cely}").save()
+        Historie(
+            typ_zmeny=POTVRZENI_PIAN, uzivatel=user, vazba=self.historie, poznamka=f"{old_ident} -> {self.ident_cely}"
+        ).save()
         self.save()
 
     def zaznamenej_zapsani(self, user):
@@ -258,6 +251,7 @@ class Kladyzm(ExportModelOperationsMixin("klady_zm"), models.Model):
     """
     Class pro db model klady zm.
     """
+
     gid = models.AutoField(primary_key=True)
     kategorie = models.IntegerField(choices=KLADYZM_KATEGORIE)
     cislo = models.CharField(unique=True, max_length=8)
@@ -271,8 +265,12 @@ class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
     """
     Class pro db model sekvence pianu podle klady zm 50 a katastru.
     """
+
     kladyzm50 = models.ForeignKey(
-        "Kladyzm", models.RESTRICT, db_column="kladyzm_id", null=False,
+        "Kladyzm",
+        models.RESTRICT,
+        db_column="kladyzm_id",
+        null=False,
     )
     sekvence = models.IntegerField()
     katastr = models.BooleanField()
@@ -280,7 +278,7 @@ class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
     class Meta:
         db_table = "pian_sekvence"
         constraints = [
-            models.UniqueConstraint(fields=['kladyzm50','katastr'], name='unique_sekvence_pian'),
+            models.UniqueConstraint(fields=["kladyzm50", "katastr"], name="unique_sekvence_pian"),
         ]
 
 
@@ -288,14 +286,8 @@ def vytvor_pian(katastr, fedora_transaction):
     """
     Funkce pro vytvoření pianu v DB podle katastru.
     """
-    zm10s = (
-                Kladyzm.objects.filter(kategorie=KLADYZM10)
-                .filter(the_geom__contains=katastr.definicni_bod)
-            )
-    zm50s = (
-        Kladyzm.objects.filter(kategorie=KLADYZM50)
-        .filter(the_geom__contains=katastr.definicni_bod)
-    )
+    zm10s = Kladyzm.objects.filter(kategorie=KLADYZM10).filter(the_geom__contains=katastr.definicni_bod)
+    zm50s = Kladyzm.objects.filter(kategorie=KLADYZM50).filter(the_geom__contains=katastr.definicni_bod)
     if len(zm10s) == 0:
         logger.error("dj.signals.create_dokumentacni_jednotka.zm10s.not_found")
         raise Exception("zm10s.not_found")
@@ -309,8 +301,16 @@ def vytvor_pian(katastr, fedora_transaction):
         geom_jtsk, res = transform_geom_to_sjtsk(str(geom).split(";")[1])
         presnost = Heslar.objects.get(pk=PIAN_PRESNOST_KATASTR)
         typ = Heslar.objects.get(pk=GEOMETRY_PLOCHA)
-        pian = Pian(stav=PIAN_POTVRZEN, zm10=zm10s, zm50=zm50s, typ=typ, presnost=presnost, geom=geom,geom_sjtsk=GEOSGeometry(geom_jtsk),
-                    geom_system="4326")
+        pian = Pian(
+            stav=PIAN_POTVRZEN,
+            zm10=zm10s,
+            zm50=zm50s,
+            typ=typ,
+            presnost=presnost,
+            geom=geom,
+            geom_sjtsk=GEOSGeometry(geom_jtsk),
+            geom_system="4326",
+        )
         pian.active_transaction = fedora_transaction
         pian.set_permanent_ident_cely()
         pian.save()
@@ -321,4 +321,3 @@ def vytvor_pian(katastr, fedora_transaction):
     except ObjectDoesNotExist as err:
         logger.error("dj.signals.create_dokumentacni_jednotka.ObjectDoesNotExist", err=err)
         raise ObjectDoesNotExist()
-        

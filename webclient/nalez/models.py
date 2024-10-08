@@ -1,20 +1,16 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from heslar.hesla import (
-    HESLAR_OBJEKT_DRUH,
-    HESLAR_OBJEKT_SPECIFIKACE,
-    HESLAR_PREDMET_DRUH,
-    HESLAR_PREDMET_SPECIFIKACE,
-)
+from django_prometheus.models import ExportModelOperationsMixin
+from heslar.hesla import HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_SPECIFIKACE, HESLAR_PREDMET_DRUH, HESLAR_PREDMET_SPECIFIKACE
 from heslar.models import Heslar
 from komponenta.models import Komponenta
-from django_prometheus.models import ExportModelOperationsMixin
 
 
 class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
     """
     Class pro db model nalez objekt.
     """
+
     komponenta = models.ForeignKey(
         Komponenta,
         on_delete=models.CASCADE,
@@ -56,7 +52,7 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
 
     def __str__(self):
         return self.druh.heslo
-    
+
     def get_permission_object(self):
         return self.komponenta.get_permission_object()
 
@@ -65,6 +61,7 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
     """
     Class pro db model nalez predmet.
     """
+
     komponenta = models.ForeignKey(
         Komponenta,
         on_delete=models.CASCADE,
@@ -106,6 +103,6 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
 
     def __str__(self):
         return self.druh.heslo
-    
+
     def get_permission_object(self):
         return self.komponenta.get_permission_object()

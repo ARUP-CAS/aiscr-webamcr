@@ -16,13 +16,7 @@ from dal import autocomplete
 from django.db.models import Q, QuerySet
 from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
-from django_filters import (
-    CharFilter,
-    DateFromToRangeFilter,
-    FilterSet,
-    ModelMultipleChoiceFilter,
-    MultipleChoiceFilter,
-)
+from django_filters import CharFilter, DateFromToRangeFilter, FilterSet, ModelMultipleChoiceFilter, MultipleChoiceFilter
 from django_filters.widgets import DateRangeWidget
 from dokument.filters import HistorieFilter
 from heslar.hesla import (

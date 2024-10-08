@@ -1,15 +1,12 @@
 import logging
 
+from core.constants import DOKUMENT_CAST_RELATION_TYPE, DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from django.core.exceptions import ObjectDoesNotExist
-from django.urls import reverse
-from core.constants import (
-    DOKUMENT_CAST_RELATION_TYPE,
-    DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
-)
 from django.db import models
+from django.urls import reverse
+from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import HESLAR_AKTIVITA, HESLAR_AREAL, HESLAR_OBDOBI
 from heslar.models import Heslar
-from django_prometheus.models import ExportModelOperationsMixin
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +16,7 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
     Class pro db model komponenta vazby.
     Model se používa k napojení na jednotlivé záznamy.
     """
+
     CHOICES = (
         (DOKUMENTACNI_JEDNOTKA_RELATION_TYPE, "Dokumentacni jednotka"),
         (DOKUMENT_CAST_RELATION_TYPE, "Dokument cast"),
@@ -45,6 +43,7 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
     """
     Class pro db model komponenty.
     """
+
     obdobi = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -96,10 +95,13 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
 
     def get_absolute_url(self):
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
-            return reverse("arch_z:update-komponenta", args=[self.ident_cely[:-5],self.komponenta_vazby.dokumentacni_jednotka.ident_cely,self.ident_cely])
+            return reverse(
+                "arch_z:update-komponenta",
+                args=[self.ident_cely[:-5], self.komponenta_vazby.dokumentacni_jednotka.ident_cely, self.ident_cely],
+            )
         else:
             return reverse("dokument:detail-model-3D", args=[self.ident_cely[:-5]])
-    
+
     def get_permission_object(self):
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
             return self.komponenta_vazby.dokumentacni_jednotka.get_permission_object()
@@ -108,8 +110,7 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
 
     def create_transaction(self, transaction_user):
         from core.repository_connector import FedoraTransaction
-        from uzivatel.models import User
-        user: User
+
         self.active_transaction = FedoraTransaction(transaction_user=transaction_user)
         return self.active_transaction
 
@@ -125,6 +126,7 @@ class KomponentaAktivita(ExportModelOperationsMixin("komponenta_aktivita"), mode
     """
     Class pro db model komponenta aktivity.
     """
+
     komponenta = models.ForeignKey(Komponenta, models.CASCADE, db_column="komponenta")
     aktivita = models.ForeignKey(
         Heslar,

@@ -1,5 +1,4 @@
 from django.test import RequestFactory, TestCase
-
 from uzivatel.models import User
 
 
@@ -10,7 +9,7 @@ class UrlTests(TestCase):
         self.existing_dj = "C-202000001A-D01"
 
     """
-    This test cannot be run as the view uses a custom SQL procedure    
+    This test cannot be run as the view uses a custom SQL procedure
     """
     # def test_post_create(self):
     #     presnost: Heslar = Heslar.objects.filter(nazev_heslare__id=HESLAR_PIAN_PRESNOST).first()

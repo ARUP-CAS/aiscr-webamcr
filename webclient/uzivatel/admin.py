@@ -2,28 +2,34 @@ import logging
 from typing import Union
 
 from cacheops import invalidate_model
+from core.constants import (
+    ROLE_ADMIN_ID,
+    ROLE_ARCHEOLOG_ID,
+    ROLE_ARCHIVAR_ID,
+    ROLE_BADATEL_ID,
+    ZMENA_HESLA_ADMIN,
+    ZMENA_HLAVNI_ROLE,
+    ZMENA_UDAJU_ADMIN,
+)
+from core.repository_connector import FedoraTransaction
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
-from django.contrib.auth.admin import UserAdmin, sensitive_post_parameters_m
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import StreamingHttpResponse
-from django_object_actions import DjangoObjectActions, action
-
-from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN, ZMENA_HESLA_ADMIN
-from core.repository_connector import FedoraTransaction
-from historie.models import Historie
-from services.mailer import Mailer
-from notifikace_projekty.models import Pes
-from notifikace_projekty.forms import KATASTR_CONTENT_TYPE, KRAJ_CONTENT_TYPE, OKRES_CONTENT_TYPE, create_pes_form
-from .forms import AuthUserCreationForm
-from .models import User, UserNotificationType
-from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID
 from django.db import transaction
 from django.db.models import Q
-from django.contrib.auth.models import Group
+from django.http import StreamingHttpResponse
 from django.utils.translation import gettext_lazy as _
+from django_object_actions import DjangoObjectActions, action
+from historie.models import Historie
+from notifikace_projekty.forms import KATASTR_CONTENT_TYPE, KRAJ_CONTENT_TYPE, OKRES_CONTENT_TYPE, create_pes_form
+from notifikace_projekty.models import Pes
+from services.mailer import Mailer
 
+from .forms import AuthUserCreationForm
+from .models import User, UserNotificationType
 
 logger = logging.getLogger(__name__)
 
@@ -32,31 +38,37 @@ class UserNotificationTypeInlineForm(forms.ModelForm):
     """
     Inline form pro nastavení notifikací uživatele.
     """
+
     def __init__(self, *args, **kwargs):
         super(UserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
-        self.fields['usernotificationtype'].queryset = UserNotificationType.objects.filter(
-            Q(ident_cely__icontains='S-E-')
-            |Q(ident_cely='E-U-04')
+        self.fields["usernotificationtype"].queryset = UserNotificationType.objects.filter(
+            Q(ident_cely__icontains="S-E-") | Q(ident_cely="E-U-04")
         )
+
 
 class UserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
     model = UserNotificationType.user.through
 
     def __init__(self, *args, **kwargs):
         super(UserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
-        if not self.instance.pk and not self.data: 
-            notification_ids = UserNotificationType.objects.filter(
-                Q(ident_cely__icontains='S-E-')
-            ).values_list('id', flat=True)
+        if not self.instance.pk and not self.data:
+            notification_ids = UserNotificationType.objects.filter(Q(ident_cely__icontains="S-E-")).values_list(
+                "id", flat=True
+            )
             self.initial = []
             for id in notification_ids:
-                self.initial.append({'usernotificationtype': id, })
+                self.initial.append(
+                    {
+                        "usernotificationtype": id,
+                    }
+                )
 
 
 class UserNotificationTypeInline(admin.TabularInline):
     """
     Inline panel pro nastavení notifikací uživatele.
     """
+
     model = UserNotificationType.user.through
     form = UserNotificationTypeInlineForm
     formset = UserNotificationTypeInlineFormset
@@ -65,17 +77,14 @@ class UserNotificationTypeInline(admin.TabularInline):
         logger.debug(self.model._default_manager)
         queryset = super(UserNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(
-            Q(usernotificationtype__ident_cely__icontains='S-E-')
-            |Q(usernotificationtype__ident_cely='E-U-04')
+            Q(usernotificationtype__ident_cely__icontains="S-E-") | Q(usernotificationtype__ident_cely="E-U-04")
         )
         return queryset
-    
+
     def get_extra(self, request, obj=None, **kwargs):
-        extra = 1  #default 0
-        if not obj: #new create only
-            extra = UserNotificationType.objects.filter(
-                Q(ident_cely__icontains='S-E-')
-            ).count()
+        extra = 1  # default 0
+        if not obj:  # new create only
+            extra = UserNotificationType.objects.filter(Q(ident_cely__icontains="S-E-")).count()
         return extra
 
     def __init__(self, parent_model, admin_site):
@@ -86,6 +95,7 @@ class PesNotificationTypeInline(admin.TabularInline):
     """
     Inline panel pro nastavení hlídacích psů uživatele.
     """
+
     model_type = None
     model = Pes
     form = create_pes_form(model_typ=model_type)
@@ -93,9 +103,7 @@ class PesNotificationTypeInline(admin.TabularInline):
 
     def get_queryset(self, request):
         queryset = super(PesNotificationTypeInline, self).get_queryset(request)
-        queryset = queryset.filter(
-            content_type__model=self.model_type
-        )
+        queryset = queryset.filter(content_type__model=self.model_type)
         return queryset
 
 
@@ -103,6 +111,7 @@ class PesKrajNotificationTypeInline(PesNotificationTypeInline):
     """
     Inline panel pro nastavení hlídacích psů uživatele pro kraj.
     """
+
     model_type = KRAJ_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
     form.admin_app = True
@@ -114,6 +123,7 @@ class PesOkresNotificationTypeInline(PesNotificationTypeInline):
     """
     Inline panel pro nastavení hlídacích psů uživatele pro okres.
     """
+
     model_type = OKRES_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
     form.admin_app = True
@@ -125,6 +135,7 @@ class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
     """
     Inline panel pro nastavení hlídacích psů uživatele pro katastr.
     """
+
     model_type = KATASTR_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
     form.admin_app = True
@@ -136,13 +147,31 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     """
     Admin panel pro správu uživatele.
     """
+
     add_form = AuthUserCreationForm
     model = User
-    list_display = ("ident_cely", "email", "is_active", "organizace", "hlavni_role", "first_name", "last_name",
-                    "telefon", "date_joined", "last_login", "osoba", "is_superuser")
+    list_display = (
+        "ident_cely",
+        "email",
+        "is_active",
+        "organizace",
+        "hlavni_role",
+        "first_name",
+        "last_name",
+        "telefon",
+        "date_joined",
+        "last_login",
+        "osoba",
+        "is_superuser",
+    )
     list_filter = ("is_active", "organizace", "groups", "is_superuser")
     readonly_fields = ("ident_cely",)
-    inlines = [UserNotificationTypeInline, PesKrajNotificationTypeInline, PesOkresNotificationTypeInline, PesKatastrNotificationTypeInline]
+    inlines = [
+        UserNotificationTypeInline,
+        PesKrajNotificationTypeInline,
+        PesOkresNotificationTypeInline,
+        PesKatastrNotificationTypeInline,
+    ]
     fieldsets = (
         (
             None,
@@ -182,9 +211,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             },
         ),
     )
-    search_fields = (
-    "email", "organizace__nazev_zkraceny", "ident_cely", "first_name", "last_name",
-    "telefon")
+    search_fields = ("email", "organizace__nazev_zkraceny", "ident_cely", "first_name", "last_name", "telefon")
     ordering = ("email",)
     change_actions = ("metadata",)
 
@@ -196,7 +223,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             yield content
 
         response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
-        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
+        response["Content-Disposition"] = 'attachment; filename="metadata.xml"'
         return response
 
     def has_delete_permission(self, request, obj=None):
@@ -212,14 +239,21 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         obj.active_transaction = fedora_transaction
         invalidate_model(User)
         invalidate_model(Historie)
-        logger.debug("uzivatel.admin.save_model.start",
-                     extra={"user": user.pk, "obj_pk": obj.pk, "change": change, "form": form,
-                            "transaction": fedora_transaction.uid})
+        logger.debug(
+            "uzivatel.admin.save_model.start",
+            extra={
+                "user": user.pk,
+                "obj_pk": obj.pk,
+                "change": change,
+                "form": form,
+                "transaction": fedora_transaction.uid,
+            },
+        )
         basic_groups_ids_list = [ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]
         try:
             user_db = User.objects.get(id=obj.pk)
-            user_db_group_ids = set(user_db.groups.values_list('id', flat=True))
-        except ObjectDoesNotExist as err:
+            user_db_group_ids = set(user_db.groups.values_list("id", flat=True))
+        except ObjectDoesNotExist:
             user_db = None
             user_db_group_ids = set()
         user_db: Union[User, None]
@@ -241,28 +275,36 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
         groups = form_groups.filter(id__in=basic_groups_ids_list)
         other_groups = form_groups.filter(~Q(id__in=basic_groups_ids_list))
-        group_ids = groups.values_list('id', flat=True)
-        all_groups_ids = form_groups.values_list('id', flat=True)
+        group_ids = groups.values_list("id", flat=True)
+        all_groups_ids = form_groups.values_list("id", flat=True)
         if group_ids.count() > 0:
             max_id = max(group_ids)
         else:
             max_id = ROLE_BADATEL_ID
         main_group = Group.objects.get(pk=max_id)
 
-        if (user_db is None
-                or (set(user.groups.values_list('id', flat=True)) != set(form_groups.values_list('id', flat=True)))):
-            logger.debug("uzivatel.admin.save_model.role_changed",
-                         extra={"old": obj.hlavni_role, "new": form_groups.values_list('name', flat=True)})
+        if user_db is None or (
+            set(user.groups.values_list("id", flat=True)) != set(form_groups.values_list("id", flat=True))
+        ):
+            logger.debug(
+                "uzivatel.admin.save_model.role_changed",
+                extra={"old": obj.hlavni_role, "new": form_groups.values_list("name", flat=True)},
+            )
             Historie(
                 typ_zmeny=ZMENA_HLAVNI_ROLE,
                 uzivatel=user,
-                poznamka="role: " + ", ".join(list(form_groups.values_list('name', flat=True))),
+                poznamka="role: " + ", ".join(list(form_groups.values_list("name", flat=True))),
                 vazba=obj.history_vazba,
             ).save()
         changed_data_without_groups = [fieldname for fieldname in form.changed_data if fieldname != "groups"]
         if form.changed_data is not None and len([form.changed_data]) > 0:
-            poznamka = ", ".join([f"{fieldname}: {form.cleaned_data[fieldname]}" for fieldname in
-                                  changed_data_without_groups if "password" not in fieldname])
+            poznamka = ", ".join(
+                [
+                    f"{fieldname}: {form.cleaned_data[fieldname]}"
+                    for fieldname in changed_data_without_groups
+                    if "password" not in fieldname
+                ]
+            )
             if len(poznamka) > 0:
                 Historie(
                     typ_zmeny=ZMENA_UDAJU_ADMIN,
@@ -272,37 +314,56 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                 ).save()
 
         if user_db is not None:
-            logger.debug("uzivatel.admin.save_model.manage_user_groups",
-                         extra={"user": obj.pk, "user_groups": user_db.groups.values_list('id', flat=True),
-                                "transaction": fedora_transaction.uid})
+            logger.debug(
+                "uzivatel.admin.save_model.manage_user_groups",
+                extra={
+                    "user": obj.pk,
+                    "user_groups": user_db.groups.values_list("id", flat=True),
+                    "transaction": fedora_transaction.uid,
+                },
+            )
         if not obj.is_active:
-            logger.debug("uzivatel.admin.save_model.manage_user_groups.deactivated",
-                         extra={"user": obj.pk, "transaction": fedora_transaction.uid})
+            logger.debug(
+                "uzivatel.admin.save_model.manage_user_groups.deactivated",
+                extra={"user": obj.pk, "transaction": fedora_transaction.uid},
+            )
             transaction.on_commit(lambda: obj.groups.set([], clear=True))
             obj.save()
             fedora_transaction.mark_transaction_as_closed()
             return
-        logger.debug("uzivatel.admin.save_model.manage_user_groups",
-                     extra={"user": obj.pk, "group_count": groups.count(), "transaction": fedora_transaction.uid})
+        logger.debug(
+            "uzivatel.admin.save_model.manage_user_groups",
+            extra={"user": obj.pk, "group_count": groups.count(), "transaction": fedora_transaction.uid},
+        )
         if groups.count() == 0:
-            logger.debug("uzivatel.admin.save_model.manage_user_groups.badatel_added",
-                         extra={"user": obj.pk, "transaction": fedora_transaction.uid})
+            logger.debug(
+                "uzivatel.admin.save_model.manage_user_groups.badatel_added",
+                extra={"user": obj.pk, "transaction": fedora_transaction.uid},
+            )
             group = Group.objects.filter(pk=ROLE_BADATEL_ID)
-            transaction.on_commit(lambda: obj.groups.set([group.first()] + list(other_groups.values_list('id', flat=True)),
-                                  clear=True))
-            all_groups_ids = all_groups_ids.union(group.values_list('id', flat=True))
+            transaction.on_commit(
+                lambda: obj.groups.set([group.first()] + list(other_groups.values_list("id", flat=True)), clear=True)
+            )
+            all_groups_ids = all_groups_ids.union(group.values_list("id", flat=True))
         elif groups.count() > 1:
-            transaction.on_commit(lambda: obj.groups.set([max_id] + list(other_groups.values_list('id', flat=True)),
-                                  clear=True))
+            transaction.on_commit(
+                lambda: obj.groups.set([max_id] + list(other_groups.values_list("id", flat=True)), clear=True)
+            )
         if user_db_group_ids != set(all_groups_ids):
             logger.debug("send activate email or change email")
             Mailer.send_eu06(user=obj, groups=[main_group] + list(other_groups))
-        logger.debug("uzivatel.admin.save_model.manage_user_groups.highest_groups",
-                     extra={"user": obj.pk, "user_groups": obj.groups.values_list('id', flat=True),
-                            "transaction": fedora_transaction.uid})
-        logger.debug("uzivatel.admin.save_model.manage_user_groups",
-                     extra={"max_id": max_id, "hlavni_role_pk": obj.hlavni_role.pk,
-                            "transaction": fedora_transaction.uid})
+        logger.debug(
+            "uzivatel.admin.save_model.manage_user_groups.highest_groups",
+            extra={
+                "user": obj.pk,
+                "user_groups": obj.groups.values_list("id", flat=True),
+                "transaction": fedora_transaction.uid,
+            },
+        )
+        logger.debug(
+            "uzivatel.admin.save_model.manage_user_groups",
+            extra={"max_id": max_id, "hlavni_role_pk": obj.hlavni_role.pk, "transaction": fedora_transaction.uid},
+        )
         obj.close_active_transaction_when_finished = True
         obj.save()
 
@@ -323,10 +384,10 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         super().log_deletion(request, object, object_repr)
 
     def get_readonly_fields(self, request, obj=None):
-        fields = super().get_readonly_fields(request,obj)
+        fields = super().get_readonly_fields(request, obj)
         if obj:
             if request.user.ident_cely == obj.ident_cely:
-                return fields+("is_superuser",)
+                return fields + ("is_superuser",)
         return fields
 
 
@@ -334,6 +395,7 @@ class CustomGroupAdmin(admin.ModelAdmin):
     """
     Admin panel pro správu uživatelskych skupin.
     """
+
     def has_delete_permission(self, request, obj=None):
         if obj is not None:
             obj: Group

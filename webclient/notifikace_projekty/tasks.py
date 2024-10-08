@@ -66,5 +66,7 @@ def check_hlidaci_pes(projekt_id):
         extra={"users_to_notify": users_to_notify.values_list("user")},
     )
     logger.debug("cron.Notifications.collect_watchdogs.end")
-    users_to_notify=users_to_notify.filter(user__groups__id__in=([ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]))
+    users_to_notify = users_to_notify.filter(
+        user__groups__id__in=([ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])
+    )
     return Mailer.send_ep02(users_to_notify.distinct("user"), projekt)

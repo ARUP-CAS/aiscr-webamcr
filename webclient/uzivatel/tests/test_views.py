@@ -1,13 +1,9 @@
 from unittest import mock
 
-from django.urls import reverse
-
 from core.tests.runner import AMCR_TESTOVACI_ORGANIZACE_ID
-from django.contrib.auth.models import AnonymousUser
-from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory, TestCase
+from django.urls import reverse
 from uzivatel.models import User
-from uzivatel.views import UserRegistrationView, create_osoba
 
 
 class TestUzivatel(TestCase):
