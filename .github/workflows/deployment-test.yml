@@ -1,0 +1,77 @@
+name: Deployment to TEST environment
+
+on:
+  workflow_dispatch :
+    inputs:
+      tag:
+       description: 'Version tag for deployment'
+       type: string
+       required: true
+
+env:
+  log_name: deployment_vpn.log
+  branch: dev
+  server_deploy_root: /home/amcr/aiscr-webamcr
+  dep_script: scripts/ci_deployment/deploy_server.sh
+
+jobs:
+  deployment:
+    name: Connect to VPN, do deployment actions on TEST SERVER, Kill VPN
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - name: Install OpenVPN
+        run: |
+          sudo apt-get update
+          sudo apt-get --assume-yes --no-install-recommends install openvpn iputils-ping dnsutils          
+
+      - name: Setup VPN config
+        run: |
+          echo "${{ secrets.VPN_CA_CRT }}" > .github/vpn/openvpn20_huldio_ci_ca.crt
+          echo "${{ secrets.VPN_USER_CRT }}" > .github/vpn/openvpn20_huldio_ci_user.crt
+          echo "${{ secrets.VPN_USER_KEY }}" > .github/vpn/openvpn20_huldio_ci_user.key
+          echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > secret.txt
+
+      - name: Connect VPN
+        run: sudo openvpn --config ".github/vpn/openvpn20_huldio_ci.ovpn" --log "${{ env.log_name }}" --daemon --askpass secret.txt
+
+      - name: Wait for a VPN connection
+        timeout-minutes: 2
+        run: until dig ${{ secrets.DNS_RESOLVER }} ${{ secrets.DEPLOYMENT_SERVER_TEST }} A +time=1; do sleep 2; done
+
+      - name: SSH connection DEPLOYMENT_SERVER_TEST
+        run: |
+          eval $(ssh-agent -s)
+          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_TEST }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_KNOWN_HOST_TEST }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          sleep 30
+          ping -c 10 ${{ secrets.DEPLOYMENT_SERVER_TEST }}
+          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
+          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_TEST }} << EOF
+          sudo su - root << AOF
+          cd ${{ env.server_deploy_root }}
+          git stash push -m "CI_autostash_${{ inputs.tag }}_${{ env.date_stamp }}"
+          git checkout ${{ env.branch }}
+          git pull
+          chmod +x ${{ env.dep_script }}
+          ./${{ env.dep_script }} ${{ inputs.tag }} ${{ env.server_deploy_root }} ${{ env.branch }}
+          AOF
+          EOF
+
+      - name: disconnect VPN
+        if: always()
+        run: |
+          sudo chmod 777 ${{ env.log_name }}
+          sudo killall openvpn    
+
+      - name: Upload VPN logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: VPN logs
+          path: ${{ env.log_name  }}

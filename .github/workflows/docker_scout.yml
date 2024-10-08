@@ -1,12 +1,9 @@
 name: Docker Scout
 
 on:
-  # push:
-    # tags: ["*"]
-    # branches:
-      # - "dev"
   pull_request:
-    branches: ["**"]
+    branches:
+      - "dev"
 
 env:
   # Hostname of your registry

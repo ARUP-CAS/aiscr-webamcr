@@ -140,7 +140,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
-     - 2024.1
+     - 2024.10
      - MIT License
      - https://github.com/django-crispy-forms/crispy-bootstrap4
    * - cron-descriptor
@@ -320,7 +320,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.1.1
+     - 2.1.2
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -352,7 +352,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.46
+     - 8.13.47
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -448,7 +448,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rcssmin/
    * - redis
-     - 5.1.0
+     - 5.1.1
      - MIT License
      - https://github.com/redis/redis-py
    * - reportlab
@@ -524,7 +524,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/python/tzdata
    * - uWSGI
-     - 2.0.27
+     - 2.0.26
      - GNU General Public License v2 or later (GPLv2+)
      - https://uwsgi-docs.readthedocs.io/en/latest/
    * - urllib3
