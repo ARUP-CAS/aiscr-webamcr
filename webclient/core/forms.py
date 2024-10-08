@@ -1,17 +1,15 @@
 import logging
 
-from django.utils import formats
-
-from django import forms
-from crispy_forms.helper import FormHelper
-from django.utils.translation import gettext_lazy as _
-from core.models import OdstavkaSystemu
-from heslar.models import Heslar
 from bs4 import BeautifulSoup
-from polib import pofile
-from django.conf import settings
-
 from core.message_constants import TRANSLATION_FILE_TOOSMALL, TRANSLATION_FILE_WRONG_FORMAT
+from core.models import OdstavkaSystemu
+from crispy_forms.helper import FormHelper
+from django import forms
+from django.conf import settings
+from django.utils import formats
+from django.utils.translation import gettext_lazy as _
+from heslar.models import Heslar
+from polib import pofile
 
 logger = logging.getLogger(__name__)
 
@@ -225,17 +223,17 @@ class BaseFilterForm(forms.Form):
         cleaned_data = super(BaseFilterForm, self).clean()
         error_list = []
         ERRORS = {
-        "historie_datum_zmeny_od":_("core.forms.baseFilterForm.historie_datum_zmeny.error"),
-        "planovane_zahajeni":_("core.forms.baseFilterForm.planovane_zahajeni.error"),
-        "termin_odevzdani_nz": _("core.forms.baseFilterForm.termin_odevzdani_nz.error"),
-        "datum_ukonceni": _("core.forms.baseFilterForm.datum_ukonceni.error"),
-        "datum_zahajeni": _("core.forms.baseFilterForm.datum_zahajeni.error"),
-        "akce_datum_ukonceni": _("core.forms.baseFilterForm.akce_datum_ukonceni.error"),
-        "akce_datum_zahajeni": _("core.forms.baseFilterForm.akce_datum_zahajeni.error"),
-        "datum_vzniku": _("core.forms.baseFilterForm.datum_vzniku.error"),
-        "let_datum": _("core.forms.baseFilterForm.let_datum.error"),
-        "datum_zverejneni": _("core.forms.baseFilterForm.datum_zverejneni.error"),
-        "datum_nalezu":_("core.forms.baseFilterForm.datum_nalezu.error"),
+            "historie_datum_zmeny_od": _("core.forms.baseFilterForm.historie_datum_zmeny.error"),
+            "planovane_zahajeni": _("core.forms.baseFilterForm.planovane_zahajeni.error"),
+            "termin_odevzdani_nz": _("core.forms.baseFilterForm.termin_odevzdani_nz.error"),
+            "datum_ukonceni": _("core.forms.baseFilterForm.datum_ukonceni.error"),
+            "datum_zahajeni": _("core.forms.baseFilterForm.datum_zahajeni.error"),
+            "akce_datum_ukonceni": _("core.forms.baseFilterForm.akce_datum_ukonceni.error"),
+            "akce_datum_zahajeni": _("core.forms.baseFilterForm.akce_datum_zahajeni.error"),
+            "datum_vzniku": _("core.forms.baseFilterForm.datum_vzniku.error"),
+            "let_datum": _("core.forms.baseFilterForm.let_datum.error"),
+            "datum_zverejneni": _("core.forms.baseFilterForm.datum_zverejneni.error"),
+            "datum_nalezu": _("core.forms.baseFilterForm.datum_nalezu.error"),
         }
         for field_name in self.list_to_check:
             if cleaned_data.get(field_name):
@@ -247,7 +245,8 @@ class BaseFilterForm(forms.Form):
         if error_list:
             raise forms.ValidationError(error_list)
         return cleaned_data
-    
+
+
 class TransaltionImportForm(forms.Form):
     file = forms.FileField(
         required=True,
@@ -259,7 +258,7 @@ class TransaltionImportForm(forms.Form):
         cleaned_data = super().clean()
         file = cleaned_data.get("file")
         if file.size < 1000:
-            raise forms.ValidationError({"file":TRANSLATION_FILE_TOOSMALL})
-        if file.name.split('.')[-1] != 'po':
-            raise forms.ValidationError({"file":TRANSLATION_FILE_WRONG_FORMAT})
+            raise forms.ValidationError({"file": TRANSLATION_FILE_TOOSMALL})
+        if file.name.split(".")[-1] != "po":
+            raise forms.ValidationError({"file": TRANSLATION_FILE_WRONG_FORMAT})
         return cleaned_data

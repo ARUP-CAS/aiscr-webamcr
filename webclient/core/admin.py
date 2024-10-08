@@ -1,44 +1,41 @@
+import csv
+import io
 import json
-import re
 import logging
+import os
+import re
+
+import pandas as pd
+from bs4 import BeautifulSoup
+from cacheops import invalidate_model
+from django.conf import settings
+from django.contrib import admin, messages
+from django.contrib.auth.models import Group
+from django.core.cache import cache
+from django.core.management import call_command
 from django.http import HttpResponse
 from django.http.request import HttpRequest
-import pandas as pd
-import os
-import io
-from bs4 import BeautifulSoup
-from polib import pofile
-import csv
-from cacheops import invalidate_model
-
-from django.contrib import admin
 from django.shortcuts import redirect
-from django.core.cache.utils import make_template_fragment_key
 from django.template.response import TemplateResponse
-from django.utils.translation import gettext as _
-from django.contrib import messages
-from django.conf import settings
-from django.core.management import call_command
-from django.contrib.auth.models import Group
 from django.urls import path, reverse
-from django.core.cache import cache
-
+from django.utils.translation import gettext as _
+from polib import pofile
 from uzivatel.models import User
 
-from .models import OdstavkaSystemu, Permissions, CustomAdminSettings, PermissionsSkip
-from .exceptions import WrongCSVError, WrongSheetError
-from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
 from .constants import (
-    ROLE_NASTAVENI_ODSTAVKY,
     PERMISSIONS_IMPORT_SHEET,
-    PERMISSIONS_SHEET_ZAKLADNI_NAME,
+    PERMISSIONS_SHEET_ACTION_NAME,
+    PERMISSIONS_SHEET_APP_NAME,
     PERMISSIONS_SHEET_PRISTUPNOST_NAME,
     PERMISSIONS_SHEET_STAV_NAME,
-    PERMISSIONS_SHEET_VLASTNICTVI_NAME,
-    PERMISSIONS_SHEET_APP_NAME,
     PERMISSIONS_SHEET_URL_NAME,
-    PERMISSIONS_SHEET_ACTION_NAME,
+    PERMISSIONS_SHEET_VLASTNICTVI_NAME,
+    PERMISSIONS_SHEET_ZAKLADNI_NAME,
+    ROLE_NASTAVENI_ODSTAVKY,
 )
+from .exceptions import WrongCSVError, WrongSheetError
+from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
+from .models import CustomAdminSettings, OdstavkaSystemu, Permissions, PermissionsSkip
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +45,8 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
     Třída admin panelu pro zobrazení odstávek systému.
     Pomocí ní se zobrazuje tabulka s odstávkami, detail a jednotlivé akce.
     """
-    change_list_template = 'core/odstavky_changelist.html'
+
+    change_list_template = "core/odstavky_changelist.html"
     list_display = (
         "info_od",
         "datum_odstavky",
@@ -95,9 +93,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
 
                 uwsgi.reload()  # pretty easy right?
             except Exception as e:
-                logger.debug(
-                    "core.admin.OdstavkaSystemuAdmin.exception", extra={"exception": e}
-                )
+                logger.debug("core.admin.OdstavkaSystemuAdmin.exception", extra={"exception": e})
                 pass  # we may not be running under uwsgi :P
         super().save_model(request, obj, form, change)
 
@@ -133,35 +129,30 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         """
         with open("/vol/web/nginx/data/" + language + "/custom_50x.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
-            soup.find("h1").string.replace_with(
-                form.cleaned_data["error_text_" + language]
-            )
+            soup.find("h1").string.replace_with(form.cleaned_data["error_text_" + language])
         with open("/vol/web/nginx/data/" + language + "/custom_50x.html", "w") as fp:
             fp.write(str(soup))
-        with open(
-            "/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html"
-        ) as fp:
+        with open("/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
-            soup.find("h1").string.replace_with(
-                form.cleaned_data["error_text_oznam_" + language]
-            )
-        with open(
-            "/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html", "w"
-        ) as fp:
+            soup.find("h1").string.replace_with(form.cleaned_data["error_text_oznam_" + language])
+        with open("/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html", "w") as fp:
             fp.write(str(soup))
 
 
 admin.site.register(OdstavkaSystemu, OdstavkaSystemuAdmin)
 
+
 class CustomAdminSettingsAdmin(admin.ModelAdmin):
     """
     Admin panel pro vlastních nastavení.
     """
+
     model = CustomAdminSettings
     list_display = ("item_id", "item_group")
 
 
 admin.site.register(CustomAdminSettings, CustomAdminSettingsAdmin)
+
 
 @admin.register(Permissions)
 class PermissionAdmin(admin.ModelAdmin):
@@ -170,14 +161,12 @@ class PermissionAdmin(admin.ModelAdmin):
     """
 
     change_list_template = "core/permissions_changelist.html"
-    list_display = [
-        "address_in_app", "main_role", "action", "base", "status", "ownership", "accessibility"
-    ]
+    list_display = ["address_in_app", "main_role", "action", "base", "status", "ownership", "accessibility"]
     list_filter = ["main_role"]
     search_fields = ["address_in_app", "action"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = ...) -> TemplateResponse:
-        return super().changelist_view(request, {"import_list":True})
+        return super().changelist_view(request, {"import_list": True})
 
     def get_urls(self):
         """
@@ -229,7 +218,7 @@ class PermissionAdmin(admin.ModelAdmin):
             sheet = sheet.reset_index(drop=True)
             logger.debug(sheet.info())
             json_sheet = sheet.to_json(orient="records")
-            cache.set("import_json_results",json_sheet,120)
+            cache.set("import_json_results", json_sheet, 120)
             return redirect(reverse("admin:import_success"))
         form = PermissionImportForm()
         media = self.media
@@ -291,12 +280,12 @@ class PermissionAdmin(admin.ModelAdmin):
         Metóda pro kontrolu řádku excelu.
         """
         number_to_role = ["B", "C", "D", "E"]
-        if row.iloc[1]=="/":
+        if row.iloc[1] == "/":
             row.iloc[1] = ""
         with io.StringIO() as out:
             call_command("show_urls", "--format", "json", stdout=out)
             url_list = pd.read_json(io.StringIO(out.getvalue()))
-        url = "/" + str(row.iloc[0]) + "/" + str(row.iloc[1]) if row.iloc[0]!="core" else "/" + str(row.iloc[1])
+        url = "/" + str(row.iloc[0]) + "/" + str(row.iloc[1]) if row.iloc[0] != "core" else "/" + str(row.iloc[1])
         if url_list["url"].eq(url).any():
             if pd.isna(row.iloc[2]) or row.iloc[2] in Permissions.actionChoices.values:
                 i = 0
@@ -304,12 +293,12 @@ class PermissionAdmin(admin.ModelAdmin):
                 while i < 4:
                     row_result.append(self.save_permission(row, i))
                     i += 1
-                if all(i == True for i in row_result):
+                if all(i is True for i in row_result):
                     return "ALL OK"
                 else:
                     results = []
                     for idx, i in enumerate(row_result):
-                        if i == True:
+                        if i is True:
                             results.append(str(number_to_role[idx] + " OK"))
                         else:
                             results.append(str(number_to_role[idx] + " NOK"))
@@ -323,16 +312,16 @@ class PermissionAdmin(admin.ModelAdmin):
         """
         Metóda pro kontrolu a uložení jednotlivého oprávnení z řádku excelu.
         """
-        if row.iloc[0]!="core":
+        if row.iloc[0] != "core":
             address = str(row.iloc[0]) + "/" + str(row.iloc[1])
         else:
-            address =  str(row.iloc[1])
+            address = str(row.iloc[1])
         if row.iloc[4 + i] == "X":
             Permissions.objects.create(
                 address_in_app=address,
                 base=False,
                 main_role=Group.objects.get(id=i + 1),
-                action=None if pd.isna(row.iloc[2]) else row.iloc[2]
+                action=None if pd.isna(row.iloc[2]) else row.iloc[2],
             )
             return True
         elif row.iloc[4 + i] == "*":
@@ -354,7 +343,7 @@ class PermissionAdmin(admin.ModelAdmin):
                 else:
                     new_row.iloc[16 + i] = row.iloc[16 + i]
                 results.append(self.save_permission(new_row, i))
-            if all(a == True for a in results):
+            if all(a is True for a in results):
                 return True
             else:
                 return False
@@ -384,12 +373,7 @@ class PermissionAdmin(admin.ModelAdmin):
         else:
             logger.debug("core.admin.PermissionAdmin.accessibility_NOK")
             return False
-        if not (
-            base == True
-            and status is None
-            and ownership is None
-            and accessibility is None
-        ):
+        if not (base is True and status is None and ownership is None and accessibility is None):
             Permissions.objects.create(
                 address_in_app=address,
                 base=base,
@@ -397,7 +381,7 @@ class PermissionAdmin(admin.ModelAdmin):
                 status=status,
                 ownership=ownership,
                 accessibility=accessibility,
-                action=None if pd.isna(row.iloc[2]) else row.iloc[2]
+                action=None if pd.isna(row.iloc[2]) else row.iloc[2],
             )
         return True
 
@@ -405,9 +389,7 @@ class PermissionAdmin(admin.ModelAdmin):
         """
         Metóda pro kontrolu správneho zadáni statusu v excelu.
         """
-        if re.fullmatch(r"(<|>|)[A-Z]{1,2}\d{1}", cell) or re.fullmatch(
-            r"\D{1,2}\d{1}-\D{1,2}\d{1}", cell
-        ):
+        if re.fullmatch(r"(<|>|)[A-Z]{1,2}\d{1}", cell) or re.fullmatch(r"\D{1,2}\d{1}-\D{1,2}\d{1}", cell):
             return True
         else:
             return False
@@ -452,14 +434,12 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     """
 
     change_list_template = "core/permissions_changelist.html"
-    list_display = [
-        "user"
-    ]
+    list_display = ["user"]
     actions = ("export_as_csv",)
     search_fields = ["user"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = ...) -> TemplateResponse:
-        return super().changelist_view(request, {"import_skip_list":True})
+        return super().changelist_view(request, {"import_skip_list": True})
 
     def get_urls(self):
         """
@@ -475,15 +455,12 @@ class PermissionSkipAdmin(admin.ModelAdmin):
             ),
         ]
         return my_urls + urls
-    
+
     def validate_sheet(self, sheet):
         """
         Metóda pro validaci importovaného excelu a jeho úpravu.
         """
-        if (
-            not sheet.columns[0] == "IDENT_CELY"
-            or not sheet.columns[1] == "IDENT_LIST"
-        ):
+        if not sheet.columns[0] == "IDENT_CELY" or not sheet.columns[1] == "IDENT_LIST":
             raise WrongCSVError
         return True
 
@@ -522,7 +499,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
             sheet = sheet.reset_index(drop=True)
             logger.debug(sheet.info())
             json_sheet = sheet.to_json(orient="records")
-            cache.set("import_json_results",json_sheet,120)
+            cache.set("import_json_results", json_sheet, 120)
             return redirect(reverse("admin:import_skip_success"))
         form = PermissionSkipImportForm()
         media = self.media
@@ -543,7 +520,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
             "core/permission_import_form.html",
             payload,
         )
-    
+
     def check_save_row(self, row):
         try:
             PermissionsSkip.objects.create(
@@ -554,7 +531,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         except Exception as e:
             logger.error(e)
             return "NOK"
-        
+
     def import_skip_success(self, request):
         """
         Metóda view pro zobrazení tabulky s výsledkom importu.
@@ -586,14 +563,14 @@ class PermissionSkipAdmin(admin.ModelAdmin):
             "core/permission_import_success.html",
             payload,
         )
-    
+
     def export_as_csv(self, request, queryset):
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=opravneni_override.csv'
-        writer = csv.writer(response,delimiter=";")
-        writer.writerow(["IDENT_CELY","IDENT_LIST"])
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = "attachment; filename=opravneni_override.csv"
+        writer = csv.writer(response, delimiter=";")
+        writer.writerow(["IDENT_CELY", "IDENT_LIST"])
         for obj in queryset:
-            writer.writerow([obj.user.ident_cely,obj.ident_list])
+            writer.writerow([obj.user.ident_cely, obj.ident_list])
         return response
-    
+
     export_as_csv.short_description = _("core.admin.permissionSkipAdmin.downloadAction_label")

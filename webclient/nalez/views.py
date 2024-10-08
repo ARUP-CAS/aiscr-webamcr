@@ -2,12 +2,7 @@ import logging
 from typing import Union
 
 from core.constants import DOKUMENT_CAST_RELATION_TYPE
-from core.message_constants import (
-    ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
-    ZAZNAM_SE_NEPOVEDLO_SMAZAT,
-    ZAZNAM_USPESNE_EDITOVAN,
-    ZAZNAM_USPESNE_SMAZAN,
-)
+from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_SMAZAN
 from core.repository_connector import FedoraTransaction
 from django.conf import settings
 from django.contrib import messages
@@ -19,8 +14,6 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-
-from core.repository_connector import FedoraTransaction
 from dokument.models import Dokument
 from heslar.hesla import (
     HESLAR_OBJEKT_DRUH,
@@ -133,9 +126,13 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
                     },
                 )
                 navazany_objekt.create_transaction(request.user)
-                logger.debug("nalez.views.edit_nalez.form_valid.save_metadata_dokument",
-                             extra={"ident_cely": navazany_objekt.ident_cely,
-                                    "fedora_transaction": navazany_objekt.active_transaction.uid})
+                logger.debug(
+                    "nalez.views.edit_nalez.form_valid.save_metadata_dokument",
+                    extra={
+                        "ident_cely": navazany_objekt.ident_cely,
+                        "fedora_transaction": navazany_objekt.active_transaction.uid,
+                    },
+                )
                 navazany_objekt.close_active_transaction_when_finished = True
                 navazany_objekt.save()
             logger.debug("Form data was changed")

@@ -1,5 +1,4 @@
 import datetime
-from decimal import Decimal
 import logging
 
 from core.constants import OBLAST_CECHY, OBLAST_MORAVA
@@ -13,15 +12,13 @@ from core.tests.runner import (
     TYP_DOKUMENTU_PLAN_SONDY_ID,
 )
 from django.contrib.gis.geos import GEOSGeometry
+from django.db import connection
 from django.test import TestCase
 from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import HistorieVazby
 from pian.models import Kladyzm, Pian
 from projekt.models import Projekt
-from django.db import connection
-
-
 
 logger = logging.getLogger("tests")
 
@@ -65,18 +62,12 @@ class IdentTests(TestCase):
         self.assertEqual(p.ident_cely, f"C-{datetime.datetime.now().year}00002")
 
     def test_get_temporary_project_ident(self):
-        year = datetime.datetime.now().year
-        p = Projekt(
-            id=1,
-        )
         region = OBLAST_MORAVA
         ident = get_temporary_project_ident(region)
-        query = (
-        "select lastval()"
-        )
+        query = "select lastval()"
         cursor = connection.cursor()
         cursor.execute(query)
-        last_val =  cursor.fetchone()[0]
+        last_val = cursor.fetchone()[0]
         self.assertEqual(ident, f"X-M-{'0' * 8}{last_val}")
 
     def test_get_permanent_ident(self):

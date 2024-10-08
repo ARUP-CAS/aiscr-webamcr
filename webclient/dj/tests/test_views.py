@@ -1,12 +1,7 @@
-from django.urls import reverse
-
 from core.tests.runner import TYP_DJ_CELEK_AKCE_ID
 from dj.models import DokumentacniJednotka
-from dj.views import zapsat
-from django.contrib.messages.middleware import MessageMiddleware
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.test import RequestFactory, TestCase
-
+from django.test import TestCase
+from django.urls import reverse
 from pian.models import Pian
 from uzivatel.models import User
 

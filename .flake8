@@ -1,5 +1,5 @@
 [flake8]
-ignore = D203, E231, E501, E702, W503
+ignore = D203, E231, E501, E702, W503, E203
 max-line-length = 120
 exclude =
     .git,
@@ -9,5 +9,7 @@ exclude =
 	dev.py,
 	local_test.py,
 	production.py,
+	dev_test.py,
+	docs.py,
 	apps.py,
 	*/migrations/*

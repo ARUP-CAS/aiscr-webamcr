@@ -16,6 +16,7 @@ class CreateKomponentaForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení komponenty.
     """
+
     class Meta:
         model = Komponenta
         fields = ("presna_datace", "poznamka", "jistota", "aktivity", "obdobi", "areal")
@@ -30,7 +31,13 @@ class CreateKomponentaForm(forms.ModelForm):
         widgets = {
             "poznamka": forms.TextInput(),
             "presna_datace": forms.TextInput(),
-            "jistota": forms.Select(choices=[(True, _("komponenta.forms.createKomponentaForm.choices.true")),(False, _("komponenta.forms.createKomponentaForm.choices.false"))], attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},),
+            "jistota": forms.Select(
+                choices=[
+                    (True, _("komponenta.forms.createKomponentaForm.choices.true")),
+                    (False, _("komponenta.forms.createKomponentaForm.choices.false")),
+                ],
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
+            ),
             "aktivity": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
@@ -42,7 +49,9 @@ class CreateKomponentaForm(forms.ModelForm):
             "poznamka": _("komponenta.forms.createKomponentaForm.poznamka.tooltip"),
         }
 
-    def __init__(self, obdobi_choices, areal_choices, *args, readonly=False,required=None,required_next=None, **kwargs):
+    def __init__(
+        self, obdobi_choices, areal_choices, *args, readonly=False, required=None, required_next=None, **kwargs
+    ):
         super(CreateKomponentaForm, self).__init__(*args, **kwargs)
         self.fields["obdobi"] = TwoLevelSelectField(
             label=_("komponenta.form.createKomponentaForm.obdobi.label"),
@@ -60,15 +69,13 @@ class CreateKomponentaForm(forms.ModelForm):
             ),
             help_text=_("komponenta.form.createKomponentaForm.areal.tooltip"),
         )
-        self.fields["aktivity"].queryset = Heslar.objects.filter(
-            nazev_heslare=HESLAR_AKTIVITA
-        )
+        self.fields["aktivity"].queryset = Heslar.objects.filter(nazev_heslare=HESLAR_AKTIVITA)
         self.fields["aktivity"].required = False
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
                 Div("obdobi", css_class="col-sm-2"),
-                Div("jistota",css_class="col-sm-2"),
+                Div("jistota", css_class="col-sm-2"),
                 Div("presna_datace", css_class="col-sm-2"),
                 Div("areal", css_class="col-sm-2"),
                 Div("aktivity", css_class="col-sm-4"),
@@ -79,7 +86,7 @@ class CreateKomponentaForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
-            if self.fields[key].disabled == True:
+            if self.fields[key].disabled:
                 if isinstance(self.fields[key].widget, forms.widgets.Select):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
                 self.fields[key].help_text = ""
@@ -87,6 +94,8 @@ class CreateKomponentaForm(forms.ModelForm):
             if required or required_next:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (
+                        " required-next" if key in required_next else ""
+                    )
                 else:
-                    self.fields[key].widget.attrs["class"] = 'required-next' if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""

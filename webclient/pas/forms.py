@@ -1,30 +1,23 @@
-
+import logging
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from core.forms import BaseFilterForm, TwoLevelSelectField
+from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
-from crispy_forms.bootstrap import AppendedText
 from dal import autocomplete
 from django import forms
 from django.contrib.auth.models import Group
 from django.contrib.gis.forms import ValidationError
 from django.forms import ModelChoiceField
-from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
-from heslar.hesla import (
-    HESLAR_OBDOBI,
-    HESLAR_OBDOBI_KAT,
-    HESLAR_PREDMET_DRUH,
-    HESLAR_PREDMET_DRUH_KAT,
-)
+from django.utils.translation import gettext_lazy as _
+from heslar.hesla import HESLAR_OBDOBI, HESLAR_OBDOBI_KAT, HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.views import heslar_12
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -36,17 +29,19 @@ def validate_uzivatel_email(email):
     user = User.objects.filter(email=email)
     if not user.exists():
         raise ValidationError(
-            _("pas.forms.te_uzivatel_email.error.noUser.part1") + email + _("pas.forms.te_uzivatel_email.error.noUser.part2"),
+            _("pas.forms.te_uzivatel_email.error.noUser.part1")
+            + email
+            + _("pas.forms.te_uzivatel_email.error.noUser.part2"),
         )
-    if user[0].hlavni_role not in Group.objects.filter(
-        id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
-    ):
+    if user[0].hlavni_role not in Group.objects.filter(id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)):
         logger.debug(
             "validate_uzivatel_email.ValidationError",
             extra={"email": email, "hlavni_role": user[0].hlavni_role},
         )
         raise ValidationError(
-            _("pas.forms.te_uzivatel_email.error.wrongGroup.part1") + email + _("pas.forms.te_uzivatel_email.error.wrongGroup.part2"),
+            _("pas.forms.te_uzivatel_email.error.wrongGroup.part1")
+            + email
+            + _("pas.forms.te_uzivatel_email.error.wrongGroup.part2"),
         )
 
 
@@ -54,6 +49,7 @@ class ProjectModelChoiceField(ModelChoiceField):
     """
     Třída pro správne zobrazení label.
     """
+
     def label_from_instance(self, obj):
         return "%s (%s)" % (obj.ident_cely, obj.vedouci_projektu)
 
@@ -62,6 +58,7 @@ class PotvrditNalezForm(forms.ModelForm):
     """
     Hlavní formulář pro potvrzení nálezu lokality.
     """
+
     predano = forms.BooleanField(
         required=False,
         widget=forms.Select(
@@ -98,9 +95,7 @@ class PotvrditNalezForm(forms.ModelForm):
         }
         help_texts = {
             "evidencni_cislo": _("pas.forms.potvrditNalezForm.evidencniCislo.tooltip"),
-            "predano_organizace": _(
-                "pas.forms.potvrditNalezForm.predanoOrganizace.tooltip"
-            ),
+            "predano_organizace": _("pas.forms.potvrditNalezForm.predanoOrganizace.tooltip"),
             "pristupnost": _("pas.forms.potvrditNalezForm.pristupnost.tooltip"),
         }
 
@@ -111,7 +106,7 @@ class PotvrditNalezForm(forms.ModelForm):
         self.fields["predano"].required = predano_required
         self.fields["pristupnost"].required = True
         self.helper = FormHelper(self)
-        if(not predano_hidden):
+        if not predano_hidden:
             self.helper.layout = Layout(
                 Div(
                     Div("predano_organizace", css_class="col-sm-3"),
@@ -150,6 +145,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení samostatnýho nálezu.
     """
+
     katastr = forms.CharField(
         max_length=50,
         label=_("pas.forms.createSamostatnyNalezForm.katastr.label"),
@@ -177,12 +173,20 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         widgets = {
             "nalezce": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
             "okolnosti": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                       "data-container": ".content-with-table-responsive-container"}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
+                }
             ),
             "specifikace": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                       "data-container": ".content-with-table-responsive-container"}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                    "data-container": ".content-with-table-responsive-container",
+                }
             ),
             "presna_datace": forms.TextInput(),
             "pocet": forms.TextInput(),
@@ -217,14 +221,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         }
 
     def __init__(
-        self,
-        *args,
-        readonly=False,
-        user=None,
-        required=None,
-        required_next=None,
-        project_ident=None,
-        **kwargs
+        self, *args, readonly=False, user=None, required=None, required_next=None, project_ident=None, **kwargs
     ):
         projekt_disabed = kwargs.pop("projekt_disabled", False)
         super(CreateSamostatnyNalezForm, self).__init__(*args, **kwargs)
@@ -241,9 +238,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             ),
             help_text=_("pas.forms.createSamostatnyNalezForm.projekt.tooltip"),
             label=_("pas.forms.createSamostatnyNalezForm.projekt.label"),
-            initial=Projekt.objects.filter(ident_cely=project_ident)[0]
-            if project_ident
-            else None,
+            initial=Projekt.objects.filter(ident_cely=project_ident)[0] if project_ident else None,
         )
         self.fields["katastr"].widget.attrs["readonly"] = True
         self.fields["druh_nalezu"] = TwoLevelSelectField(
@@ -273,7 +268,9 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             nalezce_div = Div(
                 AppendedText(
                     "nalezce",
-                    mark_safe('<button id="create-nalezce-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                    mark_safe(
+                        '<button id="create-nalezce-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
+                    ),
                 ),
                 css_class="col-sm-4 input-osoba select2-input",
             )
@@ -311,13 +308,11 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             if required:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"] = str(
-                        self.fields[key].widget.attrs["class"]
-                    ) + (" required-next" if key in required_next else "")
-                else:
-                    self.fields[key].widget.attrs["class"] = (
-                        "required-next" if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (
+                        " required-next" if key in required_next else ""
                     )
+                else:
+                    self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
         if projekt_disabed:
             self.fields["projekt"].disabled = projekt_disabed
         if self.instance is not None:
@@ -328,11 +323,10 @@ class CreateZadostForm(forms.Form):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení žádosti o spoluprácu.
     """
+
     email_uzivatele = forms.EmailField(
         label=_("pas.forms.createZadostForm.emailUzivatele.label"),
-        widget=forms.EmailInput(
-            attrs={"placeholder": _("pas.forms.createZadostForm.emailUzivatele.placeholder")}
-        ),
+        widget=forms.EmailInput(attrs={"placeholder": _("pas.forms.createZadostForm.emailUzivatele.placeholder")}),
         required=True,
         validators=[validate_uzivatel_email],
         help_text=_("pas.forms.createZadostForm.emailUzivatele.tooltip"),
@@ -341,7 +335,7 @@ class CreateZadostForm(forms.Form):
         widget=forms.Textarea,
         required=True,
         help_text=_("pas.forms.createZadostForm.text.tooltip"),
-        label=_("pas.forms.createZadostForm.text.label")
+        label=_("pas.forms.createZadostForm.text.label"),
     )
 
     def __init__(self, *args, **kwargs):
@@ -349,5 +343,6 @@ class CreateZadostForm(forms.Form):
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
+
 class PasFilterForm(BaseFilterForm):
-    list_to_check = ["historie_datum_zmeny_od","datum_nalezu"]
+    list_to_check = ["historie_datum_zmeny_od", "datum_nalezu"]

@@ -1,13 +1,8 @@
 import logging
 
+from core.tests.runner import AREAL_HRADISTE_ID, EXISTING_EVENT_IDENT, OBDOBI_STREDNI_PALEOLIT_ID
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
-
-from core.tests.runner import (
-    AREAL_HRADISTE_ID,
-    EXISTING_EVENT_IDENT,
-    OBDOBI_STREDNI_PALEOLIT_ID,
-)
 from komponenta.models import Komponenta
 from uzivatel.models import User
 
@@ -29,8 +24,11 @@ class UrlTests(TestCase):
         }
 
         self.client.force_login(self.existing_user)
-        response = self.client.post(reverse("komponenta:zapsat", kwargs={"dj_ident_cely": "C-202000001A-D01"}), data,
-                                    HTTP_REFERER="/dj/detail/C-202000001A-D01")
+        response = self.client.post(
+            reverse("komponenta:zapsat", kwargs={"dj_ident_cely": "C-202000001A-D01"}),
+            data,
+            HTTP_REFERER="/dj/detail/C-202000001A-D01",
+        )
         self.assertEqual(302, response.status_code)
         self.assertEqual(
             Komponenta.objects.filter(ident_cely="C-202000001A-K001").count(),
@@ -44,9 +42,7 @@ class UrlTests(TestCase):
 
         response = self.client.post(
             reverse("komponenta:smazat", kwargs={"ident_cely": "C-202000001A-K001"}),
-            {
-                "csrfmiddlewaretoken": "EnxpCIUt1PwHXwqP7FOtsaMGqlZJFQsIFy0fdKAjiBdInnJNBt2Fluk0Rl9DnC9t"
-            },
+            {"csrfmiddlewaretoken": "EnxpCIUt1PwHXwqP7FOtsaMGqlZJFQsIFy0fdKAjiBdInnJNBt2Fluk0Rl9DnC9t"},
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual(

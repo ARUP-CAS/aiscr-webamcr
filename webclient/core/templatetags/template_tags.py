@@ -1,24 +1,17 @@
 import logging
-
-from datetime import datetime, date, timedelta
+from datetime import date, datetime
 
 import core.message_constants as mc
-
+from core.models import CustomAdminSettings, OdstavkaSystemu
 from django import template
-from django.utils.safestring import mark_safe
-from django.template import Node, TemplateSyntaxError
 from django.conf import settings
+from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
+from django.template import Node, TemplateSyntaxError
 from django.utils.html import escape
 from django.utils.http import urlencode
-
-from django_tables2.templatetags.django_tables2 import (
-    token_kwargs,
-    context_processor_error_msg,
-)
-
-from core.models import OdstavkaSystemu, CustomAdminSettings
-from django.core.cache import cache
+from django.utils.safestring import mark_safe
+from django_tables2.templatetags.django_tables2 import context_processor_error_msg, token_kwargs
 
 register = template.Library()
 logger = logging.getLogger(__name__)
@@ -59,11 +52,7 @@ class QuerystringNodeMulti(Node):
                 if key in params and key == "sort":
                     old_params[key] = list(params[key])
                     for index, val in enumerate(params[key]):
-                        if (
-                            val == value
-                            or val == str("-" + value)
-                            or str("-" + val) == str(value)
-                        ):
+                        if val == value or val == str("-" + value) or str("-" + val) == str(value):
                             old_params[key].pop(index)
                 params[key] = value
 
@@ -155,6 +144,7 @@ def get_settings(item_group, item_id):
     settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
     if settings_query.count() > 0:
         return settings_query.last().value
-    logger.error("core.template_tags.get_settings.missing_settings",
-                 extra={"item_group": item_group, "item_id": item_id})
+    logger.error(
+        "core.template_tags.get_settings.missing_settings", extra={"item_group": item_group, "item_id": item_id}
+    )
     return ""

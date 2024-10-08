@@ -1,13 +1,13 @@
 import json
 
+from core.tests.runner import EXISTING_PROJECT_IDENT_ZACHRANNY
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
-from oznameni.views import index, post_poi2kat
-from core.tests.runner import EXISTING_PROJECT_IDENT_ZACHRANNY
 from oznameni.models import Oznamovatel
+from oznameni.views import index, post_poi2kat
 from projekt.models import Projekt
-from uzivatel.models import User, UserNotificationType
+from uzivatel.models import User
 
 
 class UrlTests(TestCase):

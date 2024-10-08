@@ -1,8 +1,9 @@
-import redis
+from django.conf import settings
 from django.utils.encoding import force_str
 
+import redis
 from webclient.settings.base import get_plain_redis_pass
-from django.conf import settings
+
 
 class RedisConnector:
     r = None

@@ -1,38 +1,35 @@
 import logging
-from rest_framework import serializers
-from .models import User
 from collections import OrderedDict
+
+from rest_framework import serializers
 from rest_framework.fields import SkipField
 from rest_framework.relations import PKOnlyObject
+
+from .models import User
 
 logger = logging.getLogger(__name__)
 
 
-class UserSerializer(serializers.ModelSerializer):    
+class UserSerializer(serializers.ModelSerializer):
     """
     Serializer pro info o uživately.
     """
+
     ident_cely = serializers.CharField(label="amcr:ident_cely")
-    jmeno = serializers.CharField(source="first_name",label="amcr:jmeno")
-    prijmeni = serializers.CharField(source="last_name",label="amcr:prijmeni")
+    jmeno = serializers.CharField(source="first_name", label="amcr:jmeno")
+    prijmeni = serializers.CharField(source="last_name", label="amcr:prijmeni")
     email = serializers.CharField(label="amcr:email")
     osoba = serializers.SerializerMethodField(label="amcr:osoba")
 
-
-
     class Meta:
         model = User
-        fields = ["ident_cely","jmeno","prijmeni","email","osoba"]
+        fields = ["ident_cely", "jmeno", "prijmeni", "email", "osoba"]
 
     def get_osoba(self, obj):
         """
         Metóda pro správne vrácení hodnot o osobe.
         """
-        return {
-            "value": str(obj.osoba) if obj.osoba else None,
-            "idRef": obj.osoba.ident_cely if obj.osoba else ""
-        }
-    
+        return {"value": str(obj.osoba) if obj.osoba else None, "idRef": obj.osoba.ident_cely if obj.osoba else ""}
 
     def to_representation(self, instance):
         """
@@ -59,4 +56,3 @@ class UserSerializer(serializers.ModelSerializer):
                 ret[field.label] = field.to_representation(attribute)
 
         return ret
-

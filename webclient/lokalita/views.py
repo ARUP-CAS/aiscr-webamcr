@@ -1,6 +1,5 @@
 import logging
 
-
 from arch_z.forms import CreateArchZForm
 from arch_z.models import ArcheologickyZaznam
 from arch_z.views import (
@@ -12,29 +11,26 @@ from arch_z.views import (
     get_obdobi_choices,
 )
 from core.constants import AZ_STAV_ZAPSANY, PIAN_POTVRZEN, ZAPSANI_AZ
+from core.coordTransform import transform_geom_to_wgs84
 from core.ident_cely import get_temp_lokalita_ident
 from core.message_constants import (
     LOKALITA_USPESNE_ZAPSANA,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
-    ZAZNAM_USPESNE_EDITOVAN,
 )
-from heslar.hesla_dynamicka import TYP_DJ_KATASTR   
-from core.repository_connector import FedoraTransaction
 from core.views import SearchListView
-from core.coordTransform import transform_geom_to_wgs84
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
 from django.core.cache import cache
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django.utils.translation import gettext as _
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext as _
 from django.views.generic import TemplateView
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import CreateView, UpdateView
@@ -90,15 +86,9 @@ class LokalitaListView(SearchListView):
         self.page_title = _("lokalita.views.lokalitaListView.pageTitle.text")
         self.search_sum = _("lokalita.views.lokalitaListView.pocetVyhledanych.text")
         self.pick_text = _("lokalita.views.lokalitaListView.pickText.text")
-        self.hasOnlyVybrat_header = _(
-            "lokalita.views.lokalitaListView.header.hasOnlyVybrat.text"
-        )
-        self.hasOnlyVlastnik_header = _(
-            "lokalita.views.lokalitaListView.header.hasOnlyVlastnik.text"
-        )
-        self.hasOnlyArchive_header = _(
-            "lokalita.views.lokalitaListView.header.hasOnlyArchive.text"
-        )
+        self.hasOnlyVybrat_header = _("lokalita.views.lokalitaListView.header.hasOnlyVybrat.text")
+        self.hasOnlyVlastnik_header = _("lokalita.views.lokalitaListView.header.hasOnlyVlastnik.text")
+        self.hasOnlyArchive_header = _("lokalita.views.lokalitaListView.header.hasOnlyArchive.text")
         self.hasOnlyNase_header = _("lokalita.views.lokalitaListView.hasOnlyNase_header.text")
         self.default_header = _("lokalita.views.lokalitaListView.header.default.text")
         self.toolbar_name = _("lokalita.views.lokalitaListView.toolbar.title.text")
@@ -126,7 +116,7 @@ class LokalitaListView(SearchListView):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
-        qs = qs.order_by(*sort_params) 
+        qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
         qs = qs.select_related(
             "druh",
@@ -137,9 +127,7 @@ class LokalitaListView(SearchListView):
             "archeologicky_zaznam__hlavni_katastr__okres",
             "archeologicky_zaznam",
             "archeologicky_zaznam__pristupnost",
-        ).prefetch_related(
-            "archeologicky_zaznam__katastry", "archeologicky_zaznam__katastry__okres"
-        )
+        ).prefetch_related("archeologicky_zaznam__katastry", "archeologicky_zaznam__katastry__okres")
         return self.check_filter_permission(qs)
 
     def get_context_data(self, **kwargs):
@@ -149,9 +137,7 @@ class LokalitaListView(SearchListView):
         return context
 
 
-class LokalitaDetailView(
-    LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecordUpdateView
-):
+class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecordUpdateView):
     """
     Třida pohledu pro zobrazení detailu lokality.
     """
@@ -183,12 +169,8 @@ class LokalitaDetailView(
         context["warnings"] = self.request.session.pop("temp_data", None)
         context["page_title"] = _("lokalita.views.lokalitaDetailView.pageTitle")
         context["detail_view"] = True
-        context["form"] = LokalitaForm(
-            instance=self.object, readonly=True, required=False, detail=True
-        )
-        context["arch_z_form"] = CreateArchZForm(
-            instance=self.arch_zaznam, readonly=True, required=False
-        )
+        context["form"] = LokalitaForm(instance=self.object, readonly=True, required=False, detail=True)
+        context["arch_z_form"] = CreateArchZForm(instance=self.arch_zaznam, readonly=True, required=False)
         return context
 
     def get_shows(self):
@@ -239,8 +221,10 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
             az = form_az.save(commit=False)
             az: ArcheologickyZaznam
             fedora_transaction = az.create_transaction(self.request.user, LOKALITA_USPESNE_ZAPSANA)
-            logger.debug("lokalita.views.LokalitaCreateView.form_valid.true",
-                         extra={"transaction": getattr(fedora_transaction, "uid", None)})
+            logger.debug(
+                "lokalita.views.LokalitaCreateView.form_valid.true",
+                extra={"transaction": getattr(fedora_transaction, "uid", None)},
+            )
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
             lokalita = form.save(commit=False)
@@ -258,9 +242,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
             az.close_active_transaction_when_finished = True
             az.save()
 
-            logger.debug(
-                f"arch_z.views.zapsat: {LOKALITA_USPESNE_ZAPSANA}, ID akce: {lokalita.pk}."
-            )
+            logger.debug(f"arch_z.views.zapsat: {LOKALITA_USPESNE_ZAPSANA}, ID akce: {lokalita.pk}.")
         else:
             logger.debug(form_az.errors)
             self.form_invalid(form)
@@ -308,9 +290,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         logger.debug("Lokalita.EditForm is valid")
-        form_az = CreateArchZForm(
-            self.request.POST, instance=self.object.archeologicky_zaznam
-        )
+        form_az = CreateArchZForm(self.request.POST, instance=self.object.archeologicky_zaznam)
         if form_az.is_valid():
             logger.debug("Lokalita.EditFormAz is valid")
             az = form_az.save(commit=False)
@@ -351,9 +331,7 @@ class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["dj_form_create"] = CreateDJForm(
-            typ_arch_z=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-        )
+        context["dj_form_create"] = CreateDJForm(typ_arch_z=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA)
         return context
 
 
@@ -367,16 +345,16 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
         az = self.get_object().archeologicky_zaznam
         if not dj.archeologicky_zaznam == az:
             logger.error("Archeologicky zaznam - Dokumentacni jednotka wrong relation")
-            messages.add_message(
-                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                    )
-            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
-                safe_redirect = request.GET.get("next","core:home")
+            messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+            if url_has_allowed_host_and_scheme(
+                request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
+            ):
+                safe_redirect = request.GET.get("next", "core:home")
             else:
                 safe_redirect = "/"
             return redirect(safe_redirect)
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
         logger.debug(
@@ -416,9 +394,7 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["komponenta_form_create"] = CreateKomponentaForm(
-            get_obdobi_choices(), get_areal_choices()
-        )
+        context["komponenta_form_create"] = CreateKomponentaForm(get_obdobi_choices(), get_areal_choices())
         context["j"] = self.get_dokumentacni_jednotka()
         return context
 
@@ -435,11 +411,11 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komponenta_ident_cely"])
         if not dj.komponenty == komponenta.komponenta_vazby:
             logger.error("Komponenta - Dokumentacni jednotka wrong relation")
-            messages.add_message(
-                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                    )
-            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
-                safe_redirect = request.GET.get("next","core:home")
+            messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+            if url_has_allowed_host_and_scheme(
+                request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
+            ):
+                safe_redirect = request.GET.get("next", "core:home")
             else:
                 safe_redirect = "/"
             return redirect(safe_redirect)
@@ -456,9 +432,7 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         old_nalez_post = self.request.session.pop("_old_nalez_post", None)
         komp_ident_cely = self.request.session.pop("komp_ident_cely", None)
         show = self.get_shows()
-        context["k"] = get_komponenta_form_detail(
-            komponenta, show, old_nalez_post, komp_ident_cely
-        )
+        context["k"] = get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely)
         context["j"] = self.get_dokumentacni_jednotka()
         context["active_komp_ident"] = komponenta.ident_cely
         return context
@@ -475,26 +449,31 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
         context = super().get_context_data(**kwargs)
         context["pian_form_create"] = PianCreateForm()
         return context
-    
-    
+
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         if "index" in self.request.GET and "label" in self.request.GET:
             try:
-                geom=cache.get(str(request.user.id) + "_geom")
-                #cache.delete(str(request.user.id) + "_geom")
-                index=int(self.request.GET["index"])
-                if self.request.GET["label"]!=geom.iloc[index]["label"]:
+                geom = cache.get(str(request.user.id) + "_geom")
+                # cache.delete(str(request.user.id) + "_geom")
+                index = int(self.request.GET["index"])
+                if self.request.GET["label"] != geom.iloc[index]["label"]:
                     raise Exception("lokalita.views.LokalitaPianCreateView.get.label_not_found")
                 context["geom"] = geom.iloc[index].copy()
-                if context["geom"]["epsg"]=='5514' or context["geom"]["epsg"] == 5514:
-                    context["geom"]['geometry'],stat =  transform_geom_to_wgs84(context["geom"]['geometry'])
+                if context["geom"]["epsg"] == "5514" or context["geom"]["epsg"] == 5514:
+                    context["geom"]["geometry"], stat = transform_geom_to_wgs84(context["geom"]["geometry"])
                     if stat != "OK":
                         raise Exception("lokalita.views.LokalitaPianCreateView.get.transormation_error")
             except Exception as err:
                 logger.error("lokalita.views.LokalitaPianCreateView.get.import_pian.error", extra={"err": err})
-                messages.add_message(self.request, messages.ERROR, _("lokalita.views.LokalitaDokumentacniJednotkaRelatedView.import_pian.error"))
-                return redirect(reverse("lokalita:detail-dj", args=[self.arch_zaznam.ident_cely, context['dj_ident_cely']] ))
+                messages.add_message(
+                    self.request,
+                    messages.ERROR,
+                    _("lokalita.views.LokalitaDokumentacniJednotkaRelatedView.import_pian.error"),
+                )
+                return redirect(
+                    reverse("lokalita:detail-dj", args=[self.arch_zaznam.ident_cely, context["dj_ident_cely"]])
+                )
         return self.render_to_response(context)
 
 
@@ -510,11 +489,11 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         pian = get_object_or_404(Pian, ident_cely=self.kwargs["pian_ident_cely"])
         if not dj.pian == pian:
             logger.error("Pian - Dokumentacni jednotka wrong relation")
-            messages.add_message(
-                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                    )
-            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
-                safe_redirect = request.GET.get("next","core:home")
+            messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+            if url_has_allowed_host_and_scheme(
+                request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
+            ):
+                safe_redirect = request.GET.get("next", "core:home")
             else:
                 safe_redirect = "/"
             return redirect(safe_redirect)
@@ -537,20 +516,26 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
             raise PermissionDenied
         if "index" in self.request.GET and "label" in self.request.GET:
             try:
-                geom=cache.get(str(request.user.id) + "_geom")
-                #cache.delete(str(request.user.id) + "_geom")
-                index=int(self.request.GET["index"])
-                if self.request.GET["label"]!=geom.iloc[index]["label"]:
+                geom = cache.get(str(request.user.id) + "_geom")
+                # cache.delete(str(request.user.id) + "_geom")
+                index = int(self.request.GET["index"])
+                if self.request.GET["label"] != geom.iloc[index]["label"]:
                     raise Exception("lokalita.views.LokalitaPianUpdateView.get.label_not_found")
                 context["geom"] = geom.iloc[index].copy()
-                if context["geom"]["epsg"]=='5514' or context["geom"]["epsg"] == 5514:
-                    context["geom"]['geometry'],stat =  transform_geom_to_wgs84(context["geom"]['geometry'])
+                if context["geom"]["epsg"] == "5514" or context["geom"]["epsg"] == 5514:
+                    context["geom"]["geometry"], stat = transform_geom_to_wgs84(context["geom"]["geometry"])
                     if stat != "OK":
                         raise Exception("lokalita.views.LokalitaPianUpdateView.get.transormation_error")
             except Exception as err:
                 logger.error("lokalita.views.LokalitaPianUpdateView.get.import_pian.error", extra={"err": err})
-                messages.add_message(self.request, messages.ERROR, _("lokalita.views.LokalitaDokumentacniJednotkaRelatedView.import_pian.error"))
-                return redirect(reverse("lokalita:detail-dj", args=[self.arch_zaznam.ident_cely, context['dj_ident_cely']] ))
+                messages.add_message(
+                    self.request,
+                    messages.ERROR,
+                    _("lokalita.views.LokalitaDokumentacniJednotkaRelatedView.import_pian.error"),
+                )
+                return redirect(
+                    reverse("lokalita:detail-dj", args=[self.arch_zaznam.ident_cely, context["dj_ident_cely"]])
+                )
         return self.render_to_response(context)
 
 

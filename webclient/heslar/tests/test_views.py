@@ -1,5 +1,5 @@
 from django.test import RequestFactory, TestCase
-from heslar.views import RuianKatastrAutocomplete,zjisti_vychozi_hodnotu
+from heslar.views import RuianKatastrAutocomplete, zjisti_vychozi_hodnotu
 
 
 class HeslarTests(TestCase):
@@ -19,4 +19,4 @@ class HeslarTests(TestCase):
     def test_get_initial_value(self):
         request = self.factory.get("/heslat/zjisti-vychozi-hodnotu?nadrazene=200")
         response = zjisti_vychozi_hodnotu(request)
-        self.assertContains(response=response,text="999", status_code=200)
+        self.assertContains(response=response, text="999", status_code=200)

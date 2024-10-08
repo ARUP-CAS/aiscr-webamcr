@@ -1,20 +1,17 @@
-from django.urls import reverse
-
-from django.test import TestCase
-from django.urls import reverse
-from django.utils.translation import gettext as _
-
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.tests.runner import (
+    AMCR_TESTOVACI_ORGANIZACE_ID,
     EL_CHEFE_ID,
     EXISTING_DOCUMENT_ID,
     EXISTING_EVENT_IDENT,
     EXISTING_EVENT_IDENT2,
+    EXISTING_EVENT_IDENT_INCOMPLETE,
     EXISTING_SAM_EVENT_IDENT,
     HLAVNI_TYP_SONDA_ID,
-    EXISTING_EVENT_IDENT_INCOMPLETE,
-    AMCR_TESTOVACI_ORGANIZACE_ID,
 )
+from django.test import TestCase
+from django.urls import reverse
+from django.utils.translation import gettext as _
 from dokument.models import Dokument
 from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, SPECIFIKACE_DATA_PRESNE
 from heslar.models import RuianKatastr
@@ -29,9 +26,7 @@ class UrlTests(TestCase):
 
     def test_get_detail(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(
-            reverse("arch_z:detail", kwargs={"ident_cely": EXISTING_EVENT_IDENT})
-        )
+        response = self.client.get(reverse("arch_z:detail", kwargs={"ident_cely": EXISTING_EVENT_IDENT}))
         self.assertEqual(200, response.status_code)
 
     def test_get_zapsat(self):
@@ -83,9 +78,7 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual(az.akce.specifikace_data.pk, SPECIFIKACE_DATA_PRESNE)
         self.assertEqual(az.pristupnost.pk, PRISTUPNOST_ANONYM_ID)
-        self.assertTrue(
-            len(ArcheologickyZaznam.objects.filter(ident_cely="C-202000001B")) == 1
-        )
+        self.assertTrue(len(ArcheologickyZaznam.objects.filter(ident_cely="C-202000001B")) == 1)
 
     def test_get_odeslat_s_chybami(self):
         self.client.force_login(self.existing_user)
@@ -98,21 +91,11 @@ class UrlTests(TestCase):
             )
         )
 
-        self.assertTrue(
-            _("Datum zahájení není vyplněn.") in self.client.session["temp_data"]
-        )
-        self.assertTrue(
-            _("Datum ukončení není vyplněn.") in self.client.session["temp_data"]
-        )
-        self.assertTrue(
-            _("Lokalizace okolností není vyplněna.") in self.client.session["temp_data"]
-        )
-        self.assertTrue(
-            _("Hlavní typ není vyplněn.") in self.client.session["temp_data"]
-        )
-        self.assertTrue(
-            _("Hlavní vedoucí není vyplněn.") in self.client.session["temp_data"]
-        )
+        self.assertTrue(_("Datum zahájení není vyplněn.") in self.client.session["temp_data"])
+        self.assertTrue(_("Datum ukončení není vyplněn.") in self.client.session["temp_data"])
+        self.assertTrue(_("Lokalizace okolností není vyplněna.") in self.client.session["temp_data"])
+        self.assertTrue(_("Hlavní typ není vyplněn.") in self.client.session["temp_data"])
+        self.assertTrue(_("Hlavní vedoucí není vyplněn.") in self.client.session["temp_data"])
         self.assertEqual(403, response.status_code)
 
     def test_get_odeslat(self):
@@ -128,9 +111,7 @@ class UrlTests(TestCase):
 
     def test_get_vratit(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(
-            reverse("arch_z:vratit", kwargs={"ident_cely": EXISTING_EVENT_IDENT})
-        )
+        response = self.client.get(reverse("arch_z:vratit", kwargs={"ident_cely": EXISTING_EVENT_IDENT}))
         self.assertEqual(403, response.status_code)
 
     def test_get_pripojit_dokument(self):
@@ -150,9 +131,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
 
-        documents_before = Dokument.objects.filter(
-            casti__archeologicky_zaznam__ident_cely=EXISTING_EVENT_IDENT
-        ).count()
+        documents_before = Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=EXISTING_EVENT_IDENT).count()
         response = self.client.post(
             reverse(
                 "arch_z:pripojit_dokument",
@@ -160,9 +139,7 @@ class UrlTests(TestCase):
             ),
             data,
         )
-        documents_after = Dokument.objects.filter(
-            casti__archeologicky_zaznam__ident_cely=EXISTING_EVENT_IDENT
-        ).count()
+        documents_after = Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=EXISTING_EVENT_IDENT).count()
         self.assertEqual(200, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
         self.assertEqual(documents_before + 1, documents_after)
@@ -174,11 +151,7 @@ class UrlTests(TestCase):
 
     def test_get_zmenit_proj_akci(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(
-            reverse(
-                "arch_z:zmenit-proj-akci", kwargs={"ident_cely": EXISTING_EVENT_IDENT2}
-            )
-        )
+        response = self.client.get(reverse("arch_z:zmenit-proj-akci", kwargs={"ident_cely": EXISTING_EVENT_IDENT2}))
         self.assertEqual(200, response.status_code)
 
     def test_post_zmenit_proj_akci(self):

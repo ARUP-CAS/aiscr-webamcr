@@ -1,9 +1,6 @@
 from django.urls import path
 from pas import views
-from pas.views import (
-    SamostatnyNalezListView,
-    UzivatelSpolupraceListView,
-)
+from pas.views import SamostatnyNalezListView, UzivatelSpolupraceListView
 
 app_name = "pas"
 
@@ -21,9 +18,7 @@ urlpatterns = [
     path("vyber", SamostatnyNalezListView.as_view(), name="list"),
     path("smazat/<str:ident_cely>", views.smazat, name="smazat"),
     path("spoluprace/zadost", views.zadost, name="spoluprace_zadost"),
-    path(
-        "spoluprace/vyber", UzivatelSpolupraceListView.as_view(), name="spoluprace_list"
-    ),
+    path("spoluprace/vyber", UzivatelSpolupraceListView.as_view(), name="spoluprace_list"),
     path(
         "spoluprace/aktivace-email/<int:pk>",
         views.AktivaceEmailView.as_view(),
@@ -45,7 +40,5 @@ urlpatterns = [
         views.post_point_position_2_katastre_with_geom,
         name="post_point_position_2_katastre_with_geom",
     ),
-    path(
-        "spoluprace/smazat/<int:pk>", views.smazat_spolupraci, name="spoluprace_smazani"
-    ),
+    path("spoluprace/smazat/<int:pk>", views.smazat_spolupraci, name="spoluprace_smazani"),
 ]

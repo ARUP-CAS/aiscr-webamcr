@@ -1,22 +1,19 @@
 import logging
 
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Value, CharField, F
-from django.db.models.functions import Concat
-from django.views.generic import ListView
-from django.utils.translation import get_language
-from django_tables2 import SingleTableMixin
-
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
+from core.models import Soubor
+from core.views import ExportMixinDate
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import CharField, F, Value
+from django.db.models.functions import Concat
+from django.utils.translation import get_language
+from django.views.generic import ListView
+from django_tables2 import SingleTableMixin
 from dokument.models import Dokument
 from historie.models import Historie
-from historie.tables import HistorieTable, SimpleHistoryTable
-from core.models import Soubor
+from historie.tables import HistorieTable
 from pas.models import SamostatnyNalez
-
 from projekt.models import Projekt
-from core.views import ExportMixinDate
-from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +23,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
     Třida pohledu pro zobrazení historie záznamu.
     Třída se dedí pro jednotlivá historie.
     """
+
     table_class = HistorieTable
     model = Historie
     template_name = "historie/historie_list.html"
@@ -34,25 +32,33 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
     def _annotate_queryset(self, queryset):
         user = self.request.user
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
-            return queryset.annotate(uzivatel_custom=Concat(
+            return queryset.annotate(
+                uzivatel_custom=Concat(
                     F("uzivatel__last_name"),
                     Value(", "),
                     F("uzivatel__first_name"),
                     Value(" ("),
                     F("uzivatel__ident_cely"),
                     Value(", "),
-                    F("uzivatel__organizace__nazev_zkraceny_en") if get_language() == "en" else F("uzivatel__organizace__nazev_zkraceny"),
+                    F("uzivatel__organizace__nazev_zkraceny_en")
+                    if get_language() == "en"
+                    else F("uzivatel__organizace__nazev_zkraceny"),
                     Value(")"),
                     output_field=CharField(),
-                ))
+                )
+            )
         else:
-            return queryset.annotate(uzivatel_custom=Concat(
-                F("uzivatel__ident_cely"),
-                Value(" ("),
-                F("uzivatel__organizace__nazev_zkraceny_en") if get_language() == "en" else F("uzivatel__organizace__nazev_zkraceny"),
-                Value(")"),
-                output_field=CharField(),
-            ))
+            return queryset.annotate(
+                uzivatel_custom=Concat(
+                    F("uzivatel__ident_cely"),
+                    Value(" ("),
+                    F("uzivatel__organizace__nazev_zkraceny_en")
+                    if get_language() == "en"
+                    else F("uzivatel__organizace__nazev_zkraceny"),
+                    Value(")"),
+                    output_field=CharField(),
+                )
+            )
 
     def get_context_data(self, typ=None, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -67,9 +73,7 @@ class ProjektHistorieListView(HistorieListView):
 
     def get_queryset(self):
         projekt_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(
-            vazba__projekt_historie__ident_cely=projekt_ident
-        ).order_by("datum_zmeny")
+        queryset = self.model.objects.filter(vazba__projekt_historie__ident_cely=projekt_ident).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -88,9 +92,7 @@ class AkceHistorieListView(HistorieListView):
 
     def get_queryset(self):
         akce_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(
-            vazba__archeologickyzaznam__ident_cely=akce_ident
-        ).order_by("datum_zmeny")
+        queryset = self.model.objects.filter(vazba__archeologickyzaznam__ident_cely=akce_ident).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -109,9 +111,9 @@ class DokumentHistorieListView(HistorieListView):
 
     def get_queryset(self):
         dokument_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(
-            vazba__dokument_historie__ident_cely=dokument_ident
-        ).order_by("datum_zmeny")
+        queryset = self.model.objects.filter(vazba__dokument_historie__ident_cely=dokument_ident).order_by(
+            "datum_zmeny"
+        )
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -133,16 +135,12 @@ class SamostatnyNalezHistorieListView(HistorieListView):
 
     def get_queryset(self):
         sn_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(
-            vazba__sn_historie__ident_cely=sn_ident
-        ).order_by("datum_zmeny")
+        queryset = self.model.objects.filter(vazba__sn_historie__ident_cely=sn_ident).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
     def get_context_data(self, **kwargs):
-        context = super(SamostatnyNalezHistorieListView, self).get_context_data(
-            **kwargs
-        )
+        context = super(SamostatnyNalezHistorieListView, self).get_context_data(**kwargs)
         context["typ"] = "samostatny_nalez"
         context["entity"] = context["typ"]
         context["ident_cely"] = self.kwargs["ident_cely"]
@@ -156,9 +154,7 @@ class SpolupraceHistorieListView(HistorieListView):
 
     def get_queryset(self):
         spoluprace_ident = self.kwargs["pk"]
-        queryset = self.model.objects.filter(
-            vazba__spoluprace_historie__pk=spoluprace_ident
-        ).order_by("datum_zmeny")
+        queryset = self.model.objects.filter(vazba__spoluprace_historie__pk=spoluprace_ident).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -204,9 +200,7 @@ class SouborHistorieListView(HistorieListView):
 
     def get_queryset(self):
         soubor_id = self.kwargs["soubor_id"]
-        queryset = self.model.objects.filter(vazba__soubor_historie=soubor_id).order_by(
-            "-datum_zmeny"
-        )
+        queryset = self.model.objects.filter(vazba__soubor_historie=soubor_id).order_by("-datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -218,9 +212,9 @@ class LokalitaHistorieListView(HistorieListView):
 
     def get_queryset(self):
         lokalita_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(
-            vazba__archeologickyzaznam__ident_cely=lokalita_ident
-        ).order_by("datum_zmeny")
+        queryset = self.model.objects.filter(vazba__archeologickyzaznam__ident_cely=lokalita_ident).order_by(
+            "datum_zmeny"
+        )
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -239,9 +233,9 @@ class UzivatelHistorieListView(HistorieListView):
 
     def get_queryset(self):
         user_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(
-            vazba__uzivatelhistorievazba__ident_cely=user_ident
-        ).order_by("datum_zmeny")
+        queryset = self.model.objects.filter(vazba__uzivatelhistorievazba__ident_cely=user_ident).order_by(
+            "datum_zmeny"
+        )
         queryset = self._annotate_queryset(queryset)
         return queryset
 
@@ -260,9 +254,7 @@ class ExterniZdrojHistorieListView(HistorieListView):
 
     def get_queryset(self):
         ez_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(
-            vazba__externizdroj__ident_cely=ez_ident
-        ).order_by("datum_zmeny")
+        queryset = self.model.objects.filter(vazba__externizdroj__ident_cely=ez_ident).order_by("datum_zmeny")
         queryset = self._annotate_queryset(queryset)
         return queryset
 

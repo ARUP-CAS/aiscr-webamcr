@@ -1,16 +1,13 @@
-
-
-from django import forms
-from django.utils.translation import gettext_lazy as _
+import logging
 
 from core.forms import TwoLevelSelectField
+from django import forms
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_KAT
-from heslar.views import heslar_12
 from heslar.models import HeslarHierarchie
+from heslar.views import heslar_12
 
 from .models import Lokalita
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +16,7 @@ class LokalitaForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení lokality.
     """
+
     typ_lokality_disp = forms.CharField(
         label=_("lokalita.forms.typLokality.label"),
         help_text=_("lokalita.forms.typLokality.tooltip"),
@@ -47,12 +45,8 @@ class LokalitaForm(forms.ModelForm):
         }
 
         widgets = {
-            "typ_lokality": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
-            ),
-            "zachovalost": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
-            ),
+            "typ_lokality": forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
+            "zachovalost": forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
             "nazev": forms.TextInput(),
             "popis": forms.Textarea(attrs={"rows": 4, "cols": 40}),
             "poznamka": forms.Textarea(attrs={"rows": 4, "cols": 40}),
@@ -70,15 +64,7 @@ class LokalitaForm(forms.ModelForm):
             "poznamka": _("lokalita.forms.poznamka.tooltip"),
         }
 
-    def __init__(
-        self,
-        *args,
-        required=None,
-        required_next=None,
-        readonly=False,
-        detail=False,
-        **kwargs
-    ):
+    def __init__(self, *args, required=None, required_next=None, readonly=False, detail=False, **kwargs):
         super(LokalitaForm, self).__init__(*args, **kwargs)
         if self.instance.pk is not None:
             nadrazene = HeslarHierarchie.objects.filter(
@@ -108,16 +94,14 @@ class LokalitaForm(forms.ModelForm):
             if required or required_next:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"] = str(
-                        self.fields[key].widget.attrs["class"]
-                    ) + (" required-next" if key in required_next else "")
-                else:
-                    self.fields[key].widget.attrs["class"] = (
-                        "required-next" if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (
+                        " required-next" if key in required_next else ""
                     )
+                else:
+                    self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""

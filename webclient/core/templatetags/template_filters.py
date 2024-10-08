@@ -2,17 +2,15 @@ import datetime
 import logging
 import os
 
-from django import template
-from psycopg2._range import DateRange
-
 from core import constants
-from heslar.models import RuianKatastr
+from django import template
 from django.utils.translation import gettext_lazy as _
-
-from uzivatel.models import Osoba
 from dokument.models import DokumentAutor
 from ez.models import ExterniZdrojAutor, ExterniZdrojEditor
 from heslar import hesla_dynamicka
+from heslar.models import RuianKatastr
+from psycopg2._range import DateRange
+from uzivatel.models import Osoba
 
 register = template.Library()
 
@@ -47,9 +45,9 @@ def hesla_to_list(value):
 @register.filter
 def autori_ordered_list(value):
     return "; ".join(
-                Osoba.objects.filter(
-            externizdrojautor__externi_zdroj=value
-        ).order_by("externizdrojautor__poradi").values_list("vypis_cely", flat=True)
+        Osoba.objects.filter(externizdrojautor__externi_zdroj=value)
+        .order_by("externizdrojautor__poradi")
+        .values_list("vypis_cely", flat=True)
     )
 
 
@@ -59,9 +57,9 @@ def render_daterange(value):
         return None
     if isinstance(value, DateRange):
         if value.lower and value.upper:
-            format_str="%-d.%-m.%Y"
-            if os.name == 'nt':
-                format_str="%#d.%#m.%Y"
+            format_str = "%-d.%-m.%Y"
+            if os.name == "nt":
+                format_str = "%#d.%#m.%Y"
             return (
                 value.lower.strftime(format_str)
                 + " - "
@@ -115,7 +113,7 @@ def get_katastr_name(value):
 
 @register.filter
 def true_false(value):
-    if value and value == True:
+    if value and value is True:
         return _("core.template_filters.true_false.true.label")
     else:
         return _("core.template_filters.true_false.false.label")
@@ -134,9 +132,7 @@ def get_osoby_name(widget):
                 objekt = ExterniZdrojEditor
             arg_list = [arg.strip() for arg in widget["attrs"]["name_id"].split(";")]
             i = 1
-            dok_autory = objekt.objects.filter(
-                externi_zdroj__ident_cely=arg_list[1]
-            ).order_by("poradi")
+            dok_autory = objekt.objects.filter(externi_zdroj__ident_cely=arg_list[1]).order_by("poradi")
             for item in dok_autory:
                 if i == 1:
                     list_hesla = item.get_osoba()
@@ -146,9 +142,7 @@ def get_osoby_name(widget):
         elif "autori" in widget["name"]:
             arg_list = [arg.strip() for arg in widget["attrs"]["name_id"].split(";")]
             i = 1
-            dok_autory = DokumentAutor.objects.filter(
-                dokument__ident_cely=arg_list[1]
-            ).order_by("poradi")
+            dok_autory = DokumentAutor.objects.filter(dokument__ident_cely=arg_list[1]).order_by("poradi")
             list_hesla = ""
             for item in dok_autory:
                 if i == 1:
@@ -158,7 +152,7 @@ def get_osoby_name(widget):
                 i = i + 1
     else:
         osoby = Osoba.objects.filter(pk__in=widget["value"])
-        list_hesla = "; ".join(osoby.values_list("vypis_cely",flat=True))
+        list_hesla = "; ".join(osoby.values_list("vypis_cely", flat=True))
     return list_hesla
 
 
@@ -191,6 +185,7 @@ def get_value_from_heslar(nazev_heslare, hodnota):
     if (nazev_heslare, hodnota) in values:
         return values[(nazev_heslare, hodnota)]
     else:
-        logger.error("template_filters.get_value_from_heslar.error",
-                     extra={"nazev_heslare": nazev_heslare, "hodnota": hodnota})
+        logger.error(
+            "template_filters.get_value_from_heslar.error", extra={"nazev_heslare": nazev_heslare, "hodnota": hodnota}
+        )
         return ""

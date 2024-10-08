@@ -1,15 +1,13 @@
 import logging
 
 import django_tables2 as tables
+from core.models import Permissions as p
+from core.models import Soubor, check_permissions
+from core.utils import SearchTable
 from django.urls import reverse
 from django.utils.html import format_html
-from django_tables2.utils import A
 from django.utils.translation import gettext_lazy as _
-from django.template import Context, Template
-from django.template.loader import get_template
-
-from core.utils import SearchTable
-from core.models import Permissions as p, check_permissions, Soubor
+from django_tables2.utils import A
 
 from .models import SamostatnyNalez, UzivatelSpoluprace
 
@@ -20,23 +18,31 @@ class SamostatnyNalezTable(SearchTable):
     """
     Class pro definování tabulky pro samostatný nález použitých pro zobrazení přehledu nálezu a exportu.
     """
+
     ident_cely = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.ident_cely.label"), linkify=True)
     katastr = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.katastr.label"), default="")
-    datum_nalezu = tables.columns.DateTimeColumn(verbose_name=_("pas.tables.samostatnyNalezTable.datum_nalezu.label"), format="Y-m-d", default="")
+    datum_nalezu = tables.columns.DateTimeColumn(
+        verbose_name=_("pas.tables.samostatnyNalezTable.datum_nalezu.label"), format="Y-m-d", default=""
+    )
     lokalizace = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.lokalizace.label"), default="")
     obdobi = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.obdobi.label"), default="")
     druh_nalezu = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.druh_nalezu.label"), default="")
     specifikace = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.specifikace.label"), default="")
     nalezce = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.nalezce.label"), default="")
-    evidencni_cislo = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.evidencni_cislo.label"), default="")
+    evidencni_cislo = tables.columns.Column(
+        verbose_name=_("pas.tables.samostatnyNalezTable.evidencni_cislo.label"), default=""
+    )
     predano = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.predano.label"), default="")
     predano_organizace = tables.columns.Column(
-        verbose_name=_("pas.tables.samostatnyNalezTable.predano_organizace.label"), 
-        default="", order_by="predano_organizace__nazev_zkraceny"
+        verbose_name=_("pas.tables.samostatnyNalezTable.predano_organizace.label"),
+        default="",
+        order_by="predano_organizace__nazev_zkraceny",
     )
     stav = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.stav.label"), default="")
     pristupnost = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.pristupnost.label"), default="")
-    presna_datace = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.presna_datace.label"), default="")
+    presna_datace = tables.columns.Column(
+        verbose_name=_("pas.tables.samostatnyNalezTable.presna_datace.label"), default=""
+    )
     pocet = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.pocet.label"), default="")
     poznamka = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.poznamka.label"), default="")
     okolnosti = tables.columns.Column(verbose_name=_("pas.tables.samostatnyNalezTable.okolnosti.label"), default="")
@@ -49,7 +55,7 @@ class SamostatnyNalezTable(SearchTable):
             "th": {"class": "white"},
         },
         orderable=False,
-        verbose_name=_("pas.tables.samostatnyNalezTable.nahled.label"), 
+        verbose_name=_("pas.tables.samostatnyNalezTable.nahled.label"),
     )
     columns_to_hide = (
         "predano",
@@ -59,7 +65,7 @@ class SamostatnyNalezTable(SearchTable):
         "pocet",
         "poznamka",
         "okolnosti",
-        "hloubka"
+        "hloubka",
     )
 
     class Meta:
@@ -83,7 +89,7 @@ class SamostatnyNalezTable(SearchTable):
             "pocet",
             "poznamka",
             "okolnosti",
-            "hloubka"
+            "hloubka",
         )
         sequence = (
             "nahled",
@@ -104,7 +110,7 @@ class SamostatnyNalezTable(SearchTable):
             "pocet",
             "poznamka",
             "okolnosti",
-            "hloubka"
+            "hloubka",
         )
 
     def render_nahled(self, value, record):
@@ -114,13 +120,27 @@ class SamostatnyNalezTable(SearchTable):
         soubor = record.nahled_soubor
         if soubor is not None:
             soubor: Soubor
-            thumbnail_url = reverse("core:download_thumbnail", args=('pas', record.ident_cely, soubor.id,))
-            thumbnail_large_url \
-                = reverse("core:download_thumbnail_large", args=('pas', record.ident_cely, soubor.id,))
+            thumbnail_url = reverse(
+                "core:download_thumbnail",
+                args=(
+                    "pas",
+                    record.ident_cely,
+                    soubor.id,
+                ),
+            )
+            thumbnail_large_url = reverse(
+                "core:download_thumbnail_large",
+                args=(
+                    "pas",
+                    record.ident_cely,
+                    soubor.id,
+                ),
+            )
             return format_html(
                 '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
                 'loading="lazy" data-fullsrc="{}" style="opacity:0" onload="this.style.opacity=100">',
-                thumbnail_url, thumbnail_large_url,
+                thumbnail_url,
+                thumbnail_large_url,
             )
         return ""
 
@@ -146,18 +166,18 @@ class smazatColumn(tables.TemplateColumn):
     def render(self, record, table, value, bound_column, **kwargs):
         if not hasattr(table, "request"):
             return ""
-        if check_permissions(p.actionChoices.spoluprace_smazat, table.request.user,record.id):
+        if check_permissions(p.actionChoices.spoluprace_smazat, table.request.user, record.id):
             return super().render(record, table, value, bound_column, **kwargs)
         else:
             return format_html("")
-        
+
+
 class UzivatelSpolupraceTable(SearchTable):
     """
     Class pro definování tabulky pro uživatelskou spolupráci použitých pro zobrazení přehledu spoluprác a exportu.
     """
-    stav = tables.Column(
-        verbose_name="Stav", default=""
-    )
+
+    stav = tables.Column(verbose_name="Stav", default="")
     vedouci = tables.Column(
         accessor="vedouci__name_and_id",
         verbose_name=_("pas.tables.spolupraceTable.vedouci.label"),
@@ -232,6 +252,3 @@ class UzivatelSpolupraceTable(SearchTable):
 
     def __init__(self, *args, **kwargs):
         super(UzivatelSpolupraceTable, self).__init__(*args, **kwargs)
-
-
-

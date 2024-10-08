@@ -1,15 +1,16 @@
 from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Div, Layout
 from django import forms
 from django.contrib.gis.forms import HiddenInput
 from django.utils.translation import gettext_lazy as _
 from pian.models import Pian
-from crispy_forms.layout import Div, Layout
 
 
 class PianCreateForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení pianu.
     """
+
     class Meta:
         model = Pian
         fields = ("presnost", "geom", "geom_sjtsk", "geom_system")
@@ -21,7 +22,9 @@ class PianCreateForm(forms.ModelForm):
             "geom": HiddenInput(),
             "geom_sjtsk": HiddenInput(),
             "geom_system": HiddenInput(),
-            "presnost": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"})
+            "presnost": forms.Select(
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            ),
         }
 
     def __init__(self, presnost=None, *args, **kwargs):

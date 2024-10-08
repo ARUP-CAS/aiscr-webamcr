@@ -3,12 +3,7 @@ import operator
 from functools import reduce
 
 import crispy_forms
-from core.constants import (
-    DOKUMENT_RELATION_TYPE,
-    ROLE_ADMIN_ID,
-    ROLE_ARCHIVAR_ID,
-    ZMENA_KATASTRU,
-)
+from core.constants import DOKUMENT_RELATION_TYPE, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZMENA_KATASTRU
 from core.forms import SelectMultipleSeparator
 from core.models import Soubor
 from crispy_forms.layout import HTML, Div, Layout

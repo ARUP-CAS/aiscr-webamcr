@@ -1,43 +1,39 @@
 import logging
+import re
 from typing import Optional
 
-from django.db import connection, connections
-import re
-
-from django.shortcuts import get_object_or_404
-
-from adb.models import Adb, Kladysm5, AdbSekvence, VyskovyBod
+from adb.models import Adb, AdbSekvence, Kladysm5, VyskovyBod
 from arch_z.models import ArcheologickyZaznam
-from core.constants import IDENTIFIKATOR_DOCASNY_PREFIX, DOKUMENT_CAST_RELATION_TYPE
+from core.constants import DOKUMENT_CAST_RELATION_TYPE, IDENTIFIKATOR_DOCASNY_PREFIX
 from core.exceptions import (
+    MaximalEventCount,
     MaximalIdentNumberError,
     NelzeZjistitRaduError,
     NeznamaGeometrieError,
     PianNotInKladysm5Error,
-    MaximalEventCount,
 )
+from core.repository_connector import FedoraTransaction
+from dj.models import DokumentacniJednotka
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
-
-from core.repository_connector import FedoraTransaction
+from django.db import connection, connections
+from django.shortcuts import get_object_or_404
 from dokument.models import Dokument
-from heslar.models import HeslarDokumentTypMaterialRada, Heslar
+from ez.models import ExterniZdroj
+from heslar.models import Heslar, HeslarDokumentTypMaterialRada
+from komponenta.models import Komponenta, KomponentaVazby
 from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
-from ez.models import ExterniZdroj
-from komponenta.models import Komponenta, KomponentaVazby
-from dj.models import DokumentacniJednotka
 from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
+
 def get_next_sequence(sequence_name: str) -> str:
-    query = (
-        "select nextval(%s)"
-    )
-    cursor = connections['urgent'].cursor()
-    cursor.execute(query,[sequence_name])
+    query = "select nextval(%s)"
+    cursor = connections["urgent"].cursor()
+    cursor.execute(query, [sequence_name])
     return cursor.fetchone()[0]
 
 
@@ -50,7 +46,7 @@ def get_temporary_project_ident(region: str) -> str:
     """
     id_number = f"{get_next_sequence('projekt_xident_seq'):09}"
     return "X-" + region + "-" + id_number
-    
+
 
 def get_project_event_ident(project: Projekt) -> Optional[str]:
     """
@@ -75,12 +71,13 @@ def get_project_event_ident(project: Projekt) -> Optional[str]:
                 else:
                     return project.ident_cely + "A"
             else:
-                logger.error("core.ident_cely.get_project_event_ident.error",
-                             extra={"error": "Maximal number of project events is 26."})
+                logger.error(
+                    "core.ident_cely.get_project_event_ident.error",
+                    extra={"error": "Maximal number of project events is 26."},
+                )
                 raise MaximalEventCount(MAXIMAL_PROJECT_EVENTS)
     else:
-        logger.error("core.ident_cely.get_project_event_ident.error",
-                     extra={"error": "Project is missing ident_cely"})
+        logger.error("core.ident_cely.get_project_event_ident.error", extra={"error": "Project is missing ident_cely"})
         return None
 
 
@@ -88,15 +85,17 @@ def get_dokument_rada(typ, material):
     """
     Metoda pro získaní rady dokumentu podle typu a materiálu dokumentu.
     """
-    instances = HeslarDokumentTypMaterialRada.objects.filter(
-        dokument_typ=typ, dokument_material=material
-    )
+    instances = HeslarDokumentTypMaterialRada.objects.filter(dokument_typ=typ, dokument_material=material)
     if len(instances) == 1:
         return instances[0].dokument_rada
     else:
-        logger.error("core.ident_cely.get_dokument_rada.error",
-                     extra={"error": "Nelze priradit radu k dokumentu. Neznama/nejednoznacna kombinace "
-                                       f"typu {typ.id} a materialu. {material.id}"})
+        logger.error(
+            "core.ident_cely.get_dokument_rada.error",
+            extra={
+                "error": "Nelze priradit radu k dokumentu. Neznama/nejednoznacna kombinace "
+                f"typu {typ.id} a materialu. {material.id}"
+            },
+        )
         raise NelzeZjistitRaduError()
 
 
@@ -108,9 +107,7 @@ def get_temp_dokument_ident(rada, region):
     Příklad: "X-M-TX-000000034"
     """
     sequence = f"{get_next_sequence('dokument_xident_seq'):09}"
-    prefix = str(
-            IDENTIFIKATOR_DOCASNY_PREFIX + region + rada + "-"
-        )
+    prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + rada + "-")
     return prefix + sequence
 
 
@@ -133,8 +130,9 @@ def get_cast_dokumentu_ident(dokument: Dokument) -> str:
         ident = doc_ident + "-D" + str(max_count + 1).zfill(last_digit_count)
         return ident
     else:
-        logger.error("core.ident_cely.get_cast_dokumentu_ident.maximal_number_document_part",
-                     extra={"maximum": str(MAXIMUM)})
+        logger.error(
+            "core.ident_cely.get_cast_dokumentu_ident.maximal_number_document_part", extra={"maximum": str(MAXIMUM)}
+        )
         raise MaximalIdentNumberError(max_count)
 
 
@@ -196,9 +194,11 @@ def get_komponenta_ident(zaznam, fedora_transaction: FedoraTransaction) -> str:
         ident = event_ident + "-K" + str(max_count + 1).zfill(last_digit_count)
         return ident
     else:
-        logger.error("core.ident_cely.get_komponenta_ident.maximal_number_komponent",
-                     extra={"maximum": str(MAXIMAL_KOMPONENTAS)})
+        logger.error(
+            "core.ident_cely.get_komponenta_ident.maximal_number_komponent", extra={"maximum": str(MAXIMAL_KOMPONENTAS)}
+        )
         raise MaximalIdentNumberError(max_count)
+
 
 def get_sm_from_point(point):
     """
@@ -235,9 +235,7 @@ def get_sn_ident(projekt: Projekt) -> str:
     MAXIMAL_FINDS: int = 99999
     last_digit_count = 5
     max_count = 0
-    nalez = (
-        SamostatnyNalez.objects.filter(projekt=projekt).all().order_by("-ident_cely")
-    )
+    nalez = SamostatnyNalez.objects.filter(projekt=projekt).all().order_by("-ident_cely")
     if nalez.exists():
         max_count = int(nalez[0].ident_cely[-last_digit_count:])
     if max_count < MAXIMAL_FINDS:
@@ -272,23 +270,23 @@ def get_adb_ident(pian: Pian) -> str:
     try:
         sequence = AdbSekvence.objects.get(kladysm5=sm5)
     except AdbSekvence.DoesNotExist:
-        sequence = AdbSekvence.objects.using('urgent').create(kladysm5=sm5, sekvence=1)
+        sequence = AdbSekvence.objects.using("urgent").create(kladysm5=sm5, sekvence=1)
     perm_ident_cely = record_list + "-" + f"{sequence.sekvence:06}"
     # Loop through all of the idents that have been imported
     while True:
         if Adb.objects.filter(ident_cely=perm_ident_cely).exists():
             sequence.sekvence += 1
-            logger.warning("core.ident_cely.get_adb_ident.already_exists",
-                           extra={"perm_ident_cely": perm_ident_cely, "sequence": sequence.sekvence})
-            perm_ident_cely = (
-                record_list + "-" + f"{sequence.sekvence:06}"
+            logger.warning(
+                "core.ident_cely.get_adb_ident.already_exists",
+                extra={"perm_ident_cely": perm_ident_cely, "sequence": sequence.sekvence},
             )
+            perm_ident_cely = record_list + "-" + f"{sequence.sekvence:06}"
         else:
             break
     if sequence.sekvence < MAXIMAL_ADBS:
         ident = perm_ident_cely
         sequence.sekvence += 1
-        sequence.save(using='urgent')
+        sequence.save(using="urgent")
         return ident, sm5
     else:
         logger.error("core.ident_cely.get_adb_ident.max_adbs_error", extra={"maximal_adbs": MAXIMAL_ADBS})
@@ -300,30 +298,32 @@ def get_temp_lokalita_ident(typ, region, lokalita):
     Metóda pro výpočet dočasného identu lokality.
 
     Logika složení je: "X-" + region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence lokalita_xident_seq doplněno na 9 číslic.
-    
+
     Příklad: "X-M-L000123456"
     """
     prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-" + typ)
     sequence = f"{get_next_sequence('lokalita_xident_seq'):09}"
     return prefix + sequence
 
+
 def get_temp_akce_ident(region):
     """
     Metóda pro výpočet dočasného identu samostatný akce.
 
     Logika složení je: "X-" + region (M anebo C) + "-9" + 9 místní číslo ze sekvence akce_xident_seq doplněno na 9 číslic -A.
-    
+
     Příklad: "X-M-9000123456A"
     """
     id_number = f"{get_next_sequence('akce_xident_seq'):09}"
     return str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9" + id_number + "A")
+
 
 def get_temp_ez_ident():
     """
     Metóda pro výpočet dočasného identu externího zdroje.
 
     Logika složení je: "X-BIB" + 9 místní číslo ze sekvence externi_zdroj_xident_seq doplněno na 9 číslic.
-    
+
     Příklad: "X-BIB-000123456"
     """
     id_number = f"{get_next_sequence('externi_zdroj_xident_seq'):09}"
@@ -336,32 +336,35 @@ def get_heslar_ident():
     """
     return f"{Heslar.ident_prefix}-{get_next_sequence('heslar_ident_cely_seq'):06}"
 
+
 def get_uzivatel_ident():
     """
     Metoda pro výpočet identu uživatele.
     """
     return f"U-{get_next_sequence('auth_user_ident_seq'):06}"
 
+
 def get_organizace_ident():
     """
     Metoda pro výpočet identu organizce.
     """
-    return  f"ORG-{get_next_sequence('organizace_ident_seq'):06}"
+    return f"ORG-{get_next_sequence('organizace_ident_seq'):06}"
+
 
 def get_osoba_ident():
     """
     Metoda pro výpočet identu osoby.
     """
-    return  f"OS-{get_next_sequence('osoba_ident_seq'):06}"
+    return f"OS-{get_next_sequence('osoba_ident_seq'):06}"
+
 
 def get_record_from_ident(ident_cely):
     """
     Funkce pro získaní záznamu podle ident cely.
     """
-    from projekt.models import Projekt
     from dokument.models import Dokument
     from pas.models import SamostatnyNalez
-
+    from projekt.models import Projekt
 
     if bool(re.fullmatch(r"(C|M|X-C|X-M)-\d{9}", ident_cely)):
         logger.debug("core.ident_cely.get_record_from_ident.project", extra={"ident_cely": ident_cely})
@@ -382,11 +385,15 @@ def get_record_from_ident(ident_cely):
         logger.debug("core.ident_cely.get_record_from_ident.dokumentacni_jednotka", extra={"ident_cely": ident_cely})
         return get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if bool(re.fullmatch(r"(C|M|X-C|X-M)-(N|L|K)\d{7,9}-D\d{2}", ident_cely)):
-        logger.debug("core.ident_cely.get_record_from_ident.dokumentacni_jednotka_lokality", extra={"ident_cely": ident_cely})
+        logger.debug(
+            "core.ident_cely.get_record_from_ident.dokumentacni_jednotka_lokality", extra={"ident_cely": ident_cely}
+        )
         return get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if bool(re.fullmatch(r"(C|M|X-C|X-M)-\w{7,10}\D{1}-K\d{3}", ident_cely)):
-        logger.debug("core.ident_cely.get_record_from_ident.komponenta_on_dokumentacni_jednotka",
-                     extra={"ident_cely": ident_cely})
+        logger.debug(
+            "core.ident_cely.get_record_from_ident.komponenta_on_dokumentacni_jednotka",
+            extra={"ident_cely": ident_cely},
+        )
         return get_object_or_404(Komponenta, ident_cely=ident_cely)
     if bool(re.fullmatch(r"ADB-\D{4}\d{2}-\d{6}", ident_cely)):
         logger.debug("core.ident_cely.get_record_from_ident.adb", extra={"ident_cely": ident_cely})

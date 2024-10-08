@@ -1,18 +1,19 @@
-from webclient.settings.base import get_secret
-from django.test.runner import DiscoverRunner as BaseRunner
-import logging
-import unittest
-import unittest.runner
 import itertools
-import collections
+import logging
+import unittest.runner
+
+from django.test.runner import DiscoverRunner as BaseRunner
 
 logger = logging.getLogger(__name__)
 
-USERS={ "archeolog":{"USERNAME":"archeolog1@arup.cas.cz" , "PASSWORD":"afsd15Easd#" },
-       "archivar":  {"USERNAME":"archivar1@arup.cas.cz" , "PASSWORD":"afsd15Easd7" } , 
-       "badatel":  {"USERNAME":"badatel2@arup.cas.cz" , "PASSWORD":"afsd15Easd2" } , 
-        "badatel1":  {"USERNAME":"zdenek.omelka@email.cz" , "PASSWORD":"afsd15Easd3" } , 
+USERS = {
+    "archeolog": {"USERNAME": "archeolog1@arup.cas.cz", "PASSWORD": "afsd15Easd#"},
+    "archivar": {"USERNAME": "archivar1@arup.cas.cz", "PASSWORD": "afsd15Easd7"},
+    "badatel": {"USERNAME": "badatel2@arup.cas.cz", "PASSWORD": "afsd15Easd2"},
+    "badatel1": {"USERNAME": "zdenek.omelka@email.cz", "PASSWORD": "afsd15Easd3"},
 }
+TYP_DJ_CELEK_AKCE_ID = ""
+
 
 class CustomTextTestResult(unittest.runner.TextTestResult):
     """Extension of TextTestResult to support numbering test cases"""
@@ -27,8 +28,8 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
     def startTest(self, test):
         """Writes the test number to the stream if showAll is set, then calls super impl"""
 
-        if True:# self.showAll:
-            progress = '[{0}/{1}] '.format(next(self.test_numbers), self.test_case_count)
+        if True:  # self.showAll:
+            progress = "[{0}/{1}] ".format(next(self.test_numbers), self.test_case_count)
             self.stream.write(progress)
 
             # Also store the progress in the test itself, so that if it errors,
@@ -44,13 +45,11 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
         info = super(CustomTextTestResult, self)._exc_info_to_string(err, test)
 
         if self.showAll:
-            info = 'Test number: {index}\n{info}'.format(
-                index=test.progress_index,
-                info=info
-            )
+            info = "Test number: {index}\n{info}".format(index=test.progress_index, info=info)
 
         return info
-    
+
+
 class CustomTextTestRunner(unittest.runner.TextTestRunner):
     """Extension of TextTestRunner to support numbering test cases"""
 
@@ -71,19 +70,16 @@ class CustomTextTestRunner(unittest.runner.TextTestRunner):
 
 
 class AMCRSeleniumTestRunner(BaseRunner):
-    def __init__(self, *args, **kwargs):        
+    def __init__(self, *args, **kwargs):
         super(AMCRSeleniumTestRunner, self).__init__(*args, **kwargs)
-        self.test_runner=CustomTextTestRunner
-    
-    
+        self.test_runner = CustomTextTestRunner
+
     def setup_databases(self, *args, **kwargs):
-        self.keepdb=True
+        self.keepdb = True
         temp_return = super().setup_databases(*args, **kwargs)
-        return temp_return  
-        
+        return temp_return
 
     def teardown_databases(self, *args, **kwargs):
         # do somthing
-        #return super().teardown_databases(*args, **kwargs)
+        # return super().teardown_databases(*args, **kwargs)
         pass
-        

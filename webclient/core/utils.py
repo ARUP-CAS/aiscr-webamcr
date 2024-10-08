@@ -1,19 +1,15 @@
+import glob
 import json
 import logging
 import mimetypes
 import os
-import django
 import tempfile
-import glob
 
 import core.message_constants as mc
+import django
 import requests
-from arch_z.models import ArcheologickyZaznam, ArcheologickyZaznamKatastr
-from django.contrib.gis.db.models.functions import PointOnSurface ,Centroid
-from django.conf import ENVIRONMENT_VARIABLE, settings
-from django.apps import apps
-from django.core.cache import caches
-
+from arch_z.models import ArcheologickyZaznam
+from core.constants import ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
 from core.message_constants import (
     VALIDATION_EMPTY,
     VALIDATION_LINE_LENGTH,
@@ -21,16 +17,19 @@ from core.message_constants import (
     VALIDATION_NOT_SIMPLE,
     VALIDATION_NOT_VALID,
 )
-from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 from dj.models import DokumentacniJednotka
+from django.apps import apps
+from django.conf import ENVIRONMENT_VARIABLE, settings
+from django.contrib.gis.db.models.functions import Centroid, PointOnSurface
+from django.core.cache import caches
 from django.db import connection, transaction
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
+from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 from heslar.models import RuianKatastr
 from pian.models import Pian
-from core.constants import ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
 from rosetta.conf import settings as rosetta_settings
 
 logger = logging.getLogger(__name__)
@@ -42,61 +41,65 @@ class CannotFindCadasterCentre(Exception):
 
 
 def file_validate_epsg(epsg):
-    if epsg == '4326' or epsg == 4326:
+    if epsg == "4326" or epsg == 4326:
         return True
-    elif epsg == '5514' or epsg == 5514:
+    elif epsg == "5514" or epsg == 5514:
         return True
     else:
         return False
 
-def balanced_parentheses(expression):    
-    stack = 0   
+
+def balanced_parentheses(expression):
+    stack = 0
     for char in expression:
-        if char == '(' :
-            stack+=1       
-        elif char == ')':
+        if char == "(":
+            stack += 1
+        elif char == ")":
             if stack == 0:
                 return False
-            stack-=1
+            stack -= 1
     if stack != 0:
-        return False              
+        return False
     return True
+
 
 def validate_and_split_geometry(geom):
     """
     Funkce pro validaci řetězce s WKT geometrií.
     """
     new_rows = []
-    if not isinstance(geom.iloc[2], str) or geom.iloc[2]=='':
-        geom['result'] = _("pian.views.importovatPianView.check.wrongGeometry")
+    if not isinstance(geom.iloc[2], str) or geom.iloc[2] == "":
+        geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
         new_rows.append(geom)
         return new_rows
-    query = """with geom_to_insert as (
-        select ST_GeomFromText(%s) as geom),
-        geometries as ( select (ST_Dump(geom)).geom as polygon
-        from geom_to_insert),
-        ring as (
-        select 
-        ST_IsValid(polygon) AS is_valid,
-        ST_IsSimple(polygon) AS is_simple,
-        ST_IsValidReason(polygon) AS invalid_reason,
-        ST_AsText((ST_DumpRings(polygon)).geom) as rings,
-        ST_GeometryType(polygon)
-        from geometries 
-        where ST_GeometryType(polygon) = 'ST_Polygon'),
-        other as ( 
-        select 
-        ST_IsValid(polygon) AS is_valid,
-        ST_IsSimple(polygon) AS is_simple,
-        ST_IsValidReason(polygon) AS invalid_reason,
-        ST_AsText(polygon) as rings,
-        ST_GeometryType(polygon)
-        from geometries
-        where ST_GeometryType(polygon) != 'ST_Polygon')
-        select * from 	ring
-        union all
-        select *
-        from other"""
+    query = """
+        WITH geom_to_insert AS
+          (SELECT ST_GeomFromText(%s) AS geom),
+             geometries AS
+          (SELECT (ST_Dump(geom)).geom AS POLYGON
+           FROM geom_to_insert),
+             ring AS
+          (SELECT ST_IsValid(POLYGON) AS is_valid,
+                  ST_IsSimple(POLYGON) AS is_simple,
+                  ST_IsValidReason(POLYGON) AS invalid_reason,
+                  ST_AsText((ST_DumpRings(POLYGON)).geom) AS rings,
+                  ST_GeometryType(POLYGON)
+           FROM geometries
+           WHERE ST_GeometryType(POLYGON) = 'ST_Polygon'),
+             other AS
+          (SELECT ST_IsValid(POLYGON) AS is_valid,
+                  ST_IsSimple(POLYGON) AS is_simple,
+                  ST_IsValidReason(POLYGON) AS invalid_reason,
+                  ST_AsText(POLYGON) AS rings,
+                  ST_GeometryType(POLYGON)
+           FROM geometriesdd
+           WHERE ST_GeometryType(POLYGON) != 'ST_Polygon')
+        SELECT *
+        FROM ring
+        UNION ALL
+        SELECT *
+        FROM other
+    """
     cursor = connection.cursor()
     sid = transaction.savepoint()
     try:
@@ -104,23 +107,24 @@ def validate_and_split_geometry(geom):
         transaction.savepoint_commit(sid)
     except Exception as e:
         transaction.savepoint_rollback(sid)
-        logger.debug("core.utils.file_validate_geometry.exception", extra={"e": e})        
-        geom['result'] = _("pian.views.importovatPianView.check.wrongGeometry")
-        new_rows.append(geom)        
+        logger.debug("core.utils.file_validate_geometry.exception", extra={"e": e})
+        geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
+        new_rows.append(geom)
         return new_rows
     rows = cursor.fetchall()
-    for index,row in enumerate(rows):
+    for index, row in enumerate(rows):
         new_geom = geom.copy()
         new_geom.iloc[2] = row[3]
-        if len(rows)>1:
-            new_geom.iloc[0]=f"{geom.iloc[0]}_{index+1}"
+        if len(rows) > 1:
+            new_geom.iloc[0] = f"{geom.iloc[0]}_{index + 1}"
         if row[0] is False or row[1] is False:
-            new_geom['result'] = _("pian.views.importovatPianView.check.wrongGeometry")
+            new_geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
             new_rows.append(new_geom)
             return new_rows
-        new_geom['result'] = True
+        new_geom["result"] = True
         new_rows.append(new_geom)
     return new_rows
+
 
 def get_mime_type(file_name):
     """
@@ -131,6 +135,7 @@ def get_mime_type(file_name):
     if file_name.endswith(".csv"):
         mime_type = "text/csv"
     return mime_type
+
 
 def get_cadastre_from_point(point):
     """
@@ -176,33 +181,51 @@ def get_cadastre_from_point_with_geometry(point):
         )
         return None
 
+
 def get_all_pians_with_akce(ident_cely):
     """
     Funkce pro získaní všech pianů s akci.
     """
-    query = (
-        " (SELECT A.id,A.ident_cely,ST_AsText(A.geom) as geometry, A.dj,katastr.nazev AS katastr_nazev, katastr.id as ku_id"
-        " FROM public.ruian_katastr katastr "
-        " JOIN ( SELECT pian.id,pian.ident_cely, "
-        "  CASE "
-        "  WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_centroid(pian.geom)  "
-        "  WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_lineinterpolatepoint(pian.geom,0.5)"
-        "  ELSE st_centroid(pian.geom) END AS geom,"
-        " dj.ident_cely as dj"
-        " from public.pian pian "
-        " join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely LIKE %s"
-        " WHERE dj.ident_cely IS NOT NULL ) AS A ON ST_Intersects(katastr.hranice,geom)"
-        " ORDER BY A.dj, katastr.nazev"
-        " LIMIT 1 )"
-        " union all "
-        "(select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj, katastr.nazev AS katastr_nazev, katastr.id as ku_id"
-        " from public.pian pian"
-        " left join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely LIKE %s"
-        " left join public.ruian_katastr katastr ON ST_Intersects(katastr.hranice,pian.geom)"
-        " where dj.ident_cely IS NOT NULL"
-        " order by dj.ident_cely, katastr_nazev"
-        " limit 990)"
-    )
+    query = """
+        (SELECT A.id,
+              A.ident_cely,
+              ST_AsText(A.geom) AS geometry,
+              A.dj,
+              katastr.nazev AS katastr_nazev,
+              katastr.id AS ku_id
+        FROM public.ruian_katastr katastr
+        JOIN
+         (SELECT pian.id,
+                 pian.ident_cely,
+                 CASE
+                     WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_centroid(pian.geom)
+                     WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_lineinterpolatepoint(pian.geom, 0.5)
+                     ELSE st_centroid(pian.geom)
+                 END AS geom,
+                 dj.ident_cely AS dj
+          FROM public.pian pian
+          JOIN public.dokumentacni_jednotka dj ON pian.id=dj.pian
+          AND dj.ident_cely LIKE %s
+          WHERE dj.ident_cely IS NOT NULL) AS A ON ST_Intersects(katastr.hranice, geom)
+        ORDER BY A.dj,
+                katastr.nazev
+        LIMIT 1)
+        UNION ALL
+        (SELECT pian.id,
+              pian.ident_cely,
+              ST_AsText(pian.geom) AS geometry,
+              dj.ident_cely AS dj,
+              katastr.nazev AS katastr_nazev,
+              katastr.id AS ku_id
+        FROM public.pian pian
+        LEFT JOIN public.dokumentacni_jednotka dj ON pian.id=dj.pian
+        AND dj.ident_cely LIKE %s
+        LEFT JOIN public.ruian_katastr katastr ON ST_Intersects(katastr.hranice, pian.geom)
+        WHERE dj.ident_cely IS NOT NULL
+        ORDER BY dj.ident_cely,
+                katastr_nazev
+        LIMIT 990)
+        """
     try:
         cursor = connection.cursor()
         cursor.execute(query, [ident_cely + "-%", ident_cely + "-%"])
@@ -248,7 +271,7 @@ def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
     if dj.typ.id == TYP_DJ_KATASTR:
         pass
     else:
-        akce_ident_cely = dj.archeologicky_zaznam.ident_cely        
+        akce_ident_cely = dj.archeologicky_zaznam.ident_cely
         hlavni_id = None
         ostatni_id = []
         for line in get_all_pians_with_akce(akce_ident_cely):
@@ -258,10 +281,10 @@ def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
                 ostatni_id.append(line["dj_katastr_id"])
 
         zaznam = ArcheologickyZaznam.objects.filter(ident_cely=akce_ident_cely).first()
-        if zaznam:                 
+        if zaznam:
             if hlavni_id is not None:
-                zaznam.hlavni_katastr_id = hlavni_id            
-            zaznam.katastry.set(ostatni_id)  
+                zaznam.hlavni_katastr_id = hlavni_id
+            zaznam.katastry.set(ostatni_id)
             zaznam.active_transaction = fedora_transaction
             zaznam.save()
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
@@ -271,51 +294,61 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     """
     Funkce pro bodu, geomu a presnosti z akce.
     """
-    logger.debug("core.utils.get_pians_from_akce.start",
-                 extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely})
+    logger.debug("core.utils.get_pians_from_akce.start", extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely})
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng,ST_AsText(ST_Envelope(hranice)) as bbox "
         " from public.ruian_katastr where "
         " id=%s"
     )
     bod_ku = RuianKatastr.objects.raw(query, [katastr.pk])[0]
-    pians = []    
+    pians = []
     try:
         if len(akce_ident_cely) > 1:
-            akce=akce_ident_cely.split("-D")[0]
-            DJs = (DokumentacniJednotka.objects.annotate(pian__centroid=PointOnSurface("pian__geom"))
-                       .filter(ident_cely__istartswith=akce).order_by('ident_cely'))
+            akce = akce_ident_cely.split("-D")[0]
+            DJs = (
+                DokumentacniJednotka.objects.annotate(pian__centroid=PointOnSurface("pian__geom"))
+                .filter(ident_cely__istartswith=akce)
+                .order_by("ident_cely")
+            )
             for dj in DJs:
-                logger.debug("core.utils.get_pians_from_akce.loop_dj",
-                                extra={"dj_ident_cely": dj.ident_cely, "pian": getattr(dj.pian, "ident_cely", None)})
+                logger.debug(
+                    "core.utils.get_pians_from_akce.loop_dj",
+                    extra={"dj_ident_cely": dj.ident_cely, "pian": getattr(dj.pian, "ident_cely", None)},
+                )
                 if dj.pian and dj.pian.geom:
-                    bod = dj.pian__centroid  
-                    pians.append({
-                        "lat": str(bod[1]),
-                        "lng": str(bod[0]),
-                        "zoom": 12 if dj.typ.id==TYP_DJ_KATASTR else 17,
-                        "geom": "" if dj.typ.id==TYP_DJ_KATASTR else str(dj.pian.geom).split(";")[1].replace(", ", ","),  
-                        "presnost": str(dj.pian.presnost.zkratka),
-                        "pian_ident_cely": str(dj.pian.ident_cely),
-                        "color": 'gold' if akce_ident_cely == dj.ident_cely  else  'green',
-                        "bbox" : str(bod_ku.bbox) if dj.typ.id==TYP_DJ_KATASTR else "",
-                        "DJ_ident_cely" : dj.ident_cely_safe,
-                    }) 
+                    bod = dj.pian__centroid
+                    pians.append(
+                        {
+                            "lat": str(bod[1]),
+                            "lng": str(bod[0]),
+                            "zoom": 12 if dj.typ.id == TYP_DJ_KATASTR else 17,
+                            "geom": ""
+                            if dj.typ.id == TYP_DJ_KATASTR
+                            else str(dj.pian.geom).split(";")[1].replace(", ", ","),
+                            "presnost": str(dj.pian.presnost.zkratka),
+                            "pian_ident_cely": str(dj.pian.ident_cely),
+                            "color": "gold" if akce_ident_cely == dj.ident_cely else "green",
+                            "bbox": str(bod_ku.bbox) if dj.typ.id == TYP_DJ_KATASTR else "",
+                            "DJ_ident_cely": dj.ident_cely_safe,
+                        }
+                    )
 
-        if len(pians)==0:    
-            
+        if len(pians) == 0:
+
             bod = [bod_ku.lat, bod_ku.lng]
-            pians.append({
-                        "lat": str(bod_ku.lat),
-                        "lng": str(bod_ku.lng),
-                        "zoom": '12',
-                        "geom": '',
-                        "presnost": 4,
-                        "pian_ident_cely": '',
-                        "color": 'green' ,
-                        "bbox" : str(bod_ku.bbox),
-                    }) 
-           
+            pians.append(
+                {
+                    "lat": str(bod_ku.lat),
+                    "lng": str(bod_ku.lng),
+                    "zoom": "12",
+                    "geom": "",
+                    "presnost": 4,
+                    "pian_ident_cely": "",
+                    "color": "green",
+                    "bbox": str(bod_ku.bbox),
+                }
+            )
+
         return pians
     except IndexError as err:
         logger.error(
@@ -337,9 +370,7 @@ def get_dj_pians_centroid(ident_cely, lat, lng):
         " limit 20000"
     )
     try:
-        pians = Pian.objects.raw(
-            query, [ident_cely[0 : ident_cely.rindex("-")] + "%", lat, lng]
-        )
+        pians = Pian.objects.raw(query, [ident_cely[0 : ident_cely.rindex("-")] + "%", lat, lng])
         return pians
     except Exception:
         logger.debug("core.utils.get_dj_pians_centroid.no_pians")
@@ -350,10 +381,7 @@ def get_num_pians_from_envelope(left, bottom, right, top):
     """
     Funkce pro získaní počtu pianů ze čtverce.
     """
-    query = (
-        "select count(*) from public.pian pian where "
-        "pian.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 1"
-    )
+    query = "select count(*) from public.pian pian where " "pian.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 1"
     try:
         # num = Pian.objects.raw(query, [left, bottom, right, top])
         cursor = connection.cursor()
@@ -401,10 +429,8 @@ def get_projekt_stav_label(stav):
     from core.constants import (
         PROJEKT_STAV_ARCHIVOVANY,
         PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
-        PROJEKT_STAV_OZNAMENY,
         PROJEKT_STAV_PRIHLASENY,
         PROJEKT_STAV_UKONCENY_V_TERENU,
-        PROJEKT_STAV_UZAVRENY,
         PROJEKT_STAV_ZAHAJENY_V_TERENU,
         PROJEKT_STAV_ZAPSANY,
         PROJEKT_STAV_ZRUSENY,
@@ -438,8 +464,7 @@ def get_project_geom(ident_cely):
     try:
         return queryset.only("id", "ident_cely", "geom", "stav")
     except IndexError:
-        logger.debug(
-            "core.utils.get_projects_from_envelope.no_points", extra={"ident_cely": ident_cely})
+        logger.debug("core.utils.get_projects_from_envelope.no_points", extra={"ident_cely": ident_cely})
         return None
 
 
@@ -455,15 +480,18 @@ def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p7
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
-    stavy=[]
-    if p1: stavy.append(1)
-    if p2: stavy.append(2)
-    if p3: stavy.append(3)
-    if p46: 
+    stavy = []
+    if p1:
+        stavy.append(1)
+    if p2:
+        stavy.append(2)
+    if p3:
+        stavy.append(3)
+    if p46:
         stavy.append(4)
         stavy.append(5)
         stavy.append(6)
-    if p78: 
+    if p78:
         stavy.append(7)
         stavy.append(8)
     queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy))
@@ -494,15 +522,18 @@ def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78, r
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
-    stavy=[]
-    if p1: stavy.append(1)
-    if p2: stavy.append(2)
-    if p3: stavy.append(3)
-    if p46: 
+    stavy = []
+    if p1:
+        stavy.append(1)
+    if p2:
+        stavy.append(2)
+    if p3:
+        stavy.append(3)
+    if p46:
         stavy.append(4)
         stavy.append(5)
         stavy.append(6)
-    if p78: 
+    if p78:
         stavy.append(7)
         stavy.append(8)
     queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy))
@@ -526,12 +557,10 @@ def get_project_pas_from_envelope(left, bottom, right, top, ident_cely):
     Funkce pro získaní pas projekt ze čtverce.
     @janhnat zohlednit pristupnost - zohledneno v ProjectPasFromEnvelopeView
     """
-    from django.contrib.gis.geos import Polygon
     from django.db.models import Q
     from pas.models import SamostatnyNalez
 
     c1 = Q(geom__isnull=False)
-    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
     c3 = Q(projekt__ident_cely=ident_cely)
     queryset = SamostatnyNalez.objects.filter(c3).filter(c1)
     # FIltering bbox is disabled-because of caching add .filter(c2)
@@ -552,28 +581,24 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
     """
     from arch_z.models import Akce
     from dj.models import DokumentacniJednotka
-    from django.contrib.gis.geos import Polygon
     from django.db.models import Q
 
-    q1 = Akce.objects.filter(projekt__ident_cely=ident_cely).only(
-        "archeologicky_zaznam__ident_cely"
-    )
+    q1 = Akce.objects.filter(projekt__ident_cely=ident_cely).only("archeologicky_zaznam__ident_cely")
 
     pians = []
     d = None
     for i in q1:
         d = list(
-                (
-                DokumentacniJednotka.objects.filter(
-                    Q(ident_cely__istartswith=i.archeologicky_zaznam.ident_cely)
-                )
+            (
+                DokumentacniJednotka.objects.filter(Q(ident_cely__istartswith=i.archeologicky_zaznam.ident_cely))
                 .distinct()
                 .values_list("pian__id", flat=True)
-            ))
-            # FIltering bbox is disabled-because of caching add .filter(Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom])))
+            )
+        )
+        # FIltering bbox is disabled-because of caching add .filter(Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom])))
         if d:
             pians.extend(d)
-    try:  
+    try:
         return Pian.objects.filter(pk__in=pians)
     except IndexError:
         logger.debug(
@@ -583,15 +608,15 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
         return None
 
 
-def get_3d_from_envelope(left, bottom, right, top,request):
+def get_3d_from_envelope(left, bottom, right, top, request):
     """
     Funkce pro získaní 3d ze čtverce.
     Bez pristupnosti
     """
+    from core.views import PermissionFilterMixin
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
     from dokument.models import DokumentExtraData
-    from core.views import PermissionFilterMixin
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
@@ -616,11 +641,11 @@ def get_num_pass_from_envelope(left, bottom, right, top, request):
     @janhnat zohlednit pristupnost - done
     musi zohlednit pristupnost [mapa_pas]
     """
+    from core.models import Permissions as p
+    from core.views import PermissionFilterMixin
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
     from pas.models import SamostatnyNalez
-    from core.views import PermissionFilterMixin
-    from core.models import Permissions as p
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
@@ -645,11 +670,11 @@ def get_pas_from_envelope(left, bottom, right, top, request):
     @janhnat zohlednit pristupnost - done
     musi zohlednit pristupnost [mapa_pas]
     """
+    from core.models import Permissions as p
+    from core.views import PermissionFilterMixin
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
     from pas.models import SamostatnyNalez
-    from core.views import PermissionFilterMixin
-    from core.models import Permissions as p
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
@@ -674,11 +699,10 @@ def get_num_pian_from_envelope(left, bottom, right, top, request):
     @janhnat zohlednit pristupnost - done
     musi zohlednit pristupnost [mapa_pian]
     """
-    from dj.models import DokumentacniJednotka
+    from core.models import Permissions as p
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
     from pian.views import PianPermissionFilterMixin
-    from core.models import Permissions as p
 
     pian_queryset = Pian.objects.filter(
         Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
@@ -691,7 +715,7 @@ def get_num_pian_from_envelope(left, bottom, right, top, request):
 
     try:
         return pian_filtered.annotate(centroid=Centroid("geom"))
-        #return DokumentacniJednotka.objects.filter(pian__in=pian_filtered).count()
+        # return DokumentacniJednotka.objects.filter(pian__in=pian_filtered).count()
     except IndexError:
         logger.debug(
             "core.utils.get_num_pian_from_envelope.no_points",
@@ -700,59 +724,65 @@ def get_num_pian_from_envelope(left, bottom, right, top, request):
         return None
 
 
-def get_pian_from_envelope(left, bottom, right, top,zoom, request):
+def get_pian_from_envelope(left, bottom, right, top, zoom, request):
     """
     Funkce pro získaní pianů ze čtverce.
     @janhnat zohlednit pristupnost - done
     musi zohlednit pristupnost [mapa_pian]
     """
 
-    from django.contrib.gis.geos import Polygon      
-    from core.constants import  ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID, PIAN_POTVRZEN      
-    from heslar.hesla import HESLAR_PIAN_PRESNOST   
-    from heslar.models import Heslar
-    from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ANONYM_ID
+    from core.constants import PIAN_POTVRZEN, ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
+    from django.contrib.gis.geos import Polygon
     from django.db import connection
-    bbox=Polygon.from_bbox([right, top, left, bottom])    
-    presnost=Heslar.objects.filter(nazev_heslare__id=HESLAR_PIAN_PRESNOST).first().id-1    
-    
-    querysum = f'''select sum(p.count) from amcr_heat_pian_l2 p where "p"."st_centroid" &&	ST_MakeEnvelope({left},{bottom},{right}, {top} ,4326)'''
-   
-    query=f'''select  p.ident_cely as "ident_cely",	p.presnost-{presnost} as "presnost",'pian' as "type", ST_AsText(p.geom) as "geom",ST_AsText(ST_PointOnSurface(p.geom)) as "centroid" from pian p where ST_Intersects("p"."geom",ST_GeomFromText('{bbox}', 4326)) '''
-    if request.user.hlavni_role.id==ROLE_BADATEL_ID:
-        query1=f''' and ( exists ( select 1 from historie h where h.vazba = p.historie and h.uzivatel = {request.user.id} and h.typ_zmeny = 'PI01' ) or exists ( select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists ( select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists ( select 1 from historie h2 where h2.vazba = az.historie and h2.uzivatel = {request.user.id} and h2.typ_zmeny = 'AZ01') ) ) or (exists ( select 1 from dokumentacni_jednotka dj1 where dj1.pian = p.id and exists ( select 1 from archeologicky_zaznam az where az.id = dj1.archeologicky_zaznam and az.pristupnost in ({PRISTUPNOST_ANONYM_ID}, {PRISTUPNOST_BADATEL_ID}) ) ) and p.stav ={PIAN_POTVRZEN} ))  '''
-        query+=query1       
-    elif request.user.hlavni_role.id==ROLE_ARCHEOLOG_ID:
-        query2=f''' and ( exists (  select 1 from historie h where h.vazba = p.historie and h.organizace_snapshot_id = {request.user.organizace_id} and h.typ_zmeny = 'PI01' ) or exists (  select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists ( select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists ( select 1 from historie h2 where h2.vazba = az.historie and h2.organizace_snapshot_id = {request.user.organizace_id} and h2.typ_zmeny = 'AZ01' ) ) ) or exists (  select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists ( select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists ( select 1 from akce a1 where a1.archeologicky_zaznam = az.id and exists ( select 1 from projekt p1 where p1.id = a1.projekt and p1.organizace = {request.user.organizace_id} ) ) ) ) or (exists (  select 1 from dokumentacni_jednotka dj1 where dj1.pian = p.id and exists ( select 1 from archeologicky_zaznam az where az.id = dj1.archeologicky_zaznam and az.pristupnost in ({PRISTUPNOST_ANONYM_ID}, {PRISTUPNOST_BADATEL_ID}, {PRISTUPNOST_ARCHEOLOG_ID}) ) ) and p.stav = {PIAN_POTVRZEN}  )) '''
-        query+=query2              
+    from heslar.hesla import HESLAR_PIAN_PRESNOST
+    from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_BADATEL_ID
+    from heslar.models import Heslar
 
-    pians=None
+    bbox = Polygon.from_bbox([right, top, left, bottom])
+    presnost = Heslar.objects.filter(nazev_heslare__id=HESLAR_PIAN_PRESNOST).first().id - 1
+
+    querysum = f"""select sum(p.count) from amcr_heat_pian_l2 p where "p"."st_centroid" && ST_MakeEnvelope({left}, {bottom}, {right}, {top} ,4326)"""
+
+    query = f"""select  p.ident_cely as "ident_cely", p.presnost-{presnost} as "presnost",'pian' as "type", ST_AsText(p.geom) as "geom",ST_AsText(ST_PointOnSurface(p.geom)) as "centroid" from pian p where ST_Intersects("p"."geom",ST_GeomFromText('{bbox}', 4326))"""
+    if request.user.hlavni_role.id == ROLE_BADATEL_ID:
+        query1 = f""" and (exists (select 1 from historie h where h.vazba = p.historie and h.uzivatel = {request.user.id} and h.typ_zmeny = 'PI01') or exists (select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists (select 1 from historie h2 where h2.vazba = az.historie and h2.uzivatel = {request.user.id} and h2.typ_zmeny = 'AZ01'))) or (exists (select 1 from dokumentacni_jednotka dj1 where dj1.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj1.archeologicky_zaznam and az.pristupnost in ({PRISTUPNOST_ANONYM_ID}, {PRISTUPNOST_BADATEL_ID}))) and p.stav ={PIAN_POTVRZEN})) """
+        query += query1
+    elif request.user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
+        query2 = f""" and (exists (select 1 from historie h where h.vazba = p.historie and h.organizace_snapshot_id = {request.user.organizace_id} and h.typ_zmeny = 'PI01') or exists (select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists (select 1 from historie h2 where h2.vazba = az.historie and h2.organizace_snapshot_id = {request.user.organizace_id} and h2.typ_zmeny = 'AZ01'))) or exists (select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists (select 1 from akce a1 where a1.archeologicky_zaznam = az.id and exists (select 1 from projekt p1 where p1.id = a1.projekt and p1.organizace = {request.user.organizace_id})))) or (exists (select 1 from dokumentacni_jednotka dj1 where dj1.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj1.archeologicky_zaznam and az.pristupnost in ({PRISTUPNOST_ANONYM_ID}, {PRISTUPNOST_BADATEL_ID}, {PRISTUPNOST_ARCHEOLOG_ID}))) and p.stav = {PIAN_POTVRZEN}))"""
+        query += query2
+
+    pians = None
     with connection.cursor() as cursor:
-            cursor.execute(querysum)
-            result = cursor.fetchone() 
-            count = int(result[0]) if result[0] is not None else 0            
-            if count<5000 or zoom>13:
-                cursor.execute(query)
-                pians = dictfetchall(cursor)
-                count=len(pians)
-    
-    return pians,count 
-    
+        cursor.execute(querysum)
+        result = cursor.fetchone()
+        count = int(result[0]) if result[0] is not None else 0
+        if count < 5000 or zoom > 13:
+            cursor.execute(query)
+            pians = dictfetchall(cursor)
+            count = len(pians)
 
-def get_dj_akce_for_pian(pian_ident_cely,request):
+    return pians, count
+
+
+def get_dj_akce_for_pian(pian_ident_cely, request):
     """
     Funkce pro pro ziskani dj/akce pro pian_ident_cely
     """
-    from django.db.models import Q
     from core.views import PermissionFilterMixin
-    queryset = DokumentacniJednotka.objects.filter(Q(pian__geom__isnull=False)).filter(Q(pian__ident_cely=pian_ident_cely))
+    from django.db.models import Q
+
+    queryset = DokumentacniJednotka.objects.filter(Q(pian__geom__isnull=False)).filter(
+        Q(pian__ident_cely=pian_ident_cely)
+    )
     perm_object = PermissionFilterMixin()
     perm_object.request = request
     perm_object.typ_zmeny_lookup = ZAPSANI_AZ
     arch_zaznamy = ArcheologickyZaznam.objects.filter(dokumentacni_jednotky_akce__in=queryset)
 
     try:
-        return queryset.filter(archeologicky_zaznam__in=perm_object.check_filter_permission(arch_zaznamy)).values("ident_cely", "archeologicky_zaznam__ident_cely")
+        return queryset.filter(archeologicky_zaznam__in=perm_object.check_filter_permission(arch_zaznamy)).values(
+            "ident_cely", "archeologicky_zaznam__ident_cely"
+        )
     except IndexError:
         logger.debug(
             "core.utils.get_dj_akce_for_pian.no_records",
@@ -892,8 +922,7 @@ def get_heatmap_project_density(left, bottom, right, top, zoom):
     """
     query = "select max(count) from amcr_heat_projekt_l2"
     query_zoom = (
-        "select max(count) from amcr_heat_projekt_lx2 "
-        "where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+        "select max(count) from amcr_heat_projekt_lx2 " "where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
     )
     try:
         # num = Pian.objects.raw(query, [left, bottom, right, top])
@@ -1022,14 +1051,7 @@ def get_multi_transform_towgs84(jtsk_points):
     for p in jtsk_points:
         incr += 1
         query = (
-            query
-            + "PP"
-            + str(incr)
-            + "     "
-            + str(p[0])
-            + "    "
-            + str(p[1])
-            + "    300\r\n"
+            query + "PP" + str(incr) + "     " + str(p[0]) + "    " + str(p[1]) + "    300\r\n"
         )  # "TB02     646860.290    1060814.217    669.262   nepovinný popis\r\n" \
     query = query + "--amcr-multipart-block--\r\n"
 
@@ -1039,9 +1061,7 @@ def get_multi_transform_towgs84(jtsk_points):
         for line in r.text.split("\n"):
             if len(line) > 5:
                 p = line.split("\t")[1].split(" ")
-                logger.debug(
-                    "core.utils.get_multi_transform_towgs84.finished", extra={"p": p}
-                )
+                logger.debug("core.utils.get_multi_transform_towgs84.finished", extra={"p": p})
                 points.append([p[0], p[1]])
 
         return points
@@ -1057,11 +1077,7 @@ def get_message(az, message):
     return str(
         getattr(
             mc,
-            str(
-                dict(ArcheologickyZaznam.CHOICES)[az.typ_zaznamu].upper()
-                + "_"
-                + message
-            ),
+            str(dict(ArcheologickyZaznam.CHOICES)[az.typ_zaznamu].upper() + "_" + message),
         )
     )
 
@@ -1080,9 +1096,7 @@ class SearchTable(ColumnShiftTableBootstrap4):
         if "vychozi_skryte_sloupce" not in self.request.session:
             self.request.session["vychozi_skryte_sloupce"] = {}
         if self.app in self.request.session["vychozi_skryte_sloupce"]:
-            columns_to_hide = set(
-                self.request.session["vychozi_skryte_sloupce"][self.app]
-            )
+            columns_to_hide = set(self.request.session["vychozi_skryte_sloupce"][self.app])
         else:
             columns_to_hide = self.columns_to_hide
             self.request.session["vychozi_skryte_sloupce"][self.app] = columns_to_hide
@@ -1104,6 +1118,7 @@ class SearchTable(ColumnShiftTableBootstrap4):
             soubor = None
         if soubor is not None:
             from core.models import Soubor
+
             soubor: Soubor
             soubor_url = reverse(
                 "core:download_thumbnail",
@@ -1132,19 +1147,19 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
 
     # project/locale
     if settings.SETTINGS_MODULE:
-        parts = settings.SETTINGS_MODULE.split('.')
+        parts = settings.SETTINGS_MODULE.split(".")
     else:
         # if settings.SETTINGS_MODULE is None, we are probably in "test" mode
         # and override_settings() was used
         # see: https://code.djangoproject.com/ticket/25911
-        parts = os.environ.get(ENVIRONMENT_VARIABLE).split('.')
+        parts = os.environ.get(ENVIRONMENT_VARIABLE).split(".")
     project = __import__(parts[0], {}, {}, [])
     abs_project_path = os.path.normpath(os.path.abspath(os.path.dirname(project.__file__)))
     if project_apps:
-        if os.path.exists(os.path.abspath(os.path.join(os.path.dirname(project.__file__), 'locale'))):
-            paths.append(os.path.abspath(os.path.join(os.path.dirname(project.__file__), 'locale')))
-        if os.path.exists(os.path.abspath(os.path.join(os.path.dirname(project.__file__), '..', 'locale'))):
-            paths.append(os.path.abspath(os.path.join(os.path.dirname(project.__file__), '..', 'locale')))
+        if os.path.exists(os.path.abspath(os.path.join(os.path.dirname(project.__file__), "locale"))):
+            paths.append(os.path.abspath(os.path.join(os.path.dirname(project.__file__), "locale")))
+        if os.path.exists(os.path.abspath(os.path.join(os.path.dirname(project.__file__), "..", "locale"))):
+            paths.append(os.path.abspath(os.path.join(os.path.dirname(project.__file__), "..", "locale")))
 
     case_sensitive_file_system = True
     tmphandle, tmppath = tempfile.mkstemp()
@@ -1154,14 +1169,14 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
 
     # django/locale
     if django_apps:
-        django_paths = cache.get('rosetta_django_paths')
+        django_paths = cache.get("rosetta_django_paths")
         if django_paths is None:
             django_paths = []
             for root, dirnames, filename in os.walk(os.path.abspath(os.path.dirname(django.__file__))):
-                if 'locale' in dirnames:
-                    django_paths.append(os.path.join(root, 'locale'))
+                if "locale" in dirnames:
+                    django_paths.append(os.path.join(root, "locale"))
                     continue
-            cache.set('rosetta_django_paths', django_paths, 60 * 60)
+            cache.set("rosetta_django_paths", django_paths, 60 * 60)
         paths = paths + django_paths
     # settings
     for localepath in settings.LOCALE_PATHS:
@@ -1175,7 +1190,7 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
 
         app_path = app_.path
         # django apps
-        if 'contrib' in app_path and 'django' in app_path and not django_apps:
+        if "contrib" in app_path and "django" in app_path and not django_apps:
             continue
 
         # third party external
@@ -1186,19 +1201,19 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
         if not project_apps and abs_project_path in app_path:
             continue
 
-        if os.path.exists(os.path.abspath(os.path.join(app_path, 'locale'))):
-            paths.append(os.path.abspath(os.path.join(app_path, 'locale')))
-        if os.path.exists(os.path.abspath(os.path.join(app_path, '..', 'locale'))):
-            paths.append(os.path.abspath(os.path.join(app_path, '..', 'locale')))
+        if os.path.exists(os.path.abspath(os.path.join(app_path, "locale"))):
+            paths.append(os.path.abspath(os.path.join(app_path, "locale")))
+        if os.path.exists(os.path.abspath(os.path.join(app_path, "..", "locale"))):
+            paths.append(os.path.abspath(os.path.join(app_path, "..", "locale")))
 
     ret = set()
     langs = [lang]
-    if u'-' in lang:
-        _l, _c = map(lambda x: x.lower(), lang.split(u'-', 1))
-        langs += [u'%s_%s' % (_l, _c), u'%s_%s' % (_l, _c.upper()), u'%s_%s' % (_l, _c.capitalize())]
-    elif u'_' in lang:
-        _l, _c = map(lambda x: x.lower(), lang.split(u'_', 1))
-        langs += [u'%s-%s' % (_l, _c), u'%s-%s' % (_l, _c.upper()), u'%s_%s' % (_l, _c.capitalize())]
+    if "-" in lang:
+        _l, _c = map(lambda x: x.lower(), lang.split("-", 1))
+        langs += ["%s_%s" % (_l, _c), "%s_%s" % (_l, _c.upper()), "%s_%s" % (_l, _c.capitalize())]
+    elif "_" in lang:
+        _l, _c = map(lambda x: x.lower(), lang.split("_", 1))
+        langs += ["%s-%s" % (_l, _c), "%s-%s" % (_l, _c.upper()), "%s_%s" % (_l, _c.capitalize())]
 
     paths = map(os.path.normpath, paths)
     paths = list(set(paths))
@@ -1206,7 +1221,7 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
         # Exclude paths
         if path not in rosetta_settings.ROSETTA_EXCLUDED_PATHS:
             for lang_ in langs:
-                dirname = os.path.join(path, lang_, 'LC_MESSAGES')
+                dirname = os.path.join(path, lang_, "LC_MESSAGES")
                 for fn in rosetta_settings.POFILENAMES:
                     filename = os.path.join(dirname, fn)
                     abs_path = os.path.abspath(filename)
@@ -1236,7 +1251,7 @@ def replace_last(source_string, old, new):
     index = source_string.rfind(old)
     if index != -1:
         start_part = source_string[:index]
-        replace_part = source_string[index:index + len(old)].replace(old, new)
-        end_part = source_string[index + len(old):]
+        replace_part = source_string[index : index + len(old)].replace(old, new)
+        end_part = source_string[index + len(old) :]
         return start_part + replace_part + end_part
     return source_string

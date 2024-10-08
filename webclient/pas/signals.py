@@ -1,18 +1,16 @@
 import logging
 
 from cacheops import invalidate_model
-from django.db import transaction
-
 from core.constants import SAMOSTATNY_NALEZ_RELATION_TYPE
-from core.repository_connector import FedoraTransaction
-from cron.tasks import update_single_redis_snapshot
 from core.models import SouborVazby
-from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
+from cron.tasks import update_single_redis_snapshot
+from django.db import transaction
+from django.db.models.signals import post_delete, post_save, pre_delete, pre_save
 from django.dispatch import receiver
-from historie.models import HistorieVazby, Historie
+from historie.models import Historie, HistorieVazby
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from projekt.models import Projekt
-from xml_generator.models import check_if_task_queued, UPDATE_REDIS_SNAPSHOT
+from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
 logger = logging.getLogger(__name__)
 
@@ -54,14 +52,15 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
             save_metadata(False)
     if not check_if_task_queued("SamostatnyNalez", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["SamostatnyNalez", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
-    logger.debug("pas.signals.save_metadata_samostatny_nalez.end", extra={"ident_cely": instance.ident_cely,
-                                                                          "transaction": fedora_transaction})
+    logger.debug(
+        "pas.signals.save_metadata_samostatny_nalez.end",
+        extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction},
+    )
 
 
 @receiver(pre_delete, sender=SamostatnyNalez, weak=False)
 def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **kwargs):
-    logger.debug("pas.signals.dokument_delete_container_soubor_vazby.start",
-                 extra={"ident_cely": instance.ident_cely})
+    logger.debug("pas.signals.dokument_delete_container_soubor_vazby.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
     invalidate_model(Projekt)
     invalidate_model(Historie)
@@ -71,6 +70,7 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
         if instance.projekt:
             instance.projekt.save_metadata(fedora_transaction)
         instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
+
     if instance.close_active_transaction_when_finished:
         transaction.on_commit(lambda: save_metadata(True))
     else:
@@ -82,8 +82,10 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
         instance.soubory.delete()
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
-    logger.debug("pas.signals.dokument_delete_container_soubor_vazby.end",
-                 extra={"ident_cely": instance.ident_cely, "transaction": transaction})
+    logger.debug(
+        "pas.signals.dokument_delete_container_soubor_vazby.end",
+        extra={"ident_cely": instance.ident_cely, "transaction": transaction},
+    )
 
 
 @receiver(post_save, sender=UzivatelSpoluprace, weak=False)
@@ -109,15 +111,19 @@ def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, 
     logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.start", extra={"pk": instance.pk})
     fedora_transaction = instance.active_transaction
     invalidate_model(UzivatelSpoluprace)
+
     def save_metadata(close_transaction=False):
         Historie.save_record_deletion_record(record=instance)
         instance.vedouci.save_metadata(fedora_transaction)
         if instance.historie and instance.historie.pk:
             instance.historie.delete()
         instance.spolupracovnik.save_metadata(fedora_transaction, close_transaction=close_transaction)
+
     if instance.close_active_transaction_when_finished:
         transaction.on_commit(lambda: save_metadata(True))
     else:
         save_metadata()
-    logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.end",
-                 extra={"pk": instance.pk,  "transaction": getattr(fedora_transaction, "uid", None)})
+    logger.debug(
+        "pas.signals.delete_uzivatel_spoluprce_connections.end",
+        extra={"pk": instance.pk, "transaction": getattr(fedora_transaction, "uid", None)},
+    )

@@ -1,6 +1,6 @@
 import datetime
+import logging
 import re
-from django.forms import ValidationError
 
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.forms import BaseFilterForm, TwoLevelSelectField
@@ -8,8 +8,9 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
-from django.utils.translation import gettext_lazy as _
+from django.forms import ValidationError
 from django.utils import formats
+from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
 from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, SPECIFIKACE_DATA_PRESNE, TYP_DJ_KATASTR
 from heslar.models import Heslar
@@ -18,8 +19,6 @@ from projekt.models import Projekt
 
 from . import validators
 
-import logging
-
 logger = logging.getLogger(__name__)
 
 
@@ -27,6 +26,7 @@ class AkceVedouciFormSetHelper(FormHelper):
     """
     Form helper pro správne vykreslení formuláře vedoucích.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.template = "inline_formset_vedouci.html"
@@ -37,25 +37,20 @@ def create_akce_vedouci_objekt_form(readonly=True):
     """
     Funkce která vrací formulář VB pro formset.
 
-    Args:     
+    Args:
         readonly (boolean): nastavuje formulář na readonly.
-    
+
     Returns:
         CreateAkceVedouciObjektForm: django model formulář AkceVedouci
     """
+
     class CreateAkceVedouciObjektForm(forms.ModelForm):
         def clean(self):
             cleaned_data = super().clean()
-            if (
-                cleaned_data.get("vedouci", None) is None
-                and cleaned_data.get("organizace", None) is not None
-            ) or (
-                cleaned_data.get("vedouci", None) is not None
-                and cleaned_data.get("organizace", None) is None
+            if (cleaned_data.get("vedouci", None) is None and cleaned_data.get("organizace", None) is not None) or (
+                cleaned_data.get("vedouci", None) is not None and cleaned_data.get("organizace", None) is None
             ):
-                raise forms.ValidationError(
-                    _("arch_z.forms.CreateAkceVedouciObjektForm.clean.error")
-                )
+                raise forms.ValidationError(_("arch_z.forms.CreateAkceVedouciObjektForm.clean.error"))
 
         class Meta:
             model = AkceVedouci
@@ -74,11 +69,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
                 widgets = {
                     "vedouci": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
                     "organizace": forms.Select(
-                        attrs={
-                            "class": "selectpicker",
-                            "data-multiple-separator": "; ",
-                            "data-live-search": "true"
-                        }
+                        attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                     ),
                 }
 
@@ -100,6 +91,7 @@ class CreateArchZForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení Archeologického záznamu.
     """
+
     class Meta:
         model = ArcheologickyZaznam
         fields = (
@@ -116,12 +108,8 @@ class CreateArchZForm(forms.ModelForm):
             "katastry": _("arch_z.forms.CreateArchZForm.katastry.label"),
         }
         widgets = {
-            "hlavni_katastr": autocomplete.ModelSelect2(
-                url="heslar:katastr-autocomplete"
-            ),
-            "katastry": autocomplete.ModelSelect2Multiple(
-                url="heslar:katastr-autocomplete"
-            ),
+            "hlavni_katastr": autocomplete.ModelSelect2(url="heslar:katastr-autocomplete"),
+            "katastry": autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
             "uzivatelske_oznaceni": forms.TextInput(),
             "pristupnost": forms.Select(
                 attrs={
@@ -152,7 +140,7 @@ class CreateArchZForm(forms.ModelForm):
         projekt: Projekt
         super(CreateArchZForm, self).__init__(*args, **kwargs)
         self.fields["pristupnost"].initial = [PRISTUPNOST_ANONYM_ID]
-        self.fields['pristupnost'].empty_label = None
+        self.fields["pristupnost"].empty_label = None
         if projekt:
             self.fields["hlavni_katastr"].initial = projekt.hlavni_katastr
             self.fields["uzivatelske_oznaceni"].initial = projekt.uzivatelske_oznaceni
@@ -177,9 +165,7 @@ class CreateArchZForm(forms.ModelForm):
                 required=False,
                 disabled=True,
             )
-            self.fields["hlavni_katastr_show"].initial = self.fields[
-                "hlavni_katastr"
-            ].initial
+            self.fields["hlavni_katastr_show"].initial = self.fields["hlavni_katastr"].initial
             self.fields["hlavni_katastr_show"].widget.attrs["id"] = "main_cadastre_id"
             self.fields["katastry_show"].widget.attrs["id"] = "other_cadastre_id"
             if self.fields["katastry"].initial is not None:
@@ -190,12 +176,14 @@ class CreateArchZForm(forms.ModelForm):
                 self.fields["hlavni_katastr_show"].disabled = True
             else:
                 pass
-            if self.instance.dokumentacni_jednotky_akce.count()==1 and\
-               self.instance.dokumentacni_jednotky_akce.first().typ.id==TYP_DJ_KATASTR and\
-               readonly is False:
-                self.fields.pop('katastry_show')
+            if (
+                self.instance.dokumentacni_jednotky_akce.count() == 1
+                and self.instance.dokumentacni_jednotky_akce.first().typ.id == TYP_DJ_KATASTR
+                and readonly is False
+            ):
+                self.fields.pop("katastry_show")
             else:
-                self.fields.pop('katastry')
+                self.fields.pop("katastry")
         except Exception as e:
             logger.debug(e)
 
@@ -218,26 +206,25 @@ class CreateArchZForm(forms.ModelForm):
         for key in self.fields.keys():
             if readonly:
                 self.fields[key].disabled = readonly
-            if self.fields[key].disabled == True:
+            if self.fields[key].disabled is True:
                 if isinstance(self.fields[key].widget, forms.widgets.Select):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
                 self.fields[key].help_text = ""
             if required or required_next:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"] = str(
-                        self.fields[key].widget.attrs["class"]
-                    ) + (" required-next" if key in required_next else "")
-                else:
-                    self.fields[key].widget.attrs["class"] = (
-                        "required-next" if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (
+                        " required-next" if key in required_next else ""
                     )
+                else:
+                    self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
 
 
 class CustomDateInput(forms.DateField):
     """
     Custom class pro zadávaní počátečního a konečního datumu v roce zadaním jen roku.
     """
+
     year_only_month = None
     year_only_day = None
 
@@ -255,8 +242,10 @@ class CustomDateInput(forms.DateField):
         if value:
             if isinstance(value, str) and CustomDateInput.year_only(value):
                 return self.get_date_based_on_year(int(value))
-            logger.info("arch_z.forms.CustomDateInput.to_python",
-                        extra={"format": formats.get_format_lazy('DATE_INPUT_FORMATS')})
+            logger.info(
+                "arch_z.forms.CustomDateInput.to_python",
+                extra={"format": formats.get_format_lazy("DATE_INPUT_FORMATS")},
+            )
 
             return super().to_python(value)  # return self.strptime(value, "%d.%m.%Y")
         return super().to_python(value)
@@ -266,6 +255,7 @@ class StartDateInput(CustomDateInput):
     """
     Class pro input prvního dne v roce.
     """
+
     year_only_month = 1
     year_only_day = 1
 
@@ -274,6 +264,7 @@ class EndDateInput(CustomDateInput):
     """
     Class pro input posledního dne v roce.
     """
+
     year_only_month = 12
     year_only_day = 31
 
@@ -282,6 +273,7 @@ class CreateAkceForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení akce.
     """
+
     datum_zahajeni = StartDateInput(
         help_text=_("arch_z.forms.CreateAkceForm.datum_zahajeni.tooltip"),
         label=_("arch_z.forms.CreateAkceForm.datum_zahajeni.label"),
@@ -297,21 +289,11 @@ class CreateAkceForm(forms.ModelForm):
         Přepis clean metódy s custom oveřením datumu ukončení a zahájení.
         """
         cleaned_data = super().clean()
-        if (
-            cleaned_data.get("datum_ukonceni") is not None
-            and cleaned_data.get("datum_zahajeni") is None
-        ):
-            raise forms.ValidationError(
-                _("arch_z.forms.CreateAkceForm.validation.datum_zahajeni.error")
-            )
-        elif (
-            cleaned_data.get("datum_ukonceni") is not None
-            and cleaned_data.get("datum_zahajeni") is not None
-        ):
+        if cleaned_data.get("datum_ukonceni") is not None and cleaned_data.get("datum_zahajeni") is None:
+            raise forms.ValidationError(_("arch_z.forms.CreateAkceForm.validation.datum_zahajeni.error"))
+        elif cleaned_data.get("datum_ukonceni") is not None and cleaned_data.get("datum_zahajeni") is not None:
             if cleaned_data.get("datum_zahajeni") > cleaned_data.get("datum_ukonceni"):
-                raise forms.ValidationError(
-                    _("arch_z.forms.CreateAkceForm.validation.datum_ukonceni.error")
-                )
+                raise forms.ValidationError(_("arch_z.forms.CreateAkceForm.validation.datum_ukonceni.error"))
         return self.cleaned_data
 
     class Meta:
@@ -362,7 +344,10 @@ class CreateAkceForm(forms.ModelForm):
             "souhrn_upresneni": forms.Textarea(attrs={"rows": 4, "cols": 40}),
             "ulozeni_dokumentace": forms.TextInput(),
             "je_nz": forms.Select(
-                choices=[("False", _("arch_z.forms.CreateAkceForm.je_nz.choice.ne.label")), ("True", _("arch_z.forms.CreateAkceForm.je_nz.choice.ano.label"))],
+                choices=[
+                    ("False", _("arch_z.forms.CreateAkceForm.je_nz.choice.ne.label")),
+                    ("True", _("arch_z.forms.CreateAkceForm.je_nz.choice.ano.label")),
+                ],
                 attrs={
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
@@ -377,7 +362,10 @@ class CreateAkceForm(forms.ModelForm):
                 },
             ),
             "odlozena_nz": forms.Select(
-                choices=[("False", _("arch_z.forms.CreateAkceForm.odlozena_nz.choice.ne.label")), ("True", _("arch_z.forms.CreateAkceForm.odlozena_nz.choice.ano.label"))],
+                choices=[
+                    ("False", _("arch_z.forms.CreateAkceForm.odlozena_nz.choice.ne.label")),
+                    ("True", _("arch_z.forms.CreateAkceForm.odlozena_nz.choice.ano.label")),
+                ],
                 attrs={
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
@@ -403,9 +391,7 @@ class CreateAkceForm(forms.ModelForm):
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
         super(CreateAkceForm, self).__init__(*args, **kwargs)
-        self.fields["specifikace_data"].choices = list(
-            self.fields["specifikace_data"].choices
-        )[1:]
+        self.fields["specifikace_data"].choices = list(self.fields["specifikace_data"].choices)[1:]
         """
         Prepis init metódy pro vyplnení init hodnot, nastanvení readonly.
         """
@@ -439,15 +425,11 @@ class CreateAkceForm(forms.ModelForm):
             self.fields["organizace"].initial = projekt.organizace
             self.fields["datum_zahajeni"].initial = projekt.datum_zahajeni
             self.fields["datum_ukonceni"].initial = projekt.datum_ukonceni
-            self.fields[
-                "lokalizace_okolnosti"
-            ].initial = f"{projekt.lokalizace}. Parc.č.: {projekt.parcelni_cislo}"
+            self.fields["lokalizace_okolnosti"].initial = f"{projekt.lokalizace}. Parc.č.: {projekt.parcelni_cislo}"
         self.helper = FormHelper(self)
         if uzamknout_specifikace:
             self.fields["specifikace_data"].disabled = True
-            self.fields["specifikace_data"].initial = Heslar.objects.filter(
-                heslo="přesně"
-            ).first()
+            self.fields["specifikace_data"].initial = Heslar.objects.filter(heslo="přesně").first()
 
         self.helper.layout = Layout(
             Div(
@@ -485,16 +467,14 @@ class CreateAkceForm(forms.ModelForm):
             if required or required_next:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"] = str(
-                        self.fields[key].widget.attrs["class"]
-                    ) + (" required-next" if key in required_next else "")
-                else:
-                    self.fields[key].widget.attrs["class"] = (
-                        "required-next" if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (
+                        " required-next" if key in required_next else ""
                     )
+                else:
+                    self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
@@ -518,13 +498,10 @@ class CreateAkceForm(forms.ModelForm):
             datum zahájení není dále něž mesíc v budoucnu
         """
         if (
-            self.cleaned_data["specifikace_data"]
-            == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
+            self.cleaned_data["specifikace_data"] == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
             and self.cleaned_data["datum_zahajeni"] is not None
         ):
-            validators.datum_max_1_mesic_v_budoucnosti(
-                self.cleaned_data["datum_zahajeni"]
-            )
+            validators.datum_max_1_mesic_v_budoucnosti(self.cleaned_data["datum_zahajeni"])
         return self.cleaned_data["datum_zahajeni"]
 
     def clean_datum_ukonceni(self):
@@ -536,15 +513,12 @@ class CreateAkceForm(forms.ModelForm):
             datum ukončení není dále něž mesíc v budoucnu
         """
         if (
-            self.cleaned_data["specifikace_data"]
-            == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
+            self.cleaned_data["specifikace_data"] == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
             and self.cleaned_data["datum_ukonceni"] is not None
         ):
-            validators.datum_max_1_mesic_v_budoucnosti(
-                self.cleaned_data["datum_ukonceni"]
-            )
+            validators.datum_max_1_mesic_v_budoucnosti(self.cleaned_data["datum_ukonceni"])
         return self.cleaned_data["datum_ukonceni"]
 
 
 class ArchzFilterForm(BaseFilterForm):
-    list_to_check = ["historie_datum_zmeny_od", "datum_ukonceni","datum_zahajeni"]
+    list_to_check = ["historie_datum_zmeny_od", "datum_ukonceni", "datum_zahajeni"]
