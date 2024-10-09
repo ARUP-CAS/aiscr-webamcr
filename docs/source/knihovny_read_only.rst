@@ -112,7 +112,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://github.com/chardet/chardet
    * - charset-normalizer
-     - 3.3.2
+     - 3.4.0
      - MIT License
      - https://github.com/Ousret/charset_normalizer
    * - click
