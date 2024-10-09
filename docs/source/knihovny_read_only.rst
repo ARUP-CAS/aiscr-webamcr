@@ -432,7 +432,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://github.com/ahupp/python-magic
    * - pytz
-     - 2024.2
+     - 2024.1
      - MIT License
      - http://pythonhosted.org/pytz
    * - pyzstd
