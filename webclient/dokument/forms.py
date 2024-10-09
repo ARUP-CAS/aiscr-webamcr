@@ -566,6 +566,7 @@ class CreateModelDokumentForm(forms.ModelForm):
             "poznamka",
             "autori",
             "rok_vzniku",
+            "licence",
         )
         widgets = {
             "typ_dokumentu": forms.Select(
@@ -582,6 +583,9 @@ class CreateModelDokumentForm(forms.ModelForm):
                     "class": "dateinput form-control date_roky",
                 }
             ),
+            "licence": forms.Select(
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            ),
         }
         labels = {
             "typ_dokumentu": _("dokument.forms.createModelDokumentForm.typDokumentu.label"),
@@ -590,6 +594,7 @@ class CreateModelDokumentForm(forms.ModelForm):
             "popis": _("dokument.forms.createModelDokumentForm.popis.label"),
             "poznamka": _("dokument.forms.createModelDokumentForm.poznamka.label"),
             "rok_vzniku": _("dokument.forms.createModelDokumentForm.rokVzniku.label"),
+            "licence": _("dokument.forms.createModelDokumentForm.licence.label"),
         }
         help_texts = {
             "typ_dokumentu": _("dokument.forms.createModelDokumentForm.typDokumentu.tooltip"),
@@ -598,6 +603,7 @@ class CreateModelDokumentForm(forms.ModelForm):
             "popis": _("dokument.forms.createModelDokumentForm.popis.tooltip"),
             "poznamka": _("dokument.forms.createModelDokumentForm.poznamka.tooltip"),
             "rok_vzniku": _("dokument.forms.createModelDokumentForm.rokVzniku.tooltip"),
+            "licence": _("dokument.forms.createModelExtraDataForm.licence.tooltip"),
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
@@ -608,6 +614,7 @@ class CreateModelDokumentForm(forms.ModelForm):
             HESLAR_DOKUMENT_TYP, {"id__in": MODEL_3D_DOKUMENT_TYPES}
         )
         self.fields["rok_vzniku"].required = True
+        self.fields["licence"].initial = Heslar.objects.filter(nazev_heslare=HESLAR_LICENCE).order_by("razeni").first()
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
