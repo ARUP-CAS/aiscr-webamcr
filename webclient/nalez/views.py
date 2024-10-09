@@ -144,11 +144,11 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         request.session["_old_nalez_post"] = request.POST
         request.session["komp_ident_cely"] = komp_ident_cely
-    if url_has_allowed_host_and_scheme(request.META.get("HTTP_REFERER"), allowed_hosts=settings.ALLOWED_HOSTS):
-        safe_redirect = request.META.get("HTTP_REFERER")
+    safe_redirect = request.META.get("HTTP_REFERER")
+    if url_has_allowed_host_and_scheme(safe_redirect, allowed_hosts=settings.ALLOWED_HOSTS):
+        response = redirect(safe_redirect)
     else:
-        safe_redirect = "/"
-    response = redirect(safe_redirect)
+        response = redirect(reverse("core:home"))
     response.set_cookie("show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000)
     response.set_cookie("set-active", f"el_komponenta_{komp_ident_cely.replace('-', '_')}", max_age=1000)
     return response
