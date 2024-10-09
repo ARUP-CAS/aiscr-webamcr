@@ -1241,7 +1241,7 @@ def edit_model_3D(request, ident_cely):
             instance=dokument.get_komponenta(),
             required=required_fields,
             required_next=required_fields_next,
-            prefix="komponenta_",
+            prefix="komponenta",
         )
         geom = None
         x1 = None
@@ -1308,7 +1308,7 @@ def edit_model_3D(request, ident_cely):
             instance=dokument.get_komponenta(),
             required=get_required_fields_model3D(dokument),
             required_next=get_required_fields_model3D(dokument, 1),
-            prefix="komponenta_",
+            prefix="komponenta",
         )
         if dokument.extra_data.geom:
             geom = str(dokument.extra_data.geom).split("(")[1].replace(", ", ",").replace(")", "")
@@ -1395,7 +1395,7 @@ def create_model_3D(request):
             request.POST,
             required=required_fields,
             required_next=required_fields_next,
-            prefix="komponenta_",
+            prefix="komponenta",
         )
         geom = None
         x1 = None
@@ -1486,7 +1486,7 @@ def create_model_3D(request):
             areal_choices,
             required=required_fields,
             required_next=required_fields_next,
-            prefix="komponenta_",
+            prefix="komponenta",
         )
     return render(
         request,
