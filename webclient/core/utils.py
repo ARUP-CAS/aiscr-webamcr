@@ -92,7 +92,7 @@ def validate_and_split_geometry(geom):
                   ST_IsValidReason(POLYGON) AS invalid_reason,
                   ST_AsText(POLYGON) AS rings,
                   ST_GeometryType(POLYGON)
-           FROM geometriesdd
+           FROM geometries
            WHERE ST_GeometryType(POLYGON) != 'ST_Polygon')
         SELECT *
         FROM ring
