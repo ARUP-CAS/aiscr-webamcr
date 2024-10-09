@@ -561,7 +561,7 @@ class DocumentGenerator:
         return xml_string
 
     def generate_document(self):
-        self.document_root.attrib["{{http://www.w3.org/2001/XMLSchema-instance}}schemaLocation"] = SCHEMA_LOCATION
+        self.document_root.attrib["{http://www.w3.org/2001/XMLSchema-instance}schemaLocation"] = SCHEMA_LOCATION
         parent_element = ET.SubElement(
             self.document_root, f"{{{AMCR_NAMESPACE_URL}}}{self._get_schema_name()}", nsmap=self._nsmap
         )
