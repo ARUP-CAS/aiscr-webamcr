@@ -390,12 +390,13 @@ class ExterniZdrojSmazatView(TransakceView):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
         zaznam.deleted_by_user = request.user
-        zaznam.create_transaction(request.user, error_message=ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
+        transaction = zaznam.create_transaction(request.user, error_message=ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
         zaznam.close_active_transaction_when_finished = True
         try:
             zaznam.delete()
         except RestrictedError as err:
             logger.debug("ez.views.ExterniZdrojSmazatView.error", extra={"ident_cely": zaznam.ident_cely, "err": err})
+            transaction.rollback_transaction()
             return JsonResponse(
                 {"redirect": zaznam.get_absolute_url()},
                 status=403,
@@ -587,7 +588,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         return object
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = self.object.create_transaction(request.user)
+        self.active_transaction = self.get_object().create_transaction(request.user)
         super().post(request, *args, **kwargs)
         self.active_transaction = None
         return JsonResponse({"redirect": self.get_success_url()})
