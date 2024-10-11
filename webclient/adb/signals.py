@@ -40,7 +40,7 @@ def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
         extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal},
     )
     invalidate_arch_z_related_models()
-    if not instance.suppress_signal and instance.tracker.changed():
+    if not instance.suppress_signal:
         fedora_transaction: FedoraTransaction = instance.active_transaction
         instance.adb.save_metadata(fedora_transaction=fedora_transaction)
         logger.debug(

@@ -662,6 +662,14 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         self.close_active_transaction_when_finished = False
         self.suppress_signal = False
 
+    def create_transaction(self, transaction_user):
+        from core.repository_connector import FedoraTransaction
+        from uzivatel.models import User
+
+        transaction_user: User
+        self.active_transaction = FedoraTransaction(self.archeologicky_zaznam or self.externi_zdroj, transaction_user)
+        return self.active_transaction
+
 
 def get_akce_ident(region):
     """

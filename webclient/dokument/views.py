@@ -620,7 +620,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         return self.object
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = self.object.create_transaction(request.user)
+        self.active_transaction = self.get_object().create_transaction(request.user)
         super().post(request, *args, **kwargs)
         self.active_transaction.mark_transaction_as_closed()
         return JsonResponse({"redirect": self.get_success_url()})
