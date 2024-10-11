@@ -9,7 +9,6 @@ on:
        required: true
 
 env:
-  log_name: deployment_vpn.log
   branch: dev
   server_deploy_root: /home/amcr/aiscr-webamcr
   dep_script: scripts/ci_deployment/deploy_server.sh
@@ -35,7 +34,7 @@ jobs:
           echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > secret.txt
 
       - name: Connect VPN
-        run: sudo openvpn --config ".github/vpn/openvpn20_huldio_ci.ovpn" --log "${{ env.log_name }}" --daemon --askpass secret.txt
+        run: sudo openvpn --config ".github/vpn/openvpn20_huldio_ci.ovpn" --daemon --askpass secret.txt
 
       - name: Wait for a VPN connection
         timeout-minutes: 2
@@ -66,12 +65,4 @@ jobs:
       - name: disconnect VPN
         if: always()
         run: |
-          sudo chmod 777 ${{ env.log_name }}
-          sudo killall openvpn    
-
-      - name: Upload VPN logs
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: VPN logs
-          path: ${{ env.log_name  }}
+          sudo killall openvpn
