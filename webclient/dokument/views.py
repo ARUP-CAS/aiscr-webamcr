@@ -620,7 +620,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         return self.object
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = self.object.create_transaction(request.user)
+        self.active_transaction = self.get_object().create_transaction(request.user)
         super().post(request, *args, **kwargs)
         self.active_transaction.mark_transaction_as_closed()
         return JsonResponse({"redirect": self.get_success_url()})
@@ -2097,6 +2097,7 @@ def get_required_fields_model3D(zaznam=None, next=0):
             "rok_vzniku",
             "organizace",
             "typ_dokumentu",
+            "licence",
         ]
     if stav > D_STAV_ZAPSANY - next:
         required_fields += [
@@ -2231,7 +2232,6 @@ def post_ajax_get_3d_limit(request):
     )
     back = []
     for pian in pians:
-        logger.debug(pian)
         back.append(
             {
                 "id": pian["dokument__id"],

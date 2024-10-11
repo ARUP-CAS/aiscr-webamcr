@@ -865,6 +865,8 @@ class AktivaceEmailView(LoginRequiredMixin, DetailView):
     def post(self, request, *args, **kwargs):
         obj: UzivatelSpoluprace = self.get_object()
         if not obj.aktivni:
+            obj.active_transaction = FedoraTransaction()
+            obj.close_active_transaction_when_finished = True
             obj.set_aktivni(request.user)
             Mailer.send_en06(cooperation=obj)
         return redirect(reverse("pas:spoluprace_list") + "?sort=organizace_vedouci&sort=spolupracovnik")

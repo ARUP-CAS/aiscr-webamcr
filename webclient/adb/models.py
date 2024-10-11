@@ -158,7 +158,6 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP},
     )
     geom = pgmodels.PointField(srid=5514, dim=3)
-    tracker = FieldTracker()
 
     def set_geom(self, northing, easting, niveleta):
         """
@@ -175,6 +174,7 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
                 y=-1 * fabs(easting),
                 z=fabs(niveleta),
             )
+            self.geom_changed = True
             logger.debug("adb.models.VyskovyBod.set_geom.point", extra={"point": self.geom})
 
     def save(self, *args, **kwargs):
@@ -200,6 +200,7 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
                 self.easting = -1 * fabs(round(self.geom[1], 2))
             if geom_length == 3:
                 self.niveleta = round(self.geom[2], 2)
+        self.geom_changed = False
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
         self.suppress_signal = False
