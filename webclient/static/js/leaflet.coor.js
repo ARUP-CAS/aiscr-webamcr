@@ -105,16 +105,24 @@ L.Control.Coordinates = L.Control.extend({
 		//label containers
 		this._labelcontainer = L.DomUtil.create("div", "uiElement label", container);
 		this._label = L.DomUtil.create("span", "labelFirst", this._labelcontainer);
+		this._labelcontainer2 = L.DomUtil.create("div", "uiElement label", container);
+		this._labelJTSK = L.DomUtil.create("span", "labeljtsk", this._labelcontainer2);
 
 
 		//input containers
 		this._inputcontainer = L.DomUtil.create("div", "uiElement input uiHidden", container);
+		this._inputcontainerWGS84 = L.DomUtil.create("div", "", this._inputcontainer);
+		this._inputcontainerJTSK = L.DomUtil.create("div", "", this._inputcontainer);
 		var xSpan, ySpan;
 		if (options.useLatLngOrder) {
-			ySpan = L.DomUtil.create("span", "", this._inputcontainer);
-			this._inputY = this._createInput("inputY", this._inputcontainer);
-			xSpan = L.DomUtil.create("span", "", this._inputcontainer);
-			this._inputX = this._createInput("inputX", this._inputcontainer);
+			ySpan = L.DomUtil.create("span", "", this._inputcontainerWGS84);
+			this._inputY = this._createInput("inputY", this._inputcontainerWGS84);
+			xSpan = L.DomUtil.create("span", "", this._inputcontainerWGS84);
+			this._inputX = this._createInput("inputX", this._inputcontainerWGS84);
+			ySpanJTSK = L.DomUtil.create("span", "", this._inputcontainerJTSK);
+			this._inputYJTSK = this._createInput("inputY", this._inputcontainerJTSK);
+			xSpanJTSK = L.DomUtil.create("span", "", this._inputcontainerJTSK);
+			this._inputXJTSK = this._createInput("inputX", this._inputcontainerJTSK);
 		} else {
 			xSpan = L.DomUtil.create("span", "", this._inputcontainer);
 			this._inputX = this._createInput("inputX", this._inputcontainer);
@@ -123,11 +131,15 @@ L.Control.Coordinates = L.Control.extend({
 		}
 		xSpan.innerHTML = options.labelTemplateLng.replace("{x}", "");
 		ySpan.innerHTML = options.labelTemplateLat.replace("{y}", "");
+		xSpanJTSK.innerHTML = "X ";
+		ySpanJTSK.innerHTML = "Y ";
 
 		L.DomEvent.on(this._inputX, 'keyup', this._handleKeypress, this);
 		L.DomEvent.on(this._inputY, 'keyup', this._handleKeypress, this);
+		L.DomEvent.on(this._inputXJTSK, 'keyup', this._handleKeypress, this);
+		L.DomEvent.on(this._inputYJTSK, 'keyup', this._handleKeypress, this);
 		L.DomEvent.on(container, 'click', function (ev) { //ToDo: zmenit/pridat
-			if (ev.target !== this._inputY && ev.target !== this._inputX) {
+			if (ev.target !== this._inputY && ev.target !== this._inputX && ev.target !== this._inputXJTSK && ev.target !== this._inputYJTSK) {
 				this.collapse();
 			}
 		}, this);
@@ -170,11 +182,11 @@ L.Control.Coordinates = L.Control.extend({
 				this.collapse();
 				break;
 			case 13: //Enter
-				this._handleSubmit();
+				this._handleSubmit(e);
 				this.collapse();
 				break;
 			default: //All keys
-				this._handleSubmit();
+				this._handleSubmit(e);
 				break;
 		}
 	},
@@ -182,26 +194,53 @@ L.Control.Coordinates = L.Control.extend({
 	/**
 	 *	Called on each keyup except ESC
 	 */
-	_handleSubmit: function () {
-		var x = L.NumberFormatter.createValidNumber(this._inputX.value, this.options.decimalSeperator);
-		var y = L.NumberFormatter.createValidNumber(this._inputY.value, this.options.decimalSeperator);
-		if (x !== undefined && y !== undefined) {
-			if (this.options.markerType !== null) {
-				var marker = this._marker;
-				if (!marker) {
-					marker = this._marker = this._createNewMarker();
-					marker.on("click", this._clearMarker, this);
+	_handleSubmit: function (e) {
+		if (e.target == this._inputY || e.target == this._inputX ) {
+			
+			var x = L.NumberFormatter.createValidNumber(this._inputX.value, this.options.decimalSeperator);
+			var y = L.NumberFormatter.createValidNumber(this._inputY.value, this.options.decimalSeperator);
+			if (x !== undefined && y !== undefined) {
+				if (this.options.markerType !== null) {
+					var marker = this._marker;
+					if (!marker) {
+						marker = this._marker = this._createNewMarker();
+						marker.on("click", this._clearMarker, this);
+
+					}
+					var ll = new L.LatLng(y, x);
+					marker.setLatLng(ll);
+					marker.addTo(this._map);
+					if (this.options.centerUserCoordinates) {
+						this._map.setView(ll, this._map.getZoom());
+					}
+				} else {
+					this._map.setView([y, x], this._map.getZoom());
 
 				}
-				var ll = new L.LatLng(y, x);
-				marker.setLatLng(ll);
-				marker.addTo(this._map);
-				if (this.options.centerUserCoordinates) {
-					this._map.setView(ll, this._map.getZoom());
-				}
-			} else {
-				this._map.setView([y, x], this._map.getZoom());
+			}
+		}
+		else{
+			var x = L.NumberFormatter.createValidNumber(this._inputXJTSK.value, this.options.decimalSeperator);
+			var y = L.NumberFormatter.createValidNumber(this._inputYJTSK.value, this.options.decimalSeperator);
+			if (x !== undefined && y !== undefined) {
+				var latlng= convertToWGS84(-y, -x);
+				if (this.options.markerType !== null) {
+					var marker = this._marker;
+					if (!marker) {
+						marker = this._marker = this._createNewMarker();
+						marker.on("click", this._clearMarker, this);
 
+					}
+					var ll = new L.LatLng(latlng[1], latlng[0]);
+					marker.setLatLng(ll);
+					marker.addTo(this._map);
+					if (this.options.centerUserCoordinates) {
+						this._map.setView(ll, this._map.getZoom());
+					}
+				} else {
+					this._map.setView([latlng[1], latlng[0]], this._map.getZoom());
+
+				}
 			}
 		}
 	},
@@ -248,6 +287,12 @@ L.Control.Coordinates = L.Control.extend({
 			return y + " " + x;
 		}
 		return x + " " + y;
+	},
+
+	_createCoordinateLabelJTSK: function (ll) {
+		var opts = this.options;
+		var coords = convertToJTSK(ll.lng, ll.lat, height=0)
+		return "Y "+L.NumberFormatter.round(coords[0]*-1, 2, opts.decimalSeperator) + " X " + L.NumberFormatter.round(coords[1]*-1, 2, opts.decimalSeperator);
 	},
 
 	/**
@@ -340,7 +385,11 @@ L.Control.Coordinates = L.Control.extend({
 			this._currentPos = pos;
 			this._inputY.value = L.NumberFormatter.round(pos.lat, opts.decimals, opts.decimalSeperator);
 			this._inputX.value = L.NumberFormatter.round(pos.lng, opts.decimals, opts.decimalSeperator);
+			var coords = convertToJTSK(pos.lng, pos.lat, height=0)
+			this._inputYJTSK.value = L.NumberFormatter.round(coords[0]*-1, 2, opts.decimalSeperator);
+			this._inputXJTSK.value = L.NumberFormatter.round(coords[1]*-1, 2, opts.decimalSeperator);
 			this._label.innerHTML = this._createCoordinateLabel(pos);
+			this._labelJTSK.innerHTML = this._createCoordinateLabelJTSK(pos);
 		}
 	},
 
