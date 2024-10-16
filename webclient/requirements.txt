@@ -41,7 +41,7 @@ django-cacheops==7.0.2
 django-model-utils==5.0.0
 pandas==2.2.3
 tablib[all]==3.6.1
-pre-commit==3.8.0
+pre-commit==4.0.1
 isort==5.13.2
 coverage==7.6.3
 django-debug-toolbar==4.4.6
