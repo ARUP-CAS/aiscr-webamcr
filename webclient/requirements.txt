@@ -43,7 +43,7 @@ pandas==2.2.3
 tablib[all]==3.6.1
 pre-commit==3.8.0
 isort==5.13.2
-coverage==7.6.1
+coverage==7.6.3
 django-debug-toolbar==4.4.6
 black==24.10.0
 django-livereload-server==0.5.1
