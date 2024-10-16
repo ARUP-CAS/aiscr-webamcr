@@ -107,7 +107,7 @@ from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     MODEL_3D_DOKUMENT_TYPES,
-    PRISTUPNOST_BADATEL_ID,
+    PRISTUPNOST_ANONYM_ID,
     TYP_PROJEKTU_PRUZKUM_ID,
 )
 from heslar.models import Heslar, HeslarHierarchie
