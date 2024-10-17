@@ -53,6 +53,6 @@ django-object-actions==4.3.0
 uWSGI==2.0.26
 requests==2.32.3
 polib==1.2.0
-pytz==2024.1
+pytz==2024.2
 python-dateutil==2.9.0.post0
 setuptools==75.1.0
