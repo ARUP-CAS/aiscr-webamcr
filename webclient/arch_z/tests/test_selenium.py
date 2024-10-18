@@ -303,10 +303,10 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "el_komponenta_C_202004814A_K001")
 
         self.ElementClick(By.CSS_SELECTOR, "#div_id_C-202004814A-K001_p-0-druh .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-82 > .text")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-15-82 > .text")
 
         self.ElementClick(By.CSS_SELECTOR, "#div_id_C-202004814A-K001_p-0-specifikace .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-12-15 > .text")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-16-15 > .text")
 
         self.ElementClick(By.ID, "id_C-202004814A-K001_p-0-pocet")
         self.driver.find_element(By.ID, "id_C-202004814A-K001_p-0-pocet").send_keys("1")
