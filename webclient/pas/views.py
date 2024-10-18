@@ -111,38 +111,45 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         CREATE_AS_COPY = 3
 
     def __init__(self, *args, **kwargs):
-        self.action_type = None
+        self.get_action_type = None
+        self.copy_source = None
         super().__init__(*args, **kwargs)
 
     def dispatch(self, request, *args, **kwargs):
         if "kopie" in self.request.path:
-            self.action_type = self.ActionType.CREATE_AS_COPY.value
+            self.get_action_type = self.ActionType.CREATE_AS_COPY.value
+            self._set_copy_source()
         elif "ident_cely" in kwargs:
-            self.action_type = self.ActionType.CREATE_FROM_PROJECT.value
+            self.get_action_type = self.ActionType.CREATE_FROM_PROJECT.value
         else:
-            self.action_type = self.ActionType.CREATE
+            self.get_action_type = self.ActionType.CREATE
         return super().dispatch(request, *args, **kwargs)
+
+    def _set_copy_source(self):
+        copy_source = SamostatnyNalez.objects.get(ident_cely=self.kwargs["ident_cely"])
+        copy_source.id = None
+        copy_source.soubory = None
+        copy_source.historie = None
+        self.copy_source = copy_source
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        if "kopie" in self.request.path:
-            instance = SamostatnyNalez.objects.get(ident_cely=self.kwargs["ident_cely"])
-            instance.id = None
-            instance.soubory = None
-            instance.historie = None
-            kwargs["instance"] = instance
+        if self.get_action_type == self.ActionType.CREATE_FROM_PROJECT.value:
+            kwargs["instance"] = self.copy_source
         kwargs["user"] = self.request.user
         kwargs["required"] = get_required_fields()
         kwargs["required_next"] = get_required_fields(next=1)
         kwargs["project_ident"] = (
-            self.kwargs["ident_cely"] if self.action_type == self.ActionType.CREATE_FROM_PROJECT.value else None
+            self.kwargs["ident_cely"] if self.get_action_type == self.ActionType.CREATE_FROM_PROJECT.value else None
         )
         return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.method == "GET":
+        if self.get_action_type in (self.ActionType.CREATE.value, self.ActionType.CREATE_FROM_PROJECT.value):
             context["formCoor"] = CoordinatesDokumentForm()
+        else:
+            context["formCoor"] = CoordinatesDokumentForm(initial=self.copy_source.generate_coord_forms_initial())
         return context
 
     def form_valid(self, form):
@@ -218,7 +225,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
     def get(self, request, *args, **kwargs):
         """Handle GET request and check project type."""
         ident_cely = kwargs.get("ident_cely")
-        if self.action_type == self.ActionType.CREATE_FROM_PROJECT.value:
+        if self.get_action_type == self.ActionType.CREATE_FROM_PROJECT.value:
             proj = get_object_or_404(Projekt, ident_cely=ident_cely)
             if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
                 logger.debug("Projekt neni typu pruzkumny")
