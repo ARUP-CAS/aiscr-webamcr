@@ -107,7 +107,7 @@ from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     MODEL_3D_DOKUMENT_TYPES,
-    PRISTUPNOST_BADATEL_ID,
+    PRISTUPNOST_ANONYM_ID,
     TYP_PROJEKTU_PRUZKUM_ID,
 )
 from heslar.models import Heslar, HeslarHierarchie
@@ -1419,7 +1419,7 @@ def create_model_3D(request):
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
             else:
-                dokument.pristupnost = Heslar.objects.get(id=PRISTUPNOST_BADATEL_ID)
+                dokument.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ANONYM_ID)
                 dokument.stav = D_STAV_ZAPSANY
                 dokument.save()
                 dokument.set_zapsany(request.user)
