@@ -147,8 +147,12 @@ def detail(request, typ_vazby, ident_cely):
             ],
         )
     response = redirect(url)
-    response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
-    response.set_cookie("set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000)
+    response.set_cookie(
+        "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000, secure=True, samesite="Strict"
+    )
+    response.set_cookie(
+        "set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000, secure=True, samesite="Strict"
+    )
     komponenta.set_transaction_main_record()
     komponenta.close_active_transaction_when_finished = True
     komponenta.save()
@@ -232,11 +236,15 @@ def zapsat(request, typ_vazby, dj_ident_cely):
             )
     response = redirect(url)
     if komp_ident_cely:
-        response.set_cookie("show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000)
+        response.set_cookie(
+            "show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000, secure=True, samesite="Strict"
+        )
         response.set_cookie(
             "set-active",
             f"el_komponenta_{komp_ident_cely.replace('-', '_')}",
             max_age=1000,
+            secure=True,
+            samesite="Strict",
         )
     return response
 
@@ -265,9 +273,7 @@ def smazat(request, typ_vazby, ident_cely):
             if dj:
                 response = JsonResponse({"redirect": dj.get_absolute_url()})
                 response.set_cookie(
-                    "show-form",
-                    f"detail_dj_form_{dj.ident_cely}",
-                    max_age=1000,
+                    "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict"
                 )
             else:
                 response = JsonResponse(
@@ -290,7 +296,9 @@ def smazat(request, typ_vazby, ident_cely):
                     {"redirect": dj.get_absolute_url()},
                     status=403,
                 )
-                response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
+                response.set_cookie(
+                    "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000, secure=True, samesite="Strict"
+                )
             else:
                 response = JsonResponse(
                     {
