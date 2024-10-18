@@ -1371,3 +1371,38 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
 
         self.assertNotEqual(pian_new, pian_old)
         logger.info("AkceSamostatneAkce.test_098_editace_PIAN_samostatne_akce_importem_p_001.end")
+
+    def test_099_import_PIAN_samostatne_akce_p_001(self):
+        # Scenar_99 Vytvoření PIAN u samostatné akce (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_099_import_PIAN_samostatne_akce_p_001.start")
+        self.login("badatel")
+        pian_old = DokumentacniJednotka.objects.filter(ident_cely="X-C-9000000002A-D01")[0].pian
+        self.assertEqual(pian_old, None)
+
+        self.go_to_Akce_vybrat()
+        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
+        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.LINK_TEXT, "X-C-9000000002A")
+        self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
+        self.ElementClick(
+            By.CSS_SELECTOR, "#detail_dj_form_X-C-9000000002A-D01 .btn-group:nth-child(1) .material-icons"
+        )
+        self.ElementClick(By.CSS_SELECTOR, ".show > .dropdown-item:nth-child(2)")
+        with open("arch_z/tests/resources/geom.csv", "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+
+        self.addFileToDropzone("#my-awesome-dropzone", "geom.csv", encoded_string)
+        self.wait(1)
+        self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
+        self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "createPianSubmitButton")
+
+        pian_new = DokumentacniJednotka.objects.filter(ident_cely="X-C-9000000002A-D01")[0].pian
+
+        self.assertNotEqual(pian_new, None)
+        logger.info("AkceSamostatneAkce.test_099_import_PIAN_samostatne_akce_p_001.end")
