@@ -200,6 +200,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.assertEqual(project_count_old, project_count_new)
         logger.info("CoreSeleniumTest.test_004_projekt_zapsat_n_001.end")
 
+    @unittest.skip  # teststuje zrušené pravidlo
     def test_005_projekt_zapsat_n_002(self):
         # Scenar_5 Zapsání projektu (negativní scénář 2)
         # test 2.4
