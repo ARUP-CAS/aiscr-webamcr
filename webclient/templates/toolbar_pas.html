@@ -52,6 +52,7 @@
           {% if show.stahnout_metadata%}
           <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'samostatny_nalez' sn.ident_cely %}">{% trans "templates.toolbarPas.metadataDownload.label" %}</a>
           {% endif %}
+          <a class="dropdown-item" href="{% url 'pas:create-copy' sn.ident_cely %}">{% trans "templates.toolbarPas.createCopy.label" %}</a>
         </div>
       </div>
     </div>
