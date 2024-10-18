@@ -48,10 +48,23 @@
       @extend .bg-transparent;
     }
 
-    .btn-link {
-      color: $app-sidebar-accordion-color-active;
+    .index-link {
+      a {
+        color: $app-sidebar-accordion-color;
+      }
+      color: $app-sidebar-accordion-color;
       padding: 0;
 
+      .material-icons {
+        margin-right: 8px;
+
+        &.app-icon-expand {
+          float: right;
+        }
+      }
+    }
+
+    .expand-click {
       .menu-direct-link {
         @include setLinkColor($app-sidebar-accordion-color, $colorH: $white);
       }

@@ -24,17 +24,20 @@
       <div class="card">        
         <div class="card-header">
           <h2 class="mb-0">
-            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                    data-target="#collapseProjekty" aria-expanded="false" aria-controls="collapseProjekty">
-              <span class="material-icons">dynamic_feed</span> {% trans "templates.baseLogedIn.sidebar.projekty" %}
-              <span class="material-icons app-icon-expand">expand_more</span>
-            </button>
+            <span class="btn index-link btn-block text-left" data-target="#collapseProjekty">
+              <a href="{% url 'projekt:index' %}">
+                <span class="material-icons">dynamic_feed</span> {% trans "templates.baseLogedIn.sidebar.projekty" %}
+              </a>
+              <span class="expand-click collapsed" data-toggle="collapse" data-target="#collapseProjekty" aria-expanded="false"
+                    aria-controls="collapseProjekty">
+                <span class="material-icons app-icon-expand">expand_more</span>
+              </span>
+            </span>
           </h2>
         </div>        
         <div id="collapseProjekty" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'projekt:index' %}">{% trans "templates.baseLogedIn.sidebar.projekty.home" %}</a></li>
               <li><a href="{% url 'projekt:create' %}">{% trans "templates.baseLogedIn.sidebar.projekty.zapsat" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}&sort=planovane_zahajeni&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.prihlasit" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.zahajitVyzkum" %}</a></li>
@@ -60,17 +63,20 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+            <span class="btn index-link btn-block text-left">
+              <a href="{% url 'arch_z:index' %}">
+                <span class="material-icons">brush</span> {% trans "templates.baseLogedIn.sidebar.samostatneAkce" %}
+              </a>
+              <span class="expand-click collapsed" data-toggle="collapse"
                     data-target="#collapseAkce" aria-expanded="false" aria-controls="collapseAkce">
-              <span class="material-icons">brush</span> {% trans "templates.baseLogedIn.sidebar.samostatneAkce" %}
-              <span class="material-icons app-icon-expand">expand_more</span>
-            </button>
+                <span class="material-icons app-icon-expand">expand_more</span>
+              </span>
+            </span>
           </h2>
         </div>
         <div id="collapseAkce" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'arch_z:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.home" %}</a></li>
               <li><a href="{% url 'arch_z:zapsat-akci' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.zapsat" %}</a></li>
               <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&sort=hlavni_katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.vybrat" %}</a></li>
               <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.mojeAkce" %}</a></li>
@@ -87,17 +93,20 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+            <span class="btn index-link btn-block text-left">
+              <a href="{% url 'lokalita:index' %}">
+                <span class="material-icons">tour</span> {% trans "templates.baseLogedIn.sidebar.lokality" %}
+              </a>
+              <span class="expand-click collapsed" data-toggle="collapse"
                     data-target="#collapseLokality" aria-expanded="false" aria-controls="collapseLokality">
-              <span class="material-icons">tour</span> {% trans "templates.baseLogedIn.sidebar.lokality" %}
-              <span class="material-icons app-icon-expand">expand_more</span>
-            </button>
+                <span class="material-icons app-icon-expand">expand_more</span>
+              </span>
+            </span>
           </h2>
         </div>
         <div id="collapseLokality" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'lokalita:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.home" %}</a></li>
               <li><a href="{% url 'lokalita:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.zapsat" %}</a></li>
               <li><a href="{% url 'lokalita:list' %}?sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.lokality.vybrat" %}</a></li>
               <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.lokality.mojelokality" %}</a></li>
@@ -114,17 +123,20 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+            <span class="btn index-link btn-block text-left">
+              <a href="{% url 'pas:index' %}">
+                <span class="material-icons">location_on</span> {% trans "templates.baseLogedIn.sidebar.samostatneNalezy" %}
+              </a>
+              <span class="expand-click collapsed" data-toggle="collapse"
                     data-target="#collapseSn" aria-expanded="false" aria-controls="collapseSn">
-              <span class="material-icons">location_on</span> {% trans "templates.baseLogedIn.sidebar.samostatneNalezy" %}
-              <span class="material-icons app-icon-expand">expand_more</span>
-            </button>
+                <span class="material-icons app-icon-expand">expand_more</span>
+              </span>
+            </span>
           </h2>
         </div>
         <div id="collapseSn" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'pas:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.home" %}</a></li>
               <li><a href="{% url 'pas:spoluprace_list' %}?sort=organizace_vedouci&sort=spolupracovnik" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.spoluprace" %}</a></li>
               <li><a href="{% url 'pas:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.zapsat" %}</a></li>
               <li><a href="{% url 'pas:list' %}?sort=katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.vybrat" %}</a></li>
@@ -145,17 +157,20 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+            <span class="btn index-link btn-block text-left">
+              <a href="{% url 'dokument:index-model-3D' %}">
+                <span class="material-icons">3d_rotation</span> {% trans "templates.baseLogedIn.sidebar.knihovna3D" %}
+              </a>
+              <span class="expand-click collapsed" data-toggle="collapse"
                     data-target="#collapse3d" aria-expanded="true" aria-controls="collapse3d">
-              <span class="material-icons">3d_rotation</span> {% trans "templates.baseLogedIn.sidebar.knihovna3D" %}
-              <span class="material-icons app-icon-expand">expand_more</span>
-            </button>
+                <span class="material-icons app-icon-expand">expand_more</span>
+              </span>
+            </span>
           </h2>
         </div>
         <div id="collapse3d" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'dokument:index-model-3D' %}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.home" %}</a></li>
               <li><a href="{% url 'dokument:create-model-3D' %}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.zapsat" %}</a></li>
               <li><a href="{% url 'dokument:list-model-3D' %}?sort=organizace__nazev_zkraceny&sort=autori&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.vybrat" %}</a></li>
               <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.mojeModely" %}</a></li>
@@ -172,17 +187,20 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                    data-target="#collapseDokument" aria-expanded="true" aria-controls="collapseDokument">
+            <span class="btn index-link btn-block text-left">
+              <a href="{% url 'dokument:index' %}">
               <span class="material-icons">description</span> {% trans "templates.baseLogedIn.sidebar.dokumenty" %}
-              <span class="material-icons app-icon-expand">expand_more</span>
-            </button>
+              </a>
+              <span class="expand-click collapsed" data-toggle="collapse"
+                    data-target="#collapseDokument" aria-expanded="true" aria-controls="collapseDokument">
+                <span class="material-icons app-icon-expand">expand_more</span>
+              </span>
+            </span>
           </h2>
         </div>
         <div id="collapseDokument" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'dokument:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.home" %}</a></li>
               {% if show_dokumenty_zapsat %}
               <li><a href="{% url 'dokument:zapsat' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.zapsat" %}</a></li>
               {% endif %}
@@ -201,17 +219,20 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                    data-target="#collapseEz" aria-expanded="false" aria-controls="collapseEz">
+            <span class="btn index-link btn-block text-left collapsed">
+              <a href="{% url 'ez:index' %}">
               <span class="material-icons">menu_book</span> {% trans "templates.baseLogedIn.sidebar.externiZdroje" %}
-              <span class="material-icons app-icon-expand">expand_more</span>
-            </button>
+              </a>
+              <span class="expand-click collapsed" data-toggle="collapse"
+                    data-target="#collapseEz" aria-expanded="false" aria-controls="collapseEz">
+                <span class="material-icons app-icon-expand">expand_more</span>
+              </span>
+            </span>
           </h2>
         </div>
         <div id="collapseEz" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'ez:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.home" %}</a></li>
               <li><a href="{% url 'ez:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.zapsat" %}</a></li>
               <li><a href="{% url 'ez:list' %}?sort=autori&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.vybrat" %}</a></li>
               <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}&sort=autori&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.mojeExterniZdroje" %}</a></li>
@@ -229,7 +250,7 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <button class="btn btn-link btn-block text-left .btn-link.collapsed" type="button">
+            <button class="btn index-link btn-block text-left .btn-link.collapsed" type="button">
               <a href="/admin/" class="menu-direct-link"><span class="material-icons">settings</span> {% trans "templates.baseLogedIn.sidebar.administrace" %}</a>
             </button>
           </h2>
