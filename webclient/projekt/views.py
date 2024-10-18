@@ -1475,9 +1475,9 @@ def get_detail_template_shows(projekt, user):
         "upravit_datum_oznameni": check_permissions(
             p.actionChoices.projekt_upravit_datum_oznameni, user, projekt.ident_cely
         ),
-        "zadost_odhlaseni_projektu": user.hlavni_role.pk == ROLE_ARCHEOLOG_ID
-        and projekt.get_create_user()[0].organizace == user.organizace
-        and projekt.stav == PROJEKT_STAV_PRIHLASENY,
+        "zadost_odhlaseni_projektu": check_permissions(
+            p.actionChoices.projekt_zadost_odhlaseni_projektu, user, projekt.ident_cely
+        ),
     }
     return show
 
