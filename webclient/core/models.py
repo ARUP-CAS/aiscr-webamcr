@@ -729,8 +729,12 @@ class Permissions(models.Model):
         projekt_ukoncit_v_terenu = "projekt_ukoncit_v_terenu", _(
             "core.models.permissions.actionChoices.projekt_ukoncit_v_terenu"
         )
-        projekt_upravit_datum_oznameni = "projekt_upravit_datum_oznameni", _(
-            "core.models.permissions.actionChoices.projekt_upravit_datum_oznameni"
+        projekt_upravit_datum_oznameni = (
+            "projekt_upravit_datum_oznameni",
+            _("core.models.permissions.actionChoices.projekt_upravit_datum_oznameni"),
+        )
+        projekt_zadost_odhlaseni_projektu = "projekt_zadost_odhlaseni_projektu", _(
+            "core.models.permissions.actionChoices.projekt_zadost_odhlaseni_projektu"
         )
         projekt_uzavrit = "projekt_uzavrit", _("core.models.permissions.actionChoices.projekt_uzavrit")
         projekt_vratit_navrh_zruseni = "projekt_vratit_navrh_zruseni", _(
