@@ -119,16 +119,16 @@ L.Control.Coordinates = L.Control.extend({
 			this._inputY = this._createInput("inputY", this._inputcontainerWGS84);
 			xSpan = L.DomUtil.create("span", "", this._inputcontainerWGS84);
 			this._inputX = this._createInput("inputX", this._inputcontainerWGS84);
-			ySpanJTSK = L.DomUtil.create("span", "", this._inputcontainerJTSK);
-			this._inputYJTSK = this._createInput("inputY", this._inputcontainerJTSK);
-			xSpanJTSK = L.DomUtil.create("span", "", this._inputcontainerJTSK);
-			this._inputXJTSK = this._createInput("inputX", this._inputcontainerJTSK);
 		} else {
-			xSpan = L.DomUtil.create("span", "", this._inputcontainer);
-			this._inputX = this._createInput("inputX", this._inputcontainer);
-			ySpan = L.DomUtil.create("span", "", this._inputcontainer);
-			this._inputY = this._createInput("inputY", this._inputcontainer);
+			xSpan = L.DomUtil.create("span", "", this._inputcontainerWGS84);
+			this._inputX = this._createInput("inputX", this._inputcontainerWGS84);
+			ySpan = L.DomUtil.create("span", "", this._inputcontainerWGS84);
+			this._inputY = this._createInput("inputY", this._inputcontainerWGS84);
 		}
+		xSpanJTSK = L.DomUtil.create("span", "", this._inputcontainerJTSK);
+		this._inputXJTSK = this._createInput("inputX", this._inputcontainerJTSK);
+		ySpanJTSK = L.DomUtil.create("span", "", this._inputcontainerJTSK);
+		this._inputYJTSK = this._createInput("inputY", this._inputcontainerJTSK);
 		xSpan.innerHTML = options.labelTemplateLng.replace("{x}", "");
 		ySpan.innerHTML = options.labelTemplateLat.replace("{y}", "");
 		xSpanJTSK.innerHTML = "X ";
@@ -223,7 +223,7 @@ L.Control.Coordinates = L.Control.extend({
 			var x = L.NumberFormatter.createValidNumber(this._inputXJTSK.value, this.options.decimalSeperator);
 			var y = L.NumberFormatter.createValidNumber(this._inputYJTSK.value, this.options.decimalSeperator);
 			if (x !== undefined && y !== undefined) {
-				var latlng= convertToWGS84(-y, -x);
+				var latlng= convertToWGS84(x, y);
 				if (this.options.markerType !== null) {
 					var marker = this._marker;
 					if (!marker) {
@@ -292,7 +292,7 @@ L.Control.Coordinates = L.Control.extend({
 	_createCoordinateLabelJTSK: function (ll) {
 		var opts = this.options;
 		var coords = convertToJTSK(ll.lng, ll.lat, height=0)
-		return "Y "+L.NumberFormatter.round(coords[0]*-1, 2, opts.decimalSeperator) + " X " + L.NumberFormatter.round(coords[1]*-1, 2, opts.decimalSeperator);
+		return "X "+L.NumberFormatter.round(coords[0], 2, opts.decimalSeperator) + " Y " + L.NumberFormatter.round(coords[1], 2, opts.decimalSeperator);
 	},
 
 	/**
@@ -386,8 +386,8 @@ L.Control.Coordinates = L.Control.extend({
 			this._inputY.value = L.NumberFormatter.round(pos.lat, opts.decimals, opts.decimalSeperator);
 			this._inputX.value = L.NumberFormatter.round(pos.lng, opts.decimals, opts.decimalSeperator);
 			var coords = convertToJTSK(pos.lng, pos.lat, height=0)
-			this._inputYJTSK.value = L.NumberFormatter.round(coords[0]*-1, 2, opts.decimalSeperator);
-			this._inputXJTSK.value = L.NumberFormatter.round(coords[1]*-1, 2, opts.decimalSeperator);
+			this._inputXJTSK.value = L.NumberFormatter.round(coords[0], 2, opts.decimalSeperator);
+			this._inputYJTSK.value = L.NumberFormatter.round(coords[1], 2, opts.decimalSeperator);
 			this._label.innerHTML = this._createCoordinateLabel(pos);
 			this._labelJTSK.innerHTML = this._createCoordinateLabelJTSK(pos);
 		}
