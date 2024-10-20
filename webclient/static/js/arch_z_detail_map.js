@@ -1310,11 +1310,9 @@ function loadSession(){
         addPointQuery(null,  drawnItems,geom.label,geom.geometry,false, map_translations.currentlyEditedPian);
         geomToText();
         save_edited_geometry_session()
-        map.fitBounds(drawnItems.getBounds());
-        //myParam="POINT (13.2164736 49.9596986)"
-        //http://localhost:8000/arch-z/akce/detail/C-202211987A/dj/C-202211987A-D02?geometry=
-        //myParam="POLYGON ((13.2164736 49.9596986,13.2154006 49.9589111,13.2178685 49.9583378,13.2183513 49.9593602,13.2164736 49.9596986))"
-        //myParam="POLYGON ((13.2164736 49.9596986,13.2154006 49.9589111,13.2178685 49.9583378,13.2165204 49.9590543,13.2164736 49.9596986))"
+        let viewParam=map._getBoundsCenterZoom(drawnItems.getBounds());
+        if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, 12)    ;                
+        else map.setView(viewParam.center, viewParam.zoom) ;  
     } else{
         let geom_session=sessionStorage.getItem("Geom-session")
         if(geom_session != null){
@@ -1325,17 +1323,14 @@ function loadSession(){
                 map_show_edit(global_map_can_edit);
                 drawnItems.clearLayers();
                 drawnItemsBuffer.clearLayers();
-                //POLYGON ((13.2496364 50.0099953, 13.2502051 50.0099539, 13.2500978 50.0094364, 13.2496364 50.0099953))
-                //POLYGON ((13.2491214 50.0100783, 13.2482845 50.0096987, 13.249218 50.0096021, 13.2491214 50.0100783))
-                //POLYGON((13.2496364 50.0099953, 13.2502051 50.0099539, 13.2500978 50.0094364, 13.2496364 50.0099953))
-                //myParam="POLYGON((13.2496364 50.0099953,13.2502051 50.0099539,13.2500978 50.0094364,13.2496364 50.0099953))"
                 addPointQuery(null,  drawnItems,map_translations.currentlyEditedPian,geom_session.geometry,false,
                     map_translations.currentlyEditedPian);
                 geomToText();
-                map.fitBounds(drawnItems.getBounds());
-                //map.setView(drawnItems,17)
-
-            }else{
+                let viewParam=map._getBoundsCenterZoom(drawnItems.getBounds());
+                if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, 12)    ;                
+                else map.setView(viewParam.center, viewParam.zoom) ;  
+            }
+            else{
                 sessionStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:null}));
             }
         }
@@ -1371,8 +1366,8 @@ function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,sele
                     coor=addDJPian([pian.lat, pian.lng],  layer,pian.pian_ident_cely,pian.geom,pian.presnost,pian.color,pian.DJ_ident_cely);
                 }
                 if(pian.color=="gold" && pian.zoom!=12 && global_blocked_by_query_geom==false){
-                    bbox=L.polyline(coor).getBounds()
-                    viewParam=map._getBoundsCenterZoom(bbox);
+                    let bbox=L.polyline(coor).getBounds()
+                    let viewParam=map._getBoundsCenterZoom(bbox);
                     if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, 12)    ;                
                     else map.setView(viewParam.center, viewParam.zoom) ;  
                     zoomed=true;                 
@@ -1388,16 +1383,14 @@ function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,sele
                         zoom_pian.bbox.split("((")[1].split(")")[0].split(",").forEach(i => {                          
                             box.push([i.split(" ")[1].trim(), i.split(" ")[0].trim()]);
                         })
-                        //latLng(40.712, -74.227),
                         map.fitBounds([ [box[0][0],box[0][1] ],[box[2][0],box[2][1] ]]);
                     }
                     else map.setView([zoom_pian.lat, zoom_pian.lng], zoom_pian.zoom)
             }
             else{
-                viewParam=map._getBoundsCenterZoom(poi_dj.getBounds() )
+                let viewParam=map._getBoundsCenterZoom(poi_dj.getBounds() )
                 if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, 12)                    
                 else map.setView(viewParam.center, viewParam.zoom) ;  
-               // map.setView([zoom_pian.lat, zoom_pian.lng], zoom_pian.zoom)
             } 
         } 
 
