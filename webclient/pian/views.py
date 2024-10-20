@@ -127,11 +127,13 @@ def detail(request, ident_cely):
     response = redirect(dj.get_absolute_url())
     if validation_results != "valid" and validation_results != PIAN_VALIDACE_VYPNUTA:
         response = redirect(dj.get_absolute_url() + "/pian/edit/" + str(ident_cely))
-    response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000)
+    response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000, secure=True, samesite="Strict")
     response.set_cookie(
         "set-active",
         f"el_div_dokumentacni_jednotka_{dj_ident_cely.replace('-', '_')}",
         max_age=1000,
+        secure=True,
+        samesite="Strict",
     )
     return response
 
@@ -181,11 +183,15 @@ def odpojit(request, dj_ident_cely):
         dj.save()
         logger.debug("pian.views.odpojit.finished", extra={"transaction": fedora_transaction.uid})
         response = JsonResponse({"redirect": dj.get_absolute_url()})
-        response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+        response.set_cookie(
+            "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict"
+        )
         response.set_cookie(
             "set-active",
             f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
             max_age=1000,
+            secure=True,
+            samesite="Strict",
         )
         return response
     else:
@@ -239,11 +245,15 @@ def potvrdit(request, dj_ident_cely):
             )
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
             response = JsonResponse({"redirect": dj.get_absolute_url()})
-            response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+            response.set_cookie(
+                "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict"
+            )
             response.set_cookie(
                 "set-active",
                 f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
                 max_age=1000,
+                secure=True,
+                samesite="Strict",
             )
             return response
     context = {
@@ -348,11 +358,13 @@ def create(request, dj_ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
     response = redirect(dj.get_absolute_url())
-    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict")
     response.set_cookie(
         "set-active",
         f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
         max_age=1000,
+        secure=True,
+        samesite="Strict",
     )
     return response
 

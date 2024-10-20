@@ -64,11 +64,13 @@ def zapsat(request, dj_ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
     response = redirect(dj.get_absolute_url())
-    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict")
     response.set_cookie(
         "set-active",
         f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
         max_age=1000,
+        secure=True,
+        samesite="Strict",
     )
     return response
 
@@ -100,7 +102,9 @@ def smazat(request, ident_cely):
                 {"redirect": dj.get_absolute_url()},
                 status=403,
             )
-        response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000)
+        response.set_cookie(
+            "show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000, secure=True, samesite="Strict"
+        )
         return response
     else:
         context = {
@@ -110,7 +114,13 @@ def smazat(request, ident_cely):
             "button": _("adb.views.smazat.modalForm.submit.button"),
         }
         response = render(request, "core/transakce_modal.html", context)
-        response.set_cookie("show-form", f"detail_dj_form_{adb.dokumentacni_jednotka.ident_cely}", max_age=1000)
+        response.set_cookie(
+            "show-form",
+            f"detail_dj_form_{adb.dokumentacni_jednotka.ident_cely}",
+            max_age=1000,
+            secure=True,
+            samesite="Strict",
+        )
         return response
 
 
@@ -155,7 +165,13 @@ def smazat_vb(request, ident_cely):
             logger.warning("adb.views.smazat.smazat_vb.deleted", extra={"ident_cely": str(ident_cely)})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             response = JsonResponse({"redirect": response}, status=403)
-        response.set_cookie("show-form", f"detail_dj_form_{zaznam.adb.dokumentacni_jednotka.ident_cely}", max_age=1000)
+        response.set_cookie(
+            "show-form",
+            f"detail_dj_form_{zaznam.adb.dokumentacni_jednotka.ident_cely}",
+            max_age=1000,
+            secure=True,
+            samesite="Strict",
+        )
         return response
     else:
         return render(request, "core/transakce_modal.html", context)

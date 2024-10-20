@@ -78,7 +78,13 @@ def smazat_nalez(request, typ_vazby, typ, ident_cely):
             logger.debug("nalez.views.smazat_nalez.not_deleted", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             response = JsonResponse({"redirect": response}, status=403)
-        response.set_cookie("show-form", f"detail_komponenta_form_{zaznam.komponenta.ident_cely}", max_age=1000)
+        response.set_cookie(
+            "show-form",
+            f"detail_komponenta_form_{zaznam.komponenta.ident_cely}",
+            max_age=1000,
+            secure=True,
+            samesite="Strict",
+        )
         return response
     else:
         return render(request, "core/transakce_modal.html", context)
@@ -149,6 +155,10 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
         response = redirect(safe_redirect)
     else:
         response = redirect(reverse("core:home"))
-    response.set_cookie("show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000)
-    response.set_cookie("set-active", f"el_komponenta_{komp_ident_cely.replace('-', '_')}", max_age=1000)
+    response.set_cookie(
+        "show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000, secure=True, samesite="Strict"
+    )
+    response.set_cookie(
+        "set-active", f"el_komponenta_{komp_ident_cely.replace('-', '_')}", max_age=1000, secure=True, samesite="Strict"
+    )
     return response
