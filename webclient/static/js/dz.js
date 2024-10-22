@@ -201,9 +201,11 @@ window.onload = function () {
                 } else {
                     show_upload_successful_message(file, result, message);
                 }
-                var submitButton = $(".btn-disable-when-running-upload");
-                submitButton.prop('disabled', false); 
-                submitButton.removeClass("disabled"); 
+                if (this.files.every(file => file.status === 'success')) {
+                    let submitButton = $(".btn-disable-when-running-upload");
+                    submitButton.prop('disabled', false); 
+                    submitButton.removeClass("disabled"); 
+                }
             });
             this.on("removedfile", function (file) {
                 if (file.id) {
@@ -223,7 +225,7 @@ window.onload = function () {
                     this.options.acceptedFiles="";
                 else this.options.acceptedFiles=acceptFile;
 
-                var submitButton = $(".btn-disable-when-running-upload");
+                let submitButton = $(".btn-disable-when-running-upload");
                 submitButton.prop('disabled', true);
                 submitButton.addClass("disabled"); 
             });
