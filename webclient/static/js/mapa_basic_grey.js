@@ -57,22 +57,52 @@ L.tileLayer.grayscale = function (url, options) {
 };
 
 
-var     osmGrey = L.tileLayer.grayscale('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM grey map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
-        cuzkWMS = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom:25, maxNativeZoom: 20, minZoom: 17, opacity: 0.5 }),
-        cuzkWMS2 = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom:25, maxNativeZoom: 20, minZoom: 12, opacity: 0.5 }),
-        cuzkOrt = L.tileLayer('http://ags.cuzk.cz/arcgis1/rest/services/ORTOFOTO_WM/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'ortofoto_wm', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
-        cuzkEL = L.tileLayer.wms('http://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer?', { layers: 'dmr5g:GrayscaleHillshade', maxZoom: 25, maxNativeZoom: 20, minZoom: 6 }),
-        cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis1/rest/services/ZTM_WM/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 25,maxNativeZoom:19, minZoom: 6 }),
-        npuOchrana = L.tileLayer.wms('https://geoportal.npu.cz/arcgis/services/Experimental/TM_proAMCR/MapServer/WMSServer?', { layers: '2,3,4,5,7,8,10,11', maxZoom: 25, maxNativeZoom: 20, minZoom: 12, format:'image/png', transparent:true });
-var poi = L.layerGroup();
-var map = L.map('projectMap',{attributionControl:false,zoomControl:false,  layers: [cuzkZM,poi]}).setView([49.84, 15.17], 7);
+var cuzkWMS = L.tileLayer.wms('https://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom: 18, maxNativeZoom: 18, minZoom: 11, opacity: 0.5 }),
+    cuzkWMS2 = L.tileLayer.wms('https://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom: 18, maxNativeZoom: 18, minZoom: 7, opacity: 0.5 }),
+    cuzkOrt = L.tileLayer.wms('	https://ags.cuzk.cz/arcgis1/services/ORTOFOTO/MapServer/WMSServer?', { layers: '0', maxZoom: 18, maxNativeZoom: 18, minZoom: 1 }),
+    cuzkEL = L.tileLayer.wms('https://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer?', { layers: 'dmr5g:GrayscaleHillshade', maxZoom: 18, maxNativeZoom: 18, minZoom: 1 }),
+    cuzkZM = L.tileLayer('https://ags.cuzk.cz/arcgis1/rest/services/ZTM/MapServer/tile/{z}/{y}/{x}?blankTile=false', { maxZoom: 18, maxNativeZoom: 13, minZoom: 0 }),
+    npuOchrana = L.tileLayer.wms('https://geoportal.npu.cz/arcgis/services/Experimental/TM_proAMCR/MapServer/WMSServer?', { layers: '2,3,4,5,7,8,10,11', maxZoom: 18, maxNativeZoom: 15, minZoom: 6, format:'image/png', transparent:true });
+
+    var poi = L.layerGroup();
+
+var JTSKcrs = L.extend({}, L.CRS, {
+    projection: {
+        project: function(latlng) {
+            var coords = convertToJTSK(latlng.lng, latlng.lat, height=0)
+            return L.point(coords[0], coords[1]);
+        },
+        unproject: function(point) {
+        
+            var latlng= convertToWGS84(point.x, point.y)
+            return L.latLng(latlng[1], latlng[0]); 
+        },
+        bounds: L.bounds([ -931374.5041534386, -1265741.5915737757], [-403476.6008465581, -896504.1794262241])
+    },
+
+    distance: function (latlng1, latlng2) {
+        var coords1 = convertToJTSK(latlng1.lng, latlng1.lat, height=0)
+        var coords2 = convertToJTSK(latlng2.lng, latlng2.lat, height=0)
+        return Math.sqrt(Math.pow(coords2[0]-coords1[0],2)+Math.pow(coords2[1]-coords1[1],2))
+    },
+    code: 'EPSG:5514',
+    transformation: new L.Transformation(1, 925000, -1, -920000), 
+    scale: function(zoom) {
+        return 1/(2048.260096520193* Math.pow(2,-zoom));
+    },
+    zoom: function (scale) {
+        return Math.log(2048.26009652019 * scale) / Math.log(2);
+    },   
+    infinite: false,
+});
+
+var map = L.map('projectMap',{crs: JTSKcrs, attributionControl:false,zoomControl:false,  layers: [cuzkZM,poi]}).setView([49.84, 15.17], 1);
 
 
 var baseLayers = {
     [map_translations['cuzkzakladniMapyCr']]: cuzkZM,
     [map_translations['cuzkOrtofotomapa']]: cuzkOrt,
     [map_translations['cuzkStinovanyeelief5G']]: cuzkEL,
-    [map_translations['openStreetMapSeda']]: osmGrey,
 };
 
 var overlays = {
@@ -83,7 +113,7 @@ var overlays = {
 };
 
 var global_map_layers = L.control.layers(baseLayers,overlays).addTo(map);
-L.control.scale(metric = "true").addTo(map);
+L.control.scale({imperial: false, metric: true,  maxWidth: 100}).addTo(map);
 
 var searchControl=new L.Control.Search({
     position:'topleft',
