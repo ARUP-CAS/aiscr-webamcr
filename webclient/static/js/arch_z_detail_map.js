@@ -456,7 +456,7 @@ map.addControl(new L.control.coordinates({
 	decimalSeperator: ",",
     labelTemplateLat: "N {y}",
     labelTemplateLng: "E {x}",
-    useLatLngOrder: true,
+    useLatLngOrder: false,
     centerUserCoordinates: true,
     markerType: null
 }));
