@@ -217,6 +217,12 @@ window.onload = function () {
                 file.previewElement.lastChild.style.display = "none"
             });
             this.on("addedfile", function (file) {
+                //hack pro win10
+                let exten=file.name.split('.').pop(); 
+                if(file.type==="" && (exten==="rar" || exten==="7z"))
+                    this.options.acceptedFiles="";
+                else this.options.acceptedFiles=acceptFile;
+
                 var submitButton = $(".btn-disable-when-running-upload");
                 submitButton.prop('disabled', true);
                 submitButton.addClass("disabled"); 
