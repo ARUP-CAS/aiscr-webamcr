@@ -52,12 +52,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from django.views.generic import CreateView, DetailView
+from django.views.generic import CreateView, DetailView, View
 from dokument.forms import CoordinatesDokumentForm
 from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID, TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar
@@ -1092,3 +1093,23 @@ def get_required_fields(zaznam=None, next=0):
             "visible_x2",
         ]
     return required_fields
+
+
+class ProjektPasTableView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro zobrazení řádku tabulky projektů pri připájení.
+    """
+
+    def get(self, request):
+        projekt = Projekt.objects.get(id=request.GET.get("id", ""))
+        qs = (
+            projekt.samostatne_nalezy.select_related("obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr")
+            .all()
+            .order_by("ident_cely")
+        )
+        perm_object = PasPermissionFilterMixin()
+        perm_object.request = request
+        perm_object.typ_zmeny_lookup = ZAPSANI_SN
+        qs = perm_object.check_filter_permission(qs, p.actionChoices.projekt_pas_zobrazit)
+        context = {"samostatne_nalezy": qs}
+        return HttpResponse(render_to_string("pas/samostatne_nalezy_table.html", context))

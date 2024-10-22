@@ -27,7 +27,7 @@
       <td>
         {% if show.soubor_nahled and soubor.small_thumbnail %}
           <img id="soubor-nahled-{{ soubor.id }}" src="{% url 'core:download_thumbnail' vazba_trida ident soubor.id %}"
-               class="image-nahled" data-toggle="modal" data-target="#soubor-modal"
+               class="image-nahled" data-toggle="modal" data-target="#soubor-modal" loading="lazy"
                data-fullsrc="{% url 'core:download_thumbnail_large' vazba_trida ident soubor.id %}">
         {% endif %}  
       </td>

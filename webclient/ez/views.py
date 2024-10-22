@@ -834,3 +834,28 @@ def save_autor_editor(zaznam, form):
             poradi=i,
         )
         i = i + 1
+
+
+class EzOdkazyTableView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro zobrazení řádku tabulky projektů pri připájení.
+    """
+
+    def get(self, request):
+        card_type = request.GET.get("card_type", False)
+        action_type = request.GET.get("type", False)
+        ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj__id=request.GET.get("id", ""))
+        if card_type == "akce":
+            zaznamy = (
+                ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE)
+                .select_related("archeologicky_zaznam")
+                .select_related("archeologicky_zaznam__akce")
+            ).order_by("archeologicky_zaznam__ident_cely")
+        elif card_type == "lokalita":
+            zaznamy = (
+                ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA)
+                .select_related("archeologicky_zaznam")
+                .select_related("archeologicky_zaznam__lokalita")
+            ).order_by("archeologicky_zaznam__ident_cely")
+        context = {"zaznamy": zaznamy, "card_type": card_type, "type": action_type}
+        return HttpResponse(render_to_string("ez/ez_odkazy_table_only.html", context))
