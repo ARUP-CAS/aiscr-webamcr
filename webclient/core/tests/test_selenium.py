@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import os.path
 import time
 from datetime import datetime
@@ -10,10 +11,11 @@ import pandas
 import psycopg2
 import requests
 from cacheops import invalidate_all
+from core.tests.custom_server import WerkzeugServerThread
 from core.tests.runner import USERS
 from django.conf import settings
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.db import connection
+from django.test import LiveServerTestCase
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
@@ -52,11 +54,32 @@ class WaitForPageLoad:
 
 # @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 # @override_settings(DEBUG=True)
-class BaseSeleniumTestClass(StaticLiveServerTestCase):
-    # port = 5678
+class BaseSeleniumTestClass(LiveServerTestCase):
+    port = 8808
     host = "0.0.0.0"
     del settings.DATABASES["test_db"]
     databases = {"default", "urgent"}
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.server_thread.is_ready.wait()
+        if cls.server_thread.error:
+            raise RuntimeError(f"Chyba při spuštění serveru: {cls.server_thread.error}")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server_thread.terminate()
+        super().tearDownClass()
+
+    @classmethod
+    def _create_server_thread(cls, connections_override):
+        """Vytvoření vlastního serverového vlákna"""
+        return WerkzeugServerThread(host=cls.host, port=cls.port)
+
+    @classmethod
+    def _terminate_thread(cls):
+        pass
 
     @classmethod
     def get_base_test_data(cls):
@@ -348,9 +371,7 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
 
     def login(self, type="archeolog"):
         port = self.server_thread.port
-        self.driver.get(f"http://{settings.WEB_SERVER_ADDRESS}:{port}/")
-        # if len(self.driver.find_elements(By.CSS_SELECTOR, ".cm__btn-group:nth-child(1) > .cm__btn:nth-child(1)"))>0:
-        # self.ElementClick(By.CSS_SELECTOR, ".cm__btn-group:nth-child(1) > .cm__btn:nth-child(1)")
+        self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}/")
 
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "czech")

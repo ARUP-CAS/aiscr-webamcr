@@ -17,7 +17,7 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
         # Scenar_27 Oznámení projektu
 
         port = self.server_thread.port
-        self.driver.get(f"http://{settings.WEB_SERVER_ADDRESS}:{port}/oznameni")
+        self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}/oznameni")
         project_count_old = Projekt.objects.count()
         self.ElementClick(By.ID, "id_oznamovatel")
         self.driver.find_element(By.ID, "id_oznamovatel").send_keys("Jan Havrlant")
