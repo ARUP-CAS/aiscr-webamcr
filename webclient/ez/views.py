@@ -844,7 +844,8 @@ class EzOdkazyTableView(LoginRequiredMixin, View):
     def get(self, request):
         card_type = request.GET.get("card_type", False)
         action_type = request.GET.get("type", False)
-        ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj__id=request.GET.get("id", ""))
+        zaznam = ExterniZdroj.objects.get(id=request.GET.get("id", ""))
+        ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj=zaznam)
         if card_type == "akce":
             zaznamy = (
                 ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE)
@@ -857,5 +858,15 @@ class EzOdkazyTableView(LoginRequiredMixin, View):
                 .select_related("archeologicky_zaznam")
                 .select_related("archeologicky_zaznam__lokalita")
             ).order_by("archeologicky_zaznam__ident_cely")
-        context = {"zaznamy": zaznamy, "card_type": card_type, "type": action_type}
+        context = {
+            "zaznamy": zaznamy,
+            "card_type": card_type,
+            "type": action_type,
+            "show": {
+                "paginace": request.GET.get("show_paginace", False),
+                "odpojit": request.GET.get("show_odpojit", False),
+                "paginace_edit": request.GET.get("show_paginace_edit", False),
+            },
+            "zaznam": zaznam,
+        }
         return HttpResponse(render_to_string("ez/ez_odkazy_table_only.html", context))

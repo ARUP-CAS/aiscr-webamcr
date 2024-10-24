@@ -5,8 +5,11 @@
           {% for nalez in samostatne_nalezy %}
             <tr>
               <td>
-                {% if nalez.nahled_soubor and nalez.nahled_soubor.small_thumbnail %}
-                  <img src="{% url 'core:download_thumbnail' 'pas' nalez.ident_cely nalez.nahled_soubor.pk %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" data-fullsrc="{% url 'core:download_thumbnail_large' 'pas' nalez.ident_cely nalez.nahled_soubor.pk %}" loading="lazy">
+                {% if nalez.nahled_soubor %}
+                  <img src="{% url 'core:download_thumbnail' 'pas' nalez.ident_cely nalez.nahled_soubor.pk %}" 
+                  class="image-nahled" data-toggle="modal" data-target="#soubor-modal" 
+                  data-fullsrc="{% url 'core:download_thumbnail_large' 'pas' nalez.ident_cely nalez.nahled_soubor.pk %}" 
+                  style="opacity:0" onload="this.style.opacity=100" loading="lazy">
                 {% endif %}
               </td>
               <td class="app-ident-cely">

@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load static %}
 <div class="card app-card-form app-card-dokument app-table-list-container">
     <div class="card-header">
       <div class="app-fx app-left">
@@ -44,7 +45,10 @@
     </div>
         <div class="card-body content-with-table-responsive">
     {% if dokumenty %}
-      {% include "dokument/dokument_table_only.html" %}
+      <div class="loader" style="text-align:center;" >
+        <img src="{% static "django_tables2_column_shifter/img/loader.gif" %}" style="margin:5px auto;" alt="loader"/>
+        {% trans "templates.bootstrap4Table.loading"%}
+      </div> 
     {% elif type == "arch_z" %}
     <div class="app-note">
       <span class="material-icons">info</span>
@@ -87,4 +91,21 @@
     };
 });
 
+</script>
+<script type="text/javascript">
+  // projekt pass load
+  $(document).ready(function() {
+    if ({{dokumenty.count}} > 0) {
+      $.ajax({
+        type: "GET",
+        url: '{% url "dokument:get_dokumenty_az_table" %}', 
+        data: {'id': {{zaznam.id}}, "show_dokument_odpojit": "{{show.dokument_odpojit}}", "type":"{{type}}"},
+        success : function(data) {
+          $('.app-card-dokument .loader').css("display", "none");
+          $('.app-card-dokument .content-with-table-responsive').append(data);
+         }
+        });
+      }
+    }
+  )
 </script>
