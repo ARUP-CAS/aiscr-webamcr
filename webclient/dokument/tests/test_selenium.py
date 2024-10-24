@@ -121,7 +121,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-000000003").first().stav, D_STAV_ZAPSANY)
         id = Dokument.objects.filter(ident_cely="X-C-TX-000000003").first().id
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-000000003")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -155,7 +155,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
 
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-202413001").first().stav, D_STAV_ZAPSANY)
         # self.wait(1)
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413001")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -221,7 +221,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
 
         self.assertEqual(Dokument.objects.filter(ident_cely="M-TX-201604272").first().stav, D_STAV_ODESLANY)
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("M-TX-201604272")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -243,7 +243,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
 
         self.assertEqual(Dokument.objects.filter(ident_cely="M-TX-201604272").first().stav, D_STAV_ODESLANY)
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("M-TX-201604272")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -266,7 +266,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
 
         self.assertEqual(Dokument.objects.filter(ident_cely="C-TX-202400071").first().stav, D_STAV_ARCHIVOVANY)
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-TX-202400071")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -288,7 +288,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
 
         self.assertEqual(Dokument.objects.filter(ident_cely="C-TX-202400071").first().stav, D_STAV_ARCHIVOVANY)
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-TX-202400071")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")

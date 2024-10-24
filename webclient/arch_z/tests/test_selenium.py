@@ -47,7 +47,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202307816A").count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202307816")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -113,7 +113,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         # ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202309552A").count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202309552")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -145,7 +145,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         # ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202309552A").count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202309552")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -182,7 +182,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
             komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202309027A-D01"
         ).count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202309027")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         self.ElementClick(By.LINK_TEXT, "C-202309027")
@@ -222,7 +222,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
             komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202309027A-D01"
         ).count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202309027")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         self.ElementClick(By.LINK_TEXT, "C-202309027")
@@ -261,7 +261,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
             komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202004814A-D01"
         ).count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202004814")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -293,7 +293,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
             komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202004814A-D01"
         ).count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202004814")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -329,10 +329,10 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         count_old = NalezObjekt.objects.filter(
             komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01"
         ).count()
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
+        self.ElementClick(By.ID, "menuSamostatneAkce")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-91277520A")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -359,9 +359,9 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
             komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01"
         ).count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
+        self.ElementClick(By.ID, "menuSamostatneAkce")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-91277520A")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -580,7 +580,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 
         self.go_to_Projekty_vyper()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401981")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -640,7 +640,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.assertNotEqual(pian, None)
 
         self.go_to_Projekty_vyper()
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202007232")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -665,7 +665,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.assertEqual(pian, None)
 
         self.go_to_Projekty_vyper()
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202309724")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -699,7 +699,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.login("archeolog")
         pian_old = str(DokumentacniJednotka.objects.filter(ident_cely="C-202005190A-D01")[0].pian.geom)
         self.go_to_Projekty_vyper()
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202005190")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -760,7 +760,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         ).count()
         self.go_to_Projekty_vyper()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-201015104")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -786,7 +786,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202401980A").count()
         self.go_to_Projekty_vyper()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401980")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -806,11 +806,11 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceSamostatneAkce(AkceProjektoveAkce):
     def go_to_Akce_zapsat(self):
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
+        self.ElementClick(By.ID, "menuSamostatneAkce")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.zapsat"))
 
     def go_to_Akce_vybrat(self):
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-akce > .card-body")
+        self.ElementClick(By.ID, "menuSamostatneAkce")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
 
     def test_046_vytvoreni_samostatne_akce_p_001(self):
@@ -959,7 +959,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         # count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000001A").count()
         self.go_to_Akce_vybrat()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -1005,7 +1005,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         # count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000001A").count()
         self.go_to_Akce_vybrat()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -1049,7 +1049,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
 
         self.go_to_Akce_vybrat()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000003A")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -1080,7 +1080,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
 
         self.go_to_Akce_vybrat()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000003A")
 
@@ -1117,7 +1117,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
 
         self.go_to_Akce_vybrat()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000004A")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -1146,7 +1146,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
 
         self.go_to_Akce_vybrat()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000004A")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -1173,7 +1173,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         count_old = DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000003A").count()
         self.go_to_Akce_vybrat()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
 
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000003A")
@@ -1224,7 +1224,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         count_old = DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000004A").count()
         self.go_to_Akce_vybrat()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
 
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000004A")
@@ -1257,7 +1257,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
 
         count_old = ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000003A").count()
         self.go_to_Akce_vybrat()
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000003A")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -1289,7 +1289,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.assertEqual(pian_old, None)
 
         self.go_to_Akce_vybrat()
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -1319,7 +1319,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         pian_old = str(DokumentacniJednotka.objects.filter(ident_cely="X-C-9000000006A-D01")[0].pian.geom)
 
         self.go_to_Akce_vybrat()
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
 
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000006A")
@@ -1346,7 +1346,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         pian_old = str(DokumentacniJednotka.objects.filter(ident_cely="X-C-9000000006A-D01")[0].pian.geom)
 
         self.go_to_Akce_vybrat()
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
 
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000006A")
@@ -1380,7 +1380,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.assertEqual(pian_old, None)
 
         self.go_to_Akce_vybrat()
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -1406,3 +1406,24 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
 
         self.assertNotEqual(pian_new, None)
         logger.info("AkceSamostatneAkce.test_099_import_PIAN_samostatne_akce_p_001.end")
+
+    def test_100_odpojeni_potvrzeneho_PIAN_samostatne_akce_p_001(self):
+        # Scenar_100 Odpojení potvrzeného PIAN u samostatné akce (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_100_odpojeni_potvrzeneho_PIAN_samostatne_akce_p_001.start")
+        self.login("badatel")
+        pian_old = DokumentacniJednotka.objects.filter(ident_cely="X-C-9000000012A-D01")[0].pian
+        self.assertNotEqual(pian_old, None)
+        self.go_to_Akce_vybrat()
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000012A")
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, "X-C-9000000012A")
+        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000012A_D01")
+        self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
+        self.ElementClick(By.ID, "pian-odpojit-P-3312-100051")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        pian_new = DokumentacniJednotka.objects.filter(ident_cely="X-C-9000000012A-D01")[0].pian
+        self.assertEqual(pian_new, None)
+        logger.info("AkceSamostatneAkce.test_100_odpojeni_potvrzeneho_PIAN_samostatne_akce_p_001.end")

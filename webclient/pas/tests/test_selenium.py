@@ -294,7 +294,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-2 > .text")
 
@@ -345,7 +345,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
 
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("M-202301371-N00015")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
