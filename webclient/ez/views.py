@@ -838,7 +838,7 @@ def save_autor_editor(zaznam, form):
 
 class EzOdkazyTableView(LoginRequiredMixin, View):
     """
-    Třída pohledu pro zobrazení řádku tabulky projektů pri připájení.
+    Třída pohledu pro zobrazení řádků tabulky externích odkazů.
     """
 
     def get(self, request):
