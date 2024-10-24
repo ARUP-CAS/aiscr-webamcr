@@ -1097,7 +1097,7 @@ def get_required_fields(zaznam=None, next=0):
 
 class ProjektPasTableView(LoginRequiredMixin, View):
     """
-    Třída pohledu pro zobrazení řádku tabulky projektů pri připájení.
+    Třída pohledu pro zobrazení řádku tabulky samostatných nálezů.
     """
 
     def get(self, request):
