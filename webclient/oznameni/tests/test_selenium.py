@@ -1,5 +1,6 @@
 import base64
 import logging
+import re
 import unittest
 
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
@@ -13,12 +14,10 @@ logger = logging.getLogger("tests")
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class OznameniSeleniumTest(BaseSeleniumTestClass):
-    def test_027_oznameni_projektu_001(self):
-        # Scenar_27 Oznámení projektu
-
+    @staticmethod
+    def oznameni_projektu(self):
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}/oznameni")
-        project_count_old = Projekt.objects.count()
         self.ElementClick(By.ID, "id_oznamovatel")
         self.driver.find_element(By.ID, "id_oznamovatel").send_keys("Jan Havrlant")
         self.ElementClick(By.ID, "id_odpovedna_osoba")
@@ -46,7 +45,6 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "id_souhlas")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-id-save")
-
         with open("oznameni/tests/resources/test_foto_1.jpg", "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode()
 
@@ -55,5 +53,14 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit_btn")
             self.driver.switch_to.alert.accept()
+        pian = re.search(r"X-[CM]-\d+", self.driver.find_element(By.ID, "oznameniPIAN").text)
+        return pian.group() if pian else None
+
+    def test_027_oznameni_projektu_001(self):
+        # Scenar_27 Oznámení projektu
+        logger.info("OznameniSeleniumTest.test_027_oznameni_projektu_001.start")
+        project_count_old = Projekt.objects.count()
+        self.oznameni_projektu(self)
         project_count_new = Projekt.objects.count()
         self.assertEqual(project_count_old + 1, project_count_new)
+        logger.info("OznameniSeleniumTest.test_027_oznameni_projektu_001.end")

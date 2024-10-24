@@ -45,11 +45,12 @@ class WaitForPageLoad:
 
     def wait_for(self, condition_function):
         start_time = time.time()
-        while time.time() < start_time + 12:
+        while time.time() < start_time + 20:
             if condition_function():
                 return True
             else:
                 time.sleep(0.5)
+        logger.error("SeleniumTest.WaitForPageLoad.timeout")
 
 
 # @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")

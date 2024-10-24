@@ -16,6 +16,7 @@ from core.constants import (
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
 from django.utils.translation import gettext as _
+from oznameni.tests.test_selenium import OznameniSeleniumTest
 from projekt.models import Projekt
 from selenium.common.exceptions import ElementNotSelectableException, ElementNotVisibleException
 from selenium.webdriver.common.by import By
@@ -211,17 +212,26 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.assertEqual(project_count_old, project_count_new)
         logger.info("CoreSeleniumTest.test_005_projekt_zapsat_n_002.end")
 
-    @unittest.skip  # teststuje se pravidlo, které v programu není
-    def test_006_projekt_zapsat_n_003(self):
-        # Scenar_6 Zapsání projektu (negativní scénář 3)
-        # test 2.5
-        logger.info("CoreSeleniumTest.test_006_projekt_zapsat_n_003.start")
-        [project_count_old, project_count_new] = self.ProjektZapsat(
-            date_from=600, date_to=620, css_selector=".nav-link > span:nth-child(2)"
-        )
+    def test_006_schvaleni_projektu_p_001(self):
+        # Scenar_6 Schválení projektu
 
-        self.assertEqual(project_count_old, project_count_new)
-        logger.info("CoreSeleniumTest.test_006_projekt_zapsat_n_003.end")
+        logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.start")
+
+        pian = OznameniSeleniumTest.oznameni_projektu(self)
+        self.login("archivar")
+        self.ElementClick(By.ID, "menuProjekty")
+        self.ElementClick(By.LINK_TEXT, "Schválit oznámení")
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys(pian)
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, pian)
+        self.ElementClick(By.ID, "projekt-schvalit")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        pian_new = self.driver.find_element(By.ID, "id-app-entity-item").text
+        self.assertNotEqual(pian, pian_new)
+        logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
