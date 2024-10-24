@@ -2243,3 +2243,34 @@ def post_ajax_get_3d_limit(request):
         return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
     else:
         return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+
+
+class DokumentyAzTableView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro zobrazení tabulky dokumentů.
+    """
+
+    def get(self, request, typ_vazby):
+        if typ_vazby == "arch_z":
+            qs = (
+                Dokument.objects.filter(casti__archeologicky_zaznam__id=request.GET.get("id", ""))
+                .select_related("soubory")
+                .prefetch_related("soubory__soubory")
+                .order_by("ident_cely")
+            )
+            zaznam = ArcheologickyZaznam.objects.get(id=request.GET.get("id", ""))
+        else:
+            qs = (
+                Dokument.objects.filter(casti__projekt__id=request.GET.get("id", ""))
+                .select_related("soubory")
+                .prefetch_related("soubory__soubory")
+            ).order_by("ident_cely")
+            zaznam = Projekt.objects.get(id=request.GET.get("id", ""))
+        context = {
+            "dokumenty": qs,
+            "show": {"dokument_odpojit": request.GET.get("show_dokument_odpojit", "")},
+            "zaznam": zaznam,
+            "type": typ_vazby,
+        }
+        logger.debug(context)
+        return HttpResponse(render_to_string("dokument/dokument_table_only.html", context))
