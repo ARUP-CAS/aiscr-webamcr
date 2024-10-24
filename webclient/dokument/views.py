@@ -510,6 +510,8 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                                 "zpet",
                                 cast.archeologicky_zaznam.get_absolute_url(),
                                 max_age=1000,
+                                secure=True,
+                                samesite="Strict",
                             )
                             found = True
                             break
@@ -522,6 +524,8 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                                 "zpet",
                                 reverse("projekt:detail", args=(ident_referer,)),
                                 max_age=1000,
+                                secure=True,
+                                samesite="Strict",
                             )
                             found = True
                             break
