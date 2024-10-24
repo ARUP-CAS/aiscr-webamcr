@@ -66,7 +66,7 @@ urlpatterns = [
         name="get_ez_table_row",
     ),
     path(
-        "ez-odkazy-table",
+        "ext-odkaz-tabulka",
         views.EzOdkazyTableView.as_view(),
         name="get_ez_odkazy_table",
     ),
