@@ -63,8 +63,8 @@ urlpatterns = [
         name="post_ajax_get_3d_limit",
     ),
     path(
-        "dokumenty-az-tabulka",
+        "dokumenty-tabulka/<str:typ_vazby>",
         DokumentyAzTableView.as_view(),
-        name="get_dokumenty_az_table",
+        name="get_dokumenty_table",
     ),
 ]

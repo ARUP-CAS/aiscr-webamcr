@@ -98,8 +98,8 @@
     if ({{dokumenty.count}} > 0) {
       $.ajax({
         type: "GET",
-        url: '{% url "dokument:get_dokumenty_az_table" %}', 
-        data: {'id': {{zaznam.id}}, "show_dokument_odpojit": "{{show.dokument_odpojit}}", "type":"{{type}}"},
+        url: '{% url "dokument:get_dokumenty_table" type %}', 
+        data: {'id': {{zaznam.id}}, "show_dokument_odpojit": "{{show.dokument_odpojit}}"},
         success : function(data) {
           $('.app-card-dokument .loader').css("display", "none");
           $('.app-card-dokument .content-with-table-responsive').append(data);

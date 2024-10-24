@@ -815,6 +815,12 @@ class Permissions(models.Model):
             "lokalita_pripojit_pian_id",
             "core.models.permissions.actionChoices.lokalita_pripojit_pian_id",
         )
+        dokumenty_tabulka_projekt = "dokumenty_tabulka_projekt", _(
+            "core.models.permissions.actionChoices.dokumenty_tabulka_projekt"
+        )
+        dokumenty_tabulka_arch_z = "dokumenty_tabulka_arch_z", _(
+            "core.models.permissions.actionChoices.dokumenty_tabulka_arch_z"
+        )
 
     pristupnost_to_groups = {
         PRISTUPNOST_ANONYM_ID: 0,

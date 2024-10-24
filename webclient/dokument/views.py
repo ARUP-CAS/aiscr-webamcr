@@ -2247,12 +2247,11 @@ def post_ajax_get_3d_limit(request):
 
 class DokumentyAzTableView(LoginRequiredMixin, View):
     """
-    Třída pohledu pro zobrazení řádku tabulky projektů pri připájení.
+    Třída pohledu pro zobrazení tabulky dokumentů.
     """
 
-    def get(self, request):
-        logger.debug(request.GET.get("type", ""))
-        if request.GET.get("type", "") == "arch_z":
+    def get(self, request, typ_vazby):
+        if typ_vazby == "arch_z":
             qs = (
                 Dokument.objects.filter(casti__archeologicky_zaznam__id=request.GET.get("id", ""))
                 .select_related("soubory")
@@ -2271,7 +2270,7 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
             "dokumenty": qs,
             "show": {"dokument_odpojit": request.GET.get("show_dokument_odpojit", "")},
             "zaznam": zaznam,
-            "type": request.GET.get("type", ""),
+            "type": typ_vazby,
         }
         logger.debug(context)
         return HttpResponse(render_to_string("dokument/dokument_table_only.html", context))
