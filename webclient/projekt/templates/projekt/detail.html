@@ -880,6 +880,14 @@
       })
       var zadost_udaje_oznamovatel_modal = new Modal(options, "zadost-udaje-oznamovatel");
       }
+      if ("{{show.zadost_odhlaseni_projektu}}" != "False") {
+        let options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        formURL: "{% url 'projekt:zadost-odhlaseni-projektu' projekt.ident_cely %}",
+        formID: "zadost-odhlaseni-projektu-form",
+        modalFormID: "#zadost-odhlaseni-projektu-form",
+      })
+      let zadost_odhlaseni_projektu_modal = new Modal(options, "zadost-odhlaseni-projektu");
+      }
     });
     </script>
 {% endblock %}

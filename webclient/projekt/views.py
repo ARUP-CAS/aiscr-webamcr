@@ -60,6 +60,8 @@ from core.message_constants import (
     PROJEKT_USPESNE_VRACEN,
     PROJEKT_USPESNE_ZAHAJEN_V_TERENU,
     PROJEKT_USPESNE_ZRUSEN,
+    PROJEKT_ZADOST_ODHLASENI_PROJEKTU_ERROR,
+    PROJEKT_ZADOST_ODHLASENI_PROJEKTU_SUCCESS,
     PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR,
     PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
@@ -118,7 +120,7 @@ from projekt.forms import (
     PrihlaseniProjektForm,
     UkoncitVTerenuForm,
     UpravitDatumOznameniForm,
-    ZadostUdajeOznamovatelForm,
+    ZadostProjektForm,
     ZahajitVTerenuForm,
     ZruseniProjektForm,
 )
@@ -1473,6 +1475,9 @@ def get_detail_template_shows(projekt, user):
         "upravit_datum_oznameni": check_permissions(
             p.actionChoices.projekt_upravit_datum_oznameni, user, projekt.ident_cely
         ),
+        "zadost_odhlaseni_projektu": check_permissions(
+            p.actionChoices.projekt_zadost_odhlaseni_projektu, user, projekt.ident_cely
+        ),
     }
     return show
 
@@ -1704,12 +1709,15 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
             "id_tag": "zadost-udaje-oznamovatel-form",
             "button": _("projekt.views.ZadostUdajeOznamovatelView.submitButton.text"),
         }
-        form = ZadostUdajeOznamovatelForm()
+        form = ZadostProjektForm(
+            _("projekt.forms.zadostUdajeOznamovatel.duvod.label"),
+            _("projekt.forms.zadostUdajeOznamovatel.duvod.tooltip"),
+        )
         context["form"] = form
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        form = ZadostUdajeOznamovatelForm(request.POST)
+        form = ZadostProjektForm(data=request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
             zaznam = self.get_zaznam()
@@ -1717,4 +1725,46 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
             messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS)
         else:
             messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR)
+        return JsonResponse({"redirect": zaznam.get_absolute_url()})
+
+
+class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro odeslání žádosti pro odhlášení projektu.
+    """
+
+    template_name = "core/transakce_modal.html"
+
+    def get_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        zaznam = get_object_or_404(
+            Projekt,
+            ident_cely=ident_cely,
+        )
+        return zaznam
+
+    def get(self, request, *args, **kwargs):
+        zaznam = self.get_zaznam()
+        context = {
+            "object": zaznam,
+            "title": _("projekt.views.ZadostOdhlaseniProjektuView.title.text"),
+            "id_tag": "zadost-odhlaseni-projektu-form",
+            "button": _("projekt.views.ZadostOdhlaseniProjektuView.submitButton.text"),
+        }
+        form = ZadostProjektForm(
+            _("projekt.forms.ZadostOdhlaseniProjektu.duvod.label"),
+            _("projekt.forms.ZadostOdhlaseniProjektu.duvod.tooltip"),
+        )
+        context["form"] = form
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        form = ZadostProjektForm(data=request.POST)
+        if form.is_valid():
+            duvod = form.cleaned_data["reason"]
+            zaznam = self.get_zaznam()
+            Mailer.send_ep07(zaznam, duvod)
+            messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_ODHLASENI_PROJEKTU_SUCCESS)
+        else:
+            messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_ODHLASENI_PROJEKTU_ERROR)
         return JsonResponse({"redirect": zaznam.get_absolute_url()})

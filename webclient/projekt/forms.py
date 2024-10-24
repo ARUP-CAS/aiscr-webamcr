@@ -783,16 +783,15 @@ class ProjektFilterForm(BaseFilterForm):
     ]
 
 
-class ZadostUdajeOznamovatelForm(forms.Form):
-    reason = forms.CharField(
-        label=_("projekt.forms.zadostUdajeOznamovatel.duvod.label"),
-        required=True,
-        help_text=_("projekt.forms.zadostUdajeOznamovatel.duvod.tooltip"),
-        widget=forms.Textarea(attrs={"rows": 5, "cols": 40}),
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(ZadostUdajeOznamovatelForm, self).__init__(*args, **kwargs)
+class ZadostProjektForm(forms.Form):
+    def __init__(self, label="", help_text="", *args, **kwargs):
+        super(ZadostProjektForm, self).__init__(*args, **kwargs)
+        self.fields["reason"] = forms.CharField(
+            label=label,
+            required=True,
+            help_text=help_text,
+            widget=forms.Textarea(attrs={"rows": 5, "cols": 40}),
+        )
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
