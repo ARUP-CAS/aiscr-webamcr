@@ -64,8 +64,9 @@
 <script src="{% static 'coor_precision.js' %}"></script>
 <script src="{% static 'spin/spin.min.js' %}"></script>
 <script src="{% static 'leaflet.spin.min.js' %}"></script>
-<script src="{% static 'mapa_basic_grey.js' %}"></script>
-<script src="{% static 'mapa_doc.js' %}"></script>
+<script src="{% static 'coordTransform.js' %}"></script>
+<script src="{% static 'mapa_basic_grey.js' %}?v1"></script>
+<script src="{% static 'mapa_doc.js' %}?v1"></script>
 <script>
   $(document).ready(function () {
         {% if coordinate_wgs84_x1 is not None %}

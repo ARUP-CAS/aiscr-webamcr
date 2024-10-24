@@ -53,7 +53,7 @@ L.easyButton('bi bi-skip-backward-fill', function () {
     poi_correct.clearLayers();
     if (poi_sugest.getLayers().length>0) {
         let ll = poi_sugest.getLayers()[0]._latlng;
-        map.setView(ll, 18);
+        map.setView(ll, 12);
         try {
             document.getElementById('id_coordinate_x2').value = ll.lat;
             document.getElementById('id_coordinate_x1').value = ll.lng;
@@ -71,7 +71,7 @@ L.easyButton('bi bi-skip-backward-fill', function () {
             document.getElementById('id_coordinate_x2').value = "";
             document.getElementById('id_coordinate_x1').value = "";
         }
-        map.setView([50,15],7);
+        map.setView([50,15],1);
 
     }
 }, [map_translations['DefaultTitle']]).addTo(map)
@@ -109,7 +109,7 @@ var addPointOnLoad = (lat, long, text, ident_cely,stav) => {
         .addTo(poi_sugest);
     }
 
-    map.setView([lat, long], 18)
+    map.setView([lat, long], 12)
 }
 
 var addProjektWithoutPointOnLoad = (ident_cely) => {

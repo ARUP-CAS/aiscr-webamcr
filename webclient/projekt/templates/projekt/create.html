@@ -36,7 +36,7 @@
   <!-- static leaflet additional import-->
 <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}?v2"/>
 <script src="{% static 'leaflet.measure.js' %}?v1"></script>
-<script type="text/javascript" src="{% static 'leaflet.coor.js' %}"></script>
+<script type="text/javascript" src="{% static 'leaflet.coor.js' %}?v1"></script>
 <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
 <link rel="stylesheet" type="text/css" href="{% static 'daterangepicker.css' %}"/>
 <link rel="stylesheet" href="{% static 'leaflet-search.css' %}"/>
@@ -119,11 +119,12 @@
   </script>
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
-  <script src="{% static 'mapa_basic_grey.js' %}"></script>
+  <script src="{% static 'coordTransform.js' %}"></script>
+  <script src="{% static 'mapa_basic_grey.js' %}?v1"></script>
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script src="{% static 'leaflet_subgroup.js' %}"></script>
-  <script src="{% static 'mapa_projekty.js' %}"></script>
+  <script src="{% static 'mapa_projekty.js' %}?v1"></script>
   <script>var object_id = "{{ confirm.ident_cely }}";</script>
   <script>
       global_map_can_edit = true;
