@@ -1,9 +1,11 @@
 # Register your models here.
 import pandas as pd
 from core.ident_cely import get_record_from_ident
+from core.repository_connector import FedoraError, FedoraTransaction
 from django.contrib import admin
 from django.template.response import TemplateResponse
 from django.urls import path
+from django.utils.translation import gettext as _
 from fedora_management.forms import UpdateMetadataFileForm
 from xml_generator.models import ModelWithMetadata
 
@@ -24,14 +26,26 @@ class YourCustomAdminSite(admin.AdminSite):
                 ]
                 sheet = sheet.set_index("ident_cely")
                 sheet["result"] = ""
+                sheet["detail"] = ""
                 for ident_cely in sheet.index:
                     record = get_record_from_ident(ident_cely)
                     if record and isinstance(record, ModelWithMetadata):
-                        record.save_metadata()
+                        try:
+                            fedora_transaction = FedoraTransaction()
+                            record.save_metadata(fedora_transaction)
+                            fedora_transaction.mark_transaction_as_closed()
+                            sheet["result"] = _("fedora_management.admin.YourCustomAdminSite.custom_page.success")
+                            sheet["detail"] = fedora_transaction.uid
+                        except FedoraError as e:
+                            sheet["result"] = _("fedora_management.admin.YourCustomAdminSite.custom_page.error")
+                            sheet["detail"] = e
                     else:
-                        sheet.loc[ident_cely, "result"] = "Record does not exist"
+                        sheet.loc[ident_cely, "result"] = sheet["result"] = _(
+                            "fedora_management.admin.YourCustomAdminSite.custom_page.does_not_exist"
+                        )
+                sheet = sheet.reset_index(drop=False)
                 context = {
-                    "text": str(sheet),
+                    "text": sheet.to_html(index=False),
                     "page_name": "Custom Page",
                     "app_list": self.get_app_list(request),
                     **self.each_context(request),

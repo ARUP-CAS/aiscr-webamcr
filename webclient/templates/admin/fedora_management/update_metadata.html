@@ -1,8 +1,11 @@
-{# templates/admin/custom_page.html #}
-
 {% extends 'admin/change_list.html' %}
 {% load crispy_forms_tags %}
 {% load i18n %}
+{% load static %}
+
+{% block extrastyle %}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+{% endblock %}
 
 {% block pagination %}{% endblock %}
 {% block filters %}{% endblock filters %}
@@ -19,13 +22,24 @@
 <h2>{% trans "core.templates.admin.fedora_management.heading" %}</h2>
 
 {% block content %}
-  <form method="post" enctype="multipart/form-data">
-    {{ update_metadata_file_form.form.non_field_errors }}
-    {% csrf_token %}
-    {% crispy update_metadata_file_form %}
-    <input type="submit" value="Save" class="default" name="_save">
-  </form>
-  {% if text %}
-    {{ text }}
-  {% endif %}
+  <div id="content-main">
+    <form method="post" enctype="multipart/form-data">
+      <div>
+        <fieldset class="module aligned">
+          {{ update_metadata_file_form.non_field_errors }}
+          {% csrf_token %}
+          {% crispy update_metadata_file_form %}
+          {% if text %}
+            {% autoescape off %}
+              {{ text }}
+            {% endautoescape %}
+          {% endif %}
+        </fieldset>
+        <div class="submit-row">
+          <input type="submit" value="{% trans 'Save' %}" class="default" name="_save">
+        </div>
+      </div>
+
+    </form>
+  </div>
 {% endblock content %}
