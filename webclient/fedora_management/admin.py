@@ -20,7 +20,10 @@ class YourCustomAdminSite(admin.AdminSite):
             form = UpdateMetadataFileForm(request.POST, request.FILES)
             if form.is_valid():
                 uploaded_file = request.FILES["ident_list_file"]
-                sheet = pd.read_csv(uploaded_file, sep=",")
+                if uploaded_file.content_type == "text/csv":
+                    sheet = pd.read_csv(uploaded_file, sep=",")
+                else:
+                    sheet = pd.read_excel(uploaded_file)
                 sheet.columns = [
                     "ident_cely",
                 ]
