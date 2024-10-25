@@ -52,6 +52,9 @@
       a {
         color: $app-sidebar-accordion-color;
       }
+      a.active {
+        color: $app-sidebar-accordion-color-active;
+      }
       color: $app-sidebar-accordion-color;
       padding: 0;
 
