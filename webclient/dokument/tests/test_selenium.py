@@ -124,7 +124,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-000000003")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-TX-000000003")
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons")
         with open("dokument/tests/resources/test.jpg", "rb") as image_file:
@@ -158,7 +158,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413001")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-TX-202413001")
         try:
             with WaitForPageLoad(self.driver):
@@ -182,7 +182,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413020")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-TX-202413020")
         self.ElementClick(By.CSS_SELECTOR, "#dokument-archivovat > .app-controls-button-text")
         with WaitForPageLoad(self.driver):
@@ -202,7 +202,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413013")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-TX-202413013")
         try:
             with WaitForPageLoad(self.driver):
@@ -224,7 +224,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("M-TX-201604272")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "M-TX-201604272")
         self.ElementClick(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text")
         # self.wait(1)
@@ -246,7 +246,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("M-TX-201604272")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "M-TX-201604272")
         self.ElementClick(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text")
         # self.ElementClick(By.ID, "id_reason")
@@ -269,7 +269,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-TX-202400071")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-TX-202400071")
         self.ElementClick(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text")
         # self.wait(1)
@@ -291,7 +291,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-TX-202400071")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-TX-202400071")
         self.ElementClick(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text")
         # self.ElementClick(By.ID, "id_reason")

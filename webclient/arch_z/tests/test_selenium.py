@@ -2,7 +2,8 @@ import base64
 import logging
 import unittest
 
-from arch_z.models import Akce, ExterniOdkaz
+from arch_z.models import Akce, ArcheologickyZaznam, ExterniOdkaz
+from core.constants import AZ_STAV_ARCHIVOVANY, AZ_STAV_ODESLANY, PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_UZAVRENY
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from dj.models import DokumentacniJednotka
 from django.conf import settings
@@ -10,6 +11,8 @@ from django.utils.translation import gettext as _
 from dokument.models import DokumentCast
 from komponenta.models import Komponenta
 from nalez.models import NalezObjekt, NalezPredmet
+from pian.models import Pian
+from projekt.models import Projekt
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
@@ -19,7 +22,7 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceProjektoveAkce(BaseSeleniumTestClass):
     def go_to_Projekty_vyper(self):
-        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
 
     def draw_polygon(self):
@@ -50,7 +53,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202307816")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202307816")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
@@ -82,7 +85,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(
             By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.zahajenVTerenu.label") + "')]"
         )
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202401502")
 
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
@@ -116,7 +119,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202309552")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
 
         self.ElementClick(By.LINK_TEXT, "C-202309552")
 
@@ -148,7 +151,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202309552")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
 
         self.ElementClick(By.LINK_TEXT, "C-202309552")
 
@@ -184,7 +187,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 
         self.ElementClick(By.ID, "buttonFiltr")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202309027")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202309027")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202309027A_D01 > strong")
@@ -224,7 +227,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 
         self.ElementClick(By.ID, "buttonFiltr")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202309027")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202309027")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202309027A_D01 > strong")
@@ -264,7 +267,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202004814")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202004814")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.ID, "el_komponenta_C_202004814A_K001")
@@ -296,7 +299,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202004814")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202004814")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         with WaitForPageLoad(self.driver):
@@ -335,7 +338,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-91277520A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-91277520A")
         self.ElementClick(By.ID, "el_komponenta_X_C_91277520A_K001")
         self.ElementClick(By.CSS_SELECTOR, "#objekt-smazat-101441 > .material-icons")
@@ -364,7 +367,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-91277520A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-91277520A")
         self.ElementClick(By.ID, "el_komponenta_X_C_91277520A_K001")
 
@@ -392,7 +395,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202207641")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202207641")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#others > .material-icons")
@@ -439,7 +442,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202207641")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202207641")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#others > .material-icons")
@@ -468,7 +471,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401979")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202401979")
         self.ElementClick(By.CSS_SELECTOR, ".app-card-akce > .card-body")
         self.ElementClick(By.CSS_SELECTOR, "tr:nth-child(2) a")
@@ -492,7 +495,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202301164")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202301164")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#eo-pripojit-do-az > .material-icons")
@@ -526,7 +529,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401980")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202401980")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401980A_D01 > strong")
@@ -554,7 +557,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401981")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202401981")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401981A_D01 > strong")
@@ -583,7 +586,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401981")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
 
         self.ElementClick(By.LINK_TEXT, "C-202401981")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
@@ -608,7 +611,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401980")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202401980")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401980A_D01 > strong")
@@ -643,7 +646,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202007232")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202007232")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202007232A_D01 > strong")
@@ -668,7 +671,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202309724")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202309724")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202309724A_D01 > strong")
@@ -702,7 +705,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202005190")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202005190")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202005190A_D01 > strong")
@@ -733,7 +736,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401980")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202401980")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401980A_D01 > strong")
@@ -763,7 +766,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-201015104")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-201015104")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.ID, "el_komponenta_C_201015104A_K001")
@@ -789,7 +792,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202401980")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202401980")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202401980A_D01 > strong")
@@ -801,6 +804,35 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         count_new = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202401980A").count()
         self.assertEqual(count_old - 1, count_new)
         logger.info("AkceProjektoveAkce.test_095_smazani_DJ_projektove_akce_p_001.end")
+
+    # C-201443939A
+    def test_102_archivace_projektove_akce_p_001(self):
+        # Scenar_95 Smazání dokumentační jednotky u projektové akce (pozitivní scénář 1)
+        logger.info("AkceProjektoveAkce.test_102_archivace_projektove_akce_p_001.start")
+        self.login("archivar")
+
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-201443939A").first().stav, AZ_STAV_ODESLANY)
+        self.assertEqual(Projekt.objects.get(ident_cely="C-201443939").stav, PROJEKT_STAV_UZAVRENY)
+        self.go_to_Projekty_vyper()
+
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-201443939")
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, "C-201443939")
+        self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
+        self.ElementClick(By.ID, "akce-archivovat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.assertEqual(
+            ArcheologickyZaznam.objects.filter(ident_cely="C-201443939A").first().stav, AZ_STAV_ARCHIVOVANY
+        )
+        self.assertEqual(Projekt.objects.get(ident_cely="C-201443939").stav, PROJEKT_STAV_ARCHIVOVANY)
+
+        logger.info("AkceProjektoveAkce.test_102_archivace_projektove_akce_p_001.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
@@ -962,7 +994,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000002A")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
@@ -1008,7 +1040,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000002A")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
@@ -1052,7 +1084,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000003A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000003A")
         self.ElementClick(By.ID, "el_komponenta_X_C_9000000003A_K001")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000003A-K001_o-0-druh .filter-option-inner-inner")
@@ -1084,7 +1116,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000003A")
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000003A")
         self.ElementClick(By.ID, "el_komponenta_X_C_9000000003A_K001")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000003A-K001_p-0-druh .filter-option-inner-inner")
@@ -1120,7 +1152,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000004A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000004A")
         self.ElementClick(By.ID, "el_komponenta_X_C_9000000004A_K001")
         self.ElementClick(By.CSS_SELECTOR, "#objekt-smazat-180491 > .material-icons")
@@ -1149,7 +1181,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000004A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000004A")
         self.ElementClick(By.ID, "el_komponenta_X_C_9000000004A_K001")
         self.ElementClick(By.CSS_SELECTOR, "#objekt-smazat-175762 > .material-icons")
@@ -1178,7 +1210,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
 
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000003A")
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000003A")
 
         # self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
@@ -1229,7 +1261,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
 
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000004A")
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000004A")
 
         self.ElementClick(By.CSS_SELECTOR, "#others > .material-icons")
@@ -1260,7 +1292,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000003A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000003A")
         self.ElementClick(By.CSS_SELECTOR, "#eo-pripojit-do-az > .material-icons")
         self.ElementClick(By.ID, "select2-id_ez-container")
@@ -1292,7 +1324,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000002A")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
         self.ElementClick(
@@ -1323,7 +1355,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.ID, "id_ident_cely")
 
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000006A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000006A")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000006A_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
@@ -1350,7 +1382,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.ID, "id_ident_cely")
 
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000006A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000006A")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000006A_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
@@ -1383,7 +1415,7 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000002A")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000002A")
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
         self.ElementClick(
@@ -1427,3 +1459,27 @@ class AkceSamostatneAkce(AkceProjektoveAkce):
         pian_new = DokumentacniJednotka.objects.filter(ident_cely="X-C-9000000012A-D01")[0].pian
         self.assertEqual(pian_new, None)
         logger.info("AkceSamostatneAkce.test_100_odpojeni_potvrzeneho_PIAN_samostatne_akce_p_001.end")
+
+    def test_101_smazani_PIAN_samostatne_akce_p_001(self):
+        # Scenar_100 Odpojení potvrzeného PIAN u samostatné akce (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_101_smazani_PIAN_samostatne_akce_p_001.start")
+        self.login("badatel")
+        pian_old = DokumentacniJednotka.objects.filter(ident_cely="X-C-9000000006A-D01")[0].pian
+        pians_count_old = Pian.objects.count()
+        self.assertNotEqual(pian_old, None)
+        self.go_to_Akce_vybrat()
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-9000000006A")
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, "X-C-9000000006A")
+        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000006A_D01")
+        self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
+        self.ElementClick(By.ID, "pian-odpojit-N-1212-000000001")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        pians_count_new = Pian.objects.count()
+        pian_new = DokumentacniJednotka.objects.filter(ident_cely="X-C-9000000006A-D01")[0].pian
+        self.assertEqual(pian_new, None)
+        self.assertEqual(pians_count_old, pians_count_new + 1)
+        logger.info("AkceSamostatneAkce.test_101_smazani_PIAN_samostatne_akce_p_001.end")

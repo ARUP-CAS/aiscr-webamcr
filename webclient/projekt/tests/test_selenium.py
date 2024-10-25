@@ -61,7 +61,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # test 2.1
         self.login()
         # Go to projects
-        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
         # Test sorting by all table columns
         with WaitForPageLoad(self.driver):
@@ -179,7 +179,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
             ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException],
         )
         wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
-        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zapsat"))
 
     def test_003_projekt_zapsat_p_001(self):
@@ -245,7 +245,7 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
         )
         wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
 
-        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zahajitVyzkum"))
 
     def test_007_projekt_zahajit_vyzkum_p_001(self):
@@ -285,7 +285,7 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
         )
         wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
 
-        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.ukoncitTeren"))
 
     def test_008_projekt_ukoncit_vyzkum_p_001(self):
@@ -343,7 +343,7 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
         )
         wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
 
-        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.UzavritProjekt"))
 
     def test_010_projekt_uzavrit_p_001(self):
@@ -395,7 +395,7 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         )
         wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
 
-        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.archivovatProjekty"))
 
     def test_012_projekt_archivovat_p_001(self):
@@ -440,7 +440,7 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
 
     def test_014_projekt_vratit_p_001(self):
@@ -454,7 +454,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-6 > .text")
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202205168")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
         self.ElementClick(By.ID, "id_reason")
@@ -562,7 +562,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
 
     def test_019_projekt_zrusit_p_001(self):
@@ -626,7 +626,7 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
 
     def test_022_projekt_zrusit_p_001(self):
@@ -656,7 +656,7 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(1) .btn")
+        self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
 
     def test_023_projekt_vytvori_akci_p_001(self):
