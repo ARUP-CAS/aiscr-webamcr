@@ -35,6 +35,19 @@
       </table>
     </div>
   {% endfor %}
+  <div class="app-rosetta module">
+    <table>
+      <caption>
+        {% trans "core.templates.admin.appList.fedora_management" %}
+      </caption>
+      <tbody>
+        <tr>
+          <th scope="row" colspan="3"><a href="{% url 'admin:update_metadata' %}">{% trans "core.templates.admin.appList.update_metadata" %}</a></th>
+          <td></td>
+          </tr>
+        </tbody>
+    </table>
+  </div>
   {% if request.user|can_translate  %}
     <div class="app-rosetta module">
         <table>

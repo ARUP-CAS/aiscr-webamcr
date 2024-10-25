@@ -1,0 +1,31 @@
+{# templates/admin/custom_page.html #}
+
+{% extends 'admin/change_list.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block pagination %}{% endblock %}
+{% block filters %}{% endblock filters %}
+{% block object-tools %}{% endblock object-tools %}
+{% block search %}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "core.templates.admin.fedora_management.home_link" %}</a>
+    {% if page_name %} &rsaquo; {{ page_name }}{% endif %}
+  </div>
+{% endblock %}
+
+<h2>{% trans "core.templates.admin.fedora_management.heading" %}</h2>
+
+{% block content %}
+  <form method="post" enctype="multipart/form-data">
+    {{ update_metadata_file_form.form.non_field_errors }}
+    {% csrf_token %}
+    {% crispy update_metadata_file_form %}
+    <input type="submit" value="Save" class="default" name="_save">
+  </form>
+  {% if text %}
+    {{ text }}
+  {% endif %}
+{% endblock content %}
