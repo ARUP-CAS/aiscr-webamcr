@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 
 import simplejson as json
 from core.constants import (
@@ -51,12 +52,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from django.views.generic import DetailView
+from django.views.generic import CreateView, DetailView
 from dokument.forms import CoordinatesDokumentForm
 from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID, TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar
@@ -99,105 +100,138 @@ def index(request):
     return render(request, "pas/index.html")
 
 
-@login_required
-@require_http_methods(["GET", "POST"])
-def create(request, ident_cely=None):
-    """
-    Funkce pohledu pro vytvoření samostatného nálezu.
-    """
-    required_fields = get_required_fields()
-    required_fields_next = get_required_fields(next=1)
-    if request.method == "POST":
-        form = CreateSamostatnyNalezForm(
-            request.POST,
-            user=request.user,
-            required=required_fields,
-            required_next=required_fields_next,
-        )
-        form_coor = CoordinatesDokumentForm(
-            request.POST,
-        )
-        if form.is_valid():
-            geom = None
-            geom_sjtsk = None
-            try:
-                wgs84_x1 = float(form_coor.data.get("coordinate_wgs84_x1"))
-                wgs84_x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
-                if wgs84_x1 > 0 and wgs84_x2 > 0:
-                    geom = Point(wgs84_x1, wgs84_x2)
-                sjtsk_x1 = float(form_coor.data.get("coordinate_sjtsk_x1"))
-                sjtsk_x2 = float(form_coor.data.get("coordinate_sjtsk_x2"))
-                if sjtsk_x1 < 0 and sjtsk_x2 < 0:
-                    geom_sjtsk = Point(sjtsk_x1, sjtsk_x2)
-            except Exception:
-                logger.info(
-                    "pas.views.create.corrd_format_error",
-                    extra={"geom": geom, "geom_sjtsk": geom_sjtsk},
-                )
-            sn: SamostatnyNalez = form.save(commit=False)
-            try:
-                sn.ident_cely = get_sn_ident(sn.projekt)
-            except MaximalIdentNumberError:
-                messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
-            else:
-                repository_connector = FedoraRepositoryConnector(sn)
-                if repository_connector.check_container_deleted_or_not_exists(sn.ident_cely, "samostatny_nalez"):
-                    sn.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN)
-                    sn.stav = SN_ZAPSANY
-                    sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
-                    sn.predano_organizace = sn.projekt.organizace
-                    sn.geom_system = form_coor.data.get("coordinate_system")
-                    if geom is not None:
-                        sn.katastr = get_cadastre_from_point(geom)
-                        sn.geom = geom
-                    if geom_sjtsk is not None:
-                        sn.geom_sjtsk = geom_sjtsk
-                    sn.save()
-                    sn.set_zapsany(request.user)
-                    form.save_m2m()
-                    sn.close_active_transaction_when_finished = True
-                    sn.save()
-                    return redirect("pas:detail", ident_cely=sn.ident_cely)
-                else:
-                    logger.info(
-                        "pas.views.create.check_container_deleted_or_not_exists.incorrect",
-                        extra={"ident_cely": sn.ident_cely},
-                    )
-                    messages.add_message(
-                        request,
-                        messages.ERROR,
-                        _("pas.views.zapsat.create." "check_container_deleted_or_not_exists_error"),
-                    )
+class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
+    model = SamostatnyNalez
+    form_class = CreateSamostatnyNalezForm
+    template_name = "pas/create.html"
 
+    class ActionType(Enum):
+        CREATE = 1
+        CREATE_FROM_PROJECT = 2
+        CREATE_AS_COPY = 3
+
+    def __init__(self, *args, **kwargs):
+        self.get_action_type = None
+        self.copy_source = None
+        super().__init__(*args, **kwargs)
+
+    def dispatch(self, request, *args, **kwargs):
+        if "kopie" in self.request.path:
+            self.get_action_type = self.ActionType.CREATE_AS_COPY.value
+            self._set_copy_source()
+        elif "ident_cely" in kwargs:
+            self.get_action_type = self.ActionType.CREATE_FROM_PROJECT.value
         else:
-            logger.info("pas.views.create.form_invalid", extra={"errors": form.errors})
-            messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
-    else:
-        if ident_cely:
+            self.get_action_type = self.ActionType.CREATE
+        return super().dispatch(request, *args, **kwargs)
+
+    def _set_copy_source(self):
+        copy_source = SamostatnyNalez.objects.get(ident_cely=self.kwargs["ident_cely"])
+        copy_source.id = None
+        copy_source.soubory = None
+        copy_source.historie = None
+        self.copy_source = copy_source
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if self.get_action_type == self.ActionType.CREATE_FROM_PROJECT.value:
+            kwargs["instance"] = self.copy_source
+        kwargs["user"] = self.request.user
+        kwargs["required"] = get_required_fields()
+        kwargs["required_next"] = get_required_fields(next=1)
+        kwargs["project_ident"] = (
+            self.kwargs["ident_cely"] if self.get_action_type == self.ActionType.CREATE_FROM_PROJECT.value else None
+        )
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.get_action_type in (self.ActionType.CREATE.value, self.ActionType.CREATE_FROM_PROJECT.value):
+            context["formCoor"] = CoordinatesDokumentForm()
+        else:
+            context["formCoor"] = CoordinatesDokumentForm(initial=self.copy_source.generate_coord_forms_initial())
+        return context
+
+    def form_valid(self, form):
+        form_coor = CoordinatesDokumentForm(self.request.POST)
+        sn = form.save(commit=False)
+        geom, geom_sjtsk = self.handle_geometry(form_coor)
+
+        try:
+            sn.ident_cely = get_sn_ident(sn.projekt)
+        except MaximalIdentNumberError:
+            messages.error(self.request, MAXIMUM_IDENT_DOSAZEN)
+            return self.form_invalid(form)
+
+        repository_connector = FedoraRepositoryConnector(sn)
+        if not repository_connector.check_container_deleted_or_not_exists(sn.ident_cely, "samostatny_nalez"):
+            logger.info(
+                "pas.views.create.check_container_deleted_or_not_exists.incorrect",
+                extra={"ident_cely": sn.ident_cely},
+            )
+            messages.error(self.request, _("pas.views.zapsat.create.check_container_deleted_or_not_exists_error"))
+            return self.form_invalid(form)
+
+        # Proceed with saving and other logic
+        sn.create_transaction(self.request.user, ZAZNAM_USPESNE_VYTVOREN)
+        sn.stav = SN_ZAPSANY
+        sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
+        sn.predano_organizace = sn.projekt.organizace
+        sn.geom_system = form_coor.data.get("coordinate_system")
+
+        if geom is not None:
+            sn.katastr = get_cadastre_from_point(geom)
+            sn.geom = geom
+        if geom_sjtsk is not None:
+            sn.geom_sjtsk = geom_sjtsk
+
+        sn.save()
+        form.save_m2m()
+        sn.set_zapsany(self.request.user)
+        sn.close_active_transaction_when_finished = True
+        sn.save()
+
+        return HttpResponseRedirect(reverse("pas:detail", kwargs={"ident_cely": sn.ident_cely}))
+
+    def form_invalid(self, form):
+        """Log form invalid errors and display a message to the user."""
+        logger.info("pas.views.create.form_invalid", extra={"errors": form.errors})
+        messages.error(self.request, FORM_NOT_VALID)
+        return super().form_invalid(form)
+
+    def handle_geometry(self, form_coor):
+        """Handle coordinate data parsing and return geometry objects."""
+        geom = None
+        geom_sjtsk = None
+        try:
+            # Parse WGS84 coordinates
+            wgs84_x1 = float(form_coor.data.get("coordinate_wgs84_x1"))
+            wgs84_x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
+            if wgs84_x1 > 0 and wgs84_x2 > 0:
+                geom = Point(wgs84_x1, wgs84_x2)
+
+            # Parse SJTSK coordinates
+            sjtsk_x1 = float(form_coor.data.get("coordinate_sjtsk_x1"))
+            sjtsk_x2 = float(form_coor.data.get("coordinate_sjtsk_x2"))
+            if sjtsk_x1 < 0 and sjtsk_x2 < 0:
+                geom_sjtsk = Point(sjtsk_x1, sjtsk_x2)
+        except Exception:
+            logger.info(
+                "pas.views.create.corrd_format_error",
+                extra={"geom": geom, "geom_sjtsk": geom_sjtsk},
+            )
+        return geom, geom_sjtsk
+
+    def get(self, request, *args, **kwargs):
+        """Handle GET request and check project type."""
+        ident_cely = kwargs.get("ident_cely")
+        if self.get_action_type == self.ActionType.CREATE_FROM_PROJECT.value:
             proj = get_object_or_404(Projekt, ident_cely=ident_cely)
             if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
                 logger.debug("Projekt neni typu pruzkumny")
-                messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_PRUZKUMNY)
-                return redirect(proj.get_absolute_url())
-        form = CreateSamostatnyNalezForm(
-            user=request.user,
-            required=required_fields,
-            required_next=required_fields_next,
-            project_ident=ident_cely,
-        )
-        form_coor = CoordinatesDokumentForm()
-    return render(
-        request,
-        "pas/create.html",
-        {
-            "global_map_can_edit": True,
-            "formCoor": form_coor,
-            "form": form,
-            "title": _("pas.views.create.title"),
-            "header": _("pas.views.create.header"),
-            "button": _("pas.views.create.submitButton.text"),
-        },
-    )
+                messages.success(request, PROJEKT_NENI_TYP_PRUZKUMNY)
+                return HttpResponseRedirect(proj.get_absolute_url())
+        return super().get(request, *args, **kwargs)
 
 
 @login_required
