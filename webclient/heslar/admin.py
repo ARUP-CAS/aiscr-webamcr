@@ -124,9 +124,9 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
     readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material")
     fields = ("dokument_rada", "dokument_typ", "dokument_material")
     search_fields = (
-        "dokument_rada",
-        "dokument_typ",
-        "dokument_material",
+        "dokument_rada__heslo",
+        "dokument_typ__heslo",
+        "dokument_material__heslo",
         "dokument_rada__ident_cely",
         "dokument_typ__ident_cely",
         "dokument_material__ident_cely",
