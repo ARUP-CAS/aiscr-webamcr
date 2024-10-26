@@ -148,3 +148,9 @@ def get_settings(item_group, item_id):
         "core.template_tags.get_settings.missing_settings", extra={"item_group": item_group, "item_id": item_id}
     )
     return ""
+
+
+@register.simple_tag
+def message_top(forloop_counter):
+    # 65px is the height of the message incl. margin
+    return forloop_counter * 65 + 15

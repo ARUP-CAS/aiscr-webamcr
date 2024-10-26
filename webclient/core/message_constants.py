@@ -17,6 +17,18 @@ ZAZNAM_USPESNE_EDITOVAN: Final = _("common.message.ZAZNAM_USPESNE_EDITOVAN.text"
 ZAZNAM_SE_NEPOVEDLO_EDITOVAT: Final = _(
     "common.message.ZAZNAM_SE_NEPOVEDLO_EDITOVAT.text"
 )  # Záznam se nepovedlo editovat.
+PREDMET_NEBO_OBJEKT_SE_NEPOVEDLO_EDITOVAT: Final = _(
+    "common.message.PREDMET_NEBO_OBJEKT_SE_NEPOVEDLO_EDITOVAT.text"
+)  # Předmět nebo objekt se nepovedlo editovat.
+PREDMET_OBJEKT_USPESNE_EDITOVAN: Final = _(
+    "common.message.PREDMET_OBJEKT_USPESNE_EDITOVAN.text"
+)  # Předmět a/nebo objekt úspěšně editován.
+KOMPONENTA_USPESNE_EDITOVANA: Final = _(
+    "common.message.KOMPONENTA_USPESNE_EDITOVANA.text"
+)  # Komponenta byla úspěšně editována.
+KOMPONENTU_SE_NEPOVEDLO_EDITOVAT: Final = _(
+    "common.message.KOMPONENTU_SE_NEPOVEDLO_EDITOVAT.text"
+)  # Komponentu se nepovedlo editovat.
 ZAZNAM_USPESNE_SMAZAN: Final = _("common.message.ZAZNAM_USPESNE_SMAZAN.text")  # Záznam byl úspěšně smazán.
 ZAZNAM_SE_NEPOVEDLO_SMAZAT: Final = _("common.message.ZAZNAM_SE_NEPOVEDLO_SMAZAT.text")  # Záznam nebyl smazán.
 ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY: Final = _(
