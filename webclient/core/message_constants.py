@@ -81,6 +81,9 @@ PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI: Final = _(
 PROJEKT_NELZE_ZAHAJIT_V_TERENU: Final = _(
     "common.message.PROJEKT_NELZE_ZAHAJIT_V_TERENU.text"
 )  # Projekt nelze zahájit v terénu.
+DATUM_OZNAMENI_SE_NEPOVEDLO_EDITOVAT: Final = _(
+    "common.message.DATUM_OZNAMENI_SE_NEPOVEDLO_EDITOVAT.text"
+)  # Datum oznámení se nepodařilo editovat
 
 PROJEKT_NELZE_SMAZAT: Final = _("common.message.PROJEKT_NELZE_SMAZAT.text")  # Projekt nelze smazat.
 PROJEKT_NEKDO_ZMENIL_STAV: Final = _("core.message_constants.projektZmenaStavuNekymJinym.text")
