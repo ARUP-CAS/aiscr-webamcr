@@ -4,6 +4,7 @@ import re
 
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.forms import BaseFilterForm, TwoLevelSelectField
+from core.validators import validate_date_min_1600
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
@@ -277,10 +278,16 @@ class CreateAkceForm(forms.ModelForm):
     datum_zahajeni = StartDateInput(
         help_text=_("arch_z.forms.CreateAkceForm.datum_zahajeni.tooltip"),
         label=_("arch_z.forms.CreateAkceForm.datum_zahajeni.label"),
+        validators=[
+            validate_date_min_1600,
+        ],
     )
     datum_ukonceni = EndDateInput(
         help_text=_("arch_z.forms.CreateAkceForm.datum_ukonceni.tooltip"),
         label=_("arch_z.forms.CreateAkceForm.datum_ukonceni.label"),
+        validators=[
+            validate_date_min_1600,
+        ],
         required=False,
     )
 

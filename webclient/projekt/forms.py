@@ -3,6 +3,7 @@ import logging
 from arch_z import validators
 from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU
 from core.forms import BaseFilterForm
+from core.validators import validate_date_min_1600
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
@@ -32,6 +33,9 @@ class CreateProjektForm(forms.ModelForm):
         label=_("projekt.forms.createProjekt.planovaneZahajeni.label"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
         help_text=_("projekt.forms.createProjekt.planovaneZahajeni.tooltip"),
+        validators=[
+            validate_date_min_1600,
+        ],
     )
 
     class Meta:
@@ -162,6 +166,9 @@ class EditProjektForm(forms.ModelForm):
         label=_("projekt.forms.editProjekt.planovaneZahajeni.label"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
         help_text=_("projekt.forms.editProjekt.planovaneZahajeni.tooltip"),
+        validators=[
+            validate_date_min_1600,
+        ],
     )
     datum_zahajeni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
