@@ -71,7 +71,7 @@ from core.message_constants import (
 from core.models import Permissions
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.repository_connector import FedoraRepositoryConnector
+from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
     get_heatmap_project,
     get_heatmap_project_density,
@@ -394,14 +394,14 @@ def create(request):
                             "button": _("projekt.views.create.submitButton.text"),
                         },
                     )
-            fedora_transaction = projekt.create_transaction(request.user)
+            fedora_transaction: FedoraTransaction = projekt.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN)
             if x1 and x2:
                 projekt.geom = Point(x1, x2)
             try:
                 projekt.set_permanent_ident_cely(False)
             except MaximalIdentNumberError:
-                messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
-                fedora_transaction.mark_transaction_as_closed()
+                fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
+                fedora_transaction.rollback_transaction()
             else:
                 repository_connector = FedoraRepositoryConnector(projekt, skip_container_check=False)
                 if repository_connector.check_container_deleted_or_not_exists(projekt.ident_cely, "projekt"):
@@ -418,7 +418,6 @@ def create(request):
                         rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
                     else:
                         rep_bin_file = True
-                    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                     projekt.send_ep01(rep_bin_file)
                     projekt.close_active_transaction_when_finished = True
                     projekt.save()
@@ -698,8 +697,8 @@ def schvalit(request, ident_cely):
             try:
                 projekt.set_permanent_ident_cely()
             except MaximalIdentNumberError:
-                messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
                 logger.debug("projekt.views.schvalit.post.max_error", extra={"ident_cely": ident_cely})
+                fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
                 fedora_transaction.rollback_transaction()
                 return JsonResponse(
                     {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
@@ -768,10 +767,9 @@ def prihlasit(request, ident_cely):
         else:
             form = PrihlaseniProjektForm(request.POST, instance=projekt)
         if form.is_valid():
-            projekt = form.save(commit=False)
-            projekt.create_transaction(request.user)
+            projekt: Projekt = form.save(commit=False)
+            projekt.create_transaction(request.user, PROJEKT_USPESNE_PRIHLASEN)
             projekt.set_prihlaseny(request.user)
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN)
             if projekt.ident_cely[0] == OBLAST_CECHY:
                 Mailer.send_ep03a(project=projekt)
             else:
@@ -827,9 +825,8 @@ def zahajit_v_terenu(request, ident_cely):
 
         if form.is_valid():
             projekt = form.save(commit=False)
-            projekt.create_transaction(request.user)
+            projekt.create_transaction(request.user, PROJEKT_USPESNE_ZAHAJEN_V_TERENU)
             projekt.set_zahajeny_v_terenu(request.user)
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZAHAJEN_V_TERENU)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
@@ -873,9 +870,8 @@ def ukoncit_v_terenu(request, ident_cely):
         form = UkoncitVTerenuForm(request.POST, instance=projekt)
         if form.is_valid():
             projekt = form.save(commit=False)
-            projekt.create_transaction(request.user)
+            projekt.create_transaction(request.user, PROJEKT_USPESNE_UKONCEN_V_TERENU)
             projekt.set_ukoncen_v_terenu(request.user)
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UKONCEN_V_TERENU)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})

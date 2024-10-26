@@ -43,7 +43,6 @@ const show_upload_successful_message = (file, result = UploadResultsEnum.success
     if (collection.length > 0) {
         const sidebar_affected_class = check_sidebar_state() ? "app-alert-floating-file-upload-no-left-bar " : "";
         const message_container_element = collection[0];
-        // <div class="alert alert-success alert-dismissible fade show app-alert-floating" role="alert">
         const alert_element = document.createElement("div");
         const sidebar_element_query = document.getElementsByClassName("app-sidebar-wrapper");
         const floating_class = sidebar_element_query.length > 0 ? "app-alert-floating-file-upload" : "app-alert-floating-file-upload-oznameni";

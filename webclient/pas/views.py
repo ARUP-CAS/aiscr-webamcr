@@ -453,7 +453,7 @@ def odeslat(request, ident_cely):
     """
     Funkce pohledu pro odeslání samostatného nálezu pomocí modalu.
     """
-    sn = get_object_or_404(
+    sn: SamostatnyNalez = get_object_or_404(
         SamostatnyNalez.objects.select_related(
             "soubory",
             "okolnosti",
@@ -478,11 +478,10 @@ def odeslat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        sn.create_transaction(request.user)
+        sn.create_transaction(request.user, SAMOSTATNY_NALEZ_ODESLAN)
         sn.set_odeslany(request.user)
         sn.close_active_transaction_when_finished = True
         sn.save()
-        messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ODESLAN)
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
 
     warnings = sn.check_pred_odeslanim()
