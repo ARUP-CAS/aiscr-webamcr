@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(pre_save, sender=Projekt, weak=False)
-def projekt_pre_save(sender, instance, **kwargs):
+def projekt_pre_save(sender, instance: Projekt, **kwargs):
     """
     Metóda pro volání dílčích metod pro nastavení projektu pred uložením.
     """
@@ -122,6 +122,10 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
         if instance.close_active_transaction_when_finished:
 
             def save_metadata():
+                if instance.hlavni_katastr in instance.katastry.all():
+                    # This must be done in on_commit function, see
+                    # https://stackoverflow.com/questions/23795811/django-accessing-manytomany-fields-from-post-save-signal
+                    instance.katastry.remove(instance.hlavni_katastr)
                 instance.save_metadata(fedora_transaction, close_transaction=True)
 
             transaction.on_commit(save_metadata)
