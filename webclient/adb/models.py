@@ -108,6 +108,15 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         self.active_transaction = None
         self.suppress_signal = False
 
+    def create_transaction(self, transaction_user, success_message=None, error_message=None, main_record=None):
+        from core.repository_connector import FedoraTransaction
+        from uzivatel.models import User
+
+        transaction_user: User
+        main_record = main_record or self
+        self.active_transaction = FedoraTransaction(main_record, transaction_user, success_message, error_message)
+        return self.active_transaction
+
 
 def get_vyskovy_bod(adb: Adb, offset=1) -> str:
     """
