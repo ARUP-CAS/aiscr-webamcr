@@ -921,6 +921,7 @@ def zapsat(request, projekt_ident_cely=None):
                     typ_akce = Akce.TYP_AKCE_SAMOSTATNA
             except MaximalEventCount:
                 messages.add_message(request, messages.ERROR, MAXIMUM_AKCII_DOSAZENO)
+                fedora_transaction.rollback_transaction()
             else:
                 if FedoraRepositoryConnector.check_container_deleted_or_not_exists(
                     az.ident_cely, "archeologicky_zaznam"
@@ -1070,7 +1071,7 @@ def smazat(request, ident_cely):
             )
         except RestrictedError as err:
             logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "err": err})
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
+            fedora_transaction.error_message = ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY
             fedora_transaction.rollback_transaction()
             return JsonResponse(
                 {"redirect": az.get_absolute_url()},

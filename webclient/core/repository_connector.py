@@ -1286,6 +1286,7 @@ class FedoraTransaction:
         *,
         uid=None,
         request=None,
+        suppress_message=False,
     ):
         from uzivatel.models import User
 
@@ -1301,6 +1302,7 @@ class FedoraTransaction:
             self.uid = uid
             logger.debug("core_repository_connector.FedoraTransaction.__init__", extra={"uid": self.uid})
         self.request = request
+        self.suppress_message = suppress_message
 
     def __str__(self):
         return self.uid
@@ -1314,7 +1316,7 @@ class FedoraTransaction:
         return self.get_transaction_redis_key(self.main_record.ident_cely, self.transaction_user.id)
 
     def _save_transaction_result_to_redis(self, result: FedoraTransactionResult):
-        if self.main_record and self.transaction_user:
+        if self.main_record and self.transaction_user and not self.suppress_message:
             r = RedisConnector()
             redis_connection = r.get_connection()
             redis_connection.hset(self._transaction_redis_key, "status", str(result.value))
