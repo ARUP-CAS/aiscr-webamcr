@@ -10,8 +10,8 @@ from fedora_management.forms import UpdateMetadataFileForm
 from xml_generator.models import ModelWithMetadata
 
 
-class YourCustomAdminSite(admin.AdminSite):
-    def custom_page(self, request):
+class FedoraCustomAdminSite(admin.AdminSite):
+    def update_metadata_file_upload(self, request):
         context = {
             "app_list": self.get_app_list(request),
             **self.each_context(request),
@@ -64,10 +64,10 @@ class YourCustomAdminSite(admin.AdminSite):
         return [
             path(
                 "update-metadata/",
-                self.admin_view(self.custom_page),
+                self.admin_view(self.update_metadata_file_upload),
                 name="update_metadata",
             ),
         ] + super().get_urls()
 
 
-admin.site.__class__ = YourCustomAdminSite
+admin.site.__class__ = FedoraCustomAdminSite
