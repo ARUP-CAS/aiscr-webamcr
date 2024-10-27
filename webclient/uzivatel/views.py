@@ -56,7 +56,7 @@ from uzivatel.forms import (
     UpdatePasswordSettings,
     UserPasswordResetForm,
 )
-from uzivatel.models import Osoba, User, UserNotificationType, UzivatelPrihlaseniLog
+from uzivatel.models import NotificationsLog, Osoba, User, UserNotificationType, UzivatelPrihlaseniLog
 
 logger = logging.getLogger(__name__)
 
@@ -376,11 +376,25 @@ class UserActivationView(ActivationView):
     def activate(self, *args, **kwargs):
         username = self.validate_key(kwargs.get("activation_key"))
         user = self.get_user(username)
+        logger.debug("uzivatel.views.activate.success", extra={"user": user.ident_cely})
         user.save()
         for notification in UserNotificationType.objects.filter(ident_cely__icontains="S-E-"):
             user.notification_types.add(notification)
-        Mailer.send_eu02(user=user)
-        Mailer.send_eu04(user=user)
+        cutoff_time = timezone.now() - datetime.timedelta(minutes=10)
+        if not NotificationsLog.objects.filter(
+            notification_type=UserNotificationType.objects.get(ident_cely="E-U-02"),
+            status="OK",
+            user=user,
+            created_at__gt=cutoff_time,
+        ).exists():
+            Mailer.send_eu02(user=user)
+        if not NotificationsLog.objects.filter(
+            notification_type=UserNotificationType.objects.get(ident_cely="E-U-04"),
+            status="OK",
+            user=user,
+            created_at__gt=cutoff_time,
+        ).exists():
+            Mailer.send_eu04(user=user)
         return user
 
 
