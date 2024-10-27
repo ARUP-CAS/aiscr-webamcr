@@ -42,6 +42,7 @@ from core.decorators import allowed_user_groups
 from core.exceptions import MaximalIdentNumberError
 from core.forms import CheckStavNotChangedForm, VratitForm
 from core.message_constants import (
+    DATUM_OZNAMENI_SE_NEPOVEDLO_EDITOVAT,
     MAXIMUM_IDENT_DOSAZEN,
     PRISTUP_ZAKAZAN,
     PROJEKT_NELZE_ARCHIVOVAT,
@@ -1674,6 +1675,7 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
             projekt.active_transaction = projekt.create_transaction(request.user)
             projekt.save_metadata(close_transaction=True)
         else:
+            messages.add_message(request, messages.ERROR, DATUM_OZNAMENI_SE_NEPOVEDLO_EDITOVAT)
             logger.debug(
                 "projekt.views.UpravitDatumOznameniView.form_invalid",
                 extra={"errors": form.errors, "ident_cely": projekt.ident_cely},
