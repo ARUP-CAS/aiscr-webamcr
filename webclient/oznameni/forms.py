@@ -3,7 +3,7 @@ import logging
 import os
 
 from core.utils import get_cadastre_from_point
-from core.validators import validate_phone_number
+from core.validators import validate_date_min_1600, validate_phone_number
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
@@ -193,6 +193,9 @@ class ProjektOznameniForm(forms.ModelForm):
         label=_("oznameni.forms.projektOznameniForm.planovaneZahajeni.label"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
         help_text=_("oznameni.forms.projektOznameniForm.planovaneZahajeni.tooltip"),
+        validators=[
+            validate_date_min_1600,
+        ],
     )
     coordinate_x2 = forms.CharField(widget=forms.HiddenInput())
     coordinate_x1 = forms.CharField(widget=forms.HiddenInput())
