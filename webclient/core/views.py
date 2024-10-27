@@ -933,7 +933,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 "core.views.SearchListView.create_export.update_progress_bar",
                 extra={"key_inner": key_inner, "new_value": new_value},
             )
-            new_value = new_value * self.progress_bar_coefficient
+            new_value *= self.progress_bar_coefficient
             r_inner.set(key_inner, int(new_value))
 
         logger.debug("core.views.SearchListView.create_export.start", extra={"export_format": export_format})
@@ -960,7 +960,6 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             for column in self.get_table().columns:
                 column_names[str(column.name)] = column.verbose_name
             data = data.rename(columns=column_names)
-            update_progress_bar(r, redis_variable_name, 60)
             for column in data.select_dtypes(include=["object"]):
                 data[column] = data[column].str.decode("utf-8")
             if export_format == TableExport.CSV:

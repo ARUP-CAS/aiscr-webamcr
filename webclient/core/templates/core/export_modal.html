@@ -61,7 +61,7 @@
           controller.abort();
       }
 
-      const manageExportDownload = (target_link) => {
+      const manageExportDownload = (downloadUrl) => {
           let downloadFinished = false;
           
           document.addEventListener('downloadStart', () => {
@@ -80,12 +80,22 @@
                   parGenerated.style.display = null
               }, 1000);
           });
-
           
-          
-          const downloadUrl = target_link;
           const downloadStartEvent = new Event('downloadStart');
           document.dispatchEvent(downloadStartEvent);
+          
+          const getFileName = target_link => {
+              if (target_link.endsWith("csv")) {
+                  return "export.csv"
+              }
+              if (target_link.endsWith("json")) {
+                  return "export.json"
+              }
+              if (target_link.endsWith("xlsx")) {
+                  return "export.xlsx"
+              }
+          }
+          const file_name = getFileName(downloadUrl)
 
           const checkDownloadStatus = () => {
               const rawEmail = "{{ request.user.email }}";
@@ -125,7 +135,7 @@
               .then(blob => {
                   const downloadLink = document.createElement('a');
                   downloadLink.href = URL.createObjectURL(blob);
-                  downloadLink.download = "export.csv";
+                  downloadLink.download = file_name;
                   downloadLink.click();
                   URL.revokeObjectURL(downloadLink.href);
               })
