@@ -817,7 +817,7 @@ class AkceProjektoveAkce(AkceTestClass):
 
     # C-201443939A
     def test_102_archivace_projektove_akce_p_001(self):
-        # Scenar_95 Smazání dokumentační jednotky u projektové akce (pozitivní scénář 1)
+        # Scenar_102 Archivace projektové akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_102_archivace_projektove_akce_p_001.start")
         self.login("archivar")
 
@@ -1485,3 +1485,20 @@ class AkceSamostatneAkce(AkceTestClass):
         self.assertEqual(pian_new, None)
         self.assertEqual(pians_count_old, pians_count_new + 1)
         logger.info("AkceSamostatneAkce.test_101_smazani_PIAN_samostatne_akce_p_001.end")
+
+    def test_103_archivace_samostatne_akce_p_001(self):
+        # Scenar_103 Archivace samostatné akce (pozitivní scénář 1)
+        logger.info("AkceProjektoveAkce.test_103_archivace_samostatne_akce_p_001.start")
+        self.login("archivar")
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-9157766A").first().stav, AZ_STAV_ODESLANY)
+        self.go_to_Akce_vybrat()
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-9157766A")
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, "C-9157766A")
+        self.ElementClick(By.ID, "akce-archivovat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-9157766A").first().stav, AZ_STAV_ARCHIVOVANY)
+        logger.info("AkceProjektoveAkce.test_103_archivace_samostatne_akce_p_001.end")
