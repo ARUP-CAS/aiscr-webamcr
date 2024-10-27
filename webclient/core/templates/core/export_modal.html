@@ -17,20 +17,17 @@
           </div>
           {% if table.rows|length >= 50000 %}
             <p id="modal-confirm-download-par">{% trans "core.templates.core.export_modal.confirm_download" %}</p>
-          {% else %}
-            <p>{% trans "core.templates.core.export_modal.text" %}</p>
           {% endif %}
+          <p id="export-progress-model-file-being-generated" style="display: none">
+            {% trans "core.templates.core.export_modal.file_being_generated" %}
+          </p>
+          <p id="export-progress-model-generated" style="display: none">
+            {% trans "core.templates.core.export_modal.file_generated" %}
+          </p>
         </div>
         <div class="modal-footer">
-          <button type="button" id="export-progress-modal-button-stop" class="btn btn-danger"
-                  {% if table.rows|length >= 50000 %}style="display: none"{% endif %}>{% trans "core.templates.core.export-modal.stop" %}</button>
-          <button type="button" id="export-progress-modal-button" class="btn btn-secondary disabled"
-                  data-dismiss="modal" disabled
-                  {% if table.rows|length >= 50000 %}style="display: none"{% endif %}>{% trans "core.templates.core.export-modal.button" %}</button>
-          {% if table.rows|length >= 50000 %}
           <button type="button" id="export-progress-modal-button-cancel" class="btn btn-secondary"
                   data-dismiss="modal">{% trans "core.templates.core.export-modal.cancel" %}</button>
-          {% endif %}
         </div>
       </div>
     </div>
@@ -48,55 +45,60 @@
           fetch("{% url 'core:reset_temp_value' %}?name=export_{{ request.user.name }}")
               .catch(error => console.error('Error in reset function:', error));
       }
-
-      const enableCloseButton = () => {
-          const button = document.getElementById('export-progress-modal-button');
-          button.removeAttribute('disabled');
-          button.classList.remove('disabled');
+      
+      const controller = new AbortController();
+      const signal = controller.signal;
+      
+      const cancelButton = document.getElementById('export-progress-modal-button-cancel');
+      cancelButton.onclick = () => {
+          controller.abort();
       }
 
-      document.addEventListener('DOMContentLoaded', function (event) {
-          document.getElementById('export-progress-modal-button').addEventListener('click', resetTempValue);
-          try {
-            document.getElementById('export-progress-modal-button-cancel').addEventListener('click', resetTempValue);
-          }
-          catch {
-            console.log("no element export-progress-modal-button-cancel")
-          }
-          document.getElementById('export-progress-modal-button-stop').addEventListener('click', () => {
-              window.stop()
-              enableCloseButton()
-              resetTempValue()
-          })
-      })
+      const manageExportDownload = (target_link) => {
+          const downloadUrl = target_link;
+          
+          const downloadStartEvent = new Event('downloadStart');
+          document.dispatchEvent(downloadStartEvent);
 
-      const checkValue = () => {
-          const cancelButton = document.getElementById("export-progress-modal-button-cancel")
-          if (cancelButton){
-              cancelButton.style.display = "none";
-          }
-          const stopButton = document.getElementById("export-progress-modal-button-stop")
-          if (stopButton){
-              stopButton.style.display = null;
-          }
-          const button = document.getElementById("export-progress-modal-button")
-          if (button){
-              button.style.display = null;
-          }
           const rawEmail = "{{ request.user.email }}"
           const email = rawEmail.replace("@", "(at)")
           fetch(`{% url 'core:read_temp_value' %}?temp_name=export_${email}`)
               .then(response => response.json())
               .then(data => {
                   updateProgressBar(data.value);
-                  if (data.value !== 100) {
-                      setTimeout(checkValue, 1000);
-                  } else {
-                      enableCloseButton();
-                      resetTempValue();
-                  }
               })
               .catch(error => console.error('Error in Check Value Function:', error));
-      }
+
+          fetch(downloadUrl, { signal })
+              .then(response => {
+                  if (!response.ok) throw new Error('Network response was not ok.');
+                  return response.blob();
+              })
+              .then(blob => {
+                  const downloadCompleteEvent = new Event('downloadComplete');
+                  document.dispatchEvent(downloadCompleteEvent);
+
+                  const downloadLink = document.createElement('a');
+                  downloadLink.href = URL.createObjectURL(blob);
+                  downloadLink.download = "export.csv";
+                  downloadLink.click();
+                  URL.revokeObjectURL(downloadLink.href);
+              })
+              .catch(error => {
+                  console.error('There was a problem with the download:', error);
+              });
+
+          document.addEventListener('downloadComplete', () => {
+              updateProgressBar(100);
+              setTimeout(() => {$('#export-progress-modal').modal('hide')}, 1000);
+          });
+          
+          document.getElementById('export-progress-modal-button-cancel').addEventListener('click', () => {
+              window.stop()
+              resetTempValue()
+          })
+      };
+
+
   </script>
 {% endblock %}
