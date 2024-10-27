@@ -179,6 +179,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "django_object_actions",
     "cacheops",
+    "fedora_management",
 ]
 
 MIDDLEWARE = [

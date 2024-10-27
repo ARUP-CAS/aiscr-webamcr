@@ -11,6 +11,7 @@ from core.constants import (
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
+    UZIVATEL_SPOLUPRACE_RELATION_TYPE,
 )
 from core.forms import SelectMultipleSeparator
 from crispy_forms.layout import HTML, Div, Layout
@@ -325,6 +326,9 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
     Třída pro zakladní filtrování uživatelské spolupráce a jejich potomků.
     """
 
+    HISTORIE_TYP_ZMENY_STARTS_WITH = "SP"
+    TYP_VAZBY = UZIVATEL_SPOLUPRACE_RELATION_TYPE
+
     vedouci = ModelMultipleChoiceFilter(
         queryset=User.objects.select_related("organizace"),
         field_name="vedouci",
@@ -394,7 +398,30 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
             )
         except utils.ProgrammingError:
             self.filters["vedouci"].extra.update({"queryset": None})
+        self.set_filter_fields(user)
         self.helper = UzivatelSpolupraceFilterFormHelper()
+
+    def filter_queryset(self, queryset):
+        logger.debug("pas.filters.UzivatelSpolupraceFilterFormHelper.filter_queryset.start")
+        historie = self._get_history_subquery()
+        queryset = super(UzivatelSpolupraceFilter, self).filter_queryset(queryset)
+        if historie:
+            queryset_history = Q(historie__typ_vazby=historie["typ_vazby"])
+            if "uzivatel" in historie:
+                queryset_history &= Q(historie__historie__uzivatel__in=historie["uzivatel"])
+            if "uzivatel_organizace" in historie:
+                queryset_history &= Q(historie__historie__organizace_snapshot__in=historie["uzivatel_organizace"])
+            if "datum_zmeny__gte" in historie:
+                queryset_history &= Q(historie__historie__datum_zmeny__gte=historie["datum_zmeny__gte"])
+            if "datum_zmeny__lte" in historie:
+                queryset_history &= Q(historie__historie__datum_zmeny__lte=historie["datum_zmeny__lte"])
+            if "typ_zmeny" in historie:
+                queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            queryset = queryset.filter(queryset_history)
+        logger.debug(
+            "pas.filters.UzivatelSpolupraceFilterFormHelper.filter_queryset.end", extra={"query": str(queryset.query)}
+        )
+        return queryset
 
 
 class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
@@ -464,12 +491,36 @@ class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
+        history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("pas.filters.UzivatelSpolupraceFilterFormHelper.history.divider.label")
+        }
         self.layout = Layout(
             Div(
-                Div("vedouci", css_class="col-sm-4"),
-                Div("spolupracovnik", css_class="col-sm-4"),
-                Div("stav", css_class="col-sm-4"),
-                css_class="row",
+                Div(
+                    Div("vedouci", css_class="col-sm-4"),
+                    Div("spolupracovnik", css_class="col-sm-4"),
+                    Div("stav", css_class="col-sm-4"),
+                    css_class="row",
+                ),
+                Div(
+                    HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                    HTML(history_divider),
+                    HTML('<hr class="mt-0" />'),
+                    data_toggle="collapse",
+                    href="#historieCollapse",
+                    role="button",
+                    aria_expanded="false",
+                    aria_controls="historieCollapse",
+                    css_class="col-sm-12 app-btn-show-more collapsed",
+                ),
+                Div(
+                    Div("historie_typ_zmeny", css_class="col-sm-2"),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
+                    Div("historie_uzivatel", css_class="col-sm-3"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    id="historieCollapse",
+                    css_class="collapse row",
+                ),
             ),
         )
         self.form_tag = False
