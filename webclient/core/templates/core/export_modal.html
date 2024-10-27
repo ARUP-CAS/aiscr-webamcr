@@ -18,7 +18,8 @@
           {% if table.rows|length >= 50000 %}
             <p id="modal-confirm-download-par">{% trans "core.templates.core.export_modal.confirm_download" %}</p>
           {% endif %}
-          <p id="export-progress-model-file-being-generated" style="display: none">
+          <p id="export-progress-model-file-being-generated"
+             {% if table.rows|length >= 50000 %}style="display: none"{% endif %}>
             {% trans "core.templates.core.export_modal.file_being_generated" %}
           </p>
           <p id="export-progress-model-generated" style="display: none">
@@ -39,26 +40,73 @@
               progressBar.style.width = progressPercentage + '%';
               progressBar.setAttribute('aria-valuenow', progressPercentage);
           }
+          if (progressPercentage >= 80) {
+              const parBeingGenerated = document.getElementById('export-progress-model-file-being-generated');
+              parBeingGenerated.style.display = "none";
+              const parGenerated = document.getElementById('export-progress-model-generated');
+              parGenerated.style.display = null;
+          }
       }
 
       const resetTempValue = () => {
           fetch("{% url 'core:reset_temp_value' %}?name=export_{{ request.user.name }}")
               .catch(error => console.error('Error in reset function:', error));
       }
-      
+
       const controller = new AbortController();
       const signal = controller.signal;
-      
+
       const cancelButton = document.getElementById('export-progress-modal-button-cancel');
       cancelButton.onclick = () => {
           controller.abort();
       }
 
       const manageExportDownload = (target_link) => {
-          const downloadUrl = target_link;
+          let downloadFinished = false;
           
+          document.addEventListener('downloadStart', () => {
+              const parBeingGenerated = document.getElementById('export-progress-model-file-being-generated');
+              parBeingGenerated.style.display = null;
+          });
+
+          document.addEventListener('downloadComplete', () => {
+              updateProgressBar(100);
+              downloadFinished = true;
+              fetch(`{% url 'core:reset_temp_value' %}?temp_name=export_${email}`)
+                  .catch(error => console.error('Error in Check Value Function:', error));
+              setTimeout(() => {
+                  $('#export-progress-modal').modal('hide')
+                  const parGenerated = document.getElementById('export-progress-model-generated')
+                  parGenerated.style.display = null
+              }, 1000);
+          });
+
+          
+          
+          const downloadUrl = target_link;
           const downloadStartEvent = new Event('downloadStart');
           document.dispatchEvent(downloadStartEvent);
+
+          const checkDownloadStatus = () => {
+              const rawEmail = "{{ request.user.email }}";
+              const email = rawEmail.replace("@", "(at)");
+
+              fetch(`{% url 'core:read_temp_value' %}?temp_name=export_${email}`)
+                  .then(response => response.json())
+                  .then(data => {
+                      updateProgressBar(data.value);
+                      if (downloadFinished) {
+                          clearInterval(intervalId);
+                      }
+                  })
+                  .catch(error => console.error('Error in Check Value Function:', error));
+          }
+
+          const intervalId = setInterval(() => {
+              if (!downloadFinished) {
+                  checkDownloadStatus();
+              }
+          }, 1000);
 
           const rawEmail = "{{ request.user.email }}"
           const email = rawEmail.replace("@", "(at)")
@@ -69,29 +117,25 @@
               })
               .catch(error => console.error('Error in Check Value Function:', error));
 
-          fetch(downloadUrl, { signal })
+          fetch(downloadUrl, {signal})
               .then(response => {
                   if (!response.ok) throw new Error('Network response was not ok.');
                   return response.blob();
               })
               .then(blob => {
-                  const downloadCompleteEvent = new Event('downloadComplete');
-                  document.dispatchEvent(downloadCompleteEvent);
-
                   const downloadLink = document.createElement('a');
                   downloadLink.href = URL.createObjectURL(blob);
                   downloadLink.download = "export.csv";
                   downloadLink.click();
                   URL.revokeObjectURL(downloadLink.href);
               })
+              .then(() => {
+                  const downloadCompleteEvent = new Event('downloadComplete');
+                  document.dispatchEvent(downloadCompleteEvent);
+              })
               .catch(error => {
                   console.error('There was a problem with the download:', error);
-              });
-
-          document.addEventListener('downloadComplete', () => {
-              updateProgressBar(100);
-              setTimeout(() => {$('#export-progress-modal').modal('hide')}, 1000);
-          });
+              })
           
           document.getElementById('export-progress-modal-button-cancel').addEventListener('click', () => {
               window.stop()
