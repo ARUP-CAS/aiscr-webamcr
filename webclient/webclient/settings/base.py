@@ -198,6 +198,7 @@ MIDDLEWARE = [
     "core.middleware.PermissionMiddleware",
     "core.middleware.ErrorMiddleware",
     "core.middleware.StatusMessageMiddleware",
+    "core.middleware.LogMiddleware",
 ]
 
 CRON_CLASSES = [
@@ -316,6 +317,11 @@ LOGGING = {
             "style": "{",
         },
     },
+    "filters": {
+        "user_filter": {
+            "()": "core.logging_filters.UserLogFilter",
+        }
+    },
     "handlers": {
         "logstash": {
             "level": "DEBUG",
@@ -325,6 +331,7 @@ LOGGING = {
             "version": 1,
             "message_type": "logstash",
             "fqdn": False,
+            "filters": ["user_filter"],
         },
         "console": {
             "class": "logging.StreamHandler",
