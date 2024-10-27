@@ -19,11 +19,20 @@ from selenium.webdriver.common.keys import Keys
 logger = logging.getLogger("tests")
 
 
-@unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
-class AkceProjektoveAkce(BaseSeleniumTestClass):
+class AkceTestClass(BaseSeleniumTestClass):
+    __test__ = False
+
     def go_to_Projekty_vyper(self):
         self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+
+    def go_to_Akce_zapsat(self):
+        self.ElementClick(By.ID, "menuSamostatneAkce")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.zapsat"))
+
+    def go_to_Akce_vybrat(self):
+        self.ElementClick(By.ID, "menuSamostatneAkce")
+        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
 
     def draw_polygon(self):
         self.wait(1)
@@ -41,6 +50,9 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, _("mapa.EditFinishText"))
         self.wait(0.2)
 
+
+@unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
+class AkceProjektoveAkce(AkceTestClass):
     def test_024_pridani_dokumentacni_jednotky_p_001(self):
         # Scenar_24 Přidání dokumentační jednotky celek akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_024_pridani_dokumentacni_jednotky_p_001.start")
@@ -332,8 +344,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
         count_old = NalezObjekt.objects.filter(
             komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01"
         ).count()
-        self.ElementClick(By.ID, "menuSamostatneAkce")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
+        self.go_to_Akce_vybrat()
 
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
@@ -362,8 +373,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
             komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01"
         ).count()
 
-        self.ElementClick(By.ID, "menuSamostatneAkce")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
+        self.go_to_Akce_vybrat()
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-91277520A")
@@ -836,15 +846,7 @@ class AkceProjektoveAkce(BaseSeleniumTestClass):
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
-class AkceSamostatneAkce(AkceProjektoveAkce):
-    def go_to_Akce_zapsat(self):
-        self.ElementClick(By.ID, "menuSamostatneAkce")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.zapsat"))
-
-    def go_to_Akce_vybrat(self):
-        self.ElementClick(By.ID, "menuSamostatneAkce")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
-
+class AkceSamostatneAkce(AkceTestClass):
     def test_046_vytvoreni_samostatne_akce_p_001(self):
         # Scenar_46 Vytvoření samostané akce (pozitivní scénář 1)
         logger.info("AkceSamostatneAkce.test_046_vytvoreni_samostatne_akce_p_001.start")

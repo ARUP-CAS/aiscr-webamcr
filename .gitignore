@@ -111,3 +111,5 @@ logstash/logstash.conf
 # rewrite preklady
 /preklady
 /prometheus/prometheus.yml
+/webclient/core/tests/resources/ssl.crt
+/webclient/core/tests/resources/ssl.key

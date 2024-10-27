@@ -56,7 +56,7 @@ class WaitForPageLoad:
 # @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 # @override_settings(DEBUG=True)
 class BaseSeleniumTestClass(LiveServerTestCase):
-    port = 8808
+    # port = 8808
     host = "0.0.0.0"
     del settings.DATABASES["test_db"]
     databases = {"default", "urgent"}
