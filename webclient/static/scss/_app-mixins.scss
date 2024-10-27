@@ -145,6 +145,8 @@
         .table {
           thead {
             background-color: $color !important;
+            position: sticky;
+            top: 0;
       
             a {
               color: $white;
