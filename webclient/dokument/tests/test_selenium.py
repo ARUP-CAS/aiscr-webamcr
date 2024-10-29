@@ -3,6 +3,7 @@ import logging
 import unittest
 
 from core.constants import D_STAV_ARCHIVOVANY, D_STAV_ODESLANY, D_STAV_ZAPSANY
+from core.models import Soubor
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
 from django.utils.translation import gettext as _
@@ -316,13 +317,8 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "menuKnihovna3D")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.knihovna3D.vybrat"))
 
-    def test_104_zapis_do_knihovny_D3_p_001(self):
-        # Scenar_104 Zápis záznamu do knihovny 3D (pozitivní scénář 1)
-        logger.info("AkceKnihovna3D.test_104_zapis_do_knihovny_D3_p_001.start")
-        self.login("archeolog")
+    def zaspat_zaznam(self):
         self.go_to_form_zapsat()
-
-        count_old = Dokument.objects.count()
         self.ElementClick(By.ID, "div_id_autori")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("švejcar")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
@@ -339,26 +335,17 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
+        ident = self.driver.current_url.split("/")[-1]
+        return ident
 
-        count_new = Dokument.objects.count()
-
-        self.assertEqual(count_old + 1, count_new)
-        logger.info("AkceKnihovna3D.test_104_zapis_do_knihovny_D3_p_001.end")
-
-    def test_105_odeslani_zaznamu_knihovny_D3_p_001(self):
-        # Scenar_105 Odeslání záznamu do knihovny 3D (pozitivní scénář 1)
-        logger.info("AkceKnihovna3D.test_105_odeslani_zaznamu_knihovny_D3_p_001.start")
-        self.login("archeolog")
+    def odeslat_zaznam(self, ident_cely):
         self.go_to_form_vybrat()
-
-        self.assertEqual(Dokument.objects.filter(ident_cely="X-C-3D-000000005").first().stav, D_STAV_ZAPSANY)
-        id = Dokument.objects.filter(ident_cely="X-C-3D-000000005").first().id
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000005")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys(ident_cely)
         self.ElementClick(By.ID, "buttonVybrat")
 
-        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000005")
+        self.ElementClick(By.LINK_TEXT, ident_cely)
         self.ElementClick(By.ID, "buttonEdit")
 
         self.ElementClick(By.CSS_SELECTOR, "#div_id_format .btn")
@@ -382,6 +369,28 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "dokument-odeslat")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
+        ident = self.driver.current_url.split("/")[-1]
+        return ident
+
+    def test_104_zapis_do_knihovny_D3_p_001(self):
+        # Scenar_104 Zápis záznamu do knihovny 3D (pozitivní scénář 1)
+        logger.info("AkceKnihovna3D.test_104_zapis_do_knihovny_D3_p_001.start")
+        self.login("archeolog")
+        count_old = Dokument.objects.count()
+        self.zaspat_zaznam()
+        count_new = Dokument.objects.count()
+
+        self.assertEqual(count_old + 1, count_new)
+        logger.info("AkceKnihovna3D.test_104_zapis_do_knihovny_D3_p_001.end")
+
+    def test_105_odeslani_zaznamu_knihovny_D3_p_001(self):
+        # Scenar_105 Odeslání záznamu do knihovny 3D (pozitivní scénář 1)
+        logger.info("AkceKnihovna3D.test_105_odeslani_zaznamu_knihovny_D3_p_001.start")
+        self.login("archeolog")
+        self.assertEqual(Dokument.objects.filter(ident_cely="X-C-3D-000000005").first().stav, D_STAV_ZAPSANY)
+        id = Dokument.objects.filter(ident_cely="X-C-3D-000000005").first().id
+        self.odeslat_zaznam("X-C-3D-000000005")
+
         self.assertEqual(Dokument.objects.filter(id=id).first().stav, D_STAV_ODESLANY)
         logger.info("AkceKnihovna3D.test_105_odeslani_zaznamu_knihovny_D3_p_001.end")
 
@@ -449,3 +458,82 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         ).count()
         self.assertEqual(count_old + 1, count_new)
         logger.info("AkceKnihovna3D.test_107_pridani_predmetu_knihovny_D3_p_001.end")
+
+    def test_108_pridani_souradnic_knihovny_D3_p_001(self):
+        # Scenar_108 Přidání prostorového vymezení k záznamu v Knihovně 3D (pozitivní scénář 1)
+        logger.info("AkceKnihovna3D.test_108_pridani_souradnic_knihovny_D3_p_001.start")
+        self.login("archeolog")
+        self.go_to_form_vybrat()
+
+        self.assertEqual(Dokument.objects.filter(ident_cely="X-C-3D-000000005").first().extra_data.geom, None)
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000005")
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000005")
+
+        self.ElementClick(By.ID, "buttonEdit")
+        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 20, 20)
+        self.wait(0.2)
+        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 20, 20)
+        self.wait(0.2)
+        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 20, 20)
+        self.wait(0.2)
+        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 20, 20)
+        self.wait(0.2)
+        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 20, 20)
+        self.wait(0.2)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "newDocumentSubmitBtn")
+
+        self.assertNotEqual(Dokument.objects.filter(ident_cely="X-C-3D-000000005").first().extra_data.geom, None)
+        logger.info("AkceKnihovna3D.test_108_pridani_souradnic_knihovny_D3_p_001.end")
+
+    def test_109_pridani_souboru_zaznamu_knihovny_D3_p_001(self):
+        # Scenar_109 Přidání souboru k záznamu v Knihovně 3D (pozitivní scénář 1)
+        logger.info("AkceKnihovna3D.test_109_pridani_souboru_zaznamu_knihovny_D3_p_001.start")
+        self.login("archeolog")
+        self.go_to_form_vybrat()
+        count_old = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-3D-000000005").count()
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000005")
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000005")
+        self.ElementClick(By.ID, "buttonUpload")
+        with open("dokument/tests/resources/del.zip", "rb") as zip_file:
+            encoded_string = base64.b64encode(zip_file.read()).decode()
+        self.addFileToDropzone("#my-awesome-dropzone", "del.zip", encoded_string)
+        self.wait(1)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "buttonUploadSubmit")
+        count_new = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-3D-000000005").count()
+        self.assertEqual(count_old + 1, count_new)
+        logger.info("AkceKnihovna3D.test_109_pridani_souboru_zaznamu_knihovny_D3_p_001.end")
+
+    def test_110_archivace_zaznamu_knihovny_D3_p_001(self):
+        # Scenar_110 Archivace záznamu v Knihovně 3D (pozitivní scénář 1)
+        logger.info("AkceKnihovna3D.test_110_archivace_zaznamu_knihovny_D3_p_001.start")
+        self.login("archeolog")
+
+        ident = self.zaspat_zaznam()
+        self.ElementClick(By.ID, "buttonLogout")
+        self.login("archeolog")
+        ident = self.odeslat_zaznam(ident)
+        self.ElementClick(By.ID, "buttonLogout")
+        self.login("archivar")
+        self.go_to_form_vybrat()
+        self.assertEqual(Dokument.objects.filter(ident_cely=ident).first().stav, D_STAV_ODESLANY)
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys(ident)
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, ident)
+
+        self.ElementClick(By.ID, "dokument-archivovat")
+
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.assertEqual(Dokument.objects.filter(ident_cely=ident).first().stav, D_STAV_ARCHIVOVANY)
+        logger.info("AkceKnihovna3D.test_110_archivace_zaznamu_knihovny_D3_p_001.end")

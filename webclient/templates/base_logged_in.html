@@ -329,7 +329,7 @@
             {% csrf_token %}
             <input type="hidden" name="logout_type" id="logout_type"  value="" />
             <input type="hidden" name="next" id="next" value="" />
-            <button type="submit" class="nav-link">
+            <button type="submit" class="nav-link" id="buttonLogout">
               <span class="material-icons">logout</span>
                {% trans "templates.baseLogedIn.navbar.odhlasit" %} 
             </button>
