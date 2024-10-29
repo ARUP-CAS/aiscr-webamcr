@@ -127,7 +127,10 @@ def update_akce_snapshot(sender, instance: Akce, **kwargs):
     invalidate_arch_z_related_models()
     if not instance.suppress_signal:
         fedora_transaction: Optional[FedoraTransaction, None] = instance.active_transaction
-        if instance.projekt is not None and instance.initial_projekt is None:
+        if (instance.projekt is not None and instance.initial_projekt is None) or (
+            instance.projekt is not None
+            and instance.archeologicky_zaznam.initial_pristupnost != instance.archeologicky_zaznam.pristupnost
+        ):
             instance.projekt.save_metadata(fedora_transaction)
         if instance.projekt is None and instance.initial_projekt is not None:
             instance.initial_projekt.save_metadata(fedora_transaction)
