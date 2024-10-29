@@ -77,8 +77,8 @@
               setTimeout(() => {
                   $('#export-progress-modal').modal('hide')
                   const parGenerated = document.getElementById('export-progress-model-generated')
-                  parGenerated.style.display = null
-              }, 1000);
+                  parGenerated.style.display = "none"
+              }, 500);
           });
           
           const downloadStartEvent = new Event('downloadStart');
