@@ -1750,7 +1750,7 @@ def get_detail_template_shows(dokument, user):
         soubor_stahnout_dokument = check_permissions(p.actionChoices.soubor_stahnout_model3d, user, dokument.ident_cely)
         soubor_nahled = check_permissions(p.actionChoices.soubor_nahled_model3d, user, dokument.ident_cely)
         soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_model3d, user, dokument.ident_cely)
-        soubor_nahradit = False
+        soubor_nahradit = check_permissions(p.actionChoices.soubor_nahradit_model3d, user, dokument.ident_cely)
     else:
         show_edit = check_permissions(p.actionChoices.dok_edit, user, dokument.ident_cely)
         soubor_stahnout_dokument = check_permissions(

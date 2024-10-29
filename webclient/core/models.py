@@ -771,6 +771,9 @@ class Permissions(models.Model):
         soubor_smazat_model3d = "soubor_smazat_model3d", _(
             "core.models.permissions.actionChoices.soubor_smazat_model3d"
         )
+        soubor_nahradit_model3d = "soubor_nahradit_model3d", _(
+            "core.models.permissions.actionChoices.soubor_nahradit_model3d"
+        )
         soubor_smazat_pas = "soubor_smazat_pas", _("core.models.permissions.actionChoices.soubor_smazat_pas")
         soubor_stahnout_projekt = "soubor_stahnout_projekt", _(
             "core.models.permissions.actionChoices.soubor_stahnout_projekt"
