@@ -929,12 +929,11 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
     def create_export(self, export_format):
         def update_progress_bar(r_inner, key_inner, new_value):
-            try:
-                old_value = int(r.get(key_inner).decode("utf-8"))
-            except ValueError:
-                old_value = 0
-            new_value = max(old_value, new_value)
-            new_value = new_value * self.progress_bar_coefficient
+            logger.debug(
+                "core.views.SearchListView.create_export.update_progress_bar",
+                extra={"key_inner": key_inner, "new_value": new_value},
+            )
+            new_value *= self.progress_bar_coefficient
             r_inner.set(key_inner, int(new_value))
 
         logger.debug("core.views.SearchListView.create_export.start", extra={"export_format": export_format})
@@ -945,13 +944,13 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             ident_cely_list = set(dataset.values_list(self.redis_value_list_field, flat=True))
             ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
             redis_variable_name = f"export_{self.request.user.email.replace('@', '(at)')}"
-            r.set(redis_variable_name, 10)
+            r.set(redis_variable_name, 0)
             ident_cely_list_len = len(ident_cely_list)
             pipe = r.pipeline()
             for i, key in enumerate(ident_cely_list):
                 pipe.hgetall(key)
-                if i % 1000 == 0:
-                    update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 0.5))
+                if i % 10000 == 0:
+                    update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 60))
             data = pipe.execute()
             data = pandas.DataFrame(data)
             data.columns = [x.decode("utf-8") for x in data.columns]
@@ -961,17 +960,14 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             for column in self.get_table().columns:
                 column_names[str(column.name)] = column.verbose_name
             data = data.rename(columns=column_names)
-            update_progress_bar(r, redis_variable_name, 60)
             for column in data.select_dtypes(include=["object"]):
                 data[column] = data[column].str.decode("utf-8")
             if export_format == TableExport.CSV:
                 response["Content-Disposition"] = 'attachment; filename="export.csv"'
                 data.to_csv(path_or_buf=response, index=False)
-                update_progress_bar(r, redis_variable_name, 90)
             elif export_format == TableExport.JSON:
                 response["Content-Disposition"] = 'attachment; filename="export.json"'
                 data.to_json(path_or_buf=response, orient="records", force_ascii=False, index=False)
-                update_progress_bar(r, redis_variable_name, 90)
             elif export_format == TableExport.XLSX:
                 excel_file = BytesIO()
                 with pandas.ExcelWriter(excel_file, engine="openpyxl") as writer:
@@ -981,7 +977,6 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                     excel_file.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
                 response["Content-Disposition"] = "attachment; filename=export.xlsx"
-                update_progress_bar(r, redis_variable_name, 90)
             update_progress_bar(r, redis_variable_name, 100)
             logger.debug(
                 "core.views.SearchListView.create_export.end",
@@ -1184,6 +1179,7 @@ class ReadTempValueView(View):
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
             value = r.get(temp_name)
+            logger.debug("core.views.ReadTempValueView.get.result", extra={"value": value, "temp_name": temp_name})
             if value is not None:
                 return JsonResponse({"value": int(value.decode("utf-8"))})
             else:
@@ -1197,13 +1193,10 @@ class ReadTempValueView(View):
 class ResetTempValueView(View):
     def get(self, request):
         r = RedisConnector.get_connection()
-        temp_name = request.GET.get("temp_value", "")
-
-        if not temp_name.startswith("export_"):
-            r.set(temp_name, 0)
-            return JsonResponse({"result": "success"})
-        else:
-            return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
+        temp_name = request.GET.get("temp_name", "")
+        r.set(temp_name, 0)
+        logger.debug("core.views.ResetTempValueView.get.result", extra={"temp_name": temp_name})
+        return JsonResponse({"result": "success"})
 
 
 class RosettaFileLevelMixinWithBackup(RosettaFileLevelMixin):
