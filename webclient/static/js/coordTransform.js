@@ -389,7 +389,7 @@ function jtsk_to_jtsk05(X,Y){
     redyx3=CORRTABLE[(hy+2000)/1000+hx+2000];
  
     if(redyx0==undefined ||redyx1==undefined || redyx2==undefined||redyx3==undefined ){
-        console.log('Varovani:pro zadane souradnice nenalezeny korekce');
+        //console.log('Varovani:pro zadane souradnice nenalezeny korekce');
         redyx0=[0,0];
         redyx1=[0,0];
         redyx2=[0,0];
