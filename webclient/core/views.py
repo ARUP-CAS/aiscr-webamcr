@@ -925,12 +925,17 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     toolbar = "toolbar_akce.html"
     redis_value_list_field = None
     redis_snapshot_prefix = None
+    progress_bar_coefficient = 0.8
 
     def create_export(self, export_format):
         def update_progress_bar(r_inner, key_inner, new_value):
-            old_value = int(r.get(key_inner).decode("utf-8"))
+            try:
+                old_value = int(r.get(key_inner).decode("utf-8"))
+            except ValueError:
+                old_value = 0
             new_value = max(old_value, new_value)
-            r_inner.set(key_inner, new_value)
+            new_value = new_value * self.progress_bar_coefficient
+            r_inner.set(key_inner, int(new_value))
 
         logger.debug("core.views.SearchListView.create_export.start", extra={"export_format": export_format})
         if self.redis_value_list_field and self.redis_snapshot_prefix:
