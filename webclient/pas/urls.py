@@ -1,6 +1,6 @@
 from django.urls import path
 from pas import views
-from pas.views import SamostatnyNalezListView, UzivatelSpolupraceListView
+from pas.views import ProjektPasTableView, SamostatnyNalezListView, UzivatelSpolupraceListView
 
 app_name = "pas"
 
@@ -42,4 +42,9 @@ urlpatterns = [
         name="post_point_position_2_katastre_with_geom",
     ),
     path("spoluprace/smazat/<int:pk>", views.smazat_spolupraci, name="spoluprace_smazani"),
+    path(
+        "projekt-pas-tabulka",
+        ProjektPasTableView.as_view(),
+        name="get_projekt_pas_table",
+    ),
 ]

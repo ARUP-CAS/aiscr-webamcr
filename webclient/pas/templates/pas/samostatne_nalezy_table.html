@@ -1,0 +1,34 @@
+{% load i18n %}
+{% load template_filters %}
+{% load template_tags %}
+
+          {% for nalez in samostatne_nalezy %}
+            <tr>
+              <td>
+                {% if nalez.nahled_soubor %}
+                  <img src="{% url 'core:download_thumbnail' 'pas' nalez.ident_cely nalez.nahled_soubor.pk %}" 
+                  class="image-nahled" data-toggle="modal" data-target="#soubor-modal" 
+                  data-fullsrc="{% url 'core:download_thumbnail_large' 'pas' nalez.ident_cely nalez.nahled_soubor.pk %}" 
+                  style="opacity:0" onload="this.style.opacity=100" loading="lazy">
+                {% endif %}
+              </td>
+              <td class="app-ident-cely">
+                <a href="{% url 'pas:detail' nalez.ident_cely %}">
+                  <span class="material-icons">brush</span>
+                  {{ nalez.ident_cely }}
+                </a>
+              </td>
+              <td>
+                <div class="container">
+                    <span class="badge-span">
+                      <span class="badge">{{ nalez.get_stav_display }}</span>
+                    </span>
+                </div>
+              </td>
+              <td>{{ nalez.katastr }}</td>
+              <td>{{ nalez.datum_nalezu|date:'Y/m/d' }}</td>
+              <td>{{ nalez.nalezce }}</td>
+              <td>{{ nalez.obdobi }}</td>
+              <td>{{ nalez.druh_nalezu }}</td>
+            </tr>
+          {% endfor %}
