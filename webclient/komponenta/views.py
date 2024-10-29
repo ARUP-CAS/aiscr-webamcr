@@ -298,7 +298,7 @@ def smazat(request, typ_vazby, ident_cely):
                     {"redirect": dj.get_absolute_url()},
                     status=403,
                 )
-                response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
+                response.set_cookie("show-form", f"detail_komponenta_form_{komponenta.ident_cely}", max_age=1000)
             else:
                 response = JsonResponse(
                     {
