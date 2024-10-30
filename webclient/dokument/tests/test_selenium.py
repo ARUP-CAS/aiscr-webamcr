@@ -319,8 +319,9 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
 
     def zaspat_zaznam(self):
         self.go_to_form_zapsat()
-        self.ElementClick(By.ID, "div_id_autori")
+        self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("švejcar")
+        self.wait(0.5)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
         self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2024")
@@ -372,6 +373,31 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         ident = self.driver.current_url.split("/")[-1]
         return ident
 
+    def pridani_objektu(self, ident):
+        self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-druh .btn")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
+        self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-specifikace .btn")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-4-3 > .text")
+
+        self.ElementClick(By.ID, f"id_{ident}-K001_o-0-pocet")
+        self.driver.find_element(By.ID, f"id_{ident}-K001_o-0-pocet").send_keys("1")
+        self.ElementClick(By.ID, f"id_{ident}-K001_o-0-poznamka")
+        self.driver.find_element(By.ID, f"id_{ident}-K001_o-0-poznamka").send_keys("test")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editNalezSubmitButton")
+
+    def pridani_predmetu(self, ident):
+        self.driver.execute_script("$(window).scrollTop(1500 );")
+        self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-druh .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-6 > .text")
+        self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-specifikace .filter-option-inner-inner")
+        self.ElementClick(By.ID, "bs-select-12-28")
+
+        self.ElementClick(By.ID, f"id_{ident}-K001_p-0-pocet")
+        self.driver.find_element(By.ID, f"id_{ident}-K001_p-0-pocet").send_keys("2")
+        self.ElementClick(By.ID, f"id_{ident}-K001_p-0-poznamka")
+        self.driver.find_element(By.ID, f"id_{ident}-K001_p-0-poznamka").send_keys("test")
+
     def test_104_zapis_do_knihovny_D3_p_001(self):
         # Scenar_104 Zápis záznamu do knihovny 3D (pozitivní scénář 1)
         logger.info("AkceKnihovna3D.test_104_zapis_do_knihovny_D3_p_001.start")
@@ -408,18 +434,8 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000005")
         self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-3D-000000005")
+        self.pridani_objektu("X-C-3D-000000005")
 
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-3D-000000005-K001_o-0-druh .btn")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-3D-000000005-K001_o-0-specifikace .btn")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-4-3 > .text")
-
-        self.ElementClick(By.ID, "id_X-C-3D-000000005-K001_o-0-pocet")
-        self.driver.find_element(By.ID, "id_X-C-3D-000000005-K001_o-0-pocet").send_keys("1")
-        self.ElementClick(By.ID, "id_X-C-3D-000000005-K001_o-0-poznamka")
-        self.driver.find_element(By.ID, "id_X-C-3D-000000005-K001_o-0-poznamka").send_keys("test")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "editNalezSubmitButton")
         count_new = NalezObjekt.objects.filter(
             komponenta__komponenta_vazby__casti_dokumentu__dokument__ident_cely="X-C-3D-000000005"
         ).count()
@@ -440,16 +456,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000005")
         self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-3D-000000005")
-        self.driver.execute_script("$(window).scrollTop(1500 );")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-3D-000000005-K001_p-0-druh .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-6 > .text")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-3D-000000005-K001_p-0-specifikace .filter-option-inner-inner")
-        self.ElementClick(By.ID, "bs-select-12-28")
-
-        self.ElementClick(By.ID, "id_X-C-3D-000000005-K001_p-0-pocet")
-        self.driver.find_element(By.ID, "id_X-C-3D-000000005-K001_p-0-pocet").send_keys("2")
-        self.ElementClick(By.ID, "id_X-C-3D-000000005-K001_p-0-poznamka")
-        self.driver.find_element(By.ID, "id_X-C-3D-000000005-K001_p-0-poznamka").send_keys("test")
+        self.pridani_predmetu("X-C-3D-000000005")
 
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editNalezSubmitButton")
@@ -537,3 +544,122 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
 
         self.assertEqual(Dokument.objects.filter(ident_cely=ident).first().stav, D_STAV_ARCHIVOVANY)
         logger.info("AkceKnihovna3D.test_110_archivace_zaznamu_knihovny_D3_p_001.end")
+
+    def test_111_zapis_do_knihovny_D3_p_002(self):
+        # Scenar_111 Zápis záznamu do knihovny 3D (pozitivní scénář 1)
+        logger.info("AkceKnihovna3D.test_111_zapis_do_knihovny_D3_p_002.start")
+        self.login("badatel")
+        count_old = Dokument.objects.count()
+        self.zaspat_zaznam()
+        count_new = Dokument.objects.count()
+
+        self.assertEqual(count_old + 1, count_new)
+        logger.info("AkceKnihovna3D.test_111_zapis_do_knihovny_D3_p_002.end")
+
+    def test_112_odeslani_zaznamu_knihovny_D3_p_002(self):
+        # Scenar_112 Odeslání záznamu do knihovny 3D (pozitivní scénář 2)
+        logger.info("AkceKnihovna3D.test_112_odeslani_zaznamu_knihovny_D3_p_002.start")
+        self.login("badatel")
+        self.assertEqual(Dokument.objects.filter(ident_cely="X-C-3D-000000006").first().stav, D_STAV_ZAPSANY)
+        id = Dokument.objects.filter(ident_cely="X-C-3D-000000006").first().id
+        self.odeslat_zaznam("X-C-3D-000000006")
+
+        self.assertEqual(Dokument.objects.filter(id=id).first().stav, D_STAV_ODESLANY)
+        logger.info("AkceKnihovna3D.test_112_odeslani_zaznamu_knihovny_D3_p_002.end")
+
+    def test_113_pridani_objektu_knihovny_D3_p_002(self):
+        # Scenar_113 Přidání objektu k záznamu v Knihovně 3D (pozitivní scénář 2)
+        logger.info("AkceKnihovna3D.test_113_pridani_objektu_knihovny_D3_p_002.start")
+        self.login("badatel")
+        self.go_to_form_vybrat()
+
+        count_old = NalezObjekt.objects.filter(
+            komponenta__komponenta_vazby__casti_dokumentu__dokument__ident_cely="X-C-3D-000000006"
+        ).count()
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000006")
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000006")
+        self.pridani_objektu("X-C-3D-000000006")
+
+        count_new = NalezObjekt.objects.filter(
+            komponenta__komponenta_vazby__casti_dokumentu__dokument__ident_cely="X-C-3D-000000006"
+        ).count()
+        self.assertEqual(count_old + 1, count_new)
+        logger.info("AkceKnihovna3D.test_113_pridani_objektu_knihovny_D3_p_002.end")
+
+    def test_114_pridani_predmetu_knihovny_D3_p_002(self):
+        # Scenar_114 Přidání předmětu k záznamu v Knihovně 3D (pozitivní scénář 2)
+        logger.info("AkceKnihovna3D.test_114_pridani_predmetu_knihovny_D3_p_002.start")
+        self.login("badatel")
+        self.go_to_form_vybrat()
+
+        count_old = NalezPredmet.objects.filter(
+            komponenta__komponenta_vazby__casti_dokumentu__dokument__ident_cely="X-C-3D-000000006"
+        ).count()
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000006")
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000006")
+        self.pridani_predmetu("X-C-3D-000000006")
+
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editNalezSubmitButton")
+        count_new = NalezPredmet.objects.filter(
+            komponenta__komponenta_vazby__casti_dokumentu__dokument__ident_cely="X-C-3D-000000006"
+        ).count()
+        self.assertEqual(count_old + 1, count_new)
+        logger.info("AkceKnihovna3D.test_114_pridani_predmetu_knihovny_D3_p_002.end")
+
+    def test_115_pridani_souradnic_knihovny_D3_p_002(self):
+        # Scenar_115 Přidání prostorového vymezení k záznamu v Knihovně 3D (pozitivní scénář 2)
+        logger.info("AkceKnihovna3D.test_115_pridani_souradnic_knihovny_D3_p_002.start")
+        self.login("badatel")
+        self.go_to_form_vybrat()
+
+        self.assertEqual(Dokument.objects.filter(ident_cely="X-C-3D-000000006").first().extra_data.geom, None)
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000006")
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000006")
+
+        self.ElementClick(By.ID, "buttonEdit")
+        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 20, 20)
+        self.wait(0.2)
+        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 20, 20)
+        self.wait(0.2)
+        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 20, 20)
+        self.wait(0.2)
+        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 20, 20)
+        self.wait(0.2)
+        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 20, 20)
+        self.wait(0.2)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "newDocumentSubmitBtn")
+        self.assertNotEqual(Dokument.objects.filter(ident_cely="X-C-3D-000000006").first().extra_data.geom, None)
+        logger.info("AkceKnihovna3D.test_115_pridani_souradnic_knihovny_D3_p_002.end")
+
+    def test_116_pridani_souboru_zaznamu_knihovny_D3_p_002(self):
+        # Scenar_116 Přidání souboru k záznamu v Knihovně 3D (pozitivní scénář 2)
+        logger.info("AkceKnihovna3D.test_116_pridani_souboru_zaznamu_knihovny_D3_p_002.start")
+        self.login("badatel")
+        self.go_to_form_vybrat()
+        count_old = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-3D-000000006").count()
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000006")
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000006")
+        self.ElementClick(By.ID, "buttonUpload")
+        with open("dokument/tests/resources/del.zip", "rb") as zip_file:
+            encoded_string = base64.b64encode(zip_file.read()).decode()
+        self.addFileToDropzone("#my-awesome-dropzone", "del.zip", encoded_string)
+        self.wait(1)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "buttonUploadSubmit")
+        count_new = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-3D-000000006").count()
+        self.assertEqual(count_old + 1, count_new)
+        logger.info("AkceKnihovna3D.test_116_pridani_souboru_zaznamu_knihovny_D3_p_002.end")
