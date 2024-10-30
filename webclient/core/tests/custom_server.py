@@ -47,7 +47,7 @@ class WerkzeugServerThread(Thread):
 
     def get_free_port(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(("", 0))  # Bind na port 0, což znamená "najdi volný port"
+            s.bind(("127.0.0.1", 0))  # Bind na port 0, což znamená "najdi volný port"
             s.listen(1)  # Spustí naslouchání na tomto portu
             port = s.getsockname()[1]  # Získá přiřazený volný port
         return port
