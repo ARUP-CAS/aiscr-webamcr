@@ -18,10 +18,7 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from oznameni.tests.test_selenium import OznameniSeleniumTest
 from projekt.models import Projekt
-from selenium.common.exceptions import ElementNotSelectableException, ElementNotVisibleException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
 
 logger = logging.getLogger("tests")
 
@@ -172,13 +169,6 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         return [project_count_old, project_count_new]
 
     def go_to_form(self):
-        wait = WebDriverWait(
-            self.driver,
-            10,
-            poll_frequency=1,
-            ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException],
-        )
-        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
         self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zapsat"))
 
@@ -237,14 +227,6 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        wait = WebDriverWait(
-            self.driver,
-            10,
-            poll_frequency=1,
-            ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException],
-        )
-        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
-
         self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zahajitVyzkum"))
 
@@ -277,14 +259,6 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        wait = WebDriverWait(
-            self.driver,
-            10,
-            poll_frequency=1,
-            ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException],
-        )
-        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
-
         self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.ukoncitTeren"))
 
@@ -335,14 +309,6 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        wait = WebDriverWait(
-            self.driver,
-            10,
-            poll_frequency=1,
-            ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException],
-        )
-        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
-
         self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.UzavritProjekt"))
 
@@ -387,14 +353,6 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
     next_stav_projektu = PROJEKT_STAV_ARCHIVOVANY
 
     def go_to_form(self):
-        wait = WebDriverWait(
-            self.driver,
-            10,
-            poll_frequency=1,
-            ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException],
-        )
-        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) .btn")))
-
         self.ElementClick(By.ID, "menuProjekty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.archivovatProjekty"))
 

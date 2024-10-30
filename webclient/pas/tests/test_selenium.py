@@ -21,7 +21,7 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
+        self.ElementClick(By.ID, "menuSamostatneNalezy")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.zapsat"))
 
     def test_025_zapsani_samostatneho_nalezu_p_001(self):
