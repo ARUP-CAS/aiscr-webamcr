@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load static %}
 {% load template_filters %}
 <div class="card app-card-form app-card-{{card_type}} app-table-list-container">
     <div class="card-header">
@@ -18,7 +19,10 @@
     <div class="content-with-table-responsive-container">
       <div class="card-body content-with-table-responsive">
         {% if zaznamy %}
-          {%include "ez/ez_odkazy_table_only.html"%}
+        <div class="loader" style="text-align:center;" >
+          <img src="{% static "django_tables2_column_shifter/img/loader.gif" %}" style="margin:5px auto;" alt="loader"/>
+          {% trans "templates.bootstrap4Table.loading"%}
+        </div> 
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
@@ -38,4 +42,28 @@
       dokument_pripojit_modal = new Modal(options, "eo-pripojit-{{card_type}}");
 });
 
+</script>
+<script type="text/javascript">
+  // projekt pass load
+  $(document).ready(function() {
+    if ("{{show.ez_odkazy}}" != "False" && {{zaznamy.count}} > 0) {
+      $.ajax({
+        type: "GET",
+        url: '{% url "ez:get_ez_odkazy_table" %}', 
+        data: {
+          'id': {{zaznam.id}},
+          'type': "{{type}}",
+          'card_type': "{{card_type}}",
+          'show_paginace': "{{show.paginace}}",
+          'show_odpojit': "{{show.odpojit}}",
+          'show_paginace_edit': "{{show.paginace_edit}}"
+        },
+        success : function(data) {
+          $('.app-card-{{card_type}} .loader').css("display", "none");
+          $('.app-card-{{card_type}} .content-with-table-responsive').append(data);
+         }
+});
+    }
+  }
+  )
 </script>

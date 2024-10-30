@@ -462,7 +462,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @property
     def thumbnail_image_file(self) -> Soubor | None:
         if self.soubory.soubory.count() > 0:
-            return self.soubory.soubory.first()
+            return self.soubory.soubory.order_by("nazev").first()
 
     @cached_property
     def large_thumbnail(self):
@@ -781,12 +781,12 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
         self.close_active_transaction_when_finished = None
         self.suppress_signal = False
 
-    def create_transaction(self, transaction_user):
+    def create_transaction(self, transaction_user, success_message=None, error_message=None):
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
         transaction_user: User
-        self.active_transaction = FedoraTransaction(self.dokument, transaction_user)
+        self.active_transaction = FedoraTransaction(self.dokument, transaction_user, success_message, error_message)
         return self.active_transaction
 
 

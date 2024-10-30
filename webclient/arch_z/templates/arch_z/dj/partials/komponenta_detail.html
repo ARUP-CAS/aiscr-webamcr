@@ -9,61 +9,64 @@
       {% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.cardHeader.label" %} {{ k.ident_cely }}
     </div>
     {% if show.komponenta_smazat %}
-    <div class="app-fx app-right">
-      <div class="btn-group" role="group">
-        <div class="dropdown-menu" aria-labelledby="others">
-          <button id="komponenta-smazat-{{k.ident_cely}}" class="dropdown-item komponenta-smazat-btn" type="button" name="button" href="{% url 'komponenta:smazat' typ_vazby k.ident_cely %}">
-            {% trans 'arch_z.templates.arch_z.dj.partials.komponenta_create.editButtons.smazatKomponentu.label' %}
+      <div class="app-fx app-right">
+        <div class="btn-group" role="group">
+          <div class="dropdown-menu" aria-labelledby="others">
+            <button id="komponenta-smazat-{{ k.ident_cely }}" class="dropdown-item komponenta-smazat-btn" type="button"
+                    name="button" href="{% url 'komponenta:smazat' typ_vazby k.ident_cely %}">
+              {% trans 'arch_z.templates.arch_z.dj.partials.komponenta_create.editButtons.smazatKomponentu.label' %}
+            </button>
+          </div>
+          <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
+                  aria-expanded="false" rel="tooltip" data-placement="top"
+                  title="{% trans 'arch_z.templates.arch_z.dj.partials.komponenta_create.menu' %}">
+            <span class="material-icons">more_vert</span>
           </button>
         </div>
-        <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'arch_z.templates.arch_z.dj.partials.komponenta_create.menu' %}">
-          <span class="material-icons">more_vert</span>
-        </button>
       </div>
-    </div>
     {% endif %}
   </div>
   <div class="card-body">
-    <form class="mb-3 submit-spinner" method="POST" action="{% url 'komponenta:detail' typ_vazby k.ident_cely %}" >
+    <form class="mb-3 submit-spinner" method="POST" action="{% url 'komponenta:detail' typ_vazby k.ident_cely %}">
       {% crispy k.form %}
 
-    <div class="card app-card-form app-card-inner">
-      <div class="card-header">
-        <div class="app-fx app-left">
-          {% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.cardHeader.label" %}
+      <div class="card app-card-form app-card-inner">
+        <div class="card-header">
+          <div class="app-fx app-left">
+            {% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.cardHeader.label" %}
+          </div>
         </div>
-      </div>
-      <div class="content-with-table-responsive-container">
-        <div class="card-body formset-table content-with-table-responsive">
-          <h5>{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.objekty.label" %}</h5>
+        <div class="content-with-table-responsive-container">
+          <div class="card-body formset-table content-with-table-responsive">
+            <h5>{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.objekty.label" %}</h5>
             {% if k.form_nalezy_objekty.forms %}
-              <input type="hidden" name="nalez_edit_nalez" value="{{ k.ident_cely }}" />
+              <input type="hidden" name="nalez_edit_nalez" value="{{ k.ident_cely }}"/>
               {% crispy k.form_nalezy_objekty k.helper_objekt %}
             {% else %}
-            <div class="app-note">
-              <span class="material-icons">info</span>
-              {% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.objekty.bezObjektovlabel." %}
-            </div>
+              <div class="app-note">
+                <span class="material-icons">info</span>
+                {% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.objekty.bezObjektovlabel." %}
+              </div>
             {% endif %}
-          <h5>{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.predmety.label" %}</h5>
+            <h5>{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.predmety.label" %}</h5>
             {% if k.form_nalezy_predmety.forms %}
-            {% crispy k.form_nalezy_predmety k.helper_predmet %}
+              {% crispy k.form_nalezy_predmety k.helper_predmet %}
             {% else %}
-            <div class="app-note">
-              <span class="material-icons">info</span>
-              {% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.predmety.bezPredmetov.label" %}
-            </div>
+              <div class="app-note">
+                <span class="material-icons">info</span>
+                {% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.predmety.bezPredmetov.label" %}
+              </div>
             {% endif %}
+          </div>
         </div>
       </div>
-    </div>
-    {% if show.editovat %}
-      <button type="submit" id="editKompSubmitButton" class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.ulozitZmeny.label" %}
-        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
-        style="display: none"></span>
-      </button>
-    {% endif %}
+      {% if show.editovat %}
+        <button type="submit" id="editKompSubmitButton"
+                class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.komponenta_create.editNalezy.ulozitZmeny.label" %}
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                style="display: none"></span>
+        </button>
+      {% endif %}
     </form>
   </div>
 </div>
@@ -71,12 +74,12 @@
 <script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-      //show form
+        //show form
         show_form(`detail_komponenta_form_{{ k.ident_cely }}`)
         // fill base on nadrazeni
         url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
         ident_cely = '{{k.ident_cely}}'
-        get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-areal`,`#id_${ident_cely}-aktivity`,url)
+        get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-areal`, `#id_${ident_cely}-aktivity`, url)
         div_komponenta = document.getElementById(`detail_komponenta_form_${ident_cely}`)
         //objekty = div_komponenta.querySelector('#objekt_table').querySelector('tbody').querySelectorAll('tr');
         //for (let i = 0; i < objekty.length; i++) {
@@ -84,19 +87,84 @@
         //} objekty not used
         predmety = div_komponenta.querySelector('#predmet_table').querySelector('tbody').querySelectorAll('tr');
         for (let i = 0; i < predmety.length; i++) {
-          get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}_p-${i}-druh`,`#id_${ident_cely}_p-${i}-specifikace`,url);
+            get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}_p-${i}-druh`, `#id_${ident_cely}_p-${i}-specifikace`, url);
         }
         // smazat nalezy 
-        if (document.getElementsByClassName("objekt-smazat-btn")){
-          elements = document.getElementsByClassName("objekt-smazat-btn")
-          for (let i = 0; i < elements.length; i++){
-            var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
-            formID: "smazat-objekt-form",
-            modalFormID: "#smazat-objekt-form",
-            })
-            new Modal(options, elements.item(i).id);
-          }
+        if (document.getElementsByClassName("objekt-smazat-btn")) {
+            elements = document.getElementsByClassName("objekt-smazat-btn")
+            for (let i = 0; i < elements.length; i++) {
+                var options = Object.assign(Object.create(defaults), {
+                    modalID: "modal-form",
+                    formID: "smazat-objekt-form",
+                    modalFormID: "#smazat-objekt-form",
+                })
+                new Modal(options, elements.item(i).id);
+            }
         }
+
+        const handle_required_fields_nalez = (o) => {
+            const input_pocet = document.querySelector(`input[name='{{ k.ident_cely }}_o-${o}-pocet']`);
+            const input_poznamka = document.querySelector(`input[name='{{ k.ident_cely }}_o-${o}-poznamka']`);
+            const select_specifikace = document.querySelector(`select[name='{{ k.ident_cely }}_o-${o}-specifikace']`);
+            const set_required = input_pocet.value.trim() !== '' || input_poznamka.value.trim() !== ''
+                || select_specifikace.value !== '';
+
+            const select_druh = document.querySelector(`select[name='{{ k.ident_cely }}_o-${o}-druh']`);
+            if (select_druh) {
+                select_druh.required = set_required;
+            }
+        }
+        document.querySelectorAll("input[name^='{{ k.ident_cely }}_o-'][name$='-pocet'], input[name^='{{ k.ident_cely }}_o-'][name$='-poznamka']").forEach(input => {
+            input.addEventListener('input', function () {
+                const namePattern = /{{ k.ident_cely }}_o-(\d+)-(?:pocet|poznamka)/;
+                const match = input.name.match(namePattern);
+                if (match) {
+                    handle_required_fields_nalez(match[1]);
+                }
+            });
+        });
+        document.querySelectorAll("select[name^='{{ k.ident_cely }}_o-'][name$='-specifikace']").forEach(select => {
+            select.addEventListener('change', function () {
+                const namePattern = /{{ k.ident_cely }}_o-(\d+)-specifikace/;
+                const match = select.name.match(namePattern);
+                if (match) {
+                    handle_required_fields_nalez(match[1]);
+                }
+            });
+        });
+
+        const handle_required_fields_predmet = (o) => {
+            const input_pocet = document.querySelector(`input[name='{{ k.ident_cely }}_p-${o}-pocet']`);
+            const input_poznamka = document.querySelector(`input[name='{{ k.ident_cely }}_p-${o}-poznamka']`);
+            const select_druh = document.querySelector(`select[name='{{ k.ident_cely }}_p-${o}-druh']`);
+            const select_specifikace = document.querySelector(`select[name='{{ k.ident_cely }}_p-${o}-specifikace']`);
+            const set_required = input_pocet.value.trim() !== '' || input_poznamka.value.trim() !== ''
+                || select_druh.value !== '' || select_specifikace.value !== '';
+            if (select_druh) {
+                select_druh.required = set_required;
+            }
+            if (select_specifikace) {
+                select_specifikace.required = set_required;
+            }
+        }
+        document.querySelectorAll("input[name^='{{ k.ident_cely }}_p-'][name$='-pocet'], input[name^='{{ k.ident_cely }}_p-'][name$='-poznamka']").forEach(input => {
+            input.addEventListener('input', function () {
+                const namePattern = /{{ k.ident_cely }}_p-(\d+)-(?:pocet|poznamka)/;
+                const match = input.name.match(namePattern);
+                if (match) {
+                    handle_required_fields_predmet(match[1]);
+                }
+            });
+        });
+        document.querySelectorAll("select[name^='{{ k.ident_cely }}_p-'][name$='-druh'], select[name^='{{ k.ident_cely }}_p-'][name$='-specifikace']").forEach(select => {
+            select.addEventListener('change', function () {
+                const namePattern = /{{ k.ident_cely }}_p-(\d+)-(?:druh|specifikace)/;
+                const match = select.name.match(namePattern);
+                if (match) {
+                    handle_required_fields_predmet(match[1]);
+                }
+            });
+        });
     });
 </script>
 

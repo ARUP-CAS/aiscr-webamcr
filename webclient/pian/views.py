@@ -15,11 +15,10 @@ from core.message_constants import (
     VALIDATION_EMPTY,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
-    ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.models import Permissions
-from core.repository_connector import FedoraRepositoryConnector
+from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
     file_validate_epsg,
     get_dj_akce_for_pian,
@@ -117,8 +116,6 @@ def detail(request, ident_cely):
             update_all_katastr_within_akce_or_lokalita(fdj, fedora_transaction)
         pian.close_active_transaction_when_finished = True
         pian.save()
-        if form.changed_data:
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         logger.debug("pian.views.detail.form.finished", extra={"transaction": fedora_transaction.uid})
     else:
         logger.debug("pian.views.detail.form.not_valid", extra={"form_errors": form.errors})
@@ -215,16 +212,16 @@ def potvrdit(request, dj_ident_cely):
         raise PermissionDenied
     if request.method == "POST":
         redirect_view = dj.archeologicky_zaznam.get_absolute_url(dj_ident_cely)
-        fedora_transaction = pian.create_transaction(request.user)
+        fedora_transaction = pian.create_transaction(request.user, PIAN_USPESNE_POTVRZEN)
         try:
             old_ident = pian.ident_cely
             pian.set_permanent_ident_cely()
         except MaximalIdentNumberError:
-            messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
+            fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
             logger.debug(
                 "pian.views.potvrdit", extra={"pian_ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid}
             )
-            fedora_transaction.mark_transaction_as_closed()
+            fedora_transaction.rollback_transaction()
             return JsonResponse(
                 {"redirect": redirect_view},
                 status=403,
@@ -237,7 +234,6 @@ def potvrdit(request, dj_ident_cely):
                 "pian.views.potvrdit.potvrzen",
                 extra={"pian_ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid},
             )
-            messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
             response = JsonResponse({"redirect": dj.get_absolute_url()})
             response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
             response.set_cookie(
@@ -318,8 +314,8 @@ def create(request, dj_ident_cely):
                 logger.warning("pian.views.create.error", extra={"message": messages.ERROR, "exception": e.message})
                 messages.add_message(request, messages.ERROR, e.message)
             else:
+                fedora_transaction: FedoraTransaction = pian.create_transaction(request.user)
                 if FedoraRepositoryConnector.check_container_deleted_or_not_exists(pian.ident_cely, "pian"):
-                    fedora_transaction = pian.create_transaction(request.user)
                     pian.save()
                     pian.set_vymezeny(request.user)
                     dj.active_transaction = fedora_transaction
@@ -332,13 +328,12 @@ def create(request, dj_ident_cely):
                         "pian.views.create.finished",
                         extra={"info": ZAZNAM_USPESNE_VYTVOREN, "dj_pk": dj.pk, "transaction": fedora_transaction.uid},
                     )
-                    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                 else:
                     logger.info(
                         "pian.views.create.check_container_deleted_or_not_exists.incorrect",
                         extra={"ident_cely": pian.ident_cely},
                     )
-                    messages.add_message(request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
+                    fedora_transaction.rollback_transaction()
         else:
             logger.info("pian.views.create.assignment_error", extra={"zm10s": zm10s, "zm50s": zm50s})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)

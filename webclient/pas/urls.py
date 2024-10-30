@@ -1,13 +1,14 @@
 from django.urls import path
 from pas import views
-from pas.views import SamostatnyNalezListView, UzivatelSpolupraceListView
+from pas.views import ProjektPasTableView, SamostatnyNalezListView, UzivatelSpolupraceListView
 
 app_name = "pas"
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("zapsat", views.create, name="create"),
-    path("zapsat/<str:ident_cely>", views.create, name="create-from-project"),
+    path("zapsat", views.SamostatnyNalezCreateView.as_view(), name="create"),
+    path("zapsat/<str:ident_cely>", views.SamostatnyNalezCreateView.as_view(), name="create-from-project"),
+    path("zapsat/kopie/<str:ident_cely>", views.SamostatnyNalezCreateView.as_view(), name="create-copy"),
     path("detail/<str:ident_cely>", views.detail, name="detail"),
     path("edit/<str:ident_cely>", views.edit, name="edit"),
     path("ulozeni/edit/<str:ident_cely>", views.edit_ulozeni, name="edit_ulozeni"),
@@ -41,4 +42,9 @@ urlpatterns = [
         name="post_point_position_2_katastre_with_geom",
     ),
     path("spoluprace/smazat/<int:pk>", views.smazat_spolupraci, name="spoluprace_smazani"),
+    path(
+        "projekt-pas-tabulka",
+        ProjektPasTableView.as_view(),
+        name="get_projekt_pas_table",
+    ),
 ]

@@ -3,6 +3,7 @@ import logging
 from arch_z import validators
 from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU
 from core.forms import BaseFilterForm
+from core.validators import validate_date_min_1600
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
@@ -32,6 +33,9 @@ class CreateProjektForm(forms.ModelForm):
         label=_("projekt.forms.createProjekt.planovaneZahajeni.label"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
         help_text=_("projekt.forms.createProjekt.planovaneZahajeni.tooltip"),
+        validators=[
+            validate_date_min_1600,
+        ],
     )
 
     class Meta:
@@ -162,14 +166,17 @@ class EditProjektForm(forms.ModelForm):
         label=_("projekt.forms.editProjekt.planovaneZahajeni.label"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
         help_text=_("projekt.forms.editProjekt.planovaneZahajeni.tooltip"),
+        validators=[
+            validate_date_min_1600,
+        ],
     )
     datum_zahajeni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        validators=[validators.datum_max_1_mesic_v_budoucnosti, validate_date_min_1600],
         widget=forms.DateInput(attrs={"data-provide": "datepicker", "autocomplete": "off"}),
         help_text=_("projekt.forms.editProjekt.datumZahajeni.tooltip"),
     )
     datum_ukonceni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        validators=[validators.datum_max_1_mesic_v_budoucnosti, validate_date_min_1600],
         widget=forms.DateInput(attrs={"data-provide": "datepicker", "autocomplete": "off"}),
         help_text=_("projekt.forms.editProjekt.datumUkonceni.tooltip"),
     )
@@ -527,7 +534,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
     """
 
     datum_zahajeni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        validators=[validators.datum_max_1_mesic_v_budoucnosti, validate_date_min_1600],
         help_text=_("projekt.forms.zahajitVTerenu.datumZahajeni.tooltip"),
         label=_("projekt.forms.zahajitVTerenu.datumZahajeni.label"),
     )
@@ -561,7 +568,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
     """
 
     datum_ukonceni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        validators=[validators.datum_max_1_mesic_v_budoucnosti, validate_date_min_1600],
         help_text=_("projekt.forms.ukoncitVTerenu.datumUkonceni.tooltip"),
         label=_("projekt.forms.ukoncitVTerenu.datumUkonceni.label"),
     )
@@ -783,16 +790,15 @@ class ProjektFilterForm(BaseFilterForm):
     ]
 
 
-class ZadostUdajeOznamovatelForm(forms.Form):
-    reason = forms.CharField(
-        label=_("projekt.forms.zadostUdajeOznamovatel.duvod.label"),
-        required=True,
-        help_text=_("projekt.forms.zadostUdajeOznamovatel.duvod.tooltip"),
-        widget=forms.Textarea(attrs={"rows": 5, "cols": 40}),
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(ZadostUdajeOznamovatelForm, self).__init__(*args, **kwargs)
+class ZadostProjektForm(forms.Form):
+    def __init__(self, label="", help_text="", *args, **kwargs):
+        super(ZadostProjektForm, self).__init__(*args, **kwargs)
+        self.fields["reason"] = forms.CharField(
+            label=label,
+            required=True,
+            help_text=help_text,
+            widget=forms.Textarea(attrs={"rows": 5, "cols": 40}),
+        )
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
@@ -802,6 +808,9 @@ class UpravitDatumOznameniForm(forms.ModelForm):
         label=_("projekt.forms.upravitDatumOznameni.datumOznameni.label"),
         widget=forms.DateInput(attrs={"data-provide": "datepicker", "autocomplete": "off"}),
         help_text=_("projekt.forms.upravitDatumOznameni.datumOznameni.tooltip"),
+        validators=[
+            validate_date_min_1600,
+        ],
     )
 
     cas_oznameni = forms.TimeField(

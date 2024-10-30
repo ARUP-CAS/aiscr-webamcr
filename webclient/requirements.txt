@@ -56,3 +56,5 @@ polib==1.2.0
 pytz==2024.2
 python-dateutil==2.9.0.post0
 setuptools==75.2.0
+Werkzeug==3.0.4
+pyOpenSSL==24.2.1

@@ -272,10 +272,14 @@ L.Control.Measure = L.Control.extend({
     if (typeof this.options.formatDistance === 'function') {
       return this.options.formatDistance(val);
     }
-    if (val < 1000) {
-      return Math.round(val) + 'm'
-    } else {
-      return Math.round((val / 1000) * 100) / 100 + 'km'
+    if (val < 100) {
+      return Math.round(val*10)/10 + ' m'
+    }
+    else if (val < 1000) {
+      return Math.round(val) + ' m'
+    }
+     else {
+      return Math.round((val / 1000) * 100) / 100 + ' km'
     }
   },
 

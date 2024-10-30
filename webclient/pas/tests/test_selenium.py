@@ -197,7 +197,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-1 > .text")
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202211308-N00213")
         self.ElementClick(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text")
         self.wait(1)
@@ -230,7 +230,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-1 > .text")
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202211308-N00213")
         self.ElementClick(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text")
         self.wait(1)
@@ -266,7 +266,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-1 > .text")
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202211308-N00213")
         self.ElementClick(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text")
         # self.ElementClick(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo")
@@ -294,12 +294,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-2 > .text")
 
         self.ElementClick(By.CSS_SELECTOR, ".card > .card-body")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202010474-N00002")
         self.ElementClick(By.CSS_SELECTOR, "#pas-archivovat > .app-controls-button-text")
         self.wait(1)
@@ -320,7 +320,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202010474-N00002")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202010474-N00002")
         self.ElementClick(By.CSS_SELECTOR, "#file-smazat-518731 > .material-icons")
         self.wait(1)
@@ -345,10 +345,10 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
 
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("M-202301371-N00015")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
+        self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "M-202301371-N00015")
         self.ElementClick(By.CSS_SELECTOR, "#pas-vratit > .app-controls-button-text")
         self.wait(1)

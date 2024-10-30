@@ -43,7 +43,6 @@ const show_upload_successful_message = (file, result = UploadResultsEnum.success
     if (collection.length > 0) {
         const sidebar_affected_class = check_sidebar_state() ? "app-alert-floating-file-upload-no-left-bar " : "";
         const message_container_element = collection[0];
-        // <div class="alert alert-success alert-dismissible fade show app-alert-floating" role="alert">
         const alert_element = document.createElement("div");
         const sidebar_element_query = document.getElementsByClassName("app-sidebar-wrapper");
         const floating_class = sidebar_element_query.length > 0 ? "app-alert-floating-file-upload" : "app-alert-floating-file-upload-oznameni";
@@ -172,7 +171,7 @@ window.onload = function () {
         dictCancelUploadConfirmation: [dz_trans["cancelUploadConfirm"]],
         dictMaxFilesExceeded:  [dz_trans["maxFilesExceeded"]],
         dictRemoveFile: [dz_trans["removeFile"]],
-        maxFilesize: 100, // MB
+        maxFilesize: 250, // MB
         maxFiles: maxFiles,
         addRemoveLinks: addRemoveLinks,
         parallelUploads: 1,
@@ -201,9 +200,11 @@ window.onload = function () {
                 } else {
                     show_upload_successful_message(file, result, message);
                 }
-                var submitButton = $(".btn-disable-when-running-upload");
-                submitButton.prop('disabled', false); 
-                submitButton.removeClass("disabled"); 
+                if (this.files.every(file => file.status === 'success')) {
+                    let submitButton = $(".btn-disable-when-running-upload");
+                    submitButton.prop('disabled', false); 
+                    submitButton.removeClass("disabled"); 
+                }
             });
             this.on("removedfile", function (file) {
                 if (file.id) {
@@ -217,7 +218,13 @@ window.onload = function () {
                 file.previewElement.lastChild.style.display = "none"
             });
             this.on("addedfile", function (file) {
-                var submitButton = $(".btn-disable-when-running-upload");
+                //hack pro win10
+                let exten=file.name.split('.').pop(); 
+                if(file.type==="" && (exten==="rar" || exten==="7z"))
+                    this.options.acceptedFiles="";
+                else this.options.acceptedFiles=acceptFile;
+
+                let submitButton = $(".btn-disable-when-running-upload");
                 submitButton.prop('disabled', true);
                 submitButton.addClass("disabled"); 
             });

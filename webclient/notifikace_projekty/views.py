@@ -121,7 +121,7 @@ class PesCreateView(LoginRequiredMixin, View):
             formset_pes.save()
             messages.add_message(request, messages.SUCCESS, HLIDACI_PES_USPESNE_VYTVOREN)
             user: User = request.user
-            user.active_transaction = FedoraTransaction(user, self.request.user)
+            user.active_transaction = FedoraTransaction()
             user.close_active_transaction_when_finished = True
             user.save()
         else:
@@ -179,8 +179,11 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
             zaznam = self.get_zaznam()
             zaznam.delete()
             messages.add_message(request, messages.SUCCESS, HLIDACI_PES_USPESNE_SMAZAN)
+            user: User = request.user
+            user.active_transaction = FedoraTransaction()
+            user.close_active_transaction_when_finished = True
+            user.save()
         except Exception as err:
             logger.warning("notifikace_projekty.PesSmazatView.post.not_valid", extra={"err": err})
             messages.add_message(request, messages.SUCCESS, HLIDACI_PES_NEUSPESNE_SMAZAN)
-        request.user.save_metadata()
         return JsonResponse({"redirect": reverse("notifikace_projekty:list")})

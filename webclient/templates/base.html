@@ -66,9 +66,9 @@
   <script src='{% static 'js/Leaflet.fullscreen1.0.1/Leaflet.fullscreen.min.js' %}'></script>
   <link href='{% static 'js/Leaflet.fullscreen1.0.1/leaflet.fullscreen.css' %}'rel='stylesheet'/>
   <!-- static leaflet additional import-->
-  <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}" />
-  <script src="{% static 'leaflet.measure.js' %}"></script>
-  <script type="text/javascript" src="{% static 'leaflet.coor.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}?v2" />
+  <script src="{% static 'leaflet.measure.js' %}?v1"></script>
+  <script type="text/javascript" src="{% static 'leaflet.coor.js' %}?v1"></script>
   <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}" />
 
   <link rel="stylesheet" href="{% static 'leaflet-search.css' %}"/>
@@ -115,18 +115,10 @@
         class="container-fluid {% if user.is_authenticated and request.path != '/oznameni/' and '/accounts/' not in request.path %}app-content-wrapper{% endif %}">
       {% block content %}{% endblock %}
     </div>
-
-    <!-- for alert development
-    <div class="alert alert-success alert-dismissible fade show app-alert-floating" role="alert">
-      Záznam byl úspěšně vytvořen.
-      <button aria-label="Close" class="close" data-dismiss="alert" type="button">
-        <span aria-hidden="true">×</span>
-       </button>
-    </div>-->
-
+  
     <div class="message-container">
       {% for message in messages %}
-        <div class="alert alert-{% if message.tags == "notclosing warning" %}warning notclosing{% elif message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show app-alert-floating" role="alert">
+        <div class="alert alert-{% if message.tags == "notclosing warning" %}warning notclosing{% elif message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show app-alert-floating" role="alert" style="top: {%  message_top forloop.counter0 %}px">
           {{ message }}
           <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
