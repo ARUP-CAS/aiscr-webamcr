@@ -1,11 +1,10 @@
 import logging
+from datetime import date, datetime
 from functools import wraps
-from datetime import datetime, date
-
-from django.shortcuts import render
 
 from core.models import OdstavkaSystemu
 from django.core.cache import cache
+from django.shortcuts import render
 
 logger = logging.getLogger(__name__)
 
@@ -39,26 +38,6 @@ def odstavka_in_progress(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         last_maintenance = cache.get("last_maintenance")
-        try:
-            language = request.LANGUAGE_CODE
-        except Exception as e:
-            language = "cs"
-        if "oznameni" in request.path:
-            try:
-                response = render(
-                    request,
-                    "/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html",
-                )
-            except:
-                pass
-        else:
-            try:
-                response = render(
-                    request,
-                    "/vol/web/nginx/data/" + language + "/custom_50x.html",
-                )
-            except:
-                pass
         if last_maintenance is None:
             odstavka = OdstavkaSystemu.objects.filter(
                 info_od__lte=datetime.today(),
@@ -68,12 +47,26 @@ def odstavka_in_progress(view_func):
             if odstavka.count():
                 last_maintenance = odstavka[0]
                 cache.set("last_maintenance", last_maintenance, 600)
-        if last_maintenance is not None:
-            if last_maintenance.datum_odstavky == date.today():
-                if datetime.now().time() > last_maintenance.cas_odstavky:
-                    return response
-            elif date.today() > last_maintenance.datum_odstavky:
-                return response
+            else:
+                cache.set("last_maintenance", False, 600)
+        if last_maintenance is not None and last_maintenance is not False:
+            if (
+                last_maintenance.datum_odstavky == date.today()
+                and datetime.now().time() > last_maintenance.cas_odstavky
+            ) or date.today() > last_maintenance.datum_odstavky:
+                try:
+                    language = request.LANGUAGE_CODE
+                except Exception:
+                    language = "cs"
+                if "oznameni" in request.path:
+                    return render(
+                        request,
+                        "/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html",
+                    )
+                return render(
+                    request,
+                    "/vol/web/nginx/data/" + language + "/custom_50x.html",
+                )
         return view_func(request, *args, **kwargs)
 
     return wrapper

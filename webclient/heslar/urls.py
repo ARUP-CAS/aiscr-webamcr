@@ -1,17 +1,17 @@
 from django.urls import path
+from uzivatel.views import OsobaAutocomplete, create_osoba
 
 from .views import (
-    RuianKatastrAutocomplete,
-    DokumentTypAutocomplete,
-    PristupnostAutocomplete,
-    zjisti_katastr_souradnic,
-    zjisti_nadrazenou_hodnotu,
-    zjisti_vychozi_hodnotu, 
     DokumentFormatAutocomplete,
+    DokumentTypAutocomplete,
     HeslarAutocompleteView,
     HeslarNazevAutocompleteView,
+    PristupnostAutocomplete,
+    RuianKatastrAutocomplete,
+    zjisti_katastr_souradnic,
+    zjisti_nadrazenou_hodnotu,
+    zjisti_vychozi_hodnotu,
 )
-from uzivatel.views import create_osoba, OsobaAutocomplete
 
 app_name = "heslar"
 

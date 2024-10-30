@@ -1,10 +1,9 @@
-import os
-from core.models import Soubor
-from webclient.settings.base import MEDIA_ROOT
-
-
 import logging
-import logstash
+import os
+
+from core.models import Soubor
+
+from webclient.settings.base import MEDIA_ROOT
 
 logger_s = logging.getLogger(__name__)
 

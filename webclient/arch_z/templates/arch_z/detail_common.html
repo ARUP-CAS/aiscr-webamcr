@@ -63,9 +63,9 @@
       var global_csrftoken = '{{ csrf_token }}';
   </script>
   <!-- static leaflet additional import-->
-  <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}"/>
-  <script src="{% static 'leaflet.measure.js' %}"></script>
-  <script type="text/javascript" src="{% static 'leaflet.coor.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}?v2"/>
+  <script src="{% static 'leaflet.measure.js' %}?v1"></script>
+  <script type="text/javascript" src="{% static 'leaflet.coor.js' %}?v1"></script>
   <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
 
   <link rel="stylesheet" href="{% static 'leaflet-search.css' %}"/>
@@ -259,12 +259,23 @@
       RemoveTitle: '{% trans "mapa.RemoveTitle" %}',
       RemoveTooltipText: '{% trans "mapa.RemoveTooltipText" %}',
       samostatneNalezy: '{% trans "mapa.samostatneNalezy" %}',
-      SearchText: '{% trans "mapa.SearchText" %}',
-      SearchTextCancel: '{% trans "mapa.SearchTextCancel" %}',
-      SearchTextError: '{% trans "mapa.SearchTextError" %}',
       TempPIAN: '{% trans "mapa.TempPIAN" %}',
       zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
       zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
+    };
+
+    var leaflet_search_translations = {
+      KatastralniUzemi: '{% trans "leaflet_search.KatastralniUzemi" %}',
+      Okres: '{% trans "leaflet_search.Okres" %}',
+      Obec: '{% trans "leaflet_search.Obec" %}',
+      Adresa: '{% trans "leaflet_search.Adresa" %}',
+      Ulice: '{% trans "leaflet_search.Ulice" %}',
+      Geonames: '{% trans "leaflet_search.Geonames" %}',
+      Parcela: '{% trans "leaflet_search.Parcela" %}',
+      Stavebni: '{% trans "leaflet_search.Stavebni" %}',
+      Pozemkova: '{% trans "leaflet_search.Pozemkova" %}',
+      SearchTextCancel: '{% trans "leaflet_search.SearchTextCancel" %}',
+      SearchTextError: '{% trans "leaflet_search.SearchTextError" %}'
     };
   </script>
   <script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
@@ -272,8 +283,7 @@
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
-  <script src="{% static 'arch_z_detail_map.js' %}"></script>
-  <script src="{% static 'leaflet.measure.js' %}"></script>
+  <script src="{% static 'arch_z_detail_map.js' %}?v1"></script>
   <script>
       function get_create_pain_form_action(selected_dj_ident) {
           const url = "/pian/zapsat/1";

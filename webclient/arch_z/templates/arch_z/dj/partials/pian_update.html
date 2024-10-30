@@ -10,13 +10,15 @@
     </div>
   </div>
   <div class="card-body">
-    <form class="mb-3" method="POST" action="{% url 'pian:detail' pian_ident_cely %}"
-          onsubmit="editPianButton.disabled = true; return true;">
+    <form class="mb-3 submit-spinner" method="POST" action="{% url 'pian:detail' pian_ident_cely %}">
       {% crispy pian_form_update %}
       {% if show.editovat %}
         <input type="hidden" name="dj_ident_cely" value="{{ dj_ident_cely }}">
         <button type="submit" id="editPianButton"
-                class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.pian_update.editButtons.upravitPian.label" %}</button>
+                class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.pian_update.editButtons.upravitPian.label" %}
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                style="display: none"></span>
+        </button>
       {% endif %}
     </form>
   </div>

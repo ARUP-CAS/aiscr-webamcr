@@ -181,11 +181,12 @@
       </div>
       <div class="card-body formset-table">
         {% if form_tvary %}  
-        <form class="mb-3" method="POST" action="{% url 'dokument:edit-tvar' dokument.ident_cely %}" onsubmit="editTvarSubmitButton.disabled = true; return true;">
+        <form class="mb-3 submit-spinner" method="POST" action="{% url 'dokument:edit-tvar' dokument.ident_cely %}">
             {% crispy form_tvary tvary_helper %}
             {% if show.tvary_edit %}
-          <button type="submit" id="editTvarSubmitButton"
-                  class="btn btn-primary">{% trans "dokument.templates.dok.detail.tvary.submitButtonText" %}
+          <button type="submit" id="editTvarSubmitButton" class="btn btn-primary">{% trans "dokument.templates.dok.detail.tvary.submitButtonText" %}
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+            style="display: none"></span>
           </button>
           {% endif %}
         </form>

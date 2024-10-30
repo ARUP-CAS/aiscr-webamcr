@@ -6,7 +6,7 @@ from nalez.models import NalezObjekt, NalezPredmet
 
 
 class NalezFormSetHelper(FormHelper):
-    def __init__(self,typ=None,typ_vazby="dokument", *args, **kwargs):
+    def __init__(self, typ=None, typ_vazby="dokument", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
@@ -19,12 +19,17 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
     """
     Funkce která vrací formulář nálezu objekty pro formset.
     """
+
     class CreateNalezObjektForm(forms.ModelForm):
         typ = forms.CharField(widget=forms.HiddenInput())
+
         class Meta:
             model = NalezObjekt
             fields = ["druh", "specifikace", "pocet", "poznamka"]
-            labels = {"pocet": _("nalez.forms.nalezObjekt.pocet.label"), "poznamka": _("nalez.forms.nalezObjekt.poznamka.label")}
+            labels = {
+                "pocet": _("nalez.forms.nalezObjekt.pocet.label"),
+                "poznamka": _("nalez.forms.nalezObjekt.poznamka.label"),
+            }
             widgets = {
                 "poznamka": forms.TextInput(),
                 "pocet": forms.TextInput(),
@@ -35,19 +40,14 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
             }
 
         def __init__(
-            self,
-            druh_objekt_choices=druh_obj_choices,
-            specifikace_objekt_choices=spec_obj_choices,
-            *args,
-            **kwargs
+            self, druh_objekt_choices=druh_obj_choices, specifikace_objekt_choices=spec_obj_choices, *args, **kwargs
         ):
             super(CreateNalezObjektForm, self).__init__(*args, **kwargs)
             self.fields["druh"] = TwoLevelSelectField(
                 label=_("nalez.forms.nalezObjekt.druh.label"),
                 widget=forms.Select(
                     choices=druh_objekt_choices,
-                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                           "data-container": ".content-with-table-responsive-container"},
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
                 ),
                 help_text=_("nalez.forms.nalezObjekt.druh.tooltip"),
             )
@@ -55,35 +55,32 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                 label=_("nalez.forms.nalezObjekt.specifikace.label"),
                 widget=forms.Select(
                     choices=specifikace_objekt_choices,
-                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                           "data-container": ".content-with-table-responsive-container"},
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
                 ),
                 help_text=_("nalez.forms.nalezObjekt.specifikace.tooltip"),
             )
             self.fields["specifikace"].required = False
 
-            self.fields["typ"].initial="objekt"
-            
+            self.fields["typ"].initial = "objekt"
+
             for key in self.fields.keys():
                 self.fields[key].disabled = not not_readonly
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled:
                     if isinstance(self.fields[key].widget, forms.widgets.Select):
-                        self.fields[
-                            key
-                        ].widget.template_name = "core/select_to_text.html"
+                        self.fields[key].widget.template_name = "core/select_to_text.html"
                     self.fields[key].help_text = ""
 
     return CreateNalezObjektForm
 
 
-def create_nalez_predmet_form(
-    druh_projekt_choices, specifikce_predmetu_choices, not_readonly=True
-):
+def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices, not_readonly=True):
     """
     Funkce která vrací formulář nálezu předměty pro formset.
     """
+
     class CreateNalezPredmetForm(forms.ModelForm):
         typ = forms.CharField(widget=forms.HiddenInput())
+
         class Meta:
             model = NalezPredmet
 
@@ -109,8 +106,7 @@ def create_nalez_predmet_form(
                 label=_("nalez.forms.nalezPredmet.druh.label"),
                 widget=forms.Select(
                     choices=druh_projekt_choices,
-                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true",
-                           "data-container": ".content-with-table-responsive-container"},
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
                 ),
                 help_text=_("nalez.forms.nalezPredmet.druh.tooltip"),
             )
@@ -120,20 +116,19 @@ def create_nalez_predmet_form(
                 help_text=_("nalez.forms.nalezPredmet.specifikace.tooltip"),
             )
             self.fields["specifikace"].widget.attrs = {
-                "class": "selectpicker", "data-multiple-separator": "; ",
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
                 "data-live-search": "true",
             }
             self.fields["specifikace"].required = True
 
-            self.fields["typ"].initial="predmet"
+            self.fields["typ"].initial = "predmet"
 
             for key in self.fields.keys():
                 self.fields[key].disabled = not not_readonly
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled:
                     if isinstance(self.fields[key].widget, forms.widgets.Select):
-                        self.fields[
-                            key
-                        ].widget.template_name = "core/select_to_text.html"
+                        self.fields[key].widget.template_name = "core/select_to_text.html"
                     self.fields[key].help_text = ""
 
     return CreateNalezPredmetForm

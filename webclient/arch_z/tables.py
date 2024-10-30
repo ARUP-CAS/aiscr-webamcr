@@ -1,8 +1,8 @@
 import django_tables2 as tables
+from core.utils import SearchTable
 from django.contrib.postgres.aggregates import StringAgg
 from django.utils.translation import gettext_lazy as _
 
-from core.utils import SearchTable
 from .models import Akce
 
 
@@ -20,11 +20,13 @@ class BooleanValueColumn(tables.columns.Column):
 
 class AkceTable(SearchTable):
     """
-        Class pro definování tabulky pro akci použitých pro zobrazení přehledu akcií a exportu.
+    Class pro definování tabulky pro akci použitých pro zobrazení přehledu akcií a exportu.
     """
+
     ident_cely = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.ident_cely.label"),
-        linkify=True, accessor="archeologicky_zaznam__ident_cely"
+        linkify=True,
+        accessor="archeologicky_zaznam__ident_cely",
     )
     pristupnost = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.pristupnost.label"),
@@ -42,33 +44,27 @@ class AkceTable(SearchTable):
         accessor="archeologicky_zaznam__katastry",
         order_by="archeologicky_zaznam__katastry",
         orderable=True,
-        separator="; "
+        separator="; ",
     )
     stav = tables.columns.Column(
-        verbose_name=_("arch_z.tables.AkceTable.stav.label"),
-        default="",
-        accessor="archeologicky_zaznam__stav"
+        verbose_name=_("arch_z.tables.AkceTable.stav.label"), default="", accessor="archeologicky_zaznam__stav"
     )
     organizace = tables.columns.Column(
-        verbose_name=_("arch_z.tables.AkceTable.organizace.label"),
-        default="",
-        order_by="organizace__nazev_zkraceny"
+        verbose_name=_("arch_z.tables.AkceTable.organizace.label"), default="", order_by="organizace__nazev_zkraceny"
     )
     vedouci_organizace = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.vedouci_organizace.label"),
         default="",
-        accessor="vedouci_organizace", 
+        accessor="vedouci_organizace",
         orderable=False,
         attrs={
             "th": {"class": "white"},
         },
     )
-    hlavni_vedouci = tables.columns.Column(
-        verbose_name=_("arch_z.tables.AkceTable.hlavni_vedouci.label"),
-        default=""
+    hlavni_vedouci = tables.columns.Column(verbose_name=_("arch_z.tables.AkceTable.hlavni_vedouci.label"), default="")
+    vedouci = tables.Column(
+        default="", accessor="vedouci_snapshot", verbose_name=_("arch_z.tables.AkceTable.vedouci.label")
     )
-    vedouci = tables.Column(default="", accessor="vedouci_snapshot",
-                            verbose_name=_("arch_z.tables.AkceTable.vedouci.label"))
     uzivatelske_oznaceni = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.uzivatelske_oznaceni.label"),
         default="",
@@ -77,12 +73,12 @@ class AkceTable(SearchTable):
     datum_zahajeni = tables.columns.DateColumn(
         verbose_name=_("arch_z.tables.AkceTable.datum_zahajeni.label"),
         default="",
-        format= "Y-m-d",
+        format="Y-m-d",
     )
     datum_ukonceni = tables.columns.DateColumn(
         verbose_name=_("arch_z.tables.AkceTable.datum_ukonceni.label"),
         default="",
-        format= "Y-m-d",
+        format="Y-m-d",
     )
     hlavni_typ = tables.columns.Column(
         verbose_name=_("arch_z.tables.AkceTable.hlavni_typ.label"),
@@ -111,37 +107,40 @@ class AkceTable(SearchTable):
     je_nz = BooleanValueColumn(
         verbose_name=_("arch_z.tables.AkceTable.je_nz.label"),
         default="",
-        value_labels=[(False, _("arch_z.tables.AkceTable.je_nz.ne")),
-                      (True, _("arch_z.tables.AkceTable.je_nz.ano"))],
+        value_labels=[(False, _("arch_z.tables.AkceTable.je_nz.ne")), (True, _("arch_z.tables.AkceTable.je_nz.ano"))],
     )
     odlozena_nz = BooleanValueColumn(
         verbose_name=_("arch_z.tables.AkceTable.odlozena_nz.label"),
         default="",
-        value_labels=[(False, _("arch_z.tables.AkceTable.odlozena_nz.ne")),
-                      (True, _("arch_z.tables.AkceTable.odlozena_nz.ano"))],
+        value_labels=[
+            (False, _("arch_z.tables.AkceTable.odlozena_nz.ne")),
+            (True, _("arch_z.tables.AkceTable.odlozena_nz.ano")),
+        ],
     )
 
     def order_vedouci_organizace(self, queryset, is_descending):
-        queryset = queryset \
-            .annotate(vedouci_organizace__nazev_zkraceny=
-                      StringAgg("akcevedouci__organizace__nazev_zkraceny", delimiter=", ", )) \
-            .order_by(f"{'-' * (-1 * is_descending)}vedouci_organizace__nazev_zkraceny")
+        queryset = queryset.annotate(
+            vedouci_organizace__nazev_zkraceny=StringAgg(
+                "akcevedouci__organizace__nazev_zkraceny",
+                delimiter=", ",
+            )
+        ).order_by(f"{'-' * (-1 * is_descending)}vedouci_organizace__nazev_zkraceny")
         return queryset, True
 
     app = "akce"
-    columns_to_hide = \
-        ("pristupnost",
-         "uzivatelske_oznaceni",
-         "katastry",
-         "specifikace_data",
-         "organizace_vedouci",
-         "ulozeni_nalezu",
-         "ulozeni_dokumentace",
-         "je_nz",
-         "odlozena_nz",
-         "vedouci",
-         "vedouci_organizace",
-         )
+    columns_to_hide = (
+        "pristupnost",
+        "uzivatelske_oznaceni",
+        "katastry",
+        "specifikace_data",
+        "organizace_vedouci",
+        "ulozeni_nalezu",
+        "ulozeni_dokumentace",
+        "je_nz",
+        "odlozena_nz",
+        "vedouci",
+        "vedouci_organizace",
+    )
     first_columns = None
 
     class Meta:

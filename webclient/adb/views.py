@@ -8,9 +8,9 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
+    ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
+from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.contrib import messages
@@ -20,7 +20,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ def zapsat(request, dj_ident_cely):
     form = CreateADBForm(request.POST)
     if form.is_valid():
         logger.debug("adb.views.zapsat.is_valid")
-        adb = form.save(commit=False)
+        adb: Adb = form.save(commit=False)
         if not dj.pian:
             raise DJNemaPianError(dj)
         try:
@@ -48,16 +47,16 @@ def zapsat(request, dj_ident_cely):
             messages.add_message(request, messages.ERROR, e.message)
         else:
             if FedoraRepositoryConnector.check_container_deleted_or_not_exists(adb.ident_cely, "adb"):
-                fedora_transaction = FedoraTransaction()
-                adb.active_transaction = fedora_transaction
+                adb.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN, main_record=dj)
                 adb.close_active_transaction_when_finished = True
                 adb.dokumentacni_jednotka = dj
                 adb.sm5 = sm5
                 adb.save()
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
             else:
-                logger.debug("adb.views.zapsat.check_container_deleted_or_not_exists.incorrect",
-                             extra={"ident_cely": adb.ident_cely})
+                logger.debug(
+                    "adb.views.zapsat.check_container_deleted_or_not_exists.incorrect",
+                    extra={"ident_cely": adb.ident_cely},
+                )
                 messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
     else:
         logger.debug("adb.views.zapsat.not_valid", extra={"errors": form.errors})
@@ -84,8 +83,7 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         dj: DokumentacniJednotka = adb.dokumentacni_jednotka
         dj_ident_cely = dj.ident_cely
-        fedora_transaction = FedoraTransaction()
-        adb.active_transaction = fedora_transaction
+        fedora_transaction = adb.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT, dj)
         adb.close_active_transaction_when_finished = True
         for vb in adb.vyskove_body.all():
             vb.active_transaction = fedora_transaction
@@ -94,19 +92,11 @@ def smazat(request, ident_cely):
 
         if resp:
             logger.debug("adb.views.smazat.resp", extra={"resp": str(resp)})
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            response = JsonResponse(
-                {
-                    "redirect": dj.get_absolute_url()
-                }
-            )
+            response = JsonResponse({"redirect": dj.get_absolute_url()})
         else:
             logger.warning("adb.views.smazat.error", extra={"ident_cely": str(ident_cely)})
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             response = JsonResponse(
-                {
-                    "redirect": dj.get_absolute_url()
-                },
+                {"redirect": dj.get_absolute_url()},
                 status=403,
             )
         response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000)
@@ -139,7 +129,9 @@ def smazat_vb(request, ident_cely):
         "button": _("adb.views.smazat_vb.modalForm.submit.button"),
     }
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
+        fedora_transaction = FedoraTransaction(
+            zaznam.adb.dokumentacni_jednotka, request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT
+        )
         zaznam.active_transaction = fedora_transaction
         zaznam.close_active_transaction_when_finished = True
         resp = zaznam.delete()
@@ -158,11 +150,10 @@ def smazat_vb(request, ident_cely):
             response = redirect(safe_redirect)
         if resp:
             logger.debug("adb.views.smazat.smazat_vb.deleted", extra={"resp": str(resp)})
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             response = JsonResponse({"redirect": response})
         else:
             logger.warning("adb.views.smazat.smazat_vb.deleted", extra={"ident_cely": str(ident_cely)})
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+            fedora_transaction.rollback_transaction()
             response = JsonResponse({"redirect": response}, status=403)
         response.set_cookie("show-form", f"detail_dj_form_{zaznam.adb.dokumentacni_jednotka.ident_cely}", max_age=1000)
         return response

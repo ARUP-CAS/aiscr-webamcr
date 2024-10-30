@@ -1,5 +1,4 @@
 from django.contrib import admin
-from projekt.models import Projekt
 
 
 class ProjektAdmin(admin.ModelAdmin):
@@ -16,4 +15,3 @@ class ProjektAdmin(admin.ModelAdmin):
         "soubory",
         "historie",
     )
-

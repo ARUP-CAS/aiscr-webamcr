@@ -1,7 +1,5 @@
 from functools import cached_property
 
-from django.db.models import CheckConstraint, Q
-
 from core.connectors import RedisConnector
 from core.constants import (
     ARCHIVACE_SN,
@@ -18,11 +16,13 @@ from core.constants import (
     VRACENI_SN,
     ZAPSANI_SN,
 )
-from core.models import SouborVazby, ModelWithMetadata
+from core.models import ModelWithMetadata, SouborVazby
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
+from django.db.models import CheckConstraint, Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
     HESLAR_OBDOBI,
@@ -35,13 +35,13 @@ from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba, User
-from django_prometheus.models import ExportModelOperationsMixin
 
 
 class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithMetadata):
     """
     Class pro db model samostantý nález.
     """
+
     PAS_STATES = [
         (SN_ZAPSANY, _("pas.models.samostatnyNalez.states.zapsany.label")),
         (SN_ODESLANY, _("pas.models.samostatnyNalez.states.odeslany.label")),  # Odeslaný
@@ -50,8 +50,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     ]
 
     PREDANO_BOOLEAN = (
-        (True, _('pas.models.samostatnyNalez.predano.ano')),
-        (False, _('pas.models.samostatnyNalez.predano.ne')))
+        (True, _("pas.models.samostatnyNalez.predano.ano")),
+        (False, _("pas.models.samostatnyNalez.predano.ne")),
+    )
 
     evidencni_cislo = models.TextField(blank=True, null=True)
     projekt = models.ForeignKey(
@@ -88,7 +89,6 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         models.RESTRICT,
         db_column="pristupnost",
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
-
     )
     obdobi = models.ForeignKey(
         Heslar,
@@ -119,9 +119,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         limit_choices_to={"nazev_heslare": HESLAR_PREDMET_SPECIFIKACE},
     )
     poznamka = models.TextField(blank=True, null=True)
-    nalezce = models.ForeignKey(
-        Osoba, models.RESTRICT, db_column="nalezce", blank=True, null=True
-    )
+    nalezce = models.ForeignKey(Osoba, models.RESTRICT, db_column="nalezce", blank=True, null=True)
     datum_nalezu = models.DateField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=PAS_STATES)
     predano = models.BooleanField(blank=True, null=True, default=False, choices=PREDANO_BOOLEAN)
@@ -152,24 +150,26 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     )
     geom_updated_at = models.DateTimeField(null=True, blank=True)
     geom_sjtsk_updated_at = models.DateTimeField(null=True, blank=True)
-  
+
     @property
     def initial_pristupnost(self):
-        if hasattr(self, "_initial_pristupnost"): return self._initial_pristupnost  
-        if hasattr(self, "pristupnost"):       
+        if hasattr(self, "_initial_pristupnost"):
+            return self._initial_pristupnost
+        if hasattr(self, "pristupnost"):
             self._initial_pristupnost = self.pristupnost
-        else: self._initial_pristupnost= None
-        return  self._initial_pristupnost       
-    
+        else:
+            self._initial_pristupnost = None
+        return self._initial_pristupnost
+
     @initial_pristupnost.setter
     def initial_pristupnost(self, value):
-        self._initial_pristupnost=value
+        self._initial_pristupnost = value
 
     def save(self, *args, **kwargs):
         if self.pk is not None:
             previous = SamostatnyNalez.objects.get(pk=self.pk)
             if previous.pristupnost != self.pristupnost:
-                self.initial_pristupnost=previous.pristupnost
+                self.initial_pristupnost = previous.pristupnost
         super(SamostatnyNalez, self).save(*args, **kwargs)
 
     def set_zapsany(self, user):
@@ -258,7 +258,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:
 
             polia: obdobi, datum_nalezu, lokalizace, okolnosti, specifikace, druh_nalezu, nalezce, geom, hloubka, katastr jsou vyplněna.
-            
+
             Samostaný nález má připojený alespoň jeden soubor.
         """
         resp = []
@@ -307,16 +307,14 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         if soubor:
             return soubor.small_thumbnail
         return None
-        
+
     def generate_coord_forms_initial(self):
         geom = "0 0"
         if self.geom:
             geom = str(self.geom).split("(")[1].replace(", ", ",").replace(")", "")
         geom_sjtsk = "0 0"
         if self.geom_sjtsk:
-            geom_sjtsk = (
-                str(self.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
-            )
+            geom_sjtsk = str(self.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
         if self.geom_system == "4326":
             system = "4326"
         elif self.geom_system == "5514":
@@ -343,10 +341,12 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         db_table = "samostatny_nalez"
         constraints = [
             CheckConstraint(
-                check=((Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
-                       | (Q(geom_system="4326") & Q(geom__isnull=False))
-                       | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
-                name='samostatny_nalez_geom_check',
+                check=(
+                    (Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
+                    | (Q(geom_system="4326") & Q(geom__isnull=False))
+                    | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))
+                ),
+                name="samostatny_nalez_geom_check",
             ),
         ]
 
@@ -355,26 +355,28 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             return self.ident_cely
         else:
             return "Samostatny nalez [ident_cely not yet assigned]"
-        
+
     def get_permission_object(self):
         return self
-    
+
     def get_create_user(self):
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_SN)[0].uzivatel,)
-        except Exception as e:
+        except Exception:
             return ()
-    
+
     def get_create_org(self):
         return (self.projekt.organizace,)
 
     @property
     def redis_snapshot_id(self):
         from pas.views import SamostatnyNalezListView
+
         return f"{SamostatnyNalezListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
         from pas.tables import SamostatnyNalezTable
+
         data = SamostatnyNalez.objects.filter(pk=self.pk)
         table = SamostatnyNalezTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
@@ -385,6 +387,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
     """
     Class pro db model spolupráce.
     """
+
     SPOLUPRACE_STATES = [
         (SPOLUPRACE_NEAKTIVNI, _("pas.models.uzivatelSpoluprace.states.neaktivni.label")),
         (SPOLUPRACE_AKTIVNI, _("pas.models.uzivatelSpoluprace.states.aktivni.label")),
@@ -472,20 +475,22 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     def __str__(self):
         return self.spolupracovnik.last_name + " + " + self.vedouci.last_name
-    
+
     def get_create_user(self):
         return (self.spolupracovnik,)
-    
+
     def get_create_org(self):
         return (self.vedouci.organizace,)
 
     @property
     def redis_snapshot_id(self):
         from pas.views import UzivatelSpolupraceListView
+
         return f"{UzivatelSpolupraceListView.redis_snapshot_prefix}_{self.pk}"
 
     def generate_redis_snapshot(self):
         from pas.tables import UzivatelSpolupraceTable
+
         data = UzivatelSpoluprace.objects.filter(pk=self.pk)
         table = UzivatelSpolupraceTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)

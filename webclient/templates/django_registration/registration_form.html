@@ -14,10 +14,13 @@
         <img class="mb-4" src="{% static 'logo-amcr-cs.svg' %}" alt="{% trans 'templates.djangoRegistration.registrationForm.logo.alt' %}" class="app-logo">
         <div class="card">
           <div class="card-body">
-            <form method="POST" class="form-group" onsubmit="registerSumbitButton.disabled = true; return true;" class="mb-0">
+            <form method="POST" class="form-group submit-spinner mb-0">
               {% crispy form %}
               {{ form.captcha }}
-              <button id="registerSumbitButton" type="submit" class="btn btn-primary btn-block">{% trans "templates.djangoRegistration.registrationForm.submitButton.text" %}</button>
+              <button id="registerSumbitButton" type="submit" class="btn btn-primary btn-block">{% trans "templates.djangoRegistration.registrationForm.submitButton.text" %}
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                style="display: none"></span>
+              </button>
             </form>
           </div>
         </div>

@@ -10,12 +10,14 @@
 {% block content %}
   <div class="app-entity-projekt">
     {% include "toolbar_projekt.html" with projekt=oznameni.projekt %}
-    <form method="post">
+    <form method="post" class="submit-spinner">
       {% crispy form %}
       <div class="mt-3">
         <div class="form-group">
-            <input type="submit" name="save" value="{% trans 'oznameni.templates.oznameni.edit.submitButton' %}" class="btn btn-primary"
-                   id="submit-id-save">
+            <button type="submit" id="submit-id-save" class="btn btn-primary">{% trans 'oznameni.templates.oznameni.edit.submitButton' %}
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+              style="display: none"></span>
+            </button>
             <a type="button" class="btn btn-secondary" href="{% url 'projekt:detail' oznameni.projekt.ident_cely %}">{% trans "oznameni.templates.oznameni.edit.backButton" %}</a>
         </div>
       </div>

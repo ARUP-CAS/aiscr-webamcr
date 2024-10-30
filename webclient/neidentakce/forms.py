@@ -15,6 +15,7 @@ class NeidentAkceForm(forms.ModelForm):
     """
     Hlavní formulář pro editaci a zobrazení neident akce.
     """
+
     class Meta:
         model = NeidentAkce
         fields = (
@@ -38,9 +39,16 @@ class NeidentAkceForm(forms.ModelForm):
             "lokalizace": forms.TextInput(),
             "popis": forms.TextInput(),
             "poznamka": forms.TextInput(),
-            "rok_zahajeni":forms.DateInput(attrs={"class": "dateinput form-control date_roky",}),
-            "rok_ukonceni":forms.DateInput(attrs={"class": "dateinput form-control date_roky",}),
-            
+            "rok_zahajeni": forms.DateInput(
+                attrs={
+                    "class": "dateinput form-control date_roky",
+                }
+            ),
+            "rok_ukonceni": forms.DateInput(
+                attrs={
+                    "class": "dateinput form-control date_roky",
+                }
+            ),
         }
         labels = {
             "katastr": _("neidentAkce.forms.neidentAkceForm.katastr.label"),
@@ -70,8 +78,8 @@ class NeidentAkceForm(forms.ModelForm):
         super(NeidentAkceForm, self).__init__(*args, **kwargs)
         self.fields["katastr"].required = True
         self.fields["vedouci"].required = False
-        self.fields["vedouci"].widget.attrs["id"]="id_vedouci_modal"
-        if readonly == False:
+        self.fields["vedouci"].widget.attrs["id"] = "id_vedouci_modal"
+        if readonly is False:
             if "class" in self.fields["katastr"].widget.attrs.keys():
                 self.fields["katastr"].widget.attrs["class"] = (
                     str(self.fields["katastr"].widget.attrs["class"]) + " required-next"

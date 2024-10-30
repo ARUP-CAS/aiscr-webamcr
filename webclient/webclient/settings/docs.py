@@ -21,84 +21,84 @@ LOGGING = {
     },
     "loggers": {
         "django.request": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
             "propagate": True,
         },
         "historie": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "oznameni": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "projekt": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "heslar": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "core": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "cron": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "ez": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "pian": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "uzivatel": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "arch_z": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "dokument": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "dj": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "komponenta": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "nalez": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "adb": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "pas": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "lokalita": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "neidentakce": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "services": {
-            "handlers": [ "console"],
+            "handlers": ["console"],
             "level": "DEBUG",
         },
         "django_cron": {

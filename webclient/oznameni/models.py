@@ -1,12 +1,13 @@
 from django.db import models
-from projekt.models import Projekt
 from django_prometheus.models import ExportModelOperationsMixin
+from projekt.models import Projekt
 
 
 class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
     """
     Class pro db model oznamovatel.
     """
+
     projekt = models.OneToOneField(
         Projekt,
         on_delete=models.CASCADE,
@@ -27,4 +28,3 @@ class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
     class Meta:
         db_table = "oznamovatel"
         verbose_name = "oznamovatele"
-

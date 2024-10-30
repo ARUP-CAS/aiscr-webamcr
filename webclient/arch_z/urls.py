@@ -7,12 +7,36 @@ app_name = "arch_z"
 urlpatterns = [
     path("akce/detail/<str:ident_cely>", views.ArcheologickyZaznamDetailView.as_view(), name="detail"),
     path("akce/detail/<str:ident_cely>/dj/zapsat", views.DokumentacniJednotkaCreateView.as_view(), name="create-dj"),
-    path("akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>", views.DokumentacniJednotkaUpdateView.as_view(), name="detail-dj"),
-    path("akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/komponenta/zapsat", views.KomponentaCreateView.as_view(), name="create-komponenta"),
-    path("akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/komponenta/detail/<str:komponenta_ident_cely>", views.KomponentaUpdateView.as_view(), name="update-komponenta"),
-    path("akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/pian/zapsat", views.PianCreateView.as_view(), name="create-pian"),
-    path("akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/pian/edit/<str:pian_ident_cely>", views.PianUpdateView.as_view(), name="update-pian"),
-    path("akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/adb/zapsat", views.AdbCreateView.as_view(), name="create-adb"),
+    path(
+        "akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>",
+        views.DokumentacniJednotkaUpdateView.as_view(),
+        name="detail-dj",
+    ),
+    path(
+        "akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/komponenta/zapsat",
+        views.KomponentaCreateView.as_view(),
+        name="create-komponenta",
+    ),
+    path(
+        "akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/komponenta/detail/<str:komponenta_ident_cely>",
+        views.KomponentaUpdateView.as_view(),
+        name="update-komponenta",
+    ),
+    path(
+        "akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/pian/zapsat",
+        views.PianCreateView.as_view(),
+        name="create-pian",
+    ),
+    path(
+        "akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/pian/edit/<str:pian_ident_cely>",
+        views.PianUpdateView.as_view(),
+        name="update-pian",
+    ),
+    path(
+        "akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/adb/zapsat",
+        views.AdbCreateView.as_view(),
+        name="create-adb",
+    ),
     path("akce/edit/<str:ident_cely>", views.edit, name="edit"),
     path("akce/zapsat/<str:projekt_ident_cely>", views.zapsat, name="zapsat"),
     path("akce/zapsat", views.zapsat, name="zapsat-akci"),
@@ -55,6 +79,6 @@ urlpatterns = [
     ),
     path("akce/vyber", views.AkceListView.as_view(), name="list"),
     path("akce/", views.AkceIndexView.as_view(), name="index"),
-    path("autocomplete/<str:type>",views.ArchZAutocomplete.as_view(),name="arch-z-autocomplete"),
+    path("autocomplete/<str:type>", views.ArchZAutocomplete.as_view(), name="arch-z-autocomplete"),
     path("radek-tabulky-odkaz", views.ArchZTableRowView.as_view(), name="get_archz_table_row"),
 ]

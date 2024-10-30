@@ -2,20 +2,19 @@ import datetime
 import logging
 import os
 
-from django_recaptcha.fields import ReCaptchaField
-from django_recaptcha.widgets import ReCaptchaV2Invisible
-from core.validators import validate_phone_number
+from core.utils import get_cadastre_from_point
+from core.validators import validate_date_min_1600, validate_phone_number
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
 from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django_recaptcha.fields import ReCaptchaField
+from django_recaptcha.widgets import ReCaptchaV2Invisible
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
 from psycopg2._range import DateRange
-
-from core.utils import get_cadastre_from_point
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +23,7 @@ class DateRangeField(forms.DateField):
     """
     Třída pro správnu práci s date range.
     """
+
     def to_python(self, value):
         if isinstance(value, DateRange):
             return value
@@ -39,7 +39,7 @@ class DateRangeField(forms.DateField):
             raise ValidationError(self.error_messages["invalid"], code="invalid")
         try:
             to_date += datetime.timedelta(days=1)
-        except:
+        except Exception:
             raise ValidationError(self.error_messages["invalid"], code="invalid")
         return DateRange(lower=from_date, upper=to_date)
 
@@ -48,20 +48,19 @@ class DateRangeWidget(forms.TextInput):
     """
     Třída pro správne zobrazení date range.
     """
+
     def format_value(self, value):
         if value == "" or value is None:
             return None
         if isinstance(value, DateRange):
             if value.lower and value.upper:
-                format_str="%-d.%-m.%Y"
-                if os.name == 'nt':
-                    format_str="%#d.%#m.%Y"
+                format_str = "%-d.%-m.%Y"
+                if os.name == "nt":
+                    format_str = "%#d.%#m.%Y"
                 return (
                     value.lower.strftime(format_str)
                     + " - "
-                    + (value.upper - datetime.timedelta(days=1)).strftime(
-                        format_str
-                    )  # Now I must substract one day
+                    + (value.upper - datetime.timedelta(days=1)).strftime(format_str)  # Now I must substract one day
                 )
 
         return str(value)
@@ -71,6 +70,7 @@ class OznamovatelForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření oznámení.
     """
+
     telefon = forms.CharField(
         validators=[validate_phone_number],
         help_text=_("oznameni.forms.oznamovatelForm.telefon.tooltip"),
@@ -100,13 +100,11 @@ class OznamovatelForm(forms.ModelForm):
         }
         help_texts = {
             "oznamovatel": _("oznameni.forms.oznamovatelForm.oznamovatel.tooltip"),
-            "odpovedna_osoba": _(
-                "oznameni.forms.oznamovatelForm.odpovednaOsoba.tooltip"
-            ),
+            "odpovedna_osoba": _("oznameni.forms.oznamovatelForm.odpovednaOsoba.tooltip"),
             "telefon": _("oznameni.forms.oznamovatelForm.telefon.tooltip"),
             "email": _("oznameni.forms.oznamovatelForm.email.tooltip"),
             "adresa": _("oznameni.forms.oznamovatelForm.adresa.tooltip"),
-            "poznamka": _("oznameni.forms.oznamovatelForm.poznamka.tooltip")
+            "poznamka": _("oznameni.forms.oznamovatelForm.poznamka.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -115,7 +113,7 @@ class OznamovatelForm(forms.ModelForm):
         required_next = kwargs.pop("required_next", False)
         add_oznamovatel = kwargs.pop("add_oznamovatel", False)
         super(OznamovatelForm, self).__init__(*args, **kwargs)
-        self.fields["telefon"].widget.input_type="tel"
+        self.fields["telefon"].widget.input_type = "tel"
         if uzamknout_formular:
             self.fields["oznamovatel"].widget.attrs["readonly"] = True
             self.fields["odpovedna_osoba"].widget.attrs["readonly"] = True
@@ -161,22 +159,43 @@ class OznamovatelForm(forms.ModelForm):
         if required_next:
             for key in self.fields:
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"] = str(
-                        self.fields[key].widget.attrs["class"]
-                    ) + " required-next"
+                    self.fields[key].widget.attrs["class"] = (
+                        str(self.fields[key].widget.attrs["class"]) + " required-next"
+                    )
                 else:
                     self.fields[key].widget.attrs["class"] = "required-next"
+
+
+class OznamovatelProjektForm(OznamovatelForm):
+    """
+    Hlavní formulář pro vytvoření oznámení.
+    """
+
+    telefon = forms.CharField(
+        help_text=_("oznameni.forms.oznamovatelForm.telefon.tooltip"),
+        label=_("oznameni.forms.oznamovatelForm.telefon.label"),
+        widget=forms.TextInput(),
+    )
+    email = forms.CharField(
+        help_text=_("oznameni.forms.oznamovatelForm.email.tooltip"),
+        label=_("oznameni.forms.oznamovatelForm.email.label"),
+        widget=forms.TextInput(),
+    )
 
 
 class ProjektOznameniForm(forms.ModelForm):
     """
     Hlavní formulář pro editaci a doplňení oznamovatele do projektu.
     """
+
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("oznameni.forms.projektOznameniForm.planovaneZahajeni.label"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
         help_text=_("oznameni.forms.projektOznameniForm.planovaneZahajeni.tooltip"),
+        validators=[
+            validate_date_min_1600,
+        ],
     )
     coordinate_x2 = forms.CharField(widget=forms.HiddenInput())
     coordinate_x1 = forms.CharField(widget=forms.HiddenInput())
@@ -203,9 +222,7 @@ class ProjektOznameniForm(forms.ModelForm):
             "lokalizace": forms.TextInput(),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "oznaceni_stavby": forms.TextInput(),
-            "katastry": autocomplete.ModelSelect2Multiple(
-                url="heslar:katastr-autocomplete"
-            ),
+            "katastry": autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
             "ident_cely": forms.HiddenInput(),
         }
         labels = {
@@ -216,16 +233,10 @@ class ProjektOznameniForm(forms.ModelForm):
             "katastry": _("oznameni.forms.projektOznameniForm.katastry.label"),
         }
         help_texts = {
-            "podnet": _(
-                "oznameni.forms.projektOznameniForm.podnet.tooltip"
-            ),
-            "lokalizace": _(
-                "oznameni.forms.projektOznameniForm.lokalizace.tooltip"
-            ),
+            "podnet": _("oznameni.forms.projektOznameniForm.podnet.tooltip"),
+            "lokalizace": _("oznameni.forms.projektOznameniForm.lokalizace.tooltip"),
             "parcelni_cislo": _("oznameni.forms.projektOznameniForm.parcelniCislo.tooltip"),
-            "oznaceni_stavby": _(
-                "oznameni.forms.projektOznameniForm.oznaceniStavby.tooltip"
-            ),
+            "oznaceni_stavby": _("oznameni.forms.projektOznameniForm.oznaceniStavby.tooltip"),
             "katastry": _("oznameni.forms.projektOznameniForm.katastry.tooltip"),
         }
 
@@ -238,9 +249,7 @@ class ProjektOznameniForm(forms.ModelForm):
         self.fields["lokalizace"].required = True
         self.fields["parcelni_cislo"].required = True
         if change:
-            self.fields["katastralni_uzemi"].initial = get_cadastre_from_point(
-                self.instance.geom
-            ).__str__()
+            self.fields["katastralni_uzemi"].initial = get_cadastre_from_point(self.instance.geom).__str__()
             self.fields["coordinate_x1"].initial = self.instance.geom[0]
             self.fields["coordinate_x2"].initial = self.instance.geom[1]
             self.fields["ident_cely"].initial = self.instance.ident_cely
@@ -282,4 +291,5 @@ class FormWithCaptcha(forms.Form):
     """
     Hlavní formulář pro captchu.
     """
+
     captcha = ReCaptchaField(widget=ReCaptchaV2Invisible, label="")

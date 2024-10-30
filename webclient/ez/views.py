@@ -1,20 +1,6 @@
 import logging
-from django.conf import settings
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse
-from django.views import View
 
-from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
-from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.utils.translation import gettext as _
-from django.views.generic import DetailView, TemplateView
-from django.contrib import messages
-from django.views.generic.edit import CreateView, UpdateView
-from django.template.loader import render_to_string
-from django.utils.http import url_has_allowed_host_and_scheme
-from dal import autocomplete
+from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 from core.constants import (
     AZ_STAV_ARCHIVOVANY,
     AZ_STAV_ODESLANY,
@@ -24,10 +10,12 @@ from core.constants import (
     EZ_STAV_ZAPSANY,
     ODESLANI_EXT_ZD,
     POTVRZENI_EXT_ZD,
-    ZAPSANI_EXT_ZD, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID,
+    ROLE_ADMIN_ID,
+    ROLE_ARCHIVAR_ID,
+    ZAPSANI_EXT_ZD,
 )
-
 from core.forms import CheckStavNotChangedForm, VratitForm
+from core.ident_cely import get_temp_ez_ident
 from core.message_constants import (
     EO_USPESNE_ODPOJEN,
     EZ_USPESNE_ODESLAN,
@@ -37,28 +25,36 @@ from core.message_constants import (
     PRISTUP_ZAKAZAN,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
+    ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
-    ZAZNAM_USPESNE_SMAZAN, ZAZNAM_NELZE_SMAZAT_FEDORA, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY,
+    ZAZNAM_USPESNE_SMAZAN,
 )
-from core.models import Permissions as p, check_permissions
-from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+from core.models import Permissions as p
+from core.models import check_permissions
+from core.repository_connector import FedoraRepositoryConnector
 from core.utils import get_message
-from core.ident_cely import get_temp_ez_ident
-from .filters import ExterniZdrojFilter
+from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
+from dal import autocomplete
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Prefetch, Q, RestrictedError
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext as _
+from django.views import View
+from django.views.generic import DetailView, TemplateView
+from django.views.generic.edit import CreateView, UpdateView
+from uzivatel.models import Osoba, User
 
-# from .forms import LokalitaForm
+from .filters import ExterniZdrojFilter
+from .forms import ExterniOdkazForm, ExterniZdrojForm, PripojitArchZaznamForm, PripojitExterniOdkazForm
 from .models import ExterniZdroj, ExterniZdrojAutor, ExterniZdrojEditor
 from .tables import ExterniZdrojTable
-from .forms import (
-    ExterniOdkazForm,
-    ExterniZdrojForm,
-    PripojitArchZaznamForm,
-    PripojitExterniOdkazForm,
-)
-from django.db.models import Prefetch, RestrictedError
-
-from uzivatel.models import Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +63,7 @@ class ExterniZdrojIndexView(LoginRequiredMixin, TemplateView):
     """
     Třida pohledu pro zobrazení domovské stránky externích zdrojů s navigačními možnostmi.
     """
+
     template_name = "ez/index.html"
 
     def get_context_data(self, **kwargs):
@@ -83,6 +80,7 @@ class ExterniZdrojListView(SearchListView):
     """
     Třida pohledu pro zobrazení listu/tabulky s externím zdrojem.
     """
+
     table_class = ExterniZdrojTable
     model = ExterniZdroj
     filterset_class = ExterniZdrojFilter
@@ -112,19 +110,16 @@ class ExterniZdrojListView(SearchListView):
             "autori": "autori_snapshot",
             "editori": "editori_snapshot",
             "typ": "typ__razeni",
-            "typ_dokumentu":"typ_dokumentu__razeni",
-            
+            "typ_dokumentu": "typ_dokumentu__razeni",
         }.get(field, field)
 
     def get_queryset(self):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
-        qs = qs.order_by(*sort_params) 
+        qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
-        qs = qs.select_related(
-            "typ",
-        ).prefetch_related(
+        qs = qs.select_related("typ",).prefetch_related(
             Prefetch(
                 "autori",
                 queryset=Osoba.objects.all().order_by("externizdrojautor__poradi"),
@@ -136,11 +131,11 @@ class ExterniZdrojListView(SearchListView):
                 to_attr="ordered_editors",
             ),
             "editori",
-            "autori"
+            "autori",
         )
         return self.check_filter_permission(qs)
-    
-    def add_accessibility_lookup(self,permission, qs):
+
+    def add_accessibility_lookup(self, permission, qs):
         return qs
 
 
@@ -148,6 +143,7 @@ class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
     """
     Třida pohledu pro zobrazení detailu externího zdroju.
     """
+
     model = ExterniZdroj
     template_name = "ez/detail.html"
     slug_field = "ident_cely"
@@ -157,22 +153,16 @@ class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
         zaznam = self.get_object()
         ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj=zaznam)
         ez_akce = (
-            ez_odkazy.filter(
-                archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
-            )
+            ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE)
             .select_related("archeologicky_zaznam")
             .select_related("archeologicky_zaznam__akce")
         ).order_by("archeologicky_zaznam__ident_cely")
         ez_lokality = (
-            ez_odkazy.filter(
-                archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-            )
+            ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA)
             .select_related("archeologicky_zaznam")
             .select_related("archeologicky_zaznam__lokalita")
         ).order_by("archeologicky_zaznam__ident_cely")
-        context["form"] = ExterniZdrojForm(
-            instance=zaznam, readonly=True, required=False
-        )
+        context["form"] = ExterniZdrojForm(instance=zaznam, readonly=True, required=False)
         context["zaznam"] = zaznam
         context["app"] = "ext_zdroj"
         context["page_title"] = _("ez.templates.ExterniZdrojDetailView.pageTitle")
@@ -188,6 +178,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
     """
     Třida pohledu pro vytvoření externího zdroje.
     """
+
     model = ExterniZdroj
     template_name = "ez/create.html"
     form_class = ExterniZdrojForm
@@ -204,12 +195,13 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
         context["page_title"] = _("ez.templates.ExterniZdrojCreateView.pageTitle")
         context["header"] = _("ez.templates.ExterniZdrojCreateView.formHeader.label")
         context["toolbar_label"] = _("ez.templates.ExterniZdrojCreateView.toolbar_label.title")
+        context["submit_button"] = _("ez.templates.ExterniZdrojCreateView.ulozitButton.label")
         return context
 
     def form_valid(self, form):
         ez = form.save(commit=False)
         ez: ExterniZdroj
-        fedora_transaction = FedoraTransaction()
+        fedora_transaction = ez.create_transaction(self.request.user, EZ_USPESNE_ZAPSAN)
         ez.stav = EZ_STAV_ZAPSANY
         ez.ident_cely = get_temp_ez_ident()
         repository_connector = FedoraRepositoryConnector(ez, skip_container_check=False)
@@ -220,14 +212,17 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
             ez.set_zapsany(self.request.user)
             ez.close_active_transaction_when_finished = True
             ez.save()
-            messages.add_message(self.request, messages.SUCCESS, EZ_USPESNE_ZAPSAN)
             return HttpResponseRedirect(ez.get_absolute_url())
         else:
-            logger.debug("ez.views.ExterniZdrojCreateView.form_valid.check_container_deleted_or_not_exists.incorrect",
-                         extra={"ident_cely": ez.ident_cely})
+            logger.debug(
+                "ez.views.ExterniZdrojCreateView.form_valid.check_container_deleted_or_not_exists.incorrect",
+                extra={"ident_cely": ez.ident_cely},
+            )
             messages.add_message(
-                self.request, messages.ERROR, _("ez.views.zapsat.ExterniZdrojCreateView."
-                                                "check_container_deleted_or_not_exists_error"))
+                self.request,
+                messages.ERROR,
+                _("ez.views.zapsat.ExterniZdrojCreateView." "check_container_deleted_or_not_exists_error"),
+            )
             return super().form_invalid(form)
 
     def form_invalid(self, form):
@@ -240,6 +235,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
     """
     Třida pohledu pro editaci externího zdroje.
     """
+
     model = ExterniZdroj
     template_name = "ez/create.html"
     form_class = ExterniZdrojForm
@@ -257,11 +253,12 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
         context["toolbar_name"] = _("ez.templates.ExterniZdrojEditView.toolbar.title")
         context["page_title"] = _("ez.templates.ExterniZdrojEditView.pageTitle")
         context["header"] = _("ez.templates.ExterniZdrojEditView.formHeader.label")
+        context["submit_button"] = _("ez.templates.ExterniZdrojEditView.ulozitButton.label")
         return context
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
-        self.object.active_transaction = FedoraTransaction()
+        self.object.active_transaction = self.object.create_transaction(self.request.user)
         self.object.autori.clear()
         self.object.editori.clear()
         self.object.close_active_transaction_when_finished = True
@@ -280,6 +277,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     """
     Třida pohledu pro změnu stavu a práci s externíma zdrojama cez modal, která se dedí pro jednotlivá změny.
     """
+
     template_name = "core/transakce_modal.html"
     id_tag = "id_tag"
     allowed_states = []
@@ -338,10 +336,9 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
-        zaznam.active_transaction = FedoraTransaction()
+        zaznam.create_transaction(request.user, self.success_message)
         zaznam.close_active_transaction_when_finished = True
         getattr(ExterniZdroj, self.action)(zaznam, request.user)
-        messages.add_message(request, messages.SUCCESS, self.success_message)
 
         return JsonResponse({"redirect": zaznam.get_absolute_url()})
 
@@ -350,6 +347,7 @@ class ExterniZdrojOdeslatView(TransakceView):
     """
     Třida pohledu pro odeslání externího zdroje pomoci modalu.
     """
+
     id_tag = "odeslat-ez-form"
     allowed_states = [EZ_STAV_ZAPSANY]
     action = "set_odeslany"
@@ -364,6 +362,7 @@ class ExterniZdrojPotvrditView(TransakceView):
     """
     Třida pohledu pro potvrzení externího zdroje pomoci modalu.
     """
+
     id_tag = "potvrdit-ez-form"
     allowed_states = [EZ_STAV_ODESLANY]
     action = "set_potvrzeny"
@@ -378,6 +377,7 @@ class ExterniZdrojSmazatView(TransakceView):
     """
     Třida pohledu pro smazání externího zdroje pomoci modalu.
     """
+
     id_tag = "smazat-ez-form"
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
 
@@ -390,14 +390,13 @@ class ExterniZdrojSmazatView(TransakceView):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
         zaznam.deleted_by_user = request.user
-        zaznam.active_transaction = FedoraTransaction()
+        transaction = zaznam.create_transaction(request.user, error_message=ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
         zaznam.close_active_transaction_when_finished = True
         try:
             zaznam.delete()
         except RestrictedError as err:
-            logger.debug("ez.views.ExterniZdrojSmazatView.error", extra={"ident_cely": zaznam.ident_cely,
-                                                                         "err": err})
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
+            logger.debug("ez.views.ExterniZdrojSmazatView.error", extra={"ident_cely": zaznam.ident_cely, "err": err})
+            transaction.rollback_transaction()
             return JsonResponse(
                 {"redirect": zaznam.get_absolute_url()},
                 status=403,
@@ -410,6 +409,7 @@ class ExterniZdrojVratitView(TransakceView):
     """
     Třida pohledu pro vrácení externího zdroje pomoci modalu.
     """
+
     id_tag = "vratit-ez-form"
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY]
     action = "set_vraceny"
@@ -428,16 +428,12 @@ class ExterniZdrojVratitView(TransakceView):
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
-        zaznam.active_transaction = FedoraTransaction()
+        zaznam.create_transaction(request.user, self.success_message)
         zaznam.close_active_transaction_when_finished = True
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            getattr(ExterniZdroj, self.action)(
-                zaznam, request.user, zaznam.stav - 1, duvod
-            )
-            messages.add_message(request, messages.SUCCESS, self.success_message)
-
+            getattr(ExterniZdroj, self.action)(zaznam, request.user, zaznam.stav - 1, duvod)
             return JsonResponse({"redirect": zaznam.get_absolute_url()})
         else:
             logger.debug("ez.views.ExterniZdrojVratitView.form_invalid", extra={"form_errors": form.errors})
@@ -448,6 +444,7 @@ class ExterniOdkazOdpojitView(TransakceView):
     """
     Třida pohledu pro odpojení externího odkazu pomoci modalu.
     """
+
     id_tag = "odpojit-az-form"
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
 
@@ -458,10 +455,8 @@ class ExterniOdkazOdpojitView(TransakceView):
         )
         if eo.externi_zdroj.ident_cely != self.kwargs["ident_cely"]:
             logger.debug("Externi odkaz - Externi zdroj wrong relation")
-            messages.add_message(
-                            request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                        )
-            return JsonResponse({"redirect": self.get_zaznam().get_absolute_url()},status=403)
+            messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+            return JsonResponse({"redirect": self.get_zaznam().get_absolute_url()}, status=403)
         return super().dispatch(request, *args, **kwargs)
 
     def init_translation(self):
@@ -478,14 +473,13 @@ class ExterniOdkazOdpojitView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = FedoraTransaction()
         self.init_translation()
         ez = self.get_zaznam()
+        self.active_transaction = ez.create_transaction(request.user, self.success_message)
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.active_transaction = self.active_transaction
         eo.close_active_transaction_when_finished = True
         eo.delete()
-        messages.add_message(request, messages.SUCCESS, self.success_message)
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
 
@@ -493,6 +487,7 @@ class ExterniOdkazPripojitView(TransakceView):
     """
     Třida pohledu pro připojení externího odkazu pomoci modalu.
     """
+
     template_name = "core/transakce_table_modal.html"
     id_tag = "pripojit-eo-form"
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
@@ -518,10 +513,10 @@ class ExterniOdkazPripojitView(TransakceView):
         form = PripojitArchZaznamForm(data=request.POST, type_arch=context["type"])
         if form.is_valid():
             logger.debug("ez.views.ExterniOdkazPripojitView.post.form_valid")
-            self.active_transaction = FedoraTransaction()
             ez = self.get_zaznam()
             arch_z_id = form.cleaned_data["arch_z"]
             arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
+            self.active_transaction = ez.create_transaction(request.user, get_message(arch_z, "EO_USPESNE_PRIPOJEN"))
             eo = ExterniOdkaz(
                 externi_zdroj=ez,
                 paginace=form.cleaned_data["paginace"],
@@ -530,9 +525,6 @@ class ExterniOdkazPripojitView(TransakceView):
             eo.active_transaction = self.active_transaction
             eo.close_active_transaction_when_finished = True
             eo.save()
-            messages.add_message(
-                request, messages.SUCCESS, get_message(arch_z, "EO_USPESNE_PRIPOJEN")
-            )
         else:
             logger.debug("ez.views.ExterniOdkazPripojitView.post.form_error", extra={"form_errors": form.errors})
         return JsonResponse({"redirect": ez.get_absolute_url()})
@@ -542,6 +534,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
     """
     Třida pohledu pro editaci externího odkazu pomoci modalu.
     """
+
     model = ExterniOdkaz
     template_name = "core/transakce_modal.html"
     id_tag = "zmenit-eo-form"
@@ -583,9 +576,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
                 response = next_url
         else:
-            response = self.get_context_data()[
-                "object"
-            ].externi_zdroj.get_absolute_url()
+            response = self.get_context_data()["object"].externi_zdroj.get_absolute_url()
         return response
 
     def get_object(self, queryset=None):
@@ -597,7 +588,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         return object
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = FedoraTransaction()
+        self.active_transaction = self.get_object().create_transaction(request.user)
         super().post(request, *args, **kwargs)
         self.active_transaction = None
         return JsonResponse({"redirect": self.get_success_url()})
@@ -616,6 +607,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
     """
     Třida pohledu pro odpojení externího odkazu z archeologického záznamu pomoci modalu.
     """
+
     id_tag = "odpojit-az-form"
     allowed_states = [AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY, AZ_STAV_ARCHIVOVANY]
 
@@ -630,10 +622,8 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         )
         if eo.archeologicky_zaznam.ident_cely != self.kwargs["ident_cely"]:
             logger.debug("Externi odkaz - Archeologicky zaznam wrong relation")
-            messages.add_message(
-                            request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                        )
-            return JsonResponse({"redirect": self.get_zaznam().get_absolute_url()},status=403)
+            messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+            return JsonResponse({"redirect": self.get_zaznam().get_absolute_url()}, status=403)
         return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
@@ -646,11 +636,11 @@ class ExterniOdkazOdpojitAZView(TransakceView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        logger.debug("ez.views.TransakceView.ExterniOdkazOdpojitAZView.get_context_data",
-                     extra={"eo_id": self.kwargs.get("eo_id")})
-        context["object"] = ExterniZdroj.objects.get(
-            externi_odkazy_zdroje__id=self.kwargs.get("eo_id")
+        logger.debug(
+            "ez.views.TransakceView.ExterniOdkazOdpojitAZView.get_context_data",
+            extra={"eo_id": self.kwargs.get("eo_id")},
         )
+        context["object"] = ExterniZdroj.objects.get(externi_odkazy_zdroje__id=self.kwargs.get("eo_id"))
         if self.get_zaznam().typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             context["title"] = _("ez.templates.ExterniOdkazOdpojitAZView.arch_z.title.text")
             context["button"] = _("ez.templates.ExterniOdkazOdpojitAZView.arch_z.submitButton.text")
@@ -660,34 +650,40 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = FedoraTransaction()
         az = self.get_zaznam()
+        self.active_transaction = az.create_transaction(request.user, get_message(az, "EO_USPESNE_ODPOJEN"))
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.active_transaction = self.active_transaction
         eo.close_active_transaction_when_finished = True
         eo.delete()
-        messages.add_message(
-            request, messages.SUCCESS, get_message(az, "EO_USPESNE_ODPOJEN")
-        )
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 
-class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,PermissionFilterMixin):
+class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, PermissionFilterMixin):
     """
     Třída pohledu pro autocomplete externích zdrojů.
     """
+
     typ_zmeny_lookup = ZAPSANI_EXT_ZD
+
+    def get_result_label(self, result):
+        return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vydani_vzniku}: {result.nazev})"
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return ExterniZdroj.objects.none()
 
-        qs = ExterniZdroj.objects.filter()
+        qs = ExterniZdroj.objects.filter().order_by("ident_cely")
         if self.q:
-            qs = qs.filter(ident_cely__icontains=self.q)
+            qs = qs.filter(
+                Q(ident_cely__icontains=self.q)
+                | Q(autori_snapshot__icontains=self.q)
+                | Q(rok_vydani_vzniku__icontains=self.q)
+                | Q(nazev__icontains=self.q)
+            )
         return self.check_filter_permission(qs)
-    
-    def add_accessibility_lookup(self,permission, qs):
+
+    def add_accessibility_lookup(self, permission, qs):
         return qs
 
 
@@ -695,6 +691,7 @@ class ExterniZdrojTableRowView(LoginRequiredMixin, View):
     """
     Třída pohledu pro získaní řádku tabulky s externím zdrojem.
     """
+
     def get(self, request):
         zaznam = ExterniZdroj.objects.get(id=request.GET.get("id", ""))
         context = {"ez": zaznam}
@@ -706,10 +703,10 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
     """
     Třída pohledu pro připojení externího odkazu do arch záznamu.
     """
+
     template_name = "core/transakce_table_modal.html"
     id_tag = "pripojit-eo-doaz-form"
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
-
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
@@ -737,8 +734,8 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = FedoraTransaction()
         az = self.get_zaznam()
+        self.active_transaction = az.create_transaction(request.user, get_message(az, "EO_USPESNE_PRIPOJEN"))
         form = PripojitExterniOdkazForm(data=request.POST)
         if form.is_valid():
             ez_id = form.cleaned_data["ez"]
@@ -751,11 +748,8 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
             eo: ExterniOdkaz
             eo.active_transaction = self.active_transaction
             eo.close_active_transaction_when_finished = True
-            eo.suppress_signal=False
+            eo.suppress_signal = False
             eo.save()
-            messages.add_message(
-                request, messages.SUCCESS, get_message(az, "EO_USPESNE_PRIPOJEN")
-            )
         else:
             logger.debug("ez.views.ExterniOdkazPripojitDoAzView.form_invalid", extra={"errors": form.errors})
         return JsonResponse({"redirect": az.get_absolute_url()})
@@ -766,7 +760,7 @@ def get_history_dates(historie_vazby, request_user):
     Funkce pro získaní historických datumu.
     """
     request_user: User
-    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
+    anonymized = request_user.hlavni_role.pk not in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
         "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_EXT_ZD, anonymized),
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_EXT_ZD, anonymized),
@@ -803,7 +797,7 @@ def get_required_fields():
     """
     Funkce pro získaní dictionary povinných polí podle stavu externího zdroje.
 
-    Args:     
+    Args:
         zaznam (Externí zdroj): model ExterniZdroj pro který se dané pole počítají.
 
         next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
@@ -840,3 +834,39 @@ def save_autor_editor(zaznam, form):
             poradi=i,
         )
         i = i + 1
+
+
+class EzOdkazyTableView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro zobrazení řádků tabulky externích odkazů.
+    """
+
+    def get(self, request):
+        card_type = request.GET.get("card_type", False)
+        action_type = request.GET.get("type", False)
+        zaznam = ExterniZdroj.objects.get(id=request.GET.get("id", ""))
+        ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj=zaznam)
+        if card_type == "akce":
+            zaznamy = (
+                ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE)
+                .select_related("archeologicky_zaznam")
+                .select_related("archeologicky_zaznam__akce")
+            ).order_by("archeologicky_zaznam__ident_cely")
+        elif card_type == "lokalita":
+            zaznamy = (
+                ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA)
+                .select_related("archeologicky_zaznam")
+                .select_related("archeologicky_zaznam__lokalita")
+            ).order_by("archeologicky_zaznam__ident_cely")
+        context = {
+            "zaznamy": zaznamy,
+            "card_type": card_type,
+            "type": action_type,
+            "show": {
+                "paginace": request.GET.get("show_paginace", False),
+                "odpojit": request.GET.get("show_odpojit", False),
+                "paginace_edit": request.GET.get("show_paginace_edit", False),
+            },
+            "zaznam": zaznam,
+        }
+        return HttpResponse(render_to_string("ez/ez_odkazy_table_only.html", context))

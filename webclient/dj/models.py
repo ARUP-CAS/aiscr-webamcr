@@ -1,28 +1,26 @@
-from audioop import reverse
-
-from model_utils import FieldTracker
-
 from arch_z.models import ArcheologickyZaznam
 from django.db import models
 from django.urls import reverse
+from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import HESLAR_DJ_TYP
 from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
+from model_utils import FieldTracker
 from pian.models import Pian
-from django_prometheus.models import ExportModelOperationsMixin
 
 
 class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), models.Model):
     """
     Class pro db model dokumentační jednotky.
     """
+
     typ = models.ForeignKey(
         Heslar,
         models.RESTRICT,
         db_column="typ",
         related_name="dokumentacni_jednotka_typy",
         limit_choices_to={"nazev_heslare": HESLAR_DJ_TYP},
-        db_index=True
+        db_index=True,
     )
     nazev = models.TextField(blank=True, null=True)
     negativni_jednotka = models.BooleanField(default=False, db_index=True)
@@ -92,4 +90,3 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         self.suppress_signal = False
         self.suppress_signal_arch_z = False
         self.save_pian_metadata = False
-

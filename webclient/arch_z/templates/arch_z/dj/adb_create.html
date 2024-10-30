@@ -12,11 +12,13 @@
     </div>
   </div>
   <div class="card-body">
-    <form method="POST" action="{% url 'adb:zapsat' j.ident_cely %}" id="create_adb_form_id">
+    <form method="POST" action="{% url 'adb:zapsat' j.ident_cely %}" id="create_adb_form_id" class="submit-spinner">
       <!-- Action is filled using javascript -->
       {% crispy adb_form_create %}
       <button type="submit" id="createAdbSubmitButton"
               class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.adb_create.editButtons.vytvoritADB.label" %}
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+              style="display: none"></span>
       </button>
     </form>
   </div>

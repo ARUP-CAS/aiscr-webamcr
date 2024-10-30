@@ -1,5 +1,5 @@
-from io import StringIO
 from html.parser import HTMLParser
+from io import StringIO
 
 
 class MLStripper(HTMLParser):

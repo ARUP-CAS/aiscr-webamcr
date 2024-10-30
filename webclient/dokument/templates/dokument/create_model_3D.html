@@ -20,7 +20,7 @@
 {% block content %}
   <div class="app-entity-knihovna_3d">
     {% include "toolbar_dokument.html" with is_3d=True is_edit=True d=object %}
-    <form method="post" onsubmit="newDocumentSubmitBtn.disabled = true; return true;">
+    <form method="post" class="submit-spinner">
       {% csrf_token %}
       <div class="card app-card-form">
         <div class="card-header">
@@ -57,6 +57,9 @@
           <div class="form-group col-sm-8">
             {{ formExtraData.odkaz|as_crispy_field }}
           </div>
+          <div class="form-group col-sm-4 col-lg-2">
+            {{ formDokument.licence|as_crispy_field }}
+          </div>
         </div>
           {% include "dokument/coor_doc.html" %}
           <div class="row">
@@ -85,7 +88,10 @@
         </div>
       </div>
       <div class="form-group">
-        <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary">{{ button }}</button>
+        <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary">{{ button }}
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+          style="display: none"></span>
+        </button>
         {% if object %}
           <a type="button" class="btn btn-secondary" href="{% url 'dokument:detail-model-3D' object.ident_cely %}">{% trans "dokument.templates.dokument.create.detailForm.button.zpet.label" %}</a>
         {% else %}
@@ -100,7 +106,7 @@
 <script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
 <script>
   url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
-  get_vychozi_hodnota_podrazeneho("#id_areal","#id_aktivity",url)
+  get_vychozi_hodnota_podrazeneho("#id_komponenta-areal","#id_komponenta-aktivity",url)
 </script>
 <script type="text/javascript">
   // create osoba scripts

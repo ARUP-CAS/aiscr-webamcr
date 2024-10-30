@@ -10,7 +10,7 @@
 {% block content %}
   <div class="app-entity-samostatny_nalez">
     {% include "toolbar_pas.html" %}
-    <form method="POST">
+    <form method="POST" class="submit-spinner">
       <div class="card app-card-form">
         <div class="card-header">
           <div class="app-fx app-left">
@@ -20,8 +20,10 @@
         <div class="card-body">
           {% crispy form %}
           <div class="mt-3">
-            <button type="submit" name="save" class="btn btn-primary mr-1"
-                    id="submit-id-save">{% trans 'pas.templates.potvrdit.submitButton' %}</button>
+            <button type="submit" name="save" class="btn btn-primary mr-1" id="submit-id-save">{% trans 'pas.templates.potvrdit.submitButton' %}
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                style="display: none"></span>
+            </button>
             <button type="button" class="btn btn-secondary"
                     onclick="window.history.back();">{% trans "pas.templates.potvrdit.backButton" %}</button>
           </div>

@@ -1,25 +1,15 @@
 import logging
 
 import crispy_forms
-from crispy_forms.layout import Div, Layout, HTML
-from django.db.models import Q, OuterRef, Subquery, F
-from django.utils.translation import gettext_lazy as _
-from django_filters import (
-    ModelMultipleChoiceFilter, CharFilter,
-)
-
-from core.constants import ZAPSANI_AZ
-from heslar.hesla import (
-    HESLAR_JISTOTA_URCENI,
-    HESLAR_LOKALITA_DRUH,
-    HESLAR_LOKALITA_TYP,
-    HESLAR_STAV_DOCHOVANI,
-)
-from heslar.models import Heslar
 from arch_z.filters import ArchZaznamFilter
 from core.forms import SelectMultipleSeparator
-from historie.models import Historie
-from uzivatel.models import Organizace
+from crispy_forms.layout import HTML, Div, Layout
+from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
+from django_filters import ModelMultipleChoiceFilter
+from heslar.hesla import HESLAR_JISTOTA_URCENI, HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_TYP, HESLAR_STAV_DOCHOVANI
+from heslar.models import Heslar
+
 from .models import Lokalita
 
 logger = logging.getLogger(__name__)
@@ -29,6 +19,7 @@ class LokalitaFilter(ArchZaznamFilter):
     """
     Třída pro zakladní filtrování lokality a jejich potomků.
     """
+
     typ_lokality = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LOKALITA_TYP),
         label=_("lokalita.filters.typLokality.label"),
@@ -69,14 +60,17 @@ class LokalitaFilter(ArchZaznamFilter):
             if "uzivatel" in historie:
                 queryset_history &= Q(archeologicky_zaznam__historie__historie__uzivatel__in=historie["uzivatel"])
             if "uzivatel_organizace" in historie:
-                queryset_history &= Q(archeologicky_zaznam__historie__historie__organizace_snapshot__in
-                                      =historie["uzivatel_organizace"])
+                queryset_history &= Q(
+                    archeologicky_zaznam__historie__historie__organizace_snapshot__in=historie["uzivatel_organizace"]
+                )
             if "datum_zmeny__gte" in historie:
-                queryset_history &= Q(archeologicky_zaznam__historie__historie__datum_zmeny__gte
-                                      =historie["datum_zmeny__gte"])
+                queryset_history &= Q(
+                    archeologicky_zaznam__historie__historie__datum_zmeny__gte=historie["datum_zmeny__gte"]
+                )
             if "datum_zmeny__lte" in historie:
-                queryset_history &= Q(archeologicky_zaznam__historie__historie__datum_zmeny__lte
-                                      =historie["datum_zmeny__lte"])
+                queryset_history &= Q(
+                    archeologicky_zaznam__historie__historie__datum_zmeny__lte=historie["datum_zmeny__lte"]
+                )
             if "typ_zmeny" in historie:
                 queryset_history &= Q(archeologicky_zaznam__historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             queryset = queryset.filter(queryset_history)
@@ -111,19 +105,21 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
     """
     Třída pro správne zobrazení filtru.
     """
+
     form_method = "GET"
+
     def __init__(self, form=None):
-        dj_pian_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"lokalita.filters.djPian.divider.label")
+        dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("lokalita.filters.djPian.divider.label")
         }
-        history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"lokalita.filters.history.divider.label")
+        history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("lokalita.filters.history.divider.label")
         }
-        komponenta_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"lokalita.filters.komponenta.divider.label")
+        komponenta_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("lokalita.filters.komponenta.divider.label")
         }
-        dok_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-            "translation": _(u"lokalita.filters.dok.divider.label")
+        dok_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
+            "translation": _("lokalita.filters.dok.divider.label")
         }
         self.layout = Layout(
             Div(
@@ -154,9 +150,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div(
-                        "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
-                    ),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
                     Div("historie_uzivatel", css_class="col-sm-3"),
                     Div("historie_uzivatel_organizace", css_class="col-sm-3"),
                     id="historieCollapse",

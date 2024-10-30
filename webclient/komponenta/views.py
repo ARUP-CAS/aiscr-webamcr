@@ -1,15 +1,18 @@
 import logging
-from cacheops import invalidate_model
 
-from arch_z.models import ArcheologickyZaznam, Akce
+from arch_z.models import Akce, ArcheologickyZaznam
+from cacheops import invalidate_model
+from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_komponenta_ident
 from core.message_constants import (
+    KOMPONENTA_USPESNE_EDITOVANA,
+    KOMPONENTU_SE_NEPOVEDLO_EDITOVAT,
     MAXIMUM_KOMPONENT_DOSAZENO,
-    ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
+    PREDMET_NEBO_OBJEKT_SE_NEPOVEDLO_EDITOVAT,
+    PREDMET_OBJEKT_USPESNE_EDITOVAN,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
-    ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
@@ -23,6 +26,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
+from dokument.models import Dokument, DokumentCast
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
@@ -36,15 +40,12 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PREDMET_SPECIFIKACE,
 )
-from heslar.models import Heslar
-from heslar.views import heslar_12
+from heslar.views import heslar_12, heslar_list
 from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
-from komponenta.models import Komponenta, KomponentaAktivita
+from komponenta.models import Komponenta
 from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
-from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
-from dokument.models import DokumentCast, Dokument
 
 logger = logging.getLogger(__name__)
 
@@ -55,10 +56,11 @@ def detail(request, typ_vazby, ident_cely):
     """
     Funkce pohledu pro zapsání editace komponenty.
     """
-    komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
+    komponenta: Komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
+    fedora_transaction = FedoraTransaction(komponenta, request.user, suppress_message=True)
+    komponenta.active_transaction = fedora_transaction
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
-    komponenta: Komponenta
     form = CreateKomponentaForm(
         obdobi_choices,
         areal_choices,
@@ -66,70 +68,59 @@ def detail(request, typ_vazby, ident_cely):
         instance=komponenta,
         prefix=ident_cely,
     )
-    fedora_transcation = FedoraTransaction()
-    komponenta.active_transaction = fedora_transcation
-    if form.is_valid():
+    if form.is_valid() and form.has_changed():
         logger.debug("komponenta.views.detail.form_valid", extra={"ident_cely": ident_cely})
         komponenta = form.save(commit=False)
-        komponenta.active_transaction = fedora_transcation
+        komponenta.active_transaction = fedora_transaction
         komponenta.save()
         form.save_m2m()
         invalidate_model(Akce)
         invalidate_model(ArcheologickyZaznam)
         invalidate_model(Dokument)
         invalidate_model(Historie)
-        if form.changed_data:
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-    else:
+        messages.add_message(request, messages.SUCCESS, KOMPONENTA_USPESNE_EDITOVANA)
+    elif not form.is_valid():
+        messages.add_message(request, messages.ERROR, KOMPONENTU_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("komponenta.views.detail.not_valid", extra={"errors": form.errors, "ident_cely": ident_cely})
-        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     if "nalez_edit_nalez" in request.POST:
         druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
-        specifikace_objekt_choices = heslar_12(
-            HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
-        )
+        specifikace_objekt_choices = heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT)
         NalezObjektFormset = inlineformset_factory(
             Komponenta,
             NalezObjekt,
-            form=create_nalez_objekt_form(
-                druh_objekt_choices, specifikace_objekt_choices
-            ),
-            extra=1,
+            form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
+            extra=3,
         )
-        formset_objekt = NalezObjektFormset(
-            request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_o"
-        )
+        formset_objekt = NalezObjektFormset(request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_o")
 
         druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
-        specifikce_predmetu_choices = list(
-            Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
-                "id", "heslo"
-            )
-        )
+        specifikce_predmetu_choices = heslar_list(HESLAR_PREDMET_SPECIFIKACE)
         NalezPredmetFormset = inlineformset_factory(
             Komponenta,
             NalezPredmet,
-            form=create_nalez_predmet_form(
-                druh_predmet_choices, specifikce_predmetu_choices
-            ),
-            extra=1,
+            form=create_nalez_predmet_form(druh_predmet_choices, specifikce_predmetu_choices),
+            extra=3,
         )
-        formset_predmet = NalezPredmetFormset(
-            request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p"
-        )
-        if formset_objekt.is_valid() and formset_predmet.is_valid():
+        formset_predmet = NalezPredmetFormset(request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p")
+        if (
+            formset_objekt.is_valid()
+            and formset_predmet.is_valid()
+            and (formset_objekt.has_changed() or formset_predmet.has_changed())
+        ):
             logger.debug("komponenta.views.detail.form_valid_2")
             formset_predmet.save()
             formset_objekt.save()
-            if formset_objekt.has_changed() or formset_predmet.has_changed():
-                logger.debug("Form data was changed")
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-        else:
-            logger.debug("komponenta.views.detail.form_not_valid_2",
-                         extra={"formset_predmet_errors": formset_predmet.errors,
-                                "formset_objekt_errors": formset_objekt.errors})
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+            messages.add_message(request, messages.SUCCESS, PREDMET_OBJEKT_USPESNE_EDITOVAN)
+        elif not formset_objekt.is_valid() or not formset_predmet.is_valid():
+            logger.debug(
+                "komponenta.views.detail.form_not_valid_2",
+                extra={
+                    "formset_predmet_errors": formset_predmet.errors,
+                    "formset_objekt_errors": formset_objekt.errors,
+                },
+            )
+            messages.add_message(request, messages.ERROR, PREDMET_NEBO_OBJEKT_SE_NEPOVEDLO_EDITOVAT)
             request.session["_old_nalez_post"] = request.POST
             request.session["komp_ident_cely"] = ident_cely
 
@@ -164,12 +155,8 @@ def detail(request, typ_vazby, ident_cely):
             ],
         )
     response = redirect(url)
-    response.set_cookie(
-        "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
-    )
-    response.set_cookie(
-        "set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000
-    )
+    response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
+    response.set_cookie("set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000)
     komponenta.close_active_transaction_when_finished = True
     komponenta.save()
     return response
@@ -193,9 +180,8 @@ def zapsat(request, typ_vazby, dj_ident_cely):
     komp_ident_cely = None
     if form.is_valid():
         logger.debug("komponenta.views.zapsat.form_valid")
-        fedora_transcation = FedoraTransaction()
         komponenta = form.save(commit=False)
-        komponenta.active_transaction = fedora_transcation
+        fedora_transcation: FedoraTransaction = komponenta.create_transaction(request.user)
         try:
             if dj:
                 komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam, fedora_transcation)
@@ -203,7 +189,8 @@ def zapsat(request, typ_vazby, dj_ident_cely):
                 komponenta.ident_cely = get_komponenta_ident(cast.dokument, fedora_transcation)
             komp_ident_cely = komponenta.ident_cely
         except MaximalIdentNumberError:
-            messages.add_message(request, messages.ERROR, MAXIMUM_KOMPONENT_DOSAZENO)
+            fedora_transcation.error_message = MAXIMUM_KOMPONENT_DOSAZENO
+            fedora_transcation.rollback_transaction()
         else:
             if dj:
                 komponenta.komponenta_vazby = dj.komponenty
@@ -215,10 +202,7 @@ def zapsat(request, typ_vazby, dj_ident_cely):
 
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
         if dj:
-            if (
-                dj.archeologicky_zaznam.typ_zaznamu
-                == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
-            ):
+            if dj.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
                 url = reverse(
                     "arch_z:update-komponenta",
                     args=[
@@ -256,9 +240,7 @@ def zapsat(request, typ_vazby, dj_ident_cely):
             )
     response = redirect(url)
     if komp_ident_cely:
-        response.set_cookie(
-            "show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000
-        )
+        response.set_cookie("show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000)
         response.set_cookie(
             "set-active",
             f"el_komponenta_{komp_ident_cely.replace('-', '_')}",
@@ -281,8 +263,7 @@ def smazat(request, typ_vazby, ident_cely):
     else:
         cast = komponenta.komponenta_vazby.casti_dokumentu
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        komponenta.active_transaction = fedora_transaction
+        komponenta.create_transaction(request.user)
         komponenta.close_active_transaction_when_finished = True
         resp = komponenta.delete()
 
@@ -317,9 +298,7 @@ def smazat(request, typ_vazby, ident_cely):
                     {"redirect": dj.get_absolute_url()},
                     status=403,
                 )
-                response.set_cookie(
-                    "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
-                )
+                response.set_cookie("show-form", f"detail_komponenta_form_{komponenta.ident_cely}", max_age=1000)
             else:
                 response = JsonResponse(
                     {

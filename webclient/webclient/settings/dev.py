@@ -11,7 +11,9 @@ INSTALLED_APPS += [
     "debug_toolbar",
 ]
 
-MIDDLEWARE = ["debug_toolbar.middleware.DebugToolbarMiddleware",] + MIDDLEWARE
+MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+] + MIDDLEWARE
 
 DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.history.HistoryPanel",
@@ -56,7 +58,7 @@ EMAIL_FILE_PATH = "/vol/web/media/emails/"
 
 # auto logout settings
 AUTO_LOGOUT = {}
-SITE_URL = 'http://localhost:8000'
+SITE_URL = "http://localhost:8000"
 
 # Fake key
 RECAPTCHA_PRIVATE_KEY = "OtKcTKoJwtIyCm0XFEf0EA5kVMV4hHaDaJfmyr"
@@ -64,5 +66,5 @@ RECAPTCHA_PUBLIC_KEY = ""
 SKIP_RECAPTCHA = True
 
 DEBUG_TOOLBAR_CONFIG = {
-    'SHOW_TOOLBAR_CALLBACK': lambda _request: DEBUG,
+    "SHOW_TOOLBAR_CALLBACK": lambda _request: DEBUG,
 }

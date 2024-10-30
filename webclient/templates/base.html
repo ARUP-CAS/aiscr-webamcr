@@ -2,7 +2,6 @@
 {% load static %}
 {% load template_filters %}
 {% load i18n %}
-{% load cache %}
 {% load template_tags%}
 
 <!DOCTYPE html>
@@ -21,7 +20,7 @@
   {% compress css %}
   <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="screen">
   {% endcompress %}
-  {% if user.is_authenticated and request.path != '/oznameni/' and request.path != '/accounts/login/' %}
+  {% if user.is_authenticated and request.path != '/oznameni/' and '/accounts' not in request.path %}
   {% compress css %}
   <link type="text/x-scss" href="{% static '_app-sidebar.scss' %}" rel="stylesheet" media="screen">
   {% endcompress %}
@@ -30,7 +29,7 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
   <!-- Optional JavaScript; choose one of the two! -->
   <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
-  <script src="{% static '/js/jquery-3.5.1.min.js' %}"></script>
+  <script src="{% static '/js/jquery-3.7.1.min.js' %}"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
           integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
           crossorigin="anonymous"></script>
@@ -52,7 +51,8 @@
   <script src="{% static '/js/selectpicker-cs.js' %}"></script>
   <script src="{% static 'pridani_title_pro_disabled.js' %}"></script>
   <script src="{% static '/js/timer.js' %}"></script>
-  <script src="{% static '/js/modal_forms_class.js' %}"></script>
+  <script src="{% static '/js/modal_forms_class.js' %}?v1"></script>
+  <script src="{% static 'submit_button.js' %}"></script>
   <link rel="shortcut icon" id="dynamic-favicon" href="{%  static '/loga/favicon.png' %}">
   <!-- Map imports -->
   <link rel="stylesheet" href="{% static 'js/Leaflet1.9.4/leaflet.css' %}"/>
@@ -66,9 +66,9 @@
   <script src='{% static 'js/Leaflet.fullscreen1.0.1/Leaflet.fullscreen.min.js' %}'></script>
   <link href='{% static 'js/Leaflet.fullscreen1.0.1/leaflet.fullscreen.css' %}'rel='stylesheet'/>
   <!-- static leaflet additional import-->
-  <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}" />
-  <script src="{% static 'leaflet.measure.js' %}"></script>
-  <script type="text/javascript" src="{% static 'leaflet.coor.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}?v2" />
+  <script src="{% static 'leaflet.measure.js' %}?v1"></script>
+  <script type="text/javascript" src="{% static 'leaflet.coor.js' %}?v1"></script>
   <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}" />
 
   <link rel="stylesheet" href="{% static 'leaflet-search.css' %}"/>
@@ -102,33 +102,23 @@
   {% block sidebar %}{% endblock %}
   <div id="app-page-wrapper">
     {% block infobar%}
-      {% cache 600 maintenance %}
       {% get_maintenance as action %}
-      {% if action and "accounts" not in request.path %}
+      {% if action %}
       <div class="maintenance">
         <p class="d-block px-3 py-2 text-center text-bold text-white old-bv">{% trans "base.odstavka.text" %}</p>
       </div>
       {% endif %}
-      {% endcache %}
     {% endblock%}
     {% block navbar %}{% endblock %}
 
     <div
-        class="container-fluid {% if user.is_authenticated and request.path != '/oznameni/' and request.path != '/accounts/login/' %}app-content-wrapper{% endif %}">
+        class="container-fluid {% if user.is_authenticated and request.path != '/oznameni/' and '/accounts/' not in request.path %}app-content-wrapper{% endif %}">
       {% block content %}{% endblock %}
     </div>
-
-    <!-- for alert development
-    <div class="alert alert-success alert-dismissible fade show app-alert-floating" role="alert">
-      Záznam byl úspěšně vytvořen.
-      <button aria-label="Close" class="close" data-dismiss="alert" type="button">
-        <span aria-hidden="true">×</span>
-       </button>
-    </div>-->
-
+  
     <div class="message-container">
       {% for message in messages %}
-        <div class="alert alert-{% if message.tags == "notclosing warning" %}warning notclosing{% elif message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show app-alert-floating" role="alert">
+        <div class="alert alert-{% if message.tags == "notclosing warning" %}warning notclosing{% elif message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show app-alert-floating" role="alert" style="top: {%  message_top forloop.counter0 %}px">
           {{ message }}
           <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
@@ -200,6 +190,10 @@
       this.disabled=true;
       $('#czech').attr("disabled", "disabled"); 
       $.ajax({
+        beforeSend: function (xhr){ 
+          xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded; charset=UTF-8");
+          xhr.setRequestHeader("Accept","application/json");
+        }, 
         type: "POST",
         url: "{% url 'set_language' %}",
         data: {'language': 'en', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
@@ -215,6 +209,10 @@
       this.disabled=true;
       $('#english').attr("disabled", "disabled"); 
       $.ajax({
+        beforeSend: function (xhr){ 
+          xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded; charset=UTF-8");
+          xhr.setRequestHeader("Accept","application/json");
+        }, 
         type: "POST",
         url: "{% url 'set_language' %}",
         data: {'language': 'cs', 'csrfmiddlewaretoken': '{{ csrf_token }}'},

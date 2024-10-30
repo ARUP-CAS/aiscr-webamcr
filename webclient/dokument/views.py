@@ -1,15 +1,11 @@
 import logging
 from datetime import datetime, timedelta
-
-from cacheops import invalidate_model
 from typing import Any
+from urllib.parse import urlparse
+
 import simplejson as json
-
-from django.db.models.signals import post_save
-from django.views import View
-
-
-from arch_z.models import ArcheologickyZaznam, Akce
+from arch_z.models import Akce, ArcheologickyZaznam
+from cacheops import invalidate_model
 from core.constants import (
     ARCHIVACE_DOK,
     D_STAV_ARCHIVOVANY,
@@ -18,15 +14,13 @@ from core.constants import (
     DOKUMENT_CAST_RELATION_TYPE,
     IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_DOK,
-    ZAPSANI_DOK, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID,
+    ROLE_ADMIN_ID,
+    ROLE_ARCHIVAR_ID,
+    ZAPSANI_DOK,
 )
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
 from core.forms import CheckStavNotChangedForm, VratitForm
-from core.ident_cely import (
-    get_cast_dokumentu_ident,
-    get_dokument_rada,
-    get_temp_dokument_ident,
-)
+from core.ident_cely import get_cast_dokumentu_ident, get_dokument_rada, get_temp_dokument_ident
 from core.message_constants import (
     DOKUMENT_AZ_USPESNE_PRIPOJEN,
     DOKUMENT_CAST_USPESNE_ODPOJEN,
@@ -34,7 +28,6 @@ from core.message_constants import (
     DOKUMENT_JIZ_BYL_PRIPOJEN,
     DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA,
     DOKUMENT_NELZE_ARCHIVOVAT,
-    DOKUMENT_NELZE_ARCHIVOVAT_CHYBY_SOUBOR,
     DOKUMENT_NELZE_ODESLAT,
     DOKUMENT_ODPOJ_ZADNE_RELACE,
     DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM,
@@ -51,31 +44,36 @@ from core.message_constants import (
     VYBERTE_PROSIM_POLOHU,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
+    ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
+    ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.repository_connector import FedoraTransaction, FedoraRepositoryConnector
+from core.models import Permissions as p
+from core.models import Soubor, check_permissions
+from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.utils import get_3d_from_envelope
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
-from core.models import Permissions as p, check_permissions
 from dal import autocomplete
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.forms import inlineformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.translation import gettext as _
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext as _
+from django.views import View
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
 from django.views.generic.edit import UpdateView
-from dokument.filters import Model3DFilter, DokumentFilter
+from dokument.filters import DokumentFilter, Model3DFilter
 from dokument.forms import (
     CoordinatesDokumentForm,
     CreateModelDokumentForm,
@@ -88,15 +86,9 @@ from dokument.forms import (
     TvarFormSetHelper,
     create_tvar_form,
 )
-from dokument.models import (
-    Dokument,
-    DokumentAutor,
-    DokumentCast,
-    DokumentExtraData,
-    Let,
-    Tvar,
-)
-from dokument.tables import Model3DTable, DokumentTable
+from dokument.models import Dokument, DokumentAutor, DokumentCast, DokumentExtraData, Let, Tvar
+from dokument.tables import DokumentTable, Model3DTable
+from ez.forms import PripojitArchZaznamForm
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
@@ -115,35 +107,22 @@ from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     MODEL_3D_DOKUMENT_TYPES,
-    PRISTUPNOST_BADATEL_ID,
+    PRISTUPNOST_ANONYM_ID,
     TYP_PROJEKTU_PRUZKUM_ID,
 )
 from heslar.models import Heslar, HeslarHierarchie
-from heslar.views import heslar_12
+from heslar.views import heslar_12, heslar_list
 from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta, KomponentaAktivita, KomponentaVazby
-from nalez.forms import (
-    NalezFormSetHelper,
-    create_nalez_objekt_form,
-    create_nalez_predmet_form,
-)
+from nalez.forms import NalezFormSetHelper, create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
-from urllib.parse import urlparse
-from projekt.models import Projekt
-from services.mailer import Mailer
 from neidentakce.forms import NeidentAkceForm
 from neidentakce.models import NeidentAkce
-from ez.forms import PripojitArchZaznamForm
 from projekt.forms import PripojitProjektForm
-from core.models import Soubor
-from django.db.models import Prefetch, Subquery, OuterRef
-
+from projekt.models import Projekt
+from services.mailer import Mailer
 from uzivatel.models import Osoba, User
-
-from core.utils import (
-    get_3d_from_envelope,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -172,7 +151,7 @@ def detail_model_3D(request, ident_cely):
             "typ_dokumentu",
         ),
         ident_cely=ident_cely,
-        typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES
+        typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES,
     )
     casti = dokument.casti.all()
     if casti.count() != 1:
@@ -180,22 +159,17 @@ def detail_model_3D(request, ident_cely):
         raise UnexpectedDataRelations()
     komponenty = casti[0].komponenty.komponenty.all()
     if komponenty.count() != 1:
-        logger.warning("dokument.views.detail_model_3D.komponenty_count_error",
-                       extra={"casti_count": komponenty.count()})
+        logger.warning(
+            "dokument.views.detail_model_3D.komponenty_count_error", extra={"casti_count": komponenty.count()}
+        )
         raise UnexpectedDataRelations()
     show = get_detail_template_shows(dokument, request.user)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
     druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
-    specifikace_objekt_choices = heslar_12(
-        HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
-    )
-    specifikce_predmetu_choices = list(
-        Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
-            "id", "heslo"
-        )
-    )
+    specifikace_objekt_choices = heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT)
+    specifikce_predmetu_choices = heslar_list(HESLAR_PREDMET_SPECIFIKACE)
     NalezObjektFormset = inlineformset_factory(
         Komponenta,
         NalezObjekt,
@@ -204,7 +178,7 @@ def detail_model_3D(request, ident_cely):
             specifikace_objekt_choices,
             not_readonly=show["editovat"],
         ),
-        extra=1 if show["editovat"] else 0,
+        extra=3 if show["editovat"] else 0,
         can_delete=False,
     )
     NalezPredmetFormset = inlineformset_factory(
@@ -215,24 +189,17 @@ def detail_model_3D(request, ident_cely):
             specifikce_predmetu_choices,
             not_readonly=show["editovat"],
         ),
-        extra=1 if show["editovat"] else 0,
+        extra=3 if show["editovat"] else 0,
         can_delete=False,
     )
     context["dokument"] = dokument
     context["komponenta"] = komponenty[0]
     context["formDokument"] = CreateModelDokumentForm(instance=dokument, readonly=True)
     if dokument.extra_data.geom:
-        geom = (
-            str(dokument.extra_data.geom)
-            .split("(")[1]
-            .replace(", ", ",")
-            .replace(")", "")
-        )
+        geom = str(dokument.extra_data.geom).split("(")[1].replace(", ", ",").replace(")", "")
         context["coordinate_wgs84_x1"] = geom.split(" ")[0]
         context["coordinate_wgs84_x2"] = geom.split(" ")[1]
-    context["formExtraData"] = CreateModelExtraDataForm(
-        instance=dokument.extra_data, readonly=True
-    )
+    context["formExtraData"] = CreateModelExtraDataForm(instance=dokument.extra_data, readonly=True)
     context["formKomponenta"] = CreateKomponentaForm(
         obdobi_choices, areal_choices, instance=komponenty[0], readonly=True
     )
@@ -254,7 +221,7 @@ def detail_model_3D(request, ident_cely):
     context["show"] = show
     context["global_map_can_edit"] = False
     if dokument.soubory:
-        context["soubory"] = sorted(dokument.soubory.soubory.all(), key=lambda x: (x.nazev.replace('.', '0'), x.nazev))
+        context["soubory"] = sorted(dokument.soubory.soubory.all(), key=lambda x: (x.nazev.replace(".", "0"), x.nazev))
     else:
         context["soubory"] = None
     return render(request, "dokument/detail_model_3D.html", context)
@@ -264,6 +231,7 @@ class Model3DListView(SearchListView):
     """
     Třida pohledu pro zobrazení listu/tabulky s modelama 3D.
     """
+
     table_class = Model3DTable
     model = Dokument
     filterset_class = Model3DFilter
@@ -292,9 +260,8 @@ class Model3DListView(SearchListView):
             "typ_dokumentu": "typ_dokumentu__razeni",
             "autori": "autori_snapshot",
             "extra_data__format": "extra_data__format__razeni",
-            "extra_data__zeme": "extra_data__zeme__razeni"
+            "extra_data__zeme": "extra_data__zeme__razeni",
         }.get(field, field)
-
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -305,19 +272,19 @@ class Model3DListView(SearchListView):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
-        qs = qs.order_by(*sort_params)  
+        qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
         qs = qs.filter(ident_cely__contains="3D")
-        qs = qs.select_related(
-            "typ_dokumentu", "extra_data", "organizace", "extra_data__format"
-        ).prefetch_related(
+        qs = qs.select_related("typ_dokumentu", "extra_data", "organizace", "extra_data__format").prefetch_related(
             Prefetch(
                 "autori",
                 queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
                 to_attr="ordered_autors",
-            ),"extra_data__zeme","soubory__soubory"
+            ),
+            "extra_data__zeme",
+            "soubory__soubory",
         )
-               
+
         return self.check_filter_permission(qs)
 
 
@@ -325,6 +292,7 @@ class DokumentIndexView(LoginRequiredMixin, TemplateView):
     """
     Třida pohledu pro zobrazení domovské stránky dokumentů s navigačními možnostmi.
     """
+
     template_name = "dokument/index_dokument.html"
 
 
@@ -332,6 +300,7 @@ class DokumentListView(SearchListView):
     """
     Třida pohledu pro zobrazení listu/tabulky s dokumentama.
     """
+
     table_class = DokumentTable
     model = Dokument
     filterset_class = DokumentFilter
@@ -365,34 +334,32 @@ class DokumentListView(SearchListView):
             "typ_dokumentu": "typ_dokumentu__razeni",
             "autori": "autori_snapshot",
             "pristupnost": "pristupnost__razeni",
-            "rada":"rada__razeni",
-            "material_originalu":"material_originalu__razeni",
-            "extra_data__format":"extra_data__format__razeni",
-            "ulozeni_originalu":"ulozeni_originalu__razeni",
-            "licence":"licence__razeni",
-            "extra_data__zachovalost":"extra_data__zachovalost__razeni",
-            "extra_data__nahrada":"extra_data__nahrada__razeni",
-            "extra_data__zeme":"extra_data__zeme__razeni",
+            "rada": "rada__razeni",
+            "material_originalu": "material_originalu__razeni",
+            "extra_data__format": "extra_data__format__razeni",
+            "ulozeni_originalu": "ulozeni_originalu__razeni",
+            "licence": "licence__razeni",
+            "extra_data__zachovalost": "extra_data__zachovalost__razeni",
+            "extra_data__nahrada": "extra_data__nahrada__razeni",
+            "extra_data__zeme": "extra_data__zeme__razeni",
             "extra_data__udalost_typ": "extra_data__udalost_typ__razeni",
-            "osoby":"osoby_snapshot",
-            "let": "let__ident_cely"
+            "osoby": "osoby_snapshot",
+            "let": "let__ident_cely",
         }.get(field, field)
 
     def get_queryset(self):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
-        qs = qs.order_by(*sort_params) 
+        qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
-        subqry = Subquery(
-            Soubor.objects.filter(vazba=OuterRef("vazba")).values_list("id", flat=True)[:1]
-        )
+        subqry = Subquery(Soubor.objects.filter(vazba=OuterRef("vazba")).values_list("id", flat=True)[:1])
         qs = qs.exclude(ident_cely__contains="3D")
-        qs = qs.select_related(           
+        qs = qs.select_related(
             "extra_data",
             "organizace",
             "extra_data__format",
-            "soubory",            
+            "soubory",
             "material_originalu",
             "ulozeni_originalu",
         ).prefetch_related(
@@ -405,7 +372,11 @@ class DokumentListView(SearchListView):
                 "autori",
                 queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
                 to_attr="ordered_autors",
-            ), "typ_dokumentu", "let", "rada","pristupnost",
+            ),
+            "typ_dokumentu",
+            "let",
+            "rada",
+            "pristupnost",
         )
         return self.check_filter_permission(qs)
 
@@ -414,6 +385,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
     """
     Třida, která se dedí a která obsahuje metódy pro získaní relací dokumentů.
     """
+
     def get_cast(self, context, cast, **kwargs):
         """
         Metóda pro získaní informací ohlědně části dokumentu.
@@ -426,19 +398,33 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["cast_form"] = cast_form
         neident_akce = NeidentAkce.objects.filter(dokument_cast=cast)
         if neident_akce.exists():
-            context["neident_akce_form"] = NeidentAkceForm(
-                instance=neident_akce[0], readonly=True
-            )
-        context["show_edit_cast"] = check_permissions(p.actionChoices.dok_cast_edit, self.request.user, cast.dokument.ident_cely)
-        context["show_smazat_cast"] = check_permissions(p.actionChoices.dok_cast_smazat, self.request.user, cast.dokument.ident_cely)
-        context["show_zapsat_komponentu"] = check_permissions(p.actionChoices.dok_komponenta_zapsat, self.request.user, cast.dokument.ident_cely)
-        context["show_neident_akce_edit"] = check_permissions(p.actionChoices.neident_akce_edit, self.request.user, cast.dokument.ident_cely)
-        context["show_neident_akce_smazat"] = check_permissions(p.actionChoices.neident_akce_smazat, self.request.user, cast.dokument.ident_cely)
+            context["neident_akce_form"] = NeidentAkceForm(instance=neident_akce[0], readonly=True)
+        context["show_edit_cast"] = check_permissions(
+            p.actionChoices.dok_cast_edit, self.request.user, cast.dokument.ident_cely
+        )
+        context["show_smazat_cast"] = check_permissions(
+            p.actionChoices.dok_cast_smazat, self.request.user, cast.dokument.ident_cely
+        )
+        context["show_zapsat_komponentu"] = check_permissions(
+            p.actionChoices.dok_komponenta_zapsat, self.request.user, cast.dokument.ident_cely
+        )
+        context["show_neident_akce_edit"] = check_permissions(
+            p.actionChoices.neident_akce_edit, self.request.user, cast.dokument.ident_cely
+        )
+        context["show_neident_akce_smazat"] = check_permissions(
+            p.actionChoices.neident_akce_smazat, self.request.user, cast.dokument.ident_cely
+        )
         context["show_odpojit"] = False
-        context["show_pripojit_proj"] = check_permissions(p.actionChoices.dok_pripojit_proj, self.request.user, cast.dokument.ident_cely)
-        context["show_pripojit_archz"] = check_permissions(p.actionChoices.dok_pripojit_archz, self.request.user, cast.dokument.ident_cely)
+        context["show_pripojit_proj"] = check_permissions(
+            p.actionChoices.dok_pripojit_proj, self.request.user, cast.dokument.ident_cely
+        )
+        context["show_pripojit_archz"] = check_permissions(
+            p.actionChoices.dok_pripojit_archz, self.request.user, cast.dokument.ident_cely
+        )
         if cast.projekt or cast.archeologicky_zaznam:
-            context["show_odpojit"] = check_permissions(p.actionChoices.dok_cast_odpojit, self.request.user, cast.dokument.ident_cely)
+            context["show_odpojit"] = check_permissions(
+                p.actionChoices.dok_cast_odpojit, self.request.user, cast.dokument.ident_cely
+            )
             context["show_pripojit_proj"] = False
             context["show_pripojit_archz"] = False
 
@@ -456,7 +442,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                 "typ_dokumentu",
                 "rada",
             ),
-            ident_cely=self.kwargs["ident_cely"]
+            ident_cely=self.kwargs["ident_cely"],
         )
         if not dokument.has_extra_data():
             extra_data = DokumentExtraData(dokument=dokument)
@@ -494,8 +480,9 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["show"] = show
 
         if dokument.soubory:
-            context["soubory"] = sorted(dokument.soubory.soubory.all(),
-                                        key=lambda x: (x.nazev.replace('.', '0'), x.nazev))
+            context["soubory"] = sorted(
+                dokument.soubory.soubory.all(), key=lambda x: (x.nazev.replace(".", "0"), x.nazev)
+            )
         else:
             context["soubory"] = None
 
@@ -513,11 +500,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
             ident_referer = referer.split("/")[-1]
             if context["dokument"].ident_cely == ident_referer:
                 pass
-            elif (
-                "arch-z/akce/detail/" in referer
-                or "/projekt/detail/"
-                or "arch-z/lokalita/detail/" in referer
-            ):
+            elif "arch-z/akce/detail/" in referer or "/projekt/detail/" or "arch-z/lokalita/detail/" in referer:
                 found = False
                 for cast in context["casti"]:
                     if cast.archeologicky_zaznam:
@@ -532,8 +515,9 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                             break
                     if cast.projekt:
                         if cast.projekt.ident_cely == ident_referer:
-                            logger.debug("dokument.views.RelatedContext.render_to_response."
-                                         "back_option_for_projekt_found")
+                            logger.debug(
+                                "dokument.views.RelatedContext.render_to_response." "back_option_for_projekt_found"
+                            )
                             response.set_cookie(
                                 "zpet",
                                 reverse("projekt:detail", args=(ident_referer,)),
@@ -544,10 +528,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                 if found is False:
                     logger.debug("dokument.views.RelatedContext.render_to_response.back_option_not_found")
                     response.delete_cookie("zpet")
-            elif (
-                "soubor/nahrat" in referer
-                and context["dokument"].ident_cely in referer_next
-            ):
+            elif "soubor/nahrat" in referer and context["dokument"].ident_cely in referer_next:
                 logger.debug("dokument.views.RelatedContext.render_to_response.back_option_not_changed")
             else:
                 logger.debug("dokument.views.RelatedContext.render_to_response.no_back_option")
@@ -562,6 +543,7 @@ class DokumentDetailView(RelatedContext):
     """
     Třida pohledu pro zobrazení detailu dokumentu.
     """
+
     template_name = "dokument/dok/detail.html"
 
 
@@ -569,17 +551,18 @@ class DokumentCastDetailView(RelatedContext):
     """
     Třida pohledu pro zobrazení detailu části dokumentu.
     """
+
     template_name = "dokument/dok/detail_cast_dokumentu.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         cast = get_object_or_404(DokumentCast, ident_cely=self.kwargs["cast_ident_cely"])
         if cast.dokument.ident_cely != self.kwargs["ident_cely"]:
             logger.error("Dokument - Dokument cast wrong relation")
-            messages.add_message(
-                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                    )
-            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
-                safe_redirect = request.GET.get("next","core:home")
+            messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+            if url_has_allowed_host_and_scheme(
+                request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
+            ):
+                safe_redirect = request.GET.get("next", "core:home")
             else:
                 safe_redirect = "/"
             return redirect(safe_redirect)
@@ -600,6 +583,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
     """
     Třida pohledu pro editaci části dokumentu pomocí modalu.
     """
+
     model = DokumentCast
     template_name = "core/transakce_modal.html"
     id_tag = "edit-cast-form"
@@ -636,14 +620,10 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         return self.object
 
     def post(self, request, *args, **kwargs):
-        self.active_transaction = FedoraTransaction()
+        self.active_transaction = self.get_object().create_transaction(request.user)
         super().post(request, *args, **kwargs)
         self.active_transaction.mark_transaction_as_closed()
         return JsonResponse({"redirect": self.get_success_url()})
-
-    def form_valid(self, form):
-        messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-        return super().form_valid(form)
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
@@ -655,17 +635,18 @@ class KomponentaDokumentDetailView(RelatedContext):
     """
     Třida pohledu pro zobrazení detailu komponenty části dokumentu.
     """
+
     template_name = "dokument/dok/detail_komponenta.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komp_ident_cely"])
         if komponenta.komponenta_vazby.casti_dokumentu.dokument.ident_cely != self.kwargs["ident_cely"]:
             logger.error("Dokument - Komponenta wrong relation")
-            messages.add_message(
-                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                    )
-            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
-                safe_redirect = request.GET.get("next","core:home")
+            messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+            if url_has_allowed_host_and_scheme(
+                request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
+            ):
+                safe_redirect = request.GET.get("next", "core:home")
             else:
                 safe_redirect = "/"
             return redirect(safe_redirect)
@@ -684,11 +665,11 @@ class KomponentaDokumentDetailView(RelatedContext):
         old_nalez_post = self.request.session.pop("_old_nalez_post", None)
         komp_ident_cely = self.request.session.pop("komp_ident_cely", None)
 
-        context["k"] = get_komponenta_form_detail(
-            komponenta, context["show"], old_nalez_post, komp_ident_cely
-        )
+        context["k"] = get_komponenta_form_detail(komponenta, context["show"], old_nalez_post, komp_ident_cely)
         context["active_komp_ident"] = komponenta.ident_cely
-        context["show"]["komponenta_smazat"] = check_permissions(p.actionChoices.komponenta_smazat_dok, self.request.user, context["dokument"].ident_cely)
+        context["show"]["komponenta_smazat"] = check_permissions(
+            p.actionChoices.komponenta_smazat_dok, self.request.user, context["dokument"].ident_cely
+        )
         return context
 
 
@@ -696,17 +677,18 @@ class KomponentaDokumentCreateView(RelatedContext):
     """
     Třida pohledu pro vytvoření komponenty části dokumentu.
     """
+
     template_name = "dokument/dok/create_komponenta.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         cast = get_object_or_404(DokumentCast, ident_cely=self.kwargs["cast_ident_cely"])
         if cast.dokument.ident_cely != self.kwargs["ident_cely"]:
             logger.error("Dokument - Dokument cast wrong relation")
-            messages.add_message(
-                        request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                    )
-            if url_has_allowed_host_and_scheme(request.GET.get("next","core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
-                safe_redirect = request.GET.get("next","core:home")
+            messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+            if url_has_allowed_host_and_scheme(
+                request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
+            ):
+                safe_redirect = request.GET.get("next", "core:home")
             else:
                 safe_redirect = "/"
             return redirect(safe_redirect)
@@ -719,9 +701,7 @@ class KomponentaDokumentCreateView(RelatedContext):
             ident_cely=self.kwargs["cast_ident_cely"],
         )
         self.get_cast(context, cast)
-        context["komponenta_form_create"] = CreateKomponentaForm(
-            get_obdobi_choices(), get_areal_choices()
-        )
+        context["komponenta_form_create"] = CreateKomponentaForm(get_obdobi_choices(), get_areal_choices())
         return context
 
 
@@ -729,27 +709,31 @@ class TvarEditView(LoginRequiredMixin, View):
     """
     Třida pohledu pro uložení zmeny tvaru z formuláře.
     """
+
     def post(self, request, *args, **kwargs):
-        dokument: Dokument = get_object_or_404(Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES), ident_cely=self.kwargs["ident_cely"])
+        dokument: Dokument = get_object_or_404(
+            Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES),
+            ident_cely=self.kwargs["ident_cely"],
+        )
         TvarFormset = inlineformset_factory(
             Dokument,
             Tvar,
             form=create_tvar_form(),
             extra=1,
         )
-        formset = TvarFormset(
-            request.POST, instance=dokument, prefix=dokument.ident_cely + "_d"
-        )
+        formset = TvarFormset(request.POST, instance=dokument, prefix=dokument.ident_cely + "_d")
         if formset.is_valid():
             logger.debug("dokument.views.TvarEditView.form_valid")
             formset.save()
             if formset.has_changed():
-                dokument.save_metadata(FedoraTransaction(), close_transaction=True)
+                fedora_transaction = dokument.create_transaction(self.request.user, ZAZNAM_USPESNE_EDITOVAN)
+                dokument.save_metadata(fedora_transaction, close_transaction=True)
                 logger.debug("dokument.views.TvarEditView.form_data_changed")
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
-            logger.debug("dokument.views.TvarEditView.form_not_valid",
-                         extra={"formset_errors": formset.errors, "formset_nonform_errors": formset.non_form_errors()})
+            logger.debug(
+                "dokument.views.TvarEditView.form_not_valid",
+                extra={"formset_errors": formset.errors, "formset_nonform_errors": formset.non_form_errors()},
+            )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         return redirect(dokument.get_absolute_url())
 
@@ -758,6 +742,7 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
     """
     Třida pohledu pro smazání tvaru dokumentu pomocí modalu.
     """
+
     template_name = "core/transakce_modal.html"
     id_tag = "smazat-tvar-form"
 
@@ -765,10 +750,8 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         tvar = self.get_zaznam()
         if tvar.dokument.ident_cely != self.kwargs.get("ident_cely"):
             logger.debug("Dokument - Tvar wrong relation")
-            messages.add_message(
-                            request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA
-                        )
-            return JsonResponse({"redirect": tvar.dokument.get_absolute_url()},status=403)
+            messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
+            return JsonResponse({"redirect": tvar.dokument.get_absolute_url()}, status=403)
         return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
@@ -793,12 +776,11 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        zaznam = self.get_zaznam()
-        zaznam.active_transaction = FedoraTransaction()
+        zaznam: Tvar = self.get_zaznam()
+        zaznam.active_transaction = zaznam.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN)
         zaznam.close_active_transaction_when_finished = True
         dokument = zaznam.dokument
         zaznam.delete()
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
 
         return JsonResponse({"redirect": dokument.get_absolute_url()})
 
@@ -807,6 +789,7 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
     """
     Třida pohledu pro vytvoření části dokumentu pomoci modalu.
     """
+
     template_name = "core/transakce_modal.html"
     id_tag = "vytvor-cast-form"
 
@@ -834,10 +817,10 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        zaznam = self.get_zaznam()
+        zaznam: Dokument = self.get_zaznam()
         form = DokumentCastCreateForm(data=request.POST)
         if form.is_valid():
-            fedora_transaction = FedoraTransaction()
+            fedora_transaction = zaznam.create_transaction(self.request.user, ZAZNAM_USPESNE_VYTVOREN)
             zaznam.active_transaction = fedora_transaction
             dc_ident = get_cast_dokumentu_ident(zaznam)
             dc = DokumentCast(
@@ -849,7 +832,6 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
             dc.save()
             zaznam.close_active_transaction_when_finished = True
             zaznam.save()
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
             return JsonResponse(
                 {
                     "redirect": reverse(
@@ -871,6 +853,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     """
     Třida pohledu pro změnu stavu a práci s dokumentama cez modal, která se dedí pro jednotlivá změny.
     """
+
     template_name = "core/transakce_modal.html"
     id_tag = "id_tag"
     allowed_states = [D_STAV_ZAPSANY, D_STAV_ODESLANY, D_STAV_ARCHIVOVANY]
@@ -934,6 +917,7 @@ class DokumentCastPripojitAkciView(TransakceView):
     """
     Třida pohledu pro připojení akce do části dokumentu pomoci modalu.
     """
+
     template_name = "core/transakce_table_modal.html"
     id_tag = "pripojit-eo-form"
 
@@ -959,7 +943,7 @@ class DokumentCastPripojitAkciView(TransakceView):
         form = PripojitArchZaznamForm(data=request.POST, type_arch=type_arch, dok=True)
         if form.is_valid():
             logger.debug("dokument.views.DokumentCastPripojitAkciView.post.form_valid")
-            fedora_transaction = FedoraTransaction()
+            fedora_transaction = cast.create_transaction(self.request.user, self.success_message)
             cast.active_transaction = fedora_transaction
             arch_z_id = form.cleaned_data["arch_z"]
             arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
@@ -967,10 +951,10 @@ class DokumentCastPripojitAkciView(TransakceView):
             cast.projekt = None
             cast.close_active_transaction_when_finished = True
             cast.save()
-            messages.add_message(request, messages.SUCCESS, self.success_message)
         else:
-            logger.debug("dokument.views.DokumentCastPripojitAkciView.post.form_invalid",
-                         extra={"form_errors": form.errors})
+            logger.debug(
+                "dokument.views.DokumentCastPripojitAkciView.post.form_invalid", extra={"form_errors": form.errors}
+            )
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
 
@@ -978,6 +962,7 @@ class DokumentCastPripojitProjektView(TransakceView):
     """
     Třida pohledu pro připojení projektu do části dokumentu pomoci modalu.
     """
+
     template_name = "core/transakce_table_modal.html"
     id_tag = "pripojit-projekt-form"
 
@@ -998,15 +983,15 @@ class DokumentCastPripojitProjektView(TransakceView):
         form = PripojitProjektForm(data=request.POST, dok=True)
         if form.is_valid():
             projekt = form.cleaned_data["projekt"]
-            cast.active_transaction = FedoraTransaction()
+            cast.create_transaction(self.request.user, self.success_message)
             cast.close_active_transaction_when_finished = True
             cast.archeologicky_zaznam = None
             cast.projekt = Projekt.objects.get(id=projekt)
             cast.save()
-            messages.add_message(request, messages.SUCCESS, self.success_message)
         else:
-            logger.debug("dokument.views.DokumentCastPripojitProjektView.post.form_invalid",
-                         extra={"form_errors": form.errors})
+            logger.debug(
+                "dokument.views.DokumentCastPripojitProjektView.post.form_invalid", extra={"form_errors": form.errors}
+            )
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
 
@@ -1014,6 +999,7 @@ class DokumentCastOdpojitView(TransakceView):
     """
     Třida pohledu pro odpojení části dokumentu pomoci modalu.
     """
+
     id_tag = "odpojit-cast-form"
 
     def init_translations(self):
@@ -1038,12 +1024,11 @@ class DokumentCastOdpojitView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         cast = self.get_zaznam()
-        cast.active_transaction = FedoraTransaction()
+        cast.create_transaction(request.user, self.success_message)
         cast.close_active_transaction_when_finished = True
         cast.archeologicky_zaznam = None
         cast.projekt = None
         cast.save()
-        messages.add_message(request, messages.SUCCESS, self.success_message)
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
 
@@ -1051,6 +1036,7 @@ class DokumentCastSmazatView(TransakceView):
     """
     Třida pohledu pro smazání části dokumentu pomoci modalu.
     """
+
     id_tag = "smazat-cast-form"
 
     def init_translations(self):
@@ -1059,9 +1045,8 @@ class DokumentCastSmazatView(TransakceView):
         self.success_message = DOKUMENT_CAST_USPESNE_SMAZANA
 
     def post(self, request, *args, **kwargs):
-        fedora_transaction = FedoraTransaction()
         cast = self.get_zaznam()
-        cast.active_transaction = fedora_transaction
+        cast.create_transaction(request.user, self.success_message)
         dokument = cast.dokument
         if cast.komponenty:
             komps = cast.komponenty
@@ -1074,12 +1059,13 @@ class DokumentCastSmazatView(TransakceView):
                 neident_akce: NeidentAkce
                 neident_akce.suppress_signal = True
                 neident_akce.delete()
-        except ObjectDoesNotExist as err:
-            logger.debug("dokument.views.DokumentCastSmazatView.post.neident_akce_not_exists",
-                         extra={"ident:cely": cast.ident_cely})
+        except ObjectDoesNotExist:
+            logger.debug(
+                "dokument.views.DokumentCastSmazatView.post.neident_akce_not_exists",
+                extra={"ident:cely": cast.ident_cely},
+            )
         cast.close_active_transaction_when_finished = True
         cast.delete()
-        messages.add_message(request, messages.SUCCESS, self.success_message)
         return JsonResponse({"redirect": dokument.get_absolute_url()})
 
 
@@ -1087,6 +1073,7 @@ class DokumentNeidentAkceSmazatView(TransakceView):
     """
     Třida pohledu pro smazání neident akce z části dokumentu pomoci modalu.
     """
+
     id_tag = "smazat-neident-akce-form"
 
     def init_translations(self):
@@ -1115,7 +1102,9 @@ def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci dokumentu.
     """
-    dokument = get_object_or_404(Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES), ident_cely=ident_cely)
+    dokument = get_object_or_404(
+        Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES), ident_cely=ident_cely
+    )
     if dokument.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if not dokument.has_extra_data():
@@ -1130,8 +1119,7 @@ def edit(request, ident_cely):
     required_fields = get_required_fields_dokument(dokument)
     required_fields_next = get_required_fields_dokument(dokument, next=1)
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        dokument.active_transaction = fedora_transaction
+        fedora_transaction = dokument.create_transaction(request.user)
         form_d = EditDokumentForm(
             request.POST,
             instance=dokument,
@@ -1176,12 +1164,12 @@ def edit(request, ident_cely):
             invalidate_model(Akce)
             invalidate_model(ArcheologickyZaznam)
             invalidate_model(Historie)
-            if form_d.has_changed() or form_extra.has_changed():
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
         else:
-            logger.debug("dokument.views.edit.forms_not_valid", extra={"form_errors": form_d.errors,
-                                                                       "form_extra_errors": form_extra.errors})
+            logger.debug(
+                "dokument.views.edit.forms_not_valid",
+                extra={"form_errors": form_d.errors, "form_extra_errors": form_extra.errors},
+            )
     else:
         form_d = EditDokumentForm(
             instance=dokument,
@@ -1216,7 +1204,9 @@ def edit_model_3D(request, ident_cely):
     """
     Funkce pohledu pro editaci modelu 3D.
     """
-    dokument: Dokument = get_object_or_404(Dokument, ident_cely=ident_cely, typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
+    dokument: Dokument = get_object_or_404(
+        Dokument, ident_cely=ident_cely, typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES
+    )
     if dokument.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
@@ -1236,9 +1226,7 @@ def edit_model_3D(request, ident_cely):
             required=required_fields,
             required_next=required_fields_next,
         )
-        form_coor = CoordinatesDokumentForm(
-            request.POST
-        )  # Zmen musis ulozit data z formulare
+        form_coor = CoordinatesDokumentForm(request.POST)  # Zmen musis ulozit data z formulare
         form_komponenta = CreateKomponentaForm(
             obdobi_choices,
             areal_choices,
@@ -1246,7 +1234,7 @@ def edit_model_3D(request, ident_cely):
             instance=dokument.get_komponenta(),
             required=required_fields,
             required_next=required_fields_next,
-            prefix="komponenta_",
+            prefix="komponenta",
         )
         geom = None
         x1 = None
@@ -1260,7 +1248,7 @@ def edit_model_3D(request, ident_cely):
             logger.debug("dokument.views.edit_model_3D.coord_error", extra={"x1": x1, "x2": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             # save autors with order
-            fedora_transaction = FedoraTransaction()
+            fedora_transaction = dokument.create_transaction(request.user)
             dokument_from_form = form_d.save(commit=False)
             dokument_from_form.active_transaction = fedora_transaction
             dokument_from_form.autori.clear()
@@ -1282,19 +1270,18 @@ def edit_model_3D(request, ident_cely):
             form_komponenta.save_m2m()
             invalidate_model(KomponentaAktivita)
             invalidate_model(Historie)
-            if (
-                form_d.changed_data
-                or form_extra.changed_data
-                or form_komponenta.changed_data
-            ):
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             dokument_from_form.close_active_transaction_when_finished = True
             dokument_from_form.save()
             return redirect("dokument:detail-model-3D", ident_cely=dokument.ident_cely)
         else:
-            logger.debug("dokument.views.edit_model_3D.forms_not_valid",
-                         extra={"form_errors": form_d.errors, "form_extra_errors": form_extra.errors,
-                                "form_komponenta": form_komponenta.errors})
+            logger.debug(
+                "dokument.views.edit_model_3D.forms_not_valid",
+                extra={
+                    "form_errors": form_d.errors,
+                    "form_extra_errors": form_extra.errors,
+                    "form_komponenta": form_komponenta.errors,
+                },
+            )
     else:
         form_d = CreateModelDokumentForm(
             instance=dokument,
@@ -1312,15 +1299,10 @@ def edit_model_3D(request, ident_cely):
             instance=dokument.get_komponenta(),
             required=get_required_fields_model3D(dokument),
             required_next=get_required_fields_model3D(dokument, 1),
-            prefix="komponenta_",
+            prefix="komponenta",
         )
         if dokument.extra_data.geom:
-            geom = (
-                str(dokument.extra_data.geom)
-                .split("(")[1]
-                .replace(", ", ",")
-                .replace(")", "")
-            )
+            geom = str(dokument.extra_data.geom).split("(")[1].replace(", ", ",").replace(")", "")
             return render(
                 request,
                 "dokument/create_model_3D.html",
@@ -1363,6 +1345,7 @@ def zapsat_do_akce(request, arch_z_ident_cely):
     zaznam: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     return zapsat(request, zaznam)
 
+
 @login_required
 def zapsat_do_projektu(request, proj_ident_cely):
     """
@@ -1403,7 +1386,7 @@ def create_model_3D(request):
             request.POST,
             required=required_fields,
             required_next=required_fields_next,
-            prefix="komponenta_",
+            prefix="komponenta",
         )
         geom = None
         x1 = None
@@ -1417,21 +1400,18 @@ def create_model_3D(request):
             logger.debug("dokument.views.create_model_3D.coord_error", extra={"x1": x1, "x2": x2})
 
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
-            fedora_transaction = FedoraTransaction()
-            logger.debug("dokument.views.create_model_3D.forms_valid",
-                         extra={"fedora_transaction": fedora_transaction.uid})
-            dokument = form_d.save(commit=False)
-            dokument.active_transaction = fedora_transaction
+            logger.debug("dokument.views.create_model_3D.forms_valid")
+            dokument: Dokument = form_d.save(commit=False)
+            fedora_transaction = dokument.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN)
             dokument.rada = Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D)
-            dokument.material_originalu = Heslar.objects.get(
-                id=MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR
-            )
+            dokument.material_originalu = Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR)
             try:
                 dokument.ident_cely = get_temp_dokument_ident(rada="3D", region="C-")
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
+                fedora_transaction.rollback_transaction()
             else:
-                dokument.pristupnost = Heslar.objects.get(id=PRISTUPNOST_BADATEL_ID)
+                dokument.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ANONYM_ID)
                 dokument.stav = D_STAV_ZAPSANY
                 dokument.save()
                 dokument.set_zapsany(request.user)
@@ -1470,15 +1450,17 @@ def create_model_3D(request):
                 dokument.close_active_transaction_when_finished = True
                 dokument.save()
 
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                return redirect(
-                    "dokument:detail-model-3D", ident_cely=dokument.ident_cely
-                )
+                return redirect("dokument:detail-model-3D", ident_cely=dokument.ident_cely)
 
         else:
-            logger.debug("dokument.views.create_model_3D.forms_not_valid",
-                         extra={"form_errors": form_d.errors, "form_extra_errors": form_extra.errors,
-                                "form_komponenta": form_komponenta.errors})
+            logger.debug(
+                "dokument.views.create_model_3D.forms_not_valid",
+                extra={
+                    "form_errors": form_d.errors,
+                    "form_extra_errors": form_extra.errors,
+                    "form_komponenta": form_komponenta.errors,
+                },
+            )
             if "geom" in form_extra.errors:
                 messages.add_message(request, messages.ERROR, VYBERTE_PROSIM_POLOHU)
     else:
@@ -1495,7 +1477,7 @@ def create_model_3D(request):
             areal_choices,
             required=required_fields,
             required_next=required_fields_next,
-            prefix="komponenta_",
+            prefix="komponenta",
         )
     return render(
         request,
@@ -1508,7 +1490,7 @@ def create_model_3D(request):
             "title": _("dokument.views.create_model_3D.title"),
             "header": _("dokument.views.create_model_3D.header"),
             "button": _("dokument.views.create_model_3D.submitButton.text"),
-            "toolbar_label": _("dokument.views.create_model_3D.toolbar_label")
+            "toolbar_label": _("dokument.views.create_model_3D.toolbar_label"),
         },
     )
 
@@ -1532,15 +1514,14 @@ def odeslat(request, ident_cely):
 
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        dokument.active_transaction = fedora_transaction
+        fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ODESLAN, DOKUMENT_NELZE_ODESLAT)
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
         returned_value = Dokument.set_permanent_identificator(dokument, request, messages, fedora_transaction)
         if isinstance(returned_value, JsonResponse):
+            fedora_transaction.rollback_transaction()
             return returned_value
         dokument.set_odeslany(request.user, old_ident)
-        messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
         logger.debug("dokument.views.odeslat.sucess")
         dokument.close_active_transaction_when_finished = True
         dokument.save()
@@ -1551,9 +1532,7 @@ def odeslat(request, ident_cely):
             logger.debug("dokument.views.odeslat.warnings", extra={"warnings": warnings, "ident_cely": ident_cely})
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
-            return JsonResponse(
-                {"redirect": get_detail_json_view(ident_cely)}, status=403
-            )
+            return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})
     context = {
         "object": dokument,
@@ -1584,7 +1563,7 @@ def archivovat(request, ident_cely):
         logger.debug("dokument.views.archivovat.check_stav_changed", extra={"ident_cely": ident_cely})
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
+        fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ARCHIVOVAN)
         dokument.active_transaction = fedora_transaction
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
@@ -1593,17 +1572,14 @@ def archivovat(request, ident_cely):
             try:
                 dokument.set_permanent_ident_cely(dokument.ident_cely[2], rada)
             except MaximalIdentNumberError:
-                messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+                fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
                 fedora_transaction.rollback_transaction()
                 dokument.close_active_transaction_when_finished = True
-                return JsonResponse(
-                    {"redirect": get_detail_json_view(ident_cely)}, status=403
-                )
+                return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
             else:
                 dokument.save()
                 logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": dokument.ident_cely})
         dokument.set_archivovany(request.user, old_ident)
-        messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
         if dokument.rada == Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D):
             Mailer.send_ek01(document=dokument)
         dokument.close_active_transaction_when_finished = True
@@ -1615,9 +1591,7 @@ def archivovat(request, ident_cely):
         if warnings:
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
-            return JsonResponse(
-                {"redirect": get_detail_json_view(ident_cely)}, status=403
-            )
+            return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})
     context = {
         "object": dokument,
@@ -1644,21 +1618,17 @@ def vratit(request, ident_cely):
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
-            fedora_transaction = FedoraTransaction()
-            dokument.active_transaction = fedora_transaction
+            dokument.create_transaction(request.user, DOKUMENT_USPESNE_VRACEN)
             duvod = form.cleaned_data["reason"]
             if dokument.stav == D_STAV_ODESLANY:
                 Mailer.send_ek02(document=dokument, reason=duvod)
             dokument.set_vraceny(request.user, dokument.stav - 1, duvod)
-            messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_VRACEN)
             dokument.close_active_transaction_when_finished = True
             dokument.save()
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
         else:
             logger.debug("dokument.views.vratit.not_valid", extra={"errors": form.errors})
-            return JsonResponse(
-                {"redirect": get_detail_json_view(ident_cely)}, status=403
-            )
+            return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     else:
         form = VratitForm(initial={"old_stav": dokument.stav})
     context = {
@@ -1682,8 +1652,9 @@ def smazat(request, ident_cely):
     if check_stav_changed(request, dokument):
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
-        fedora_transaction = FedoraTransaction()
-        dokument.active_transaction = fedora_transaction
+        fedora_transaction = dokument.create_transaction(
+            request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT
+        )
         dokument.save_record_deletion_record(fedora_transaction, request.user)
         for item in dokument.casti.all():
             if hasattr(item, "neident_akce"):
@@ -1698,7 +1669,6 @@ def smazat(request, ident_cely):
         resp1 = dokument.delete()
         if resp1:
             logger.debug("dokument.views.smazat.deleted", extra={"resp1": resp1})
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             fedora_transaction.mark_transaction_as_closed()
             if "3D" in ident_cely:
                 return JsonResponse({"redirect": reverse("dokument:index-model-3D")})
@@ -1706,11 +1676,8 @@ def smazat(request, ident_cely):
                 return JsonResponse({"redirect": reverse("dokument:index")})
         else:
             logger.warning("dokument.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             fedora_transaction.rollback_transaction()
-            return JsonResponse(
-                {"redirect": get_detail_json_view(ident_cely)}, status=403
-            )
+            return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})
         context = {
@@ -1723,18 +1690,24 @@ def smazat(request, ident_cely):
         return render(request, "core/transakce_modal.html", context)
 
 
-class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,PermissionFilterMixin):
+class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, PermissionFilterMixin):
     """
     Třída pohledu pro autocomplete dokumentů.
     """
+
     typ_zmeny_lookup = ZAPSANI_DOK
+
+    def get_result_label(self, result):
+        return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vzniku})"
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
-        qs = Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
+        qs = Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES).order_by("ident_cely")
         if self.q:
-            qs = qs.filter(ident_cely__icontains=self.q)
+            qs = qs.filter(
+                Q(ident_cely__icontains=self.q) | Q(autori_snapshot__icontains=self.q) | Q(rok_vzniku__icontains=self.q)
+            )
         return self.check_filter_permission(qs)
 
 
@@ -1742,9 +1715,9 @@ def get_hierarchie_dokument_typ():
     """
     Funkce pro získaní hierarchie pro heslař.
     """
-    hierarchie_qs = HeslarHierarchie.objects.filter(
-        heslo_podrazene__nazev_heslare__id=HESLAR_DOKUMENT_TYP
-    ).values_list("heslo_podrazene", "heslo_nadrazene")
+    hierarchie_qs = HeslarHierarchie.objects.filter(heslo_podrazene__nazev_heslare__id=HESLAR_DOKUMENT_TYP).values_list(
+        "heslo_podrazene", "heslo_nadrazene"
+    )
     hierarchie = {}
     for v in hierarchie_qs:
         if v[0] in hierarchie:
@@ -1759,7 +1732,7 @@ def get_history_dates(historie_vazby, request_user):
     Funkce pro získaní historických datumu.
     """
     request_user: User
-    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
+    anonymized = request_user.hlavni_role.pk not in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
         "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_DOK, anonymized),
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_DOK, anonymized),
@@ -1768,7 +1741,7 @@ def get_history_dates(historie_vazby, request_user):
     return historie
 
 
-def get_detail_template_shows(dokument,user):
+def get_detail_template_shows(dokument, user):
     """
     Funkce pro získaní kontextu pro zobrazování možností na stránkách.
     """
@@ -1777,10 +1750,12 @@ def get_detail_template_shows(dokument,user):
         soubor_stahnout_dokument = check_permissions(p.actionChoices.soubor_stahnout_model3d, user, dokument.ident_cely)
         soubor_nahled = check_permissions(p.actionChoices.soubor_nahled_model3d, user, dokument.ident_cely)
         soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_model3d, user, dokument.ident_cely)
-        soubor_nahradit = False
+        soubor_nahradit = check_permissions(p.actionChoices.soubor_nahradit_model3d, user, dokument.ident_cely)
     else:
         show_edit = check_permissions(p.actionChoices.dok_edit, user, dokument.ident_cely)
-        soubor_stahnout_dokument = check_permissions(p.actionChoices.soubor_stahnout_dokument, user, dokument.ident_cely)
+        soubor_stahnout_dokument = check_permissions(
+            p.actionChoices.soubor_stahnout_dokument, user, dokument.ident_cely
+        )
         soubor_nahled = check_permissions(p.actionChoices.soubor_nahled_dokument, user, dokument.ident_cely)
         soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_dokument, user, dokument.ident_cely)
         soubor_nahradit = check_permissions(p.actionChoices.soubor_nahradit_dokument, user, dokument.ident_cely)
@@ -1806,6 +1781,7 @@ def get_detail_template_shows(dokument,user):
     }
     return show
 
+
 @login_required
 def zapsat(request, zaznam=None):
     """
@@ -1821,13 +1797,12 @@ def zapsat(request, zaznam=None):
         )
         if form_d.is_valid():
             logger.debug("dokument.views.zapsat.valid")
-            fedora_transaction = FedoraTransaction()
             dokument = form_d.save(commit=False)
             dokument: Dokument
-            dokument.active_transaction = fedora_transaction
-            dokument.rada = get_dokument_rada(
-                dokument.typ_dokumentu, dokument.material_originalu
+            fedora_transaction = dokument.create_transaction(
+                request.user, ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
             )
+            dokument.rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
             if isinstance(zaznam, Projekt):
                 dokument.datum_zverejneni = datetime.now().date() + timedelta(days=365 * 100)
             try:
@@ -1839,11 +1814,9 @@ def zapsat(request, zaznam=None):
                             logger.debug(prefix)
                 else:
                     prefix = form_d.cleaned_data["region"]
-                dokument.ident_cely = get_temp_dokument_ident(
-                    rada=dokument.rada.zkratka, region=prefix
-                )
+                dokument.ident_cely = get_temp_dokument_ident(rada=dokument.rada.zkratka, region=prefix)
             except MaximalIdentNumberError:
-                messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
+                fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
                 fedora_transaction.rollback_transaction()
             else:
                 if FedoraRepositoryConnector.check_container_deleted_or_not_exists(dokument.ident_cely, "dokument"):
@@ -1882,11 +1855,12 @@ def zapsat(request, zaznam=None):
                     dokument.close_active_transaction_when_finished = True
                     dokument.save()
 
-                    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                     return redirect("dokument:detail", ident_cely=dokument.ident_cely)
                 else:
-                    logger.debug("dokument.views.zapsat.check_container_deleted_or_not_exists.invalid",
-                                 extra={"ident_cely": dokument.ident_cely})
+                    logger.debug(
+                        "dokument.views.zapsat.check_container_deleted_or_not_exists.invalid",
+                        extra={"ident_cely": dokument.ident_cely},
+                    )
         else:
             logger.debug("dokument.views.zapsat.not_valid", extra={"erros": form_d.errors})
 
@@ -1918,7 +1892,7 @@ def zapsat(request, zaznam=None):
             "formDokument": form_d,
             "hierarchie": get_hierarchie_dokument_typ(),
             "samostatny": True if not zaznam else False,
-            "toolbar_label": _("dokument.views.zapsat.dokument.toolbar_label")
+            "toolbar_label": _("dokument.views.zapsat.dokument.toolbar_label"),
         },
     )
 
@@ -1940,19 +1914,15 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
             remove_orphan = True
     if request.method == "POST":
         if isinstance(zaznam, ArcheologickyZaznam):
-            dokument_cast = relace_dokumentu.filter(
-                archeologicky_zaznam__ident_cely=ident_zaznamu
-            )
+            dokument_cast = relace_dokumentu.filter(archeologicky_zaznam__ident_cely=ident_zaznamu)
         else:
             dokument_cast = relace_dokumentu.filter(projekt__ident_cely=ident_zaznamu)
         if len(dokument_cast) == 0:
             logger.debug("dokument.views.odpojit.no_relace", extra={"ident_doku": ident_doku})
-            messages.add_message(
-                request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM
-            )
+            messages.add_message(request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM)
             return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=404)
-        fedora_transaction = FedoraTransaction()
-        dokument_cast[0].active_transaction = fedora_transaction
+        fedora_transaction = FedoraTransaction(zaznam, request.user, DOKUMENT_USPESNE_ODPOJEN)
+        fedora_transaction.main_record = zaznam
         resp = dokument_cast[0].delete()
         logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
         if remove_orphan:
@@ -1961,7 +1931,6 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
             orphan_dokument.delete()
             logger.debug("dokument.views.odpojit.deleted")
         fedora_transaction.mark_transaction_as_closed()
-        messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODPOJEN)
         return JsonResponse({"redirect": zaznam.get_absolute_url()})
     else:
         warnings = []
@@ -1990,9 +1959,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
     """
     zaznam = get_object_or_404(typ, ident_cely=ident_zaznam)
     if isinstance(zaznam, ArcheologickyZaznam):
-        casti_zaznamu = DokumentCast.objects.filter(
-            archeologicky_zaznam__ident_cely=ident_zaznam
-        )
+        casti_zaznamu = DokumentCast.objects.filter(archeologicky_zaznam__ident_cely=ident_zaznam)
         debug_name = "akci "
         redirect_name = zaznam.get_absolute_url()
         context = {
@@ -2016,7 +1983,9 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
 
         for dokument_id in dokument_ids:
             dokument = get_object_or_404(Dokument, id=dokument_id)
-            fedora_transaction = FedoraTransaction()
+            fedora_transaction = zaznam.create_transaction(
+                request.user, DOKUMENT_USPESNE_PRIPOJEN, DOKUMENT_JIZ_BYL_PRIPOJEN
+            )
             dokument.active_transaction = fedora_transaction
             relace = casti_zaznamu.filter(dokument__id=dokument_id)
             if not relace.exists():
@@ -2030,45 +1999,30 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                     dc.active_transaction = fedora_transaction
                     dc.save()
                 else:
-                    dc = DokumentCast(
-                        projekt=zaznam, dokument=dokument, ident_cely=dc_ident
-                    )
+                    dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
                     dc.active_transaction = fedora_transaction
                     dc.save()
                 dokument.close_active_transaction_when_finished = True
                 dokument.save()
-                logger.debug("dokument.views.pripojit.pripojit",
-                             extra={"debug_name": debug_name, "ident_zaznam": ident_zaznam,
-                                    "ident_cely": dokument.ident_cely})
-                messages.add_message(
-                    request,
-                    messages.SUCCESS,
-                    DOKUMENT_USPESNE_PRIPOJEN,
+                logger.debug(
+                    "dokument.views.pripojit.pripojit",
+                    extra={"debug_name": debug_name, "ident_zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
                 )
             else:
-                messages.add_message(
-                    request, messages.WARNING, DOKUMENT_JIZ_BYL_PRIPOJEN
-                )
+                messages.add_message(request, messages.WARNING, DOKUMENT_JIZ_BYL_PRIPOJEN)
+                fedora_transaction.rollback_transaction()
         return JsonResponse({"redirect": redirect_name})
     else:
         if proj_ident_cely:
             # Pridavam projektove dokumenty
             projektove_dokumenty = set()
             proj_dok_list = set()
-            dokumenty_akce = set(
-                Dokument.objects.filter(
-                    casti__archeologicky_zaznam__ident_cely=ident_zaznam
-                )
-            )
+            dokumenty_akce = set(Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_zaznam))
             projekt = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
-            for akce in projekt.akce_set.all().exclude(
-                archeologicky_zaznam__ident_cely=ident_zaznam
-            ):
+            for akce in projekt.akce_set.all().exclude(archeologicky_zaznam__ident_cely=ident_zaznam):
                 for cast in akce.archeologicky_zaznam.casti_dokumentu.all():
                     if cast.dokument not in dokumenty_akce:
-                        projektove_dokumenty.add(
-                            (cast.dokument.id, cast.dokument.ident_cely)
-                        )
+                        projektove_dokumenty.add((cast.dokument.id, cast.dokument.ident_cely))
                         proj_dok_list.add(cast.dokument)
             context["dokumenty"] = proj_dok_list
             context["pripojit"] = proj_dok_list
@@ -2115,7 +2069,7 @@ def get_required_fields_model3D(zaznam=None, next=0):
     """
     Funkce pro získaní dictionary povinných polí podle stavu modelu 3D.
 
-    Args:     
+    Args:
         zaznam (Dokument): model Dokument pro který se dané pole počítají.
 
         next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
@@ -2134,6 +2088,7 @@ def get_required_fields_model3D(zaznam=None, next=0):
             "rok_vzniku",
             "organizace",
             "typ_dokumentu",
+            "licence",
         ]
     if stav > D_STAV_ZAPSANY - next:
         required_fields += [
@@ -2150,7 +2105,7 @@ def get_required_fields_dokument(zaznam=None, next=0):
     """
     Funkce pro získaní dictionary povinných polí podle stavu dokumentu.
 
-    Args:     
+    Args:
         zaznam (Dokument): model Dokument pro který se dané pole počítají.
 
         next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
@@ -2194,7 +2149,7 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
             heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
             not_readonly=show["editovat"],
         ),
-        extra=1 if show["editovat"] else 0,
+        extra=3 if show["editovat"] else 0,
         can_delete=False,
     )
     NalezPredmetFormset = inlineformset_factory(
@@ -2202,14 +2157,10 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
         NalezPredmet,
         form=create_nalez_predmet_form(
             heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
-            list(
-                Heslar.objects.filter(
-                    nazev_heslare=HESLAR_PREDMET_SPECIFIKACE
-                ).values_list("id", "heslo")
-            ),
+            heslar_list(HESLAR_PREDMET_SPECIFIKACE),
             not_readonly=show["editovat"],
         ),
-        extra=1 if show["editovat"] else 0,
+        extra=3 if show["editovat"] else 0,
         can_delete=False,
     )
 
@@ -2228,18 +2179,14 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
             prefix=komponenta.ident_cely + "_o",
         )
         if komponenta.ident_cely == komp_ident_cely
-        else NalezObjektFormset(
-            instance=komponenta, prefix=komponenta.ident_cely + "_o"
-        ),
+        else NalezObjektFormset(instance=komponenta, prefix=komponenta.ident_cely + "_o"),
         "form_nalezy_predmety": NalezPredmetFormset(
             old_nalez_post,
             instance=komponenta,
             prefix=komponenta.ident_cely + "_p",
         )
         if komponenta.ident_cely == komp_ident_cely
-        else NalezPredmetFormset(
-            instance=komponenta, prefix=komponenta.ident_cely + "_p"
-        ),
+        else NalezPredmetFormset(instance=komponenta, prefix=komponenta.ident_cely + "_p"),
         "helper_predmet": NalezFormSetHelper(typ="predmet"),
         "helper_objekt": NalezFormSetHelper(typ="objekt"),
     }
@@ -2259,6 +2206,7 @@ def get_areal_choices():
     """
     return heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
 
+
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_3d_limit(request):
@@ -2275,15 +2223,45 @@ def post_ajax_get_3d_limit(request):
     )
     back = []
     for pian in pians:
-        logger.debug(pian)
         back.append(
             {
                 "id": pian["dokument__id"],
                 "ident_cely": pian["dokument__ident_cely"],
-                "geom": pian["geom"].wkt.replace(", ", ",")
+                "geom": pian["geom"].wkt.replace(", ", ","),
             }
         )
     if len(pians) > 0:
         return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
     else:
         return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+
+
+class DokumentyAzTableView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro zobrazení tabulky dokumentů.
+    """
+
+    def get(self, request, typ_vazby):
+        if typ_vazby == "arch_z":
+            qs = (
+                Dokument.objects.filter(casti__archeologicky_zaznam__id=request.GET.get("id", ""))
+                .select_related("soubory")
+                .prefetch_related("soubory__soubory")
+                .order_by("ident_cely")
+            )
+            zaznam = ArcheologickyZaznam.objects.get(id=request.GET.get("id", ""))
+        else:
+            qs = (
+                Dokument.objects.filter(casti__projekt__id=request.GET.get("id", ""))
+                .select_related("soubory")
+                .prefetch_related("soubory__soubory")
+            ).order_by("ident_cely")
+            zaznam = Projekt.objects.get(id=request.GET.get("id", ""))
+        context = {
+            "dokumenty": qs,
+            "show": {"dokument_odpojit": request.GET.get("show_dokument_odpojit", "")},
+            "zaznam": zaznam,
+            "type": typ_vazby,
+        }
+        logger.debug(context)
+        return HttpResponse(render_to_string("dokument/dokument_table_only.html", context))

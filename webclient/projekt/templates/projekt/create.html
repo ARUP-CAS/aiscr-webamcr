@@ -34,9 +34,9 @@
   <script type="text/javascript" src="{% static 'js/daterangepicker.min.js' %}"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
   <!-- static leaflet additional import-->
-<link rel="stylesheet" href="{% static 'leaflet.measure.css' %}"/>
-<script src="{% static 'leaflet.measure.js' %}"></script>
-<script type="text/javascript" src="{% static 'leaflet.coor.js' %}"></script>
+<link rel="stylesheet" href="{% static 'leaflet.measure.css' %}?v2"/>
+<script src="{% static 'leaflet.measure.js' %}?v1"></script>
+<script type="text/javascript" src="{% static 'leaflet.coor.js' %}?v1"></script>
 <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
 <link rel="stylesheet" type="text/css" href="{% static 'daterangepicker.css' %}"/>
 <link rel="stylesheet" href="{% static 'leaflet-search.css' %}"/>
@@ -46,7 +46,7 @@
 {% block content %}
   <div class="app-entity-projekt">
     {% include "toolbar_projekt.html" %}
-    <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;" action="{% url 'projekt:create' %}">
+    <form method="post" action="{% url 'projekt:create' %}" class="submit-spinner">
       <div class="card app-card-form app-card-in-clean-shadow">
         <div class="card-header">
           <div class="app-fx app-left">
@@ -60,7 +60,10 @@
           </div>
         </div>
       </div>
-      <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{{ button }}</button>
+      <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{{ button }}
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+        style="display: none"></span>
+      </button>
       <a class="btn btn-secondary mt-3" href="{% url 'projekt:index' %}">{% trans "projekt.templates.create.backButton.text" %}</a>
     </form>
   </div>
@@ -95,21 +98,33 @@
       projektyP78: '{% trans "mapa.projektyP78" %}',
       projektyPAS: '{% trans "mapa.projektyPAS" %}',
       projektyPIAN: '{% trans "mapa.projektyPIAN" %}',
-      SearchText: '{% trans "mapa.SearchText" %}',
-      SearchTextCancel: '{% trans "mapa.SearchTextCancel" %}',
-      SearchTextError: '{% trans "mapa.SearchTextError" %}',
       SelectedLocation: '{% trans "mapa.SelectedLocation" %}',
       zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
       zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
     };
+
+    var leaflet_search_translations = {
+      KatastralniUzemi: '{% trans "leaflet_search.KatastralniUzemi" %}',
+      Okres: '{% trans "leaflet_search.Okres" %}',
+      Obec: '{% trans "leaflet_search.Obec" %}',
+      Adresa: '{% trans "leaflet_search.Adresa" %}',
+      Ulice: '{% trans "leaflet_search.Ulice" %}',
+      Geonames: '{% trans "leaflet_search.Geonames" %}',
+      Parcela: '{% trans "leaflet_search.Parcela" %}',
+      Stavebni: '{% trans "leaflet_search.Stavebni" %}',
+      Pozemkova: '{% trans "leaflet_search.Pozemkova" %}',
+      SearchTextCancel: '{% trans "leaflet_search.SearchTextCancel" %}',
+      SearchTextError: '{% trans "leaflet_search.SearchTextError" %}'
+  };
   </script>
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
-  <script src="{% static 'mapa_basic_grey.js' %}"></script>
+  <script src="{% static 'coordTransform.js' %}"></script>
+  <script src="{% static 'mapa_basic_grey.js' %}?v1"></script>
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script src="{% static 'leaflet_subgroup.js' %}"></script>
-  <script src="{% static 'mapa_projekty.js' %}"></script>
+  <script src="{% static 'mapa_projekty.js' %}?v1"></script>
   <script>var object_id = "{{ confirm.ident_cely }}";</script>
   <script>
       global_map_can_edit = true;
@@ -184,9 +199,11 @@
   <script>
     $(document).ready(function () {
         var sel = document.getElementById('id_katastry');
-        for(var i = 0; i < sel.options.length; i++){
-          if(sel.options[i].value === ""){
-          sel.remove(i--);//decrease i to preserve future index references after removal
+        if (sel && "options" in sel) {
+          for(var i = 0; i < sel.options.length; i++){
+            if(sel.options[i].value === ""){
+            sel.remove(i--);//decrease i to preserve future index references after removal
+            }
           }
         }
         switchMap(false);

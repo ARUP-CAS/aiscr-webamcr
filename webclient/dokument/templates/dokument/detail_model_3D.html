@@ -25,7 +25,7 @@
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-knihovna_3d" href="{% url 'core:upload_file' 'model3d' dokument.ident_cely %}"
+            <a id="buttonUpload" class="btn app-entity-knihovna_3d" href="{% url 'core:upload_file' 'model3d' dokument.ident_cely %}"
                rel="tooltip"
                data-placement="top" title="{% trans 'dokument.templates.detail_model_3D.nahledy3dModelu.nahratSoubor.tooltip' %}">
               <span class="material-icons">publish</span>
@@ -54,7 +54,7 @@
         {% if show.editovat %}
           <div class="app-fx app-right">
             <div class="btn-group" role="group">
-              <a class="btn" href="{% url 'dokument:edit-model-3D' dokument.ident_cely %}" rel="tooltip"
+              <a id="buttonEdit" class="btn" href="{% url 'dokument:edit-model-3D' dokument.ident_cely %}" rel="tooltip"
                  data-placement="top" title="{% trans 'dokument.templates.detail_model_3D.detail.upravit.tooltip' %}">
                 <span class="material-icons">edit</span>
               </a>
@@ -101,6 +101,9 @@
             <div class="form-group col-sm-8">
               {{ formExtraData.odkaz|as_crispy_field }}
             </div>
+            <div class="form-group col-sm-4 col-lg-2">
+              {{ formDokument.licence|as_crispy_field }}
+            </div>
           </div>
           {% include "dokument/coor_doc.html" %}
           <div class="row">
@@ -138,8 +141,7 @@
       </div>
       <div class="card-body formset-table">
         <h5>{% trans "dokument.templates.detail_model_3D.predmetyObjekty.Objekty" %}</h5>
-        <form class="mb-3" method="POST" action="{% url 'nalez:edit_nalez' 'dokument' komponenta.ident_cely %}"
-              onsubmit="editNalezSubmitButton.disabled = true; return true;">
+        <form class="mb-3 submit-spinner" method="POST" action="{% url 'nalez:edit_nalez' 'dokument' komponenta.ident_cely %}">
           {% if formset.objekt.forms %}
           <div class="content-with-table-responsive-container">
             <div class="content-with-table-responsive">
@@ -166,8 +168,10 @@
           </div>
           {% endif %}
           {% if show.editovat %}
-          <button type="submit" id="editNalezSubmitButton"
-                  class="btn btn-primary">{% trans "dokument.templates.detail_model_3D.predmetyObjekty.submitButton.text" %}</button>
+          <button type="submit" id="editNalezSubmitButton" class="btn btn-primary">{% trans "dokument.templates.detail_model_3D.predmetyObjekty.submitButton.text" %}
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+            style="display: none"></span>
+          </button>
           {% endif %}
         </form>
       </div>

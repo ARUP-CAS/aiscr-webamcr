@@ -1,13 +1,13 @@
 from django.urls import path
 
 from .views import (
+    GetUserInfo,
+    ObtainAuthTokenWithUpdate,
     UserAccountUpdateView,
     UzivatelAutocomplete,
+    UzivatelAutocompletePublic,
     update_notifications,
-    GetUserInfo,
-    ObtainAuthTokenWithUpdate, UzivatelAutocompletePublic,
 )
-
 
 app_name = "uzivatel"
 

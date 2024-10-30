@@ -10,7 +10,7 @@
 {% block content %}
   <div class="app-entity-dokument">
     {% include "toolbar_dokument.html" with is_3d=False is_edit=True d=dokument%}
-    <form method="post" onsubmit="newDocumentSubmitBtn.disabled = true; return true;">
+    <form method="post" class="submit-spinner">
       <div>
         <div class="card app-card-form">
           <div class="card-header">
@@ -33,7 +33,10 @@
         </div>
         <div class="mt-3">
           <div class="form-group">
-            <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary">{% trans "dokument.templates.edit.submitButton.text" %}</button>
+            <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary">{% trans "dokument.templates.edit.submitButton.text" %}
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+              style="display: none"></span>
+            </button>
             <a type="button" class="btn btn-secondary" href="{% url 'dokument:detail' dokument.ident_cely %}">{% trans "dokument.templates.edit.backButton.text" %}</a>
           </div>
         </div>

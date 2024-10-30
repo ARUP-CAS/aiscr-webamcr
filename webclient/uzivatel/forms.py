@@ -1,26 +1,26 @@
 import logging
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Layout, Field
+
+from core.validators import validate_phone_number
+from core.widgets import ForeignKeyReadOnlyTextInput
 from crispy_forms.bootstrap import AppendedText
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Div, Field, Layout
 from django import forms
 from django.conf import settings
-from django.contrib.auth import authenticate
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.mail import EmailMultiAlternatives
 from django.forms import PasswordInput
 from django.template import loader
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Invisible
 from django_registration.forms import RegistrationForm
-from django.core.exceptions import ValidationError
-from django.core.mail import EmailMultiAlternatives
-from django.utils.safestring import mark_safe
-
-from core.widgets import ForeignKeyReadOnlyTextInput
-from core.validators import validate_phone_number
-from .models import Osoba, User, UserNotificationType
 from services.mailer import Mailer
+
+from .models import Osoba, User, UserNotificationType
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ class AuthUserCreationForm(RegistrationForm):
     """
     Formulář pro vytvoření uživatele.
     """
+
     class Meta(RegistrationForm):
         model = User
         fields = (
@@ -68,8 +69,8 @@ class AuthUserCreationForm(RegistrationForm):
     def __init__(self, *args, **kwargs):
         super(AuthUserCreationForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-        self.fields["telefon"].validators=[validate_phone_number]
-        self.fields["telefon"].widget.input_type="tel"
+        self.fields["telefon"].validators = [validate_phone_number]
+        self.fields["telefon"].widget.input_type = "tel"
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Field("first_name"),
@@ -77,8 +78,16 @@ class AuthUserCreationForm(RegistrationForm):
             Field("email"),
             Field("telefon"),
             Field("organizace"),
-            AppendedText('password1', mark_safe('<i class="bi bi-eye-slash" id="togglePassword1"></i>'),input_size="input-group-sm"),
-            AppendedText('password2', mark_safe('<i class="bi bi-eye-slash" id="togglePassword2"></i>'),input_size="input-group-sm"),
+            AppendedText(
+                "password1",
+                mark_safe('<i class="bi bi-eye-slash" id="togglePassword1"></i>'),
+                input_size="input-group-sm",
+            ),
+            AppendedText(
+                "password2",
+                mark_safe('<i class="bi bi-eye-slash" id="togglePassword2"></i>'),
+                input_size="input-group-sm",
+            ),
         )
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
@@ -111,6 +120,7 @@ class AuthUserChangeForm(forms.ModelForm):
     """
     Formulář pro editaci uživatele.
     """
+
     class Meta:
         model = User
         fields = ("telefon",)
@@ -141,16 +151,16 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
     """
     Formulář pro zobrazení detailu uživatele.
     """
+
     hlavni_role = forms.CharField(
         widget=ForeignKeyReadOnlyTextInput(),
         label=_("uzivatel.forms.userChange.hlavni_role.label"),
-        help_text= _("uzivatel.forms.userChange.hlavni_role.tooltip")
-        )
+        help_text=_("uzivatel.forms.userChange.hlavni_role.tooltip"),
+    )
 
     class Meta:
         model = User
-        fields = (
-            "first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "groups")
+        fields = ("first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "groups")
         labels = {
             "first_name": _("uzivatel.forms.userChange.first_name.label"),
             "last_name": _("uzivatel.forms.userChange.last_name.label"),
@@ -198,7 +208,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
                 Div("organizace", css_class="col-sm-3"),
                 Div("hlavni_role", css_class="col-sm-3"),
                 Div("groups", css_class="col-sm-3"),
-                css_class="row"
+                css_class="row",
             )
         )
 
@@ -207,39 +217,42 @@ class NotificationsForm(forms.ModelForm):
     """
     Formulář pro správu typu notifikací.
     """
+
     notification_types = forms.ModelMultipleChoiceField(
-        queryset=UserNotificationType.objects.filter(ident_cely__icontains='S-E-'),
+        queryset=UserNotificationType.objects.filter(ident_cely__icontains="S-E-"),
         widget=forms.CheckboxSelectMultiple,
-        required=False, 
+        required=False,
         label=_("uzivatel.forms.notifications_form.notification_types.notification_types_label"),
-        help_text=_("uzivatel.forms.notifications_form.notification_types.notification_types.tooltip")
-        )
+        help_text=_("uzivatel.forms.notifications_form.notification_types.notification_types.tooltip"),
+    )
 
     class Meta:
         model = User
-        fields = ('notification_types',)
+        fields = ("notification_types",)
+
 
 class UpdatePasswordSettings(forms.ModelForm):
     """
     Formulář pro změnu hesla.
     """
+
     old_password = forms.CharField(
         required=False,
         widget=PasswordInput(),
         label=_("uzivatel.forms.userChange.old_password.label"),
-        help_text=_("uzivatel.forms.UpdatePasswordSettings.old_password.tooltip")
+        help_text=_("uzivatel.forms.UpdatePasswordSettings.old_password.tooltip"),
     )
     password1 = forms.CharField(
         required=False,
         widget=PasswordInput(),
         label=_("uzivatel.forms.userChange.password1.label"),
-        help_text=_("uzivatel.forms.UpdatePasswordSettings.password1.tooltip")
+        help_text=_("uzivatel.forms.UpdatePasswordSettings.password1.tooltip"),
     )
     password2 = forms.CharField(
         required=False,
         widget=PasswordInput(),
         label=_("uzivatel.forms.userChange.password2.label"),
-        help_text=_("uzivatel.forms.UpdatePasswordSettings.password2.tooltip")
+        help_text=_("uzivatel.forms.UpdatePasswordSettings.password2.tooltip"),
     )
 
     def clean(self):
@@ -284,15 +297,20 @@ class AuthUserLoginForm(AuthenticationForm):
     """
     Formulář pro prihlášení uživatele.
     """
+
     def __init__(self, *args, **kwargs):
         super(AuthUserLoginForm, self).__init__(*args, **kwargs)
-        self.fields["username"].help_text= _("uzivatel.forms.login.username.tooltip")
-        self.fields["password"].help_text= _("uzivatel.forms.login.password.tooltip")
+        self.fields["username"].help_text = _("uzivatel.forms.login.username.tooltip")
+        self.fields["password"].help_text = _("uzivatel.forms.login.password.tooltip")
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Field("username"),
-            AppendedText("password", mark_safe('<i class="bi bi-eye-slash" id="togglePassword"> </i>'),input_size="input-group-sm"),
+            AppendedText(
+                "password",
+                mark_safe('<i class="bi bi-eye-slash" id="togglePassword"> </i>'),
+                input_size="input-group-sm",
+            ),
         )
 
     def get_invalid_login_error(self):
@@ -301,11 +319,12 @@ class AuthUserLoginForm(AuthenticationForm):
             code="invalid_login",
         )
 
+
 class UserPasswordResetForm(PasswordResetForm):
     def __init__(self, *args, **kwargs):
         super(UserPasswordResetForm, self).__init__(*args, **kwargs)
-        self.fields["email"].label= _("uzivatel.forms.passwordReset.email.label")
-        self.fields["email"].help_text= _("uzivatel.forms.passwordReset.email.tooltip")
+        self.fields["email"].label = _("uzivatel.forms.passwordReset.email.label")
+        self.fields["email"].help_text = _("uzivatel.forms.passwordReset.email.tooltip")
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
@@ -335,19 +354,27 @@ class UserPasswordResetForm(PasswordResetForm):
             status = "OK"
             exception = None
         except Exception as e:
-            logger.warning("uzivatel.forms.send_mail.warning",
-                            extra={"from_email": from_email, "to": to_email, "subject": subject, "exception": e})
+            logger.warning(
+                "uzivatel.forms.send_mail.warning",
+                extra={"from_email": from_email, "to": to_email, "subject": subject, "exception": e},
+            )
             status = "NOK"
             exception = e
         notification_type = UserNotificationType.objects.get(ident_cely="E-U-05")
-        Mailer._log_notification(notification_type=notification_type, receiver_object=context['user'], receiver_address=to_email, status=status, exception=exception)
-
+        Mailer._log_notification(
+            notification_type=notification_type,
+            receiver_object=context["user"],
+            receiver_address=to_email,
+            status=status,
+            exception=exception,
+        )
 
 
 class OsobaForm(forms.ModelForm):
     """
     Formulář pro vytvoření osoby.
     """
+
     class Meta:
         model = Osoba
         fields = (

@@ -10,11 +10,14 @@
     </div>
   </div>
   <div class="card-body">
-    <form method="POST" action="{% url 'pian:create' dj_ident_cely %}" id="create_pian_form_id">
+    <form method="POST" action="{% url 'pian:create' dj_ident_cely %}" id="create_pian_form_id" class="submit-spinner">
       <!-- Action is filled using javascript -->
       {% crispy pian_form_create %}
       <button type="submit" id="createPianSubmitButton"
-              class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.pian_crate.button.vytvoritPian.label" %}</button>
+              class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.pian_crate.button.vytvoritPian.label" %}
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+              style="display: none"></span>
+      </button>
     </form>
   </div>
 </div>

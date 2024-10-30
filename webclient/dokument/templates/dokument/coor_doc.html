@@ -43,19 +43,30 @@
     MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
     openStreetMap: '{% trans "mapa.openStreetMap" %}',
     openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
-    SearchText: '{% trans "mapa.SearchText" %}',
-    SearchTextCancel: '{% trans "mapa.SearchTextCancel" %}',
-    SearchTextError: '{% trans "mapa.SearchTextError" %}',
     zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
     zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'          
   };
+  var leaflet_search_translations = {
+    KatastralniUzemi: '{% trans "leaflet_search.KatastralniUzemi" %}',
+    Okres: '{% trans "leaflet_search.Okres" %}',
+    Obec: '{% trans "leaflet_search.Obec" %}',
+    Adresa: '{% trans "leaflet_search.Adresa" %}',
+    Ulice: '{% trans "leaflet_search.Ulice" %}',
+    Geonames: '{% trans "leaflet_search.Geonames" %}',
+    Parcela: '{% trans "leaflet_search.Parcela" %}',
+    Stavebni: '{% trans "leaflet_search.Stavebni" %}',
+    Pozemkova: '{% trans "leaflet_search.Pozemkova" %}',
+    SearchTextCancel: '{% trans "leaflet_search.SearchTextCancel" %}',
+    SearchTextError: '{% trans "leaflet_search.SearchTextError" %}'
+};
 </script>
 <script src="{% static 'mapa_pins.js' %}"></script>
 <script src="{% static 'coor_precision.js' %}"></script>
 <script src="{% static 'spin/spin.min.js' %}"></script>
 <script src="{% static 'leaflet.spin.min.js' %}"></script>
-<script src="{% static 'mapa_basic_grey.js' %}"></script>
-<script src="{% static 'mapa_doc.js' %}"></script>
+<script src="{% static 'coordTransform.js' %}"></script>
+<script src="{% static 'mapa_basic_grey.js' %}?v1"></script>
+<script src="{% static 'mapa_doc.js' %}?v1"></script>
 <script>
   $(document).ready(function () {
         {% if coordinate_wgs84_x1 is not None %}

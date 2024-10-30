@@ -8,4 +8,3 @@ class HistorieConfig(AppConfig):
         super(HistorieConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import historie.signals
-

@@ -1,29 +1,31 @@
 import logging
 
-from django.urls import reverse
-
+from arch_z import validators
+from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU
+from core.forms import BaseFilterForm
+from core.validators import validate_date_min_1600
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
 from django.forms import HiddenInput
-from django.utils.translation import gettext_lazy as _
+from django.urls import reverse
 from django.utils.safestring import mark_safe
-
-from arch_z import validators
+from django.utils.translation import gettext_lazy as _
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
+from historie.models import Historie
 from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
-from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_ZRUSENY
-from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
-from core.forms import BaseFilterForm
 
 logger_s = logging.getLogger(__name__)
+
 
 class CreateProjektForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření projektu.
     """
+
     coordinate_x1 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_x2 = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
@@ -31,6 +33,9 @@ class CreateProjektForm(forms.ModelForm):
         label=_("projekt.forms.createProjekt.planovaneZahajeni.label"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
         help_text=_("projekt.forms.createProjekt.planovaneZahajeni.tooltip"),
+        validators=[
+            validate_date_min_1600,
+        ],
     )
 
     class Meta:
@@ -53,12 +58,8 @@ class CreateProjektForm(forms.ModelForm):
             "lokalizace": forms.TextInput(),
             "parcelni_cislo": forms.TextInput(),
             "oznaceni_stavby": forms.TextInput(),
-            "hlavni_katastr": forms.TextInput(
-                attrs={"readonly": "readonly"}
-            ),
-            "katastry": autocomplete.ModelSelect2Multiple(
-                url="heslar:katastr-autocomplete"
-            ),
+            "hlavni_katastr": forms.TextInput(attrs={"readonly": "readonly"}),
+            "katastry": autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
         }
         labels = {
             "typ_projektu": _("projekt.forms.createProjekt.typProjektu.label"),
@@ -69,9 +70,7 @@ class CreateProjektForm(forms.ModelForm):
             "parcelni_cislo": _("projekt.forms.createProjekt.parcelniCislo.label"),
             "oznaceni_stavby": _("projekt.forms.createProjekt.oznaceniStavby.label"),
         }
-        error_messages = {
-            "hlavni_katastr": {"required": _("projekt.forms.createProjekt.hlavniKatastr.error")}
-        }
+        error_messages = {"hlavni_katastr": {"required": _("projekt.forms.createProjekt.hlavniKatastr.error")}}
         help_texts = {
             "typ_projektu": _("projekt.forms.createProjekt.typProjektu.tooltip"),
             "hlavni_katastr": _("projekt.forms.createProjekt.hlavniKatastr.tooltip"),
@@ -82,7 +81,7 @@ class CreateProjektForm(forms.ModelForm):
             "oznaceni_stavby": _("projekt.forms.createProjekt.oznaceniStavby.tooltip"),
         }
 
-    def __init__(self, *args,required=None,required_next=None, **kwargs):
+    def __init__(self, *args, required=None, required_next=None, **kwargs):
         super(CreateProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.fields["katastry"].readonly = True
@@ -128,38 +127,38 @@ class CreateProjektForm(forms.ModelForm):
                 css_class="card app-card-form",
             )
         )
-        self.fields[
-            "hlavni_katastr"
-        ].widget.template_name = "core/select_to_text.html"
+        self.fields["hlavni_katastr"].widget.template_name = "core/select_to_text.html"
         self.helper.form_tag = False
         for key in self.fields.keys():
             if required or required_next:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (
+                        " required-next" if key in required_next else ""
+                    )
                 else:
-                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
-            if self.fields[key].disabled == True:
+            if self.fields[key].disabled:
                 self.fields[key].help_text = ""
 
     def clean(self):
         cleaned_data = super().clean()
 
-        coordinate_x1 = cleaned_data.get('coordinate_x1')
-        coordinate_x2 = cleaned_data.get('coordinate_x2')
+        coordinate_x1 = cleaned_data.get("coordinate_x1")
+        coordinate_x2 = cleaned_data.get("coordinate_x2")
 
         if not coordinate_x1 or not coordinate_x2:
             raise forms.ValidationError(_("projekt.forms.CreateProjektForm.clean.missing_coords"))
         return cleaned_data
 
 
-
 class EditProjektForm(forms.ModelForm):
     """
     Hlavní formulář pro editaci projektu.
     """
+
     coordinate_x1 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_x2 = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
@@ -167,19 +166,18 @@ class EditProjektForm(forms.ModelForm):
         label=_("projekt.forms.editProjekt.planovaneZahajeni.label"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
         help_text=_("projekt.forms.editProjekt.planovaneZahajeni.tooltip"),
+        validators=[
+            validate_date_min_1600,
+        ],
     )
     datum_zahajeni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti],
-        widget=forms.DateInput(
-            attrs={"data-provide": "datepicker", "autocomplete": "off"}
-        ),
+        validators=[validators.datum_max_1_mesic_v_budoucnosti, validate_date_min_1600],
+        widget=forms.DateInput(attrs={"data-provide": "datepicker", "autocomplete": "off"}),
         help_text=_("projekt.forms.editProjekt.datumZahajeni.tooltip"),
     )
     datum_ukonceni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti],
-        widget=forms.DateInput(
-            attrs={"data-provide": "datepicker", "autocomplete": "off"}
-        ),
+        validators=[validators.datum_max_1_mesic_v_budoucnosti, validate_date_min_1600],
+        widget=forms.DateInput(attrs={"data-provide": "datepicker", "autocomplete": "off"}),
         help_text=_("projekt.forms.editProjekt.datumUkonceni.tooltip"),
     )
 
@@ -216,22 +214,16 @@ class EditProjektForm(forms.ModelForm):
             "kulturni_pamatka_popis": forms.TextInput(),
             "uzivatelske_oznaceni": forms.TextInput(),
             "hlavni_katastr": forms.TextInput(
-                attrs=
-                    {"readonly": "readonly"}
-                ,
+                attrs={"readonly": "readonly"},
             ),
-            "katastry": autocomplete.ModelSelect2Multiple(
-                url="heslar:katastr-autocomplete"
-            ),
+            "katastry": autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
             "vedouci_projektu": forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
-            "termin_odevzdani_nz": forms.DateInput(
-                attrs={"data-provide": "datepicker", "autocomplete": "off"}
-            ),
+            "termin_odevzdani_nz": forms.DateInput(attrs={"data-provide": "datepicker", "autocomplete": "off"}),
             "kulturni_pamatka": forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
@@ -265,29 +257,19 @@ class EditProjektForm(forms.ModelForm):
             "vedouci_projektu": _("projekt.forms.editProjekt.vedouciProjektu.tooltip"),
             "organizace": _("projekt.forms.editProjekt.organizace.tooltip"),
             "kulturni_pamatka": _("projekt.forms.editProjekt.kulturniPamatka.tooltip"),
-            "kulturni_pamatka_cislo": _(
-                "projekt.forms.editProjekt.kulturniPamatkaCislo.tooltip"
-            ),
-            "kulturni_pamatka_popis": _(
-                "projekt.forms.editProjekt.kulturniPamatkaPopis.tooltip"
-            ),
-            "uzivatelske_oznaceni": _(
-                "projekt.forms.editProjekt.uzivatelskeOznaceni.tooltip"
-            ),
+            "kulturni_pamatka_cislo": _("projekt.forms.editProjekt.kulturniPamatkaCislo.tooltip"),
+            "kulturni_pamatka_popis": _("projekt.forms.editProjekt.kulturniPamatkaPopis.tooltip"),
+            "uzivatelske_oznaceni": _("projekt.forms.editProjekt.uzivatelskeOznaceni.tooltip"),
             "datum_zahajeni": _("projekt.forms.editProjekt.datumZahajeni.tooltip"),
             "datum_ukonceni": _("projekt.forms.editProjekt.datumUkonceni.tooltip"),
-            "termin_odevzdani_nz": _(
-                "projekt.forms.editProjekt.terminOdevzdani.tooltip"
-            ),
+            "termin_odevzdani_nz": _("projekt.forms.editProjekt.terminOdevzdani.tooltip"),
         }
 
     def __init__(self, *args, required=None, required_next=None, edit_fields=None, **kwargs):
         super(EditProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.helper = FormHelper(self)
-        self.fields[
-            "hlavni_katastr"
-        ].widget.template_name = "core/select_to_text.html"
+        self.fields["hlavni_katastr"].widget.template_name = "core/select_to_text.html"
         for key in self.fields.keys():
             if edit_fields:
                 if key not in edit_fields:
@@ -295,9 +277,11 @@ class EditProjektForm(forms.ModelForm):
             if required or required_next:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (
+                        " required-next" if key in required_next else ""
+                    )
                 else:
-                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = "required-next" if key in required_next else ""
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
@@ -305,11 +289,16 @@ class EditProjektForm(forms.ModelForm):
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
         if self.fields["vedouci_projektu"].disabled is True:
-            helper_vedouci_projektu = Div("vedouci_projektu",css_class="col-sm-4")
+            helper_vedouci_projektu = Div("vedouci_projektu", css_class="col-sm-4")
         else:
             helper_vedouci_projektu = Div(
-                            AppendedText("vedouci_projektu", mark_safe('<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>')),
-                            css_class="col-sm-4 input-osoba",
+                AppendedText(
+                    "vedouci_projektu",
+                    mark_safe(
+                        '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
+                    ),
+                ),
+                css_class="col-sm-4 input-osoba",
             )
         self.helper.layout = Layout(
             Div(
@@ -345,10 +334,8 @@ class EditProjektForm(forms.ModelForm):
                     Div(
                         Div(
                             HTML('<span class="app-divider-label">'),
-                            HTML(
-                                _("projekt.forms.editProjekt.prihlaseni.divider")
-                                ),
-                            HTML('</span>'),
+                            HTML(_("projekt.forms.editProjekt.prihlaseni.divider")),
+                            HTML("</span>"),
                             HTML('<hr class="mt-0" />'),
                             css_class="col-sm-12",
                         ),
@@ -363,7 +350,7 @@ class EditProjektForm(forms.ModelForm):
                         Div(
                             HTML('<span class="app-divider-label">'),
                             HTML(_("projekt.forms.editProjekt.terenniCast.divider")),
-                            HTML('</span>'),
+                            HTML("</span>"),
                             HTML('<hr class="mt-0" />'),
                             css_class="col-sm-12",
                         ),
@@ -387,15 +374,9 @@ class EditProjektForm(forms.ModelForm):
         """
         cleaned_data = super().clean()
         if {"datum_zahajeni", "datum_ukonceni"} <= cleaned_data.keys():
-            if cleaned_data.get("datum_zahajeni") and cleaned_data.get(
-                "datum_ukonceni"
-            ):
-                if cleaned_data.get("datum_zahajeni") > cleaned_data.get(
-                    "datum_ukonceni"
-                ):
-                    raise forms.ValidationError(
-                        "Datum zahájení nemůže být po datu ukončení"
-                    )
+            if cleaned_data.get("datum_zahajeni") and cleaned_data.get("datum_ukonceni"):
+                if cleaned_data.get("datum_zahajeni") > cleaned_data.get("datum_ukonceni"):
+                    raise forms.ValidationError("Datum zahájení nemůže být po datu ukončení")
         return self.cleaned_data
 
 
@@ -403,6 +384,7 @@ class NavrhnoutZruseniProjektForm(forms.Form):
     """
     Formulář pro navržení zrušení projektu.
     """
+
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
     CHOICES = [
         ("option1", _("projekt.forms.navrhzruseni.duvod1.text")),
@@ -440,13 +422,13 @@ class NavrhnoutZruseniProjektForm(forms.Form):
             Div(
                 "reason",
                 css_class="form-check",
-                ),
+            ),
             Div(
                 "reason_text",
                 css_class="col-sm-12",
             ),
             Div("projekt_id", css_class="col-sm-12"),
-            Div("old_stav"),        
+            Div("old_stav"),
         )
 
     def clean(self):
@@ -456,14 +438,10 @@ class NavrhnoutZruseniProjektForm(forms.Form):
         cleaned_data = super().clean()
         if cleaned_data.get("reason") == "option1":
             if not cleaned_data.get("projekt_id"):
-                raise forms.ValidationError(
-                    _("projekt.forms.navrhzruseni.validation.projektId.text")
-                )
+                raise forms.ValidationError(_("projekt.forms.navrhzruseni.validation.projektId.text"))
         elif cleaned_data.get("reason") == "option6":
             if not cleaned_data.get("reason_text"):
-                raise forms.ValidationError(
-                    _("projekt.forms.navrhzruseni.validation.vlastniDuvod.text")
-                )
+                raise forms.ValidationError(_("projekt.forms.navrhzruseni.validation.vlastniDuvod.text"))
         return self.cleaned_data
 
 
@@ -471,6 +449,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
     """
     Hlavní formulář pro prihlášení projektu.
     """
+
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     class Meta:
@@ -487,14 +466,10 @@ class PrihlaseniProjektForm(forms.ModelForm):
             "kulturni_pamatka_popis": forms.TextInput(),
             "kulturni_pamatka_cislo": forms.TextInput(),
             "uzivatelske_oznaceni": forms.TextInput(),
-            "vedouci_projektu": forms.Select(
-                attrs={"class": "selectpicker required-next", "data-live-search": "true"}
-            ),
-            "kulturni_pamatka": forms.Select(
-                attrs={"class": "selectpicker required-next", "data-live-search": "true"}
-            ),
+            "vedouci_projektu": forms.Select(attrs={"class": "selectpicker required-next", "data-live-search": "true"}),
+            "kulturni_pamatka": forms.Select(attrs={"class": "selectpicker required-next", "data-live-search": "true"}),
             "organizace": forms.Select(
-                attrs={"class": "selectpicker required-next", "data-live-search": "true", "size":"7"}
+                attrs={"class": "selectpicker required-next", "data-live-search": "true", "size": "7"}
             ),
         }
         labels = {
@@ -506,22 +481,12 @@ class PrihlaseniProjektForm(forms.ModelForm):
             "uzivatelske_oznaceni": _("projekt.forms.prihlaseniProj.uzivatelskeOznaceni.label"),
         }
         help_texts = {
-            "vedouci_projektu": _(
-                "projekt.forms.prihlaseniProj.vedouciProjektu.tooltip"
-            ),
-            "kulturni_pamatka": _(
-                "projekt.forms.prihlaseniProj.kulturniPamatka.tooltip"
-            ),
+            "vedouci_projektu": _("projekt.forms.prihlaseniProj.vedouciProjektu.tooltip"),
+            "kulturni_pamatka": _("projekt.forms.prihlaseniProj.kulturniPamatka.tooltip"),
             "organizace": _("projekt.forms.prihlaseniProj.organizace.tooltip"),
-            "kulturni_pamatka_cislo": _(
-                "projekt.forms.prihlaseniProj.kulturniPamatkaCislo.tooltip"
-            ),
-            "kulturni_pamatka_popis": _(
-                "projekt.forms.prihlaseniProj.kulturniPamatkaPopis.tooltip"
-            ),
-            "uzivatelske_oznaceni": _(
-                "projekt.forms.prihlaseniProj.uzivatelskeOznaceni.tooltip"
-            ),
+            "kulturni_pamatka_cislo": _("projekt.forms.prihlaseniProj.kulturniPamatkaCislo.tooltip"),
+            "kulturni_pamatka_popis": _("projekt.forms.prihlaseniProj.kulturniPamatkaPopis.tooltip"),
+            "uzivatelske_oznaceni": _("projekt.forms.prihlaseniProj.uzivatelskeOznaceni.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -534,9 +499,14 @@ class PrihlaseniProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    AppendedText("vedouci_projektu", mark_safe('<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>')),
-                    css_class="col-sm-4 input-osoba",
+                    AppendedText(
+                        "vedouci_projektu",
+                        mark_safe(
+                            '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
+                        ),
                     ),
+                    css_class="col-sm-4 input-osoba",
+                ),
                 Div("organizace", css_class="col-sm-4"),
                 Div("uzivatelske_oznaceni", css_class="col-sm-4"),
                 Div("kulturni_pamatka", css_class="col-sm-4"),
@@ -562,10 +532,11 @@ class ZahajitVTerenuForm(forms.ModelForm):
     """
     Formulář pro zahájení projektu v terénu.
     """
+
     datum_zahajeni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        validators=[validators.datum_max_1_mesic_v_budoucnosti, validate_date_min_1600],
         help_text=_("projekt.forms.zahajitVTerenu.datumZahajeni.tooltip"),
-        label=_("projekt.forms.zahajitVTerenu.datumZahajeni.label")
+        label=_("projekt.forms.zahajitVTerenu.datumZahajeni.label"),
     )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
@@ -575,9 +546,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
         labels = {
             "datum_zahajeni": _("projekt.forms.zahajitVTerenu.datumZahajeni.label"),
         }
-        help_texts = {
-            "datum_zahajeni": _("projekt.forms.zahajitVTerenu.datumZahajeni.tooltip")
-        }
+        help_texts = {"datum_zahajeni": _("projekt.forms.zahajitVTerenu.datumZahajeni.tooltip")}
 
     def __init__(self, *args, **kwargs):
         super(ZahajitVTerenuForm, self).__init__(*args, **kwargs)
@@ -589,7 +558,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
                 Div("datum_zahajeni", css_class="col-sm-4"),
                 Div("old_stav"),
                 css_class="row",
-                ),
+            ),
         )
 
 
@@ -597,10 +566,11 @@ class UkoncitVTerenuForm(forms.ModelForm):
     """
     Formulář pro ukončení projektu v terénu.
     """
+
     datum_ukonceni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        validators=[validators.datum_max_1_mesic_v_budoucnosti, validate_date_min_1600],
         help_text=_("projekt.forms.ukoncitVTerenu.datumUkonceni.tooltip"),
-        label=_("projekt.forms.ukoncitVTerenu.datumUkonceni.label")
+        label=_("projekt.forms.ukoncitVTerenu.datumUkonceni.label"),
     )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
@@ -624,7 +594,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
                 Div("datum_ukonceni", css_class="col-sm-4"),
                 Div("old_stav"),
                 css_class="row",
-                ),
+            ),
         )
 
     def clean(self):
@@ -645,6 +615,7 @@ class ZruseniProjektForm(forms.Form):
     """
     Formulář pro zrušení projektu.
     """
+
     reason_text = forms.CharField(
         label=_("projekt.forms.zruseni.duvod.label"),
         required=True,
@@ -672,7 +643,10 @@ class GenerovatNovePotvrzeniForm(forms.Form):
     """
     Formulář pro vygenerování nového potvrzení projektu.
     """
-    odeslat_oznamovateli = forms.BooleanField(label=_("projekt.forms.GenerovatExpertniListForm.odeslatOznamovateli.label"), required=False)
+
+    odeslat_oznamovateli = forms.BooleanField(
+        label=_("projekt.forms.GenerovatExpertniListForm.odeslatOznamovateli.label"), required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -703,13 +677,17 @@ VYSLEDEK_CHOICES = [
     ("jine", _("projekt.forms.GenerovatExpertniListForm.vysledek.jine.text")),
 ]
 
+
 class GenerovatExpertniListForm(forms.Form):
     """
     Formulář pro generování expertního listu projektu.
     """
-    cislo_jednaci = forms.CharField(label=_("projekt.forms.GenerovatExpertniListForm.cislo_jednaci.label"),
-                                    required=False,
-                                    help_text=_("projekt.forms.GenerovatExpertniListForm.cislo_jednaci.tooltip"), )
+
+    cislo_jednaci = forms.CharField(
+        label=_("projekt.forms.GenerovatExpertniListForm.cislo_jednaci.label"),
+        required=False,
+        help_text=_("projekt.forms.GenerovatExpertniListForm.cislo_jednaci.tooltip"),
+    )
     typ_vyzkumu = forms.ChoiceField(
         label=_("projekt.forms.GenerovatExpertniListForm.typ_vyzkumu.label"),
         choices=TYP_VYZKUMU_CHOICES,
@@ -757,26 +735,28 @@ class GenerovatExpertniListForm(forms.Form):
             ),
         )
 
+
 class PripojitProjektForm(forms.Form):
     """
     Formulář pro pripojení projektu do akce nebo dokumentu.
     """
-    def __init__(self,dok=False, *args, **kwargs):
+
+    def __init__(self, dok=False, *args, **kwargs):
         super(PripojitProjektForm, self).__init__(*args, **kwargs)
         if dok:
             new_choices = list(
-                Projekt.objects.filter(stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU,stav__lte=PROJEKT_STAV_ARCHIVOVANY)
+                Projekt.objects.filter(stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU, stav__lte=PROJEKT_STAV_ARCHIVOVANY)
                 .filter(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
                 .values_list("id", "ident_cely")
             )
             typ = "dokument"
         else:
             new_choices = list(
-                Projekt.objects.filter(stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU,stav__lte=PROJEKT_STAV_ARCHIVOVANY)
+                Projekt.objects.filter(stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU, stav__lte=PROJEKT_STAV_ARCHIVOVANY)
                 .exclude(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
                 .values_list("id", "ident_cely")
             )
-            typ= "archz"
+            typ = "archz"
         self.fields["projekt"] = forms.ChoiceField(
             label=_("projekt.forms.projektPripojit.projekt.label"),
             choices=new_choices,
@@ -791,11 +771,81 @@ class PripojitProjektForm(forms.Form):
             Div(
                 Div(
                     "projekt",
-                    css_class="col-sm-2",
+                    css_class="col-sm-8",
                 ),
                 css_class="row",
             ),
         )
 
+
 class ProjektFilterForm(BaseFilterForm):
-    list_to_check = ["historie_datum_zmeny_od","planovane_zahajeni", "termin_odevzdani_nz","datum_ukonceni","datum_zahajeni","akce_datum_zahajeni","akce_datum_ukonceni"]
+    list_to_check = [
+        "historie_datum_zmeny_od",
+        "planovane_zahajeni",
+        "termin_odevzdani_nz",
+        "datum_ukonceni",
+        "datum_zahajeni",
+        "akce_datum_zahajeni",
+        "akce_datum_ukonceni",
+    ]
+
+
+class ZadostProjektForm(forms.Form):
+    def __init__(self, label="", help_text="", *args, **kwargs):
+        super(ZadostProjektForm, self).__init__(*args, **kwargs)
+        self.fields["reason"] = forms.CharField(
+            label=label,
+            required=True,
+            help_text=help_text,
+            widget=forms.Textarea(attrs={"rows": 5, "cols": 40}),
+        )
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class UpravitDatumOznameniForm(forms.ModelForm):
+    datum_oznameni = forms.DateField(
+        label=_("projekt.forms.upravitDatumOznameni.datumOznameni.label"),
+        widget=forms.DateInput(attrs={"data-provide": "datepicker", "autocomplete": "off"}),
+        help_text=_("projekt.forms.upravitDatumOznameni.datumOznameni.tooltip"),
+        validators=[
+            validate_date_min_1600,
+        ],
+    )
+
+    cas_oznameni = forms.TimeField(
+        label=_("projekt.forms.upravitDatumOznameni.casOznameni.label"),
+        widget=forms.TimeInput(
+            format="%H:%M", attrs={"type": "time", "autocomplete": "off"}
+        ),  # Type "time" provides a time picker
+        help_text=_("projekt.forms.upravitDatumOznameni.casOznameni.tooltip"),
+    )
+
+    class Meta:
+        model = Historie
+        fields = ("datum_oznameni", "cas_oznameni", "poznamka")
+        help_texts = {
+            "poznamka": _("projekt.forms.upravitDatumOznameni.poznamka.tooltip"),
+        }
+        labels = {
+            "poznamka": _("projekt.forms.upravitDatumOznameni.poznamka.label"),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(UpravitDatumOznameniForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    Div(
+                        Div("datum_oznameni", css_class="col-sm-6"),
+                        Div("cas_oznameni", css_class="col-sm-6"),
+                        Div("poznamka", css_class="col-sm-12"),
+                        css_class="row",
+                    ),
+                    css_class="card-body",
+                ),
+                css_class="card app-card-form",
+            )
+        )
+        self.helper.form_tag = False

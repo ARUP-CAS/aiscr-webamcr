@@ -234,10 +234,6 @@ table {
     height: 1.23rem;
     padding: 0 0.5rem;
   }
-
-  .dropdown-menu .dropdown-menu.inner {
-    float: inline-end;
-  }
 }
 
 .column-table-selector {
@@ -403,6 +399,7 @@ form {
 
       #projectMap {
         @extend .w-100, .rounded, .h-100;
+        min-height: 320px;
 
         @media (max-width: 768px) {
           min-height: 70vh;

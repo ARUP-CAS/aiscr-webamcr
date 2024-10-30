@@ -1,6 +1,7 @@
-from polib import pofile
-from pathlib import Path
 import os
+from pathlib import Path
+
+from polib import pofile
 
 
 def find_v2(po_file, st, by="msgid", include_obsolete_entries=False, msgctxt=False):
@@ -56,15 +57,13 @@ def find_v2(po_file, st, by="msgid", include_obsolete_entries=False, msgctxt=Fal
 
 BASE_DIR = Path(__file__).resolve()
 path_new = os.path.join(BASE_DIR.parent.parent, "preklady/new_django.po.cs/django.po")
-path_old = os.path.join(
-    BASE_DIR.parent.parent, "preklady/django.po.cs_backup/django_oznameni.po"
-)
+path_old = os.path.join(BASE_DIR.parent.parent, "preklady/django.po.cs_backup/django_oznameni.po")
 po_file_new = pofile(path_new)
 po_file_old = pofile(path_old)
 rewrite_only = "oznameni/"
 print("Not found entries:")
 for entry_new in po_file_new:
-    if len(entry_new.occurrences) >0 and  rewrite_only in entry_new.occurrences[0][0]:
+    if len(entry_new.occurrences) > 0 and rewrite_only in entry_new.occurrences[0][0]:
         entry_old_msgid = find_v2(po_file_old, entry_new.msgid)
         if not entry_old_msgid:
             entry_old = find_v2(po_file_old, entry_new.occurrences, "occurrences")
