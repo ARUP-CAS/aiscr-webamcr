@@ -273,7 +273,7 @@ const addUniquePointToPoiLayer = (point_leaf, text, zoom = true, redPin = false)
         .addTo(poi_sugest);
     }
     if (point_rec_leaf[0] && point_rec_leaf[1] && zoom) {
-        map.setView(point_rec_leaf, 15);
+        map.setView(point_rec_leaf, 9);
     }
 
     if (point_global_WGS84[0] == 0) {
@@ -293,7 +293,7 @@ function showPosition(position) {
     var [latitude, longitude] = amcr_static_coordinate_precision_wgs84([position.coords.latitude, position.coords.longitude]);
     var latlng = new L.LatLng(latitude, longitude);
 
-    map.setView(latlng, 16);
+    map.setView(latlng, 10);
     addUniquePointToPoiLayer([latitude, longitude], '', false, true)
 
     point_global_WGS84 = [longitude,latitude];
