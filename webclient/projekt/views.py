@@ -1761,7 +1761,7 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
             zaznam = self.get_zaznam()
-            Mailer.send_ep07(zaznam, duvod)
+            Mailer.send_ep07(zaznam, duvod, request.user)
             messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_ODHLASENI_PROJEKTU_SUCCESS)
         else:
             messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_ODHLASENI_PROJEKTU_ERROR)

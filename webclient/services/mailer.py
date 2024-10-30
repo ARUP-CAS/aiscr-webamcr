@@ -621,7 +621,7 @@ class Mailer:
         cls._send_ep03(project, notification_type)
 
     @classmethod
-    def send_ep07(cls, project: "projekt.models.Projekt", reason):
+    def send_ep07(cls, project: "projekt.models.Projekt", reason, user):
         IDENT_CELY = "E-P-07"
         logger.debug("services.mailer.send_ep07", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -640,7 +640,13 @@ class Mailer:
                 "reason": reason,
             },
         )
-        cls.__send(subject=subject, to="info@amapa.cz", html_content=html, notification_type=notification_type)
+        cls.__send(
+            subject=subject,
+            to="info@amapa.cz",
+            html_content=html,
+            notification_type=notification_type,
+            from_email=user.email,
+        )
 
     @classmethod
     def send_ep04(cls, project: "projekt.models.Projekt", reason):
