@@ -200,7 +200,9 @@ window.onload = function () {
                 } else {
                     show_upload_successful_message(file, result, message);
                 }
-                if (this.files.every(file => file.status === 'success')) {
+            });
+            this.on("complete", function (file, response) {
+                if (this.files.every(file => (file.status === 'success' || file.status === 'error' ))) {
                     let submitButton = $(".btn-disable-when-running-upload");
                     submitButton.prop('disabled', false); 
                     submitButton.removeClass("disabled"); 
