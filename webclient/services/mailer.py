@@ -139,9 +139,11 @@ class Mailer:
         receiver_address,
         status,
         exception,
+        log_user=None,
     ):
+        user_object = log_user if log_user else receiver_object
         try:
-            uzivatel.models.User.objects.get(pk=receiver_object.pk)
+            uzivatel.models.User.objects.get(pk=user_object.pk)
         except Exception as e:
             logger.info(
                 "services.mailer._log_notification", extra={"exception": e, "traceback": traceback.format_exc()}
@@ -151,7 +153,7 @@ class Mailer:
             try:
                 uzivatel.models.NotificationsLog(
                     notification_type=notification_type,
-                    user=receiver_object,
+                    user=user_object,
                     receiver_address=receiver_address,
                     status=status,
                     exception=exception,
@@ -164,7 +166,7 @@ class Mailer:
             "services.mailer._log_notification",
             extra={
                 "notification_type": notification_type,
-                "user": receiver_object,
+                "user": user_object,
                 "receiver_address": receiver_address,
             },
         )
@@ -179,6 +181,7 @@ class Mailer:
         user=None,
         from_email=settings.DEFAULT_FROM_EMAIL,
         attachment: RepositoryBinaryFile = None,
+        log_user=None,
     ):
         if "@" in to:
             plain_text = cls.__strip_tags(html_content)
@@ -213,6 +216,7 @@ class Mailer:
                 receiver_address=to,
                 status=status,
                 exception=exception,
+                log_user=log_user,
             )
         else:
             logger.warning("services.mailer.send.invalid_email", extra={"to": to, "subject": subject})
@@ -273,6 +277,7 @@ class Mailer:
                     html,
                     notification_type=notification_type,
                     user=superuser,
+                    log_user=user,
                 )
 
     @classmethod
