@@ -1099,8 +1099,8 @@ class ProjektPasTableView(LoginRequiredMixin, View):
     Třída pohledu pro zobrazení řádku tabulky samostatných nálezů.
     """
 
-    def get(self, request):
-        projekt = Projekt.objects.get(id=request.GET.get("id", ""))
+    def get(self, request, ident_cely):
+        projekt = Projekt.objects.get(ident_cely=ident_cely)
         qs = (
             projekt.samostatne_nalezy.select_related("obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr")
             .all()
