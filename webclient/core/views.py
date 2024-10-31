@@ -584,12 +584,14 @@ def post_upload(request):
                 logger.warning("core.views.post_upload.rep_bin_file_is_none")
                 soubor_instance.close_active_transaction_when_finished = True
                 soubor_instance.save()
-                return JsonResponse({"error": "core.views.post_upload.unknown_error"}, status=500)
+                help_translation = _("core.views.post_upload.unknown_error")
+                return JsonResponse({"error": help_translation}, status=500)
     else:
         logger.warning("core.views.post_upload.no_file")
     soubor_instance.close_active_transaction_when_finished = True
     soubor_instance.save()
-    return JsonResponse({"error": "core.views.post_upload.unknown_error"}, status=500)
+    help_translation = _("core.views.post_upload.unknown_error")
+    return JsonResponse({"error": help_translation}, status=500)
 
 
 def get_finds_soubor_name(find, filename, add_to_index=1):
