@@ -2254,6 +2254,9 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
                 .order_by("ident_cely")
             )
             zaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
+            dokument_odpojit = check_permissions(
+                p.actionChoices.archz_odpojit_dokument, request.user, zaznam.ident_cely
+            )
         else:
             qs = (
                 Dokument.objects.filter(casti__projekt__ident_cely=ident_cely)
@@ -2261,9 +2264,12 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
                 .prefetch_related("soubory__soubory")
             ).order_by("ident_cely")
             zaznam = Projekt.objects.get(ident_cely=ident_cely)
+            dokument_odpojit = (
+                check_permissions(p.actionChoices.projekt_dok_odpojit, request.user, zaznam.ident_cely),
+            )
         context = {
             "dokumenty": qs,
-            "show": {"dokument_odpojit": request.GET.get("show_dokument_odpojit", "")},
+            "show": {"dokument_odpojit": dokument_odpojit},
             "zaznam": zaznam,
             "type": typ_vazby,
         }
