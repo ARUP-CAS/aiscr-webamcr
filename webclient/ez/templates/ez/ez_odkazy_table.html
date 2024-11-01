@@ -49,9 +49,8 @@
     if ("{{show.ez_odkazy}}" != "False" && {{zaznamy.count}} > 0) {
       $.ajax({
         type: "GET",
-        url: '{% url "ez:get_ez_odkazy_table" %}', 
+        url: '{% url "ez:get_ez_odkazy_table" zaznam.ident_cely%}', 
         data: {
-          'id': {{zaznam.id}},
           'type': "{{type}}",
           'card_type': "{{card_type}}",
           'show_paginace': "{{show.paginace}}",
@@ -61,6 +60,26 @@
         success : function(data) {
           $('.app-card-{{card_type}} .loader').css("display", "none");
           $('.app-card-{{card_type}} .content-with-table-responsive').append(data);
+          if (document.getElementsByClassName("ez-odpojit-btn")){
+            elements = document.getElementsByClassName("ez-odpojit-btn")
+            for (let i = 0; i < elements.length; i++){
+              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+              formID: "odpojit-az-form",
+              modalFormID: "#odpojit-az-form",
+              })
+              new Modal(options, elements.item(i).id);
+            }
+          };
+          if (document.getElementsByClassName("ez-change-btn")){
+            elements = document.getElementsByClassName("ez-change-btn")
+            for (let i = 0; i < elements.length; i++){
+              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+              formID: "zmenit-eo-form",
+              modalFormID: "#zmenit-eo-form",
+              })
+              new Modal(options, elements.item(i).id);
+            }
+          };
          }
 });
     }

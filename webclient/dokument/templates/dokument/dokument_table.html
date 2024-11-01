@@ -65,16 +65,6 @@
 <script>
   //modal scripts
   document.addEventListener('DOMContentLoaded', function (event) {
-    if (document.getElementsByClassName("dokument-odpojit-btn")){
-      elements = document.getElementsByClassName("dokument-odpojit-btn")
-      for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
-        formID: "odpojit-dokument-form",
-        modalFormID: "#odpojit-dokument-form",
-        })
-        new Modal(options, elements.item(i).id);
-      }
-    }
     if ("{{show.pripojit_dokumenty}}"){
       var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-dokument-form",
@@ -98,11 +88,21 @@
     if ({{dokumenty.count}} > 0) {
       $.ajax({
         type: "GET",
-        url: '{% url "dokument:get_dokumenty_table" type %}', 
-        data: {'id': {{zaznam.id}}, "show_dokument_odpojit": "{{show.dokument_odpojit}}"},
+        url: '{% url "dokument:get_dokumenty_table" type zaznam.ident_cely %}', 
+        data: {"show_dokument_odpojit": "{{show.dokument_odpojit}}"},
         success : function(data) {
           $('.app-card-dokument .loader').css("display", "none");
           $('.app-card-dokument .content-with-table-responsive').append(data);
+          if (document.getElementsByClassName("dokument-odpojit-btn")){
+            elements = document.getElementsByClassName("dokument-odpojit-btn")
+            for (let i = 0; i < elements.length; i++){
+              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+              formID: "odpojit-dokument-form",
+              modalFormID: "#odpojit-dokument-form",
+              })
+              new Modal(options, elements.item(i).id);
+            }
+          };
          }
         });
       }
