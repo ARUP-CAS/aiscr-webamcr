@@ -43,7 +43,7 @@ urlpatterns = [
     ),
     path("spoluprace/smazat/<int:pk>", views.smazat_spolupraci, name="spoluprace_smazani"),
     path(
-        "projekt-pas-tabulka",
+        "projekt-pas-tabulka/<str:ident_cely>",
         ProjektPasTableView.as_view(),
         name="get_projekt_pas_table",
     ),
