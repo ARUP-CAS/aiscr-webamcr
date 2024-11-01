@@ -50,11 +50,11 @@ django-livereload-server==0.5.1
 django-debug-toolbar-template-profiler==2.1.0
 psycopg2==2.9.10
 django-object-actions==4.3.0
-uWSGI==2.0.26
+uWSGI==2.0.28
 requests==2.32.3
 polib==1.2.0
 pytz==2024.2
 python-dateutil==2.9.0.post0
 setuptools==75.2.0
-Werkzeug==3.0.4
+Werkzeug==3.0.6
 pyOpenSSL==24.2.1
