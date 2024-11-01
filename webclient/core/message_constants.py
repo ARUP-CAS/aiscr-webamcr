@@ -17,6 +17,18 @@ ZAZNAM_USPESNE_EDITOVAN: Final = _("common.message.ZAZNAM_USPESNE_EDITOVAN.text"
 ZAZNAM_SE_NEPOVEDLO_EDITOVAT: Final = _(
     "common.message.ZAZNAM_SE_NEPOVEDLO_EDITOVAT.text"
 )  # Záznam se nepovedlo editovat.
+PREDMET_NEBO_OBJEKT_SE_NEPOVEDLO_EDITOVAT: Final = _(
+    "common.message.PREDMET_NEBO_OBJEKT_SE_NEPOVEDLO_EDITOVAT.text"
+)  # Předmět nebo objekt se nepovedlo editovat.
+PREDMET_OBJEKT_USPESNE_EDITOVAN: Final = _(
+    "common.message.PREDMET_OBJEKT_USPESNE_EDITOVAN.text"
+)  # Předmět a/nebo objekt úspěšně editován.
+KOMPONENTA_USPESNE_EDITOVANA: Final = _(
+    "common.message.KOMPONENTA_USPESNE_EDITOVANA.text"
+)  # Komponenta byla úspěšně editována.
+KOMPONENTU_SE_NEPOVEDLO_EDITOVAT: Final = _(
+    "common.message.KOMPONENTU_SE_NEPOVEDLO_EDITOVAT.text"
+)  # Komponentu se nepovedlo editovat.
 ZAZNAM_USPESNE_SMAZAN: Final = _("common.message.ZAZNAM_USPESNE_SMAZAN.text")  # Záznam byl úspěšně smazán.
 ZAZNAM_SE_NEPOVEDLO_SMAZAT: Final = _("common.message.ZAZNAM_SE_NEPOVEDLO_SMAZAT.text")  # Záznam nebyl smazán.
 ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY: Final = _(
@@ -69,6 +81,9 @@ PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI: Final = _(
 PROJEKT_NELZE_ZAHAJIT_V_TERENU: Final = _(
     "common.message.PROJEKT_NELZE_ZAHAJIT_V_TERENU.text"
 )  # Projekt nelze zahájit v terénu.
+DATUM_OZNAMENI_SE_NEPOVEDLO_EDITOVAT: Final = _(
+    "common.message.DATUM_OZNAMENI_SE_NEPOVEDLO_EDITOVAT.text"
+)  # Datum oznámení se nepodařilo editovat
 
 PROJEKT_NELZE_SMAZAT: Final = _("common.message.PROJEKT_NELZE_SMAZAT.text")  # Projekt nelze smazat.
 PROJEKT_NEKDO_ZMENIL_STAV: Final = _("core.message_constants.projektZmenaStavuNekymJinym.text")
@@ -76,6 +91,8 @@ PROJEKT_NENI_TYP_PRUZKUMNY: Final = _("common.message.PROJEKT_NENI_TYP_PRUZKUMNY
 PROJEKT_NENI_TYP_ZACHRANNY: Final = _("common.message.PROJEKT_NENI_TYP_ZACHRANNY.text")
 PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS: Final = _("common.message.PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS.text")
 PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR: Final = _("common.message.PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR.text")
+PROJEKT_ZADOST_ODHLASENI_PROJEKTU_SUCCESS: Final = _("common.message.PROJEKT_ZADOST_ODHLASENI_PROJEKTU_SUCCESS.text")
+PROJEKT_ZADOST_ODHLASENI_PROJEKTU_ERROR: Final = _("common.message.PROJEKT_ZADOST_ODHLASENI_PROJEKTU_ERROR.text")
 
 AKCE_USPESNE_ZAPSANA: Final = _("common.message.AKCE_USPESNE_ZAPSANA.text")  # Akce úspěšně zapsána.
 AKCE_USPESNE_ODESLANA: Final = _("common.message.AKCE_USPESNE_ODESLANA.text")  # Akce úspěšně odeslána.

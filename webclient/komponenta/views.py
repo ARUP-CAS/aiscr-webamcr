@@ -6,14 +6,17 @@ from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_komponenta_ident
 from core.message_constants import (
+    KOMPONENTA_USPESNE_EDITOVANA,
+    KOMPONENTU_SE_NEPOVEDLO_EDITOVAT,
     MAXIMUM_KOMPONENT_DOSAZENO,
-    ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
+    PREDMET_NEBO_OBJEKT_SE_NEPOVEDLO_EDITOVAT,
+    PREDMET_OBJEKT_USPESNE_EDITOVAN,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
-    ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
+from core.repository_connector import FedoraTransaction
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -53,10 +56,11 @@ def detail(request, typ_vazby, ident_cely):
     """
     Funkce pohledu pro zapsání editace komponenty.
     """
-    komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
+    komponenta: Komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
+    fedora_transaction = FedoraTransaction(komponenta, request.user, suppress_message=True)
+    komponenta.active_transaction = fedora_transaction
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
-    komponenta: Komponenta
     form = CreateKomponentaForm(
         obdobi_choices,
         areal_choices,
@@ -64,17 +68,19 @@ def detail(request, typ_vazby, ident_cely):
         instance=komponenta,
         prefix=ident_cely,
     )
-    if form.is_valid():
+    if form.is_valid() and form.has_changed():
         logger.debug("komponenta.views.detail.form_valid", extra={"ident_cely": ident_cely})
         komponenta = form.save(commit=False)
-        komponenta.create_transaction(request.user)
+        komponenta.active_transaction = fedora_transaction
         komponenta.save()
         form.save_m2m()
         invalidate_model(Akce)
         invalidate_model(ArcheologickyZaznam)
         invalidate_model(Dokument)
         invalidate_model(Historie)
-    else:
+        messages.add_message(request, messages.SUCCESS, KOMPONENTA_USPESNE_EDITOVANA)
+    elif not form.is_valid():
+        messages.add_message(request, messages.ERROR, KOMPONENTU_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("komponenta.views.detail.not_valid", extra={"errors": form.errors, "ident_cely": ident_cely})
 
     if "nalez_edit_nalez" in request.POST:
@@ -97,14 +103,16 @@ def detail(request, typ_vazby, ident_cely):
             extra=3,
         )
         formset_predmet = NalezPredmetFormset(request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p")
-        if formset_objekt.is_valid() and formset_predmet.is_valid():
+        if (
+            formset_objekt.is_valid()
+            and formset_predmet.is_valid()
+            and (formset_objekt.has_changed() or formset_predmet.has_changed())
+        ):
             logger.debug("komponenta.views.detail.form_valid_2")
             formset_predmet.save()
             formset_objekt.save()
-            if formset_objekt.has_changed() or formset_predmet.has_changed():
-                logger.debug("Form data was changed")
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-        else:
+            messages.add_message(request, messages.SUCCESS, PREDMET_OBJEKT_USPESNE_EDITOVAN)
+        elif not formset_objekt.is_valid() or not formset_predmet.is_valid():
             logger.debug(
                 "komponenta.views.detail.form_not_valid_2",
                 extra={
@@ -112,7 +120,7 @@ def detail(request, typ_vazby, ident_cely):
                     "formset_objekt_errors": formset_objekt.errors,
                 },
             )
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+            messages.add_message(request, messages.ERROR, PREDMET_NEBO_OBJEKT_SE_NEPOVEDLO_EDITOVAT)
             request.session["_old_nalez_post"] = request.POST
             request.session["komp_ident_cely"] = ident_cely
 
@@ -153,7 +161,6 @@ def detail(request, typ_vazby, ident_cely):
     response.set_cookie(
         "set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000, secure=True, samesite="Strict"
     )
-    komponenta.set_transaction_main_record()
     komponenta.close_active_transaction_when_finished = True
     komponenta.save()
     return response
@@ -178,7 +185,7 @@ def zapsat(request, typ_vazby, dj_ident_cely):
     if form.is_valid():
         logger.debug("komponenta.views.zapsat.form_valid")
         komponenta = form.save(commit=False)
-        fedora_transcation = komponenta.create_transaction(request.user)
+        fedora_transcation: FedoraTransaction = komponenta.create_transaction(request.user)
         try:
             if dj:
                 komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam, fedora_transcation)
@@ -186,7 +193,8 @@ def zapsat(request, typ_vazby, dj_ident_cely):
                 komponenta.ident_cely = get_komponenta_ident(cast.dokument, fedora_transcation)
             komp_ident_cely = komponenta.ident_cely
         except MaximalIdentNumberError:
-            messages.add_message(request, messages.ERROR, MAXIMUM_KOMPONENT_DOSAZENO)
+            fedora_transcation.error_message = MAXIMUM_KOMPONENT_DOSAZENO
+            fedora_transcation.rollback_transaction()
         else:
             if dj:
                 komponenta.komponenta_vazby = dj.komponenty
@@ -297,7 +305,7 @@ def smazat(request, typ_vazby, ident_cely):
                     status=403,
                 )
                 response.set_cookie(
-                    "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000, secure=True, samesite="Strict"
+                    "show-form", f"detail_komponenta_form_{komponenta.ident_cely}", max_age=1000, secure=True, samesite="Strict"
                 )
             else:
                 response = JsonResponse(

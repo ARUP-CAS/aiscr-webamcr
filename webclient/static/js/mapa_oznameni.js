@@ -6,7 +6,7 @@ map.on('click', function (e) {
         poi.clearLayers();
         let [x1, x2] = amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
         if (x1 >= 12.2401111182 && x1 <= 18.8531441586 && x2 >= 48.5553052842 && x2 <= 51.1172677679)
-            if (map.getZoom() > 15) {
+            if (map.getZoom() > 11) {
                 document.getElementById('id_coordinate_x1').value = x1
                 document.getElementById('id_coordinate_x2').value = x2
                 point_leaf=[x2,x1]
@@ -29,9 +29,9 @@ map.on('click', function (e) {
                 xhr.send(JSON.stringify({ 'x1': x1, 'x2': x2 }))
 
             } else {
-                var zoom = 2;
-                if (map.getZoom() < 10) zoom += 2;
-                else if (map.getZoom() < 13) zoom += 1;
+                var zoom = 1;
+                if (map.getZoom() < 6) zoom += 2;
+                else if (map.getZoom() < 9) zoom += 1;
 
                 map.setView(e.latlng, map.getZoom() + zoom);
             }

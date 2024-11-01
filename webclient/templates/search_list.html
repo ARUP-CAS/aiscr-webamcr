@@ -18,7 +18,7 @@
         <div class="mb-1 d-flex flex-row align-items-center justify-content-between">
           <div class="app-left">
             {% if  app == "spoluprace" and show_zadost %} <a class="btn btn-primary mb-1 mt-1" href="{% url 'pas:spoluprace_zadost' %}">{% trans 'templates.searchList.zadostOSpolupraci' %}</a> {% endif %}
-            <button class="btn btn-primary collapsed mr-1 mt-1 mb-1" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
+            <button id="buttonFiltr" class="btn btn-primary collapsed mr-1 mt-1 mb-1" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
               <span class="material-icons mr-1">filter_alt</span>{% trans "templates.searchList.filtr.label" %}<span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </div>
@@ -103,7 +103,7 @@
               {% for value in sort_params %}
                 <input type="hidden" name="sort" value="{{ value }}">
               {% endfor %}
-              <button type="submit" class="btn btn-primary">
+              <button id="buttonVybrat" type="submit" class="btn btn-primary">
                 <span class="material-icons">check</span> {{pick_text}}
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
                 style="display: none"></span>
@@ -201,6 +201,10 @@ $('#export-progress-modal').on('show.bs.modal', (event) => {
           if (downloadLink) {
               downloadLink.style.display = 'none';
           }
+          const confirmationPar = document.getElementById('modal-confirm-download-par');
+          if (confirmationPar) {
+              confirmationPar.style.display = 'none';
+          }
       }
 
     updateProgressBar(0);
@@ -210,25 +214,25 @@ $('#export-progress-modal').on('show.bs.modal', (event) => {
         const paragraph = $("#modal-confirm-download-par");
         paragraph.next('a.source-link').remove();
         const modal_link = $('<a>')
-            .attr('href', url)
+            .attr('data-target-link', url)
             .attr('id', 'modal-confirm-download-link')
             .addClass('source-link')
             .text('{% trans "core.templates.core.export_modal.link_text" %}')
             .css({display: 'block', marginTop: '10px'})
-            .on('click', function() {
-                checkValue();  // Call the checkValue function
+            .on('click', (event) => {
+                event.preventDefault();
+                manageExportDownload(url);
                 hideDownloadLink()
             });
         paragraph.after(modal_link);
+        const confirmationPar = document.getElementById('modal-confirm-download-par');
+        if (confirmationPar) {
+            confirmationPar.style.display = null;
+        }
     {% endif %}
     $('#export-progress-modal').data('sourceUrl', url);
     {% if table.rows|length < 50000 %}
-        const link = document.createElement('a');
-        link.href = url;
-        document.body.appendChild(link);
-        checkValue();
-        link.click();
-        document.body.removeChild(link);
+        manageExportDownload(url);
     {% endif %}
 })
 

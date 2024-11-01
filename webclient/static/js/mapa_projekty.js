@@ -53,7 +53,7 @@ L.easyButton('bi bi-skip-backward-fill', function () {
     poi_correct.clearLayers();
     if (poi_sugest.getLayers().length>0) {
         let ll = poi_sugest.getLayers()[0]._latlng;
-        map.setView(ll, 18);
+        map.setView(ll, 12);
         try {
             document.getElementById('id_coordinate_x2').value = ll.lat;
             document.getElementById('id_coordinate_x1').value = ll.lng;
@@ -71,7 +71,7 @@ L.easyButton('bi bi-skip-backward-fill', function () {
             document.getElementById('id_coordinate_x2').value = "";
             document.getElementById('id_coordinate_x1').value = "";
         }
-        map.setView([50,15],7);
+        map.setView([50,15],1);
 
     }
 }, [map_translations['DefaultTitle']]).addTo(map)
@@ -109,7 +109,7 @@ var addPointOnLoad = (lat, long, text, ident_cely,stav) => {
         .addTo(poi_sugest);
     }
 
-    map.setView([lat, long], 18)
+    map.setView([lat, long], 12)
 }
 
 var addProjektWithoutPointOnLoad = (ident_cely) => {
@@ -156,7 +156,7 @@ map.on('click', function (e) {
     let point_leaf = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
     if (!global_measuring_toolbox._measuring)
         if (point_leaf[1] >= 12.2401111182 && point_leaf[1] <= 18.8531441586 && point_leaf[0] >= 48.5553052842 && point_leaf[0] <= 51.1172677679)
-            if (map.getZoom() > 15) {
+            if (map.getZoom() > 11) {
                 try {
                     //console.log("Position is: "+corX+" "+corY)
                     document.getElementById('id_coordinate_x2').value = point_leaf[0]
@@ -167,9 +167,9 @@ map.on('click', function (e) {
                 addPointToPoiLayer(point_leaf, [map_translations['SelectedLocation']]); // 'Vámi vybraná poloha záměru'
 
             } else {
-                var zoom = 2;
-                if (map.getZoom() < 10) zoom += 2;
-                else if (map.getZoom() < 13) zoom += 1;
+                var zoom = 1;
+                if (map.getZoom() < 6) zoom += 2;
+                else if (map.getZoom() < 9) zoom += 1;
 
                 map.setView(e.latlng, map.getZoom() + zoom);
             }

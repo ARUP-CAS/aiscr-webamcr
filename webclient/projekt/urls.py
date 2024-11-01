@@ -8,6 +8,7 @@ from .views import (
     ProjektAutocompleteBezZrusenych,
     ProjektListView,
     UpravitDatumOznameniView,
+    ZadostOdhlaseniProjektuView,
     ZadostUdajeOznamovatelView,
     archivovat,
     create,
@@ -131,5 +132,10 @@ urlpatterns = [
         "upravit-datum-oznameni/<str:ident_cely>",
         UpravitDatumOznameniView.as_view(),
         name="upravit-datum-oznameni",
+    ),
+    path(
+        "zadost-odhlaseni-projektu/<str:ident_cely>",
+        ZadostOdhlaseniProjektuView.as_view(),
+        name="zadost-odhlaseni-projektu",
     ),
 ]

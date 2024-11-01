@@ -32,12 +32,10 @@
           </form>
           <small class="form-text text-muted" id="import-helptext">{% trans "pian.templates.importovatPianModal.tooltip" %}</small>
           <div class="modal-body-table" id="modal-pian-import-table">
+          </div>
+          <small class="form-text text-muted" id="import-helptext-pian" style="display: none">{% trans "pian.templates.pian_import_table.tooltip" %}</small>
         </div>
       </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "pian.templates.importovatPianModal.closeButton.text" %}</button>
-        </div>
-      </form>
     </div>
   </div>
 </div>
@@ -60,6 +58,7 @@
   $('#importovat_pian').on('hidden.bs.modal', function (e) {
     $("#my-awesome-dropzone").attr('style','display:');
     $("#import-helptext").attr('style','display:');
+    $("#import-helptext-pian").hide();
     $('#modal-pian-import-table').empty();
   })
   $('#importovat_pian').on('show.bs.modal', function(e) {

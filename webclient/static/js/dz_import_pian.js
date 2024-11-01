@@ -59,6 +59,7 @@ window.onload = function () {
         addRemoveLinks: true,
         dictCancelUpload: [dz_trans["cancelUpload"]],
         dictCancelUploadConfirmation: [dz_trans["cancelUploadConfirm"]],
+        dictMaxFilesExceeded:  dz_trans["maxFilesExceeded"],
         dictRemoveFile: [dz_trans["removeFile"]],
         maxFilesize: 10, // MB
         maxFiles: 1,
@@ -72,6 +73,7 @@ window.onload = function () {
                 show_upload_successful_message(file, UploadResultsEnum.success);
                 $("#my-awesome-dropzone").attr('style','display:none !important');
                 $("#import-helptext").attr('style','display:none !important');
+                $("#import-helptext-pian").show();
                 $('#modal-pian-import-table').append(response);
                 this.removeFile(file);
             });

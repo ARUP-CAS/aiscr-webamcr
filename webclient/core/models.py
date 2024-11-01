@@ -729,8 +729,12 @@ class Permissions(models.Model):
         projekt_ukoncit_v_terenu = "projekt_ukoncit_v_terenu", _(
             "core.models.permissions.actionChoices.projekt_ukoncit_v_terenu"
         )
-        projekt_upravit_datum_oznameni = "projekt_upravit_datum_oznameni", _(
-            "core.models.permissions.actionChoices.projekt_upravit_datum_oznameni"
+        projekt_upravit_datum_oznameni = (
+            "projekt_upravit_datum_oznameni",
+            _("core.models.permissions.actionChoices.projekt_upravit_datum_oznameni"),
+        )
+        projekt_zadost_odhlaseni_projektu = "projekt_zadost_odhlaseni_projektu", _(
+            "core.models.permissions.actionChoices.projekt_zadost_odhlaseni_projektu"
         )
         projekt_uzavrit = "projekt_uzavrit", _("core.models.permissions.actionChoices.projekt_uzavrit")
         projekt_vratit_navrh_zruseni = "projekt_vratit_navrh_zruseni", _(
@@ -766,6 +770,9 @@ class Permissions(models.Model):
         )
         soubor_smazat_model3d = "soubor_smazat_model3d", _(
             "core.models.permissions.actionChoices.soubor_smazat_model3d"
+        )
+        soubor_nahradit_model3d = "soubor_nahradit_model3d", _(
+            "core.models.permissions.actionChoices.soubor_nahradit_model3d"
         )
         soubor_smazat_pas = "soubor_smazat_pas", _("core.models.permissions.actionChoices.soubor_smazat_pas")
         soubor_stahnout_projekt = "soubor_stahnout_projekt", _(
@@ -814,6 +821,12 @@ class Permissions(models.Model):
         lokalita_pripojit_pian_id = (
             "lokalita_pripojit_pian_id",
             "core.models.permissions.actionChoices.lokalita_pripojit_pian_id",
+        )
+        dokumenty_tabulka_projekt = "dokumenty_tabulka_projekt", _(
+            "core.models.permissions.actionChoices.dokumenty_tabulka_projekt"
+        )
+        dokumenty_tabulka_arch_z = "dokumenty_tabulka_arch_z", _(
+            "core.models.permissions.actionChoices.dokumenty_tabulka_arch_z"
         )
 
     pristupnost_to_groups = {
