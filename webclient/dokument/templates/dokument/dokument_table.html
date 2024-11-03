@@ -89,7 +89,7 @@
       $.ajax({
         type: "GET",
         url: '{% url "dokument:get_dokumenty_table" type zaznam.ident_cely %}', 
-        data: {"show_dokument_odpojit": "{{show.dokument_odpojit}}"},
+        data: {},
         success : function(data) {
           $('.app-card-dokument .loader').css("display", "none");
           $('.app-card-dokument .content-with-table-responsive').append(data);

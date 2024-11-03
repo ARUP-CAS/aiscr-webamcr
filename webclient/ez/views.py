@@ -863,9 +863,9 @@ class EzOdkazyTableView(LoginRequiredMixin, View):
             "card_type": card_type,
             "type": action_type,
             "show": {
-                "paginace": request.GET.get("show_paginace", False),
-                "odpojit": request.GET.get("show_odpojit", False),
-                "paginace_edit": request.GET.get("show_paginace_edit", False),
+                "paginace": True,
+                "paginace_edit": check_permissions(p.actionChoices.eo_edit_ez, request.user, zaznam.ident_cely),
+                "odpojit": check_permissions(p.actionChoices.eo_odpojit_akce, request.user, zaznam.ident_cely),
             },
             "zaznam": zaznam,
         }
