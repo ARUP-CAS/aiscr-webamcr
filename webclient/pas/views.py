@@ -117,12 +117,13 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         if "kopie" in self.request.path:
-            self.get_action_type = self.ActionType.CREATE_AS_COPY.value
+            get_action_type = self.ActionType.CREATE_AS_COPY.value
             self._set_copy_source()
         elif "ident_cely" in kwargs:
-            self.get_action_type = self.ActionType.CREATE_FROM_PROJECT.value
+            get_action_type = self.ActionType.CREATE_FROM_PROJECT.value
         else:
-            self.get_action_type = self.ActionType.CREATE
+            get_action_type = self.ActionType.CREATE.value
+        self.get_action_type = get_action_type
         return super().dispatch(request, *args, **kwargs)
 
     def _set_copy_source(self):
@@ -134,7 +135,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        if self.get_action_type == self.ActionType.CREATE_FROM_PROJECT.value:
+        if self.get_action_type == self.ActionType.CREATE_AS_COPY.value:
             kwargs["instance"] = self.copy_source
         kwargs["user"] = self.request.user
         kwargs["required"] = get_required_fields()
