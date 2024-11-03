@@ -76,7 +76,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://pyyaml.org/
    * - Werkzeug
-     - 3.0.4
+     - 3.0.6
      - BSD License
      - UNKNOWN
    * - amqp
@@ -548,7 +548,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/python/tzdata
    * - uWSGI
-     - 2.0.26
+     - 2.0.28
      - GNU General Public License v2 or later (GPLv2+)
      - https://uwsgi-docs.readthedocs.io/en/latest/
    * - urllib3
