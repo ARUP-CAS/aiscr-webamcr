@@ -33,8 +33,13 @@ class AkceLokality(BaseSeleniumTestClass):
         count_old = Lokalita.objects.count()
 
         self.ElementClick(By.ID, "select2-id_hlavni_katastr-container")
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Křtiny")
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
+            "Křtiny"
+        )
+        self.wait(1)
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
+            Keys.ENTER
+        )
         self.ElementClick(By.CSS_SELECTOR, "#div_id_druh .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("pol")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
@@ -89,7 +94,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-L000000001").count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-L000000001")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
@@ -115,7 +120,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="X-C-L000000001").count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-L000000001")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
@@ -146,7 +151,7 @@ class AkceLokality(BaseSeleniumTestClass):
             komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-L000000002-D01"
         ).count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
 
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-L000000002")
@@ -179,7 +184,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N9000579").first().stav, AZ_STAV_ZAPSANY)
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
 
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N9000579")
@@ -201,7 +206,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N9000145").first().stav, AZ_STAV_ZAPSANY)
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
 
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N9000145")
@@ -223,7 +228,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000003").first().stav, AZ_STAV_ODESLANY)
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N1000003")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
@@ -242,7 +247,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000109").first().stav, AZ_STAV_ODESLANY)
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N1000109")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
@@ -264,7 +269,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000003").first().stav, AZ_STAV_ODESLANY)
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N1000003")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
@@ -286,7 +291,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000003").first().stav, AZ_STAV_ODESLANY)
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N1000003")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
@@ -310,7 +315,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N9000593").first().stav, AZ_STAV_ARCHIVOVANY)
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N9000593")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")
@@ -333,7 +338,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N9000593").first().stav, AZ_STAV_ARCHIVOVANY)
 
-        self.ElementClick(By.CSS_SELECTOR, ".mt-1")
+        self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-N9000593")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(10)")

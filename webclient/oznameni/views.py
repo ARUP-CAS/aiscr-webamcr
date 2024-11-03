@@ -116,7 +116,9 @@ def index(request, test_run=False):
 
             context = {"confirm": confirmation}
             response = render(request, "oznameni/index_2.html", context)
-            response.set_cookie("project", hash(projekt.ident_cely), 3600)
+            response.set_cookie(
+                "project", hash(projekt.ident_cely), 3600, secure=True, httponly=True, samesite="Strict"
+            )
             return response
         else:
             extra = {"form_ozn_errors": form_ozn.errors, "form_projekt_errors": form_projekt.errors}

@@ -510,6 +510,8 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                                 "zpet",
                                 cast.archeologicky_zaznam.get_absolute_url(),
                                 max_age=1000,
+                                secure=True,
+                                samesite="Strict",
                             )
                             found = True
                             break
@@ -522,6 +524,8 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                                 "zpet",
                                 reverse("projekt:detail", args=(ident_referer,)),
                                 max_age=1000,
+                                secure=True,
+                                samesite="Strict",
                             )
                             found = True
                             break
@@ -2234,3 +2238,34 @@ def post_ajax_get_3d_limit(request):
         return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
     else:
         return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+
+
+class DokumentyAzTableView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro zobrazení tabulky dokumentů.
+    """
+
+    def get(self, request, typ_vazby, ident_cely):
+        if typ_vazby == "arch_z":
+            qs = (
+                Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
+                .select_related("soubory")
+                .prefetch_related("soubory__soubory")
+                .order_by("ident_cely")
+            )
+            zaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
+        else:
+            qs = (
+                Dokument.objects.filter(casti__projekt__ident_cely=ident_cely)
+                .select_related("soubory")
+                .prefetch_related("soubory__soubory")
+            ).order_by("ident_cely")
+            zaznam = Projekt.objects.get(ident_cely=ident_cely)
+        context = {
+            "dokumenty": qs,
+            "show": {"dokument_odpojit": request.GET.get("show_dokument_odpojit", "")},
+            "zaznam": zaznam,
+            "type": typ_vazby,
+        }
+        logger.debug(context)
+        return HttpResponse(render_to_string("dokument/dokument_table_only.html", context))

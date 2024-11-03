@@ -67,6 +67,7 @@ else:
         "lokalita.tests.test_selenium",
         "arch_z.tests.test_selenium",
         "pas.tests.test_selenium",
+        "oznameni.tests.test_selenium",
     ]
 
 
