@@ -602,10 +602,12 @@ def edit(request, ident_cely):
         if form_az.is_valid() and form_akce.is_valid() and ostatni_vedouci_objekt_formset.is_valid():
             logger.debug("arch_z.views.edit.form_valid")
             az = form_az.save(commit=False)
-            az.create_transaction(request.user)
+            fedora_transaction = az.create_transaction(request.user)
             az.save()
             form_az.save_m2m()
-            akce = form_akce.save()
+            akce = form_akce.save(commit=False)
+            akce.active_transaction = fedora_transaction
+            akce.save()
             ostatni_vedouci_objekt_formset.save()
             akce.set_snapshots()
             az.close_active_transaction_when_finished = True
