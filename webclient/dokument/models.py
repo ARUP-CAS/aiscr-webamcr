@@ -462,7 +462,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @property
     def thumbnail_image_file(self) -> Soubor | None:
         if self.soubory.soubory.count() > 0:
-            return self.soubory.soubory.order_by("nazev").first()
+            soubory = [x for x in self.soubory.soubory.all()]
+            soubory = list(sorted(soubory, key=lambda x: x.nazev))
+            return soubory[0]
 
     @cached_property
     def large_thumbnail(self):
