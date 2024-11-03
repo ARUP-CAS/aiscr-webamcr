@@ -152,6 +152,9 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
             context["formCoor"] = CoordinatesDokumentForm()
         else:
             context["formCoor"] = CoordinatesDokumentForm(initial=self.copy_source.generate_coord_forms_initial())
+        context["title"] = _("pas.views.create.title")
+        context["header"] = _("pas.views.create.header")
+        context["button"] = _("pas.views.create.submitButton.text")
         return context
 
     def form_valid(self, form):
