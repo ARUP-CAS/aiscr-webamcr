@@ -24,7 +24,7 @@
       <div class="card">        
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left" data-target="#collapseProjekty">
+            <span id="menuProjekty" class="btn index-link btn-block text-left" data-target="#collapseProjekty">
               <a href="{% url 'projekt:index' %}" class="{% if request.resolver_match.app_name == 'projekt' %}active{% endif %}">
                 <span class="material-icons">dynamic_feed</span> {% trans "templates.baseLogedIn.sidebar.projekty" %}
               </a>
@@ -63,7 +63,7 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left">
+            <span id="menuSamostatneAkce" class="btn index-link btn-block text-left">
               <a href="{% url 'arch_z:index' %}" class="{% if request.resolver_match.app_name == 'arch_z' %}active{% endif %}">
                 <span class="material-icons">brush</span> {% trans "templates.baseLogedIn.sidebar.samostatneAkce" %}
               </a>
@@ -93,7 +93,7 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left">
+            <span id="menuLokality" class="btn index-link btn-block text-left">
               <a href="{% url 'lokalita:index' %}" class="{% if request.resolver_match.app_name == 'lokalita' %}active{% endif %}">
                 <span class="material-icons">tour</span> {% trans "templates.baseLogedIn.sidebar.lokality" %}
               </a>
@@ -123,7 +123,7 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left">
+            <span id="menuSamostatneNalezy" class="btn index-link btn-block text-left">
               <a href="{% url 'pas:index' %}" class="{% if request.resolver_match.app_name == 'pas' %}active{% endif %}">
                 <span class="material-icons">location_on</span> {% trans "templates.baseLogedIn.sidebar.samostatneNalezy" %}
               </a>
@@ -157,7 +157,7 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left">
+            <span id="menuKnihovna3D" class="btn index-link btn-block text-left">
               <a href="{% url 'dokument:index-model-3D' %}"  class="{% if request.resolver_match.app_name == 'dokument' and 'model' in request.path %}active{% endif %}">
                 <span class="material-icons">3d_rotation</span> {% trans "templates.baseLogedIn.sidebar.knihovna3D" %}
               </a>
@@ -187,7 +187,7 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left">
+            <span id="menuDokumenty" class="btn index-link btn-block text-left">
               <a href="{% url 'dokument:index' %}" class="{% if request.resolver_match.app_name == 'dokument' and 'model' not in request.path %}active{% endif %}">
               <span class="material-icons">description</span> {% trans "templates.baseLogedIn.sidebar.dokumenty" %}
               </a>
@@ -219,7 +219,7 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left collapsed">
+            <span id="menuExterniZdroje" class="btn index-link btn-block text-left collapsed">
               <a href="{% url 'ez:index' %}" class="{% if request.resolver_match.app_name == 'ez' %}active{% endif %}">
               <span class="material-icons">menu_book</span> {% trans "templates.baseLogedIn.sidebar.externiZdroje" %}
               </a>
@@ -350,7 +350,7 @@
             {% csrf_token %}
             <input type="hidden" name="logout_type" id="logout_type"  value="" />
             <input type="hidden" name="next" id="next" value="" />
-            <button type="submit" class="nav-link">
+            <button type="submit" class="nav-link" id="buttonLogout">
               <span class="material-icons">logout</span>
                {% trans "templates.baseLogedIn.navbar.odhlasit" %} 
             </button>

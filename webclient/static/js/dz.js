@@ -131,7 +131,9 @@ window.onload = function () {
             "application/x-rar, " +
             "application/x-rar-compressed, " +
             "application/x-compressed," +
-            "application/x-7z-compressed"
+            "application/x-7z-compressed,"+
+            ".rar,"+
+            ".7z"
         RejectedFileMessage = reject_dict["rejected_dokument_model"]
     } else {
         acceptFile = "image/jpeg, " +
@@ -159,7 +161,9 @@ window.onload = function () {
             "text/csv, " +
             "application/rtf, " +
             "application/vnd.oasis.opendocument.text, " +
-            "application/vnd.oasis.opendocument.spreadsheet "
+            "application/vnd.oasis.opendocument.spreadsheet, "
+            ".rar, "+
+            ".7z "
         RejectedFileMessage = reject_dict["rejected_all"]
     }
     const dropzoneOptions= {
@@ -200,7 +204,9 @@ window.onload = function () {
                 } else {
                     show_upload_successful_message(file, result, message);
                 }
-                if (this.files.every(file => file.status === 'success')) {
+            });
+            this.on("complete", function (file, response) {
+                if (this.files.every(file => (file.status === 'success' || file.status === 'error' ))) {
                     let submitButton = $(".btn-disable-when-running-upload");
                     submitButton.prop('disabled', false); 
                     submitButton.removeClass("disabled"); 
@@ -218,12 +224,6 @@ window.onload = function () {
                 file.previewElement.lastChild.style.display = "none"
             });
             this.on("addedfile", function (file) {
-                //hack pro win10
-                let exten=file.name.split('.').pop(); 
-                if(file.type==="" && (exten==="rar" || exten==="7z"))
-                    this.options.acceptedFiles="";
-                else this.options.acceptedFiles=acceptFile;
-
                 let submitButton = $(".btn-disable-when-running-upload");
                 submitButton.prop('disabled', true);
                 submitButton.addClass("disabled"); 
