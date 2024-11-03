@@ -930,7 +930,15 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     progress_bar_coefficient = 0.8
 
     def create_export(self, export_format):
-        def update_progress_bar(r_inner, key_inner, new_value):
+        from redis import Redis
+
+        def check_if_aborted(r_inner: Redis, key_inner: str):
+            aborted = r_inner.get(key_inner) == -1
+            if aborted:
+                r_inner.delete(key_inner)
+            return aborted
+
+        def update_progress_bar(r_inner: Redis, key_inner: str, new_value: int):
             logger.debug(
                 "core.views.SearchListView.create_export.update_progress_bar",
                 extra={"key_inner": key_inner, "new_value": new_value},
@@ -945,13 +953,24 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             dataset = self.get_table_data()
             ident_cely_list = set(dataset.values_list(self.redis_value_list_field, flat=True))
             ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
-            redis_variable_name = f"export_{self.request.user.email.replace('@', '(at)')}"
+            export_suffix_string = self.request.GET["export_suffix_string"]
+            redis_variable_name = f"export_{self.request.user.email.replace('@', '(at)')}_{export_suffix_string}"
+            logger.debug(
+                "core.views.SearchListView.create_export.redis_variable_name",
+                extra={"redis_variable_name": redis_variable_name},
+            )
             r.set(redis_variable_name, 0)
             ident_cely_list_len = len(ident_cely_list)
             pipe = r.pipeline()
             for i, key in enumerate(ident_cely_list):
                 pipe.hgetall(key)
-                if i % 10000 == 0:
+                if i % 1000 == 0:
+                    if check_if_aborted(r, redis_variable_name):
+                        logger.debug(
+                            "core.views.SearchListView.create_export.aborted",
+                            extra={"redis_variable_name": redis_variable_name},
+                        )
+                        return HttpResponse()
                     update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 60))
             data = pipe.execute()
             data = pandas.DataFrame(data)
@@ -964,6 +983,12 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             data = data.rename(columns=column_names)
             for column in data.select_dtypes(include=["object"]):
                 data[column] = data[column].str.decode("utf-8")
+            if check_if_aborted(r, redis_variable_name):
+                logger.debug(
+                    "core.views.SearchListView.create_export.aborted",
+                    extra={"redis_variable_name": redis_variable_name},
+                )
+                return HttpResponse()
             if export_format == TableExport.CSV:
                 response["Content-Disposition"] = 'attachment; filename="export.csv"'
                 data.to_csv(path_or_buf=response, index=False)
@@ -979,6 +1004,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                     excel_file.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
                 response["Content-Disposition"] = "attachment; filename=export.xlsx"
+            else:
+                return HttpResponse(_("core.views.SearchListView.create_export.export_format_not_supported"))
             update_progress_bar(r, redis_variable_name, 100)
             logger.debug(
                 "core.views.SearchListView.create_export.end",
@@ -988,6 +1015,13 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                     "redis_variable_name": redis_variable_name,
                 },
             )
+            if check_if_aborted(r, redis_variable_name):
+                logger.debug(
+                    "core.views.SearchListView.create_export.aborted",
+                    extra={"redis_variable_name": redis_variable_name},
+                )
+                return HttpResponse()
+            response["Content-Length"] = len(response.content)
             return response
 
     def init_translations(self):
@@ -1192,13 +1226,30 @@ class ReadTempValueView(View):
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
-class ResetTempValueView(View):
+class DeleteTempValueView(View):
     def get(self, request):
         r = RedisConnector.get_connection()
         temp_name = request.GET.get("temp_name", "")
-        r.set(temp_name, 0)
-        logger.debug("core.views.ResetTempValueView.get.result", extra={"temp_name": temp_name})
-        return JsonResponse({"result": "success"})
+        if temp_name.startswith("export_"):
+            r.delete(temp_name)
+            logger.debug("core.views.ResetTempValueView.get.result", extra={"temp_name": temp_name})
+            return JsonResponse({"result": "success"})
+        else:
+            # Return a JSON response with a 403 Forbidden status
+            return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
+
+
+class AbortDownloadUpdateTempValueView(View):
+    def get(self, request):
+        r = RedisConnector.get_connection()
+        temp_name = request.GET.get("temp_name", "")
+        if temp_name.startswith("export_"):
+            r.set(temp_name, -1)
+            logger.debug("core.views.AbortDownloadUpdateTempValueView.get.result", extra={"temp_name": temp_name})
+            return JsonResponse({"result": "success"})
+        else:
+            # Return a JSON response with a 403 Forbidden status
+            return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
 class RosettaFileLevelMixinWithBackup(RosettaFileLevelMixin):
