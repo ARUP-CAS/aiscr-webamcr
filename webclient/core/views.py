@@ -12,7 +12,13 @@ from pathlib import Path
 import pandas
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
-from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
+from core.constants import (
+    MAX_POCET_SOUBORU_PROJEKTU,
+    ROLE_ADMIN_ID,
+    ROLE_ARCHEOLOG_ID,
+    ROLE_ARCHIVAR_ID,
+    ROLE_BADATEL_ID,
+)
 from core.forms import CheckStavNotChangedForm, TransaltionImportForm
 from core.ident_cely import get_record_from_ident
 from core.message_constants import (
@@ -332,7 +338,7 @@ def post_upload(request):
         samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
         if projekt.exists():
             objekt = projekt[0]
-            new_name = get_projekt_soubor_name(request.FILES.get("file").name)
+            new_name = get_projekt_soubor_name(objekt, request.FILES.get("file").name)
         elif dokument.exists():
             objekt = dokument[0]
             new_name = get_dokument_soubor_name(objekt, request.FILES.get("file").name)
@@ -572,10 +578,12 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
             return False
 
 
-def get_projekt_soubor_name(file_name):
+def get_projekt_soubor_name(projekt: Projekt, file_name):
     """
     Funkce pro získaní jména souboru pro projekt.
     """
+    if Soubor.objects.filter(vazba__projekt_souboru=projekt).count() >= MAX_POCET_SOUBORU_PROJEKTU:
+        return False
     split_file = os.path.splitext(file_name)
     nfkd_form = unicodedata.normalize("NFKD", split_file[0])
     only_ascii = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
