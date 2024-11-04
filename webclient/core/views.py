@@ -261,7 +261,13 @@ def update_file(request, typ_vazby, ident_cely, file_id):
     return render(
         request,
         "core/upload_file.html",
-        {"ident_cely": ident_cely, "back_url": back_url, "file_id": file_id, "typ_vazby": typ_vazby},
+        {
+            "ident_cely": ident_cely,
+            "back_url": back_url,
+            "file_id": file_id,
+            "typ_vazby": typ_vazby,
+            "info_tooltip": _("core.upload_file_replace.tooltip"),
+        },
     )
 
 
@@ -280,12 +286,16 @@ class Uploadfileview(LoginRequiredMixin, TemplateView):
             "core.views.Uploadfileview.get_zaznam.start", extra={"typ_vazby": self.typ_vazby, "ident": self.ident}
         )
         if self.typ_vazby == "pas":
+            self.info_tooltip = _("core.upload_file_PAS.tooltip")
             return get_object_or_404(SamostatnyNalez, ident_cely=self.ident)
         elif self.typ_vazby == "dokument":
+            self.info_tooltip = _("core.upload_file_dokument.tooltip")
             return get_object_or_404(Dokument, ident_cely=self.ident)
         elif self.typ_vazby == "model3d":
+            self.info_tooltip = _("core.upload_file_model3d.tooltip")
             return get_object_or_404(Dokument, ident_cely=self.ident)
         else:
+            self.info_tooltip = _("core.upload_file_projekt.tooltip")
             return get_object_or_404(Projekt, ident_cely=self.ident)
 
     def get_context_data(self, **kwargs):
@@ -294,6 +304,7 @@ class Uploadfileview(LoginRequiredMixin, TemplateView):
             "ident_cely": self.ident,
             "back_url": zaznam.get_absolute_url(),
             "typ_vazby": self.typ_vazby,
+            "info_tooltip": self.info_tooltip,
         }
         logger.debug(
             "core.views.Uploadfileview.get_context_data.start", extra={"typ_vazby": self.typ_vazby, "ident": self.ident}
