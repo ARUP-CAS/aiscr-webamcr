@@ -12,15 +12,7 @@ from pathlib import Path
 import pandas
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
-from core.constants import (
-    D_STAV_ARCHIVOVANY,
-    PROJEKT_STAV_ARCHIVOVANY,
-    ROLE_ADMIN_ID,
-    ROLE_ARCHEOLOG_ID,
-    ROLE_ARCHIVAR_ID,
-    ROLE_BADATEL_ID,
-    SN_ARCHIVOVANY,
-)
+from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
 from core.forms import CheckStavNotChangedForm, TransaltionImportForm
 from core.ident_cely import get_record_from_ident
 from core.message_constants import (
@@ -249,41 +241,9 @@ class DownloadThumbnailLarge(DownloadFile):
 
 @login_required
 @require_http_methods(["GET"])
-def upload_file_projekt(request, ident_cely):
-    """
-    Funkce pohledu pro zobrazení stránky pro upload souboru k projektu.
-    """
-    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
-        raise PermissionDenied()
-    return render(
-        request,
-        "core/upload_file.html",
-        {"ident_cely": ident_cely, "back_url": projekt.get_absolute_url()},
-    )
-
-
-@login_required
-@require_http_methods(["GET"])
-def upload_file_dokument(request, ident_cely):
-    """
-    Funkce pohledu pro zobrazení stránky pro upload souboru k dokumentu.
-    """
-    d = get_object_or_404(Dokument, ident_cely=ident_cely)
-    if d.stav == D_STAV_ARCHIVOVANY:
-        raise PermissionDenied()
-    return render(
-        request,
-        "core/upload_file.html",
-        {"ident_cely": ident_cely, "back_url": d.get_absolute_url()},
-    )
-
-
-@login_required
-@require_http_methods(["GET"])
 def update_file(request, typ_vazby, ident_cely, file_id):
     """
-    Funkce pohledu pro zobrazení stránky pro upload souboru.
+    Funkce pohledu pro zobrazení stránky pro nahrazení souboru.
     """
     if url_has_allowed_host_and_scheme(request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
         safe_redirect = request.GET.get("next", "core:home")
@@ -302,22 +262,6 @@ def update_file(request, typ_vazby, ident_cely, file_id):
         request,
         "core/upload_file.html",
         {"ident_cely": ident_cely, "back_url": back_url, "file_id": file_id, "typ_vazby": typ_vazby},
-    )
-
-
-@login_required
-@require_http_methods(["GET"])
-def upload_file_samostatny_nalez(request, ident_cely):
-    """
-    Funkce pohledu pro zobrazení stránky pro upload souboru k samostatnému nálezu.
-    """
-    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
-    if sn.stav == SN_ARCHIVOVANY:
-        raise PermissionDenied()
-    return render(
-        request,
-        "core/upload_file.html",
-        {"ident_cely": ident_cely, "back_url": sn.get_absolute_url()},
     )
 
 
