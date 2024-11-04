@@ -16,7 +16,7 @@
 
   <!-- Leaflet imports -->
   <link rel="stylesheet" href="{% static 'js/Leaflet1.9.4/leaflet.css' %}"/>
-  <script src="{% static 'js/Leaflet1.9.4/leaflet.js' %}"></script>
+  <script src="{% static 'js/Leaflet1.9.4/leaflet-src.js' %}"></script>
   <!--contextmenu-->
   <script src="{% static 'js/Leaflet.contextmenu1.5.1/leaflet.contextmenu.min.js' %}"></script>
   <link rel="stylesheet" href="{% static 'js/Leaflet.contextmenu1.5.1/leaflet.contextmenu.min.css' %}"/>
@@ -26,6 +26,7 @@
   <!--Leaflet Draw-->
   <script src="{% static 'js/Leaflet.draw1.0.4/leaflet.draw-src.js' %}"></script>
   <link rel="stylesheet" href="{% static 'js/Leaflet.draw1.0.4/leaflet.draw.css' %}">
+  <script src="{% static 'js/leaflet.EditCoordControl.js' %}"></script>
 
   <!--Leaflet FullScreen-->
   <script src='{% static 'js/Leaflet.fullscreen1.0.1/Leaflet.fullscreen.min.js' %}'></script>
@@ -261,7 +262,8 @@
       samostatneNalezy: '{% trans "mapa.samostatneNalezy" %}',
       TempPIAN: '{% trans "mapa.TempPIAN" %}',
       zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
-      zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
+      zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}',
+      eidt_coordinates:'{% trans "mapa.editCoordinates" %}'
     };
 
     var leaflet_search_translations = {
@@ -283,7 +285,7 @@
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
-  <script src="{% static 'arch_z_detail_map.js' %}?v1"></script>
+  <script src="{% static 'arch_z_detail_map.js' %}?v5"></script>
   <script>
       function get_create_pain_form_action(selected_dj_ident) {
           const url = "/pian/zapsat/1";
