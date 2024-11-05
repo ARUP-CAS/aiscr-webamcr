@@ -1,9 +1,10 @@
 name: Build and publish Docker images
 on:
-  workflow_run:
-    workflows: [New version - pre-release, New version - production]
-    types:
-      - completed
+  workflow_call:
+    inputs:
+      tags:
+        type: string
+        required: true
 
 env:
   DOCKER_HUB_REPO_REDIS: aiscr/webamcr-redis
