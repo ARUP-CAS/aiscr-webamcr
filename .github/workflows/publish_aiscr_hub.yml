@@ -1,8 +1,9 @@
 name: Build and publish Docker images
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  workflow_run:
+    workflows: [New version - pre-release, New version - production]
+    types:
+      - completed
 
 env:
   DOCKER_HUB_REPO_REDIS: aiscr/webamcr-redis
@@ -19,6 +20,7 @@ jobs:
       packages: write
       contents: read
       attestations: write
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
