@@ -183,3 +183,5 @@ UDAJ_ODSTRANEN = "údaj odstraněn"  # POZOR - neměnit - po změně by se v rá
 STARY_PROJEKT_ZRUSEN = "Automatické zrušení projektů starších tří let, u kterých již nelze očekávat zahájení."
 
 PRISTUPNOST_MIN_RAZENI = 1  # Nejnižší hodnota přístupnosti podle řazení.
+
+MAX_POCET_SOUBORU_PROJEKTU = 40
