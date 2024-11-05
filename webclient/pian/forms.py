@@ -33,7 +33,7 @@ class PianCreateForm(forms.ModelForm):
             self.fields["presnost"].initial = presnost
         self.helper = FormHelper(self)
         self.helper.form_tag = False
-        self.fields["geom_system"].initial = "4326"
+        self.fields["geom_system"].initial = "5514"
         self.helper.layout = Layout(
             Div(
                 Div(
