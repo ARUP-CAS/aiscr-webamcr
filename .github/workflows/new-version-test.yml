@@ -125,3 +125,4 @@ jobs:
     uses: ./.github/workflows/publish_aiscr_hub.yml
     with:
       tags: ${{ inputs.new_tag }}
+      latest: true
