@@ -939,10 +939,6 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             return aborted
 
         def update_progress_bar(r_inner: Redis, key_inner: str, new_value: int):
-            logger.debug(
-                "core.views.SearchListView.create_export.update_progress_bar",
-                extra={"key_inner": key_inner, "new_value": new_value},
-            )
             new_value *= self.progress_bar_coefficient
             r_inner.set(key_inner, int(new_value))
 
