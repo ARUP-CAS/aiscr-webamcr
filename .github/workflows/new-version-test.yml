@@ -126,3 +126,4 @@ jobs:
     with:
       tag: ${{ inputs.new_tag }}
       latest: true
+    secrets: inherit
