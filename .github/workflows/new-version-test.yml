@@ -124,5 +124,5 @@ jobs:
     needs: new_version
     uses: ./.github/workflows/publish_aiscr_hub.yml
     with:
-      tags: ${{ inputs.new_tag }}
+      tag: ${{ inputs.new_tag }}
       latest: true
