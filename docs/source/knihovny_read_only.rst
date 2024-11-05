@@ -188,7 +188,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://django-autocomplete-light.rtfd.org
    * - django-cacheops
-     - 7.0.2
+     - 7.1
      - BSD License
      - http://github.com/Suor/django-cacheops
    * - django-celery-beat
