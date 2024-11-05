@@ -1,7 +1,8 @@
 name: Build and publish Docker images
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 env:
   DOCKER_HUB_REPO_REDIS: aiscr/webamcr-redis
