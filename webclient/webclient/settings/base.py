@@ -445,6 +445,10 @@ LOGGING = {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
+        "fedora_management": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+        },
     },
 }
 

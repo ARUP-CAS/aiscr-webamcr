@@ -52,10 +52,7 @@
         url: '{% url "ez:get_ez_odkazy_table" zaznam.ident_cely%}', 
         data: {
           'type': "{{type}}",
-          'card_type': "{{card_type}}",
-          'show_paginace': "{{show.paginace}}",
-          'show_odpojit': "{{show.odpojit}}",
-          'show_paginace_edit': "{{show.paginace_edit}}"
+          'card_type': "{{card_type}}"
         },
         success : function(data) {
           $('.app-card-{{card_type}} .loader').css("display", "none");

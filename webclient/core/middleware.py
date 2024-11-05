@@ -130,7 +130,7 @@ class StatusMessageMiddleware:
         else:
             error_message = self.redis_connection.hget(redis_key, "error_message")
             if error_message:
-                error_message = gettext_lazy(error_message)
+                error_message = gettext_lazy(error_message.decode("utf-8"))
             else:
                 error_message = ZAZNAM_SE_NEPOVEDLO_EDITOVAT
             messages.add_message(request, messages.ERROR, error_message)

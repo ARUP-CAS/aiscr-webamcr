@@ -13,13 +13,11 @@ import pandas
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
-    D_STAV_ARCHIVOVANY,
-    PROJEKT_STAV_ARCHIVOVANY,
+    MAX_POCET_SOUBORU_PROJEKTU,
     ROLE_ADMIN_ID,
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
-    SN_ARCHIVOVANY,
 )
 from core.forms import CheckStavNotChangedForm, TransaltionImportForm
 from core.ident_cely import get_record_from_ident
@@ -249,41 +247,9 @@ class DownloadThumbnailLarge(DownloadFile):
 
 @login_required
 @require_http_methods(["GET"])
-def upload_file_projekt(request, ident_cely):
-    """
-    Funkce pohledu pro zobrazení stránky pro upload souboru k projektu.
-    """
-    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
-        raise PermissionDenied()
-    return render(
-        request,
-        "core/upload_file.html",
-        {"ident_cely": ident_cely, "back_url": projekt.get_absolute_url()},
-    )
-
-
-@login_required
-@require_http_methods(["GET"])
-def upload_file_dokument(request, ident_cely):
-    """
-    Funkce pohledu pro zobrazení stránky pro upload souboru k dokumentu.
-    """
-    d = get_object_or_404(Dokument, ident_cely=ident_cely)
-    if d.stav == D_STAV_ARCHIVOVANY:
-        raise PermissionDenied()
-    return render(
-        request,
-        "core/upload_file.html",
-        {"ident_cely": ident_cely, "back_url": d.get_absolute_url()},
-    )
-
-
-@login_required
-@require_http_methods(["GET"])
 def update_file(request, typ_vazby, ident_cely, file_id):
     """
-    Funkce pohledu pro zobrazení stránky pro upload souboru.
+    Funkce pohledu pro zobrazení stránky pro nahrazení souboru.
     """
     if url_has_allowed_host_and_scheme(request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
         safe_redirect = request.GET.get("next", "core:home")
@@ -301,23 +267,13 @@ def update_file(request, typ_vazby, ident_cely, file_id):
     return render(
         request,
         "core/upload_file.html",
-        {"ident_cely": ident_cely, "back_url": back_url, "file_id": file_id, "typ_vazby": typ_vazby},
-    )
-
-
-@login_required
-@require_http_methods(["GET"])
-def upload_file_samostatny_nalez(request, ident_cely):
-    """
-    Funkce pohledu pro zobrazení stránky pro upload souboru k samostatnému nálezu.
-    """
-    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
-    if sn.stav == SN_ARCHIVOVANY:
-        raise PermissionDenied()
-    return render(
-        request,
-        "core/upload_file.html",
-        {"ident_cely": ident_cely, "back_url": sn.get_absolute_url()},
+        {
+            "ident_cely": ident_cely,
+            "back_url": back_url,
+            "file_id": file_id,
+            "typ_vazby": typ_vazby,
+            "info_tooltip": _("core.upload_file_replace.tooltip"),
+        },
     )
 
 
@@ -336,12 +292,16 @@ class Uploadfileview(LoginRequiredMixin, TemplateView):
             "core.views.Uploadfileview.get_zaznam.start", extra={"typ_vazby": self.typ_vazby, "ident": self.ident}
         )
         if self.typ_vazby == "pas":
+            self.info_tooltip = _("core.upload_file_PAS.tooltip")
             return get_object_or_404(SamostatnyNalez, ident_cely=self.ident)
         elif self.typ_vazby == "dokument":
+            self.info_tooltip = _("core.upload_file_dokument.tooltip")
             return get_object_or_404(Dokument, ident_cely=self.ident)
         elif self.typ_vazby == "model3d":
+            self.info_tooltip = _("core.upload_file_model3d.tooltip")
             return get_object_or_404(Dokument, ident_cely=self.ident)
         else:
+            self.info_tooltip = _("core.upload_file_projekt.tooltip")
             return get_object_or_404(Projekt, ident_cely=self.ident)
 
     def get_context_data(self, **kwargs):
@@ -350,6 +310,7 @@ class Uploadfileview(LoginRequiredMixin, TemplateView):
             "ident_cely": self.ident,
             "back_url": zaznam.get_absolute_url(),
             "typ_vazby": self.typ_vazby,
+            "info_tooltip": self.info_tooltip,
         }
         logger.debug(
             "core.views.Uploadfileview.get_context_data.start", extra={"typ_vazby": self.typ_vazby, "ident": self.ident}
@@ -377,7 +338,7 @@ def post_upload(request):
         samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
         if projekt.exists():
             objekt = projekt[0]
-            new_name = get_projekt_soubor_name(request.FILES.get("file").name)
+            new_name = get_projekt_soubor_name(objekt, request.FILES.get("file").name)
         elif dokument.exists():
             objekt = dokument[0]
             new_name = get_dokument_soubor_name(objekt, request.FILES.get("file").name)
@@ -617,10 +578,12 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
             return False
 
 
-def get_projekt_soubor_name(file_name):
+def get_projekt_soubor_name(projekt: Projekt, file_name):
     """
     Funkce pro získaní jména souboru pro projekt.
     """
+    if Soubor.objects.filter(vazba__projekt_souboru=projekt).count() >= MAX_POCET_SOUBORU_PROJEKTU:
+        return False
     split_file = os.path.splitext(file_name)
     nfkd_form = unicodedata.normalize("NFKD", split_file[0])
     only_ascii = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
@@ -930,11 +893,15 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     progress_bar_coefficient = 0.8
 
     def create_export(self, export_format):
-        def update_progress_bar(r_inner, key_inner, new_value):
-            logger.debug(
-                "core.views.SearchListView.create_export.update_progress_bar",
-                extra={"key_inner": key_inner, "new_value": new_value},
-            )
+        from redis import Redis
+
+        def check_if_aborted(r_inner: Redis, key_inner: str):
+            aborted = r_inner.get(key_inner) == -1
+            if aborted:
+                r_inner.delete(key_inner)
+            return aborted
+
+        def update_progress_bar(r_inner: Redis, key_inner: str, new_value: int):
             new_value *= self.progress_bar_coefficient
             r_inner.set(key_inner, int(new_value))
 
@@ -945,13 +912,24 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             dataset = self.get_table_data()
             ident_cely_list = set(dataset.values_list(self.redis_value_list_field, flat=True))
             ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
-            redis_variable_name = f"export_{self.request.user.email.replace('@', '(at)')}"
+            export_suffix_string = self.request.GET["export_suffix_string"]
+            redis_variable_name = f"export_{self.request.user.email.replace('@', '(at)')}_{export_suffix_string}"
+            logger.debug(
+                "core.views.SearchListView.create_export.redis_variable_name",
+                extra={"redis_variable_name": redis_variable_name},
+            )
             r.set(redis_variable_name, 0)
             ident_cely_list_len = len(ident_cely_list)
             pipe = r.pipeline()
             for i, key in enumerate(ident_cely_list):
                 pipe.hgetall(key)
-                if i % 10000 == 0:
+                if i % 1000 == 0:
+                    if check_if_aborted(r, redis_variable_name):
+                        logger.debug(
+                            "core.views.SearchListView.create_export.aborted",
+                            extra={"redis_variable_name": redis_variable_name},
+                        )
+                        return HttpResponse()
                     update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 60))
             data = pipe.execute()
             data = pandas.DataFrame(data)
@@ -964,6 +942,12 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             data = data.rename(columns=column_names)
             for column in data.select_dtypes(include=["object"]):
                 data[column] = data[column].str.decode("utf-8")
+            if check_if_aborted(r, redis_variable_name):
+                logger.debug(
+                    "core.views.SearchListView.create_export.aborted",
+                    extra={"redis_variable_name": redis_variable_name},
+                )
+                return HttpResponse()
             if export_format == TableExport.CSV:
                 response["Content-Disposition"] = 'attachment; filename="export.csv"'
                 data.to_csv(path_or_buf=response, index=False)
@@ -979,6 +963,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                     excel_file.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
                 response["Content-Disposition"] = "attachment; filename=export.xlsx"
+            else:
+                return HttpResponse(_("core.views.SearchListView.create_export.export_format_not_supported"))
             update_progress_bar(r, redis_variable_name, 100)
             logger.debug(
                 "core.views.SearchListView.create_export.end",
@@ -988,6 +974,13 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                     "redis_variable_name": redis_variable_name,
                 },
             )
+            if check_if_aborted(r, redis_variable_name):
+                logger.debug(
+                    "core.views.SearchListView.create_export.aborted",
+                    extra={"redis_variable_name": redis_variable_name},
+                )
+                return HttpResponse()
+            response["Content-Length"] = len(response.content)
             return response
 
     def init_translations(self):
@@ -1192,13 +1185,30 @@ class ReadTempValueView(View):
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
-class ResetTempValueView(View):
+class DeleteTempValueView(View):
     def get(self, request):
         r = RedisConnector.get_connection()
         temp_name = request.GET.get("temp_name", "")
-        r.set(temp_name, 0)
-        logger.debug("core.views.ResetTempValueView.get.result", extra={"temp_name": temp_name})
-        return JsonResponse({"result": "success"})
+        if temp_name.startswith("export_"):
+            r.delete(temp_name)
+            logger.debug("core.views.ResetTempValueView.get.result", extra={"temp_name": temp_name})
+            return JsonResponse({"result": "success"})
+        else:
+            # Return a JSON response with a 403 Forbidden status
+            return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
+
+
+class AbortDownloadUpdateTempValueView(View):
+    def get(self, request):
+        r = RedisConnector.get_connection()
+        temp_name = request.GET.get("temp_name", "")
+        if temp_name.startswith("export_"):
+            r.set(temp_name, -1)
+            logger.debug("core.views.AbortDownloadUpdateTempValueView.get.result", extra={"temp_name": temp_name})
+            return JsonResponse({"result": "success"})
+        else:
+            # Return a JSON response with a 403 Forbidden status
+            return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
 class RosettaFileLevelMixinWithBackup(RosettaFileLevelMixin):
