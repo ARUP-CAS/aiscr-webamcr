@@ -18,14 +18,14 @@ from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
 from django.db import connection, connections
 from django.shortcuts import get_object_or_404
-from dokument.models import Dokument
+from dokument.models import Dokument, Let
 from ez.models import ExterniZdroj
-from heslar.models import Heslar, HeslarDokumentTypMaterialRada
+from heslar.models import Heslar, HeslarDokumentTypMaterialRada, RuianKatastr, RuianKraj, RuianOkres
 from komponenta.models import Komponenta, KomponentaVazby
 from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
-from uzivatel.models import User
+from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -428,18 +428,28 @@ def get_record_from_ident(ident_cely):
     if bool(re.fullmatch(r"(U)-\d{6}", ident_cely)):
         logger.debug("core.ident_cely.get_record_from_ident.uzivatel", extra={"ident_cely": ident_cely})
         return get_object_or_404(User, ident_cely=ident_cely)
-    if bool(re.fullmatch(r"(LET)-\d{7}", ident_cely)):
-        logger.debug("core.ident_cely.get_record_from_ident.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
+    if bool(re.fullmatch(r"(?:C-)?(LET)-\d{5,7}", ident_cely)):
+        logger.debug("core.ident_cely.get_record_from_ident.let", extra={"ident_cely": ident_cely})
+        return get_object_or_404(Let, ident_cely=ident_cely)
     if bool(re.fullmatch(r"(HES)-\d{6}", ident_cely)):
-        logger.debug("core.ident_cely.get_record_from_ident.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
+        logger.debug("core.ident_cely.get_record_from_ident.heslar", extra={"ident_cely": ident_cely})
+        return get_object_or_404(Heslar, ident_cely=ident_cely)
     if bool(re.fullmatch(r"(ORG)-\d{6}", ident_cely)):
-        logger.debug("core.ident_cely.get_record_from_ident.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
+        logger.debug("core.ident_cely.get_record_from_ident.organizace", extra={"ident_cely": ident_cely})
+        return get_object_or_404(Organizace, ident_cely=ident_cely)
     if bool(re.fullmatch(r"(OS)-\d{6}", ident_cely)):
-        logger.debug("core.ident_cely.get_record_from_ident.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    else:
-        logger.debug("core.ident_cely.get_record_from_ident.no_match", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.osoba", extra={"ident_cely": ident_cely})
+        return get_object_or_404(Osoba, ident_cely=ident_cely)
+    ruian_match = re.fullmatch(r"ruian-(\d{2,6})", ident_cely)
+    if ruian_match:
+        logger.debug("core.ident_cely.get_record_from_ident.ruian", extra={"ident_cely": ident_cely})
+        kod = ruian_match.group(1)
+        len_kod = len(kod)
+        if 2 <= len_kod < 3:
+            return get_object_or_404(RuianKraj, kod=int(kod))
+        if len_kod == 4:
+            return get_object_or_404(RuianOkres, kod=int(kod))
+        if len_kod > 4:
+            return get_object_or_404(RuianKatastr, kod=int(kod))
+    logger.debug("core.ident_cely.get_record_from_ident.no_match", extra={"ident_cely": ident_cely})
     return None
