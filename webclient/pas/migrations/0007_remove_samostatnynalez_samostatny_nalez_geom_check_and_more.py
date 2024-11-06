@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
             name='geom_system',
             field=models.TextField(default='5514'),
         ),
-        migrations.AlterField(
+        migrations.AlterField(   # tato migrace nemá vliv na databázi a je pouze evidencí změny v modelu
             model_name='samostatnynalez',
             name='projekt',
             field=models.ForeignKey(db_column='projekt', limit_choices_to={'typ_projektu': 1137}, on_delete=django.db.models.deletion.RESTRICT, related_name='samostatne_nalezy', to='projekt.projekt'),
