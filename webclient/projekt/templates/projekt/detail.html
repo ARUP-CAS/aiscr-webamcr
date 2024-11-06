@@ -874,8 +874,8 @@
         if ("{{show.samostatne_nalezy}}" != "False" && {{samostatne_nalezy.count}} > 0) {
           $.ajax({
             type: "GET",
-            url: '{% url "pas:get_projekt_pas_table" %}', 
-            data: {'id': {{projekt.id}} },
+            url: '{% url "pas:get_projekt_pas_table" projekt.ident_cely %}', 
+            data: {},
             success : function(data) {
               $('.app-card-samostatny_nalez .loader').css("display", "none");
               $('.app-card-samostatny_nalez table thead').css("display", "table-header-group");

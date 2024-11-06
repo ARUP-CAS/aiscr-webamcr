@@ -73,6 +73,7 @@ window.onload = function () {
                 show_upload_successful_message(file, UploadResultsEnum.success);
                 $("#my-awesome-dropzone").attr('style','display:none !important');
                 $("#import-helptext").attr('style','display:none !important');
+                $("#import-helptext-pian").show();
                 $('#modal-pian-import-table').append(response);
                 this.removeFile(file);
             });

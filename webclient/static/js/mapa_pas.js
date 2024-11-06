@@ -38,7 +38,7 @@ map.on('click', function (e) {
     if (!global_measuring_toolbox._measuring) {
         if (global_map_can_edit) {
             if (!lock) {
-                if (map.getZoom() > 15) {
+                if (map.getZoom() > 11) {
                     point_global_WGS84= amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
                     point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0], point_global_WGS84[1]));
                     point_leaf= [...point_global_WGS84].reverse();
