@@ -132,6 +132,10 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         copy_source.id = None
         copy_source.soubory = None
         copy_source.historie = None
+        copy_source.evidencni_cislo = None
+        copy_source.predano_organizace = None
+        copy_source.predano = None
+        copy_source.pristupnost = None
         self.copy_source = copy_source
 
     def get_form_kwargs(self):
