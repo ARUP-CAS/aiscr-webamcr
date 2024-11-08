@@ -19,6 +19,7 @@ from core.constants import (
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
+    SPOLUPRACE_AKTIVNI,
     SPOLUPRACE_NEAKTIVNI,
     UZIVATEL_RELATION_TYPE,
 )
@@ -135,10 +136,11 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
         admin_group = Group.objects.get(id=ROLE_ADMIN_ID)
         if self.hlavni_role == badatel_group or self.hlavni_role == archeolog_group:
-            moje_spoluprace = self.spoluprace_badatelu.filter(spolupracovnik=self)
-            moje_spolupracujici_organizace = []
-            for spoluprace in moje_spoluprace:
-                moje_spolupracujici_organizace.append(spoluprace.vedouci.organizace)
+            moje_spolupracujici_organizace = list(
+                self.spoluprace_badatelu.filter(spolupracovnik=self, stav=SPOLUPRACE_AKTIVNI)
+                .select_related("vedouci__organizace")
+                .values_list("vedouci__organizace", flat=True)
+            )
             # Archeologum jeste k spolupracim s jinymi archeology pridat jejich organizaci
             if self.hlavni_role == archeolog_group:
                 moje_spolupracujici_organizace.append(self.organizace)

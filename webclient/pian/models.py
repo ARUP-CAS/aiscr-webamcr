@@ -58,7 +58,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     )
     geom = pgmodels.GeometryField(null=False, srid=4326, db_index=True)
     geom_sjtsk = pgmodels.GeometryField(blank=True, null=True, srid=5514, db_index=True)
-    geom_system = models.CharField(max_length=6, default="4326", db_index=True)
+    geom_system = models.CharField(max_length=6, default="5514", db_index=True)
     zm10 = models.ForeignKey(
         "Kladyzm",
         models.RESTRICT,

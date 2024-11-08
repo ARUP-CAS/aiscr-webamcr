@@ -125,6 +125,14 @@
       src="{% static "django_tables2_column_shifter/js/django_tables2_column_shifter.min.js" %}">
   </script>
 <script>
+  const generateExportSuffixString = () => {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < 20; i++) {
+          result += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      return result;
+  }
   $(document).ready(function(){
     $('.app-daterangepicker input').each(function() {
       $(this).datepicker({format: "d.m.yyyy",
@@ -209,7 +217,11 @@ $('#export-progress-modal').on('show.bs.modal', (event) => {
 
     updateProgressBar(0);
     const triggerElement = $(event.relatedTarget);
-    const url = triggerElement.data('url');
+    const export_suffix_string = generateExportSuffixString();
+    const rawEmail = "{{ request.user.email }}";
+    const email = rawEmail.replace("@", "(at)");
+    const url = triggerElement.data('url') + `&export_suffix_string=${export_suffix_string}`;
+    const redis_variable_name = `export_${email}_${export_suffix_string}`
     {% if table.rows|length >= 50000 %}
         const paragraph = $("#modal-confirm-download-par");
         paragraph.next('a.source-link').remove();
@@ -218,10 +230,10 @@ $('#export-progress-modal').on('show.bs.modal', (event) => {
             .attr('id', 'modal-confirm-download-link')
             .addClass('source-link')
             .text('{% trans "core.templates.core.export_modal.link_text" %}')
-            .css({display: 'block', marginTop: '10px'})
+            .css({display: 'block', marginTop: '10px',  cursor: 'pointer'})
             .on('click', (event) => {
                 event.preventDefault();
-                manageExportDownload(url);
+                manageExportDownload(url, redis_variable_name);
                 hideDownloadLink()
             });
         paragraph.after(modal_link);
@@ -232,7 +244,7 @@ $('#export-progress-modal').on('show.bs.modal', (event) => {
     {% endif %}
     $('#export-progress-modal').data('sourceUrl', url);
     {% if table.rows|length < 50000 %}
-        manageExportDownload(url);
+        manageExportDownload(url, redis_variable_name);
     {% endif %}
 })
 
