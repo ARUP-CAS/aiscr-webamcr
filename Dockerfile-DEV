@@ -40,6 +40,7 @@ RUN pip3 install -r requirements.txt --break-system-packages
 RUN mkdir /code
 COPY ./webclient /code
 COPY ./scripts /scripts
+COPY ./cert /cert
 WORKDIR /code
 
 # Uploaded images
@@ -59,6 +60,8 @@ RUN usermod -aG sudo user
 RUN chown -R user:user /vol /scripts
 RUN chmod -R 755 /vol/web /scripts
 RUN chmod 777 -R  /vol/web/nginx/data
+RUN chmod 777 -R  /cert/amcr-test-local.crt
+RUN chmod 777 -R  /cert/amcr-test-local.key
 RUN crontab -u user /scripts/crontab.txt
 USER user
 
