@@ -352,7 +352,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; MIT License
      - https://github.com/python-trio/outcome
    * - packaging
-     - 24.1
+     - 24.2
      - Apache Software License; BSD License
      - https://github.com/pypa/packaging
    * - pandas
