@@ -27,7 +27,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
             "app_list": self.get_app_list(request),
             **self.each_context(request),
         }
-        if request.method == "POST":
+        if request.method == "POST" and request.user.is_superuser:
             form = UpdateMetadataFileForm(request.POST, request.FILES)
             if form.is_valid():
                 uploaded_file = request.FILES["ident_list_file"]
