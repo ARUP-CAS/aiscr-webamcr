@@ -125,5 +125,5 @@ jobs:
     uses: ./.github/workflows/publish_aiscr_hub.yml
     with:
       tag: ${{ inputs.new_tag }}
-      latest: true
+      latest: false
     secrets: inherit
