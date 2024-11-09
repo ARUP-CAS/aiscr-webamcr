@@ -826,8 +826,30 @@ class UzivatelSpolupraceListView(SearchListView):
         self.pick_text = _("pas.views.uzivatelSpolupraceListView.pickText")
         self.toolbar_name = _("pas.views.uzivatelSpolupraceListView.toolbar.title")
 
+    @staticmethod
+    def rename_field_for_ordering(field: str):
+        field = field.replace("-", "")
+        return {
+            "organizace_vedouci": "vedouci__organizace__nazev_zkraceny",
+            "organizace_spolupracovnik": "spolupracovnik__organizace__nazev_zkraceny",
+        }.get(field, field)
+
     def get_queryset(self):
+        sort_params = self._get_sort_params()
+        sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
+        if "vedouci" in sort_params:
+            index = sort_params.index("vedouci")
+            sort_params[index : index + 1] = ["vedouci__last_name", "vedouci__first_name", "vedouci__ident_cely"]
+        if "spolupracovnik" in sort_params:
+            index = sort_params.index("spolupracovnik")
+            sort_params[index : index + 1] = [
+                "spolupracovnik__last_name",
+                "spolupracovnik__first_name",
+                "spolupracovnik__ident_cely",
+            ]
+        qs = qs.order_by(*sort_params)
+        qs = qs.distinct("pk", *sort_params)
         qs = qs.select_related(
             "vedouci",
             "spolupracovnik",
