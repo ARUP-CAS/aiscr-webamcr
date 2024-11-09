@@ -445,7 +445,7 @@ def get_record_from_ident(ident_cely):
         logger.debug("core.ident_cely.get_record_from_ident.ruian", extra={"ident_cely": ident_cely})
         kod = ruian_match.group(1)
         len_kod = len(kod)
-        if 2 <= len_kod < 3:
+        if 2 <= len_kod <= 3:
             return get_object_or_404(RuianKraj, kod=int(kod))
         if len_kod == 4:
             return get_object_or_404(RuianOkres, kod=int(kod))

@@ -157,7 +157,7 @@ services:
     restart: always
     volumes:
       - ./prometheus:/etc/prometheus
-      - prometheus_data:/prometheus
+      - /opt/docker_logs/prometheus_data:/prometheus
     networks:
       - prod-net
     ports:
@@ -194,7 +194,7 @@ services:
       - XPACK_MONITORING_ENABLED=false
       - ELASTIC_PASSWORD=elastic_pass
     volumes:
-      - /opt/elastic_logs:/usr/share/elasticsearch/data
+      - /opt/docker_logs/elastic_data:/usr/share/elasticsearch/data
       - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     ports:
       - 9200:9200
@@ -266,7 +266,6 @@ volumes:
   logs_volume:
   grafana_data:
   redis_data:
-  prometheus_data:
 
 networks:
   prod-net:

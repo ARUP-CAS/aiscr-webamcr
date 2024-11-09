@@ -16,7 +16,11 @@
                  aria-valuemin="0" aria-valuemax="100"></div>
           </div>
           {% if table.rows|length >= 50000 %}
-            <p id="modal-confirm-download-par">{% trans "core.templates.core.export_modal.confirm_download" %}</p>
+            {% if request.user.is_superuser %}
+              <p id="modal-confirm-download-par">{% trans "core.templates.core.export_modal.confirm_download" %}</p>
+            {% else %}
+              <p>{% trans "core.templates.core.export_modal.too_many_rows" %}</p>
+            {% endif %}
           {% endif %}
           <p id="export-progress-model-file-being-generated"
              {% if table.rows|length >= 50000 %}style="display: none"{% endif %}>
