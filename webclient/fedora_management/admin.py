@@ -4,11 +4,9 @@ import pandas as pd
 from core.ident_cely import get_record_from_ident
 from core.repository_connector import FedoraError, FedoraTransaction
 from django.contrib import admin
-from django.contrib.auth.decorators import user_passes_test
 from django.http import Http404
 from django.template.response import TemplateResponse
 from django.urls import path
-from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from fedora_management.forms import UpdateMetadataFileForm
 from uzivatel.models import User
@@ -18,10 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class FedoraCustomAdminSite(admin.AdminSite):
-    @method_decorator(user_passes_test(lambda u: u.is_superuser))
-    def has_permission(self, request):
-        return request.user.is_active and request.user.is_superuser
-
     def update_metadata_file_upload(self, request):
         context = {
             "app_list": self.get_app_list(request),
