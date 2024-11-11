@@ -100,3 +100,11 @@ jobs:
       - name: Check tag exists
         run: |
           echo "Tag already present: ${{ env.TAG_EXISTS }}"
+
+  docker_deploy:
+    needs: new_version
+    uses: ./.github/workflows/publish_aiscr_hub.yml
+    with:
+      tag: ${{ inputs.new_tag }}
+      latest: true
+    secrets: inherit

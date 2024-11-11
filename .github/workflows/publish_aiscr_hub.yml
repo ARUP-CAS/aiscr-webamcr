@@ -1,7 +1,13 @@
 name: Build and publish Docker images
 on:
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+      latest:
+        type: boolean
+        required: true
 
 env:
   DOCKER_HUB_REPO_REDIS: aiscr/webamcr-redis
@@ -22,7 +28,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tags }}
+          ref: ${{ inputs.tag }}
       
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@v3
@@ -35,9 +41,9 @@ jobs:
       
       - name: Get tag from GITHUB_REF
         run: |
-          if [ "${{ inputs.tags }}" != '' ]; then
-            echo "${{ inputs.tags }}"
-            echo "tag_version=${{ inputs.tags }}" >> $GITHUB_ENV
+          if [ "${{ inputs.tag }}" != '' ]; then
+            echo "${{ inputs.tag }}"
+            echo "tag_version=${{ inputs.tag }}" >> $GITHUB_ENV
           else
             echo "$(echo $GITHUB_REF | cut -d/ -f3)"
             echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
@@ -54,7 +60,7 @@ jobs:
           
       - name: Set tags prod
         run: |
-          if [ "${{ inputs.tags }}" != '' ]; then
+          if [ "${{ inputs.latest }}" == 'false' ]; then
             echo "prod_tags=${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_PROD }}:${{ env.tag_version }}" >> $GITHUB_ENV
           else
             echo "prod_tags=${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_PROD }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_PROD }}:latest" >> $GITHUB_ENV
@@ -93,7 +99,7 @@ jobs:
 
       - name: Set tags proxy
         run: |
-          if [ "${{ inputs.tags }}" != '' ]; then
+          if [ "${{ inputs.latest }}" == 'false' ]; then
             echo "proxy_tags=${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_PROXY }}:${{ env.tag_version }}" >> $GITHUB_ENV
           else
             echo "proxy_tags=${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_PROXY }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_PROXY }}:latest" >> $GITHUB_ENV
@@ -131,7 +137,7 @@ jobs:
 
       - name: Set tags redis
         run: |
-          if [ "${{ inputs.tags }}" != '' ]; then
+          if [ "${{ inputs.latest }}" == 'false' ]; then
             echo "redis_tags=${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_REDIS }}:${{ env.tag_version }}" >> $GITHUB_ENV
           else
             echo "redis_tags=${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_REDIS }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.DOCKER_HUB_REPO_REDIS }}:latest" >> $GITHUB_ENV

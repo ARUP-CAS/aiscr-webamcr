@@ -5,6 +5,18 @@
 
 {% block extrastyle %}
   <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+  <style>
+      .form-group {
+          display: flex;
+          align-items: center;
+          margin-bottom: 1rem;
+      }
+
+      .form-label {
+          width: 300px;
+          margin-right: 10px;
+      }
+  </style>
 {% endblock %}
 
 {% block pagination %}{% endblock %}
@@ -22,24 +34,34 @@
 <h2>{% trans "core.templates.admin.fedora_management.heading" %}</h2>
 
 {% block content %}
-  <div id="content-main">
-    <form method="post" enctype="multipart/form-data">
-      <div>
-        <fieldset class="module aligned">
-          {{ update_metadata_file_form.non_field_errors }}
-          {% csrf_token %}
-          {% crispy update_metadata_file_form %}
-          {% if text %}
-            {% autoescape off %}
-              {{ text }}
-            {% endautoescape %}
-          {% endif %}
-        </fieldset>
-        <div class="submit-row">
-          <input type="submit" value="{% trans 'Save' %}" class="default" name="_save">
+  {% if request.user.is_superuser %}
+    <div id="content-main">
+      <form method="post" enctype="multipart/form-data">
+        <div>
+          <fieldset class="module aligned">
+            {{ update_metadata_file_form.non_field_errors }}
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="id_ident_list_file" class="form-label">
+                {{ form.ident_list_file.label }}
+              </label>
+              <input type="file" id="id_ident_list_file" name="ident_list_file" required accept=".xlsx, .xls, .csv">
+            </div>
+            {% if error %}
+              <p>{{ error }}</p>
+            {% elif text %}
+              {% autoescape off %}
+                {{ text }}
+              {% endautoescape %}
+            {% endif %}
+          </fieldset>
+          <div class="submit-row">
+            <input type="submit" value="{% trans 'Save' %}" class="default" name="_save">
+          </div>
         </div>
-      </div>
-
-    </form>
-  </div>
+      </form>
+    </div>
+  {% else %}
+    <p>{% trans "core.templates.admin.fedora_management.not_superuser" %}</p>
+  {% endif %}
 {% endblock content %}

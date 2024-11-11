@@ -510,6 +510,8 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                                 "zpet",
                                 cast.archeologicky_zaznam.get_absolute_url(),
                                 max_age=1000,
+                                secure=True,
+                                samesite="Strict",
                             )
                             found = True
                             break
@@ -522,6 +524,8 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                                 "zpet",
                                 reverse("projekt:detail", args=(ident_referer,)),
                                 max_age=1000,
+                                secure=True,
+                                samesite="Strict",
                             )
                             found = True
                             break
@@ -2241,25 +2245,31 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
     Třída pohledu pro zobrazení tabulky dokumentů.
     """
 
-    def get(self, request, typ_vazby):
+    def get(self, request, typ_vazby, ident_cely):
         if typ_vazby == "arch_z":
             qs = (
-                Dokument.objects.filter(casti__archeologicky_zaznam__id=request.GET.get("id", ""))
+                Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
                 .select_related("soubory")
                 .prefetch_related("soubory__soubory")
                 .order_by("ident_cely")
             )
-            zaznam = ArcheologickyZaznam.objects.get(id=request.GET.get("id", ""))
+            zaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
+            dokument_odpojit = check_permissions(
+                p.actionChoices.archz_odpojit_dokument, request.user, zaznam.ident_cely
+            )
         else:
             qs = (
-                Dokument.objects.filter(casti__projekt__id=request.GET.get("id", ""))
+                Dokument.objects.filter(casti__projekt__ident_cely=ident_cely)
                 .select_related("soubory")
                 .prefetch_related("soubory__soubory")
             ).order_by("ident_cely")
-            zaznam = Projekt.objects.get(id=request.GET.get("id", ""))
+            zaznam = Projekt.objects.get(ident_cely=ident_cely)
+            dokument_odpojit = (
+                check_permissions(p.actionChoices.projekt_dok_odpojit, request.user, zaznam.ident_cely),
+            )
         context = {
             "dokumenty": qs,
-            "show": {"dokument_odpojit": request.GET.get("show_dokument_odpojit", "")},
+            "show": {"dokument_odpojit": dokument_odpojit},
             "zaznam": zaznam,
             "type": typ_vazby,
         }

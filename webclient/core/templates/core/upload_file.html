@@ -22,7 +22,7 @@
         <input name="file" type="file" multiple/>
       </div>
     </form>
-    <small class="form-text text-muted">{% trans "core.templates.upload_file.tooltip" %}</small>
+    <small class="form-text text-muted">{{ info_tooltip }}</small>
     <div class="mt-3">
       <div class="form-group">
         <a id="buttonUploadSubmit" class="btn btn-primary app-entity-soubor-btn btn-disable-when-running-upload"
@@ -45,7 +45,7 @@
       </script>
     {% else %}
         <script>
-          var maxFiles = 999;
+          var maxFiles = 99;
           var object_id = "{{ ident_cely }}";
           var typ_vazby = "{{ typ_vazby }}";
           var typ_uploadu = "upload";

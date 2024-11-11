@@ -652,7 +652,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     @property
     def pristupnost(self):
         pristupnosti_ids = set()
-        if self.typ_projektu == TYP_PROJEKTU_PRUZKUM_ID:
+        if self.typ_projektu.pk == TYP_PROJEKTU_PRUZKUM_ID:
             samostatne_nalezy = self.samostatne_nalezy.all()
             for samosatny_nalez in samostatne_nalezy:
                 from pas.models import SamostatnyNalez
