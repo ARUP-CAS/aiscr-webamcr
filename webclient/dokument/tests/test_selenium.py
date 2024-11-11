@@ -18,11 +18,11 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceDokumenty(BaseSeleniumTestClass):
     def go_to_form_zapsat(self):
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .card-body")
+        self.ElementClick(By.ID, "menuDokumenty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.dokumenty.zapsat"))
 
     def go_to_form_vybrat(self):
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .card-body")
+        self.ElementClick(By.ID, "menuDokumenty")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.dokumenty.vybrat"))
 
     def test_064_zapsani_dokumentu_p_001(self):

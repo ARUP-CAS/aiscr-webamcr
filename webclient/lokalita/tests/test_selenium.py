@@ -18,11 +18,11 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceLokality(BaseSeleniumTestClass):
     def go_to_form_zapsat(self):
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-lokalita > .card-body")
+        self.ElementClick(By.ID, "menuLokality")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.lokality.zapsat"))
 
     def go_to_form_vybrat(self):
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-lokalita > .card-body")
+        self.ElementClick(By.ID, "menuLokality")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.lokality.vybrat"))
 
     def test_051_zapsani_lokality_p_001(self):
