@@ -80,7 +80,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - UNKNOWN
    * - amqp
-     - 5.2.0
+     - 5.3.0
      - BSD License
      - http://github.com/celery/py-amqp
    * - asgiref
