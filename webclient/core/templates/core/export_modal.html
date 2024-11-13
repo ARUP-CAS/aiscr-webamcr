@@ -16,7 +16,11 @@
                  aria-valuemin="0" aria-valuemax="100"></div>
           </div>
           {% if table.rows|length >= 50000 %}
-            <p id="modal-confirm-download-par">{% trans "core.templates.core.export_modal.confirm_download" %}</p>
+            {% if request.user.is_superuser %}
+              <p id="modal-confirm-download-par">{% trans "core.templates.core.export_modal.confirm_download" %}</p>
+            {% else %}
+              <p>{% trans "core.templates.core.export_modal.too_many_rows" %}</p>
+            {% endif %}
           {% endif %}
           <p id="export-progress-model-file-being-generated"
              {% if table.rows|length >= 50000 %}style="display: none"{% endif %}>
@@ -47,21 +51,11 @@
               parGenerated.style.display = null;
           }
       }
-
-      const resetTempValue = () => {
-          fetch("{% url 'core:reset_temp_value' %}?name=export_{{ request.user.name }}")
-              .catch(error => console.error('Error in reset function:', error));
-      }
-
+      
       const controller = new AbortController();
       const signal = controller.signal;
 
-      const cancelButton = document.getElementById('export-progress-modal-button-cancel');
-      cancelButton.onclick = () => {
-          controller.abort();
-      }
-
-      const manageExportDownload = (downloadUrl) => {
+      const manageExportDownload = (downloadUrl, redis_variable_name) => {
           let downloadFinished = false;
           
           document.addEventListener('downloadStart', () => {
@@ -72,7 +66,7 @@
           document.addEventListener('downloadComplete', () => {
               updateProgressBar(100);
               downloadFinished = true;
-              fetch(`{% url 'core:reset_temp_value' %}?temp_name=export_${email}`)
+              fetch(`{% url 'core:delete_temp_value' %}?temp_name=${redis_variable_name}`)
                   .catch(error => console.error('Error in Check Value Function:', error));
               setTimeout(() => {
                   $('#export-progress-modal').modal('hide')
@@ -85,23 +79,20 @@
           document.dispatchEvent(downloadStartEvent);
           
           const getFileName = target_link => {
-              if (target_link.endsWith("csv")) {
+              if (target_link.includes("export=csv")) {
                   return "export.csv"
               }
-              if (target_link.endsWith("json")) {
+              if (target_link.includes("export=json")) {
                   return "export.json"
               }
-              if (target_link.endsWith("xlsx")) {
+              if (target_link.includes("export=xlsx")) {
                   return "export.xlsx"
               }
           }
           const file_name = getFileName(downloadUrl)
 
           const checkDownloadStatus = () => {
-              const rawEmail = "{{ request.user.email }}";
-              const email = rawEmail.replace("@", "(at)");
-
-              fetch(`{% url 'core:read_temp_value' %}?temp_name=export_${email}`)
+              fetch(`{% url 'core:read_temp_value' %}?temp_name=${redis_variable_name}`)
                   .then(response => response.json())
                   .then(data => {
                       updateProgressBar(data.value);
@@ -111,6 +102,12 @@
                   })
                   .catch(error => console.error('Error in Check Value Function:', error));
           }
+          
+          const updateRedisDownloadAbort = () => {
+              fetch(`{% url 'core:abort_download_update_temp_value' %}?temp_name=${redis_variable_name}`)
+                  .catch(error => console.error('Error in reset function:', error));
+          }
+
 
           const intervalId = setInterval(() => {
               if (!downloadFinished) {
@@ -118,9 +115,7 @@
               }
           }, 1000);
 
-          const rawEmail = "{{ request.user.email }}"
-          const email = rawEmail.replace("@", "(at)")
-          fetch(`{% url 'core:read_temp_value' %}?temp_name=export_${email}`)
+          fetch(`{% url 'core:read_temp_value' %}?temp_name=${redis_variable_name}`)
               .then(response => response.json())
               .then(data => {
                   updateProgressBar(data.value);
@@ -144,12 +139,17 @@
                   document.dispatchEvent(downloadCompleteEvent);
               })
               .catch(error => {
-                  console.error('There was a problem with the download:', error);
+                  if (error === 'AbortedByUser') {
+                      console.log('Fetch request was aborted');
+                  } else {
+                      console.error('Fetch error:', error);
+                  }
               })
           
           document.getElementById('export-progress-modal-button-cancel').addEventListener('click', () => {
-              window.stop()
-              resetTempValue()
+              updateRedisDownloadAbort()
+              controller.abort("AbortedByUser")
+              location.reload()
           })
       };
 

@@ -61,7 +61,12 @@ urlpatterns = [
     ),
     path("check-authentication", views.CheckUserAuthentication.as_view(), name="check_authentication"),
     path("read-temp-value", views.ReadTempValueView.as_view(), name="read_temp_value"),
-    path("reset-temp-value", views.ResetTempValueView.as_view(), name="reset_temp_value"),
+    path("delete-temp-value", views.DeleteTempValueView.as_view(), name="delete_temp_value"),
+    path(
+        "abort-download-temp-value",
+        views.AbortDownloadUpdateTempValueView.as_view(),
+        name="abort_download_update_temp_value",
+    ),
     path(
         "rosetta/files/import/<str:po_filter>/<str:lang_id>/<int:idx>/",
         views.TranslationImportView.as_view(),

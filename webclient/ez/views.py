@@ -841,10 +841,10 @@ class EzOdkazyTableView(LoginRequiredMixin, View):
     Třída pohledu pro zobrazení řádků tabulky externích odkazů.
     """
 
-    def get(self, request):
+    def get(self, request, ident_cely):
         card_type = request.GET.get("card_type", False)
         action_type = request.GET.get("type", False)
-        zaznam = ExterniZdroj.objects.get(id=request.GET.get("id", ""))
+        zaznam = ExterniZdroj.objects.get(ident_cely=ident_cely)
         ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj=zaznam)
         if card_type == "akce":
             zaznamy = (
@@ -863,9 +863,9 @@ class EzOdkazyTableView(LoginRequiredMixin, View):
             "card_type": card_type,
             "type": action_type,
             "show": {
-                "paginace": request.GET.get("show_paginace", False),
-                "odpojit": request.GET.get("show_odpojit", False),
-                "paginace_edit": request.GET.get("show_paginace_edit", False),
+                "paginace": True,
+                "paginace_edit": check_permissions(p.actionChoices.eo_edit_ez, request.user, zaznam.ident_cely),
+                "odpojit": check_permissions(p.actionChoices.eo_odpojit_akce, request.user, zaznam.ident_cely),
             },
             "zaznam": zaznam,
         }

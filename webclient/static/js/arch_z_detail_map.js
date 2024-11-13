@@ -884,6 +884,7 @@ map.on('editCoord:save', function (e) {
 })
 
 
+//událost po vytvoření geometrie
 map.on('draw:created', function (e) {
     addLogText("arch_z_detail_map.draw:created")
     if (global_map_can_edit) {

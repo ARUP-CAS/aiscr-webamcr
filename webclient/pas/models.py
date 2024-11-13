@@ -83,7 +83,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     )
     geom = pgmodels.PointField(blank=True, null=True, srid=4326)
     geom_sjtsk = pgmodels.PointField(blank=True, null=True, srid=5514)
-    geom_system = models.TextField(default="4326")
+    geom_system = models.TextField(default="5514")
     pristupnost = models.ForeignKey(
         Heslar,
         models.RESTRICT,

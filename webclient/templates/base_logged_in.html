@@ -24,13 +24,13 @@
       <div class="card">        
         <div class="card-header">
           <h2 class="mb-0">
-            <span id="menuProjekty" class="btn index-link btn-block text-left" data-target="#collapseProjekty">
+            <span class="btn index-link btn-block text-left" data-target="#collapseProjekty">
               <a href="{% url 'projekt:index' %}" class="{% if request.resolver_match.app_name == 'projekt' %}active{% endif %}">
                 <span class="material-icons">dynamic_feed</span> {% trans "templates.baseLogedIn.sidebar.projekty" %}
               </a>
               <span class="expand-click collapsed" data-toggle="collapse" data-target="#collapseProjekty" aria-expanded="false"
                     aria-controls="collapseProjekty">
-                <span class="material-icons app-icon-expand">expand_more</span>
+                <span id="menuProjekty" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
@@ -63,13 +63,13 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span id="menuSamostatneAkce" class="btn index-link btn-block text-left">
+            <span class="btn index-link btn-block text-left">
               <a href="{% url 'arch_z:index' %}" class="{% if request.resolver_match.app_name == 'arch_z' %}active{% endif %}">
                 <span class="material-icons">brush</span> {% trans "templates.baseLogedIn.sidebar.samostatneAkce" %}
               </a>
               <span class="expand-click collapsed" data-toggle="collapse"
                     data-target="#collapseAkce" aria-expanded="false" aria-controls="collapseAkce">
-                <span class="material-icons app-icon-expand">expand_more</span>
+                <span id="menuSamostatneAkce" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
@@ -93,13 +93,13 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span id="menuLokality" class="btn index-link btn-block text-left">
+            <span class="btn index-link btn-block text-left">
               <a href="{% url 'lokalita:index' %}" class="{% if request.resolver_match.app_name == 'lokalita' %}active{% endif %}">
                 <span class="material-icons">tour</span> {% trans "templates.baseLogedIn.sidebar.lokality" %}
               </a>
               <span class="expand-click collapsed" data-toggle="collapse"
                     data-target="#collapseLokality" aria-expanded="false" aria-controls="collapseLokality">
-                <span class="material-icons app-icon-expand">expand_more</span>
+                <span id="menuLokality" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
@@ -123,13 +123,13 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span id="menuSamostatneNalezy" class="btn index-link btn-block text-left">
+            <span class="btn index-link btn-block text-left">
               <a href="{% url 'pas:index' %}" class="{% if request.resolver_match.app_name == 'pas' %}active{% endif %}">
                 <span class="material-icons">location_on</span> {% trans "templates.baseLogedIn.sidebar.samostatneNalezy" %}
               </a>
               <span class="expand-click collapsed" data-toggle="collapse"
                     data-target="#collapseSn" aria-expanded="false" aria-controls="collapseSn">
-                <span class="material-icons app-icon-expand">expand_more</span>
+                <span id="menuSamostatneNalezy" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
@@ -157,13 +157,13 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span id="menuKnihovna3D" class="btn index-link btn-block text-left">
+            <span class="btn index-link btn-block text-left">
               <a href="{% url 'dokument:index-model-3D' %}"  class="{% if request.resolver_match.app_name == 'dokument' and 'model' in request.path %}active{% endif %}">
                 <span class="material-icons">3d_rotation</span> {% trans "templates.baseLogedIn.sidebar.knihovna3D" %}
               </a>
               <span class="expand-click collapsed" data-toggle="collapse"
                     data-target="#collapse3d" aria-expanded="true" aria-controls="collapse3d">
-                <span class="material-icons app-icon-expand">expand_more</span>
+                <span id="menuKnihovna3D" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
@@ -187,13 +187,13 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span id="menuDokumenty" class="btn index-link btn-block text-left">
+            <span class="btn index-link btn-block text-left">
               <a href="{% url 'dokument:index' %}" class="{% if request.resolver_match.app_name == 'dokument' and 'model' not in request.path %}active{% endif %}">
               <span class="material-icons">description</span> {% trans "templates.baseLogedIn.sidebar.dokumenty" %}
               </a>
               <span class="expand-click collapsed" data-toggle="collapse"
                     data-target="#collapseDokument" aria-expanded="true" aria-controls="collapseDokument">
-                <span class="material-icons app-icon-expand">expand_more</span>
+                <span id="menuDokumenty" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
@@ -219,13 +219,13 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span id="menuExterniZdroje" class="btn index-link btn-block text-left collapsed">
+            <span class="btn index-link btn-block text-left collapsed">
               <a href="{% url 'ez:index' %}" class="{% if request.resolver_match.app_name == 'ez' %}active{% endif %}">
               <span class="material-icons">menu_book</span> {% trans "templates.baseLogedIn.sidebar.externiZdroje" %}
               </a>
               <span class="expand-click collapsed" data-toggle="collapse"
                     data-target="#collapseEz" aria-expanded="false" aria-controls="collapseEz">
-                <span class="material-icons app-icon-expand">expand_more</span>
+                <span id="menuExterniZdroje" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
