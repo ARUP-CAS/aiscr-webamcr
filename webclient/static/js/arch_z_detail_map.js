@@ -4,6 +4,7 @@ var global_blocked_by_query_geom= false; //nahraná geometrie ze sessions pro op
 var global_map_can_grab_geom_from_map = false;
 var global_map_element = "id_geom";
 var global_map_element_sjtsk = "id_geom_sjtsk";
+var global_map_element_epsg = "id_geom_system";
 var global_map_can_load_pians = true;
 var global_map_katastry_all = null;
 var global_unwanted_popup=null;
@@ -441,309 +442,13 @@ var drawControl = new L.Control.Draw({
 
 map.addControl(drawControl);
 
-
-
-var CustomEditCoordControl = L.Control.extend({
-    options: {
-        position: 'topleft'
-    },
-    active: false,
-    tempMarkers: [],
-    _uneditedLayerProps: {},
-    originalCoordinates: {},  // Objekt pro uložení původních souřadnic
-    container: null,
-    
-    onAdd: function(map) {
-        this.container = L.DomUtil.create('a', 'leaflet-draw-edit-edit');
-        this.container.href = '#';
-        this.container.title = "Edit Coordinates";
-        this.container.innerHTML = '<img src="/static/static/img/coord-edit.png" style="width:20px">';
-        this.container.style.backgroundImage='none'
-        this.container.style.background
-
-        this.container1 = L.DomUtil.create('ul', 'leaflet-draw-actions');
-        this.container1.innerHTML = '<li><a href="#" id="saveChanges" title="Uložit změny">Uložit změny</a></li><li><a href="#" id="cancelChanges" title="Vrátit změny">Storno</a></li>';
-        this.container1.style.display = 'none';
-        this.container1.style.top = '32px';
-
-        var drawSections = document.querySelectorAll('.leaflet-draw-toolbar');
-        if (drawSections.length > 1) {
-            drawSections[1].appendChild(this.container);
-            drawSections[1].parentElement.appendChild(this.container1);
-        } else {
-            map.getContainer().appendChild(this.container);
-        }
-        this.createCoordDialog();
-
-        this.container.onclick = (function() {
-            if (this.active === false) {
-
-                drawControl._toolbars.draw.disable();
-                drawControl._toolbars.edit.disable();
-                if (global_measuring_toolbox._measuring) {
-                    global_measuring_toolbox._toggleMeasure();
-                }
-                this.activate(map);
-            } else {
-                this.deactivate(map);
-            }
-        }).bind(this);
-
-        // Navázání událostí na tlačítka Uložit a Storno
-        document.getElementById('saveChanges').onclick = (function(e) {
-            e.preventDefault();
-            this.saveChanges();
-        }).bind(this);
-
-        document.getElementById('cancelChanges').onclick = (function(e) {
-            e.preventDefault();
-            this.restoreOriginalCoordinates();
-            this.deactivate(map);
-        }).bind(this);
-
-        return this.container;
-    },
-
-    activate: function(map) {
-        this.active = true;
-        this.container1.style.display = 'block';
-        this._createTooltip();
-        drawnItems.eachLayer((layer) => {
-            this.saveOriginalCoordinates(layer);  // Uložení původních souřadnic
-
-            if (layer instanceof L.Polygon || layer instanceof L.Polyline) {
-                var latlngs = layer instanceof L.Polygon ? layer.getLatLngs()[0] : layer.getLatLngs();
-                latlngs.forEach((latlng, index) => {
-                    var squareMarker = L.marker(latlng, { icon: this.createCustomMarker(latlng) }).addTo(map);
-                    this.tempMarkers.push(squareMarker);
-                    squareMarker.off('click');
-                    squareMarker.on('click', () => {
-                        this._fillInputContainer(latlng);
-                        L.popup()
-                            .setLatLng(latlng)
-                            .setContent(this._inputcontainer)
-                            .openOn(map);
-
-                            this._buttonSubmit.addEventListener('click', () => {
-                            latlng.lng = parseFloat(this._inputX.value);
-                            latlng.lat = parseFloat(this._inputY.value);
-                            var oldLatLng = L.latLng(latlng.lat, latlng.lng);
-                            latlngs[index].lat = newLat;
-                            latlngs[index].lng = newLng;
-
-                            if (layer instanceof L.Polygon) {
-                                layer.setLatLngs([latlngs]);
-                            } else if (layer instanceof L.Polyline) {
-                                layer.setLatLngs(latlngs);
-                            }
-                            if (layer.intersects()) {  // Kontrola křížení
-                                message_box.show( map_translations['EditPolylineError'] );
-                                //latlngs[index] = oldLatLng;  // Obnovení na původní souřadnice
-                                latlngs[index].lat = oldLatLng.lat;
-                                latlngs[index].lng = oldLatLng.lng;
-                                if (layer instanceof L.Polygon) {
-                                    layer.setLatLngs([latlngs]);
-                                } else if (layer instanceof L.Polyline) {
-                                    layer.setLatLngs(latlngs);
-                                }
-                            } else {
-                                squareMarker.setLatLng([newLat, newLng]);
-                                map.closePopup();
-                            }
-
-                           // squareMarker.setLatLng([newLat, newLng]);
-                          //  map.closePopup();
-                        });
-                    });
-                });
-            } else if (layer instanceof L.Marker) {
-                var latlng = layer.getLatLng();
-                layer.off('click');
-                layer.on('click', () => {
-                    this._fillInputContainer(latlng);
-                    L.popup()
-                        .setLatLng(latlng)
-                        .setContent(this._inputcontainer)
-                        .openOn(map);
-
-                        this._buttonSubmit.addEventListener('click', () => {
-                        latlng.lng = parseFloat(this._inputX.value);
-                        latlng.lat = parseFloat(this._inputY.value);
-                        layer.setLatLng(latlng);
-                        map.closePopup();
-                    });
-                });
-            }
-        });
-    },
-
-    deactivate: function(map) {
-        this.active = false;
-        this.container1.style.display = 'none';
-        this.tempMarkers.forEach((marker) => {
-            map.removeLayer(marker);
-        });
-        this.tempMarkers = [];
-        this._deactivateTooltip();
-    },
-
-    saveOriginalCoordinates: function(layer) {
-        var id = L.Util.stamp(layer);
-
-		if (!this._uneditedLayerProps[id]) {
-			// Polyline, Polygon or Rectangle
-			if (layer instanceof L.Polyline || layer instanceof L.Polygon || layer instanceof L.Rectangle) {
-				this._uneditedLayerProps[id] = {
-					latlngs: L.LatLngUtil.cloneLatLngs(layer.getLatLngs())
-				};
-			} else if (layer instanceof L.Circle) {
-				this._uneditedLayerProps[id] = {
-					latlng: L.LatLngUtil.cloneLatLng(layer.getLatLng()),
-					radius: layer.getRadius()
-				};
-			} else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) { // Marker
-				this._uneditedLayerProps[id] = {
-					latlng: L.LatLngUtil.cloneLatLng(layer.getLatLng())
-				};
-			}
-		}
-    },
-
-    restoreOriginalCoordinates: function() {
-        drawnItems.eachLayer((layer) => {
-            var id = L.Util.stamp(layer);
-            layer.edited = false;
-            if (this._uneditedLayerProps.hasOwnProperty(id)) {
-                // Polyline, Polygon or Rectangle
-                if (layer instanceof L.Polyline || layer instanceof L.Polygon || layer instanceof L.Rectangle) {
-                    layer.setLatLngs(this._uneditedLayerProps[id].latlngs);
-                } else if (layer instanceof L.Circle) {
-                    layer.setLatLng(this._uneditedLayerProps[id].latlng);
-                    layer.setRadius(this._uneditedLayerProps[id].radius);
-                } else if (layer instanceof L.Marker || layer instanceof L.CircleMarker) { // Marker or CircleMarker
-                    layer.setLatLng(this._uneditedLayerProps[id].latlng);
-                }
-    
-                //layer.fire('revert-edited', {layer: layer});
-            }
-        });
-    },
-
-    saveChanges: function() {
-        this._uneditedLayerProps = {};  // Vyprázdnění uložených souřadnic, aby nebylo možné je vrátit
-        this.deactivate(map);
-        geomToText();
-        save_edited_geometry_session();
-    },
-
-    createCoordDialog: function() {
-        this._inputcontainer = L.DomUtil.create("div", "uiElement input uiHidden");
-        this._inputcontainerWGS84 = L.DomUtil.create("div", "", this._inputcontainer);
-        this._inputcontainerJTSK = L.DomUtil.create("div", "", this._inputcontainer);
-        var xSpan, ySpan;
-    
-        xSpan = L.DomUtil.create("span", "", this._inputcontainerWGS84);
-        this._inputX = this._createInput("coordInput", this._inputcontainerWGS84);
-        ySpan = L.DomUtil.create("span", "", this._inputcontainerWGS84);
-        this._inputY = this._createInput("coordInput", this._inputcontainerWGS84);
-    
-        xSpanJTSK = L.DomUtil.create("span", "", this._inputcontainerJTSK);
-        this._inputXJTSK = this._createInput("coordInput", this._inputcontainerJTSK);
-        ySpanJTSK = L.DomUtil.create("span", "", this._inputcontainerJTSK);
-        this._inputYJTSK = this._createInput("coordInput", this._inputcontainerJTSK);
-        xSpan.innerHTML = " E ";
-        ySpan.innerHTML = " N ";
-        xSpanJTSK.innerHTML = " X ";
-        ySpanJTSK.innerHTML = " Y ";
-        this._buttonSubmit= L.DomUtil.create("button","",this._inputcontainer);// '<button type="button" id="updateMarkerButton">Upravit</button>' +
-        this._buttonSubmit.innerHTML="Upravit";//preklad
-        
-        L.DomEvent.on(this._inputX, 'keyup', this._handleKeypress, this);
-        L.DomEvent.on(this._inputY, 'keyup', this._handleKeypress, this);
-        L.DomEvent.on(this._inputXJTSK, 'keyup', this._handleKeypress, this);
-        L.DomEvent.on(this._inputYJTSK, 'keyup', this._handleKeypress, this);
-    },
-    _createInput: function (classname, container) {
-        var input = L.DomUtil.create("input", classname, container);
-        input.type = "text";
-        L.DomEvent.disableClickPropagation(input);
-        return input;
-    },
-    _handleKeypress: function (e) {
-        if (e.target == this._inputY || e.target == this._inputX ) {
-            
-            var x = parseFloat(this._inputX.value);
-            var y = parseFloat(this._inputY.value);
-            if (x !== undefined && y !== undefined) {
-                var coords = convertToJTSK(x, y);
-                this._inputXJTSK.value=Math.round(coords[0]*100)/100;
-                this._inputYJTSK.value=Math.round(coords[1]*100)/100;
-            }
-        }
-        else{
-            var x = parseFloat(this._inputXJTSK.value);
-            var y = parseFloat(this._inputYJTSK.value);
-            if (x !== undefined && y !== undefined) {
-                var latlng= convertToWGS84(x, y);
-                this._inputX.value=latlng[0];
-                this._inputY.value=latlng[1];
-            }
-        }
-    },
-    _fillInputContainer: function(latlng){
-        this._inputX.value=latlng.lng;
-        this._inputY.value=latlng.lat;
-        var coords = convertToJTSK(latlng.lng, latlng.lat);
-        this._inputXJTSK.value=Math.round(coords[0]*100)/100;
-        this._inputYJTSK.value=Math.round(coords[1]*100)/100;
-    },
-    _createTooltip: function(){
-        this.tooltip = new L.Draw.Tooltip(map);
-        this.tooltip.updateContent({
-            text: L.drawLocal.edit.handlers.edit.tooltip.text,
-            subtext: L.drawLocal.edit.handlers.edit.tooltip.subtext
-        });
-
-        // Quickly access the tooltip to update for intersection checking
-        
-
-        //this._updateTooltip();
-
-        map.on('mousemove', this._onMouseMove, this)
-            .on('touchmove', this._onMouseMove, this)
-            .on('MSPointerMove', this._onMouseMove, this)
-         
-
-    },
-    _deactivateTooltip: function(){
-        this.tooltip.dispose();
-        map.off('mousemove', this._onMouseMove, this)
-            .off('touchmove', this._onMouseMove, this)
-            .off('MSPointerMove', this._onMouseMove, this)
-           
-    },
-
-    _onMouseMove: function (e) {
-		//this._tooltip.updatePosition(e.latlng);
-        var pos = map.latLngToLayerPoint(e.latlng);
-        tooltipContainer = this.tooltip._container;
-        if (this.tooltip) {        
-            L.DomUtil.setPosition(tooltipContainer, pos);
-        }
-        return this;
-	},
-    createCustomMarker: function (latlng) {
-        return L.divIcon({
-            className: 'custom-edit-coord-marker',
-            iconSize: [12, 12],
-            iconAnchor: [6, 6]
-        });
-    }
+let coordinates_editor = new L.Control.EditCoordControl({
+    saveText: map_translations['EditCoordSave'],
+    stornoText: map_translations['EditCoordStorno'],
+    tooltipText: map_translations['EditCoordTooltip'],
+    titleText: map_translations['EditCoordTitle'],
+    modifyText: map_translations['EditCoordModify'],
 });
-
-
-//let coordinates_editor = new CustomEditCoordControl();
-let coordinates_editor = new L.Control.EditCoordControl();
 
 
 let global_measuring_toolbox = new L.control.measure(
@@ -840,7 +545,7 @@ map.on('draw:edited', function (e) {
 map.on('draw:deleted', function (e) {
     addLogText("arch_z_detail_map.draw:drawstart")
     addLogText("deleted")
-    addWGS84Geometry()
+    updateGeometry()
     addSJTSKGeometry()
     disableSavePianButton();
     save_edited_geometry_session();
@@ -879,7 +584,7 @@ map.on('editCoord:intersects', function (e) {
 })
 
 map.on('editCoord:save', function (e) {
-    geomToText()
+    geomToText(e.epsg)
     save_edited_geometry_session()
 })
 
@@ -915,7 +620,7 @@ map.on('draw:created', function (e) {
 
 
 //převod geometrie pianu do textoveho formatu posílaného na server
-function geomToText() {//Desc: This fce moves edited geometry into HTML element
+function geomToText(epsg=null) {//Desc: This fce moves edited geometry into HTML element
     addLogText("arch_z_detail_map.geomToText")
     // LINESTRING(-71.160281 42.258729,-71.160837
     // POLYGON((-71.1776585052917 42.3902909739571,-71.177682
@@ -924,6 +629,9 @@ function geomToText() {//Desc: This fce moves edited geometry into HTML element
     var jtsk_text = ""
     var jtsk_coor = []
     let coordinates = [];
+    if(epsg!=null){
+        geom_system=epsg;
+    }
     drawnItems.eachLayer(function (layer) {
         if (layer instanceof L.Marker) {
             addLogText('im an instance of L point');
@@ -970,8 +678,8 @@ function geomToText() {//Desc: This fce moves edited geometry into HTML element
             text += ")"
             jtsk_text += ")"
         }
-        addWGS84Geometry(amcr_static_geom_precision_wgs84(text), global_map_can_edit);
-        addSJTSKGeometry(amcr_static_geom_precision_jtsk(jtsk_text), global_map_can_edit);
+        updateGeometry(amcr_static_geom_precision_wgs84(text), amcr_static_geom_precision_jtsk(jtsk_text));
+
     });
 
 
@@ -1325,23 +1033,11 @@ function addLogText(text) {
     //console.log(text)
 }
 
-function addWGS84Geometry(text) {
-    addLogText("arch_z_detail_map.addWGS84Geometry: " + global_map_element + " " + text)
-    let geom = document.getElementById(global_map_element);
-    if (geom) {
-        geom.value = text;
-    }
-    if (poi_sugest.getLayers().size) {
-        edit_buttons.enable();
-    }
-}
+function updateGeometry(WGS84Geometry,JTSKGeometry,EPSG=null){
+    $("#"+global_map_element).val(WGS84Geometry)
+    $("#"+global_map_element_sjtsk).val(JTSKGeometry)
+    if(EPSG!=null) $("#"+global_map_element_epsg).val(EPSG)   
 
-function addSJTSKGeometry(text) {
-    addLogText("arch_z_detail_map.addSJTSKGeometry: " + global_map_element_sjtsk + " " + text)
-    let geom_sjtsk = document.getElementById(global_map_element_sjtsk);
-    if (geom_sjtsk) {
-        geom_sjtsk.value = text;
-    }
     if (poi_sugest.getLayers().size) {
         edit_buttons.enable();
     }

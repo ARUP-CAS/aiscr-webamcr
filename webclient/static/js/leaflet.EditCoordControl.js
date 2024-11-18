@@ -7,7 +7,7 @@ L.Control.EditCoordControl = L.Control.extend({
         tooltipText: 'Klikněte pro vybrání bodu',
         tooltipSubText: '',
         titleText: 'Editovat souřadnice',
-        position: 'topleft',
+        modifyText: 'Upravit',
     },
 
     initialize: function (options) {
@@ -16,6 +16,7 @@ L.Control.EditCoordControl = L.Control.extend({
         this._tempMarkers = []
         this._uneditedLayerProps = {}
         this._container = null
+        this._epsg = null
         L.Util.setOptions(this, options)
     },
 
@@ -23,7 +24,7 @@ L.Control.EditCoordControl = L.Control.extend({
         this._map = map;
         this._container = L.DomUtil.create('a', 'leaflet-draw-edit-edit')
         this._container.href = '#'
-        this._container.title = 'Edit Coordinates'
+        this._container.title = this.options.titleText;
         this._container.innerHTML =
             '<img src="/static/static/img/coord-edit.png" style="width:20px">'
         this._container.style.backgroundImage = 'none'
@@ -31,7 +32,7 @@ L.Control.EditCoordControl = L.Control.extend({
 
         this.container1 = L.DomUtil.create('ul', 'leaflet-draw-actions')
         this.container1.innerHTML =
-            '<li><a href="#" id="saveChanges" title="Uložit změny">Uložit změny</a></li><li><a href="#" id="cancelChanges" title="Vrátit změny">Storno</a></li>'
+            `<li><a href="#" id="saveChanges" title="${this.options.saveText}">${this.options.saveText}</a></li><li><a href="#" id="cancelChanges" title="${this.options.stornoText}">${this.options.stornoText}</a></li>`
         this.container1.style.display = 'none'
         this.container1.style.top = '32px'
 
@@ -99,7 +100,7 @@ L.Control.EditCoordControl = L.Control.extend({
                 })
             } else if (layer instanceof L.Marker) {
                 layer.off('click')
-                layer.on('click', () => this._pointMarkerClick.bind(this, layer))
+                layer.on('click', () => {this._pointMarkerClick(layer)})
             }
         })
     },
@@ -109,14 +110,15 @@ L.Control.EditCoordControl = L.Control.extend({
         this.container1.style.display = 'none'
         this._tempMarkers.forEach((marker) => {
             this._map.removeLayer(marker)
-        })
+            marker=null
+        })        
         this._tempMarkers = []
         this._deactivateTooltip()
         if(save==false){
             this._restoreOriginalCoordinates();
         }
         else{       
-            this._map.fire('editCoord:save');
+            this._map.fire('editCoord:save',{epsg: this._epsg});
         }
         this._uneditedLayerProps = {} // Vyprázdnění uložených souřadnic, aby nebylo možné je vrátit
     },
@@ -130,13 +132,7 @@ L.Control.EditCoordControl = L.Control.extend({
             .openOn(this._map)
         this._inputcontainer.latlng=latlng;
         this._inputcontainer.layer=layer;
-      /*  this._buttonSubmit.addEventListener('click', () => {
-            latlng.lng = parseFloat(this._inputX.value)
-            latlng.lat = parseFloat(this._inputY.value)
-            layer.setLatLng(latlng)
-            this._map.closePopup()
-        })*/
-    },
+     },
 
     _lineMarkerClick: function (squareMarker, latlng, index, layer, latlngs) {
         this._fillInputContainer(latlng)
@@ -148,38 +144,7 @@ L.Control.EditCoordControl = L.Control.extend({
         this._inputcontainer.latlng=latlng;
         this._inputcontainer.index=index;
         this._inputcontainer.layer=layer;
-        this._inputcontainer.latlngs=latlngs;
-      /*  this._buttonSubmit.addEventListener('click', () => {
-            let oldLatLng = L.latLng(latlng.lat, latlng.lng)
-            latlng.lng = parseFloat(this._inputX.value)
-            latlng.lat = parseFloat(this._inputY.value)
-            
-            latlngs[index].lat = latlng.lat
-            latlngs[index].lng = latlng.lng
-
-            if (layer instanceof L.Polygon) {
-                layer.setLatLngs([latlngs])
-            } else if (layer instanceof L.Polyline) {
-                layer.setLatLngs(latlngs)
-            }
-            if (layer.intersects()) {
-                // Kontrola křížení
-                this._map.fire('editCoord:intersects')
-                latlngs[index].lat = oldLatLng.lat
-                latlngs[index].lng = oldLatLng.lng
-                if (layer instanceof L.Polygon) {
-                    layer.setLatLngs([latlngs])
-                } else if (layer instanceof L.Polyline) {
-                    layer.setLatLngs(latlngs)
-                }
-            } else {
-                squareMarker.setLatLng([latlng.lat, latlng.lng])
-                this._map.closePopup()
-            }
-
-            // squareMarker.setLatLng([newLat, newLng]);
-            //  map.closePopup();
-        })*/
+        this._inputcontainer.latlngs=latlngs;      
     },
 
     _saveOriginalCoordinates: function (layer) {
@@ -211,7 +176,6 @@ L.Control.EditCoordControl = L.Control.extend({
             }
         }
     },
-
     _restoreOriginalCoordinates: function () {
         drawnItems.eachLayer((layer) => {
             let id = L.Util.stamp(layer)
@@ -235,11 +199,10 @@ L.Control.EditCoordControl = L.Control.extend({
                     layer.setLatLng(this._uneditedLayerProps[id].latlng)
                 }
 
-                //layer.fire('revert-edited', {layer: layer});
+                layer.fire('revert-edited', {layer: layer});
             }
         })
     },
-
     _createCoordDialog: function () {
         this._inputcontainer = L.DomUtil.create(
             'div',
@@ -287,7 +250,8 @@ L.Control.EditCoordControl = L.Control.extend({
             '',
             this._inputcontainer
         ) // '<button type="button" id="updateMarkerButton">Upravit</button>' +
-        this._buttonSubmit.innerHTML = 'Upravit' //preklad
+        this._buttonSubmit.innerHTML = this.options.modifyText
+        this._buttonSubmit.style="margin-top: 2px;"
         this._buttonSubmit.addEventListener('click', () => {
             this._buttonSubmitEvent();
         })
@@ -310,6 +274,7 @@ L.Control.EditCoordControl = L.Control.extend({
                 let coords = convertToJTSK(x, y)
                 this._inputXJTSK.value = Math.round(coords[0] * 100) / 100
                 this._inputYJTSK.value = Math.round(coords[1] * 100) / 100
+                this._epsg=4326
             }
         } else {
             let x = parseFloat(this._inputXJTSK.value)
@@ -318,6 +283,7 @@ L.Control.EditCoordControl = L.Control.extend({
                 let latlng = convertToWGS84(x, y)
                 this._inputX.value = latlng[0]
                 this._inputY.value = latlng[1]
+                this._epsg=5514
             }
         }
     },
@@ -331,8 +297,8 @@ L.Control.EditCoordControl = L.Control.extend({
     _createTooltip: function () {
         this.tooltip = new L.Draw.Tooltip(this._map)
         this.tooltip.updateContent({
-            text: L.drawLocal.edit.handlers.edit.tooltip.text,
-            subtext: L.drawLocal.edit.handlers.edit.tooltip.subtext,
+            text: this.options.tooltipText,
+            subtext: this.options.tooltipSubText,
         })
 
         this._map
@@ -342,6 +308,7 @@ L.Control.EditCoordControl = L.Control.extend({
     },
     _deactivateTooltip: function () {
         this.tooltip.dispose()
+		this.tooltip = null;
         this._map
             .off('mousemove', this._onMouseMove, this)
             .off('touchmove', this._onMouseMove, this)
