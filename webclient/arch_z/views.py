@@ -467,7 +467,7 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
                 geom = cache.get(str(request.user.id) + "_geom")
                 # cache.delete(str(request.user.id) + "_geom")
                 index = int(self.request.GET["index"])
-                if self.request.GET["label"] != geom.iloc[index]["label"]:
+                if self.request.GET["label"] != str(geom.iloc[index]["label"]):
                     raise Exception("arch_z.views.PianCreateView.get.label_not_found")
                 context["geom"] = geom.iloc[index].copy()
                 if context["geom"]["epsg"] == "5514" or context["geom"]["epsg"] == 5514:
@@ -527,7 +527,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
                 geom = cache.get(str(request.user.id) + "_geom")
                 # cache.delete(str(request.user.id) + "_geom")
                 index = int(self.request.GET["index"])
-                if self.request.GET["label"] != geom.iloc[index]["label"]:
+                if self.request.GET["label"] != str(geom.iloc[index]["label"]):
                     raise Exception("arch_z.views.PianUpdateView.get.label_not_found")
                 context["geom"] = geom.iloc[index].copy()
                 if context["geom"]["epsg"] == "5514" or context["geom"]["epsg"] == 5514:
