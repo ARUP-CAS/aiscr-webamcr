@@ -14,7 +14,7 @@ from heslar.signals import get_or_create_transaction
 from historie.models import Historie
 from rest_framework.authtoken.models import Token
 from services.mailer import Mailer
-from uzivatel.models import Organizace, Osoba, User, UzivatelPrihlaseniLog
+from uzivatel.models import NotificationsLog, Organizace, Osoba, User, UzivatelPrihlaseniLog
 
 logger = logging.getLogger(__name__)
 
@@ -177,6 +177,7 @@ def delete_profile(sender, instance: User, *args, **kwargs):
     """
     logger.debug("uzivatel.signals.delete_profile.start", extra={"ident_cely": instance.ident_cely})
     Mailer.send_eu03(user=instance)
+    NotificationsLog.objects.filter(user=instance).update(user=None)
     logger.debug("uzivatel.signals.delete_profile.end", extra={"ident_cely": instance.ident_cely})
 
 
