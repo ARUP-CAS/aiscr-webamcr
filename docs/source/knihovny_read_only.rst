@@ -80,7 +80,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - UNKNOWN
    * - amqp
-     - 5.2.0
+     - 5.3.0
      - BSD License
      - http://github.com/celery/py-amqp
    * - asgiref
@@ -296,7 +296,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.6.1
+     - 2.6.2
      - MIT License
      - https://github.com/pre-commit/identify
    * - idna
@@ -352,7 +352,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; MIT License
      - https://github.com/python-trio/outcome
    * - packaging
-     - 24.1
+     - 24.2
      - Apache Software License; BSD License
      - https://github.com/pypa/packaging
    * - pandas
