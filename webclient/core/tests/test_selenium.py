@@ -11,13 +11,18 @@ import pandas
 import psycopg2
 import requests
 from cacheops import invalidate_all
+from core.ident_cely import get_record_from_ident
+from core.repository_connector import FedoraError, FedoraTransaction
 from core.tests.custom_server import WerkzeugServerThread
 from core.tests.runner import USERS
 from django.conf import settings
 from django.db import connection
+from django.http import Http404
 from django.test import LiveServerTestCase
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from uzivatel.models import User
+from xml_generator.models import ModelWithMetadata
 
 from webclient.settings.base import get_secret
 
@@ -371,9 +376,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 )
 
     def login(self, type="archeolog"):
-        port = self.server_thread.port
-        self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}/")
-
+        self.goToAddress()
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "czech")
 
@@ -382,6 +385,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, ".btn")
         self.driver.set_window_rect(0, 0, 1360, 1020)
+
+    def goToAddress(self, rel_address="/"):
+        port = self.server_thread.port
+        self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}{rel_address}")
 
     def addFileToDropzone(self, css_selector, name, content):
         """
@@ -414,6 +421,26 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             name,
         )
         self.driver.execute_script(script)
+
+    def createFedoraRecord(self, ident_cely):
+        try:
+            record = get_record_from_ident(ident_cely)
+        except Http404 as err:
+            record = None
+            logger.debug(
+                "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".not_found",
+                extra={"ident_cely": ident_cely, "err": err},
+            )
+        if record and isinstance(record, ModelWithMetadata) or isinstance(record, User):
+            try:
+                fedora_transaction = FedoraTransaction()
+                record.save_metadata(fedora_transaction)
+                fedora_transaction.mark_transaction_as_closed()
+            except FedoraError as err:
+                logger.debug(
+                    "fedora_management.admin.FedoraCustomAdminSite.fedora_error" ".not_found",
+                    extra={"ident_cely": ident_cely, "err": err},
+                )
 
 
 class CoreSeleniumTest(BaseSeleniumTestClass):
