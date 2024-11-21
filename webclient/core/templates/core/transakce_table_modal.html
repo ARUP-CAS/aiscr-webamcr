@@ -123,6 +123,9 @@
             $(cl).css("display", "none");
         }
     });
+    $('#modal-form').on('shown.bs.modal', function(event) {
+        $(document).off('focusin.modal');
+    });
 </script>
 <script>
   if ("{{ id_tag }}" == "pripojit-dokument-form" || "{{ id_tag }}" == "akce-change-form" || "{{ id_tag }}" == "pripojit-eo-form"|| "{{ id_tag }}" == "pripojit-eo-doaz-form" || "{{ id_tag }}" == "pripojit-projekt-form"){
