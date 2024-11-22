@@ -1,6 +1,7 @@
 import logging
 import unittest
 
+from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 from core.constants import EZ_STAV_ODESLANY, EZ_STAV_ZAPSANY
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
@@ -63,3 +64,28 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.assertEqual(ExterniZdroj.objects.filter(id=id).first().stav, EZ_STAV_ODESLANY)
         logger.info("AkceExterniZdroj.test_118_odeslani_externího_zdroje_p_001.end")
+
+    def test_119_pripojeni_akce_externího_zdroje_p_001(self):
+        # Scenar_119 Připojení akce k externímu zdroji (pozitivní scénář 1)
+        logger.info("AkceExterniZdroj.test_119_pripojeni_akce_externího_zdroje_p_001.start")
+        self.login("archeolog")
+        self.createFedoraRecord("X-BIB-000000001")
+
+        id = ExterniZdroj.objects.filter(ident_cely="X-BIB-000000001").first().id
+        ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj=id)
+        count_old = ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE).count()
+        self.goToAddress("/id/X-BIB-000000001")
+
+        self.ElementClick(By.ID, "eo-pripojit-akce")
+
+        self.ElementClick(By.ID, "select2-id_arch_z-container")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-C-9000000001A")
+        self.wait(2)
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj=id)
+        count_new = ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE).count()
+        self.assertEqual(count_old + 1, count_new)
+        logger.info("AkceExterniZdroj.test_119_pripojeni_akce_externího_zdroje_p_001.end")
