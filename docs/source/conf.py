@@ -30,7 +30,7 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    'sphinxcontrib.googleanalytics',
+    "sphinxcontrib.googleanalytics",
 ]
 
 templates_path = ["_templates"]
@@ -52,4 +52,4 @@ autodoc_default_options = {
 
 autodoc_mock_imports = ["django_prometheus"]
 
-googleanalytics_id = 'G-7RC46X5Q29'
+googleanalytics_id = "G-7RC46X5Q29"
