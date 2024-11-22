@@ -1918,16 +1918,18 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
             remove_orphan = True
     if request.method == "POST":
         if isinstance(zaznam, ArcheologickyZaznam):
-            dokument_cast = relace_dokumentu.filter(archeologicky_zaznam__ident_cely=ident_zaznamu)
+            dokument_cast_query = relace_dokumentu.filter(archeologicky_zaznam__ident_cely=ident_zaznamu)
         else:
-            dokument_cast = relace_dokumentu.filter(projekt__ident_cely=ident_zaznamu)
-        if len(dokument_cast) == 0:
+            dokument_cast_query = relace_dokumentu.filter(projekt__ident_cely=ident_zaznamu)
+        if len(dokument_cast_query) == 0:
             logger.debug("dokument.views.odpojit.no_relace", extra={"ident_doku": ident_doku})
             messages.add_message(request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM)
             return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=404)
         fedora_transaction = FedoraTransaction(zaznam, request.user, DOKUMENT_USPESNE_ODPOJEN)
         fedora_transaction.main_record = zaznam
-        resp = dokument_cast[0].delete()
+        dokument_cast = dokument_cast_query.first()
+        dokument_cast.active_transaction = fedora_transaction
+        resp = dokument_cast.delete()
         logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
         if remove_orphan:
             orphan_dokument.active_transaction = fedora_transaction
