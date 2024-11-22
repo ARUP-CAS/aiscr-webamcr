@@ -28,18 +28,14 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_064_zapsani_dokumentu_p_001(self):
         # Scenar_64 Zapsání dokumentu (pozitivní scénář 1)
         logger.info("AkceDokumenty.test_064_zapsani_dokumentu_p_001.start")
-        self.login("archivar")
-        self.go_to_form_zapsat()
+        self.login("badatel")
+        self.goToAddress("/dokument/zapsat/do-arch-z/X-C-9000000001A")
 
         count_old = Dokument.objects.count()
-        # self.wait(self.wait_interval)
-        self.ElementClick(By.CSS_SELECTOR, "#id-modal-region-div > #div_id_region .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-10-2 > .text")
 
-        self.ElementClick(By.CSS_SELECTOR, ".modal-footer > .btn-primary")
-        # self.wait(1)
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
+        self.wait(1)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
         self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")
@@ -73,15 +69,11 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_065_zapsani_dokumentu_n_001(self):
         # Scenar_65 Zapsání dokumentu (negativní scénář 1)
         logger.info("AkceDokumenty.test_065_zapsani_dokumentu_n_001.start")
-        self.login("archivar")
-        self.go_to_form_zapsat()
+        self.login("badatel")
+        self.goToAddress("/dokument/zapsat/do-arch-z/X-C-9000000001A")
 
         count_old = Dokument.objects.count()
         # self.wait(self.wait_interval)
-        self.ElementClick(By.CSS_SELECTOR, "#id-modal-region-div > #div_id_region .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-10-2 > .text")
-
-        self.ElementClick(By.CSS_SELECTOR, ".modal-footer > .btn-primary")
         # self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         # self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
         # self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
@@ -95,7 +87,6 @@ class AkceDokumenty(BaseSeleniumTestClass):
         )
         # self.wait(self.wait_interval)
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-
         self.ElementClick(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
 
@@ -112,7 +103,6 @@ class AkceDokumenty(BaseSeleniumTestClass):
         except Exception:
             pass
         count_new = Dokument.objects.count()
-
         self.assertEqual(count_old, count_new)
         logger.info("AkceDokumenty.test_065_zapsani_dokumentu_n_001.end")
 
@@ -152,16 +142,16 @@ class AkceDokumenty(BaseSeleniumTestClass):
     def test_067_odeslani_dokumentu_n_001(self):
         # Scenar_67 Odeslání dokumentu (negativní scénář 1)
         logger.info("AkceDokumenty.test_067_odeslani_dokumentu_n_001.start")
-        self.login("archivar")
+        self.login("badatel")
         self.go_to_form_vybrat()
 
-        self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-202413001").first().stav, D_STAV_ZAPSANY)
+        self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-000000003").first().stav, D_STAV_ZAPSANY)
         # self.wait(1)
         self.ElementClick(By.ID, "buttonFiltr")
         self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413001")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-000000003")
         self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-TX-202413001")
+        self.ElementClick(By.LINK_TEXT, "X-C-TX-000000003")
         try:
             with WaitForPageLoad(self.driver):
                 self.ElementClick(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text")
@@ -169,7 +159,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         except Exception:
             pass
 
-        self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-202413001").first().stav, D_STAV_ZAPSANY)
+        self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-000000003").first().stav, D_STAV_ZAPSANY)
         logger.info("AkceDokumenty.test_067_odeslani_dokumentu_n_001.end")
 
     @unittest.skip
@@ -305,6 +295,131 @@ class AkceDokumenty(BaseSeleniumTestClass):
             pass
         self.assertEqual(Dokument.objects.filter(ident_cely="C-TX-202400071").first().stav, D_STAV_ARCHIVOVANY)
         logger.info("AkceDokumenty.test_073_vraceni_archivovaneho_dokumentu_n_001.end")
+
+    def test_132_zapsani_dokumentu_p_002(self):
+        # Scenar_132 Zapsání dokumentu (pozitivní scénář 1)
+        logger.info("AkceDokumenty.test_132_zapsani_dokumentu_p_002.start")
+        self.login("archeolog")
+        self.goToAddress("/dokument/zapsat/do-arch-z/X-C-9000000013A")
+        count_old = Dokument.objects.count()
+        # self.wait(1)
+        self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        self.ElementClick(By.ID, "id_rok_vzniku")
+        self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_organizace .filter-option-inner-inner")
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(
+            "Archeologický ústav Brno"
+        )
+        # self.wait(self.wait_interval)
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-0 > .text")
+        # self.wait(1)
+        self.ElementClick(By.ID, "id_popis")
+        self.driver.find_element(By.ID, "id_popis").send_keys("test")
+        self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.ID, "bs-select-7-1")
+
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "newDocumentSubmitBtn")
+        count_new = Dokument.objects.count()
+        self.assertEqual(count_old + 1, count_new)
+        logger.info("AkceDokumenty.test_132_zapsani_dokumentu_p_002.end")
+
+    def test_133_zapsani_dokumentu_n_002(self):
+        # Scenar_133 Zapsání dokumentu (negativní scénář 1)
+        logger.info("AkceDokumenty.test_133_zapsani_dokumentu_n_002.start")
+        self.login("archeolog")
+        self.goToAddress("/dokument/zapsat/do-arch-z/X-C-9000000013A")
+
+        count_old = Dokument.objects.count()
+        # self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
+        # self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
+        # self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        # self.wait(1)
+        self.ElementClick(By.ID, "id_rok_vzniku")
+        self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_organizace .filter-option-inner-inner")
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(
+            "Archeologický ústav Brno"
+        )
+        # self.wait(self.wait_interval)
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-0 > .text")
+        # self.wait(1)
+        self.ElementClick(By.ID, "id_popis")
+        self.driver.find_element(By.ID, "id_popis").send_keys("test")
+        self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.ID, "bs-select-7-1")
+        try:
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.ID, "newDocumentSubmitBtn")
+        except Exception:
+            pass
+        count_new = Dokument.objects.count()
+
+        self.assertEqual(count_old, count_new)
+        logger.info("AkceDokumenty.test_133_zapsani_dokumentu_n_002.end")
+
+    def test_134_odeslani_dokumentu_p_002(self):
+        # Scenar_134 Odeslání dokumentu (pozitivní scénář 1)
+        logger.info("AkceDokumenty.test_134_odeslani_dokumentu_p_002.start")
+        self.login("archeolog")
+        self.go_to_form_vybrat()
+        self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-000000002").first().stav, D_STAV_ZAPSANY)
+        DBid = Dokument.objects.filter(ident_cely="X-C-TX-000000002").first().id
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-000000002")
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, "X-C-TX-000000002")
+        self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons")
+        with open("dokument/tests/resources/test.jpg", "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+        self.addFileToDropzone("#my-awesome-dropzone", "test.jpg", encoded_string)
+        self.driver.set_script_timeout(15)
+        self.driver.execute_async_script(
+            """
+            var done = arguments[0];
+            newDropzone.on("success", function(){ done('foo');});
+            """
+        )
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.LINK_TEXT, _("core.templates.upload_file.submitButton.text"))
+        self.ElementClick(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(Dokument.objects.filter(id=DBid).first().stav, D_STAV_ODESLANY)
+        logger.info("AkceDokumenty.test_134_odeslani_dokumentu_p_002.end")
+
+    def test_135_odeslani_dokumentu_n_002(self):
+        # Scenar_135 Odeslání dokumentu (negativní scénář 1)
+        logger.info("AkceDokumenty.test_135_odeslani_dokumentu_n_002.start")
+        self.login("archeolog")
+        self.go_to_form_vybrat()
+        self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-000000002").first().stav, D_STAV_ZAPSANY)
+        DBid = Dokument.objects.filter(ident_cely="X-C-TX-000000002").first().id
+        # self.wait(1)
+        self.ElementClick(By.ID, "buttonFiltr")
+        self.ElementClick(By.ID, "id_ident_cely")
+        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-000000002")
+        self.ElementClick(By.ID, "buttonVybrat")
+        self.ElementClick(By.LINK_TEXT, "X-C-TX-000000002")
+        try:
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text")
+                self.ElementClick(By.ID, "submit-btn")
+        except Exception:
+            pass
+        self.assertEqual(Dokument.objects.filter(id=DBid).first().stav, D_STAV_ZAPSANY)
+        logger.info("AkceDokumenty.test_135_odeslani_dokumentu_n_002.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
