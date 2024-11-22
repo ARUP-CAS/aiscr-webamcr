@@ -56,7 +56,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.1.2
+     - 5.1.3
      - BSD License
      - https://www.djangoproject.com/
    * - MarkupSafe
@@ -76,11 +76,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://pyyaml.org/
    * - Werkzeug
-     - 3.0.6
+     - 3.1.3
      - BSD License
      - UNKNOWN
    * - amqp
-     - 5.3.0
+     - 5.3.1
      - BSD License
      - http://github.com/celery/py-amqp
    * - asgiref
@@ -148,7 +148,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.6.4
+     - 7.6.7
      - Apache Software License
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
@@ -248,9 +248,9 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/torchbox/django-recaptcha
    * - django-registration
-     - 3.3
+     - 5.1.0
      - BSD License
-     - https://github.com/ubernostrum/django-registration/
+     - UNKNOWN
    * - django-rosetta
      - 0.10.1
      - MIT License
@@ -368,7 +368,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.49
+     - 8.13.50
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -512,7 +512,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/facelessuser/soupsieve
    * - sqlparse
-     - 0.5.1
+     - 0.5.2
      - BSD License
      - https://github.com/andialbrecht/sqlparse
    * - tablib
