@@ -374,10 +374,7 @@ class UserActivationView(ActivationView):
         return super().dispatch(request, *args, **kwargs)
 
     def activate(self, *args, **kwargs):
-        username = self.validate_key(kwargs.get("activation_key"))
-        user = self.get_user(username)
-        logger.debug("uzivatel.views.activate.success", extra={"user": user.ident_cely})
-        user.save()
+        user = super().activate(*args, **kwargs)
         for notification in UserNotificationType.objects.filter(ident_cely__icontains="S-E-"):
             user.notification_types.add(notification)
         cutoff_time = timezone.now() - datetime.timedelta(minutes=10)
