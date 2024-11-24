@@ -47,6 +47,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from services.mailer import Mailer
 from uzivatel.forms import (
+    AuthActivationForm,
     AuthReadOnlyUserChangeForm,
     AuthUserChangeForm,
     AuthUserCreationFormWithRecaptcha,
@@ -369,6 +370,8 @@ class UserActivationView(ActivationView):
     """
     Třída pohledu pro aktivaci uživatele.
     """
+
+    form_class = AuthActivationForm
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         return super().dispatch(request, *args, **kwargs)

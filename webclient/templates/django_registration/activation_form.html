@@ -15,7 +15,6 @@
         <div class="card">
           <div class="card-body">
             <form method="post" class="form-group submit-spinner mb-0">
-              <label for="{{ form.activation_key.id_for_label }}" class="requiredField">{% trans 'templates.djangoRegistration.activationKey.label' %}</label>
               {{ errors }}
               {{ form.activation_key|as_crispy_field }}
               {% csrf_token %}

@@ -17,6 +17,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Invisible
+from django_registration.backends.activation.forms import ActivationForm
 from django_registration.forms import RegistrationForm
 from services.mailer import Mailer
 
@@ -418,3 +419,7 @@ class OsobaForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+
+
+class AuthActivationForm(ActivationForm):
+    activation_key = forms.CharField(label=_("templates.djangoRegistration.activationKey.label"))
