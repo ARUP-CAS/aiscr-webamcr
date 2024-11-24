@@ -64,7 +64,7 @@ urlpatterns = [
         odstavka_in_progress(TemplateView.as_view(template_name="django_registration/registration_closed.html")),
         name="django_registration_disallowed",
     ),
-    path("accounts/activate/<str:activation_key>/", UserActivationView.as_view(), name="django_registration_activate"),
+    path("accounts/activate/", UserActivationView.as_view(), name="django_registration_activate"),
     path(
         "accounts/login/",
         UserLoginView.as_view(),
