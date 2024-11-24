@@ -59,6 +59,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 5.1.3
      - BSD License
      - https://www.djangoproject.com/
+   * - Jinja2
+     - 3.1.4
+     - BSD License
+     - https://github.com/pallets/jinja/
    * - MarkupSafe
      - 3.0.2
      - BSD License
@@ -75,10 +79,22 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 6.0.2
      - MIT License
      - https://pyyaml.org/
+   * - Pygments
+     - 2.18.0
+     - BSD License
+     - https://pygments.org
+   * - Sphinx
+     - 8.1.3
+     - BSD License
+     - https://www.sphinx-doc.org/
    * - Werkzeug
      - 3.1.3
      - BSD License
      - UNKNOWN
+   * - alabaster
+     - 1.0.0
+     - BSD License
+     - https://alabaster.readthedocs.io/
    * - amqp
      - 5.3.1
      - BSD License
@@ -91,6 +107,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 24.2.0
      - MIT License
      - https://www.attrs.org/en/stable/changelog.html
+   * - babel
+     - 2.16.0
+     - BSD License
+     - https://babel.pocoo.org/
    * - beautifulsoup4
      - 4.12.3
      - MIT License
@@ -279,6 +299,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 2.0.0
      - BSD License
      - https://github.com/jpadilla/django-rest-framework-xml
+   * - docutils
+     - 0.21.2
+     - BSD License; GNU General Public License (GPL); Public Domain; Python Software Foundation License
+     - https://docutils.sourceforge.io
    * - et_xmlfile
      - 2.0.0
      - MIT License
@@ -303,6 +327,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 3.10
      - BSD License
      - https://github.com/kjd/idna
+   * - imagesize
+     - 1.4.1
+     - MIT License
+     - https://github.com/shibukawa/imagesize_py
    * - inflate64
      - 1.0.0
      - GNU Lesser General Public License v2 or later (LGPLv2+)
@@ -503,6 +531,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.3.1
      - Apache Software License; MIT License
      - https://github.com/python-trio/sniffio
+   * - snowballstemmer
+     - 2.2.0
+     - BSD License
+     - https://github.com/snowballstem/snowball
    * - sortedcontainers
      - 2.4.0
      - Apache Software License
@@ -511,6 +543,34 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 2.6
      - MIT License
      - https://github.com/facelessuser/soupsieve
+   * - sphinxcontrib-applehelp
+     - 2.0.0
+     - BSD License
+     - https://www.sphinx-doc.org/
+   * - sphinxcontrib-devhelp
+     - 2.0.0
+     - BSD License
+     - https://www.sphinx-doc.org/
+   * - sphinxcontrib-googleanalytics
+     - 0.4
+     - BSD License
+     - https://github.com/sphinx-contrib/googleanalytics
+   * - sphinxcontrib-htmlhelp
+     - 2.1.0
+     - BSD License
+     - https://www.sphinx-doc.org/
+   * - sphinxcontrib-jsmath
+     - 1.0.1
+     - BSD License
+     - http://sphinx-doc.org/
+   * - sphinxcontrib-qthelp
+     - 2.0.0
+     - BSD License
+     - https://www.sphinx-doc.org/
+   * - sphinxcontrib-serializinghtml
+     - 2.0.0
+     - BSD License
+     - https://www.sphinx-doc.org/
    * - sqlparse
      - 0.5.2
      - BSD License
@@ -528,7 +588,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/foutaise/texttable/
    * - tornado
-     - 6.4.1
+     - 6.4.2
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
@@ -568,7 +628,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/websocket-client/websocket-client.git
    * - wrapt
-     - 1.16.0
+     - 1.17.0
      - BSD License
      - https://github.com/GrahamDumpleton/wrapt
    * - wsproto

@@ -60,7 +60,7 @@ jobs:
       - name: Update pip package list
         if: ${{ env.pip_update  == 'true' }}
         run: |
-          VERSION="${{ inputs.new_tag }}-pre-release"
+          VERSION="${{ inputs.new_tag }}"
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git config --global pull.rebase true
@@ -76,7 +76,7 @@ jobs:
       - name: Update CITATION.cff
         if: ${{ env.citation_update  == 'true' }}
         run: |
-          VERSION="${{ inputs.new_tag }}-pre-release"
+          VERSION="${{ inputs.new_tag }}"
           DATE=$(date -I)
           sed -i '/title:/!b;n;cversion: "'"$VERSION"'"' CITATION.cff
           sed -i "s/date-released:.*/date-released: $DATE/" CITATION.cff
