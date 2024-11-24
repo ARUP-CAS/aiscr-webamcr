@@ -376,8 +376,12 @@ class UserActivationView(ActivationView):
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         return super().dispatch(request, *args, **kwargs)
 
-    def activate(self, *args, **kwargs):
-        user = super().activate(*args, **kwargs)
+    def activate(self, form):
+        username = form.cleaned_data["activation_key"]
+        user = self.get_user(username)
+        # User must by activated manually by an administrator of the system
+        user.is_active = False
+        user.save()
         for notification in UserNotificationType.objects.filter(ident_cely__icontains="S-E-"):
             user.notification_types.add(notification)
         cutoff_time = timezone.now() - datetime.timedelta(minutes=10)
