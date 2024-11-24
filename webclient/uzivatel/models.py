@@ -56,6 +56,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     Class pro db model user.
     """
 
+    EMAIL_FIELD = "email"
+
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
     is_superuser = models.BooleanField(default=False, verbose_name="Globální administrátor", db_index=True)
