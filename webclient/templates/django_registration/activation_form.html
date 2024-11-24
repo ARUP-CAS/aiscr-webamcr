@@ -16,8 +16,10 @@
           <div class="card-body">
             <form method="post" class="form-group submit-spinner mb-0">
               {{ errors }}
+              <label for="{{ form.activation_key.id_for_label }}" class="requiredField">{% trans 'templates.djangoRegistration.activationKey.label' %}</label>
               {{ form.activation_key|as_crispy_field }}
               {% csrf_token %}
+              <small id="hint_id_activation_key" class="form-text text-muted">{% trans 'templates.djangoRegistration.activationKey.tooltip' %}</small>
               <input type="submit" class="btn btn-primary" value="{% trans 'templates.djangoRegistration.activationForm.submit' %}">
             </form>
           </div>
