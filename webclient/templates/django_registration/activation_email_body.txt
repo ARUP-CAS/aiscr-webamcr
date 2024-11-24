@@ -7,7 +7,8 @@ tato zpráva slouží k ověření vaší emailové adresy, což je nezbytný kr
 Svoji emailovou adresu ověříte kliknutím na níže uvedený odkaz:
 {% get_site_url %}{% url 'django_registration_activate' %}
 
-Do aktivačního formuláře zadejte následující aktivační klíč: {{ activation_key }}
+Do aktivačního formuláře zadejte následující aktivační klíč:
+{{ activation_key }}
 
 Tento odkaz expiruje za {{ expiration_days }} dní.
 
@@ -24,7 +25,8 @@ This message is to verify your email address, which is a necessary step to gain 
 You can verify your email address by clicking on the link below:
 {% get_site_url %}{% url 'django_registration_activate' %}
 
-Insert the following activation key to the activation form: {{ activation_key }}
+Insert the following activation key to the activation form:
+{{ activation_key }}
 
 This link expires in {{ expiration_days }} days.
 
