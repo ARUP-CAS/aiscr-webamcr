@@ -23,7 +23,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "menuExterniZdroje")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.externiZdroje.vybrat"))
 
-    def zaspat_zaznam(self):
+    def zapsat_zaznam(self):
         self.go_to_form_zapsat()
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-4 > .text")
@@ -46,7 +46,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_117_zapsani_externího_zdroje_p_001.start")
         self.login("archeolog")
         count_old = ExterniZdroj.objects.count()
-        self.zaspat_zaznam()
+        self.zapsat_zaznam()
         count_new = ExterniZdroj.objects.count()
         self.assertEqual(count_old + 1, count_new)
         logger.info("AkceExterniZdroj.test_117_zapsani_externího_zdroje_p_001.end")
@@ -126,7 +126,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_122_zapsani_externího_zdroje_p_002.start")
         self.login("badatel")
         count_old = ExterniZdroj.objects.count()
-        self.zaspat_zaznam()
+        self.zapsat_zaznam()
         count_new = ExterniZdroj.objects.count()
         self.assertEqual(count_old + 1, count_new)
         logger.info("AkceExterniZdroj.test_122_zapsani_externího_zdroje_p_002.end")

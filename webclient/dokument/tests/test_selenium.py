@@ -432,7 +432,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "menuKnihovna3D")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.knihovna3D.vybrat"))
 
-    def zaspat_zaznam(self):
+    def zapsat_zaznam(self):
         self.go_to_form_zapsat()
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("švejcar")
@@ -518,7 +518,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_104_zapis_do_knihovny_D3_p_001.start")
         self.login("archeolog")
         count_old = Dokument.objects.count()
-        self.zaspat_zaznam()
+        self.zapsat_zaznam()
         count_new = Dokument.objects.count()
 
         self.assertEqual(count_old + 1, count_new)
@@ -638,7 +638,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_110_archivace_zaznamu_knihovny_D3_p_001.start")
         self.login("archeolog")
 
-        ident = self.zaspat_zaznam()
+        ident = self.zapsat_zaznam()
         self.ElementClick(By.ID, "buttonLogout")
         self.login("archeolog")
         ident = self.odeslat_zaznam(ident)
@@ -665,7 +665,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_111_zapis_do_knihovny_D3_p_002.start")
         self.login("badatel")
         count_old = Dokument.objects.count()
-        self.zaspat_zaznam()
+        self.zapsat_zaznam()
         count_new = Dokument.objects.count()
 
         self.assertEqual(count_old + 1, count_new)
