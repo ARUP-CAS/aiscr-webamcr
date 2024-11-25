@@ -428,7 +428,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         except Http404 as err:
             record = None
             logger.debug(
-                "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".not_found",
+                "BaseSeleniumTestClass.createFedoraRecord.not_found",
                 extra={"ident_cely": ident_cely, "err": err},
             )
         if record and isinstance(record, ModelWithMetadata) or isinstance(record, User):
@@ -438,7 +438,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 fedora_transaction.mark_transaction_as_closed()
             except FedoraError as err:
                 logger.debug(
-                    "fedora_management.admin.FedoraCustomAdminSite.fedora_error" ".not_found",
+                    "BaseSeleniumTestClass.fedora_error.not_found",
                     extra={"ident_cely": ident_cely, "err": err},
                 )
 
