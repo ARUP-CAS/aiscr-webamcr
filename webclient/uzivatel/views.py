@@ -47,6 +47,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from services.mailer import Mailer
 from uzivatel.forms import (
+    AuthActivationForm,
     AuthReadOnlyUserChangeForm,
     AuthUserChangeForm,
     AuthUserCreationFormWithRecaptcha,
@@ -370,13 +371,16 @@ class UserActivationView(ActivationView):
     Třída pohledu pro aktivaci uživatele.
     """
 
+    form_class = AuthActivationForm
+
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         return super().dispatch(request, *args, **kwargs)
 
-    def activate(self, *args, **kwargs):
-        username = self.validate_key(kwargs.get("activation_key"))
+    def activate(self, form):
+        username = form.cleaned_data["activation_key"]
         user = self.get_user(username)
-        logger.debug("uzivatel.views.activate.success", extra={"user": user.ident_cely})
+        # User must by activated manually by an administrator of the system
+        user.is_active = False
         user.save()
         for notification in UserNotificationType.objects.filter(ident_cely__icontains="S-E-"):
             user.notification_types.add(notification)
