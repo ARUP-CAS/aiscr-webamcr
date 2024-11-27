@@ -88,7 +88,6 @@ jobs:
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_PROD }}
           subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
 
       #---------------------
       # BUILD PROXY
@@ -120,7 +119,6 @@ jobs:
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_PROXY }}
           subject-digest: ${{ steps.push_proxy.outputs.digest }}
-          push-to-registry: true
           
       #---------------------
       # BUILD REDIS
@@ -152,4 +150,3 @@ jobs:
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_REDIS }}
           subject-digest: ${{ steps.push_redis.outputs.digest }}
-          push-to-registry: true
