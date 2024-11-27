@@ -213,6 +213,7 @@
       cuzkOrtofotomapa: '{% trans "mapa.cuzkOrtofotomapa" %}',
       cuzkStinovanyeelief5G: '{% trans "mapa.cuzkStinovanyeelief5G" %}',
       cuzkzakladniMapyCr: '{% trans "mapa.cuzkzakladniMapyCr" %}',
+      cuzkzakladniMapyCrGrey: '{% trans "mapa.cuzkzakladniMapyCrGrey" %}',
       npuPamatkovaOchrana: '{% trans "mapa.npuPamatkovaOchrana" %}',
       DefaultTitle: '{% trans "mapa.DefaultTitle" %}',
       DrawError: '{% trans "mapa.DrawError" %}',
@@ -252,8 +253,6 @@
       MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
       MessageMultipleElements: '{% trans "mapa.MessageMultipleElements" %}',
       MoveFront: '{% trans "mapa.MoveFront" %}',
-      openStreetMap: '{% trans "mapa.openStreetMap" %}',
-      openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
       pian: '{% trans "mapa.pian" %}',
       pianZazamu: '{% trans "mapa.pianZazamu" %}',
       RemoveDisabled: '{% trans "mapa.RemoveDisabled" %}',
@@ -290,7 +289,9 @@
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
-  <script src="{% static 'arch_z_detail_map.js' %}?v5"></script>
+  <script src="{% static 'leaflet-grayscale.js' %}"></script>
+  <script src="{% static 'mapa_settings_jtsk.js' %}"></script>
+  <script src="{% static 'mapa_arch_z.js' %}?v1"></script>
   <script>
       function get_create_pain_form_action(selected_dj_ident) {
           const url = "/pian/zapsat/1";

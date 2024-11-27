@@ -9,100 +9,14 @@ var global_map_can_load_pians = true;
 var global_map_katastry_all = null;
 var global_unwanted_popup=null;
 var DJ_pians_ident_cely=[];
+const epsgJTSK="5514"
+const epsgWGS84="4326"
 
 addLogText("zmena def.geom :" + global_map_element)
 
-L.TileLayer.Grayscale = L.TileLayer.extend({
-    options: {
-        quotaRed: 21,
-        quotaGreen: 71,
-        quotaBlue: 8,
-        quotaDividerTune: 0,
-        quotaDivider: function () {
-            return this.quotaRed + this.quotaGreen + this.quotaBlue + this.quotaDividerTune;
-        }
-    },
-
-    initialize: function (url, options) {
-        options = options || {}
-        options.crossOrigin = true;
-        L.TileLayer.prototype.initialize.call(this, url, options);
-
-        this.on('tileload', function (e) {
-            this._makeGrayscale(e.tile);
-        });
-    },
-
-    _createTile: function () {
-        var tile = L.TileLayer.prototype._createTile.call(this);
-        tile.crossOrigin = "Anonymous";
-        return tile;
-    },
-
-    _makeGrayscale: function (img) {
-        if (img.getAttribute('data-grayscaled'))
-            return;
-
-        img.crossOrigin = '';
-        var canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        var ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0);
-
-        var imgd = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        var pix = imgd.data;
-        for (var i = 0, n = pix.length; i < n; i += 4) {
-            pix[i] = pix[i + 1] = pix[i + 2] = (this.options.quotaRed * pix[i] + this.options.quotaGreen * pix[i + 1] + this.options.quotaBlue * pix[i + 2]) / this.options.quotaDivider();
-        }
-        ctx.putImageData(imgd, 0, 0);
-        img.setAttribute('data-grayscaled', true);
-        img.src = canvas.toDataURL();
-    }
-});
-
-L.tileLayer.grayscale = function (url, options) {
-    return new L.TileLayer.Grayscale(url, options);
-};
-
-
-var cuzkWMS = L.tileLayer.wms('https://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom: 18, maxNativeZoom: 18, minZoom: 11, opacity: 0.5 }),
-    cuzkWMS2 = L.tileLayer.wms('https://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom: 18, maxNativeZoom: 18, minZoom: 7, opacity: 0.5 }),
-    cuzkOrt = L.tileLayer.wms('	https://ags.cuzk.cz/arcgis1/services/ORTOFOTO/MapServer/WMSServer?', { layers: '0', maxZoom: 18, maxNativeZoom: 18, minZoom: 1 }),
-    cuzkEL = L.tileLayer.wms('https://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer?', { layers: 'dmr5g:GrayscaleHillshade', maxZoom: 18, maxNativeZoom: 18, minZoom: 1 }),
-    cuzkZM = L.tileLayer('https://ags.cuzk.cz/arcgis1/rest/services/ZTM/MapServer/tile/{z}/{y}/{x}?blankTile=false', { maxZoom: 18, maxNativeZoom: 13, minZoom: 0 }),
-    npuOchrana = L.tileLayer.wms('https://geoportal.npu.cz/arcgis/services/Experimental/TM_proAMCR/MapServer/WMSServer?', { layers: '2,3,4,5,7,8,10,11', maxZoom: 18, maxNativeZoom: 15, minZoom: 6, format:'image/png', transparent:true });
 var global_clusters = false;
 var global_heat = false;
-var JTSKcrs = L.extend({}, L.CRS, {
-    projection: {
-        project: function(latlng) {
-            var coords = convertToJTSK(latlng.lng, latlng.lat, height=0)
-            return L.point(coords[0], coords[1]);
-        },
-        unproject: function(point) {
-        
-            var latlng= convertToWGS84(point.x, point.y)
-            return L.latLng(latlng[1], latlng[0]); 
-        },
-        bounds: L.bounds([ -931374.5041534386, -1265741.5915737757], [-403476.6008465581, -896504.1794262241])
-    },
 
-    distance: function (latlng1, latlng2) {
-        var coords1 = convertToJTSK(latlng1.lng, latlng1.lat, height=0)
-        var coords2 = convertToJTSK(latlng2.lng, latlng2.lat, height=0)
-        return Math.sqrt(Math.pow(coords2[0]-coords1[0],2)+Math.pow(coords2[1]-coords1[1],2))
-    },
-    code: 'EPSG:5514',
-    transformation: new L.Transformation(1, 925000, -1, -920000), 
-    scale: function(zoom) {
-        return 1/(2048.260096520193* Math.pow(2,-zoom));
-    },
-    zoom: function (scale) {
-        return Math.log(2048.26009652019 * scale) / Math.log(2);
-    },   
-    infinite: false,
-});
 
 var map = L.map('djMap', {
     crs: JTSKcrs,
@@ -113,7 +27,7 @@ var map = L.map('djMap', {
     contextmenuWidth: 140,
     contextmenuItems: []
 
-}).setView([49.84, 15.17], 2);
+}).setView(init_position, init_zoom_jtsk);
 
 var parentGroup = L.markerClusterGroup({ disableClusteringAtZoom: 20 }).addTo(map);
 var poi_all =  L.featureGroup.subGroup(parentGroup)
@@ -144,6 +58,7 @@ map.addLayer(poi_all)
 
 var baseLayers = {
     [map_translations['cuzkzakladniMapyCr']]: cuzkZM,
+    [map_translations['cuzkzakladniMapyCrGrey']]: cuzkZMGrey,
     [map_translations['cuzkOrtofotomapa']]: cuzkOrt,
     [map_translations['cuzkStinovanyeelief5G']]: cuzkEL,
    
@@ -189,7 +104,7 @@ map.addControl(new L.control.zoom(
 
 var buttons = [
     L.easyButton('bi bi-skip-backward-fill', function () {
-        map.setView(poi_sugest.getLayers()[0]._latlng, 12);
+        map.setView(poi_sugest.getLayers()[0]._latlng, zoom_jtsk);
         edit_buttons.disable();
     }, [map_translations['DefaultTitle']])]
 
@@ -539,17 +454,9 @@ function disableSavePianButton() {
 map.on('draw:edited', function (e) {
     addLogText("arch_z_detail_map.draw:edited")
     addLogText("edited")
-    geomToText();
+    geomToText(epsgJTSK);
     save_edited_geometry_session();
 });
-map.on('draw:deleted', function (e) {
-    addLogText("arch_z_detail_map.draw:drawstart")
-    addLogText("deleted")
-    updateGeometry()
-    addSJTSKGeometry()
-    disableSavePianButton();
-    save_edited_geometry_session();
-})
 
 map.on('draw:drawstart draw:editstart', function (e) {
     addLogText("arch_z_detail_map." + e.type);  // Loguje typ události (draw:drawstart nebo draw:editstart)
@@ -611,7 +518,7 @@ map.on('draw:created', function (e) {
             drawnItems.addLayer(la);
         }
         addLogText("created")
-        geomToText();
+        geomToText(epsgJTSK);
         save_edited_geometry_session();
         disableSavePianButton();
 
@@ -629,9 +536,6 @@ function geomToText(epsg=null) {//Desc: This fce moves edited geometry into HTML
     var jtsk_text = ""
     var jtsk_coor = []
     let coordinates = [];
-    if(epsg!=null){
-        geom_system=epsg;
-    }
     drawnItems.eachLayer(function (layer) {
         if (layer instanceof L.Marker) {
             addLogText('im an instance of L point');
@@ -678,7 +582,7 @@ function geomToText(epsg=null) {//Desc: This fce moves edited geometry into HTML
             text += ")"
             jtsk_text += ")"
         }
-        updateGeometry(amcr_static_geom_precision_wgs84(text), amcr_static_geom_precision_jtsk(jtsk_text));
+        updateGeometry(amcr_static_geom_precision_wgs84(text), amcr_static_geom_precision_jtsk(jtsk_text),epsg);
 
     });
 
@@ -784,7 +688,7 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
                 global_unwanted_popup=null
             }
             if(global_measuring_toolbox._measuring){
-                global_measuring_toolbox._toggleMeasure()
+                return;
             }
             if(coordinates_editor.activate)coordinates_editor.deactivate();
             //pian připnout z mapy
@@ -828,6 +732,9 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
     if(geom.options.icon) geom.options.iconOld=geom.options.icon;
     if(geom.options.color)geom.options.colorOld=geom.options.color;
     geom.on('mouseover', function() {
+        if(global_measuring_toolbox._measuring){
+            return;
+        }
         if(!global_map_can_edit){
             if (geom instanceof L.Marker){                
                 if(this.options.changeIcon){
@@ -960,7 +867,6 @@ const addPointQuery = (geom, layer, ident_cely, st_text, presnost, popup_text) =
         .bindPopup(popup_text)
         .addTo(layer));
     }
-    //map.setView(coor[0],17)
 
 }
 
@@ -1221,7 +1127,7 @@ function loadKatastry() {
 function save_edited_geometry_session(){
     addLogText("arch_z_detail_map.save_edited_geometry_session")
     const currentUrl = window.location.href;
-     sessionStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:document.getElementById(global_map_element).value}))
+    localStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:$("#"+global_map_element).val(),epsg:$("#"+global_map_element_epsg).val()}))
 }
 
 function checkBlockedByQWuery(){
@@ -1242,7 +1148,7 @@ window.addEventListener("load", function(){
         save_edited_geometry_session()
     } 
     else{
-        sessionStorage.removeItem("Geom-session");
+        localStorage.removeItem("Geom-session");
     }
 });
 
@@ -1259,13 +1165,13 @@ function loadSession(){
         drawnItems.clearLayers();
         drawnItemsBuffer.clearLayers();
         addPointQuery(null,  drawnItems,geom.label,geom.geometry,false, map_translations.currentlyEditedPian);
-        geomToText();
+        geomToText(geom.epsg);
         save_edited_geometry_session()
         let viewParam=map._getBoundsCenterZoom(drawnItems.getBounds());
-        if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, 12)    ;                
+        if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, zoom_jtsk)    ;                
         else map.setView(viewParam.center, viewParam.zoom) ;  
     } else{
-        let geom_session=sessionStorage.getItem("Geom-session")
+        let geom_session=localStorage.getItem("Geom-session")
         if(geom_session != null){
             geom_session=JSON.parse(geom_session)
             if(geom_session.url==currentUrl && geom_session.geometry !=null){
@@ -1276,13 +1182,13 @@ function loadSession(){
                 drawnItemsBuffer.clearLayers();
                 addPointQuery(null,  drawnItems,map_translations.currentlyEditedPian,geom_session.geometry,false,
                     map_translations.currentlyEditedPian);
-                geomToText();
+                geomToText(geom_session.epsg);
                 let viewParam=map._getBoundsCenterZoom(drawnItems.getBounds());
-                if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, 12)    ;                
+                if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, zoom_jtsk)    ;                
                 else map.setView(viewParam.center, viewParam.zoom) ;  
             }
             else{
-                sessionStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:null}));
+                localStorage.removeItem("Geom-session");
             }
         }
     }
@@ -1316,22 +1222,22 @@ function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,sele
                 if(global_blocked_by_query_geom==false && pian.hasOwnProperty("DJ_ident_cely")) {                       
                     coor=addDJPian([pian.lat, pian.lng],  layer,pian.pian_ident_cely,pian.geom,pian.presnost,pian.color,pian.DJ_ident_cely);
                 }
-                if(pian.color=="gold" && pian.zoom!=12 && global_blocked_by_query_geom==false){
+                if(pian.color=="gold" && pian.zoom!=zoom_jtsk && global_blocked_by_query_geom==false){
                     let bbox=L.polyline(coor).getBounds()
                     let viewParam=map._getBoundsCenterZoom(bbox);
-                    if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, 12)    ;                
+                    if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, zoom_jtsk)    ;                
                     else map.setView(viewParam.center, viewParam.zoom) ;  
                     zoomed=true;                 
                 }
         })
         if(zoomed==false && global_blocked_by_query_geom==false){
             zoom_pian=rs.pians.find((element) => element.color=='gold' )
-            if(zoom_pian==undefined)zoom_pian=rs.pians.find((element) => element.zoom!=12)
+            if(zoom_pian==undefined)zoom_pian=rs.pians.find((element) => element.zoom!=zoom_jtsk)
             if(zoom_pian==undefined)zoom_pian= rs.pians[0];
-            if(zoom_pian.zoom==12){
+            if(zoom_pian.zoom==zoom_jtsk){
                     if(zoom_pian.bbox!=""){
                         box=[]
-                        zoom_pian.bbox.split("((")[1].split(")")[0].split(",").forEach(i => {                          
+                        zoom_pian.bbox.split("((")[1].split(")")[0].split(",").forEach(i => {
                             box.push([i.split(" ")[1].trim(), i.split(" ")[0].trim()]);
                         })
                         map.fitBounds([ [box[0][0],box[0][1] ],[box[2][0],box[2][1] ]]);
@@ -1340,7 +1246,7 @@ function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,sele
             }
             else{
                 let viewParam=map._getBoundsCenterZoom(poi_dj.getBounds() )
-                if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, 12)                    
+                if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, zoom_jtsk)
                 else map.setView(viewParam.center, viewParam.zoom) ;  
             } 
         } 
