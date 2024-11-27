@@ -493,9 +493,16 @@ a.dropdown-item {
 .leaflet-top .leaflet-control {
   margin-top: 5px !important;
 }
+
 .leaflet-draw-toolbar {
   margin-top: 5px !important;
 }
+
+.leaflet-container {
+  background: #ffffff !important;
+  border: $input-border-width solid $input-border-color;
+}
+
 input.coordInput {
   width: 130px;
   border-radius: 5px;
