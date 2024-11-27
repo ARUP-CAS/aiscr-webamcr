@@ -52,6 +52,7 @@ jobs:
         run: |
           echo "${{ inputs.tag }}"
           echo "tag_version=$(echo ${{ inputs.tag }} | sed 's/^v//')" >> $GITHUB_ENV
+          echo "repo_owner=$(echo ${{ github.repository_owner }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
 
       #---------------------
       # BUILD PROD
@@ -59,9 +60,9 @@ jobs:
       - name: Set tags prod
         run: |
           if [ "${{ inputs.latest }}" == 'false' ]; then
-            echo "prod_tags=$(echo ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PROD }}:${{ env.tag_version }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
+            echo "prod_tags=$(echo ${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_PROD }}:${{ env.tag_version }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           else
-            echo "prod_tags=$(echo ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PROD }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PROD }}:latest | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
+            echo "prod_tags=$(echo ${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_PROD }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_PROD }}:latest | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           fi
           echo "date_created=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
           
@@ -85,7 +86,7 @@ jobs:
         uses: actions/attest-build-provenance@v1
         id: attest
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROD }}
+          subject-name: ${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_PROD }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
@@ -95,9 +96,9 @@ jobs:
       - name: Set tags proxy
         run: |
           if [ "${{ inputs.latest }}" == 'false' ]; then
-            echo "proxy_tags=$(echo ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PROXY }}:${{ env.tag_version }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
+            echo "proxy_tags=$(echo ${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_PROXY }}:${{ env.tag_version }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           else
-            echo "proxy_tags=$(echo ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PROXY }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PROXY }}:latest | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
+            echo "proxy_tags=$(echo ${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_PROXY }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_PROXY }}:latest | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           fi
 
       - name: PROXY - Build and push Docker image
@@ -117,7 +118,7 @@ jobs:
         uses: actions/attest-build-provenance@v1
         id: attest_proxy
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROXY }}
+          subject-name: ${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_PROXY }}
           subject-digest: ${{ steps.push_proxy.outputs.digest }}
           push-to-registry: true
           
@@ -127,9 +128,9 @@ jobs:
       - name: Set tags redis
         run: |
           if [ "${{ inputs.latest }}" == 'false' ]; then
-            echo "redis_tags=$(echo ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_REDIS }}:${{ env.tag_version }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
+            echo "redis_tags=$(echo ${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_REDIS }}:${{ env.tag_version }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           else
-            echo "redis_tags=$(echo ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_REDIS }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_REDIS }}:latest | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
+            echo "redis_tags=$(echo ${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_REDIS }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_REDIS }}:latest | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           fi
 
       - name: REDIS - Build and push Docker image
@@ -149,6 +150,6 @@ jobs:
         uses: actions/attest-build-provenance@v1
         id: attest_redis
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDIS }}
+          subject-name: ${{ env.REGISTRY }}/${{ env.repo_owner }}/${{ env.IMAGE_NAME_REDIS }}
           subject-digest: ${{ steps.push_redis.outputs.digest }}
           push-to-registry: true
