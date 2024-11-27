@@ -76,11 +76,20 @@ jobs:
           sbom: true
           provenance: mode=max
           tags: ${{ env.prod_tags }}
+          labels: |
+            org.opencontainers.image.title=Archaeological Map of the Czech Republic (AMCR)
+            org.opencontainers.image.description=The Archaeological Map of the Czech Republic (AMCR) is an information system for the collection, management and presentation of data on archaeological fieldwork in the Czech Republic and for supporting related workflows.
+            org.opencontainers.image.url=https://github.com/ARUP-CAS/aiscr-webamcr
+            org.opencontainers.image.source=https://github.com/ARUP-CAS/aiscr-webamcr
+            org.opencontainers.image.version=${{ env.tag_version }}
+            org.opencontainers.image.created=${{ env.date_created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
+            org.opencontainers.image.licenses=AGPL-3.0-or-later
+            org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
           build-args: |
             VERSION_APP=${{ env.tag_version }}
             TAG_APP=${{ github.ref }}
-            DATE_CREATED=${{ env.date_created }}
-            REVISION=${{ github.sha }}
       
       - name: Attest
         uses: actions/attest-build-provenance@v1

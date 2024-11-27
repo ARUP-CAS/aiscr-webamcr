@@ -5,24 +5,10 @@ FROM ghcr.io/osgeo/gdal:ubuntu-small-3.9.1
 # Load arguments
 ARG VERSION_APP
 ARG TAG_APP
-ARG DATE_CREATED
-ARG REVISION
 
 # Set variables
 ENV VERSION=${VERSION_APP}
 ENV TAG=${TAG_APP}
-
-# Set labels
-LABEL org.opencontainers.image.title="Archaeological Map of the Czech Republic (AMCR)"
-LABEL org.opencontainers.image.description="The Archaeological Map of the Czech Republic (AMCR) is an information system for the collection, management and presentation of data on archaeological fieldwork in the Czech Republic and for supporting related workflows."
-LABEL org.opencontainers.image.url=https://github.com/ARUP-CAS/aiscr-webamcr
-LABEL org.opencontainers.image.source=https://github.com/ARUP-CAS/aiscr-webamcr
-LABEL org.opencontainers.image.version=${VERSION_APP}
-LABEL org.opencontainers.image.created=${DATE_CREATED}
-LABEL org.opencontainers.image.revision=${REVISION}
-LABEL org.opencontainers.image.authors="Archaeological Information System of the Czech Republic (AIS CR)"
-LABEL org.opencontainers.image.licenses=AGPL-3.0-or-later
-LABEL org.opencontainers.image.documentation="https://aiscr-webamcr.readthedocs.io/"
 
 # Update base container install
 RUN apt-get clean
