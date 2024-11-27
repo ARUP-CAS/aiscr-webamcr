@@ -61,7 +61,7 @@ jobs:
           if [ "${{ inputs.latest }}" == 'false' ]; then
             echo "prod_tags=$(echo ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PROD }}:${{ env.tag_version }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           else
-            echo "prod_tags=$(echo ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PROD }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROD }}:latest | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
+            echo "prod_tags=$(echo ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PROD }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PROD }}:latest | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           fi
           echo "date_created=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
           
