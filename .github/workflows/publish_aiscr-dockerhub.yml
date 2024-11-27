@@ -95,9 +95,9 @@ jobs:
       - name: Set tags proxy
         run: |
           if [ "${{ inputs.latest }}" == 'false' ]; then
-            echo "proxy_tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROXY }}:${{ env.tag_version }}" >> $GITHUB_ENV
+            echo "proxy_tags=$(echo ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROXY }}:${{ env.tag_version }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           else
-            echo "proxy_tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROXY }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROXY }}:latest" >> $GITHUB_ENV
+            echo "proxy_tags=$(echo ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROXY }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROXY }}:latest | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           fi
 
       - name: PROXY - Build and push Docker image
@@ -127,9 +127,9 @@ jobs:
       - name: Set tags redis
         run: |
           if [ "${{ inputs.latest }}" == 'false' ]; then
-            echo "redis_tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDIS }}:${{ env.tag_version }}" >> $GITHUB_ENV
+            echo "redis_tags=$(echo ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDIS }}:${{ env.tag_version }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           else
-            echo "redis_tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDIS }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDIS }}:latest" >> $GITHUB_ENV
+            echo "redis_tags=$(echo ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDIS }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDIS }}:latest | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           fi
 
       - name: REDIS - Build and push Docker image
