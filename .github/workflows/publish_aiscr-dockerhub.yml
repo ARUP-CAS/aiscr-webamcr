@@ -48,7 +48,7 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
       
-      - name: Set tag
+      - name: Set tags and names
         run: |
           echo "${{ inputs.tag }}"
           echo "tag_version=$(echo ${{ inputs.tag }} | sed 's/^v//')" >> $GITHUB_ENV
@@ -59,9 +59,9 @@ jobs:
       - name: Set tags prod
         run: |
           if [ "${{ inputs.latest }}" == 'false' ]; then
-            echo "prod_tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROD }}:${{ env.tag_version }}" >> $GITHUB_ENV
+            echo "prod_tags=$(echo ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROD }}:${{ env.tag_version }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           else
-            echo "prod_tags=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROD }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROD }}:latest" >> $GITHUB_ENV
+            echo "prod_tags=$(echo ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROD }}:${{ env.tag_version }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROD }}:latest | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
           fi
           echo "date_created=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
           
