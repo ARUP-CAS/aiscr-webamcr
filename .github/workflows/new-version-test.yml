@@ -122,7 +122,7 @@ jobs:
 
   docker_deploy:
     needs: new_version
-    uses: ./.github/workflows/publish_aiscr_hub.yml
+    uses: ./.github/workflows/publish_aiscr-dockerhub.yml
     with:
       tag: ${{ inputs.new_tag }}
       latest: false
