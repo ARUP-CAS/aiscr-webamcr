@@ -33,7 +33,8 @@ var searchControl=new L.Control.Search({
     propertyMagicKey:'magicKey',
     minLength:3,
     translations:leaflet_search_translations,
-    layerKN:cuzkWMS
+    layerKN:cuzkWMS, 
+    zoom:6
 }).addTo(map);
 
 map.addControl(new L.Control.Fullscreen({

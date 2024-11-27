@@ -1,9 +1,7 @@
 
 var poi = L.layerGroup();
 
-
 var map = L.map('projectMap',{crs: JTSKcrs, attributionControl:false,zoomControl:false,  layers: [cuzkZM,poi]}).setView(init_position, 1);
-
 
 var baseLayers = {
     [map_translations['cuzkzakladniMapyCr']]: cuzkZM,
@@ -75,7 +73,6 @@ function getLocation() {
         x.innerHTML = [map_translations['CurrentLocationError']]; // "Geolocation is not supported by this browser."
     }
 }
-
 
 //zobrazení DJ které daný pian obsahují
 function onMarkerClick(ident_cely,e) {
