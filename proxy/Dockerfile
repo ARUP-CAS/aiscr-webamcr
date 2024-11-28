@@ -1,8 +1,10 @@
 FROM nginxinc/nginx-unprivileged:1.26.1-alpine3.19
 
 ARG VERSION_APP
+ARG TAG_APP
 
 ENV VERSION=${VERSION_APP}
+ENV TAG=${TAG_APP}
 
 COPY ./default.conf /etc/nginx/conf.d/default.conf
 COPY ./uwsgi_params /etx/nginx/uwsgi_params

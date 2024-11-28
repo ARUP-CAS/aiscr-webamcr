@@ -4,9 +4,11 @@ FROM ghcr.io/osgeo/gdal:ubuntu-small-3.9.1
 
 # Load arguments
 ARG VERSION_APP
+ARG TAG_APP
 
 # Set variables
 ENV VERSION=${VERSION_APP}
+ENV TAG=${TAG_APP}
 
 # Update base container install
 RUN apt-get clean

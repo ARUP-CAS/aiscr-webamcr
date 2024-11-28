@@ -1,8 +1,10 @@
 FROM redis:7.2.5
 
 ARG VERSION_APP
+ARG TAG_APP
 
 ENV VERSION=${VERSION_APP}
+ENV TAG=${TAG_APP}
 
 COPY redis.conf /home/redis/
 RUN mkdir -p /scripts

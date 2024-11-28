@@ -95,6 +95,7 @@ jobs:
           annotations: ${{ steps.meta_prod.outputs.annotations }}
           build-args: |
             VERSION_APP=${{ steps.meta_prod.outputs.version }}
+            TAG_APP=${{ github.ref }}
       
       - name: PROD - attest - GitHub
         uses: actions/attest-build-provenance@v1
@@ -145,6 +146,7 @@ jobs:
           annotations: ${{ steps.meta_proxy.outputs.annotations }}
           build-args: |
             VERSION_APP=${{ steps.meta_proxy.outputs.version }}
+            TAG_APP=${{ github.ref }}
 
       - name: PROXY - attest - GitHub
         uses: actions/attest-build-provenance@v1
@@ -195,6 +197,7 @@ jobs:
           annotations: ${{ steps.meta_redis.outputs.annotations }}
           build-args: |
             VERSION_APP=${{ steps.meta_redis.outputs.version }}
+            TAG_APP=${{ github.ref }}
 
       - name: REDIS - attest - GitHub
         uses: actions/attest-build-provenance@v1
