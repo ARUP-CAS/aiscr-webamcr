@@ -120,17 +120,9 @@ jobs:
         run: |
           echo "Tag already present: ${{ env.TAG_EXISTS }}"
 
-  docker_deploy_dockerhub:
+  docker_deploy:
     needs: new_version
-    uses: ./.github/workflows/publish_aiscr-dockerhub.yml
-    with:
-      tag: ${{ inputs.new_tag }}
-      latest: false
-    secrets: inherit
-
-  docker_deploy_github:
-    needs: new_version
-    uses: ./.github/workflows/publish_aiscr-github.yml
+    uses: ./.github/workflows/publish_container.yml
     with:
       tag: ${{ inputs.new_tag }}
       latest: false

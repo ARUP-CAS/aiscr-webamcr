@@ -4,11 +4,9 @@ FROM ghcr.io/osgeo/gdal:ubuntu-small-3.9.1
 
 # Load arguments
 ARG VERSION_APP
-ARG TAG_APP
 
 # Set variables
 ENV VERSION=${VERSION_APP}
-ENV TAG=${TAG_APP}
 
 # Update base container install
 RUN apt-get clean
@@ -65,8 +63,10 @@ RUN chmod -R 755 /vol/web
 RUN chown -R user:user /code
 RUN chmod -R 755 /code
 
-# Apply cron and update templates
+# Apply cron
 RUN crontab -u user /scripts/crontab.txt
+
+# Update version info
 RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > /version.txt
 RUN sed -i "s/1.0.0/${VERSION}/g" ./templates/base_logged_in.html
 RUN current_year=$(date +%Y) && \
