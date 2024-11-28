@@ -71,15 +71,14 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern={{version}},value=${{ inputs.tag }}
             type=raw,value=latest,enable=${{ inputs.latest }}
           labels: |
-            org.opencontainers.image.title=Archaeological Map of the Czech Republic (AMCR)
-            org.opencontainers.image.description=The Archaeological Map of the Czech Republic (AMCR) is an information system for the collection, management and presentation of data on archaeological fieldwork in the Czech Republic and for supporting related workflows.
+            org.opencontainers.image.description=Archaeological Map of the Czech Republic (AMCR)
             org.opencontainers.image.url=https://github.com/ARUP-CAS/aiscr-webamcr
-            org.opencontainers.image.source=https://github.com/ARUP-CAS/aiscr-webamcr
             org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
             org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
+            org.opencontainers.image.licenses=GPL-3.0-or-later
           
       - name: PROD - build and push
         id: push_prod
@@ -92,7 +91,6 @@ jobs:
           provenance: mode=max
           tags: ${{ steps.meta_prod.outputs.tags }}
           labels: ${{ steps.meta_prod.outputs.labels }}
-          annotations: ${{ steps.meta_prod.outputs.annotations }}
           build-args: |
             VERSION_APP=${{ steps.meta_prod.outputs.version }}
             TAG_APP=${{ github.ref }}
@@ -124,14 +122,14 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern={{version}},value=${{ inputs.tag }}
             type=raw,value=latest,enable=${{ inputs.latest }}
           labels: |
-            org.opencontainers.image.title=Archaeological Map of the Czech Republic (AMCR) - Proxy Server
+            org.opencontainers.image.description=Archaeological Map of the Czech Republic (AMCR) - Proxy Server
             org.opencontainers.image.url=https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/proxy
-            org.opencontainers.image.source=https://github.com/ARUP-CAS/aiscr-webamcr
             org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
             org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
+            org.opencontainers.image.licenses=GPL-3.0-or-later
 
       - name: PROXY - build and push
         id: push_proxy
@@ -143,7 +141,6 @@ jobs:
           provenance: mode=max
           tags: ${{ steps.meta_proxy.outputs.tags }}
           labels: ${{ steps.meta_proxy.outputs.labels }}
-          annotations: ${{ steps.meta_proxy.outputs.annotations }}
           build-args: |
             VERSION_APP=${{ steps.meta_proxy.outputs.version }}
             TAG_APP=${{ github.ref }}
@@ -175,14 +172,14 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern={{version}},value=${{ inputs.tag }}
             type=raw,value=latest,enable=${{ inputs.latest }}
           labels: |
-            org.opencontainers.image.title=Archaeological Map of the Czech Republic (AMCR) - Redis
+            org.opencontainers.image.description=Archaeological Map of the Czech Republic (AMCR) - Redis Server
             org.opencontainers.image.url=https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/redis
-            org.opencontainers.image.source=https://github.com/ARUP-CAS/aiscr-webamcr
             org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
             org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
+            org.opencontainers.image.licenses=GPL-3.0-or-later
 
       - name: REDIS - build and push
         id: push_redis
@@ -194,7 +191,6 @@ jobs:
           provenance: mode=max
           tags: ${{ steps.meta_redis.outputs.tags }}
           labels: ${{ steps.meta_redis.outputs.labels }}
-          annotations: ${{ steps.meta_redis.outputs.annotations }}
           build-args: |
             VERSION_APP=${{ steps.meta_redis.outputs.version }}
             TAG_APP=${{ github.ref }}
