@@ -1,6 +1,6 @@
 import logging
 
-from core.validators import validate_phone_number
+from core.validators import validate_orcid, validate_phone_number
 from core.widgets import ForeignKeyReadOnlyTextInput
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
@@ -31,6 +31,13 @@ class AuthUserCreationForm(RegistrationForm):
     Formulář pro vytvoření uživatele.
     """
 
+    orcid = forms.CharField(
+        validators=[validate_orcid],
+        help_text=_("uzivatel.forms.AuthUserCreationForm.orcid.tooltip"),
+        label=_("uzivatel.forms.AuthUserCreationForm.orcid.label"),
+        widget=forms.TextInput(),
+    )
+
     class Meta(RegistrationForm):
         model = User
         fields = (
@@ -39,6 +46,7 @@ class AuthUserCreationForm(RegistrationForm):
             "email",
             "telefon",
             "organizace",
+            "orcid",
             "password1",
             "password2",
         )
@@ -79,6 +87,7 @@ class AuthUserCreationForm(RegistrationForm):
             Field("email"),
             Field("telefon"),
             Field("organizace"),
+            Field("orcid"),
             AppendedText(
                 "password1",
                 mark_safe('<i class="bi bi-eye-slash" id="togglePassword1"></i>'),
@@ -122,9 +131,16 @@ class AuthUserChangeForm(forms.ModelForm):
     Formulář pro editaci uživatele.
     """
 
+    orcid = forms.CharField(
+        validators=[validate_orcid],
+        help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
+        label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
+        widget=forms.TextInput(),
+    )
+
     class Meta:
         model = User
-        fields = ("telefon",)
+        fields = ("telefon", "orcid")
         labels = {
             "telefon": _("uzivatel.forms.userChange.telefon.label"),
         }
@@ -143,6 +159,7 @@ class AuthUserChangeForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div("telefon", css_class="col-sm-3"),
+                Div("orcid", css_class="col-sm-3"),
                 css_class="row",
             )
         )
@@ -375,6 +392,14 @@ class OsobaForm(forms.ModelForm):
     """
     Formulář pro vytvoření osoby.
     """
+
+    orcid = forms.CharField(
+        validators=[validate_orcid],
+        help_text=_("uzivatel.forms.OsobaForm.orcid.tooltip"),
+        label=_("uzivatel.forms.OsobaForm.orcid.label"),
+        widget=forms.TextInput(),
+        required=False,
+    )
 
     class Meta:
         model = Osoba

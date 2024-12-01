@@ -7,6 +7,9 @@
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
       {{ sn.ident_cely }}{% if show.backtoprojekt %}<span class="app-pipe"></span><a href="{% url 'projekt:detail' sn.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarPas.backToProjekt.label" %}</a>{% endif %}
+      {% if sn.igsn %}
+        <span style="font-weight: normal">({{ sn.igsn }})</span>
+      {% endif %}
     </div>
   </div>
   {% if showcontrols %}

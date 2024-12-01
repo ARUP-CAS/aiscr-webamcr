@@ -89,6 +89,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         limit_choices_to={"ident_cely__icontains": "S-E-"},
         default=only_notification_groups,
     )
+    orcid = models.CharField(max_length=255, blank=True, null=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

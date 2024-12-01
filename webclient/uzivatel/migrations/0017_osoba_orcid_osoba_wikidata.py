@@ -20,4 +20,9 @@ class Migration(migrations.Migration):
             name="wikidata",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
+        migrations.AddField(
+            model_name="user",
+            name="orcid",
+            field=models.CharField(blank=True, max_length=255, null=True),
+        ),
     ]

@@ -150,7 +150,7 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     """
 
     list_display = ("heslo_ident_cely", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
-    fields = ("heslar_nazev", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
+    fields = ("heslar_nazev", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation", "scheme_uri")
     search_fields = ("heslo__ident_cely", "heslo__heslo", "zdroj", "nazev_kodu", "kod", "uri")
     list_filter = ("zdroj", "skos_mapping_relation")
     form = HeslarOdkazForm

@@ -143,10 +143,11 @@ class ExterniZdrojForm(forms.ModelForm):
 
     def clean_doi(self):
         doi = self.cleaned_data["doi"]
-        match = re.search(r"10\.\d{4,9}\/[-._;()/:a-zA-Z0-9]+", doi)
-        if not match:
-            raise ValidationError(_("ez.forms.externiZdrojForm.doi.error"))
-        doi = match.group()
+        if doi:
+            match = re.search(r"10\.\d{4,9}\/[-._;()/:a-zA-Z0-9]+", doi)
+            if not match:
+                raise ValidationError(_("ez.forms.externiZdrojForm.doi.error"))
+            doi = match.group()
         return doi
 
     def __init__(self, *args, required=None, required_next=None, readonly=False, **kwargs):

@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.template.response import TemplateResponse
 from django.urls import path
-from doi.doi_serializers import DokumentSerializer
 from doi.forms import UpdateDocumentObjectIdentifierFileForm
+from doi.model_serializers import DokumentSerializer, LokalitaSerializer, SamostatnyNalezSerializer
 from dokument.models import Dokument
+from lokalita.models import Lokalita
+from pas.models import SamostatnyNalez
 
 
 class DigitalObjectIdentifierCustomAdminSite(admin.AdminSite):
@@ -16,6 +18,14 @@ class DigitalObjectIdentifierCustomAdminSite(admin.AdminSite):
             documents = Dokument.objects.all()[:100]
             for item in documents:
                 serializer = DokumentSerializer(item)
+                serializer.serialize_publish()
+            localities = Lokalita.objects.all()[:100]
+            for item in localities:
+                serializer = LokalitaSerializer(item)
+                serializer.serialize_publish()
+            findings = SamostatnyNalez.objects.all()[:100]
+            for item in findings:
+                serializer = SamostatnyNalezSerializer(item)
                 serializer.serialize_publish()
         context["form"] = UpdateDocumentObjectIdentifierFileForm()
         return TemplateResponse(request, "admin/doi_management/update_doi.html", context)

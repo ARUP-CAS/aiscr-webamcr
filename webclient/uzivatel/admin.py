@@ -185,6 +185,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                     "last_name",
                     "telefon",
                     "osoba",
+                    "orcid",
                     "groups",
                 )
             },
@@ -206,12 +207,21 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                     "last_name",
                     "telefon",
                     "osoba",
+                    "orcid",
                     "groups",
                 ),
             },
         ),
     )
-    search_fields = ("email", "organizace__nazev_zkraceny", "ident_cely", "first_name", "last_name", "telefon")
+    search_fields = (
+        "email",
+        "organizace__nazev_zkraceny",
+        "ident_cely",
+        "first_name",
+        "last_name",
+        "telefon",
+        "orcid",
+    )
     ordering = ("email",)
     change_actions = ("metadata",)
 
