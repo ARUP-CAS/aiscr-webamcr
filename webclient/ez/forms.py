@@ -1,4 +1,5 @@
 import logging
+import re
 
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 from crispy_forms.bootstrap import AppendedText
@@ -6,6 +7,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from dal import autocomplete
 from django import forms
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -61,6 +63,7 @@ class ExterniZdrojForm(forms.ModelForm):
             "organizace",
             "link",
             "poznamka",
+            "doi",
         )
 
         labels = {
@@ -81,6 +84,7 @@ class ExterniZdrojForm(forms.ModelForm):
             "organizace": _("ez.forms.externiZdrojForm.organizace.label"),
             "link": _("ez.forms.externiZdrojForm.link.label"),
             "poznamka": _("ez.forms.externiZdrojForm.poznamka.label"),
+            "doi": _("ez.forms.externiZdrojForm.doi.label"),
         }
 
         widgets = {
@@ -113,6 +117,7 @@ class ExterniZdrojForm(forms.ModelForm):
             "organizace": forms.TextInput(),
             "link": forms.TextInput(),
             "poznamka": forms.TextInput(),
+            "doi": forms.TextInput(),
         }
 
         help_texts = {
@@ -133,7 +138,16 @@ class ExterniZdrojForm(forms.ModelForm):
             "organizace": _("ez.forms.externiZdrojForm.organizace.tooltip"),
             "link": _("ez.forms.externiZdrojForm.link.tooltip"),
             "poznamka": _("ez.forms.externiZdrojForm.poznamka.tooltip"),
+            "doi": _("ez.forms.externiZdrojForm.poznamka.tooltip"),
         }
+
+    def clean_doi(self):
+        doi = self.cleaned_data["doi"]
+        match = re.search(r"10\.\d{4,9}\/[-._;()/:a-zA-Z0-9]+", doi)
+        if not match:
+            raise ValidationError(_("ez.forms.externiZdrojForm.doi.error"))
+        doi = match.group()
+        return doi
 
     def __init__(self, *args, required=None, required_next=None, readonly=False, **kwargs):
         super(ExterniZdrojForm, self).__init__(*args, **kwargs)
@@ -187,7 +201,8 @@ class ExterniZdrojForm(forms.ModelForm):
                 Div("typ_dokumentu", css_class="col-sm-2"),
                 Div("organizace", css_class="col-sm-2"),
                 Div("link", css_class="col-sm-8"),
-                Div("poznamka", css_class="col-sm-10"),
+                Div("poznamka", css_class="col-sm-9"),
+                Div("doi", css_class="col-sm-3"),
                 css_class="row",
             ),
         )

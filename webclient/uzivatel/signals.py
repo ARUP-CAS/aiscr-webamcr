@@ -1,4 +1,5 @@
 import logging
+import re
 
 from cacheops import invalidate_model
 from core.ident_cely import get_uzivatel_ident
@@ -29,6 +30,15 @@ def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
             "uzivatel.signals.orgnaizace_save_metadata.end",
             extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction},
         )
+
+
+@receiver(pre_save, sender=Osoba, weak=False)
+def osoba_pre_save(sender, instance: Osoba, **kwargs):
+    if instance.orcid:
+        match = re.search(r"\d{4}-\d{4}-\d{4}-\d{4}", instance.orcid)
+        instance.orcid = match.group() if match else None
+    if instance.wikidata and "/" in instance.wikidata:
+        instance.wikidata = instance.wikidata.split("/")[-1]
 
 
 @receiver(post_save, sender=Osoba, weak=False)
@@ -203,6 +213,8 @@ def organizace_delete_repository_container(sender, instance: Organizace, **kwarg
         "uzivatel.signals.organizace_delete_repository_container.end",
         extra={"ident_cely": instance.ident_cely, "transaction": transaction},
     )
+    if instance.ror and "/" in instance.ror:
+        instance.ror = instance.ror.split("/")[-1]
 
 
 @receiver(user_logged_in, weak=False)

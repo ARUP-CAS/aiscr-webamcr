@@ -519,6 +519,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             data = RedisConnector.prepare_model_for_redis(table)
             return self.redis_snapshot_id, data
 
+    def get_komponenty(self, arch_z_status=None):
+        komponenty = []
+        for cast in self.casti.all():
+            if arch_z_status and (not cast.archeologicky_zaznam or cast.archeologicky_zaznam.stav != arch_z_status):
+                continue
+            komponenty += [komp for komp in cast.komponenty.komponenty.all()]
+        return komponenty
+
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     """
@@ -552,6 +560,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         null=True,
         related_name="casti_dokumentu",
     )
+    doi = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         db_table = "dokument_cast"
@@ -698,6 +707,10 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
         db_table = "dokument_autor"
         unique_together = (("dokument", "autor"), ("dokument", "poradi"))
         ordering = ("poradi",)
+
+    @property
+    def anonym(self):
+        return False
 
 
 class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):

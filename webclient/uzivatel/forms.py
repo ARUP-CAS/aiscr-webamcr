@@ -381,6 +381,8 @@ class OsobaForm(forms.ModelForm):
         fields = (
             "jmeno",
             "prijmeni",
+            "orcid",
+            "wikidata"
             # "rok_narozeni",
             # "rok_umrti",
             # "rodne_prijmeni",
@@ -388,11 +390,15 @@ class OsobaForm(forms.ModelForm):
         widgets = {
             "jmeno": forms.TextInput(),
             "prijmeni": forms.TextInput(),
+            "orcid": forms.TextInput(),
+            "wikidata": forms.TextInput(),
             # "rodne_prijmeni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
         labels = {
             "jmeno": _("uzivatel.forms.osoba.jmeno.label"),
             "prijmeni": _("uzivatel.forms.osoba.prijmeni.label"),
+            "orcid": _("uzivatel.forms.osoba.orcid.label"),
+            "wikidata": _("uzivatel.forms.osoba.wikidata.label"),
             # "rok_narozeni": _("uzivatel.forms.osoba.rok_narozeni.label"),
             # "rok_umrti": _("uzivatel.forms.osoba.rok_umrti.label"),
             # "rodne_prijmeni": _("uzivatel.forms.osoba.rodne_prijmeni.label"),
@@ -400,6 +406,8 @@ class OsobaForm(forms.ModelForm):
         help_texts = {
             "jmeno": _("uzivatel.forms.osoba.jmeno.tooltip"),
             "prijmeni": _("uzivatel.forms.osoba.prijmeni.tooltip"),
+            "orcid": _("uzivatel.forms.osoba.orcid.tooltip"),
+            "wikidata": _("uzivatel.forms.osoba.wikidata.tooltip"),
             # "rok_narozeni": _("uzivatel.forms.osoba.rok_narozeni.tooltip"),
             # "rok_umrti": _("uzivatel.forms.osoba.rok_umrti.tooltip"),
             # "rodne_prijmeni": _("uzivatel.forms.osoba.rodne_prijmeni.tooltip"),
@@ -412,6 +420,8 @@ class OsobaForm(forms.ModelForm):
             Div(
                 Div("jmeno", css_class="col-sm-6"),
                 Div("prijmeni", css_class="col-sm-6"),
+                Div("orcid", css_class="col-sm-6"),
+                Div("wikidata", css_class="col-sm-6"),
                 # Div("rok_narozeni", css_class="col-sm-6"),
                 # Div("rok_umrti", css_class="col-sm-6"),
                 # Div("rodne_prijmeni", css_class="col-sm-12"),

@@ -196,8 +196,19 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
         "rok_narozeni",
         "rok_umrti",
     )
-    fields = ("ident_cely", "jmeno", "prijmeni", "rodne_prijmeni", "vypis_cely", "vypis", "rok_narozeni", "rok_umrti")
-    search_fields = ("ident_cely", "vypis_cely", "vypis", "prijmeni", "rodne_prijmeni", "jmeno")
+    fields = (
+        "ident_cely",
+        "jmeno",
+        "prijmeni",
+        "rodne_prijmeni",
+        "vypis_cely",
+        "vypis",
+        "rok_narozeni",
+        "rok_umrti",
+        "orcid",
+        "wikidata",
+    )
+    search_fields = ("ident_cely", "vypis_cely", "vypis", "prijmeni", "rodne_prijmeni", "jmeno", "orcid", "wikidata")
     readonly_fields = ("ident_cely",)
 
     def has_delete_permission(self, request, obj=None):
@@ -241,6 +252,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
         "adresa",
         "email",
         "telefon",
+        "ror",
     )
     fields = (
         "ident_cely",
@@ -259,6 +271,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
         "soucast",
         "zanikla",
         "cteni_dokumentu",
+        "ror",
     )
     readonly_fields = ("ident_cely",)
 
