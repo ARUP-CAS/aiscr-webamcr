@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List
 
+from arch_z.models import AkceVedouci
 from core.constants import AZ_STAV_ARCHIVOVANY
 from django.core.exceptions import ObjectDoesNotExist
 from dokument.models import Dokument, DokumentCast
@@ -34,7 +35,7 @@ def format_katastr_place(katastr: RuianKatastr):
 def serialize_geom(geom=None, place: str | None = None) -> frozenset:
     serialized_geom = {}
     if geom:
-        serialized_geom.update({"pointLatitude": geom.Y, "pointLongitude": geom.X})
+        serialized_geom.update({"pointLatitude": geom.centroid.y, "pointLongitude": geom.centroid.x})
     if place:
         if isinstance(place, str):
             serialized_geom["geoLocationPlace"] = place
@@ -117,25 +118,34 @@ class DokumentSerializer(ModelSerializer):
             cast: DokumentCast
             try:
                 if cast.neident_akce and cast.neident_akce.vedouci:
-                    contributors.append(serialize_osoba(cast.neident_akce.vedouci))
+                    for vedouci in cast.neident_akce.vedouci.all():
+                        contributors.append(serialize_osoba(vedouci))
             except ObjectDoesNotExist:
                 pass
-            if cast.archeologicky_zaznam.akce and cast.archeologicky_zaznam.akce.hlavni_vedouci:
-                contributors.append(
-                    serialize_osoba(
-                        cast.archeologicky_zaznam.akce.hlavni_vedouci, cast.archeologicky_zaznam.akce.organizace
-                    )
-                )
+            if cast.archeologicky_zaznam:
+                try:
+                    if cast.archeologicky_zaznam.akce.hlavni_vedouci:
+                        contributors.append(
+                            serialize_osoba(
+                                cast.archeologicky_zaznam.akce.hlavni_vedouci, cast.archeologicky_zaznam.akce.organizace
+                            )
+                        )
+                    for akce_vedouci in cast.archeologicky_zaznam.akce.akcevedouci_set.all():
+                        akce_vedouci: AkceVedouci
+                        contributors.append(serialize_osoba(akce_vedouci.vedouci, akce_vedouci.organizace))
+                except ObjectDoesNotExist:
+                    pass
             if cast.projekt and cast.projekt.vedouci_projektu:
                 contributors.append(serialize_osoba(cast.projekt.vedouci_projektu, cast.projekt.organizace))
-            for vedouci in cast.archeologicky_zaznam.akce.akcevedouci_set.all():
-                contributors.append(serialize_osoba(vedouci, cast.archeologicky_zaznam.akce.organizace))
         return contributors
 
     def _serialize_dates(self):
         dates = []
-        if self.object.extra_data and self.object.extra_data.datum_vzniku:
-            dates.append({"date": self.object.extra_data.datum_vzniku, "dateType": "Created"})
+        try:
+            if self.object.extra_data and self.object.extra_data.datum_vzniku:
+                dates.append({"date": self.object.extra_data.datum_vzniku, "dateType": "Created"})
+        except ObjectDoesNotExist:
+            pass
         if self.object.historie:
             updated_dates = [
                 {"date": date.datum_zmeny, "dateType": "Updated"} for date in self.object.historie.historie_set.all()
@@ -153,11 +163,19 @@ class DokumentSerializer(ModelSerializer):
 
     def _serialize_geo_locations(self):
         geo_locations: List[frozenset] = []
-        if self.object.extra_data.geom:
-            geo_locations.append(serialize_geom(self.object.extra_data.geom))
+        try:
+            if self.object.extra_data.geom:
+                geo_locations.append(serialize_geom(self.object.extra_data.geom))
+        except ObjectDoesNotExist:
+            pass
         for cast in self.object.casti.all():
-            if cast.neident_akce and cast.neident_akce.katastr:
-                geo_locations.append(serialize_geom(cast.neident_akce.katastr.definicni_bod, cast.neident_akce.katastr))
+            try:
+                if cast.neident_akce and cast.neident_akce.katastr:
+                    geo_locations.append(
+                        serialize_geom(cast.neident_akce.katastr.definicni_bod, cast.neident_akce.katastr)
+                    )
+            except ObjectDoesNotExist:
+                pass
             if cast.projekt and cast.projekt.hlavni_katastr and cast.projekt.pristupnost.pk == PRISTUPNOST_ANONYM_ID:
                 geo_locations.append(
                     serialize_geom(cast.projekt.hlavni_katastr.definicni_bod, cast.projekt.hlavni_katastr)
@@ -186,6 +204,24 @@ class DokumentSerializer(ModelSerializer):
         geo_locations_dict = [dict(item) for item in list(set(geo_locations))]
         return geo_locations_dict
 
+    def _serialize_rights_list(self):
+        if self.object.licence:
+            serialized_rights = {"rights": self.object.licence.heslo_en}
+            spdx_query = self.object.licence.heslar_odkaz.filter(zdroj="SPDX")
+            if spdx_query.exists():
+                serialized_rights["rightsUri"] = self.object.licence.heslar_odkaz.filter(zdroj="SPDX").first().uri
+                serialized_rights["schemeUri"] = self.object.licence.heslar_odkaz.filter(zdroj="SPDX").first().uri
+                serialized_rights["rightsIdentifier"] = (
+                    self.object.licence.heslar_odkaz.filter(zdroj="SPDX").first().kod
+                )
+                serialized_rights["rightsIdentifierScheme"] = (
+                    self.object.licence.heslar_odkaz.filter(zdroj="SPDX").first().zdroj
+                )
+            return [
+                serialized_rights,
+            ]
+        return []
+
     def _serialize_subjects(self):
         first_item = frozenset(
             {
@@ -211,43 +247,32 @@ class DokumentSerializer(ModelSerializer):
             serialized_subjects += [serialize_subject(objekt.specifikace) for objekt in komp.objekty.all()]
             serialized_subjects += [serialize_subject(predmet.druh) for predmet in komp.predmety.all()]
             serialized_subjects += [serialize_subject(predmet.specifikace) for predmet in komp.predmety.all()]
-        serialized_subjects += [
-            serialize_subject(cast.archeologicky_zaznam.akce.hlavni_typ)
-            for cast in self.object.casti.all()
-            if cast.archeologicky_zaznam and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-        ]
-        serialized_subjects += [
-            serialize_subject(cast.archeologicky_zaznam.akce.hlavni_typ)
-            for cast in self.object.casti.all()
-            if cast.archeologicky_zaznam and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-        ]
-        serialized_subjects += [
-            serialize_subject(cast.archeologicky_zaznam.akce.vedlejsi_typ)
-            for cast in self.object.casti.all()
-            if cast.archeologicky_zaznam and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-        ]
-        try:
-            serialized_subjects += [
-                serialize_subject(cast.archeologicky_zaznam.lokalita.typ_lokality)
-                for cast in self.object.casti.all()
-                if cast.archeologicky_zaznam
-                and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-                and cast.archeologicky_zaznam.lokalita
-            ]
-        except ObjectDoesNotExist:
-            pass
-        try:
-            serialized_subjects += [
-                serialize_subject(cast.archeologicky_zaznam.lokalita.druh)
-                for cast in self.object.casti.all()
-                if cast.archeologicky_zaznam
-                and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-                and cast.archeologicky_zaznam.lokalita
-            ]
-        except ObjectDoesNotExist:
-            pass
+
+        for cast in self.object.casti.all():
+            try:
+                if cast.archeologicky_zaznam and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY:
+                    serialized_subjects.append(serialize_subject(cast.archeologicky_zaznam.akce.hlavni_typ))
+                    serialized_subjects.append(serialize_subject(cast.archeologicky_zaznam.akce.vedlejsi_typ))
+            except ObjectDoesNotExist:
+                pass
+
+            try:
+                if cast.archeologicky_zaznam and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY:
+                    serialized_subjects.append(serialize_subject(cast.archeologicky_zaznam.lokalita.typ_lokality))
+                    serialized_subjects.append(serialize_subject(cast.archeologicky_zaznam.lokalita.druh))
+            except ObjectDoesNotExist:
+                pass
         serialized_subjects = [dict(item) for item in set(serialized_subjects)]
         return serialized_subjects
+
+    def _serialize_types(self):
+        serialized_types = {"resourceType": self.object.typ_dokumentu.heslo_en}
+        resource_type_query = self.object.typ_dokumentu.heslar_odkaz.filter(zdroj="DataCite").filter(
+            nazev_kodu="resourceTypeGeneral"
+        )
+        if resource_type_query.exists():
+            serialized_types["resourceTypeGeneral"] = resource_type_query.first().kod
+        return serialized_types
 
     def serialize_publish(self):
         return {
@@ -305,13 +330,7 @@ class DokumentSerializer(ModelSerializer):
                 "contributors": self._serialize_contributors(),
                 "dates": self._serialize_dates(),
                 "language": self.object.jazyky.first(),
-                "types": {
-                    "resourceType": self.object.typ_dokumentu.heslo_en,
-                    "resourceTypeGeneral": self.object.typ_dokumentu.heslar_odkaz.filter(zdroj="DataCite")
-                    .filter(nazev_kodu="resourceTypeGeneral")
-                    .first()
-                    .kod,
-                },
+                "types": self._serialize_types(),
                 "relatedIdentifiers": [],
                 "sizes": [
                     f"{sum([soubor.size_mb for soubor in self.object.soubory.soubory.all()])} MB",
@@ -321,15 +340,7 @@ class DokumentSerializer(ModelSerializer):
                 else [],
                 "formats": list(set([soubor.mimetype for soubor in self.object.soubory.soubory.all()])),
                 "version": self.object.historie.historie_set.last().datum_zmeny,
-                "rightsList": [
-                    {
-                        "rights": self.object.licence.heslo_en,
-                        "rightsUri": self.object.licence.heslar_odkaz.filter(zdroj="SPDX").first().uri,
-                        "schemeUri": self.object.licence.heslar_odkaz.filter(zdroj="SPDX").first().uri,
-                        "rightsIdentifier": self.object.licence.heslar_odkaz.filter(zdroj="SPDX").first().kod,
-                        "rightsIdentifierScheme": self.object.licence.heslar_odkaz.filter(zdroj="SPDX").first().zdroj,
-                    }
-                ],
+                "rightsList": self._serialize_rights_list(),
                 "descriptions": self._serialize_descriptions(),
                 "geoLocations": self._serialize_geo_locations(),
                 "url": "",

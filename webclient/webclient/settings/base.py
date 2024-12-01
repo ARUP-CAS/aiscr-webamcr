@@ -180,6 +180,7 @@ INSTALLED_APPS = [
     "django_object_actions",
     "cacheops",
     "fedora_management",
+    "doi.apps.DoiConfig",
 ]
 
 MIDDLEWARE = [
