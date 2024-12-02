@@ -41,6 +41,8 @@ class DateRangeField(forms.DateField):
             to_date += datetime.timedelta(days=1)
         except Exception:
             raise ValidationError(self.error_messages["invalid"], code="invalid")
+        if from_date >= to_date:
+            raise ValidationError(self.error_messages["invalid"], code="invalid")
         return DateRange(lower=from_date, upper=to_date)
 
 

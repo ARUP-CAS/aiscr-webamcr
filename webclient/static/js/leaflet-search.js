@@ -69,7 +69,7 @@ L.Control.Search = L.Control.extend({
 		moveToLocation: null,			//callback run on location found, params: latlng, title, map
 		buildTip: null,					//function to return row tip html node(or html string), receive text tooltip in first param
 		container: '',					//container id to insert Search Control
-		zoom: null,						//default zoom level for move to location
+		zoom: 0,						//default zoom level for move to location
 		minLength: 1,					//minimal text length for autocomplete
 		initial: true,					//search elements only by initial text
 		casesensitive: false,			//search elements in case sensitive text
@@ -134,39 +134,39 @@ L.Control.Search = L.Control.extend({
 		this._url["KU"]={name:this.options.translations.KatastralniUzemi,
 			urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/7/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
 				urlService:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/7/findAddressCandidates?outSR={"wkid":4326}&f=json',
-                zoom:13
+                zoom: this.options.zoom+7
             };
 		this._url["okresy"]={name:this.options.translations.Okres,
 			urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/15/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
 				urlService:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/15/findAddressCandidates?outSR={"wkid":4326}&f=json',
-                zoom:10
+                zoom: this.options.zoom+4
             };
 		this._url["obce"]={name:this.options.translations.Obec,
 				urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/12/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
 					urlService:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/12/findAddressCandidates?outSR={"wkid":4326}&f=json',
-					zoom:14
+					zoom: this.options.zoom+8
 				};
 		this._url["adresy"]={name:this.options.translations.Adresa,
 			urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/1/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
 				urlService:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/1/findAddressCandidates?outSR={"wkid":4326}&f=json',
-                zoom:19
+                zoom: this.options.zoom+13
             };
 		this._url["ulice"]={name:this.options.translations.Ulice,
 			urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/4/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
 				urlService:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/4/findAddressCandidates?outSR={"wkid":4326}&f=json',
-                zoom:17
+                zoom: this.options.zoom+11
             };
 		this._url["geonames"]={name:this.options.translations.Geonames,
 			urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/GEONAMES/Vyhledavaci_sluzba_nad_daty_GEONAMES/MapServer/exts/GeocodeSOE/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
 				urlService:'https://ags.cuzk.cz/arcgis/rest/services/GEONAMES/Vyhledavaci_sluzba_nad_daty_GEONAMES/MapServer/exts/GeocodeSOE/findAddressCandidates?outSR={"wkid":4326}&f=json',
-                zoom:15
+                zoom: this.options.zoom+9
 		};
 		this._url["parcely"]={name:this.options.translations.Parcela, name_place:this.options.translations.KatastralniUzemi,
 			urlSuggestions:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/7/suggest?maxSuggestions=100&outSR={"latestWkid":5514,"wkid":102067}&f=json',
             urlService:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/7/findAddressCandidates?outSR={"wkid":4326}&f=json',
 			urlServiceKU:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Prohlizeci_sluzba_nad_daty_RUIAN/MapServer/7/query/query?f=json&outFields=kod&returnGeometry=false&spatialRel=esriSpatialRelIntersects',
             urlServiceParcela:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Prohlizeci_sluzba_nad_daty_RUIAN/MapServer/5/query?f=json&outSR=4326',
-                zoom:15
+                zoom: this.options.zoom+9
             };
         this._currentUrl=this._url["okresy"];
 		this._inputMinSize= this._currentUrl.name.length;

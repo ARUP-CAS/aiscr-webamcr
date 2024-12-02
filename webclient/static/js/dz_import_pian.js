@@ -53,14 +53,14 @@ window.onload = function () {
         return cookieValue;
     };
     let dropzoneOptions = {
-        dictDefaultMessage: [dz_trans["description"]],
+        dictDefaultMessage: dz_trans["description"],
         acceptedFiles: ".csv, .CSV",
-        dictInvalidFileType: [dz_trans["rejectedFileMessage"]],
+        dictInvalidFileType: dz_trans["rejectedFileMessage"],
         addRemoveLinks: true,
-        dictCancelUpload: [dz_trans["cancelUpload"]],
-        dictCancelUploadConfirmation: [dz_trans["cancelUploadConfirm"]],
+        dictCancelUpload: dz_trans["cancelUpload"],
+        dictCancelUploadConfirmation: dz_trans["cancelUploadConfirm"],
         dictMaxFilesExceeded:  dz_trans["maxFilesExceeded"],
-        dictRemoveFile: [dz_trans["removeFile"]],
+        dictRemoveFile: dz_trans["removeFile"],
         maxFilesize: 10, // MB
         maxFiles: 1,
         addRemoveLinks: false,
