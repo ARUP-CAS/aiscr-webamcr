@@ -361,7 +361,7 @@ def post_upload(request):
                         + _("core.views.post_upload.error.maximal_file_name_exceeded_part_2")
                     )
                 },
-                status=500,
+                status=422,
             )
     else:
         logger.debug(
