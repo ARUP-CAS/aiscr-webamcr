@@ -992,16 +992,22 @@ heatPoints = heatPoints.map(function (p) {
     }
 });
 
+function getRotatedBounds() {
+    const pixelBounds = map.getPixelBounds();
+    return {
+        topLeft: map.unproject(pixelBounds.getTopLeft()),
+        topRight: map.unproject(pixelBounds.getTopRight()),
+        bottomRight: map.unproject(pixelBounds.getBottomRight()),
+        bottomLeft: map.unproject(pixelBounds.getBottomLeft()),
+    };
+}
+
 //překreslení mapy
 switchMap = function (overview = false) {
-    var bounds = map.getBounds();
+    let bounds = getRotatedBounds();
     let zoom = map.getZoom();
-    var northWest = bounds.getNorthWest(),
-        southEast = bounds.getSouthEast();
-    const currentUrl = window.location.href;
     if (global_map_can_load_pians && (map.hasLayer(poi_all) || map.hasLayer(poi_sn))) {
-        if (overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest) {
-            addLogText("Change: " + northWest + "  " + southEast + " " + zoom);
+        if (overview || bounds.topLeft != boundsLock.topLeft || !boundsLock.topLeft) {
             boundsLock = bounds;
             let xhr = new XMLHttpRequest();
             xhr.open('POST', '/mapa-pian-pas');
@@ -1012,9 +1018,7 @@ switchMap = function (overview = false) {
             map.spin(false);
             map.spin(true);
             xhr.send(JSON.stringify(
-                {
-                    'northWest': northWest,
-                    'southEast': southEast,
+                {   'bounds': bounds,
                     'zoom': zoom,
                     'pian':map.hasLayer(poi_all),
                     'pas':map.hasLayer(poi_sn),
@@ -1053,11 +1057,6 @@ switchMap = function (overview = false) {
                                 }
                             }
                         })
-                        /*if (count > 50 && count<500) {
-                            map.removeLayer(poi_pian_dp);
-                        } else if (!map.hasLayer(poi_pian_dp)) {
-                           // map.addLayer(poi_pian_dp);
-                        }*/
                     } else {
                         heatPoints=[]
                         let resHeat = JSON.parse(this.responseText).heat
@@ -1067,12 +1066,9 @@ switchMap = function (overview = false) {
                             if(i.pocet>maxHeat){
                                 maxHeat=i.pocet;
                             }
-                                //from: {"id": "1", "pocet": 32, "density": 0, "geom": "POINT(14.8 50.120000000000005)"}
-                                //to: {lat: 24.6408, lng:46.7728, count: 3}
                             heatPoints.push({lat:parseFloat(geom[1]), lng:parseFloat(geom[0]), count:i.pocet});//chyba je to geome
                         })
                         heatLayer = new HeatmapOverlay( heatmapOptions); //= L.heatLayer(heatPoints, heatmapOptions);
-                        //addLogText({max:maxHeat,data:heatPoints})
                         heatLayer.setData({max:maxHeat,data:heatPoints})
                         map.addLayer(heatLayer);
                         poi_pian.clearLayers();

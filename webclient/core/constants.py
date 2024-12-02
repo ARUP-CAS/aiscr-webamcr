@@ -185,3 +185,5 @@ STARY_PROJEKT_ZRUSEN = "Automatické zrušení projektů starších tří let, u
 PRISTUPNOST_MIN_RAZENI = 1  # Nejnižší hodnota přístupnosti podle řazení.
 
 MAX_POCET_SOUBORU_PROJEKTU = 40
+
+LIMIT_PRVKU_ZOBRAZENI_HEATMAP = 7_000  # Počet prvků v mapovém výřezu, při kterém se už má zobrazit heatmap

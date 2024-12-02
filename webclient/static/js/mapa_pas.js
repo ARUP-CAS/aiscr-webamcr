@@ -359,13 +359,20 @@ $(document).ready(function () {
     switchMap(false);
 })
 
+function getRotatedBounds() {
+    const pixelBounds = map.getPixelBounds();
+    return {
+        topLeft: map.unproject(pixelBounds.getTopLeft()),
+        topRight: map.unproject(pixelBounds.getTopRight()),
+        bottomRight: map.unproject(pixelBounds.getBottomRight()),
+        bottomLeft: map.unproject(pixelBounds.getBottomLeft()),
+    };
+}
+
 switchMap = function (overview = false) {
-    var bounds = map.getBounds();
+    let bounds = getRotatedBounds();
     let zoom = map.getZoom();
-    var northWest = bounds.getNorthWest(),
-        southEast = bounds.getSouthEast();
-    if (overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest) {
-        debugText("Change: " + northWest + "  " + southEast + " " + zoom);
+        if (overview || bounds.topLeft != boundsLock.topLeft || !boundsLock.topLeft) {
         boundsLock = bounds;
         let xhr = new XMLHttpRequest();
         xhr.open('POST', '/mapa-pian-pas');
@@ -376,9 +383,7 @@ switchMap = function (overview = false) {
         map.spin(false);
         map.spin(true);
         xhr.send(JSON.stringify(
-            {
-                'northWest': northWest,
-                'southEast': southEast,
+                {   'bounds': bounds,
                 'zoom': zoom,
                 'pian':map.hasLayer(poi_pian),
                 'pas':map.hasLayer(poi_sn),
@@ -413,17 +418,13 @@ switchMap = function (overview = false) {
                         if(i.pocet>maxHeat){
                             maxHeat=i.pocet;
                         }
-                            //from: {"id": "1", "pocet": 32, "density": 0, "geom": "POINT(14.8 50.120000000000005)"}
-                            //to: {lat: 24.6408, lng:46.7728, count: 3}
+
                         heatPoints.push({lat:parseFloat(geom[1]), lng:parseFloat(geom[0]), count:i.pocet});//chyba je to geome
                     })
                     heatLayer = new HeatmapOverlay( heatmapOptions); //= L.heatLayer(heatPoints, heatmapOptions);
                     debugText({max:maxHeat,data:heatPoints})
                     heatLayer.setData({max:maxHeat,data:heatPoints})
                     map.addLayer(heatLayer);
-                    //poi_other.clearLayers();
-                    //poi_other_dp.clearLayers();
-                    //poi_dj.clearLayers();
                 }
                 map.spin(false);
             } catch(e){map.spin(false);debugText(e)}
