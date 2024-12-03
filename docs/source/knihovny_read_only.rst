@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/pre-commit/pre-commit
    * - prometheus_client
-     - 0.21.0
+     - 0.21.1
      - Apache Software License
      - https://github.com/prometheus/client_python
    * - prompt_toolkit
