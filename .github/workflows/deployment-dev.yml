@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          ref: v${{ inputs.tag }}
       - name: Install OpenVPN
         run: |
           sudo apt-get update

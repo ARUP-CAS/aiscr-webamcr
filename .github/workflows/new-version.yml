@@ -103,7 +103,7 @@ jobs:
 
   docker_deploy:
     needs: new_version
-    uses: ./.github/workflows/publish_aiscr_hub.yml
+    uses: ./.github/workflows/publish_images.yml
     with:
       tag: ${{ inputs.new_tag }}
       latest: true

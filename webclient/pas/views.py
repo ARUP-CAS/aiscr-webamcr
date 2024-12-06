@@ -159,6 +159,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         context["title"] = _("pas.views.create.title")
         context["header"] = _("pas.views.create.header")
         context["button"] = _("pas.views.create.submitButton.text")
+        context["global_map_can_edit"] = True
         return context
 
     def form_valid(self, form):
