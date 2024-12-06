@@ -55,7 +55,7 @@ def createFedoraWebacAcl(container_path, Atomic_ID, file):
     headers = {"Atomic-ID": Atomic_ID, "Content-Type": "text/turtle"}
     with open(file, "r") as f:
         data = f.read()
-        data = data.replace("/rest/AMCR", f"/rest/{FEDORA_SERVER_NAME}")
+        data = data.replace("/AMCR/", f"/{FEDORA_SERVER_NAME}/")
     response = requests.put(container_path + "/fcr:acl", auth=AUTH, headers=headers, data=data, timeout=10)
     print(response)
 
@@ -79,7 +79,7 @@ def IndirectContainer(container_path, Atomic_ID, name, file):
     print("IndirectContainer")
     with open(file, "r") as f:
         data = f.read()
-        data = data.replace("/rest/AMCR", f"/rest/{FEDORA_SERVER_NAME}")
+        data = data.replace("/AMCR/", f"/{FEDORA_SERVER_NAME}/")
     headers = {
         "Atomic-ID": Atomic_ID,
         "Slug": name,
@@ -216,30 +216,34 @@ def generate_base_struct():
     commit(transaction_id)
 
 
-# FEDORA_SERVER_NAME = "AMCR-selenium-test"
+def inicialize_base_directory():
+    for attempt in range(MAX_RETRIES + 1):  # Pokusíme se max_retries + 1 krát (včetně prvního pokusu)
+        try:
+            stat, res = get_container_content(f"{API_URL}{FEDORA_SERVER_NAME}")
+            # Pokud server odpoví status kódem 200, je vše v pořádku
+            if stat == 200:
+                print("fedora-init.py: Základní struktura existuje")
+
+                break
+            else:
+                print("fedora-init.py: Vytvářím základní strukturu")
+                generate_base_struct()
+                break
+        except requests.exceptions.RequestException as e:
+            # Pokud dojde k výjimce, vypíše chybu a počká 2 sekundy před dalším pokusem
+            print(f"fedora-init.py: Chyba při pokusu o spojení s Fedorou na adrese {API_URL}{FEDORA_SERVER_NAME}: {e}")
+            if attempt < MAX_RETRIES:
+                print(f"fedora-init.py: Opakuji pokus {attempt + 1} za {RETRY_DELAY} sekund...")
+                time.sleep(RETRY_DELAY)
+            else:
+                print("fedora-init.py: Vyčerpán maximální počet pokusů spojení s Fedorou.")
+
 
 FEDORA_SERVER_NAME = "AMCR"
 
 MAX_RETRIES = 10  # Maximální počet pokusů
 RETRY_DELAY = 5  # Pauza mezi pokusy v sekundách
+inicialize_base_directory()
 
-for attempt in range(MAX_RETRIES + 1):  # Pokusíme se max_retries + 1 krát (včetně prvního pokusu)
-    try:
-        stat, res = get_container_content(f"{API_URL}{FEDORA_SERVER_NAME}")
-        # Pokud server odpoví status kódem 200, je vše v pořádku
-        if stat == 200:
-            print("fedora-init.py: Základní struktura existuje")
-
-            break
-        else:
-            print("fedora-init.py: Vytvářím základní strukturu")
-            generate_base_struct()
-            break
-    except requests.exceptions.RequestException as e:
-        # Pokud dojde k výjimce, vypíše chybu a počká 2 sekundy před dalším pokusem
-        print(f"fedora-init.py: Chyba při pokusu o spojení s Fedorou na adrese {API_URL}{FEDORA_SERVER_NAME}: {e}")
-        if attempt < MAX_RETRIES:
-            print(f"fedora-init.py: Opakuji pokus {attempt + 1} za {RETRY_DELAY} sekund...")
-            time.sleep(RETRY_DELAY)
-        else:
-            print("fedora-init.py: Vyčerpán maximální počet pokusů spojení s Fedorou.")
+FEDORA_SERVER_NAME = "AMCR-selenium-test"
+inicialize_base_directory()

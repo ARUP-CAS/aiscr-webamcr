@@ -1,0 +1,210 @@
+name: Build and publish Docker images
+on:
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+      latest:
+        type: boolean
+        required: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        type: string
+        required: true
+      latest:
+        type: boolean
+        required: true
+
+env:
+  IMAGE_NAME_REDIS_GITHUB: arup-cas/aiscr-webamcr-redis
+  IMAGE_NAME_PROXY_GITHUB: arup-cas/aiscr-webamcr-proxy
+  IMAGE_NAME_PROD_GITHUB: arup-cas/aiscr-webamcr
+  IMAGE_NAME_REDIS_DOCKERHUB: aiscr/webamcr-redis
+  IMAGE_NAME_PROXY_DOCKERHUB: aiscr/webamcr-proxy
+  IMAGE_NAME_PROD_DOCKERHUB: aiscr/webamcr
+  REGISTRY_GITHUB: ghcr.io
+  REGISTRY_DOCKERHUB: index.docker.io
+
+jobs:
+  build_publish_images:
+    name: Build and publish images
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      packages: write
+      contents: read
+      attestations: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to the GitHub registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_GITHUB }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to the DockerHub registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      #---------------------
+      # BUILD PROD
+      #---------------------
+      - name: PROD - extract metadata
+        id: meta_prod
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME_PROD_GITHUB }}
+            ${{ env.IMAGE_NAME_PROD_DOCKERHUB }}
+          flavor: |
+            latest=false
+          tags: |
+            type=semver,pattern={{version}},value=${{ inputs.tag }}
+            type=raw,value=latest,enable=${{ inputs.latest }}
+          labels: |
+            org.opencontainers.image.description=Archaeological Map of the Czech Republic (AMCR)
+            org.opencontainers.image.url=https://github.com/ARUP-CAS/aiscr-webamcr
+            org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
+            org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
+            org.opencontainers.image.licenses=GPL-3.0-or-later
+          
+      - name: PROD - build and push
+        id: push_prod
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile-production
+          push: true
+          sbom: true
+          provenance: mode=max
+          tags: ${{ steps.meta_prod.outputs.tags }}
+          labels: ${{ steps.meta_prod.outputs.labels }}
+          build-args: |
+            VERSION_APP=${{ steps.meta_prod.outputs.version }}
+            TAG_APP=${{ github.ref }}
+      
+      - name: PROD - attest - GitHub
+        uses: actions/attest-build-provenance@v1
+        id: attest_prod_github
+        with:
+          subject-name: ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME_PROD_GITHUB }}
+          subject-digest: ${{ steps.push_prod.outputs.digest }}
+          
+      - name: PROD - attest - DockerHub
+        uses: actions/attest-build-provenance@v1
+        id: attest_prod_dockerhub
+        with:
+          subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME_PROD_DOCKERHUB }}
+          subject-digest: ${{ steps.push_prod.outputs.digest }}
+
+      #---------------------
+      # BUILD PROXY
+      #---------------------
+      - name: PROXY - extract metadata
+        id: meta_proxy
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME_PROXY_GITHUB }}
+            ${{ env.IMAGE_NAME_PROXY_DOCKERHUB }}
+          flavor: |
+            latest=false
+          tags: |
+            type=semver,pattern={{version}},value=${{ inputs.tag }}
+            type=raw,value=latest,enable=${{ inputs.latest }}
+          labels: |
+            org.opencontainers.image.description=Archaeological Map of the Czech Republic (AMCR) - Proxy Server
+            org.opencontainers.image.url=https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/proxy
+            org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
+            org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
+            org.opencontainers.image.licenses=GPL-3.0-or-later
+
+      - name: PROXY - build and push
+        id: push_proxy
+        uses: docker/build-push-action@v6
+        with:
+          context: ./proxy
+          push: true
+          sbom: true
+          provenance: mode=max
+          tags: ${{ steps.meta_proxy.outputs.tags }}
+          labels: ${{ steps.meta_proxy.outputs.labels }}
+          build-args: |
+            VERSION_APP=${{ steps.meta_proxy.outputs.version }}
+            TAG_APP=${{ github.ref }}
+
+      - name: PROXY - attest - GitHub
+        uses: actions/attest-build-provenance@v1
+        id: attest_proxy_github
+        with:
+          subject-name: ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME_PROXY_GITHUB }}
+          subject-digest: ${{ steps.push_proxy.outputs.digest }}
+          
+      - name: PROXY - attest - DockerHub
+        uses: actions/attest-build-provenance@v1
+        id: attest_proxy_dockerhub
+        with:
+          subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME_PROXY_DOCKERHUB }}
+          subject-digest: ${{ steps.push_proxy.outputs.digest }}
+          
+      #---------------------
+      # BUILD REDIS
+      #---------------------
+      - name: REDIS - extract metadata
+        id: meta_redis
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME_REDIS_GITHUB }}
+            ${{ env.IMAGE_NAME_REDIS_DOCKERHUB }}
+          flavor: |
+            latest=false
+          tags: |
+            type=semver,pattern={{version}},value=${{ inputs.tag }}
+            type=raw,value=latest,enable=${{ inputs.latest }}
+          labels: |
+            org.opencontainers.image.description=Archaeological Map of the Czech Republic (AMCR) - Redis Server
+            org.opencontainers.image.url=https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/redis
+            org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
+            org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
+            org.opencontainers.image.licenses=GPL-3.0-or-later
+
+      - name: REDIS - build and push
+        id: push_redis
+        uses: docker/build-push-action@v6
+        with:
+          context: ./redis
+          push: true
+          sbom: true
+          provenance: mode=max
+          tags: ${{ steps.meta_redis.outputs.tags }}
+          labels: ${{ steps.meta_redis.outputs.labels }}
+          build-args: |
+            VERSION_APP=${{ steps.meta_redis.outputs.version }}
+            TAG_APP=${{ github.ref }}
+
+      - name: REDIS - attest - GitHub
+        uses: actions/attest-build-provenance@v1
+        id: attest_redis_github
+        with:
+          subject-name: ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME_REDIS_GITHUB }}
+          subject-digest: ${{ steps.push_redis.outputs.digest }}
+          
+      - name: REDIS - attest - DockerHub
+        uses: actions/attest-build-provenance@v1
+        id: attest_redis_dockerhub
+        with:
+          subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME_REDIS_DOCKERHUB }}
+          subject-digest: ${{ steps.push_redis.outputs.digest }}

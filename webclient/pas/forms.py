@@ -147,7 +147,6 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
     """
 
     katastr = forms.CharField(
-        max_length=50,
         label=_("pas.forms.createSamostatnyNalezForm.katastr.label"),
         error_messages={"required": _("pas.forms.createSamostatnyNalezForm.katastr.errorMessage")},
         help_text=_("pas.forms.createSamostatnyNalezForm.katastr.tooltip"),
