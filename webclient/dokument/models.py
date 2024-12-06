@@ -174,6 +174,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     tvary = models.ManyToManyField(Heslar, through="Tvar", related_name="dokumenty_tvary")
     autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
     osoby_snapshot = models.CharField(max_length=5000, null=True, blank=True)
+    doi = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = "dokument"
@@ -560,7 +561,6 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         null=True,
         related_name="casti_dokumentu",
     )
-    doi = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         db_table = "dokument_cast"
