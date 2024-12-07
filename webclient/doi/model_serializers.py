@@ -27,6 +27,14 @@ class ModelSerializer(ABC):
         pass
 
     @abstractmethod
+    def _get_historie_queryset(self):
+        pass
+
+    @abstractmethod
+    def _get_ident_cely(self):
+        pass
+
+    @abstractmethod
     def _get_publication_year(self):
         pass
 
@@ -38,6 +46,10 @@ class ModelSerializer(ABC):
         pass
 
     @abstractmethod
+    def _get_soubory_queryset(self):
+        pass
+
+    @abstractmethod
     def _get_title(self, language: str):
         pass
 
@@ -46,7 +58,7 @@ class ModelSerializer(ABC):
         return [
             {
                 "alternateIdentifierType": "Local accession number",
-                "alternateIdentifier": self.object.ident_cely,
+                "alternateIdentifier": self._get_ident_cely(),
             },
         ]
 
@@ -55,7 +67,7 @@ class ModelSerializer(ABC):
         pass
 
     def _serialize_creators(self):
-        return [serialize_osoba(author.autor, self.object.organizace) for author in self._get_creators()]
+        return (serialize_osoba(author.autor, self.object.organizace) for author in self._get_creators())
 
     @abstractmethod
     def _serialize_dates(self):
@@ -111,7 +123,7 @@ class ModelSerializer(ABC):
                 "type": "dois",
                 "attributes": {
                     "event": "publish",
-                    "doi": f"{self._get_prefix()}/{self.object.ident_cely}",
+                    "doi": f"{self._get_prefix()}/{self._get_ident_cely()}",
                     "alternateIdentifiers": self._serialize_alternate_identifiers(),
                 },
                 "creators": self._serialize_creators(),
@@ -147,15 +159,15 @@ class ModelSerializer(ABC):
                 "types": self._serialize_types(),
                 "relatedIdentifiers": self._serialize_related_identifiers(),
                 "sizes": [
-                    f"{sum([soubor.size_mb for soubor in self.object.soubory.soubory.all()])} MB",
-                    f"{sum([soubor.rozsah for soubor in self.object.soubory.soubory.all()])} pages",
+                    f"{sum([soubor.size_mb for soubor in self._get_soubory_queryset().all()])} MB",
+                    f"{sum([soubor.rozsah for soubor in self._get_soubory_queryset().all()])} pages",
                 ]
-                if self.object.soubory.soubory.exists()
+                if self._get_soubory_queryset() and self._get_soubory_queryset().exists()
                 else [],
-                "formats": set([soubor.mimetype for soubor in self.object.soubory.soubory.all()])
-                if self.object.soubory.soubory.exists()
+                "formats": set([soubor.mimetype for soubor in self._get_soubory_queryset().all()])
+                if self._get_soubory_queryset() and self._get_soubory_queryset().exists()
                 else [],
-                "version": self.object.historie.historie_set.last().datum_zmeny,
+                "version": self._get_historie_queryset().last().datum_zmeny,
                 "rightsList": self._serialize_rights_list(),
                 "descriptions": self._serialize_descriptions(),
                 "geoLocations": self._serialize_geo_locations(),
@@ -218,7 +230,7 @@ def serialize_organizace(organizace: Organizace):
     return serialized_organizace
 
 
-def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None) -> Dict:
+def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contributor_type: str | None = None) -> Dict:
     serialized_object = {
         "name": osoba.vypis_cely if not osoba.anonym else ":unkn",
         "nameType": "Personal",
@@ -255,6 +267,8 @@ def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None) -> Dict:
             ),
         ],
     }
+    if contributor_type:
+        serialized_object["contributorType"] = contributor_type
     return serialized_object
 
 
@@ -278,6 +292,12 @@ class DokumentSerializer(ModelSerializer):
     def _get_creators(self):
         return self.object.dokumentautor_set.all()
 
+    def _get_historie_queryset(self):
+        return self.object.historie.historie_set
+
+    def _get_ident_cely(self):
+        return self.object.ident_cely
+
     def _get_language(self):
         return self.object.jazyky.first()
 
@@ -287,10 +307,14 @@ class DokumentSerializer(ModelSerializer):
     def _get_prefix(self):
         return ""
 
+    def _get_soubory_queryset(self):
+        if self.object.soubory:
+            return self.object.soubory.soubory
+
     def _get_title(self, language: str):
         return {
-            "en": f"AMCR {self.object.ident_cely} – {self.object.typ_dokumentu.heslo_en}",
-            "cs": f"AMCR {self.object.ident_cely} – {self.object.typ_dokumentu.heslo}",
+            "en": f"AMCR {self._get_ident_cely()} – {self.object.typ_dokumentu.heslo_en}",
+            "cs": f"AMCR {self._get_ident_cely()} – {self.object.typ_dokumentu.heslo}",
         }[language]
 
     def _serialize_alternate_identifiers(self):
@@ -395,7 +419,7 @@ class DokumentSerializer(ModelSerializer):
 
     def _serialize_related_identifiers(self):
         related_identifiers = super()._serialize_related_identifiers()
-        if self.object.soubory.soubory.exists():
+        if self.object.soubory and self.object.soubory.soubory.exists():
             related_identifiers.append(
                 {
                     "relationType": "HasPart",
@@ -510,21 +534,33 @@ class SamostatnyNalezSerializer(ModelSerializer):
     def _get_creators(self):
         return [self.object.nalezce]
 
+    def _get_historie_queryset(self):
+        return self.object.historie.historie_set
+
+    def _get_ident_cely(self):
+        return self.object.ident_cely
+
     def _get_prefix(self):
         return ""
 
+    def _get_soubory_queryset(self):
+        if self.object.soubory:
+            return self.object.soubory.soubory
+
     def _get_publication_year(self):
-        return self.object.historie.historie_set.filter(typ_zmeny=ARCHIVACE_SN).first().datum_zmeny.year
+        publication_year_history = self._get_historie_queryset().filter(typ_zmeny=ARCHIVACE_SN)
+        if publication_year_history.exists():
+            return publication_year_history.first().datum_zmeny.year
 
     def _get_title(self, language: str):
         return {
-            "en": f"AMCR {self.object.ident_cely} – {self.object.druh_nalezu.heslo_en} ({self.object.specifikace.heslo_en}), {self.object.obdobi.heslo_en}",
-            "cs": f"AMCR {self.object.ident_cely} – {self.object.druh_nalezu.heslo} ({self.object.specifikace.heslo}), {self.object.obdobi.heslo}",
+            "en": f"AMCR {self.object.ident_cely} – {self.object.druh_nalezu.heslo_en if self.object.druh_nalezu else ''} ({self.object.specifikace.heslo_en if self.object.specifikace else ''}), {self.object.obdobi.heslo_en if self.object.obdobi else ''}",
+            "cs": f"AMCR {self.object.ident_cely} – {self.object.druh_nalezu.heslo if self.object.druh_nalezu else ''} ({self.object.specifikace.heslo if self.object.specifikace else ''}), {self.object.obdobi.heslo if self.object.obdobi else ''}",
         }[language]
 
     def _serialize_alternate_identifiers(self):
         alternate_identifiers = super()._serialize_alternate_identifiers()
-        if self.object.oznaceni_originalu:
+        if self.object.evidencni_cislo:
             alternate_identifiers.append(
                 {
                     "alternateIdentifierType": "Find inventory number",
@@ -534,10 +570,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return alternate_identifiers
 
     def _serialize_contributors(self):
-        contributors = [serialize_osoba(self.object.let.pozorovatel, self.object.projekt.vedouci_projektu)]
-        if self.object.organizace and not self.object.organizace.general:
-            contributors.append(serialize_organizace(self.object.organizace))
-        return contributors
+        return [serialize_osoba(self.object.projekt.vedouci_projektu, self.object.projekt.organizace)]
 
     def _serialize_dates(self):
         dates = super()._serialize_dates()
@@ -607,9 +640,15 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_subjects(self):
         serialized_subjects = super()._serialize_subjects()
-        serialized_subjects += [serialize_subject(posudek) for posudek in self.object.obdobi]
-        serialized_subjects += [serialize_subject(posudek) for posudek in self.object.druh_nalezu]
-        serialized_subjects += [serialize_subject(posudek) for posudek in self.object.specifikace]
+        serialized_subjects += [
+            serialize_subject(self.object.obdobi),
+        ]
+        serialized_subjects += [
+            serialize_subject(self.object.druh_nalezu),
+        ]
+        serialized_subjects += [
+            serialize_subject(self.object.specifikace),
+        ]
         return serialized_subjects
 
     def _serialize_types(self):
@@ -624,11 +663,21 @@ class LokalitaSerializer(ModelSerializer):
     def _get_creators(self):
         pass
 
+    def _get_ident_cely(self):
+        return self.object.archeologicky_zaznam.ident_cely
+
+    def _get_historie_queryset(self):
+        return self.object.archeologicky_zaznam.historie.historie_set
+
     def _serialize_contributors(self):
         pass
 
     def _serialize_dates(self):
         pass
+
+    def _get_soubory_queryset(self):
+        if self.object.archeologicky_zaznam.soubory:
+            return self.object.archeologicky_zaznam.soubory.soubory
 
     def _serialize_descriptions(self):
         descriptions = [
@@ -638,7 +687,7 @@ class LokalitaSerializer(ModelSerializer):
                 "descriptionType": "Methods",
             }
         ]
-        if self.object.popis and self.object.pristupnost.pk == PRISTUPNOST_ANONYM_ID:
+        if self.object.popis and self.object.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID:
             descriptions.append({"lang": "cs", "description": self.object.popis, "descriptionType": "Abstract"})
         if self.object.zachovalost:
             descriptions.append(
@@ -665,23 +714,26 @@ class LokalitaSerializer(ModelSerializer):
     def _get_externi_odkaz_query(self):
         return self.object.archeologicky_zaznam.externi_odkazy.filter(
             externi_zdroj__typ__heslar_odkaz__zdroj="DataCite"
-        ).filter(externi_zdroj__typ_heslar_odkaz__nazev_kodu="resourceTypeGeneral")
+        ).filter(externi_zdroj__typ__heslar_odkaz__nazev_kodu="resourceTypeGeneral")
 
     def _serialize_geo_locations(self):
         geo_locations: List[frozenset] = []
-        if self.object.pristupnost.pk == PRISTUPNOST_ANONYM_ID:
+        if self.object.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID:
             dok_query = self.object.archeologicky_zaznam.dokumentacni_jednotky_akce
             if dok_query.exists():
                 dok: DokumentacniJednotka = dok_query.first()
-                geo_locations.append(serialize_geom(dok.pian, self.object.katastr))
-        geo_locations_dict = [dict(item) for item in list(set(geo_locations))]
+                if dok.pian and dok.pian.geom:
+                    geo_locations.append(serialize_geom(dok.pian.geom, self.object.archeologicky_zaznam.hlavni_katastr))
+        geo_locations_dict = (dict(item) for item in list(set(geo_locations)))
         return geo_locations_dict
 
     def _get_prefix(self):
         return ""
 
     def _get_publication_year(self):
-        return self.object.historie.historie_set.filter(typ_zmeny=ARCHIVACE_AZ).first().datum_zmeny.year
+        archivace_history_queryset = self._get_historie_queryset().filter(typ_zmeny=ARCHIVACE_AZ)
+        if archivace_history_queryset.exists():
+            return archivace_history_queryset.first().datum_zmeny.year
 
     def _serialize_rights_list(self):
         return [
@@ -696,17 +748,17 @@ class LokalitaSerializer(ModelSerializer):
 
     def _get_title(self, language: str):
         return {
-            "en": f"AMCR {self.object.ident_cely} – {self.object.druh.heslo_en} {self.object.nazev * self.object.pristupnost.pk == PRISTUPNOST_ANONYM_ID}",
-            "cs": f"AMCR {self.object.ident_cely} – {self.object.druh.heslo} {self.object.nazev * self.object.pristupnost.pk == PRISTUPNOST_ANONYM_ID}",
+            "en": f"AMCR {self._get_ident_cely()} – {self.object.druh.heslo_en} {self.object.nazev * self.object.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID}",
+            "cs": f"AMCR {self._get_ident_cely()} – {self.object.druh.heslo} {self.object.nazev * self.object.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID}",
         }[language]
 
     def _serialize_alternate_identifiers(self):
         alternate_identifiers = super()._serialize_alternate_identifiers()
-        if self.object.uzivatelske_oznaceni:
+        if self.object.archeologicky_zaznam.uzivatelske_oznaceni:
             alternate_identifiers.append(
                 {
                     "alternateIdentifierType": "External identifier",
-                    "alternateIdentifier": self.object.uzivatelske_oznaceni,
+                    "alternateIdentifier": self.object.archeologicky_zaznam.uzivatelske_oznaceni,
                 }
             )
         return alternate_identifiers
@@ -810,9 +862,19 @@ class LokalitaSerializer(ModelSerializer):
                 serialized_subjects.append(serialize_subject(self.object.archeologicky_zaznam.lokalita.druh))
         except ObjectDoesNotExist:
             pass
-        serialized_subjects += [serialize_subject(komp.obdobi) for komp in self.object.get_komponenty()]
-        serialized_subjects += [serialize_subject(komp.areal) for komp in self.object.get_komponenty()]
-        serialized_subjects += _serialize_komponenty_m2n_fields(self.object.get_komponenty(AZ_STAV_ARCHIVOVANY))
+        serialized_komponenta_data = []
+        serialized_komponenta_data += [
+            [serialize_subject(komp.obdobi) for komp in dj.komponenty.komponenty.all()]
+            for dj in self.object.archeologicky_zaznam.dokumentacni_jednotky_akce.all()
+        ]
+        serialized_komponenta_data += [
+            [serialize_subject(komp.areal) for komp in dj.komponenty.komponenty.all()]
+            for dj in self.object.archeologicky_zaznam.dokumentacni_jednotky_akce.all()
+        ]
+        serialized_komponenta_data += [
+            _serialize_komponenty_m2n_fields(dj.komponenty.komponenty.all())
+            for dj in self.object.archeologicky_zaznam.dokumentacni_jednotky_akce.all()
+        ]
         return serialized_subjects
 
     def _serialize_types(self):
