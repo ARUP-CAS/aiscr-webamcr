@@ -9,4 +9,3 @@ var osmGrey = L.tileLayer.grayscale('http://tile.openstreetmap.org/{z}/{x}/{y}.p
     init_zoom_mercator=7;
     zoom_mercator=9;
     init_position=[49.84, 15.17];
-    //18
