@@ -94,7 +94,7 @@ map.on('popupopen', function (e) {
     if (tooltip) 
     {
         // close the open tooltip, if you have configured animations on the tooltip this looks snazzy
-        e.target.closeTooltip();
+        e.popup._source.closeTooltip()
         // use opacity to make the tooltip for this feature invisible while the popup is active.
         e.popup._source.getTooltip().setOpacity(0);
     }
@@ -170,7 +170,7 @@ var fill_katastr = () => {
 
 var is_in_czech_republic = (x1, x2) => {
     if (document.getElementById('visible_ss_combo').value == 1) {
-        if (x1 >= 12.2401111182 && x1 <= 18.8531441586 && x2 >= 48.5553052842 && x2 <= 51.1172677679) {
+        if (x1 >= 12.06 && x1 <= 18.87 && x2 >= 48.55 && x2 <= 51.08) {
             disableSaveButton(false)
             return true;
         } else {
