@@ -320,7 +320,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.6.2
+     - 2.6.3
      - MIT License
      - https://github.com/pre-commit/identify
    * - idna
@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/pre-commit/pre-commit
    * - prometheus_client
-     - 0.21.0
+     - 0.21.1
      - Apache Software License
      - https://github.com/prometheus/client_python
    * - prompt_toolkit
@@ -620,7 +620,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.27.1
+     - 20.28.0
      - MIT License
      - https://github.com/pypa/virtualenv
    * - websocket-client
