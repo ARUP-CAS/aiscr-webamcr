@@ -347,6 +347,7 @@ def post_upload(request):
             new_name = get_finds_soubor_name(objekt, request.FILES.get("file").name)
         else:
             fedora_transaction.rollback_transaction()
+            logger.error("core.views.post_upload.error.object_does_not_exist")
             return JsonResponse(
                 {"error": _("core.views.post_upload.error.object_does_not_exist") + " " + request.POST["objectID"]},
                 status=500,
@@ -468,12 +469,14 @@ def post_upload(request):
             original_name = soubor.name
             if soubor_instance is None:
                 fedora_transaction.rollback_transaction()
+                logger.error("core.views.post_upload.error.error_processing")
                 return JsonResponse(
                     {"error": _("core.views.post_upload.error.error_processing")},
                     status=500,
                 )
             if soubor_instance.vazba.typ_vazby is None:
                 fedora_transaction.rollback_transaction()
+                logger.error("core.views.post_upload.error.no_vazba")
                 return JsonResponse(
                     {"error": _("core.views.post_upload.error.no_vazba")},
                     status=500,
@@ -542,16 +545,17 @@ def post_upload(request):
                 soubor_instance.save()
                 return JsonResponse(response_data, status=200)
             else:
-                logger.warning("core.views.post_upload.rep_bin_file_is_none")
                 soubor_instance.close_active_transaction_when_finished = True
                 soubor_instance.save()
                 help_translation = _("core.views.post_upload.unknown_error")
+                logger.error("core.views.post_upload.rep_bin_file_is_none")
                 return JsonResponse({"error": help_translation}, status=500)
     else:
-        logger.warning("core.views.post_upload.no_file")
+        logger.error("core.views.post_upload.no_file")
     soubor_instance.close_active_transaction_when_finished = True
     soubor_instance.save()
     help_translation = _("core.views.post_upload.unknown_error")
+    logger.error("core.views.post_upload.unknown_error")
     return JsonResponse({"error": help_translation}, status=500)
 
 
