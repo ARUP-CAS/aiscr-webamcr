@@ -68,6 +68,7 @@ else:
         "arch_z.tests.test_selenium",
         "pas.tests.test_selenium",
         "oznameni.tests.test_selenium",
+        "ez.tests.test_selenium",
     ]
 
 
