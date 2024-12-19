@@ -56,7 +56,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.1.3
+     - 5.1.4
      - BSD License
      - https://www.djangoproject.com/
    * - Jinja2
@@ -168,7 +168,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.6.7
+     - 7.6.9
      - Apache Software License
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
@@ -180,7 +180,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
-     - 43.0.3
+     - 44.0.0
      - Apache Software License; BSD License
      - https://github.com/pyca/cryptography
    * - defusedxml
@@ -320,7 +320,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.6.2
+     - 2.6.3
      - MIT License
      - https://github.com/pre-commit/identify
    * - idna
@@ -364,7 +364,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.1.3
+     - 2.2.0
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -396,7 +396,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.50
+     - 8.13.51
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/pre-commit/pre-commit
    * - prometheus_client
-     - 0.21.0
+     - 0.21.1
      - Apache Software License
      - https://github.com/prometheus/client_python
    * - prompt_toolkit
@@ -440,7 +440,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://py7zr.readthedocs.io/
    * - pyOpenSSL
-     - 24.2.1
+     - 24.3.0
      - Apache Software License
      - https://pyopenssl.org/
    * - pybcj
@@ -500,7 +500,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rcssmin/
    * - redis
-     - 5.2.0
+     - 5.2.1
      - MIT License
      - https://github.com/redis/redis-py
    * - reportlab
@@ -516,7 +516,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
-     - 4.26.1
+     - 4.27.1
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
@@ -524,7 +524,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Academic Free License (AFL); MIT License
      - https://github.com/simplejson/simplejson
    * - six
-     - 1.16.0
+     - 1.17.0
      - MIT License
      - https://github.com/benjaminp/six
    * - sniffio
@@ -572,7 +572,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://www.sphinx-doc.org/
    * - sqlparse
-     - 0.5.2
+     - 0.5.3
      - BSD License
      - https://github.com/andialbrecht/sqlparse
    * - tablib
@@ -620,7 +620,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.27.1
+     - 20.28.0
      - MIT License
      - https://github.com/pypa/virtualenv
    * - websocket-client

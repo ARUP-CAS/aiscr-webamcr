@@ -136,7 +136,6 @@ map.on('click', function (e) {
     const addPointToPoiLayer = (point_leaf, text) => {
         if (global_map_can_edit) {
             poi_correct.clearLayers();
-            L.marker(point_leaf, { icon: pinIconRedDf }).bindPopup(text).addTo(poi_correct);
             const getUrl = window.location;
             const select = $("input[name='hlavni_katastr']");
             if (select) {
@@ -147,6 +146,7 @@ map.on('click', function (e) {
                             ORIGIN_KATASTR = select.val();
                         }
                         select.val(response['value']);
+                        if(response['value']!=undefined) L.marker(point_leaf, { icon: pinIconRedDf }).bindPopup(text).addTo(poi_correct);
                     })
             }
         }
@@ -154,7 +154,7 @@ map.on('click', function (e) {
 
     let point_leaf = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
     if (!global_measuring_toolbox._measuring)
-        if (point_leaf[1] >= 12.2401111182 && point_leaf[1] <= 18.8531441586 && point_leaf[0] >= 48.5553052842 && point_leaf[0] <= 51.1172677679)
+        if (point_leaf[1] >= 12.06 && point_leaf[1] <= 18.87 && point_leaf[0] >= 48.55 && point_leaf[0] <= 51.08)
             if (map.getZoom() > 11) {
                 try {
                     //console.log("Position is: "+corX+" "+corY)
