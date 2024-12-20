@@ -9,8 +9,6 @@ var global_map_can_load_pians = true;
 var global_map_katastry_all = null;
 var global_unwanted_popup=null;
 var DJ_pians_ident_cely=[];
-const epsgJTSK="5514"
-const epsgWGS84="4326"
 
 addLogText("zmena def.geom :" + global_map_element)
 

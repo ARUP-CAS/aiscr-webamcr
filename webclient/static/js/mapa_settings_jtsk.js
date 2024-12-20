@@ -37,6 +37,10 @@ var JTSKcrs = L.extend({}, L.CRS, {
         },   
         infinite: false,
     });
-    init_position=[49.84, 15.17];
-    init_zoom_jtsk=8;
-    zoom_jtsk=12;
+
+const init_position=[49.84, 15.17];
+const init_zoom_jtsk=8;
+const zoom_jtsk=12;
+
+const epsgJTSK="5514"
+const epsgWGS84="4326"

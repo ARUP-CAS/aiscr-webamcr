@@ -129,7 +129,7 @@ $(document).ready(function () {
     switchMap();
 })
 
-//načtení 3d projektů při každém překreslení mapy
+//načtení 3d dokumentů při každém překreslení mapy
 switchMap = function () {
     var bounds = map.getBounds();
     let zoom = map.getZoom();
