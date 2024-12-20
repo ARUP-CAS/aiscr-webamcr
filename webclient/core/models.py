@@ -828,6 +828,13 @@ class Permissions(models.Model):
         dokumenty_tabulka_arch_z = "dokumenty_tabulka_arch_z", _(
             "core.models.permissions.actionChoices.dokumenty_tabulka_arch_z"
         )
+        vypis_dokument = "vypis_dokument", _("core.models.permissions.actionChoices.vypis_dokument")
+        vypis_projekt = "vypis_projekt", _("core.models.permissions.actionChoices.vypis_projekt")
+        vypis_arch_z = "vypis_arch_z", _("core.models.permissions.actionChoices.vypis_arch_z")
+        vypis_lokalita = "vypis_lokalita", _("core.models.permissions.actionChoices.vypis_lokalita")
+        vypis_pas = "vypis_pas", _("core.models.permissions.actionChoices.vypis_pas")
+        vypis_model3d = "vypis_model3d", _("core.models.permissions.actionChoices.vypis_model3d")
+        vypis_ez = "vypis_ez", _("core.models.permissions.actionChoices.vypis_ez")
 
     pristupnost_to_groups = {
         PRISTUPNOST_ANONYM_ID: 0,
