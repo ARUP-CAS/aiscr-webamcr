@@ -27,7 +27,7 @@
 <link href='{% static 'js/Leaflet.fullscreen1.0.1/leaflet.fullscreen.css' %}'rel='stylesheet'/>
 <!-- static leaflet additional import-->
 <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}?v2"/>
-<script src="{% static 'leaflet.measure.js' %}?v1"></script>
+<script src="{% static 'leaflet.measure.js' %}?v2"></script>
 <script type="text/javascript" src="{% static 'leaflet.coor.js' %}?v1"></script>
 <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
 
@@ -192,14 +192,13 @@
       cuzkOrtofotomapa: '{% trans "mapa.cuzkOrtofotomapa" %}',
       cuzkStinovanyeelief5G: '{% trans "mapa.cuzkStinovanyeelief5G" %}',
       cuzkzakladniMapyCr: '{% trans "mapa.cuzkzakladniMapyCr" %}',
+      cuzkzakladniMapyCrGrey: '{% trans "mapa.cuzkzakladniMapyCrGrey" %}',
       npuPamatkovaOchrana: '{% trans "mapa.npuPamatkovaOchrana" %}',
       lokalizacePAS: '{% trans "mapa.lokalizacePAS" %}',
       FindLocation: '{% trans "mapa.FindLocation" %}',
       FullscreenTitle: '{% trans "mapa.FullscreenTitle" %}',
       FullscreenTitleClose: '{% trans "mapa.FullscreenTitleClose" %}',
       MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
-      openStreetMap: '{% trans "mapa.openStreetMap" %}',
-      openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
       pian: '{% trans "mapa.pian" %}',
       samostatneNalezy: '{% trans "mapa.samostatneNalezy" %}',
       SetLocation: '{% trans "mapa.SetLocation" %}',
@@ -223,12 +222,14 @@
 <script src="{% static 'mapa_pins.js' %}"></script>
 <script src="{% static 'coor_precision.js' %}"></script>
 <script src="{% static 'coordTransform.js' %}"></script>
-<script src="{% static 'mapa_basic_grey.js' %}?v1"></script>
+<script src="{% static 'leaflet-grayscale.js' %}"></script>
+<script src="{% static 'mapa_settings_jtsk.js' %}"></script>
+<script src="{% static 'mapa_basic_functions.js' %}?v1"></script>
 <script src="{% static 'coordTransform.js' %}"></script>
 <script src="{% static 'leaflet_subgroup.js' %}"></script>
 <script src="{% static 'spin/spin.min.js' %}"></script>
 <script src="{% static 'leaflet.spin.min.js' %}"></script>
-<script src="{% static 'mapa_pas.js' %}?v2"></script>
+<script src="{% static 'mapa_pas.js' %}?v3"></script>
     <script>
         $(document).ready(function () {
             $('[readonly]').addClass("disabled");

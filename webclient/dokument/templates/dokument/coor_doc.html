@@ -65,11 +65,12 @@
 <script src="{% static 'spin/spin.min.js' %}"></script>
 <script src="{% static 'leaflet.spin.min.js' %}"></script>
 <script src="{% static 'coordTransform.js' %}"></script>
-<script src="{% static 'mapa_basic_grey.js' %}?v1"></script>
-<script src="{% static 'mapa_doc.js' %}?v2"></script>
+<script src="{% static 'leaflet-grayscale.js' %}"></script>
+<script src="{% static 'mapa_settings_mercator.js' %}"></script>
+<script src="{% static 'mapa_doc.js' %}?v3"></script>
 <script>
   $(document).ready(function () {
-        {% if coordinate_wgs84_x1 is not None %}
+      {% if coordinate_wgs84_x1 is not None %}
         let [cor_x1, cor_x2] = amcr_static_coordinate_precision_wgs84([{{ coordinate_wgs84_x1 }}, {{ coordinate_wgs84_x2 }}]);
 
         document.getElementById('id_visible_x1').value = cor_x1;
@@ -87,16 +88,16 @@
 
         $('[readonly]').prop("disabled", true);
         {% if global_map_can_edit %}
-        addUniquePointToPoiLayer([cor_x2,cor_x1],ident_cely);
+          addUniquePointToPoiLayer([cor_x2,cor_x1],ident_cely);
         {% else  %}
-        global_map_can_edit = false
-        addReadOnlyUniquePointToPoiLayer([cor_x2,cor_x1],ident_cely);
+          global_map_can_edit = false
+          addReadOnlyUniquePointToPoiLayer([cor_x2,cor_x1],ident_cely);
         {% endif %}
-        {% else  %}
+      {% else  %}
         if(window.location.href.includes("/detail/")){
           global_map_can_edit = false
         }
-        {% endif %}
-      })
+      {% endif %}
+  })
 
 </script>

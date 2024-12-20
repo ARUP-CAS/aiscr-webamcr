@@ -1,10 +1,8 @@
 var global_map_can_edit = true;
 var point_global_WGS84 = [0, 0];
 var point_global_JTSK = [0, 0];
-var lock = false;
 var GLOBAL_DEBUG_TEXT=false;
 
-var global_map_can_load_projects=true //zkontroluj
 var boundsLock=false //zkontroluj
 
 var poi_sugest= L.layerGroup();
@@ -37,12 +35,11 @@ map.on('click', function (e) {
     //if(('{{context.archivovano}}' === 'undefined' || '{{context.archivovano}}'=='False')){
     if (!global_measuring_toolbox._measuring) {
         if (global_map_can_edit) {
-            if (!lock) {
-                if (map.getZoom() > 11) {
-                    point_global_WGS84= amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
-                    point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0], point_global_WGS84[1]));
-                    point_leaf= [...point_global_WGS84].reverse();
-                    if (document.getElementById('visible_ss_combo').value == 1) {
+            if (map.getZoom() > 11) {
+                point_global_WGS84= amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
+                point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0], point_global_WGS84[1]));
+                point_leaf= [...point_global_WGS84].reverse();
+                if (document.getElementById('visible_ss_combo').value == 1) {
                         document.getElementById('visible_x1').value = point_global_WGS84[0];
                         document.getElementById('visible_x2').value = point_global_WGS84[1];
                     }
@@ -53,18 +50,17 @@ map.on('click', function (e) {
                     else if (document.getElementById('visible_ss_combo').value == 2) {
                         document.getElementById('visible_x1').value = -1*Math.abs(point_global_JTSK[0]);
                         document.getElementById('visible_x2').value = -1*Math.abs(point_global_JTSK[1]);
-                    }
-                    replace_coor();
-                    document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
-                    document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
-                    document.getElementById('id_coordinate_sjtsk_x1').value = point_global_JTSK[0]
-                    document.getElementById('id_coordinate_sjtsk_x2').value = point_global_JTSK[1]
-                    addUniquePointToPoiLayer(point_leaf, '', false, true)
-                    fill_katastr();
-                } else {
-                    map.setView(e.latlng, map.getZoom() + 2)
                 }
-            }
+                replace_coor();
+                document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
+                document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
+                document.getElementById('id_coordinate_sjtsk_x1').value = point_global_JTSK[0]
+                document.getElementById('id_coordinate_sjtsk_x2').value = point_global_JTSK[1]
+                addUniquePointToPoiLayer(point_leaf, '', false, true)
+                fill_katastr();
+            } else {
+                map.setView(e.latlng, map.getZoom() + 2)
+            }        
         }
     }
 });
@@ -83,50 +79,6 @@ map.on('overlayremove', function(eventlayer){
     }
 });
 
-map.on('popupclose', function (e) {
-
-    // make the tooltip for this feature visible again
-    // but check first, not all features will have tooltips!
-    var tooltip = e.popup._source.getTooltip();
-    if (tooltip) tooltip.setOpacity(0.9);
-
-});
-
-map.on('popupopen', function (e) {
-
-    var tooltip = e.popup._source.getTooltip();
-    // not all features will have tooltips!
-    if (tooltip) 
-    {
-        // close the open tooltip, if you have configured animations on the tooltip this looks snazzy
-        e.popup._source.closeTooltip()
-        // use opacity to make the tooltip for this feature invisible while the popup is active.
-        e.popup._source.getTooltip().setOpacity(0);
-    }
-
-});
-
-function onMarkerClick(ident_cely,e) {
-    var popup = e.target.getPopup();
-    popup.setContent("");
-    let xhr = new XMLHttpRequest();
-    xhr.open('POST', '/pian/mapa-connections/'+ident_cely);
-    xhr.setRequestHeader('Content-type', 'application/json');
-    if (typeof global_csrftoken !== 'undefined') {
-        xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
-    }
-    xhr.send();
-    xhr.onload = function () {
-        rs = JSON.parse(this.responseText).points
-        text=""
-        rs.forEach((i) => {
-            let link='<a href="/id/' + i.dj + '" target="_blank">' + i.dj + '</a></br>'
-            text=text+link
-        })
-        popup.setContent(text);
-        
-    }
- }
 
 var debugText=(text)=>{
     if(GLOBAL_DEBUG_TEXT){
@@ -354,7 +306,6 @@ const addUniquePointToPoiLayer = (point_leaf, text, zoom = true, redPin = false)
 
 var addReadOnlyUniquePointToPoiLayer = (lat, long, ident_cely) => {
     addUniquePointToPoiLayer([lat, long], ident_cely, true)
-    lock = false;
 };
 
 function showPosition(position) {
@@ -481,76 +432,76 @@ $(document).ready(function () {
     switchMap(false);
 })
 
+function getRotatedBounds() {
+    const pixelBounds = map.getPixelBounds();
+    return {
+        topLeft: map.unproject(pixelBounds.getTopLeft()),
+        topRight: map.unproject(pixelBounds.getTopRight()),
+        bottomRight: map.unproject(pixelBounds.getBottomRight()),
+        bottomLeft: map.unproject(pixelBounds.getBottomLeft()),
+    };
+}
+
 switchMap = function (overview = false) {
-    var bounds = map.getBounds();
+    let bounds = getRotatedBounds();
     let zoom = map.getZoom();
-    var northWest = bounds.getNorthWest(),
-        southEast = bounds.getSouthEast();
-    if (global_map_can_load_projects) {
-        if (overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest) {
-            debugText("Change: " + northWest + "  " + southEast + " " + zoom);
-            boundsLock = bounds;
-            let xhr = new XMLHttpRequest();
-            xhr.open('POST', '/mapa-pian-pas');
-            xhr.setRequestHeader('Content-type', 'application/json');
-            if (typeof global_csrftoken !== 'undefined') {
-                xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
-            }
-            map.spin(false);
-            map.spin(true);
-            xhr.send(JSON.stringify(
-                {
-                    'northWest': northWest,
-                    'southEast': southEast,
-                    'zoom': zoom,
-                    'pian':map.hasLayer(poi_pian),
-                    'pas':map.hasLayer(poi_sn),
-                }));
-
-            xhr.onload = function () {
-                try{
-                    poi_sn.clearLayers();
-                    poi_pian.clearLayers();
-                    map.removeLayer(heatLayer);
-                    let resAl = JSON.parse(this.responseText).algorithm
-                    if (resAl == "detail") {
-                        let resPoints = JSON.parse(this.responseText).points
-                        resPoints.forEach((i) => {
-
-                            if(i.type=="pas"){
-                                let ge = i.geom.split("(")[1].split(")")[0];
-                                L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurplePin })
-                                .bindTooltip(i.ident_cely, { sticky: true })
-                                .bindPopup('<a href="/pas/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
-                                .addTo(poi_sn)
-                            } else if(i.type=="pian"){
-                                addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost)
-                            }
-                        })
-                    } else {
-                        heatPoints=[]
-                        let resHeat = JSON.parse(this.responseText).heat
-                        let maxHeat=0;
-                        resHeat.forEach((i) => {
-                            geom = i.geom.split("(")[1].split(")")[0].split(" ");
-                            if(i.pocet>maxHeat){
-                                maxHeat=i.pocet;
-                            }
-                                //from: {"id": "1", "pocet": 32, "density": 0, "geom": "POINT(14.8 50.120000000000005)"}
-                                //to: {lat: 24.6408, lng:46.7728, count: 3}
-                            heatPoints.push({lat:parseFloat(geom[1]), lng:parseFloat(geom[0]), count:i.pocet});//chyba je to geome
-                        })
-                        heatLayer = new HeatmapOverlay( heatmapOptions); //= L.heatLayer(heatPoints, heatmapOptions);
-                        debugText({max:maxHeat,data:heatPoints})
-                        heatLayer.setData({max:maxHeat,data:heatPoints})
-                        map.addLayer(heatLayer);
-                        //poi_other.clearLayers();
-                        //poi_other_dp.clearLayers();
-                        //poi_dj.clearLayers();
-                    }
-                    map.spin(false);
-                } catch(e){map.spin(false);debugText(e)}
-            };
+        if (overview || bounds.topLeft != boundsLock.topLeft || !boundsLock.topLeft) {
+        boundsLock = bounds;
+        let xhr = new XMLHttpRequest();
+        xhr.open('POST', '/mapa-pian-pas');
+        xhr.setRequestHeader('Content-type', 'application/json');
+        if (typeof global_csrftoken !== 'undefined') {
+            xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
         }
+        map.spin(false);
+        map.spin(true);
+        xhr.send(JSON.stringify(
+                {   'bounds': bounds,
+                'zoom': zoom,
+                'pian':map.hasLayer(poi_pian),
+                'pas':map.hasLayer(poi_sn),
+            }));
+
+        xhr.onload = function () {
+            try{
+                poi_sn.clearLayers();
+                poi_pian.clearLayers();
+                map.removeLayer(heatLayer);
+                let resAl = JSON.parse(this.responseText).algorithm
+                if (resAl == "detail") {
+                    let resPoints = JSON.parse(this.responseText).points
+                    resPoints.forEach((i) => {
+
+                        if(i.type=="pas"){
+                            let ge = i.geom.split("(")[1].split(")")[0];
+                            L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurplePin })
+                            .bindTooltip(i.ident_cely, { sticky: true })
+                            .bindPopup('<a href="/pas/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
+                            .addTo(poi_sn)
+                        } else if(i.type=="pian"){
+                            addPointToPoiLayer(i.geom, poi_pian, i.ident_cely, true,i.presnost)
+                        }
+                    })
+                } else {
+                    heatPoints=[]
+                    let resHeat = JSON.parse(this.responseText).heat
+                    let maxHeat=0;
+                    resHeat.forEach((i) => {
+                        geom = i.geom.split("(")[1].split(")")[0].split(" ");
+                        if(i.pocet>maxHeat){
+                            maxHeat=i.pocet;
+                        }
+
+                        heatPoints.push({lat:parseFloat(geom[1]), lng:parseFloat(geom[0]), count:i.pocet});//chyba je to geome
+                    })
+                    heatLayer = new HeatmapOverlay( heatmapOptions); //= L.heatLayer(heatPoints, heatmapOptions);
+                    debugText({max:maxHeat,data:heatPoints})
+                    heatLayer.setData({max:maxHeat,data:heatPoints})
+                    map.addLayer(heatLayer);
+                }
+                map.spin(false);
+            } catch(e){map.spin(false);debugText(e)}
+        };
     }
+    
 }
