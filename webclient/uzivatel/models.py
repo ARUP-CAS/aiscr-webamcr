@@ -260,7 +260,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         )
         from core.repository_connector import FedoraRepositoryConnector
 
-        connector = FedoraRepositoryConnector(self, fedora_transaction.uid, skip_container_check=False)
+        connector = FedoraRepositoryConnector(self, fedora_transaction, skip_container_check=False)
         connector.save_metadata(True)
         if close_transaction is True or self.close_active_transaction_when_finished:
             logger.debug(

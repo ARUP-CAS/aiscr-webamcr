@@ -13,6 +13,7 @@ import pandas
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
+    LIMIT_PRVKU_ZOBRAZENI_HEATMAP,
     MAX_POCET_SOUBORU_PROJEKTU,
     ROLE_ADMIN_ID,
     ROLE_ARCHEOLOG_ID,
@@ -1103,25 +1104,28 @@ def post_ajax_get_pas_and_pian_limit(request):
     """
     body = json.loads(request.body.decode("utf-8"))
     params = [
-        body["southEast"]["lng"],
-        body["northWest"]["lat"],
-        body["northWest"]["lng"],
-        body["southEast"]["lat"],
+        body["bounds"]["topLeft"]["lng"],
+        body["bounds"]["bottomLeft"]["lat"],
+        body["bounds"]["bottomRight"]["lng"],
+        body["bounds"]["topRight"]["lat"],
         body["zoom"],
     ]
     num = 0
     req_pian = body["pian"]
     req_pas = body["pas"]
+    pians = None
     if req_pas:
-        pases = get_pas_from_envelope(*params[0:4], request).distinct()
+        pases = get_pas_from_envelope(body["bounds"], request).distinct()
         num = num + pases.count()
 
     if req_pian:
-        pians, count = get_pian_from_envelope(*params[0:5], request)
+        pians, count = get_pian_from_envelope(body["bounds"], body["zoom"], request)
         num = num + count
 
     logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"num": num})
-    if (num < 5000 and not req_pian) or (num < 5000 and req_pian and pians is not None):
+    if (num < LIMIT_PRVKU_ZOBRAZENI_HEATMAP and not req_pian) or (
+        num < LIMIT_PRVKU_ZOBRAZENI_HEATMAP and req_pian and pians is not None
+    ):
         back = []
 
         if req_pas:

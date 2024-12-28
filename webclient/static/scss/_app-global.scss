@@ -490,6 +490,36 @@ a.dropdown-item {
   z-index: 990;
 }
 
+.leaflet-top .leaflet-control {
+  margin-top: 5px !important;
+}
+
+.leaflet-draw-toolbar {
+  margin-top: 5px !important;
+}
+
+.leaflet-container {
+  background: #ffffff !important;
+  border: $input-border-width solid $input-border-color;
+}
+
+input.coordInput {
+  width: 130px;
+  border-radius: 5px;
+  margin: 2px;
+}
+
+.custom-edit-coord-marker {
+	width: 12px;
+	height: 12px;
+	background-color: white;
+	border: 1px solid #666;
+	background: #fff;
+	border-radius: 2px;
+	opacity: 0.6;
+	box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
 .pagination-range {
   @media (max-width: 980px) {
     display: none;

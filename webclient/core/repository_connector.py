@@ -126,6 +126,7 @@ class FedoraRepositoryConnector:
             self.transaction_uid = transaction.uid
         elif isinstance(transaction, str):
             self.transaction_uid = transaction
+            transaction = FedoraTransaction(uid=transaction)
         else:
             self.transaction_uid = None
         self.restored_container = False
