@@ -23,6 +23,7 @@ from core.constants import (
 )
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
 from core.models import ModelWithMetadata, Soubor, SouborVazby
+from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -200,6 +201,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         if "3D" in self.ident_cely:
             return reverse("dokument:detail-model-3D", kwargs={"ident_cely": self.ident_cely})
         return reverse("dokument:detail", kwargs={"ident_cely": self.ident_cely})
+
+    def set_doi(self):
+        self.doi = f"{settings.DOI_PREFIX}/{self.ident_cely}"
 
     def set_zapsany(self, user):
         """
@@ -527,6 +531,31 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 continue
             komponenty += [komp for komp in cast.komponenty.komponenty.all()]
         return komponenty
+
+    @property
+    def doi_exists(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        client = DigitalObjectIdentifierClient(self)
+        return client.check_record_exists()
+
+    def doi_delete(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        client = DigitalObjectIdentifierClient(self)
+        return client.delete_record()
+
+    def doi_hide(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        client = DigitalObjectIdentifierClient(self)
+        return client.hide_record()
+
+    def doi_publish_or_update(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        client = DigitalObjectIdentifierClient(self)
+        return client.publish_or_update_record()
 
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):

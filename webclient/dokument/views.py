@@ -1569,6 +1569,8 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ARCHIVOVAN)
         dokument.active_transaction = fedora_transaction
+        dokument.doi_publish_or_update()
+        dokument.set_doi()
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
@@ -1599,6 +1601,7 @@ def archivovat(request, ident_cely):
     form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})
     context = {
         "object": dokument,
+        "text": _("dokument.views.archivovat.doi_exists_warning") if dokument.doi_exists else None,
         "title": _("dokument.views.archivovat.title"),
         "id_tag": "archivovat-dokument-form",
         "button": _("dokument.views.archivovat.submitButton.text"),
@@ -1623,6 +1626,8 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             dokument.create_transaction(request.user, DOKUMENT_USPESNE_VRACEN)
+            if dokument.stav == D_STAV_ARCHIVOVANY:
+                dokument.doi_hide()
             duvod = form.cleaned_data["reason"]
             if dokument.stav == D_STAV_ODESLANY:
                 Mailer.send_ek02(document=dokument, reason=duvod)

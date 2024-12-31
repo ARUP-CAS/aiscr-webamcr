@@ -746,6 +746,10 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         fedora_transaction = az.create_transaction(request.user)
+        for item in az.casti_dokumentu.all():
+            item: DokumentCast
+            if item.dokument.stav == AZ_STAV_ARCHIVOVANY:
+                item.dokument.doi_publish_or_update()
         az.set_archivovany(request.user)
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
