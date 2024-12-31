@@ -2,6 +2,7 @@ import logging
 
 from arch_z.models import ArcheologickyZaznam
 from core.connectors import RedisConnector
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django_prometheus.models import ExportModelOperationsMixin
@@ -72,6 +73,9 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
             kwargs={"slug": self.archeologicky_zaznam.ident_cely},
         )
 
+    def set_igsn(self):
+        self.igsn = f"{settings.DOI_PREFIX}/{self.archeologicky_zaznam.ident_cely}"
+
     def set_snapshots(self):
         if not self.archeologicky_zaznam.katastry.all():
             self.dalsi_katastry_snapshot = None
@@ -95,3 +99,28 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         table = LokalitaTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
         return self.redis_snapshot_id, data
+
+    @property
+    def igsn_exists(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        client = DigitalObjectIdentifierClient(self)
+        return client.check_record_exists()
+
+    def igsn_delete(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        client = DigitalObjectIdentifierClient(self)
+        return client.delete_record()
+
+    def igsn_hide(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        client = DigitalObjectIdentifierClient(self)
+        return client.hide_record()
+
+    def igsn_publish_or_update(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        client = DigitalObjectIdentifierClient(self)
+        return client.publish_or_update_record()

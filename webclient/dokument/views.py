@@ -1601,8 +1601,8 @@ def archivovat(request, ident_cely):
     form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})
     context = {
         "object": dokument,
-        "text": _("dokument.views.archivovat.doi_exists_warning") if dokument.doi_exists else None,
         "title": _("dokument.views.archivovat.title"),
+        "text": _("dokument.views.archivovat.doi_exists_warning") if dokument.doi_exists else None,
         "id_tag": "archivovat-dokument-form",
         "button": _("dokument.views.archivovat.submitButton.text"),
         "form_check": form_check,

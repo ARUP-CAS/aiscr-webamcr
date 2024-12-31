@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Dict, List
 
 from arch_z.models import AkceVedouci, ArcheologickyZaznam, ExterniOdkaz
@@ -18,8 +19,21 @@ AIS_AMCR = Organizace.objects.get(ident_cely="ORG-000091")
 
 
 class ModelSerializer(ABC):
+    DELETE_DESCRIPTION_CZ = (
+        "Tento záznam byl odstraněn z repozitáře AMČR. V odůvodněných případech lze data na "
+        "vyžádání získat od administrátora systému ze záložní kopie."
+    )
+    DELETE_DESCRIPTION_EN = (
+        "This record has been removed from the AMCR repository. In justified cases, data can "
+        "be retrieved from a backup copy by the system administrator on request."
+    )
+
     def __init__(self, record):
         self.record = record
+
+    @staticmethod
+    def format_date(date):
+        return date.strftime("%Y-%m-%d")
 
     @staticmethod
     def format_date_time(date_time):
@@ -44,9 +58,8 @@ class ModelSerializer(ABC):
     def _get_language(self):
         return "cs"
 
-    @abstractmethod
     def _get_prefix(self):
-        pass
+        return settings.DOI_PREFIX
 
     @abstractmethod
     def _get_soubory_queryset(self):
@@ -72,7 +85,6 @@ class ModelSerializer(ABC):
     def _serialize_creators(self):
         return [serialize_osoba(author.autor, self.record.organizace) for author in self._get_creators()]
 
-    @abstractmethod
     def _serialize_dates(self):
         dates = []
         if self.record.historie:
@@ -121,13 +133,31 @@ class ModelSerializer(ABC):
     def _serialize_types(self):
         pass
 
-    @abstractmethod
     def serialize_delete(self):
-        pass
+        return {
+            "data": {
+                "type": "dois",
+                "attributes": {
+                    "event": "hide",
+                    "descriptions": self._serialize_descriptions()
+                    + [
+                        {
+                            "lang": "cs",
+                            "description": self.DELETE_DESCRIPTION_CZ,
+                            "descriptionType": "TechnicalInfo",
+                        },
+                        {
+                            "lang": "en",
+                            "description": self.DELETE_DESCRIPTION_EN,
+                            "descriptionType": "TechnicalInfo",
+                        },
+                    ],
+                },
+            }
+        }
 
-    @abstractmethod
     def serialize_hide(self):
-        pass
+        return {"data": {"type": "dois", "attributes": {"event": "hide"}}}
 
     def serialize_publish(self):
         return {
@@ -200,7 +230,7 @@ def format_katastr_place(katastr: RuianKatastr):
     return f"{katastr.nazev}, {katastr.okres.nazev}, {katastr.okres.kraj.nazev}, Czech Republic"
 
 
-def serialize_creator_contributor(autor: Osoba):
+def serialize_creator_contributor(autor: Osoba) -> Dict[str, str]:
     return {
         "name": autor.vypis_cely,
         "givenName": autor.jmeno,
@@ -386,7 +416,7 @@ class DokumentSerializer(ModelSerializer):
             pass
         return dates
 
-    def _serialize_descriptions(self):
+    def _serialize_descriptions(self) -> List[Dict]:
         descriptions = []
         if self.record.popis:
             descriptions.append({"lang": "cs", "description": self.record.popis, "descriptionType": "Abstract"})
@@ -537,7 +567,7 @@ class DokumentSerializer(ModelSerializer):
         serialized_subjects = [dict(item) for item in set(serialized_subjects) if item]
         return serialized_subjects
 
-    def _serialize_types(self):
+    def _serialize_types(self) -> dict:
         resource_type_query = self.record.typ_dokumentu.heslar_odkaz.filter(zdroj="DataCite").filter(
             nazev_kodu="resourceTypeGeneral"
         )
@@ -550,32 +580,6 @@ class DokumentSerializer(ModelSerializer):
             serialized_types["resourceTypeGeneral"] = "Dataset"
         return serialized_types
 
-    def serialize_delete(self):
-        return {
-            "data": {
-                "type": "dois",
-                "attributes": {
-                    "event": "hide",
-                    "descriptions": self._serialize_descriptions()
-                    + [
-                        {
-                            "lang": "cs",
-                            "description": "Tento dokument byl odstraněn z repozitáře AMČR. V odůvodněných případech "
-                            "lze data na vyžádání získat od administrátora systému ze záložní kopie.",
-                            "descriptionType": "TechnicalInfo",
-                        },
-                        {
-                            "lang": "en",
-                            "description": "This document has been removed from the AMCR repository. In justified "
-                            "cases, data can be retrieved from a backup copy by the system administrator"
-                            " on request.",
-                            "descriptionType": "TechnicalInfo",
-                        },
-                    ],
-                },
-            }
-        }
-
     def serialize_hide(self):
         return {
             "data": {
@@ -586,15 +590,12 @@ class DokumentSerializer(ModelSerializer):
                     + [
                         {
                             "lang": "cs",
-                            "description": "Tento dokument byl odstraněn z repozitáře AMČR. V odůvodněných případech "
-                            "lze data na vyžádání získat od administrátora systému ze záložní kopie.",
+                            "description": self.DELETE_DESCRIPTION_CZ,
                             "descriptionType": "TechnicalInfo",
                         },
                         {
                             "lang": "en",
-                            "description": "This document has been removed from the AMCR repository. In justified "
-                            "cases, data can be retrieved from a backup copy by the system administrator "
-                            "on request.",
+                            "description": self.DELETE_DESCRIPTION_EN,
                             "descriptionType": "TechnicalInfo",
                         },
                     ],
@@ -617,9 +618,6 @@ class SamostatnyNalezSerializer(ModelSerializer):
     def get_ident_cely(self):
         return self.record.ident_cely
 
-    def _get_prefix(self):
-        return ""
-
     def _get_soubory_queryset(self):
         if self.record.soubory:
             return self.record.soubory.soubory
@@ -628,6 +626,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
         publication_year_history = self._get_historie_queryset().filter(typ_zmeny=ARCHIVACE_SN)
         if publication_year_history.exists():
             return publication_year_history.first().datum_zmeny.year
+        else:
+            # DataCite request may be called before the history record is created
+            return datetime.now().year
 
     def _get_title(self, language: str):
         return {
@@ -647,11 +648,14 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return alternate_identifiers
 
     def _serialize_contributors(self):
-        return [serialize_osoba(self.record.projekt.vedouci_projektu, self.record.projekt.organizace)]
+        return [serialize_osoba(self.record.projekt.vedouci_projektu, self.record.projekt.organizace, "ProjectLeader")]
+
+    def _serialize_creators(self):
+        return [serialize_osoba(author, self.record.projekt.organizace) for author in self._get_creators()]
 
     def _serialize_dates(self):
         dates = super()._serialize_dates()
-        dates.append({"date": self.record.datum_nalezu, "dateType": "Collected"})
+        dates.append({"date": self.format_date(self.record.datum_nalezu), "dateType": "Collected"})
         return dates
 
     def _serialize_descriptions(self):
@@ -682,7 +686,8 @@ class SamostatnyNalezSerializer(ModelSerializer):
             geo_locations.append(serialize_geom(self.record.geom))
         if self.record.pristupnost.pk == PRISTUPNOST_ANONYM_ID and self.record.katastr:
             geo_locations.append(serialize_geom(place=self.record.katastr))
-        return geo_locations
+        geo_locations_dict = [dict(item) for item in list(set(geo_locations))]
+        return geo_locations_dict
 
     def _serialize_related_identifiers(self):
         related_identifiers = super()._serialize_related_identifiers()
@@ -690,7 +695,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
             related_identifiers.append(
                 {
                     "relationType": "IsDocumentedBy",
-                    "relatedIdentifier": "<soubory.url>",
+                    "relatedIdentifier": f"{settings.DIGIARCHIV_SERVER_URL}id/{self.get_ident_cely()}",
                     "resourceTypeGeneral": "Image",
                     "relatedIdentifierType": "URL",
                 }
@@ -703,6 +708,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
                 "relatedIdentifierType": "URL",
             }
         )
+        return related_identifiers
 
     def _serialize_rights_list(self):
         return [
@@ -729,6 +735,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
             serialized_subjects += [
                 serialize_subject(self.record.specifikace),
             ]
+        serialized_subjects = [dict(item) for item in set(serialized_subjects) if item]
         return serialized_subjects
 
     def _serialize_types(self):
@@ -750,14 +757,25 @@ class LokalitaSerializer(ModelSerializer):
         return self.record.archeologicky_zaznam.historie.historie_set
 
     def _serialize_contributors(self):
-        pass
-
-    def _serialize_dates(self):
-        pass
+        contributors = []
+        for eo in self.record.archeologicky_zaznam.externi_odkazy.all():
+            eo: ExterniOdkaz
+            contributors += [serialize_osoba(ed, contributor_type="Personal") for ed in eo.externi_zdroj.editori.all()]
+        return contributors
 
     def _get_soubory_queryset(self):
         if self.record.archeologicky_zaznam.soubory:
             return self.record.archeologicky_zaznam.soubory.soubory
+
+    def _serialize_dates(self):
+        dates = []
+        if self._get_soubory_queryset():
+            updated_dates = [
+                {"date": self.format_date_time(date.datum_zmeny), "dateType": "Updated"}
+                for date in self._get_soubory_queryset()
+            ]
+            dates.extend(updated_dates)
+        return dates
 
     def _serialize_descriptions(self):
         descriptions = [
@@ -786,9 +804,7 @@ class LokalitaSerializer(ModelSerializer):
                 }
             )
         if self.record.poznamka:
-            descriptions.append(
-                {"lang": "cs", "description": {self.record.poznamka}, "descriptionType": "TechnicalInfo"}
-            )
+            descriptions.append({"lang": "cs", "description": self.record.poznamka, "descriptionType": "TechnicalInfo"})
         return descriptions
 
     def _get_externi_odkaz_query(self):
@@ -804,16 +820,15 @@ class LokalitaSerializer(ModelSerializer):
                 dok: DokumentacniJednotka = dok_query.first()
                 if dok.pian and dok.pian.geom:
                     geo_locations.append(serialize_geom(dok.pian.geom, self.record.archeologicky_zaznam.hlavni_katastr))
-        geo_locations_dict = (dict(item) for item in list(set(geo_locations)))
+        geo_locations_dict = [dict(item) for item in list(set(geo_locations))]
         return geo_locations_dict
-
-    def _get_prefix(self):
-        return ""
 
     def _get_publication_year(self):
         archivace_history_queryset = self._get_historie_queryset().filter(typ_zmeny=ARCHIVACE_AZ)
         if archivace_history_queryset.exists():
             return archivace_history_queryset.first().datum_zmeny.year
+        else:
+            return datetime.now().year
 
     def _serialize_rights_list(self):
         return [
@@ -828,8 +843,8 @@ class LokalitaSerializer(ModelSerializer):
 
     def _get_title(self, language: str):
         return {
-            "en": f"AMCR {self.get_ident_cely()} – {self.record.druh.heslo_en} {self.record.nazev * self.record.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID}",
-            "cs": f"AMCR {self.get_ident_cely()} – {self.record.druh.heslo} {self.record.nazev * self.record.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID}",
+            "en": f"AMCR {self.get_ident_cely()} – {self.record.druh.heslo_en} {self.record.nazev * (self.record.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID)}",
+            "cs": f"AMCR {self.get_ident_cely()} – {self.record.druh.heslo} {self.record.nazev * (self.record.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID)}",
         }[language]
 
     def _serialize_alternate_identifiers(self):
@@ -955,6 +970,7 @@ class LokalitaSerializer(ModelSerializer):
             _serialize_komponenty_m2n_fields(dj.komponenty.komponenty.all())
             for dj in self.record.archeologicky_zaznam.dokumentacni_jednotky_akce.all()
         ]
+        serialized_subjects = [dict(item) for item in set(serialized_subjects) if item]
         return serialized_subjects
 
     def _serialize_types(self):
@@ -963,3 +979,4 @@ class LokalitaSerializer(ModelSerializer):
     def serialize_publish(self):
         publish = super().serialize_publish()
         publish["data"]["attributes"]["relatedItems"] = self._serialize_related_items()
+        return publish

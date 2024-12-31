@@ -17,6 +17,7 @@ from core.constants import (
     ZAPSANI_SN,
 )
 from core.models import ModelWithMetadata, SouborVazby
+from django.conf import settings
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.db.models import CheckConstraint, Q
@@ -382,6 +383,34 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         table = SamostatnyNalezTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
         return self.redis_snapshot_id, data
+
+    def set_igsn(self):
+        self.igsn = f"{settings.DOI_PREFIX}/{self.ident_cely}"
+
+    @property
+    def igsn_exists(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        client = DigitalObjectIdentifierClient(self)
+        return client.check_record_exists()
+
+    def igsn_delete(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        client = DigitalObjectIdentifierClient(self)
+        return client.delete_record()
+
+    def igsn_hide(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        client = DigitalObjectIdentifierClient(self)
+        return client.hide_record()
+
+    def igsn_publish_or_update(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        client = DigitalObjectIdentifierClient(self)
+        return client.publish_or_update_record()
 
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):

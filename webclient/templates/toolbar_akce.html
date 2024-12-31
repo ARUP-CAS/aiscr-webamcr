@@ -8,6 +8,9 @@
     <div id="id-app-entity-item" class="app-entity-item">
       {% if toolbar_label %}{{toolbar_label}}{%endif%}
       {{ zaznam.ident_cely }}{% if showbackdetail and app == "pr" %}<span class="app-pipe"></span><a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarAkce.backToProjekt.label" %}</a>{% endif %}
+      {% if zaznam.lokalita.igsn %}
+        <span style="font-weight: normal">({{ zaznam.lokalita.igsn }})</span>
+      {% endif %}
     </div>
   </div>
   {% if showcontrols %}
