@@ -286,6 +286,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             "application/rtf": "rtf.png",
             "application/vnd.oasis.opendocument.text": "odt.png",
             "application/vnd.oasis.opendocument.spreadsheet": "ods.png",
+            "application/pdf": "pdf.png",
         }.get(mime_type, None)
         if icon_filename:
             file_path = os.path.join(settings.STATICFILES_DIRS[0], "icons", icon_filename)
