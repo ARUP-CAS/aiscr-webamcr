@@ -1569,7 +1569,7 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ARCHIVOVAN)
         dokument.active_transaction = fedora_transaction
-        dokument.doi_publish_or_update()
+        dokument.doi_publish()
         dokument.set_doi()
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny

@@ -1,4 +1,3 @@
-import json
 import logging
 
 import requests
@@ -86,32 +85,23 @@ class DigitalObjectIdentifierClient:
         self._check_response_status(response)
         return response.json()
 
-    def publish_or_update_record(self):
-        if not getattr(self.record, self.attribute_name, None) and not self.check_record_exists():
-            return self.publish_record()
-        else:
-            return self.update_record()
-
     def publish_record(self):
-        if getattr(self.record, self.attribute_name, None):
-            logger.error(
-                "doi.client.DigitalObjectIdentifierClient.publish_record.already_published.error",
-                extra={"ident_cely": self.record.ident_cely},
-            )
-            raise DoiHasBeenAlreadyPublishedError
         if not isinstance(self.record, Lokalita) and not hasattr(self.record, "active_transaction"):
             raise DoiNoTransactionError
-        with open("test.json", "w", encoding="utf-8") as f:
-            json.dump(self.serializer.serialize_publish(), f, ensure_ascii=False, indent=4)
-        response = requests.post(
-            DATACITE_URL, headers=self.headers, json=self.serializer.serialize_publish(), auth=self.auth
-        )
+        if self.check_record_exists():
+            response = requests.put(
+                DATACITE_URL, headers=self.headers, json=self.serializer.serialize_publish(), auth=self.auth
+            )
+        else:
+            response = requests.post(
+                self._get_record_url(), headers=self.headers, json=self.serializer.serialize_publish(), auth=self.auth
+            )
         self._check_response_status(response)
         return response.json()
 
     def update_record(self):
         response = requests.put(
-            self._get_record_url(), headers=self.headers, json=self.serializer.serialize_publish(), auth=self.auth
+            self._get_record_url(), headers=self.headers, json=self.serializer.serialize_update(), auth=self.auth
         )
         self._check_response_status(response)
         return response.json()

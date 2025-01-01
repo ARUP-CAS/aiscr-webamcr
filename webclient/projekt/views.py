@@ -999,7 +999,7 @@ def archivovat(request, ident_cely):
         for item in projekt.casti_dokumentu.all():
             item: DokumentCast
             if item.dokument.stav == D_STAV_ARCHIVOVANY:
-                item.dokument.doi_publish_or_update()
+                item.dokument.doi_publish()
         projekt.set_archivovany(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()

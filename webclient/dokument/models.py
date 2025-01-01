@@ -532,30 +532,26 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             komponenty += [komp for komp in cast.komponenty.komponenty.all()]
         return komponenty
 
+    def _get_doi_client(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        return DigitalObjectIdentifierClient(self)
+
     @property
     def doi_exists(self):
-        from doi.client import DigitalObjectIdentifierClient
-
-        client = DigitalObjectIdentifierClient(self)
-        return client.check_record_exists()
+        return self._get_doi_client().check_record_exists()
 
     def doi_delete(self):
-        from doi.client import DigitalObjectIdentifierClient
-
-        client = DigitalObjectIdentifierClient(self)
-        return client.delete_record()
+        return self._get_doi_client().delete_record()
 
     def doi_hide(self):
-        from doi.client import DigitalObjectIdentifierClient
+        return self._get_doi_client().hide_record()
 
-        client = DigitalObjectIdentifierClient(self)
-        return client.hide_record()
+    def doi_publish(self):
+        return self._get_doi_client().publish_record()
 
-    def doi_publish_or_update(self):
-        from doi.client import DigitalObjectIdentifierClient
-
-        client = DigitalObjectIdentifierClient(self)
-        return client.publish_or_update_record()
+    def doi_update(self):
+        return self._get_doi_client().update_record()
 
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):

@@ -217,6 +217,11 @@ class ModelSerializer(ABC):
             }
         }
 
+    def serialize_update(self):
+        result = self.serialize_publish()
+        result["data"]["attributes"].pop("event")
+        return result
+
 
 class PartialSerializer(ABC):
     def __init__(self, record):

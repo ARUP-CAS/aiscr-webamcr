@@ -15,6 +15,17 @@ class UpdateDocumentObjectIdentifierFileForm(forms.Form):
             }
         ),
     )
+    performed_action = forms.CharField(
+        required=True,
+        widget=forms.Select(
+            choices=[
+                ("post_publish", _("core.forms.UpdateDocumentObjectIdentifierFileForm.post_publish")),
+                ("put_publish", _("core.forms.UpdateDocumentObjectIdentifierFileForm.put_publish")),
+                ("hide", _("core.forms.UpdateDocumentObjectIdentifierFileForm.hide")),
+                ("update", _("core.forms.UpdateDocumentObjectIdentifierFileForm.update")),
+            ]
+        ),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

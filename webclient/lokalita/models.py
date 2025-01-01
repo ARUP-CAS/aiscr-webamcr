@@ -100,27 +100,23 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         data = RedisConnector.prepare_model_for_redis(table)
         return self.redis_snapshot_id, data
 
+    def _get_igsn_client(self):
+        from doi.client import DigitalObjectIdentifierClient
+
+        return DigitalObjectIdentifierClient(self)
+
     @property
     def igsn_exists(self):
-        from doi.client import DigitalObjectIdentifierClient
-
-        client = DigitalObjectIdentifierClient(self)
-        return client.check_record_exists()
+        return self._get_igsn_client().check_record_exists()
 
     def igsn_delete(self):
-        from doi.client import DigitalObjectIdentifierClient
-
-        client = DigitalObjectIdentifierClient(self)
-        return client.delete_record()
+        return self._get_igsn_client().delete_record()
 
     def igsn_hide(self):
-        from doi.client import DigitalObjectIdentifierClient
+        return self._get_igsn_client().hide_record()
 
-        client = DigitalObjectIdentifierClient(self)
-        return client.hide_record()
+    def igsn_publish(self):
+        return self._get_igsn_client().publish_record()
 
-    def igsn_publish_or_update(self):
-        from doi.client import DigitalObjectIdentifierClient
-
-        client = DigitalObjectIdentifierClient(self)
-        return client.publish_or_update_record()
+    def igsn_update(self):
+        return self._get_igsn_client().update_record()

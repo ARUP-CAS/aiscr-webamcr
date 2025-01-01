@@ -6,6 +6,7 @@ import os
 import re
 
 import pandas as pd
+from arch_z.models import ArcheologickyZaznam
 from bs4 import BeautifulSoup
 from cacheops import invalidate_model
 from core.ident_cely import get_record_from_ident
@@ -24,11 +25,14 @@ from django.utils.translation import gettext as _
 from doi.forms import UpdateDocumentObjectIdentifierFileForm
 from dokument.models import Dokument
 from fedora_management.forms import UpdateMetadataFileForm
+from pas.models import SamostatnyNalez
 from polib import pofile
 from uzivatel.models import User
 from xml_generator.models import ModelWithMetadata
 
 from .constants import (
+    AZ_STAV_ARCHIVOVANY,
+    D_STAV_ARCHIVOVANY,
     PERMISSIONS_IMPORT_SHEET,
     PERMISSIONS_SHEET_ACTION_NAME,
     PERMISSIONS_SHEET_APP_NAME,
@@ -38,6 +42,7 @@ from .constants import (
     PERMISSIONS_SHEET_VLASTNICTVI_NAME,
     PERMISSIONS_SHEET_ZAKLADNI_NAME,
     ROLE_NASTAVENI_ODSTAVKY,
+    SN_ARCHIVOVANY,
 )
 from .exceptions import WrongCSVError, WrongSheetError
 from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
@@ -616,6 +621,14 @@ class FedoraCustomAdminSite(admin.AdminSite):
             sheet["detail"] = ""
         return sheet
 
+    @staticmethod
+    def _perform_client_action(record, attribute_name, publish_callable_method, set_callable_method=None):
+        result = json.dumps(publish_callable_method())
+        if set_callable_method:
+            set_callable_method()
+            record.save()
+        return result
+
     def update_doi(self, request):
         context = {
             "app_list": self.get_app_list(request),
@@ -630,18 +643,80 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 if isinstance(sheet, pd.DataFrame):
                     for ident_cely in sheet.index.unique():
                         record = get_record_from_ident(ident_cely)
+                        fedora_transaction = FedoraTransaction()
+                        record.active_transaction = fedora_transaction
+                        result = None
                         if isinstance(record, Dokument):
-                            if not record.doi:
-                                fedora_transaction = FedoraTransaction()
-                                record.active_transaction = fedora_transaction
-                            response = record.doi_publish_or_update()
-                            sheet.loc[ident_cely, "result"] = _(
-                                "fedora_management.admin.FedoraCustomAdminSite.update_doi.success"
-                            )
-                            sheet.loc[ident_cely, "detail"] = json.dumps(response)
-                            if not record.doi:
-                                record.set_doi()
-                                record.save()
+                            if form.cleaned_data["performed_action"] == "post_publish":
+                                if not record.doi and record.stav == D_STAV_ARCHIVOVANY:
+                                    result = self._perform_client_action(
+                                        record, "doi", record.doi_publish, record.set_doi
+                                    )
+                                else:
+                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                            elif form.cleaned_data["performed_action"] == "put_publish":
+                                if record.doi and record.stav == D_STAV_ARCHIVOVANY:
+                                    result = self._perform_client_action(record, "doi", record.doi_publish)
+                                else:
+                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                            elif form.cleaned_data["performed_action"] == "hide":
+                                if record.doi and record.stav != D_STAV_ARCHIVOVANY:
+                                    result = self._perform_client_action(record, "doi", record.doi_hide)
+                                else:
+                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                            elif form.cleaned_data["performed_action"] == "update":
+                                if record.doi:
+                                    result = self._perform_client_action(record, "doi", record.doi_update)
+                                else:
+                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                        elif isinstance(record, ArcheologickyZaznam):
+                            if form.cleaned_data["performed_action"] == "post_publish" and record.lokalita:
+                                if not record.lokalita.igsn and record.stav == AZ_STAV_ARCHIVOVANY:
+                                    result = self._perform_client_action(
+                                        record, "igsn", record.lokalita.igsn_publish, record.lokalita.set_igsn
+                                    )
+                                else:
+                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                            elif form.cleaned_data["performed_action"] == "put_publish":
+                                if record.lokalita.igsn and record.stav == AZ_STAV_ARCHIVOVANY:
+                                    result = self._perform_client_action(record, "igsn", record.lokalita.igsn_publish)
+                                else:
+                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                            elif form.cleaned_data["performed_action"] == "hide":
+                                if record.lokalita.igsn and record.stav != AZ_STAV_ARCHIVOVANY:
+                                    result = self._perform_client_action(record, "igsn", record.lokalita.igsn_hide)
+                                else:
+                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                            elif form.cleaned_data["performed_action"] == "update":
+                                if record.lokalita.igsn:
+                                    result = self._perform_client_action(record, "igsn", record.lokalita.igsn_update)
+                                else:
+                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                        elif isinstance(record, SamostatnyNalez):
+                            if form.cleaned_data["performed_action"] == "post_publish":
+                                if not record.igsn and record.stav == SN_ARCHIVOVANY:
+                                    result = self._perform_client_action(
+                                        record, "igsn", record.igsn_publish, record.set_igsn
+                                    )
+                                else:
+                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                            elif form.cleaned_data["performed_action"] == "put_publish":
+                                if record.igsn and record.stav == SN_ARCHIVOVANY:
+                                    result = self._perform_client_action(record, "igsn", record.igsn_publish)
+                                else:
+                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                            elif form.cleaned_data["performed_action"] == "hide":
+                                if record.igsn and record.stav != SN_ARCHIVOVANY:
+                                    result = self._perform_client_action(record, "igsn", record.igsn_hide)
+                                else:
+                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                            elif form.cleaned_data["performed_action"] == "update":
+                                if record.igsn and record.stav != SN_ARCHIVOVANY:
+                                    result = self._perform_client_action(record, "igsn", record.igsn_update)
+                                else:
+                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                        sheet.loc[ident_cely, "result"] = result
+                        sheet.loc[ident_cely, "detail"] = result
                 context["text"] = sheet.to_html(index=True)
         else:
             context["form"] = UpdateDocumentObjectIdentifierFileForm()

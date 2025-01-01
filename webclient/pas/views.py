@@ -596,7 +596,7 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        sn.igsn_publish_or_update()
+        sn.igsn_publish()
         sn.set_igsn()
         sn.create_transaction(request.user, SAMOSTATNY_NALEZ_ARCHIVOVAN)
         sn.set_archivovany(request.user)
