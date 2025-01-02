@@ -704,6 +704,7 @@ class FedoraRepositoryConnector:
 
             thumb_icon, mime_type = Soubor.get_thumb_icon(file_content)
             if mime_type.startswith("image/"):
+                file_content = thumb_icon
                 try:
                     thumbnail = resize_image(file_content, large)
                     logger.debug(
