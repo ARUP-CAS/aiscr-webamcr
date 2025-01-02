@@ -181,6 +181,7 @@ INSTALLED_APPS = [
     "cacheops",
     "fedora_management",
     "doi.apps.DoiConfig",
+    "vypis",
 ]
 
 MIDDLEWARE = [
@@ -451,6 +452,10 @@ LOGGING = {
             "level": "DEBUG",
         },
         "fedora_management": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+        },
+        "vypis": {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },

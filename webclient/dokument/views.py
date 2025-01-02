@@ -1760,6 +1760,7 @@ def get_detail_template_shows(dokument, user):
         soubor_nahled = check_permissions(p.actionChoices.soubor_nahled_model3d, user, dokument.ident_cely)
         soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_model3d, user, dokument.ident_cely)
         soubor_nahradit = check_permissions(p.actionChoices.soubor_nahradit_model3d, user, dokument.ident_cely)
+        vypis = check_permissions(p.actionChoices.vypis_model3d, user, dokument.ident_cely)
     else:
         show_edit = check_permissions(p.actionChoices.dok_edit, user, dokument.ident_cely)
         soubor_stahnout_dokument = check_permissions(
@@ -1768,6 +1769,7 @@ def get_detail_template_shows(dokument, user):
         soubor_nahled = check_permissions(p.actionChoices.soubor_nahled_dokument, user, dokument.ident_cely)
         soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_dokument, user, dokument.ident_cely)
         soubor_nahradit = check_permissions(p.actionChoices.soubor_nahradit_dokument, user, dokument.ident_cely)
+        vypis = check_permissions(p.actionChoices.vypis_dokument, user, dokument.ident_cely)
     show_arch_links = dokument.stav == D_STAV_ARCHIVOVANY
     show_tvary = True if dokument.rada.zkratka in ["LD", "LN", "DL"] else False
     show = {
@@ -1787,6 +1789,7 @@ def get_detail_template_shows(dokument, user):
         "soubor_nahled": soubor_nahled,
         "soubor_smazat": soubor_smazat,
         "soubor_nahradit": soubor_nahradit,
+        "vypis": vypis,
     }
     return show
 

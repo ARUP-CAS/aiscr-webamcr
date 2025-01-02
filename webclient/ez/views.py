@@ -789,6 +789,7 @@ def get_detail_template_shows(zaznam, user):
         "paginace_edit": check_permissions(p.actionChoices.eo_edit_ez, user, zaznam.ident_cely),
         "smazat": check_permissions(p.actionChoices.ez_smazat, user, zaznam.ident_cely),
         "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, zaznam.ident_cely),
+        "vypis": check_permissions(p.actionChoices.vypis_ez, user, zaznam.ident_cely),
     }
     return show
 

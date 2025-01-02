@@ -1389,37 +1389,8 @@ def get_detail_template_shows(projekt, user):
     Returns:
         show: dictionary možností pro zobrazení.
     """
-    show_oznamovatel = False
-    if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
-        if user.is_archiver_or_more:
-            show_oznamovatel = True
-        elif user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
-            if projekt.stav == PROJEKT_STAV_ZAPSANY:
-                show_oznamovatel = True
-            elif projekt.organizace == user.organizace:
-                if projekt.stav in [
-                    PROJEKT_STAV_PRIHLASENY,
-                    PROJEKT_STAV_ZAHAJENY_V_TERENU,
-                    PROJEKT_STAV_UKONCENY_V_TERENU,
-                ]:
-                    show_oznamovatel = True
-                elif projekt.stav == PROJEKT_STAV_UZAVRENY:
-                    last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
-                    if last_uzavreni and last_uzavreni["datum"] >= datetime.now(
-                        last_uzavreni["datum"].tzinfo
-                    ) - timedelta(days=90):
-                        show_oznamovatel = True
-            elif projekt.stav in [
-                PROJEKT_STAV_PRIHLASENY,
-                PROJEKT_STAV_ZAHAJENY_V_TERENU,
-                PROJEKT_STAV_UKONCENY_V_TERENU,
-                PROJEKT_STAV_UZAVRENY,
-            ]:
-                last_prihlaseni = projekt.historie.get_last_transaction_date(PRIHLASENI_PROJ)
-                if last_prihlaseni and last_prihlaseni["datum"] >= datetime.now(
-                    last_prihlaseni["datum"].tzinfo
-                ) - timedelta(days=30):
-                    show_oznamovatel = True
+    show_oznamovatel = get_show_oznamovatel(projekt, user)
+
     show_samostatne_nalezy = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
     show_pridat_akci = False
     show_pridat_sam_nalez = False
@@ -1480,8 +1451,43 @@ def get_detail_template_shows(projekt, user):
         "zadost_odhlaseni_projektu": check_permissions(
             p.actionChoices.projekt_zadost_odhlaseni_projektu, user, projekt.ident_cely
         ),
+        "vypis": check_permissions(p.actionChoices.vypis_projekt, user, projekt.ident_cely),
     }
     return show
+
+
+def get_show_oznamovatel(projekt, user):
+    if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
+        if user.is_archiver_or_more:
+            return True
+        elif user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
+            if projekt.stav == PROJEKT_STAV_ZAPSANY:
+                return True
+            elif projekt.organizace == user.organizace:
+                if projekt.stav in [
+                    PROJEKT_STAV_PRIHLASENY,
+                    PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                    PROJEKT_STAV_UKONCENY_V_TERENU,
+                ]:
+                    return True
+                elif projekt.stav == PROJEKT_STAV_UZAVRENY:
+                    last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
+                    if last_uzavreni and last_uzavreni["datum"] >= datetime.now(
+                        last_uzavreni["datum"].tzinfo
+                    ) - timedelta(days=90):
+                        return True
+            elif projekt.stav in [
+                PROJEKT_STAV_PRIHLASENY,
+                PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                PROJEKT_STAV_UKONCENY_V_TERENU,
+                PROJEKT_STAV_UZAVRENY,
+            ]:
+                last_prihlaseni = projekt.historie.get_last_transaction_date(PRIHLASENI_PROJ)
+                if last_prihlaseni and last_prihlaseni["datum"] >= datetime.now(
+                    last_prihlaseni["datum"].tzinfo
+                ) - timedelta(days=30):
+                    return True
+    return False
 
 
 def get_required_fields(zaznam=None, next=0):
