@@ -180,6 +180,7 @@ INSTALLED_APPS = [
     "django_object_actions",
     "cacheops",
     "fedora_management",
+    "vypis",
 ]
 
 MIDDLEWARE = [
@@ -446,6 +447,10 @@ LOGGING = {
             "level": "DEBUG",
         },
         "fedora_management": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+        },
+        "vypis": {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },

@@ -1,0 +1,5 @@
+<div>
+{% for historie_part in field.historie %}
+    <li> {{ historie_part.datum_zmeny|date }} ({{historie_part.uzivatel }}) - {{ historie_part.get_typ_zmeny_display }}{%if historie_part.poznamka%}: {{historie_part.poznamka}}{% endif %}</li>
+{% endfor %}
+</div>

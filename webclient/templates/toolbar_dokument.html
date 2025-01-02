@@ -56,6 +56,12 @@
           {% if show.stahnout_metadata%}
           <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'dokument' d.ident_cely %}">{% trans "templates.toolbarDokument.metadataDownload.label" %}</a>
           {% endif %}
+          {% if show.vypis and is_3d %}
+          <a class="dropdown-item" href="{% url 'vypis:vypis' 'model' d.ident_cely %}" target=”_blank”>{% trans "templates.toolbarDokument.vypis.label" %}</a>
+          {% endif %}
+          {% if show.vypis and not is_3d %}
+          <a class="dropdown-item" href="{% url 'vypis:vypis' 'dokument' d.ident_cely %}" target=”_blank”>{% trans "templates.toolbarDokument.vypis.label" %}</a>
+          {% endif %}
         </div>
       </div>
     </div>
