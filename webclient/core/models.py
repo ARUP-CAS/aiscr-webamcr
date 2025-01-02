@@ -287,20 +287,26 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             "application/vnd.oasis.opendocument.text": "odt.png",
             "application/vnd.oasis.opendocument.spreadsheet": "ods.png",
             "application/pdf": "pdf.png",
-        }.get(mime_type, None)
-        if icon_filename:
-            file_path = os.path.join(settings.STATICFILES_DIRS[0], "icons", icon_filename)
-            file_bytes = io.BytesIO()
-            with open(file_path, "rb") as file:
-                file_bytes.write(file.read())
-            file_bytes.seek(0)
-            logger.debug(
-                "core.models.Soubor.get_thumb_icon.end", extra={"mime_type": mime_type, "icon_filename": icon_filename}
-            )
-            return file_bytes
-        else:
-            logger.debug("core.models.Soubor.get_thumb_icon.no_icon", extra={"mime_type": mime_type})
-            return None
+            "image/bmp": "bmp.png",
+            "image/gif": "gif.png",
+            "image/jpeg": "jpg.png",
+            "image/png": "png.png",
+            "image/svg+xml": "svg.png",
+            "image/tiff": "tif.png",
+        }.get(mime_type, "file.png")
+
+        file_path = os.path.join(settings.STATICFILES_DIRS[0], "icons", icon_filename)
+        file_bytes = io.BytesIO()
+        with open(file_path, "rb") as file:
+            file_bytes.write(file.read())
+        file_bytes.seek(0)
+        logger.debug(
+            "core.models.Soubor.get_thumb_icon.end", extra={"mime_type": mime_type, "icon_filename": icon_filename}
+        )
+        if icon_filename == "file.png":
+            logger.warning("core.models.Soubor.get_thumb_icon.no_icon", extra={"mime_type": mime_type})
+            return None, mime_type
+        return file_bytes, mime_type
 
     @classmethod
     def get_mime_types(cls, file, check_archive=False) -> Union[set, bool, str]:
