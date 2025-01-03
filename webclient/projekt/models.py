@@ -127,6 +127,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     termin_odevzdani_nz = models.DateField(blank=True, null=True)
     ident_cely = models.TextField(unique=True, verbose_name=_("projekt.models.projekt.ident.label"))
     geom = pgmodels.PointField(blank=True, null=True, srid=4326)
+    geom_sjtsk = pgmodels.PointField(blank=True, null=True, srid=5514)
+    geom_system = models.CharField(max_length=6, default="5514")
     soubory = models.OneToOneField(
         SouborVazby,
         on_delete=models.SET_NULL,
