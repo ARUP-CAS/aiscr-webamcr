@@ -1068,17 +1068,7 @@ class SearchTable(ColumnShiftTableBootstrap4):
     app = None
 
     def get_column_default_show(self):
-        self.column_default_show = list(self.columns.columns.keys())
-        if "vychozi_skryte_sloupce" not in self.request.session:
-            self.request.session["vychozi_skryte_sloupce"] = {}
-        if self.app in self.request.session["vychozi_skryte_sloupce"]:
-            columns_to_hide = set(self.request.session["vychozi_skryte_sloupce"][self.app])
-        else:
-            columns_to_hide = self.columns_to_hide
-            self.request.session["vychozi_skryte_sloupce"][self.app] = columns_to_hide
-        for column in columns_to_hide:
-            if column is not None and column in self.column_default_show:
-                self.column_default_show.remove(column)
+        self.column_default_show = list(set(self.columns.columns.keys()) - set(self.columns_to_hide))
         return super(SearchTable, self).get_column_default_show()
 
     def render_nahled(self, value, record):
