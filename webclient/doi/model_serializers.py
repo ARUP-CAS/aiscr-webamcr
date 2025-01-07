@@ -58,8 +58,9 @@ class ModelSerializer(ABC):
     def _get_language(self):
         return "cs"
 
+    @abstractmethod
     def _get_prefix(self):
-        return settings.DOI_PREFIX
+        pass
 
     @abstractmethod
     def _get_soubory_queryset(self):
@@ -627,6 +628,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
         if self.record.soubory:
             return self.record.soubory.soubory
 
+    def _get_prefix(self):
+        return settings.IGSN_PREFIX
+
     def _get_publication_year(self):
         publication_year_history = self._get_historie_queryset().filter(typ_zmeny=ARCHIVACE_SN)
         if publication_year_history.exists():
@@ -760,6 +764,9 @@ class LokalitaSerializer(ModelSerializer):
 
     def _get_historie_queryset(self):
         return self.record.archeologicky_zaznam.historie.historie_set
+
+    def _get_prefix(self):
+        return settings.IGSN_PREFIX
 
     def _serialize_contributors(self):
         contributors = []

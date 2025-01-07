@@ -138,7 +138,7 @@ class ExterniZdrojForm(forms.ModelForm):
             "organizace": _("ez.forms.externiZdrojForm.organizace.tooltip"),
             "link": _("ez.forms.externiZdrojForm.link.tooltip"),
             "poznamka": _("ez.forms.externiZdrojForm.poznamka.tooltip"),
-            "doi": _("ez.forms.externiZdrojForm.poznamka.tooltip"),
+            "doi": _("ez.forms.externiZdrojForm.doi.tooltip"),
         }
 
     def clean_doi(self):

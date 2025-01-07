@@ -536,6 +536,7 @@ DATACITE_URL = get_secret("DATACITE_URL", "")
 DATACITE_USER = get_secret("DATACITE_USER", "")
 DATACITE_USER_PASSWORD = get_secret("DATACITE_USER_PASSWORD", "")
 DOI_PREFIX = get_secret("DOI_PREFIX", "")
+IGSN_PREFIX = get_secret("IGSN_PREFIX", "")
 
 DIGIARCHIV_SERVER_URL = get_secret("DIGIARCHIV_SERVER_URL", "https://digiarchiv.aiscr.cz/")
 
