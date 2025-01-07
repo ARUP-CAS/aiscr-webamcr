@@ -19,6 +19,13 @@
   background-color: $app-sidebar-bg;
   width: $app-sidebar-width;
 
+  &.no-transition {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+  }
+
   .sidebar-toggle-2-container {
     @media (max-width: 380px) {
       display: block;
