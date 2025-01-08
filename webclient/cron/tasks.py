@@ -27,7 +27,7 @@ from django.db import connection
 from django.db.models import F, Min, Prefetch, Q
 from django.db.models.functions import Coalesce, Upper
 from django.utils import timezone
-from dokument.models import Dokument
+from dokument.models import Dokument, DokumentExtraData
 from ez.models import ExterniZdroj
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
@@ -140,6 +140,64 @@ def nalez_to_sjtsk():
                 cursor.execute(query_update, [geom[0], SN.id])
         else:
             print("chyba SN id {SN.id}")
+
+
+@shared_task
+def projekt_to_sjtsk():
+    query_select = (
+        "select projekt.id,projekt.ident_cely,ST_AsText(projekt.geom) as geometry,ST_AsText(projekt.geom_sjtsk) as geometry_sjtsk "
+        " from public.projekt "
+        " where projekt.geom is not null "
+        " and projekt.geom_sjtsk is null "
+        " order by projekt.id"
+    )
+    query_update = (
+        "update public.projekt "
+        " set geom_sjtsk = ST_GeomFromText(%s) "
+        " where projekt.geom_sjtsk is null and projekt.id=%s "
+    )
+    PRJs = Projekt.objects.raw(query_select)
+    c = len(PRJs)
+    for idx, PRJ in enumerate(PRJs):
+        if c > 100 and idx % (c // 100) == 0:
+            print(f"\r{round(idx / c * 100)}%", end="")
+
+        geom = transform_geom_to_sjtsk(PRJ.geometry)
+        if geom[1] == "OK":
+            with connection.cursor() as cursor:
+                cursor.execute(query_update, [geom[0], PRJ.id])
+        else:
+            print("chyba PRJ id {PRJ.id}")
+
+
+@shared_task
+def dokument_to_sjtsk():
+    query_select = (
+        "select dokument_extra_data.dokument,ST_AsText(dokument_extra_data.geom) as geometry,ST_AsText(dokument_extra_data.geom_sjtsk) as geometry_sjtsk "
+        " from public.dokument_extra_data "
+        " where dokument_extra_data.geom is not null "
+        " and dokument_extra_data.geom_sjtsk is null "
+        " order by dokument_extra_data.dokument"
+    )
+    query_update = (
+        "update public.dokument_extra_data "
+        " set geom_sjtsk = ST_GeomFromText(%s) "
+        " where dokument_extra_data.geom_sjtsk is null and dokument_extra_data.dokument=%s "
+    )
+    DOCs = DokumentExtraData.objects.raw(query_select)
+    c = len(DOCs)
+    for idx, DOC in enumerate(DOCs):
+        if c > 100 and idx % (c // 100) == 0:
+            print(f"\r{round(idx / c * 100)}%", end="")
+        try:
+            geom = transform_geom_to_sjtsk(DOC.geometry)
+            if geom[1] == "OK":
+                with connection.cursor() as cursor:
+                    cursor.execute(query_update, [geom[0], DOC.pk])
+            else:
+                print("chyba DOC id {DOC.pk}")
+        except Exception as err:
+            logger.warning("core.cron.dokument_to_sjtsk.warning", extra={"error": err})
 
 
 @shared_task
