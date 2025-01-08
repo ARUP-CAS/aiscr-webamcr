@@ -655,6 +655,11 @@ map.on('click', function (e) {
   
 });
 
+// Načtení stavu při načtení stránky
+loadMapState('arch_z');
+// Připojení eventů pro sledování změn
+addEventLayerChange('arch_z');
+
 map.on('overlayadd', function(eventlayer){
     if(eventlayer.layer===poi_sn || eventlayer.layer===poi_all){
         switchMap(false)

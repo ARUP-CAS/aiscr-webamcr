@@ -37,3 +37,8 @@ map.on('click', function (e) {
             }
     }
 });
+
+// Načtení stavu při načtení stránky
+loadMapState('oznameni');
+// Připojení eventů pro sledování změn
+addEventLayerChange('oznameni');

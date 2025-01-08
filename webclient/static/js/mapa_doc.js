@@ -121,6 +121,11 @@ var replace_coor = () => {
     document.getElementById(x2).value=(document.getElementById(x2).value.replace(".",","));
 }
 
+// Načtení stavu při načtení stránky
+loadMapState('doc');
+// Připojení eventů pro sledování změn
+addEventLayerChange('doc');
+
 map.on('moveend', function () {
     switchMap();
 });
