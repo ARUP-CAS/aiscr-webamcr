@@ -38,6 +38,7 @@ from core.constants import (
     ZAPSANI_PROJ,
     ZAPSANI_SN,
 )
+from core.coordTransform import convertToJTSK
 from core.decorators import allowed_user_groups
 from core.exceptions import MaximalIdentNumberError
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -398,6 +399,8 @@ def create(request):
             fedora_transaction: FedoraTransaction = projekt.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN)
             if x1 and x2:
                 projekt.geom = Point(x1, x2)
+                projekt.geom_sjtsk = Point(convertToJTSK(x1, x2))
+                projekt.geom_system = "5514"
             try:
                 projekt.set_permanent_ident_cely(False)
             except MaximalIdentNumberError:
@@ -511,6 +514,7 @@ def edit(request, ident_cely):
             geom_changed = False
             if old_geom is None or new_geom.coords != old_geom.coords:
                 projekt.geom = new_geom
+                projekt.geom_sjtsk = Point(convertToJTSK(x1, x2))
                 projekt.save()
                 geom_changed = True
                 logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": projekt.geom})
