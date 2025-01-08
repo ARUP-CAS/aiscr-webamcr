@@ -147,7 +147,7 @@ KLADYZM_KATEGORIE = (
     (KLADYZM200, "1:200 000"),
 )
 # Podporovane souradnicove systemy
-COORDINATE_SYSTEM = [(2, "S-JTSK (EPSG:5514)"), (1, "WGS-84 (EPSG:4326)")]
+COORDINATE_SYSTEM = [(2, "S-JTSK (EPSG:5514)"), (1, "WGS-84 DEG (EPSG:4326)"), (3, "WGS-84 DMS (EPSG:4326)")]
 
 DOK_MESTO = (_("core.constants.dok.mesto_praha"), _("core.constants.dok.mesto_brno"))
 DOK_VE_MESTE = (_("core.constants.dok.v_praze"), _("core.constants.dok.v_brne"))
@@ -185,3 +185,7 @@ STARY_PROJEKT_ZRUSEN = "Automatické zrušení projektů starších tří let, u
 PRISTUPNOST_MIN_RAZENI = 1  # Nejnižší hodnota přístupnosti podle řazení.
 
 MAX_POCET_SOUBORU_PROJEKTU = 40
+
+LIMIT_PRVKU_ZOBRAZENI_HEATMAP = 7_000  # Počet prvků v mapovém výřezu, při kterém se už má zobrazit heatmap
+
+EPSG_WGS84 = 4326

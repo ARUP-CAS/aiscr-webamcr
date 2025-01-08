@@ -35,7 +35,8 @@ from .constants import (
 )
 from .exceptions import WrongCSVError, WrongSheetError
 from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
-from .models import CustomAdminSettings, OdstavkaSystemu, Permissions, PermissionsSkip
+from .models import OdstavkaSystemu, Permissions, PermissionsSkip
+from .setting_models import CustomAdminSettings
 
 logger = logging.getLogger(__name__)
 

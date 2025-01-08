@@ -159,6 +159,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         context["title"] = _("pas.views.create.title")
         context["header"] = _("pas.views.create.header")
         context["button"] = _("pas.views.create.submitButton.text")
+        context["global_map_can_edit"] = True
         return context
 
     def form_valid(self, form):
@@ -1040,6 +1041,7 @@ def get_detail_template_shows(sn, user):
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_pas, user, sn.ident_cely),
         "soubor_nahradit": check_permissions(p.actionChoices.soubor_nahradit_pas, user, sn.ident_cely),
         "backtoprojekt": user.is_archeolog_or_more,
+        "vypis": check_permissions(p.actionChoices.vypis_pas, user, sn.ident_cely),
     }
     return show
 

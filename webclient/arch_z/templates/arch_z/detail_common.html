@@ -26,6 +26,7 @@
   <!--Leaflet Draw-->
   <script src="{% static 'js/Leaflet.draw1.0.4/leaflet.draw-src.js' %}"></script>
   <link rel="stylesheet" href="{% static 'js/Leaflet.draw1.0.4/leaflet.draw.css' %}">
+  <script src="{% static 'js/leaflet.EditCoordControl.js' %}"></script>
 
   <!--Leaflet FullScreen-->
   <script src='{% static 'js/Leaflet.fullscreen1.0.1/Leaflet.fullscreen.min.js' %}'></script>
@@ -64,12 +65,12 @@
   </script>
   <!-- static leaflet additional import-->
   <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}?v2"/>
-  <script src="{% static 'leaflet.measure.js' %}?v1"></script>
+  <script src="{% static 'leaflet.measure.js' %}?v2"></script>
   <script type="text/javascript" src="{% static 'leaflet.coor.js' %}?v1"></script>
   <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
 
   <link rel="stylesheet" href="{% static 'leaflet-search.css' %}"/>
-  <script src="{% static 'leaflet-search.js' %}"></script>
+  <script src="{% static 'leaflet-search.js' %}?v1"></script>
 {% endblock %}
 
 {% block content %}
@@ -212,6 +213,7 @@
       cuzkOrtofotomapa: '{% trans "mapa.cuzkOrtofotomapa" %}',
       cuzkStinovanyeelief5G: '{% trans "mapa.cuzkStinovanyeelief5G" %}',
       cuzkzakladniMapyCr: '{% trans "mapa.cuzkzakladniMapyCr" %}',
+      cuzkzakladniMapyCrGrey: '{% trans "mapa.cuzkzakladniMapyCrGrey" %}',
       npuPamatkovaOchrana: '{% trans "mapa.npuPamatkovaOchrana" %}',
       DefaultTitle: '{% trans "mapa.DefaultTitle" %}',
       DrawError: '{% trans "mapa.DrawError" %}',
@@ -251,8 +253,6 @@
       MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
       MessageMultipleElements: '{% trans "mapa.MessageMultipleElements" %}',
       MoveFront: '{% trans "mapa.MoveFront" %}',
-      openStreetMap: '{% trans "mapa.openStreetMap" %}',
-      openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
       pian: '{% trans "mapa.pian" %}',
       pianZazamu: '{% trans "mapa.pianZazamu" %}',
       RemoveDisabled: '{% trans "mapa.RemoveDisabled" %}',
@@ -261,7 +261,13 @@
       samostatneNalezy: '{% trans "mapa.samostatneNalezy" %}',
       TempPIAN: '{% trans "mapa.TempPIAN" %}',
       zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
-      zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
+      zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}',
+      eidt_coordinates:'{% trans "mapa.editCoordinates" %}',
+      EditCoordSave: '{% trans "mapa.EditCoordSave" %}',
+      EditCoordStorno: '{% trans "mapa.EditCoordStorno" %}',
+      EditCoordTooltip: '{% trans "mapa.EditCoordTooltip" %}',
+      EditCoordTitle: '{% trans "mapa.EditCoordTitle" %}',
+      EditCoordModify: '{% trans "mapa.EditCoordModify" %}',
     };
 
     var leaflet_search_translations = {
@@ -283,7 +289,9 @@
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
-  <script src="{% static 'arch_z_detail_map.js' %}?v1"></script>
+  <script src="{% static 'leaflet-grayscale.js' %}"></script>
+  <script src="{% static 'mapa_settings_jtsk.js' %}"></script>
+  <script src="{% static 'mapa_arch_z.js' %}?v1"></script>
   <script>
       function get_create_pain_form_action(selected_dj_ident) {
           const url = "/pian/zapsat/1";

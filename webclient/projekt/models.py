@@ -38,6 +38,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PROJEKT_TYP
@@ -193,11 +194,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         self.stav = PROJEKT_STAV_VYTVORENY
         owner = get_object_or_404(User, email="amcr@arup.cas.cz")
-        Historie(
-            typ_zmeny=OZNAMENI_PROJ,
-            uzivatel=owner,
-            vazba=self.historie,
-        ).save()
+        hist, created = Historie.objects.update_or_create(
+            vazba=self.historie, typ_zmeny=OZNAMENI_PROJ, defaults={"uzivatel": owner, "datum_zmeny": now()}
+        )
         self.save()
 
     def set_oznameny(self):
@@ -205,6 +204,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Metóda pro nastavení stavu oznámený a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_OZNAMENY
+        owner = get_object_or_404(User, email="amcr@arup.cas.cz")
+        hist, created = Historie.objects.update_or_create(
+            vazba=self.historie, typ_zmeny=OZNAMENI_PROJ, defaults={"uzivatel": owner, "datum_zmeny": now()}
+        )
         self.save()
 
     def set_schvaleny(self, user, old_ident):

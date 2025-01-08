@@ -53,6 +53,9 @@
           {% if show.stahnout_metadata %}
           <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'archeologicky_zaznam' zaznam.ident_cely %}">{% trans "templates.toolbarAkce.metadataDownload.label" %}</a>
           {% endif %}
+          {% if show.vypis %}
+          <a class="dropdown-item" href="{% url 'vypis:vypis' type zaznam.ident_cely %}" target=”_blank”>{% if type == "lokalita" %}{% trans "templates.toolbarLokalita.vypis.label" %}{% else %}{% trans "templates.toolbarAkce.vypis.label" %}{%endif%}</a>
+          {% endif %}
         </div>
       </div>
     </div>
