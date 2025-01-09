@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+from doi.verificators import verify_doi
 from dokument.forms import AutoriField
 from uzivatel.models import Osoba
 
@@ -148,6 +149,8 @@ class ExterniZdrojForm(forms.ModelForm):
             if not match:
                 raise ValidationError(_("ez.forms.externiZdrojForm.doi.error"))
             doi = match.group()
+            if not verify_doi(doi):
+                raise ValidationError(_("ez.forms.externiZdrojForm.doi_does_not_exists.error"))
         return doi
 
     def __init__(self, *args, required=None, required_next=None, readonly=False, **kwargs):

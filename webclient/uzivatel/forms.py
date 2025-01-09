@@ -19,6 +19,7 @@ from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Invisible
 from django_registration.backends.activation.forms import ActivationForm
 from django_registration.forms import RegistrationForm
+from doi.verificators import verify_orcid
 from services.mailer import Mailer
 
 from .models import Osoba, User, UserNotificationType
@@ -103,6 +104,15 @@ class AuthUserCreationForm(RegistrationForm):
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
 
+    def clean_orcid(self):
+        orcid = self.cleaned_data.get("orcid")
+        if not verify_orcid(orcid):
+            raise forms.ValidationError(
+                _("uzivatel.forms.AuthUserCreationForm.orcid.error"),
+                code="orcid_error",
+            )
+        return self.cleaned_data.get("orcid")
+
 
 class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
     captcha = ReCaptchaField(widget=ReCaptchaV2Invisible)
@@ -163,6 +173,15 @@ class AuthUserChangeForm(forms.ModelForm):
                 css_class="row",
             )
         )
+
+    def clean_orcid(self):
+        orcid = self.cleaned_data.get("orcid")
+        if not verify_orcid(orcid):
+            raise forms.ValidationError(
+                _("uzivatel.forms.AuthUserChangeForm.orcid.error"),
+                code="orcid_error",
+            )
+        return self.cleaned_data.get("orcid")
 
 
 class AuthReadOnlyUserChangeForm(forms.ModelForm):
@@ -229,6 +248,21 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
                 css_class="row",
             )
         )
+
+
+class AuthUserChangeAdminForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = "__all__"
+
+    def clean_orcid(self):
+        orcid = self.cleaned_data.get("orcid")
+        if not verify_orcid(orcid):
+            raise forms.ValidationError(
+                _("heslar.forms.OsobaForm.orcid.error"),
+                code="orcid_error",
+            )
+        return self.cleaned_data.get("orcid")
 
 
 class NotificationsForm(forms.ModelForm):
@@ -454,6 +488,15 @@ class OsobaForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+
+    def clean_orcid(self):
+        orcid = self.cleaned_data.get("orcid")
+        if not verify_orcid(orcid):
+            raise forms.ValidationError(
+                _("uzivatel.forms.OsobaForm.orcid.error"),
+                code="orcid_error",
+            )
+        return self.cleaned_data.get("orcid")
 
 
 class AuthActivationForm(ActivationForm):

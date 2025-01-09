@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.http import StreamingHttpResponse
 from django_object_actions import DjangoObjectActions, action
-from heslar.forms import HeslarHierarchieForm, HeslarOdkazForm
+from heslar.forms import HeslarHierarchieForm, HeslarOdkazForm, OrganizaceAdminForm, OsobaAdminForm
 from heslar.models import (
     Heslar,
     HeslarDatace,
@@ -186,6 +186,8 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
     Admin část pro správu modelu osob.
     """
 
+    form = OsobaAdminForm
+
     list_display = (
         "ident_cely",
         "vypis_cely",
@@ -223,6 +225,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
     Admin část pro správu modelu organizace.
     """
 
+    form = OrganizaceAdminForm
     list_display = (
         "ident_cely",
         "nazev",

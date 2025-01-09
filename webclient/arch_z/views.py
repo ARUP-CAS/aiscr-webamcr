@@ -751,9 +751,12 @@ def archivovat(request, ident_cely):
             if item.dokument.stav == AZ_STAV_ARCHIVOVANY:
                 item.dokument.doi_publish()
         if az.lokalita:
-            az.lokalita.igsn_publish()
-            az.lokalita.set_igsn()
-            az.lokalita.save()
+            if not az.lokalita.igsn:
+                az.lokalita.igsn_publish()
+                az.lokalita.set_igsn()
+                az.lokalita.save()
+            else:
+                az.lokalita.igsn_update()
         az.set_archivovany(request.user)
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(

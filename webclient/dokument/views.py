@@ -8,6 +8,7 @@ from arch_z.models import Akce, ArcheologickyZaznam
 from cacheops import invalidate_model
 from core.constants import (
     ARCHIVACE_DOK,
+    AZ_STAV_ARCHIVOVANY,
     D_STAV_ARCHIVOVANY,
     D_STAV_ODESLANY,
     D_STAV_ZAPSANY,
@@ -1571,6 +1572,14 @@ def archivovat(request, ident_cely):
         dokument.active_transaction = fedora_transaction
         dokument.doi_publish()
         dokument.set_doi()
+        for item in dokument.casti.all():
+            item: DokumentCast
+            if (
+                item.archeologicky_zaznam
+                and item.archeologicky_zaznam.lokalita
+                and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            ):
+                item.archeologicky_zaznam.lokalita.igsn_update()
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
