@@ -66,6 +66,13 @@ body {
   transition: margin .25s ease-out;
   position: relative;
 
+  &.no-transition {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+  }
+  
   @import "app-navbar";
   @import "app-toolbar";
   @import "app-bs-stepper";

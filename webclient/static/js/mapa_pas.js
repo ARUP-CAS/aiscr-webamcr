@@ -65,6 +65,11 @@ map.on('click', function (e) {
     }
 });
 
+// Načtení stavu při načtení stránky
+loadMapState('pas');
+// Připojení eventů pro sledování změn
+addEventLayerChange('pas');
+
 map.on('overlayadd', function(eventlayer){
     debugText("pridat mapu")
     if(eventlayer.layer===poi_pian || eventlayer.layer===poi_sn){

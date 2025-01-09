@@ -403,6 +403,20 @@
 
 {% block script_sidebar %}
   <script>
+    if(screen.width>=1140)
+    {
+      const savedState = localStorage.getItem("sidebar_toggle");
+      if (savedState && savedState==="true") {
+        $("#app-page-wrapper").addClass("no-transition");        
+        $("#app-sidebar-wrapper").addClass("no-transition");
+        $("#app-wrapper").addClass("toggled");
+        setTimeout(function() {
+          $("#app-page-wrapper").removeClass("no-transition");        
+          $("#app-sidebar-wrapper").removeClass("no-transition");
+        }, 100);
+
+      }
+    }
     const sidebar_toggle_func = (e) => {
       if (typeof map !== 'undefined') {
         try {
@@ -414,6 +428,8 @@
       }
       e.preventDefault();
       $("#app-wrapper").toggleClass("toggled");
+      //uložení nastavení postraní lišty
+      localStorage.setItem("sidebar_toggle", $("#app-wrapper").hasClass("toggled"));
     }
     $("#sidebar-toggle").click(sidebar_toggle_func);
     $("#sidebar-toggle-2").click(sidebar_toggle_func);

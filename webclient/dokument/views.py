@@ -19,6 +19,7 @@ from core.constants import (
     ROLE_ARCHIVAR_ID,
     ZAPSANI_DOK,
 )
+from core.coordTransform import convertToJTSK
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
 from core.forms import CheckStavNotChangedForm, VratitForm
 from core.ident_cely import get_cast_dokumentu_ident, get_dokument_rada, get_temp_dokument_ident
@@ -1249,6 +1250,7 @@ def edit_model_3D(request, ident_cely):
             x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
             if x1 > 0 and x2 > 0:
                 geom = Point(x1, x2)
+                geom_sjtsk = Point(convertToJTSK(x1, x2))
         except Exception:
             logger.debug("dokument.views.edit_model_3D.coord_error", extra={"x1": x1, "x2": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
@@ -1268,6 +1270,7 @@ def edit_model_3D(request, ident_cely):
                 i = i + 1
             if geom is not None:
                 dokument.extra_data.geom = geom
+                dokument.extra_data.geom_sjtsk = geom_sjtsk
             form_extra.save()
             komponenta = form_komponenta.save(commit=False)
             komponenta.active_transaction = fedora_transaction
@@ -1401,6 +1404,10 @@ def create_model_3D(request):
             x2 = float(form_extra.data.get("coordinate_wgs84_x2"))
             if x1 > 0 and x2 > 0:
                 geom = Point(x1, x2)
+                try:
+                    geom_sjtsk = Point(convertToJTSK(x1, x2))
+                except Exception:
+                    geom_sjtsk = None
         except Exception:
             logger.debug("dokument.views.create_model_3D.coord_error", extra={"x1": x1, "x2": x2})
 
@@ -1443,6 +1450,9 @@ def create_model_3D(request):
                 extra_data.dokument = dokument
                 if geom is not None:
                     extra_data.geom = geom
+                if geom_sjtsk is not None:
+                    extra_data.geom_sjtsk = geom_sjtsk
+                extra_data.geom_system = "4326"
                 extra_data.save()
 
                 komponenta = form_komponenta.save(commit=False)

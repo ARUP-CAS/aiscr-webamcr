@@ -173,7 +173,10 @@ map.on('click', function (e) {
                 map.setView(e.latlng, map.getZoom() + zoom);
             }
 });
-
+// Načtení stavu při načtení stránky
+loadMapState('projekty');
+// Připojení eventů pro sledování změn
+addEventLayerChange('projekty');
 map.on('overlayadd', function(eventlayer){
     console.log("pridat mapu")
     if(eventlayer.layer===poi_p1 || eventlayer.layer===poi_p2 || eventlayer.layer===poi_p3 || eventlayer.layer===poi_p46 || eventlayer.layer===poi_p78){

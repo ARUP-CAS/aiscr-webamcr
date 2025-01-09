@@ -1,4 +1,3 @@
-import html
 import json
 import logging
 import os
@@ -1027,40 +1026,6 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["toolbar_label"] = self.toolbar_label
         context["sort_params"] = self._get_sort_params()
         return context
-
-
-class SearchListChangeColumnsView(LoginRequiredMixin, View):
-    """
-    Třída pohledu pro změnu zobrazení sloupcu u tabulky.
-    """
-
-    def post(self, request, *args, **kwargs):
-        if "vychozi_skryte_sloupce" not in request.session:
-            request.session["vychozi_skryte_sloupce"] = {}
-        app = json.loads(request.body.decode("utf8"))["app"]
-        sloupec = html.escape(json.loads(request.body.decode("utf8"))["sloupec"])
-        zmena = json.loads(request.body.decode("utf8"))["zmena"]
-        if app not in request.session["vychozi_skryte_sloupce"]:
-            request.session["vychozi_skryte_sloupce"][app] = []
-        skryte_sloupce = request.session["vychozi_skryte_sloupce"][app]
-        if zmena == "zobraz":
-            try:
-                skryte_sloupce.remove(sloupec)
-                request.session.modified = True
-                help_translation = _("core.views.SearchListChangeColumnsView.show")  # Odebrano ze skrytych
-                return HttpResponse(f"{help_translation} {sloupec}")
-            except ValueError:
-                logger.error(
-                    "core.SearchListChangeColumnsView.post.odebrat_sloupec_z_vychozich.error",
-                    extra={"sloupec": sloupec},
-                )  # Nelze odebrat sloupec
-                help_translation = _("core.views.SearchListChangeColumnsView.failed")
-                HttpResponse(f"{help_translation} {sloupec}", status=400)
-        else:
-            skryte_sloupce.append(sloupec)
-            request.session.modified = True
-        help_translation = _("core.views.SearchListChangeColumnsView.hide")
-        return HttpResponse(f"{help_translation} {sloupec}")
 
 
 class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):

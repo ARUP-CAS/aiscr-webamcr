@@ -708,6 +708,8 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
     rok_do = models.PositiveIntegerField(blank=True, null=True)
     duveryhodnost = models.PositiveIntegerField(blank=True, null=True, validators=[MaxValueValidator(100)])
     geom = PointField(blank=True, null=True, srid=4326)
+    geom_sjtsk = PointField(blank=True, null=True, srid=5514)
+    geom_system = models.CharField(max_length=6, default="4326")
 
     class Meta:
         db_table = "dokument_extra_data"

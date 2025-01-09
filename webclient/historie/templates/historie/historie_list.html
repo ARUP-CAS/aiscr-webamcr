@@ -9,7 +9,7 @@
 {% block head %}{% endblock %}
 
 {% block content %}
-  <div class="app-entity-historie app-entity-{{entity}} app-table-list-container">
+  <div id="{{ table.uniq_table_class_name }}" class="column-shifter-container app-entity-historie app-entity-{{entity}} app-table-list-container">
     <div class="app-toolbar mb-2">
       <div class="app-left">
         <div class="app-entity-title">
