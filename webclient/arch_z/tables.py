@@ -185,3 +185,9 @@ class AkceTable(SearchTable):
 
     def __init__(self, *args, **kwargs):
         super(AkceTable, self).__init__(*args, **kwargs)
+
+    def get_all_idents(self):
+        """
+        Vrátí seznam identifikátorů projektů.
+        """
+        return ",".join([record.record.archeologicky_zaznam.ident_cely for record in self.paginated_rows])

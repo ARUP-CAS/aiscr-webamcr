@@ -895,6 +895,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     redis_value_list_field = None
     redis_snapshot_prefix = None
     progress_bar_coefficient = 0.8
+    vypis_app = "core"
 
     def create_export(self, export_format):
         from redis import Redis
@@ -1025,6 +1026,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["toolbar_name"] = self.toolbar_name
         context["toolbar_label"] = self.toolbar_label
         context["sort_params"] = self._get_sort_params()
+        context["idents"] = context["table"].get_all_idents()
+        context["vypis_app"] = self.vypis_app
         return context
 
 

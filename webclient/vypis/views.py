@@ -98,3 +98,20 @@ class VypisView(LoginRequiredMixin, TemplateView):
             {"title": config["title"], "main_section_data": main_section_data, "sections_data": sections_data}
         )
         return context
+
+
+class VypisOnlyView(VypisView):
+    template_name = "vypis/vypis_only.html"
+
+
+class VypisListView(LoginRequiredMixin, TemplateView):
+    template_name = "vypis/vypis_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        name = kwargs.get("typ_vazby")
+        config = get_config(name)
+        if not config:
+            raise Http404("Page not found")
+        context["title"] = config["title"]
+        return context

@@ -80,6 +80,7 @@ class LokalitaListView(SearchListView):
     redis_snapshot_prefix = "lokalita"
     redis_value_list_field = "archeologicky_zaznam__ident_cely"
     typ_zmeny_lookup = ZAPSANI_AZ
+    vypis_app = "lokalita"
 
     def init_translations(self):
         super().init_translations()
