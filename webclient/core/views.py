@@ -894,7 +894,6 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     toolbar = "toolbar_akce.html"
     redis_value_list_field = None
     redis_snapshot_prefix = None
-    progress_bar_coefficient = 0.8
 
     def create_export(self, export_format):
         from redis import Redis
@@ -906,13 +905,27 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             return aborted
 
         def update_progress_bar(r_inner: Redis, key_inner: str, new_value: int):
-            new_value *= self.progress_bar_coefficient
             r_inner.set(key_inner, int(new_value))
+
+        def file_iterator(content, r, redis_variable_name, chunk_size=8192):
+            bytes_sent = 0
+            file_size = len(content)
+            try:
+                for i in range(0, len(content), chunk_size):
+                    chunk = content[i : i + chunk_size]
+                    bytes_sent += len(chunk)
+                    if file_size > 50 and bytes_sent % (file_size // 50) < chunk_size:
+                        update_progress_bar(r, redis_variable_name, int(bytes_sent / file_size * 50 + 50))
+                    yield chunk
+            except GeneratorExit:
+                logger.warning("core.views.SearchListView.file_iterator.Connection_closed_by_client")
+            except Exception as e:
+                logger.warning("core.views.SearchListView.file_iterator.Error_during_streaming", extra={"errors": e})
+                raise
 
         logger.debug("core.views.SearchListView.create_export.start", extra={"export_format": export_format})
         if self.redis_value_list_field and self.redis_snapshot_prefix:
             r = RedisConnector.get_connection()
-            response = HttpResponse()
             dataset = self.get_table_data()
             ident_cely_list = set(dataset.values_list(self.redis_value_list_field, flat=True))
             ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
@@ -925,17 +938,18 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             r.set(redis_variable_name, 0)
             ident_cely_list_len = len(ident_cely_list)
             pipe = r.pipeline()
+            data = []
             for i, key in enumerate(ident_cely_list):
                 pipe.hgetall(key)
-                if i % 1000 == 0:
+                if (ident_cely_list_len > 100 and i % (ident_cely_list_len // 50) == 0) or i == ident_cely_list_len - 1:
                     if check_if_aborted(r, redis_variable_name):
                         logger.debug(
                             "core.views.SearchListView.create_export.aborted",
                             extra={"redis_variable_name": redis_variable_name},
                         )
                         return HttpResponse()
-                    update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 60))
-            data = pipe.execute()
+                    update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 50))
+                    data.extend(pipe.execute())
             data = pandas.DataFrame(data)
             data.columns = [x.decode("utf-8") for x in data.columns]
             filtered_column_order = [col.name for col in self.get_table().columns if col.name in data.columns]
@@ -953,23 +967,22 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 )
                 return HttpResponse()
             if export_format == TableExport.CSV:
-                response["Content-Disposition"] = 'attachment; filename="export.csv"'
-                data.to_csv(path_or_buf=response, index=False)
+                filetype = 'attachment; filename="export.csv"'
+                resdata = data.to_csv(index=False)
             elif export_format == TableExport.JSON:
-                response["Content-Disposition"] = 'attachment; filename="export.json"'
-                data.to_json(path_or_buf=response, orient="records", force_ascii=False, index=False)
+                filetype = 'attachment; filename="export.json"'
+                resdata = data.to_json(orient="records", force_ascii=False, index=False)
             elif export_format == TableExport.XLSX:
                 excel_file = BytesIO()
                 with pandas.ExcelWriter(excel_file, engine="openpyxl") as writer:
                     data.to_excel(writer, index=False)
-                excel_file.seek(0)
-                response = HttpResponse(
-                    excel_file.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-                response["Content-Disposition"] = "attachment; filename=export.xlsx"
+                resdata = excel_file.getvalue()
+                filetype = "attachment; filename=export.xlsx"
             else:
                 return HttpResponse(_("core.views.SearchListView.create_export.export_format_not_supported"))
-            update_progress_bar(r, redis_variable_name, 100)
+            response = StreamingHttpResponse(file_iterator(resdata, r, redis_variable_name))
+            response["Content-Disposition"] = filetype
+            update_progress_bar(r, redis_variable_name, 50)
             logger.debug(
                 "core.views.SearchListView.create_export.end",
                 extra={
@@ -984,7 +997,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                     extra={"redis_variable_name": redis_variable_name},
                 )
                 return HttpResponse()
-            response["Content-Length"] = len(response.content)
+            response["X-Accel-Buffering"] = "no"  # Zakázání bufferování v NGINX
             return response
 
     def init_translations(self):
