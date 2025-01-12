@@ -3,10 +3,10 @@ import logging
 import requests
 from django.conf import settings
 from django.utils.translation import gettext as _
-from doi.model_serializers import DokumentSerializer, LokalitaSerializer, SamostatnyNalezSerializer
 from dokument.models import Dokument
 from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez
+from pid.model_serializers import DokumentSerializer, LokalitaSerializer, SamostatnyNalezSerializer
 from requests.auth import HTTPBasicAuth
 
 from webclient.settings.base import DATACITE_URL, DATACITE_USER, DATACITE_USER_PASSWORD
@@ -90,11 +90,11 @@ class DigitalObjectIdentifierClient:
             raise DoiNoTransactionError
         if self.check_record_exists():
             response = requests.put(
-                DATACITE_URL, headers=self.headers, json=self.serializer.serialize_publish(), auth=self.auth
+                self._get_record_url(), headers=self.headers, json=self.serializer.serialize_publish(), auth=self.auth
             )
         else:
             response = requests.post(
-                self._get_record_url(), headers=self.headers, json=self.serializer.serialize_publish(), auth=self.auth
+                DATACITE_URL, headers=self.headers, json=self.serializer.serialize_publish(), auth=self.auth
             )
         self._check_response_status(response)
         return response.json()

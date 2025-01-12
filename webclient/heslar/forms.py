@@ -3,8 +3,8 @@ import logging
 from dal import autocomplete, forward
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from doi.verificators import verify_orcid, verify_ror
 from heslar.models import HeslarHierarchie, HeslarNazev, HeslarOdkaz
+from pid.verificators import verify_orcid, verify_ror, verify_wikidata
 from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
@@ -83,10 +83,19 @@ class OsobaAdminForm(forms.ModelForm):
         orcid = self.cleaned_data.get("orcid")
         if orcid and not verify_orcid(orcid):
             raise forms.ValidationError(
-                _("heslar.forms.OsobaForm.orcid.error"),
+                _("heslar.forms.OsobaAdminForm.orcid.error"),
                 code="orcid_error",
             )
         return orcid
+
+    def clean_wikidata(self):
+        wikidata = self.cleaned_data.get("wikidata")
+        if not verify_wikidata(wikidata):
+            raise forms.ValidationError(
+                _("uzivatel.forms.OsobaAdminForm.wikidata.error"),
+                code="orcid_error",
+            )
+        return wikidata
 
 
 class OrganizaceAdminForm(forms.ModelForm):

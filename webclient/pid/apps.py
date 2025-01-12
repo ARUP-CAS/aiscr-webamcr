@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class DoiConfig(AppConfig):
+class PidConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "doi"
+    name = "pid"

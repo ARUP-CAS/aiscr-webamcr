@@ -11,8 +11,8 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from doi.verificators import verify_doi
 from dokument.forms import AutoriField
+from pid.verificators import verify_doi
 from uzivatel.models import Osoba
 
 from .models import ExterniZdroj

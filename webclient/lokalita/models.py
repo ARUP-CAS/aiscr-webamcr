@@ -101,7 +101,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         return self.redis_snapshot_id, data
 
     def _get_igsn_client(self):
-        from doi.client import DigitalObjectIdentifierClient
+        from pid.client import DigitalObjectIdentifierClient
 
         return DigitalObjectIdentifierClient(self)
 
