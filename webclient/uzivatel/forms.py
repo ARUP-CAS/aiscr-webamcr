@@ -5,6 +5,7 @@ from core.widgets import ForeignKeyReadOnlyTextInput
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Field, Layout
+from dal import autocomplete
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
@@ -141,25 +142,21 @@ class AuthUserChangeForm(forms.ModelForm):
     Formulář pro editaci uživatele.
     """
 
-    orcid = forms.CharField(
-        validators=[validate_orcid],
-        help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
-        label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
-        widget=forms.TextInput(),
-    )
-
     class Meta:
         model = User
         fields = ("telefon", "orcid")
         labels = {
-            "telefon": _("uzivatel.forms.userChange.telefon.label"),
+            "telefon": _("uzivatel.forms.AuthUserChangeForm.telefon.label"),
+            "orvid": _("uzivatel.forms.AuthUserChangeForm.orcid.label"),
         }
         help_texts = {
-            "telefon": _("uzivatel.forms.userChange.telefon.tooltip"),
+            "telefon": _("uzivatel.forms.AuthUserChangeForm.telefon.tooltip"),
+            "orvid": _("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
         }
 
         widgets = {
             "telefon": forms.TextInput(),
+            "orcid": autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -172,6 +169,13 @@ class AuthUserChangeForm(forms.ModelForm):
                 Div("orcid", css_class="col-sm-3"),
                 css_class="row",
             )
+        )
+        self.fields["orcid"] = autocomplete.Select2ListChoiceField(
+            validators=[validate_orcid],
+            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
+            help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
+            choice_list=[[self.instance.orcid, self.instance.orcid]],
         )
 
     def clean_orcid(self):

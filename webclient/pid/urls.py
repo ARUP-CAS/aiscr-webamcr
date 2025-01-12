@@ -1,0 +1,10 @@
+from django.urls import path
+
+from . import views
+
+app_name = "pid"
+
+urlpatterns = [
+    path("doi-autocomplete", views.DoiAutocompleteView.as_view(), name="doi-autocomplete"),
+    path("orcid-autocomplete", views.OrcidAutocompleteView.as_view(), name="orcid-autocomplete"),
+]

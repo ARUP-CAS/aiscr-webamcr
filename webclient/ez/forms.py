@@ -41,6 +41,11 @@ class ExterniZdrojForm(forms.ModelForm):
         label=_("ez.forms.externiZdrojForm.editori.label"),
         help_text=_("ez.forms.externiZdrojForm.editori.tooltip"),
     )
+    doi = autocomplete.Select2ListChoiceField(
+        widget=autocomplete.ListSelect2(url="pid:doi-autocomplete"),
+        label=_("ez.forms.externiZdrojForm.doi.label"),
+        help_text=_("ez.forms.externiZdrojForm.doi.tooltip"),
+    )
 
     class Meta:
         model = ExterniZdroj
@@ -64,7 +69,6 @@ class ExterniZdrojForm(forms.ModelForm):
             "organizace",
             "link",
             "poznamka",
-            "doi",
         )
 
         labels = {
@@ -85,7 +89,6 @@ class ExterniZdrojForm(forms.ModelForm):
             "organizace": _("ez.forms.externiZdrojForm.organizace.label"),
             "link": _("ez.forms.externiZdrojForm.link.label"),
             "poznamka": _("ez.forms.externiZdrojForm.poznamka.label"),
-            "doi": _("ez.forms.externiZdrojForm.doi.label"),
         }
 
         widgets = {
@@ -118,7 +121,6 @@ class ExterniZdrojForm(forms.ModelForm):
             "organizace": forms.TextInput(),
             "link": forms.TextInput(),
             "poznamka": forms.TextInput(),
-            "doi": forms.TextInput(),
         }
 
         help_texts = {
