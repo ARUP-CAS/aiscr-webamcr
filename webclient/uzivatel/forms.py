@@ -19,7 +19,7 @@ from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Invisible
 from django_registration.backends.activation.forms import ActivationForm
 from django_registration.forms import RegistrationForm
-from doi.verificators import verify_orcid
+from pid.verificators import verify_orcid, verify_wikidata
 from services.mailer import Mailer
 
 from .models import Osoba, User, UserNotificationType
@@ -496,7 +496,16 @@ class OsobaForm(forms.ModelForm):
                 _("uzivatel.forms.OsobaForm.orcid.error"),
                 code="orcid_error",
             )
-        return self.cleaned_data.get("orcid")
+        return orcid
+
+    def clean_wikidata(self):
+        wikidata = self.cleaned_data.get("wikidata")
+        if not verify_wikidata(wikidata):
+            raise forms.ValidationError(
+                _("uzivatel.forms.OsobaForm.wikidata.error"),
+                code="orcid_error",
+            )
+        return wikidata
 
 
 class AuthActivationForm(ActivationForm):

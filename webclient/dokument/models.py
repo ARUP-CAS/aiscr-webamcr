@@ -533,7 +533,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         return komponenty
 
     def _get_doi_client(self):
-        from doi.client import DigitalObjectIdentifierClient
+        from pid.client import DigitalObjectIdentifierClient
 
         return DigitalObjectIdentifierClient(self)
 

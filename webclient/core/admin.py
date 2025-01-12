@@ -22,10 +22,10 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.translation import gettext as _
-from doi.forms import UpdateDocumentObjectIdentifierFileForm
 from dokument.models import Dokument
 from fedora_management.forms import UpdateMetadataFileForm
 from pas.models import SamostatnyNalez
+from pid.forms import UpdateDocumentObjectIdentifierFileForm
 from polib import pofile
 from uzivatel.models import User
 from xml_generator.models import ModelWithMetadata

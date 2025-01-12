@@ -5,6 +5,7 @@ import requests
 DOI_API_URL = "https://doi.org/api/handles/"
 ORCID_API_URL = "https://pub.orcid.org/v3.0/"
 ROR_API_URL = "https://api.ror.org/organizations/"
+WIKIDATA_API_URL = "https://www.wikidata.org/wiki/Special:EntityData/"
 
 
 def verify_doi(doi):
@@ -21,4 +22,9 @@ def verify_orcid(orcid):
 
 def verify_ror(ror):
     response = requests.get(f"{ROR_API_URL}{ror}")
+    return response.status_code == 200
+
+
+def verify_wikidata(wikidata):
+    response = requests.get(f"{WIKIDATA_API_URL}{wikidata}")
     return response.status_code == 200

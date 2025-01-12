@@ -749,7 +749,7 @@ def archivovat(request, ident_cely):
         for item in az.casti_dokumentu.all():
             item: DokumentCast
             if item.dokument.stav == AZ_STAV_ARCHIVOVANY:
-                item.dokument.doi_publish()
+                item.dokument.doi_update()
         if az.lokalita:
             if not az.lokalita.igsn:
                 az.lokalita.igsn_publish()

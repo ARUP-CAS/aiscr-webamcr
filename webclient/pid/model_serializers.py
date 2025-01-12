@@ -15,8 +15,6 @@ from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez
 from uzivatel.models import Organizace, Osoba
 
-AIS_AMCR = Organizace.objects.get(ident_cely="ORG-000091")
-
 
 class ModelSerializer(ABC):
     DELETE_DESCRIPTION_CZ = (
@@ -184,7 +182,7 @@ class ModelSerializer(ABC):
                         "lang": "en",
                         "name": "Archaeological Information System of the Czech Republic",
                         "schemeUri": "https://ror.org/",
-                        "publisherIdentifier": f"https://ror.org/{AIS_AMCR.ror}",
+                        "publisherIdentifier": settings.AIS_AMCR_ROR,
                         "publisherIdentifierScheme": "ROR",
                     },
                     "container": {
@@ -445,31 +443,40 @@ class DokumentSerializer(ModelSerializer):
                     )
             except ObjectDoesNotExist:
                 pass
-            if cast.projekt and cast.projekt.hlavni_katastr and cast.projekt.pristupnost.pk == PRISTUPNOST_ANONYM_ID:
-                geo_locations.append(
-                    serialize_geom(cast.projekt.hlavni_katastr.definicni_bod, cast.projekt.hlavni_katastr)
-                )
-                geo_locations.append(serialize_geom(place=cast.projekt.hlavni_katastr))
+            if cast.projekt and cast.projekt.hlavni_katastr:
+                anonymize = cast.projekt.pristupnost.pk == PRISTUPNOST_ANONYM_ID
+                if not anonymize:
+                    geo_locations.append(
+                        serialize_geom(cast.projekt.hlavni_katastr.definicni_bod, cast.projekt.hlavni_katastr)
+                    )
+                else:
+                    geo_locations.append(serialize_geom(place=cast.projekt.hlavni_katastr))
                 for katastr in cast.projekt.katastry.all():
                     if katastr.pk != cast.projekt.hlavni_katastr:
                         geo_locations.append(serialize_geom(katastr.definicni_bod, katastr))
+                    else:
                         geo_locations.append(serialize_geom(place=katastr))
             if (
                 cast.archeologicky_zaznam
                 and cast.archeologicky_zaznam.hlavni_katastr
-                and cast.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID
                 and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
             ):
-                geo_locations.append(
-                    serialize_geom(
-                        cast.archeologicky_zaznam.hlavni_katastr.definicni_bod, cast.archeologicky_zaznam.hlavni_katastr
+                anonymize = not cast.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID
+                if not anonymize:
+                    geo_locations.append(
+                        serialize_geom(
+                            cast.archeologicky_zaznam.hlavni_katastr.definicni_bod,
+                            cast.archeologicky_zaznam.hlavni_katastr,
+                        )
                     )
-                )
-                geo_locations.append(serialize_geom(place=cast.archeologicky_zaznam.hlavni_katastr))
+                else:
+                    geo_locations.append(serialize_geom(place=cast.archeologicky_zaznam.hlavni_katastr))
                 for katastr in cast.archeologicky_zaznam.katastry.all():
                     if katastr.pk != cast.archeologicky_zaznam.hlavni_katastr:
-                        geo_locations.append(serialize_geom(katastr.definicni_bod, katastr))
-                        geo_locations.append(serialize_geom(place=katastr))
+                        if not anonymize:
+                            geo_locations.append(serialize_geom(katastr.definicni_bod, katastr))
+                        else:
+                            geo_locations.append(serialize_geom(place=katastr))
         geo_locations_dict = [dict(item) for item in list(set(geo_locations))]
         return geo_locations_dict
 
@@ -586,29 +593,6 @@ class DokumentSerializer(ModelSerializer):
             serialized_types["resourceTypeGeneral"] = "Dataset"
         return serialized_types
 
-    def serialize_hide(self):
-        return {
-            "data": {
-                "type": "dois",
-                "attributes": {
-                    "event": "hide",
-                    "descriptions": self._serialize_descriptions()
-                    + [
-                        {
-                            "lang": "cs",
-                            "description": self.DELETE_DESCRIPTION_CZ,
-                            "descriptionType": "TechnicalInfo",
-                        },
-                        {
-                            "lang": "en",
-                            "description": self.DELETE_DESCRIPTION_EN,
-                            "descriptionType": "TechnicalInfo",
-                        },
-                    ],
-                },
-            }
-        }
-
 
 class SamostatnyNalezSerializer(ModelSerializer):
     def __init__(self, record: SamostatnyNalez):
@@ -693,7 +677,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
         geo_locations: List[frozenset] = []
         if self.record.pristupnost.pk == PRISTUPNOST_ANONYM_ID and self.record.geom:
             geo_locations.append(serialize_geom(self.record.geom))
-        if self.record.pristupnost.pk == PRISTUPNOST_ANONYM_ID and self.record.katastr:
+        if self.record.pristupnost.pk != PRISTUPNOST_ANONYM_ID and self.record.katastr:
             geo_locations.append(serialize_geom(place=self.record.katastr))
         geo_locations_dict = [dict(item) for item in list(set(geo_locations))]
         return geo_locations_dict
@@ -832,6 +816,12 @@ class LokalitaSerializer(ModelSerializer):
                 dok: DokumentacniJednotka = dok_query.first()
                 if dok.pian and dok.pian.geom:
                     geo_locations.append(serialize_geom(dok.pian.geom, self.record.archeologicky_zaznam.hlavni_katastr))
+            for katastr in self.record.archeologicky_zaznam.katastry.all():
+                geo_locations.append(serialize_geom(place=katastr))
+        else:
+            geo_locations.append(serialize_geom(place=self.record.archeologicky_zaznam.hlavni_katastr))
+            for katastr in self.record.archeologicky_zaznam.katastry.all():
+                geo_locations.append(serialize_geom(place=katastr.okres))
         geo_locations_dict = [dict(item) for item in list(set(geo_locations))]
         return geo_locations_dict
 
@@ -877,7 +867,7 @@ class LokalitaSerializer(ModelSerializer):
                 "nameType": "Organizational",
                 "nameIdentifiers": [
                     {
-                        "affiliationIdentifier": f"https://ror.org/{AIS_AMCR.ident_cely}",
+                        "affiliationIdentifier": settings.AIS_AMCR_ROR,
                         "affiliationIdentifierScheme": "ROR",
                         "schemeUri": "https://ror.org/",
                     }
@@ -964,11 +954,8 @@ class LokalitaSerializer(ModelSerializer):
 
     def _serialize_subjects(self):
         serialized_subjects = super()._serialize_subjects()
-        try:
-            if self.record.archeologicky_zaznam and self.record.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY:
-                serialized_subjects.append(serialize_subject(self.record.archeologicky_zaznam.lokalita.druh))
-        except ObjectDoesNotExist:
-            pass
+        if self.record.druh:
+            serialized_subjects.append(serialize_subject(self.record.druh))
         serialized_komponenta_data = []
         serialized_komponenta_data += [
             [serialize_subject(komp.obdobi) for komp in dj.komponenty.komponenty.all()]
