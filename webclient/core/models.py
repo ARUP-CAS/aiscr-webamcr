@@ -469,14 +469,20 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def large_thumbnail(self) -> FileResponse | None:
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_large=True)
         if self.repository_uuid is not None and rep_bin_file:
-            return self._create_file_response(rep_bin_file)
+            response = self._create_file_response(rep_bin_file)
+            response["Content-Type"] = "image/png"
+            response["Content-Disposition"] = f"attachment; filename={self.nazev}.png"
+            return response
         return None
 
     @cached_property
     def small_thumbnail(self) -> FileResponse | None:
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_small=True)
         if self.repository_uuid is not None and rep_bin_file:
-            return self._create_file_response(rep_bin_file)
+            response = self._create_file_response(rep_bin_file)
+            response["Content-Type"] = "image/png"
+            response["Content-Disposition"] = f"attachment; filename={self.nazev}.png"
+            return response
         return None
 
     @cached_property
