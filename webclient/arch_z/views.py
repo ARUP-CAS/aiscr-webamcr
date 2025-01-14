@@ -1526,6 +1526,7 @@ class AkceListView(SearchListView):
     typ_zmeny_lookup = ZAPSANI_AZ
     redis_snapshot_prefix = "akce"
     redis_value_list_field = "archeologicky_zaznam__ident_cely"
+    vypis_app = "akce"
 
     def init_translations(self):
         super().init_translations()

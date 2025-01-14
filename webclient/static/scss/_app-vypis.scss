@@ -11,13 +11,14 @@
 
   .app-content-wrapper {
 
-    h1 {
-      color: rgb(0, 128, 255);
+
+    button {
+      border: none;
+      background: none;
     }
 
     .section-name {
-      color: rgb(0, 128, 255);
-      font-weight: 500;
+      font-weight: bolder;
     }
 
     .under-header {
@@ -31,12 +32,9 @@
     }
 
     .main-header {
-      color: rgb(0, 128, 255) !important;
+      font-weight: bolder;
       font-size: 1.5rem;
 
-      a {
-        color: rgb(0, 128, 255) !important
-      }
     }
 
     .sub-header {
