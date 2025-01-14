@@ -1103,7 +1103,7 @@ class SearchTable(ColumnShiftTableBootstrap4):
 
     def get_all_idents(self):
         """
-        Vrátí seznam identifikátorů projektů.
+        Vrátí seznam identifikátorů záznamů tabulky.
         """
         return ",".join([record.record.ident_cely for record in self.paginated_rows])
 

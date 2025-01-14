@@ -255,6 +255,6 @@ class UzivatelSpolupraceTable(SearchTable):
 
     def get_all_idents(self):
         """
-        Vrátí seznam identifikátorů projektů.
+        Vrátí prázdnu hodnotu. Metóda je zde kvůli kompatibilitě s ostatními tabulkami.
         """
         return ""
