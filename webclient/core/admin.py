@@ -716,6 +716,8 @@ class FedoraCustomAdminSite(admin.AdminSite):
                                     result = self._perform_client_action(record, "igsn", record.igsn_update)
                                 else:
                                     result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
+                        else:
+                            result = _("core.admin.FedoraCustomAdminSite.cannot_load_record")
                         sheet.loc[ident_cely, "result"] = result
                         sheet.loc[ident_cely, "detail"] = result
                 context["text"] = sheet.to_html(index=True)

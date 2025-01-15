@@ -485,6 +485,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
 
     @property
     def anonym(self):
+        # TODO: Implement this when anonym detection is added
         return False
 
 

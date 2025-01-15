@@ -30,21 +30,27 @@ class DoiNoTransactionError(DoiWriteError):
     pass
 
 
+class DoiConnectionError(DoiWriteError):
+    pass
+
+
 class DigitalObjectIdentifierClient:
     auth = HTTPBasicAuth(DATACITE_USER, DATACITE_USER_PASSWORD)
     headers = {"Content-Type": "application/vnd.api+json"}
 
+    record_serializer_map = {
+        Dokument: (DokumentSerializer, "doi"),
+        Lokalita: (LokalitaSerializer, "igsn"),
+        SamostatnyNalez: (SamostatnyNalezSerializer, "igsn"),
+    }
+
     def __init__(self, record):
         self.record = record
-        if isinstance(self.record, Dokument):
-            self.serializer = DokumentSerializer(self.record)
-            self.attribute_name = "doi"
-        elif isinstance(self.record, Lokalita):
-            self.serializer = LokalitaSerializer(self.record)
-            self.attribute_name = "igsn"
-        elif isinstance(self.record, SamostatnyNalez):
-            self.serializer = SamostatnyNalezSerializer(self.record)
-            self.attribute_name = "igsn"
+        record_type = type(record)
+        if record_type in self.record_serializer_map:
+            serializer_class, attribute_name = self.record_serializer_map[record_type]
+            self.serializer = serializer_class(self.record)  # Access serializer class dynamically
+            self.attribute_name = attribute_name
         else:
             logger.error("doi.client.DigitalObjectIdentifierClient.invalid_record_class")
             raise ValueError(_("doi.client.DigitalObjectIdentifierClient.invalid_record_class"))
@@ -65,6 +71,15 @@ class DigitalObjectIdentifierClient:
 
     def check_record_exists(self):
         response = requests.get(self._get_record_url(), auth=self.auth)
+        if str(response.status_code).startswith("5"):
+            logger.error(
+                "doi.client.DigitalObjectIdentifierClient.check_record_exists.error",
+                extra={
+                    "ident_cely": self.serializer.get_ident_cely(),
+                    "status_code": response.status_code,
+                },
+            )
+            raise DoiConnectionError(response.text)
         return str(response.status_code).startswith("2")
 
     def delete_record(self):

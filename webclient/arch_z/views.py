@@ -13,6 +13,7 @@ from core.constants import (
     AZ_STAV_ARCHIVOVANY,
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
+    D_STAV_ARCHIVOVANY,
     ODESLANI_AZ,
     PIAN_NEPOTVRZEN,
     PIAN_POTVRZEN,
@@ -748,15 +749,17 @@ def archivovat(request, ident_cely):
         fedora_transaction = az.create_transaction(request.user)
         for item in az.casti_dokumentu.all():
             item: DokumentCast
-            if item.dokument.stav == AZ_STAV_ARCHIVOVANY:
+            if item.dokument.stav == D_STAV_ARCHIVOVANY:
                 item.dokument.doi_update()
-        if az.lokalita:
+        try:
             if not az.lokalita.igsn:
                 az.lokalita.igsn_publish()
                 az.lokalita.set_igsn()
                 az.lokalita.save()
             else:
                 az.lokalita.igsn_update()
+        except ObjectDoesNotExist:
+            pass
         az.set_archivovany(request.user)
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
@@ -780,10 +783,17 @@ def archivovat(request, ident_cely):
                 status=403,
             )
     form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
+    try:
+        if az.lokalita.igsn_exists:
+            doi_exists_warning = _("arch_z.views.archivovat.doi_exists_warning")
+        else:
+            doi_exists_warning = None
+    except ObjectDoesNotExist:
+        doi_exists_warning = None
     context = {
         "object": az,
         "title": _("arch_z.views.archivovat.title.text"),
-        "text": _("dokument.views.archivovat.doi_exists_warning") if az.lokalita and az.lokalita.igsn_exists else None,
+        "text": doi_exists_warning,
         "id_tag": "archivovat-akci-form",
         "button": _("arch_z.views.archivovat.submitButton.text"),
         "form_check": form_check,
@@ -817,8 +827,11 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             fedora_trasnaction = az.create_transaction(request.user)
-            if az.lokalita and az.stav == AZ_STAV_ARCHIVOVANY:
-                az.lokalita.igsn_hide()
+            try:
+                if az.lokalita and az.stav == AZ_STAV_ARCHIVOVANY:
+                    az.lokalita.igsn_hide()
+            except ObjectDoesNotExist:
+                pass
             duvod = form.cleaned_data["reason"]
             projekt = None
             if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
