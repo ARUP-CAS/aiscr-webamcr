@@ -61,11 +61,11 @@ def odstavka_in_progress(view_func):
                 if "oznameni" in request.path:
                     return render(
                         request,
-                        "/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html",
+                        "/vol/web/nginx/data/" + language + "/oznameni/custom_503.html",
                     )
                 return render(
                     request,
-                    "/vol/web/nginx/data/" + language + "/custom_50x.html",
+                    "/vol/web/nginx/data/" + language + "/custom_503.html",
                 )
         return view_func(request, *args, **kwargs)
 
