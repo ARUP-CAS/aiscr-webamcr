@@ -250,6 +250,7 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
         verbose_name=_("heslar.models.HeslarOdkaz.skos_mapping_relation"),
         choices=SKOS_MAPPING_RELATION_CHOICES,
     )
+    scheme_uri = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = "heslar_odkaz"

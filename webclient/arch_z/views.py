@@ -746,6 +746,17 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         fedora_transaction = az.create_transaction(request.user)
+        for item in az.casti_dokumentu.all():
+            item: DokumentCast
+            if item.dokument.stav == AZ_STAV_ARCHIVOVANY:
+                item.dokument.doi_update()
+        if az.lokalita:
+            if not az.lokalita.igsn:
+                az.lokalita.igsn_publish()
+                az.lokalita.set_igsn()
+                az.lokalita.save()
+            else:
+                az.lokalita.igsn_update()
         az.set_archivovany(request.user)
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
@@ -772,6 +783,7 @@ def archivovat(request, ident_cely):
     context = {
         "object": az,
         "title": _("arch_z.views.archivovat.title.text"),
+        "text": _("dokument.views.archivovat.doi_exists_warning") if az.lokalita and az.lokalita.igsn_exists else None,
         "id_tag": "archivovat-akci-form",
         "button": _("arch_z.views.archivovat.submitButton.text"),
         "form_check": form_check,
@@ -805,6 +817,8 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             fedora_trasnaction = az.create_transaction(request.user)
+            if az.lokalita and az.stav == AZ_STAV_ARCHIVOVANY:
+                az.lokalita.igsn_hide()
             duvod = form.cleaned_data["reason"]
             projekt = None
             if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -1526,6 +1540,7 @@ class AkceListView(SearchListView):
     typ_zmeny_lookup = ZAPSANI_AZ
     redis_snapshot_prefix = "akce"
     redis_value_list_field = "archeologicky_zaznam__ident_cely"
+    vypis_app = "akce"
 
     def init_translations(self):
         super().init_translations()

@@ -189,3 +189,5 @@ MAX_POCET_SOUBORU_PROJEKTU = 40
 LIMIT_PRVKU_ZOBRAZENI_HEATMAP = 7_000  # Počet prvků v mapovém výřezu, při kterém se už má zobrazit heatmap
 
 EPSG_WGS84 = 4326
+
+AIS_AMCR_ROR = "https://ror.org/0287jta43"

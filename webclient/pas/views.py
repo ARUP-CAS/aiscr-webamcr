@@ -438,6 +438,8 @@ def vratit(request, ident_cely):
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
             sn.create_transaction(request.user, SAMOSTATNY_NALEZ_VRACEN)
+            if sn.stav == SN_ARCHIVOVANY:
+                sn.igsn_hide()
             sn.set_vracen(request.user, sn.stav - 1, duvod)
             sn.close_active_transaction_when_finished = True
             sn.save()
@@ -571,7 +573,7 @@ def archivovat(request, ident_cely):
     """
     Funkce pohledu pro archivaci samostatného nálezu pomocí modalu.
     """
-    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    sn: SamostatnyNalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_POTVRZENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse(
@@ -594,6 +596,8 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
+        sn.igsn_publish()
+        sn.set_igsn()
         sn.create_transaction(request.user, SAMOSTATNY_NALEZ_ARCHIVOVAN)
         sn.set_archivovany(request.user)
         sn.close_active_transaction_when_finished = True
@@ -606,6 +610,7 @@ def archivovat(request, ident_cely):
             "object": sn,
             "title": _("pas.views.archivovat.title.text"),
             "id_tag": "archivovat-pas-form",
+            "text": _("dokument.views.archivovat.doi_exists_warning") if sn.igsn_exists else None,
             "button": _("pas.views.archivovat.submitButton.text"),
             "form_check": form_check,
         }
@@ -637,6 +642,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     redis_value_list_field = "ident_cely"
     toolbar = "toolbar_pas.html"
     typ_zmeny_lookup = ZAPSANI_SN
+    vypis_app = "pas"
 
     def init_translations(self):
         super().init_translations()
