@@ -139,15 +139,15 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         """
         Pomocní metóda pro úpravu template zobrazených počas odstávky.
         """
-        with open("/vol/web/nginx/data/" + language + "/custom_50x.html") as fp:
+        with open("/vol/web/nginx/data/" + language + "/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
             soup.find("h1").string.replace_with(form.cleaned_data["error_text_" + language])
-        with open("/vol/web/nginx/data/" + language + "/custom_50x.html", "w") as fp:
+        with open("/vol/web/nginx/data/" + language + "/custom_503.html", "w") as fp:
             fp.write(str(soup))
-        with open("/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html") as fp:
+        with open("/vol/web/nginx/data/" + language + "/oznameni/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
             soup.find("h1").string.replace_with(form.cleaned_data["error_text_oznam_" + language])
-        with open("/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html", "w") as fp:
+        with open("/vol/web/nginx/data/" + language + "/oznameni/custom_503.html", "w") as fp:
             fp.write(str(soup))
 
 

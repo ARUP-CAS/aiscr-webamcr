@@ -1456,15 +1456,15 @@ class FedoraTransaction:
                 i.active(),
             )
         except Exception as e:
-            logger.error(
-                "core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_error",
+            logger.warning(
+                "core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_warning",
                 extra={"Exception": e, "app": app},
             )
             call_digiarchiv_update_task.apply_async()
         for queue in queues:
             if queue is None:
-                logger.error(
-                    "core_repository_connector.FedoraTransaction.call_digiarchiv_update.error",
+                logger.warning(
+                    "core_repository_connector.FedoraTransaction.call_digiarchiv_update.warning",
                     extra={"i": i, "queues": queues},
                 )
                 break

@@ -1,0 +1,17 @@
+<div>
+    <hr class="mt-1" />
+    <div class="main-header">
+    {% include main_section_data.header.template with header=main_section_data.header %}
+    </div>
+    {% if main_section_data.sub_header %}
+    <div class = "sub-header">
+    {% include main_section_data.sub_header.template with sub_header=main_section_data.sub_header %}
+    </div>
+    {% endif %}
+    {% include main_section_data.under_header.template with section=main_section_data.under_header %}
+    
+    {% for section_, section_fields in sections_data.items %}
+    <hr class="mt-1" />
+        {% include section_fields.template with section=section_fields %}
+    {% endfor %}
+</div>

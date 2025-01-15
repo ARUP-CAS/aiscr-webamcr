@@ -33,7 +33,7 @@ class DoiNoTransactionError(DoiWriteError):
 class DoiConnectionError(DoiWriteError):
     pass
 
-
+  
 class DigitalObjectIdentifierClient:
     auth = HTTPBasicAuth(DATACITE_USER, DATACITE_USER_PASSWORD)
     headers = {"Content-Type": "application/vnd.api+json"}

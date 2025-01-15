@@ -252,3 +252,9 @@ class UzivatelSpolupraceTable(SearchTable):
 
     def __init__(self, *args, **kwargs):
         super(UzivatelSpolupraceTable, self).__init__(*args, **kwargs)
+
+    def get_all_idents(self):
+        """
+        Vrátí prázdnu hodnotu. Metóda je zde kvůli kompatibilitě s ostatními tabulkami.
+        """
+        return ""

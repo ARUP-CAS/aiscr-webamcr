@@ -243,6 +243,7 @@ class Model3DListView(SearchListView):
     redis_snapshot_prefix = "dokument"
     redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
+    vypis_app = "model"
 
     def init_translations(self):
         super().init_translations()
@@ -312,6 +313,7 @@ class DokumentListView(SearchListView):
     redis_snapshot_prefix = "dokument"
     redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
+    vypis_app = "dokument"
 
     def init_translations(self):
         super().init_translations()

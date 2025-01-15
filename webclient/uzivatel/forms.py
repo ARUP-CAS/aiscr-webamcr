@@ -142,6 +142,13 @@ class AuthUserChangeForm(forms.ModelForm):
     Formulář pro editaci uživatele.
     """
 
+    orcid = forms.CharField(
+        validators=[validate_orcid],
+        help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
+        label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
+        widget=forms.TextInput(),
+    )
+
     class Meta:
         model = User
         fields = ("telefon", "orcid")
@@ -177,6 +184,15 @@ class AuthUserChangeForm(forms.ModelForm):
             help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
             choice_list=[[self.instance.orcid, self.instance.orcid]],
         )
+
+    def clean_orcid(self):
+        orcid = self.cleaned_data.get("orcid")
+        if not verify_orcid(orcid):
+            raise forms.ValidationError(
+                _("uzivatel.forms.AuthUserChangeForm.orcid.error"),
+                code="orcid_error",
+            )
+        return self.cleaned_data.get("orcid")
 
     def clean_orcid(self):
         orcid = self.cleaned_data.get("orcid")

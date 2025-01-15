@@ -760,6 +760,7 @@ def archivovat(request, ident_cely):
                 az.lokalita.igsn_update()
         except ObjectDoesNotExist:
             pass
+
         az.set_archivovany(request.user)
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
@@ -1553,6 +1554,7 @@ class AkceListView(SearchListView):
     typ_zmeny_lookup = ZAPSANI_AZ
     redis_snapshot_prefix = "akce"
     redis_value_list_field = "archeologicky_zaznam__ident_cely"
+    vypis_app = "akce"
 
     def init_translations(self):
         super().init_translations()
