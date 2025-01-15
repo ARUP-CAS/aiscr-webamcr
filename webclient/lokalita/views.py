@@ -29,8 +29,10 @@ from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
+from django.views.decorators.cache import never_cache
 from django.views.generic import TemplateView
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import CreateView, UpdateView
@@ -215,7 +217,6 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         logger.debug("lokalita.views.LokalitaCreateView.form_valid.start")
-        logger.debug(CreateArchZForm(self.request.POST))
         form_az = CreateArchZForm(self.request.POST)
         if form_az.is_valid():
             az = form_az.save(commit=False)
@@ -253,6 +254,10 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         logger.debug("main form is invalid")
         logger.debug(form.errors)
         return super().form_invalid(form)
+
+    @method_decorator(never_cache)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 
 class LokalitaEditView(LoginRequiredMixin, UpdateView):
@@ -311,6 +316,10 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         logger.debug("main form is invalid")
         logger.debug(form.errors)
         return super().form_invalid(form)
+
+    @method_decorator(never_cache)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 
 class LokalitaRelatedView(LokalitaDetailView):

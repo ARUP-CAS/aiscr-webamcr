@@ -71,6 +71,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views import View
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
 from django.views.generic.edit import UpdateView
@@ -1101,6 +1102,7 @@ class DokumentNeidentAkceSmazatView(TransakceView):
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
@@ -1203,6 +1205,7 @@ def edit(request, ident_cely):
     )
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit_model_3D(request, ident_cely):
@@ -1366,6 +1369,7 @@ def zapsat_do_projektu(request, proj_ident_cely):
     return zapsat(request, zaznam)
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET", "POST"])
 def create_model_3D(request):
@@ -1799,6 +1803,7 @@ def get_detail_template_shows(dokument, user):
     return show
 
 
+@never_cache
 @login_required
 def zapsat(request, zaznam=None):
     """
