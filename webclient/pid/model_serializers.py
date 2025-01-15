@@ -3,7 +3,14 @@ from datetime import datetime
 from typing import Dict, List
 
 from arch_z.models import AkceVedouci, ArcheologickyZaznam, ExterniOdkaz
-from core.constants import ARCHIVACE_AZ, ARCHIVACE_SN, AZ_STAV_ARCHIVOVANY, D_STAV_ARCHIVOVANY, EZ_STAV_POTVRZENY
+from core.constants import (
+    AIS_AMCR_ROR,
+    ARCHIVACE_AZ,
+    ARCHIVACE_SN,
+    AZ_STAV_ARCHIVOVANY,
+    D_STAV_ARCHIVOVANY,
+    EZ_STAV_POTVRZENY,
+)
 from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -182,7 +189,7 @@ class ModelSerializer(ABC):
                         "lang": "en",
                         "name": "Archaeological Information System of the Czech Republic",
                         "schemeUri": "https://ror.org/",
-                        "publisherIdentifier": settings.AIS_AMCR_ROR,
+                        "publisherIdentifier": AIS_AMCR_ROR,
                         "publisherIdentifierScheme": "ROR",
                     },
                     "container": {
@@ -867,7 +874,7 @@ class LokalitaSerializer(ModelSerializer):
                 "nameType": "Organizational",
                 "nameIdentifiers": [
                     {
-                        "affiliationIdentifier": settings.AIS_AMCR_ROR,
+                        "affiliationIdentifier": AIS_AMCR_ROR,
                         "affiliationIdentifierScheme": "ROR",
                         "schemeUri": "https://ror.org/",
                     }
