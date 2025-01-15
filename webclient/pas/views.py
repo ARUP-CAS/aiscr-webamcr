@@ -642,6 +642,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     redis_value_list_field = "ident_cely"
     toolbar = "toolbar_pas.html"
     typ_zmeny_lookup = ZAPSANI_SN
+    vypis_app = "pas"
 
     def init_translations(self):
         super().init_translations()

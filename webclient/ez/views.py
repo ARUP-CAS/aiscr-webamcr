@@ -90,6 +90,7 @@ class ExterniZdrojListView(SearchListView):
     redis_snapshot_prefix = "externi_zdroj"
     redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_EXT_ZD
+    vypis_app = "ez"
 
     def init_translations(self):
         super().init_translations()
