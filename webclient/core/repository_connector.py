@@ -18,6 +18,8 @@ from requests.auth import HTTPBasicAuth
 from xml_generator.generator import DocumentGenerator
 from xml_generator.models import ModelWithMetadata
 
+from redis import ResponseError
+
 logger = logging.getLogger(__name__)
 
 
@@ -1348,7 +1350,13 @@ class FedoraTransaction:
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         if operation == FedoraTransactionOperation.COMMIT:
             response = requests.put(url, auth=auth, verify=False)
-            self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
+            try:
+                self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
+            except ResponseError as err:
+                logger.error(
+                    "core_repository_connector.FedoraTransaction._save_transaction_result_to_redis.failed",
+                    extra={"transaction": self.uid, "err": err},
+                )
         elif operation == FedoraTransactionOperation.ROLLBACK:
             response = requests.delete(url, auth=auth, verify=False)
             self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)

@@ -8,6 +8,7 @@ from cacheops import invalidate_model
 from core.constants import (
     ARCHIVACE_PROJ,
     AZ_STAV_ZAPSANY,
+    D_STAV_ARCHIVOVANY,
     D_STAV_ZAPSANY,
     NAVRZENI_KE_ZRUSENI_PROJ,
     OBLAST_CECHY,
@@ -1000,6 +1001,10 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
+        for item in projekt.casti_dokumentu.all():
+            item: DokumentCast
+            if item.dokument.stav == D_STAV_ARCHIVOVANY:
+                item.dokument.doi_update()
         projekt.set_archivovany(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()

@@ -4,6 +4,8 @@ from dal import autocomplete, forward
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from heslar.models import HeslarHierarchie, HeslarNazev, HeslarOdkaz
+from pid.verificators import verify_orcid, verify_ror, verify_wikidata
+from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
 
@@ -70,3 +72,42 @@ class HeslarOdkazForm(forms.ModelForm):
         logger.debug(self.instance)
         if self.instance.pk is not None:
             self.fields["heslar_nazev"].initial = self.instance.heslo.nazev_heslare
+
+
+class OsobaAdminForm(forms.ModelForm):
+    class Meta:
+        model = Osoba
+        fields = "__all__"
+
+    def clean_orcid(self):
+        orcid = self.cleaned_data.get("orcid")
+        if orcid and not verify_orcid(orcid):
+            raise forms.ValidationError(
+                _("heslar.forms.OsobaAdminForm.orcid.error"),
+                code="orcid_error",
+            )
+        return orcid
+
+    def clean_wikidata(self):
+        wikidata = self.cleaned_data.get("wikidata")
+        if not verify_wikidata(wikidata):
+            raise forms.ValidationError(
+                _("uzivatel.forms.OsobaAdminForm.wikidata.error"),
+                code="orcid_error",
+            )
+        return wikidata
+
+
+class OrganizaceAdminForm(forms.ModelForm):
+    class Meta:
+        model = Osoba
+        fields = "__all__"
+
+    def clean_ror(self):
+        ror = self.cleaned_data.get("ror")
+        if ror and not verify_ror(ror):
+            raise forms.ValidationError(
+                _("heslar.forms.OrganizaceAdminForm.orcid.error"),
+                code="orcid_error",
+            )
+        return ror
