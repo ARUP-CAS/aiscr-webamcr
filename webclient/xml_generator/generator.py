@@ -234,12 +234,17 @@ class DocumentGenerator:
             from pian.models import Pian
             from projekt.models import Projekt
 
-            if isinstance(record, Projekt) or isinstance(record, DokumentExtraData) or isinstance(record, VyskovyBod):
+            if isinstance(record, Projekt) or isinstance(record, DokumentExtraData):
                 record = record.__class__.objects.annotate(
                     geom_st_asgml=AsGML("geom", nprefix="gml"),
                     geom_st_astext=AsText("geom"),
                     geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
                     geom_sjtsk_st_astext=AsText("geom_sjtsk"),
+                ).get(pk=record.pk)
+            elif isinstance(record, VyskovyBod):
+                record = record.__class__.objects.annotate(
+                    geom_st_asgml=AsGML("geom", nprefix="gml"),
+                    geom_st_astext=AsText("geom"),
                 ).get(pk=record.pk)
             elif isinstance(record, SamostatnyNalez) or isinstance(record, Pian):
                 record = record.__class__.objects.annotate(
