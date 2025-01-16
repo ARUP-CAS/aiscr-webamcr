@@ -149,8 +149,6 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         null=True,
         related_name="sn_historie",
     )
-    geom_updated_at = models.DateTimeField(null=True, blank=True)
-    geom_sjtsk_updated_at = models.DateTimeField(null=True, blank=True)
     igsn = models.CharField(max_length=255, blank=True, null=True)
 
     @property
