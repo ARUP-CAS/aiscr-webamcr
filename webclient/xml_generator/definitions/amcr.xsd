@@ -115,6 +115,7 @@
   <xs:complexType name="dokumentType">
     <xs:sequence>
       <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{ident_cely}" -->
+      <xs:element name="doi" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{doi}" -->
       <xs:element name="let" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{let.ident_cely}" | "{let.ident_cely}" -->
       <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> <!-- "{stav}" -->
       <xs:element name="typ_dokumentu" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{typ_dokumentu.ident_cely}" | "{typ_dokumentu.heslo}" -->
@@ -143,6 +144,7 @@
   <xs:complexType name="ext_zdrojType">
     <xs:sequence>
       <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{ident_cely}" -->
+      <xs:element name="doi" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{doi}" -->
       <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> <!-- "{stav}" -->
       <xs:element name="typ" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{typ.ident_cely}" | "{typ.heslo}" -->
       <xs:element name="autor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{externizdrojautor_set.autor.ident_cely}" | "{externizdrojautor_set.poradi}" | "{externizdrojautor_set.autor.vypis_cely}" -->
@@ -184,6 +186,7 @@
     <xs:sequence>
       <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{ident_cely}" -->
       <xs:element name="evidencni_cislo" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{evidencni_cislo}" -->
+      <xs:element name="igsn" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{igsn}" -->
       <xs:element name="projekt" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{projekt.ident_cely}" | "{projekt.ident_cely}" -->
       <xs:element name="okres" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> <!-- "ruian-{katastr.okres.kod}" | "{katastr.okres.nazev}" -->
       <xs:element name="hloubka" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{hloubka}" -->
@@ -215,6 +218,7 @@
       <xs:element name="prijmeni" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{last_name}" -->
       <xs:element name="email" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{email}" -->
       <xs:element name="osoba" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{osoba.ident_cely}" | "{osoba.vypis_cely}" -->
+      <xs:element name="orcid" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{orcid}" -->
       <xs:element name="organizace" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{organizace.ident_cely}" | "{organizace.nazev}" -->
       <xs:element name="jazyk" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{jazyk}" -->
       <xs:element name="telefon" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{telefon}" -->
@@ -302,6 +306,7 @@
       <xs:element name="soucast" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> <!-- "{soucast.ident_cely}" | "{soucast.nazev}" -->
       <xs:element name="zanikla" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{zanikla}" -->
       <xs:element name="cteni_dokumentu" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{cteni_dokumentu}" -->
+      <xs:element name="ror" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{ror}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="osobaType">
@@ -314,6 +319,8 @@
       <xs:element name="rok_narozeni" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{rok_narozeni}" -->
       <xs:element name="rok_umrti" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{rok_umrti}" -->
       <xs:element name="rodne_prijmeni" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{rodne_prijmeni}" -->
+      <xs:element name="orcid" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{orcid}" -->
+      <xs:element name="wikidata" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{wikidata}" -->
     </xs:sequence>
   </xs:complexType>
  
@@ -405,6 +412,7 @@
   </xs:complexType>
   <xs:complexType name="lokalitaType">
     <xs:sequence>
+      <xs:element name="igsn" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{igsn}" -->
       <xs:element name="typ_lokality" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{typ_lokality.ident_cely}" | "{typ_lokality.heslo}" -->
       <xs:element name="druh" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{druh.ident_cely}" | "{druh.heslo}" -->
       <xs:element name="zachovalost" minOccurs="0" maxOccurs="1" type="amcr:vocabType"/> <!-- "{zachovalost.ident_cely}" | "{zachovalost.heslo}" -->
@@ -621,6 +629,7 @@
       <xs:element name="nazev_kodu" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev_kodu}" -->
       <xs:element name="kod" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{kod}" -->
       <xs:element name="uri" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{uri}" -->
+      <xs:element name="scheme_uri" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{scheme_uri}" -->
       <xs:element name="skos_mapping_relation" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{skos_mapping_relation}" -->
     </xs:sequence>
   </xs:complexType>

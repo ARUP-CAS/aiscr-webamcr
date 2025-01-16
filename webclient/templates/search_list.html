@@ -92,6 +92,11 @@
                       {% trans "templates.searchList.stahnout.label" %} <code>.{{ format }}</code>
                     </a>
                   {% endfor %}
+                  {% if app != "spoluprace" %}
+                  <a class="dropdown-item" href="{% url 'vypis:vypisy' vypis_app idents %}" target='_blank'>
+                    {% trans "templates.searchList.vypis.label" %}
+                  </a>
+                  {% endif %}
                 </div>
               </div>
             </div>

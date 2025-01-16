@@ -1101,6 +1101,12 @@ class SearchTable(ColumnShiftTableBootstrap4):
             )
         return ""
 
+    def get_all_idents(self):
+        """
+        Vrátí seznam identifikátorů záznamů tabulky.
+        """
+        return ",".join([record.record.ident_cely for record in self.paginated_rows])
+
 
 def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party_apps=False):
     """

@@ -10,6 +10,9 @@ from django.utils.translation import gettext_lazy as _
 logger = logging.getLogger(__name__)
 
 
+orcid_pattern = re.compile(r"\d{4}-\d{4}-\d{4}-\d{4}")
+
+
 def validate_phone_number(number):
     """
     Validátor pro ověření telefonního čísla na správny formát.
@@ -37,3 +40,9 @@ def validate_date_min_1600(value):
             raise ValidationError(_("core.validators.validate_date_min_1600.not_valid_upper"))
     elif value and value <= min_date:
         raise ValidationError(_("core.validators.validate_date_min_1600.not_valid"))
+
+
+def validate_orcid(orcid):
+    match = orcid_pattern.search(orcid)
+    if not match:
+        raise ValidationError(_("core.validators.validate_orcid.not_valid"))

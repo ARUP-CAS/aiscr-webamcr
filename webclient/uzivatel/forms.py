@@ -1,6 +1,6 @@
 import logging
 
-from core.validators import validate_phone_number
+from core.validators import validate_orcid, validate_phone_number
 from core.widgets import ForeignKeyReadOnlyTextInput
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
@@ -19,6 +19,7 @@ from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Invisible
 from django_registration.backends.activation.forms import ActivationForm
 from django_registration.forms import RegistrationForm
+from pid.verificators import verify_orcid, verify_wikidata
 from services.mailer import Mailer
 
 from .models import Osoba, User, UserNotificationType
@@ -31,6 +32,13 @@ class AuthUserCreationForm(RegistrationForm):
     Formulář pro vytvoření uživatele.
     """
 
+    orcid = forms.CharField(
+        validators=[validate_orcid],
+        help_text=_("uzivatel.forms.AuthUserCreationForm.orcid.tooltip"),
+        label=_("uzivatel.forms.AuthUserCreationForm.orcid.label"),
+        widget=forms.TextInput(),
+    )
+
     class Meta(RegistrationForm):
         model = User
         fields = (
@@ -39,6 +47,7 @@ class AuthUserCreationForm(RegistrationForm):
             "email",
             "telefon",
             "organizace",
+            "orcid",
             "password1",
             "password2",
         )
@@ -79,6 +88,7 @@ class AuthUserCreationForm(RegistrationForm):
             Field("email"),
             Field("telefon"),
             Field("organizace"),
+            Field("orcid"),
             AppendedText(
                 "password1",
                 mark_safe('<i class="bi bi-eye-slash" id="togglePassword1"></i>'),
@@ -93,6 +103,15 @@ class AuthUserCreationForm(RegistrationForm):
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
+
+    def clean_orcid(self):
+        orcid = self.cleaned_data.get("orcid")
+        if not verify_orcid(orcid):
+            raise forms.ValidationError(
+                _("uzivatel.forms.AuthUserCreationForm.orcid.error"),
+                code="orcid_error",
+            )
+        return self.cleaned_data.get("orcid")
 
 
 class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
@@ -122,9 +141,16 @@ class AuthUserChangeForm(forms.ModelForm):
     Formulář pro editaci uživatele.
     """
 
+    orcid = forms.CharField(
+        validators=[validate_orcid],
+        help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
+        label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
+        widget=forms.TextInput(),
+    )
+
     class Meta:
         model = User
-        fields = ("telefon",)
+        fields = ("telefon", "orcid")
         labels = {
             "telefon": _("uzivatel.forms.userChange.telefon.label"),
         }
@@ -143,9 +169,19 @@ class AuthUserChangeForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div("telefon", css_class="col-sm-3"),
+                Div("orcid", css_class="col-sm-3"),
                 css_class="row",
             )
         )
+
+    def clean_orcid(self):
+        orcid = self.cleaned_data.get("orcid")
+        if not verify_orcid(orcid):
+            raise forms.ValidationError(
+                _("uzivatel.forms.AuthUserChangeForm.orcid.error"),
+                code="orcid_error",
+            )
+        return self.cleaned_data.get("orcid")
 
 
 class AuthReadOnlyUserChangeForm(forms.ModelForm):
@@ -212,6 +248,21 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
                 css_class="row",
             )
         )
+
+
+class AuthUserChangeAdminForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = "__all__"
+
+    def clean_orcid(self):
+        orcid = self.cleaned_data.get("orcid")
+        if not verify_orcid(orcid):
+            raise forms.ValidationError(
+                _("heslar.forms.OsobaForm.orcid.error"),
+                code="orcid_error",
+            )
+        return self.cleaned_data.get("orcid")
 
 
 class NotificationsForm(forms.ModelForm):
@@ -376,11 +427,21 @@ class OsobaForm(forms.ModelForm):
     Formulář pro vytvoření osoby.
     """
 
+    orcid = forms.CharField(
+        validators=[validate_orcid],
+        help_text=_("uzivatel.forms.OsobaForm.orcid.tooltip"),
+        label=_("uzivatel.forms.OsobaForm.orcid.label"),
+        widget=forms.TextInput(),
+        required=False,
+    )
+
     class Meta:
         model = Osoba
         fields = (
             "jmeno",
             "prijmeni",
+            "orcid",
+            "wikidata"
             # "rok_narozeni",
             # "rok_umrti",
             # "rodne_prijmeni",
@@ -388,11 +449,15 @@ class OsobaForm(forms.ModelForm):
         widgets = {
             "jmeno": forms.TextInput(),
             "prijmeni": forms.TextInput(),
+            "orcid": forms.TextInput(),
+            "wikidata": forms.TextInput(),
             # "rodne_prijmeni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
         labels = {
             "jmeno": _("uzivatel.forms.osoba.jmeno.label"),
             "prijmeni": _("uzivatel.forms.osoba.prijmeni.label"),
+            "orcid": _("uzivatel.forms.osoba.orcid.label"),
+            "wikidata": _("uzivatel.forms.osoba.wikidata.label"),
             # "rok_narozeni": _("uzivatel.forms.osoba.rok_narozeni.label"),
             # "rok_umrti": _("uzivatel.forms.osoba.rok_umrti.label"),
             # "rodne_prijmeni": _("uzivatel.forms.osoba.rodne_prijmeni.label"),
@@ -400,6 +465,8 @@ class OsobaForm(forms.ModelForm):
         help_texts = {
             "jmeno": _("uzivatel.forms.osoba.jmeno.tooltip"),
             "prijmeni": _("uzivatel.forms.osoba.prijmeni.tooltip"),
+            "orcid": _("uzivatel.forms.osoba.orcid.tooltip"),
+            "wikidata": _("uzivatel.forms.osoba.wikidata.tooltip"),
             # "rok_narozeni": _("uzivatel.forms.osoba.rok_narozeni.tooltip"),
             # "rok_umrti": _("uzivatel.forms.osoba.rok_umrti.tooltip"),
             # "rodne_prijmeni": _("uzivatel.forms.osoba.rodne_prijmeni.tooltip"),
@@ -412,6 +479,8 @@ class OsobaForm(forms.ModelForm):
             Div(
                 Div("jmeno", css_class="col-sm-6"),
                 Div("prijmeni", css_class="col-sm-6"),
+                Div("orcid", css_class="col-sm-6"),
+                Div("wikidata", css_class="col-sm-6"),
                 # Div("rok_narozeni", css_class="col-sm-6"),
                 # Div("rok_umrti", css_class="col-sm-6"),
                 # Div("rodne_prijmeni", css_class="col-sm-12"),
@@ -419,6 +488,24 @@ class OsobaForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+
+    def clean_orcid(self):
+        orcid = self.cleaned_data.get("orcid")
+        if not verify_orcid(orcid):
+            raise forms.ValidationError(
+                _("uzivatel.forms.OsobaForm.orcid.error"),
+                code="orcid_error",
+            )
+        return orcid
+
+    def clean_wikidata(self):
+        wikidata = self.cleaned_data.get("wikidata")
+        if not verify_wikidata(wikidata):
+            raise forms.ValidationError(
+                _("uzivatel.forms.OsobaForm.wikidata.error"),
+                code="orcid_error",
+            )
+        return wikidata
 
 
 class AuthActivationForm(ActivationForm):

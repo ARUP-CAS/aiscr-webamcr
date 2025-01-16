@@ -17,6 +17,7 @@ from core.constants import (
     ZAPSANI_SN,
 )
 from core.models import ModelWithMetadata, SouborVazby
+from django.conf import settings
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.db.models import CheckConstraint, Q
@@ -148,6 +149,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         null=True,
         related_name="sn_historie",
     )
+    igsn = models.CharField(max_length=255, blank=True, null=True)
 
     @property
     def initial_pristupnost(self):
@@ -379,6 +381,30 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         table = SamostatnyNalezTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
         return self.redis_snapshot_id, data
+
+    def set_igsn(self):
+        self.igsn = f"{settings.DOI_PREFIX}/{self.ident_cely}"
+
+    def _get_igsn_client(self):
+        from pid.client import DigitalObjectIdentifierClient
+
+        return DigitalObjectIdentifierClient(self)
+
+    @property
+    def igsn_exists(self):
+        return self._get_igsn_client().check_record_exists()
+
+    def igsn_delete(self):
+        return self._get_igsn_client().delete_record()
+
+    def igsn_hide(self):
+        return self._get_igsn_client().hide_record()
+
+    def igsn_publish(self):
+        return self._get_igsn_client().publish_record()
+
+    def igsn_update(self):
+        return self._get_igsn_client().update_record()
 
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):

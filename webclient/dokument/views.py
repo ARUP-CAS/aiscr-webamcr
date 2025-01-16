@@ -8,6 +8,7 @@ from arch_z.models import Akce, ArcheologickyZaznam
 from cacheops import invalidate_model
 from core.constants import (
     ARCHIVACE_DOK,
+    AZ_STAV_ARCHIVOVANY,
     D_STAV_ARCHIVOVANY,
     D_STAV_ODESLANY,
     D_STAV_ZAPSANY,
@@ -243,6 +244,7 @@ class Model3DListView(SearchListView):
     redis_snapshot_prefix = "dokument"
     redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
+    vypis_app = "model"
 
     def init_translations(self):
         super().init_translations()
@@ -312,6 +314,7 @@ class DokumentListView(SearchListView):
     redis_snapshot_prefix = "dokument"
     redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
+    vypis_app = "dokument"
 
     def init_translations(self):
         super().init_translations()
@@ -1583,6 +1586,16 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ARCHIVOVAN)
         dokument.active_transaction = fedora_transaction
+        dokument.doi_publish()
+        dokument.set_doi()
+        for item in dokument.casti.all():
+            item: DokumentCast
+            if (
+                item.archeologicky_zaznam
+                and item.archeologicky_zaznam.lokalita
+                and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            ):
+                item.archeologicky_zaznam.lokalita.igsn_update()
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
@@ -1614,6 +1627,7 @@ def archivovat(request, ident_cely):
     context = {
         "object": dokument,
         "title": _("dokument.views.archivovat.title"),
+        "text": _("dokument.views.archivovat.doi_exists_warning") if dokument.doi_exists else None,
         "id_tag": "archivovat-dokument-form",
         "button": _("dokument.views.archivovat.submitButton.text"),
         "form_check": form_check,
@@ -1637,6 +1651,8 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             dokument.create_transaction(request.user, DOKUMENT_USPESNE_VRACEN)
+            if dokument.stav == D_STAV_ARCHIVOVANY:
+                dokument.doi_hide()
             duvod = form.cleaned_data["reason"]
             if dokument.stav == D_STAV_ODESLANY:
                 Mailer.send_ek02(document=dokument, reason=duvod)
