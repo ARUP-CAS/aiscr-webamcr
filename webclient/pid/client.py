@@ -9,7 +9,7 @@ from pas.models import SamostatnyNalez
 from pid.model_serializers import DokumentSerializer, LokalitaSerializer, SamostatnyNalezSerializer
 from requests.auth import HTTPBasicAuth
 
-from webclient.settings.base import DATACITE_URL, DATACITE_USER, DATACITE_USER_PASSWORD
+from webclient.settings.base import DATACITE_URL, DOI_USER, DOI_USER_PASSWORD, IGSN_USER, IGSN_USER_PASSWORD
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,6 @@ class DoiNoTransactionError(DoiWriteError):
 
 
 class DigitalObjectIdentifierClient:
-    auth = HTTPBasicAuth(DATACITE_USER, DATACITE_USER_PASSWORD)
     headers = {"Content-Type": "application/vnd.api+json"}
 
     def __init__(self, record):
@@ -39,12 +38,15 @@ class DigitalObjectIdentifierClient:
         if isinstance(self.record, Dokument):
             self.serializer = DokumentSerializer(self.record)
             self.attribute_name = "doi"
+            self.auth = HTTPBasicAuth(DOI_USER, DOI_USER_PASSWORD)
         elif isinstance(self.record, Lokalita):
             self.serializer = LokalitaSerializer(self.record)
             self.attribute_name = "igsn"
+            self.auth = HTTPBasicAuth(IGSN_USER, IGSN_USER_PASSWORD)
         elif isinstance(self.record, SamostatnyNalez):
             self.serializer = SamostatnyNalezSerializer(self.record)
             self.attribute_name = "igsn"
+            self.auth = HTTPBasicAuth(IGSN_USER, IGSN_USER_PASSWORD)
         else:
             logger.error("doi.client.DigitalObjectIdentifierClient.invalid_record_class")
             raise ValueError(_("doi.client.DigitalObjectIdentifierClient.invalid_record_class"))
