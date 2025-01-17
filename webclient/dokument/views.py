@@ -69,6 +69,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views import View
@@ -555,6 +556,10 @@ class DokumentDetailView(RelatedContext):
 
     template_name = "dokument/dok/detail.html"
 
+    @method_decorator(never_cache)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
 
 class DokumentCastDetailView(RelatedContext):
     """
@@ -712,6 +717,10 @@ class KomponentaDokumentCreateView(RelatedContext):
         self.get_cast(context, cast)
         context["komponenta_form_create"] = CreateKomponentaForm(get_obdobi_choices(), get_areal_choices())
         return context
+
+    @method_decorator(never_cache)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 
 class TvarEditView(LoginRequiredMixin, View):

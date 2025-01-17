@@ -319,6 +319,10 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
         context["active_dj_ident"] = self.get_dokumentacni_jednotka().ident_cely
         return context
 
+    @method_decorator(never_cache)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
 
 class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdateView):
     """
@@ -466,6 +470,7 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         context["pian_form_create"] = PianCreateForm()
         return context
 
+    @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         if "index" in self.request.GET and "label" in self.request.GET:

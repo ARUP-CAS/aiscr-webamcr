@@ -146,6 +146,7 @@ def index(request):
     return render(request, "projekt/index.html")
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):

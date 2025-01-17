@@ -408,6 +408,10 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
         context["j"] = self.get_dokumentacni_jednotka()
         return context
 
+    @method_decorator(never_cache)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
 
 class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
     """

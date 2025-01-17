@@ -164,7 +164,8 @@ class Modal {
 
     succesFunction (settings, response) {
         if (!settings.successFunc) {
-            if (response.redirect){
+            if (response.redirect){             
+                window.history.replaceState(null, null, response.redirect);               
                 window.location.href = response.redirect
             }
             else{
