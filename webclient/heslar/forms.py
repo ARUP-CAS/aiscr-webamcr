@@ -4,8 +4,7 @@ from dal import autocomplete, forward
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from heslar.models import HeslarHierarchie, HeslarNazev, HeslarOdkaz
-from pid.fields import OrcidAutocompleteField, RorAutocompleteField
-from pid.verificators import verify_wikidata
+from pid.fields import OrcidAutocompleteField, RorAutocompleteField, WikiDataAutocompleteField
 from uzivatel.models import Organizace, Osoba
 
 logger = logging.getLogger(__name__)
@@ -80,15 +79,6 @@ class OsobaAdminForm(forms.ModelForm):
         model = Osoba
         fields = "__all__"
 
-    def clean_wikidata(self):
-        wikidata = self.cleaned_data.get("wikidata")
-        if wikidata and not verify_wikidata(wikidata):
-            raise forms.ValidationError(
-                _("uzivatel.forms.OsobaAdminForm.wikidata.error"),
-                code="wikidata_error",
-            )
-        return wikidata
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["orcid"] = OrcidAutocompleteField(
@@ -96,6 +86,12 @@ class OsobaAdminForm(forms.ModelForm):
             label=_("heslar.forms.OsobaAdminForm.orcid.label"),
             instance=self.instance,
             initial_value=args[0].get("orcid") if args else None,
+        )
+        self.fields["wikidata"] = WikiDataAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:wikidata-autocomplete"),
+            label=_("heslar.forms.OsobaAdminForm.wikidata.label"),
+            instance=self.instance,
+            initial_value=args[0].get("wikidata") if args else None,
         )
 
 

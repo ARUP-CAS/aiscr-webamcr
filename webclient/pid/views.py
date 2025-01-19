@@ -1,8 +1,14 @@
+# flake8: noqa: E201, E202
+
+import re
+
 import requests
 from core.connectors import RedisConnector
 from dal import autocomplete
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
+from SPARQLWrapper import JSON, SPARQLWrapper
 
 
 class ApiView(autocomplete.Select2ListView):
@@ -16,7 +22,8 @@ class ApiView(autocomplete.Select2ListView):
     @classmethod
     def _get_value_from_cache(cls, key):
         cached_value = cls.r.get(f"{cls.CACHE_PREFIX}_{key}")
-        return [key, cached_value.decode("utf-8")]
+        if cached_value:
+            return [key, cached_value.decode("utf-8")]
 
     @classmethod
     def _save_value_to_cache(cls, key, value):
@@ -34,15 +41,15 @@ class ApiView(autocomplete.Select2ListView):
         else:
             return JsonResponse({"results": []})
 
-    def get_list(self):
-        pass
-
     def autocomplete_results(self, results):
         return [dict(id=x, text=y) for x, y in results]
 
+    def get_list(self):
+        return self.api_call(self.q)
+
 
 class DoiAutocompleteView(LoginRequiredMixin, ApiView):
-    API_URL = "https://api.test.datacite.org/dois"
+    API_URL = settings.DATACITE_URL
     CACHE_PREFIX = "DOI"
 
     @classmethod
@@ -59,10 +66,6 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
                 title = record.get("attributes").get("titles")[0].get("title") or record.get("id")
                 id = record.get("id")
                 results.append([id, f"{title} ({id})"])
-        return results
-
-    def get_list(self):
-        results = self.api_call(self.q)
         return results
 
 
@@ -98,10 +101,6 @@ class OrcidAutocompleteView(LoginRequiredMixin, ApiView):
                 cls._save_value_to_cache(orcid_id, full_nane)
         return result_list
 
-    def get_list(self):
-        result_list = self.api_call(self.q)
-        return result_list
-
 
 class RorAutocompleteView(LoginRequiredMixin, ApiView):
     API_URL = "https://api.ror.org/organizations"
@@ -125,6 +124,43 @@ class RorAutocompleteView(LoginRequiredMixin, ApiView):
                 result_list.append([ror_id, f"{name} ({ror_id})"])
         return result_list
 
-    def get_list(self):
-        result_list = self.api_call(self.q)
+
+class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
+    API_URL = "https://query.wikidata.org/sparql"
+    CACHE_PREFIX = "WIKIDATA"
+    ID_REGEX = re.compile(r".*Q\d+")
+
+    @classmethod
+    def api_call(cls, q, use_cache=False):
+        if cls.ID_REGEX.match(q):
+            query = f"""
+                SELECT ?item ?itemLabel WHERE {{
+                VALUES ?item {{ wd:{q} }}
+                ?item wdt:P31 wd:Q5.
+                SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,cs". }}
+                }}
+                LIMIT 50
+            """
+        else:
+            query = f"""
+                SELECT ?item ?itemLabel WHERE {{
+                  ?item wdt:P31 wd:Q5.
+                  ?item ?label "{q}"
+                  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,cs". }}
+                }}
+            LIMIT 10
+            """
+
+        # Set up the SPARQL wrapper
+        sparql = SPARQLWrapper(cls.API_URL)
+        sparql.setQuery(query)
+        sparql.setReturnFormat(JSON)
+
+        result_list = []
+        results = sparql.query().convert()
+        for result in results["results"]["bindings"]:
+            id = result["item"]["value"]
+            if "/" in id:
+                id = id.split("/")[-1]
+            result_list.append([id, f"{result['itemLabel']['value']} ({id})"])
         return result_list

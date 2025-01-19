@@ -1,6 +1,6 @@
 from dal import autocomplete
-from pid.verificators import verify_doi, verify_orcid, verify_ror
-from pid.views import DoiAutocompleteView, OrcidAutocompleteView, RorAutocompleteView
+from pid.verificators import verify_doi, verify_orcid, verify_ror, verify_wikidata
+from pid.views import DoiAutocompleteView, OrcidAutocompleteView, RorAutocompleteView, WikiDataAutocompleteView
 
 
 class PidAutocompleteField(autocomplete.Select2ListChoiceField):
@@ -55,3 +55,14 @@ class RorAutocompleteField(PidAutocompleteField):
 
     def validate(self, value):
         return verify_ror(value)
+
+
+class WikiDataAutocompleteField(PidAutocompleteField):
+    autocomplete_class = WikiDataAutocompleteView
+    attribute_name = "wikidata"
+
+    def valid_value(self, value):
+        return verify_wikidata(value)
+
+    def validate(self, value):
+        return verify_wikidata(value)
