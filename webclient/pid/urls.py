@@ -7,4 +7,5 @@ app_name = "pid"
 urlpatterns = [
     path("doi-autocomplete", views.DoiAutocompleteView.as_view(), name="doi-autocomplete"),
     path("orcid-autocomplete", views.OrcidAutocompleteView.as_view(), name="orcid-autocomplete"),
+    path("ror-autocomplete", views.RorAutocompleteView.as_view(), name="ror-autocomplete"),
 ]

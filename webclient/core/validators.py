@@ -40,9 +40,3 @@ def validate_date_min_1600(value):
             raise ValidationError(_("core.validators.validate_date_min_1600.not_valid_upper"))
     elif value and value <= min_date:
         raise ValidationError(_("core.validators.validate_date_min_1600.not_valid"))
-
-
-def validate_orcid(orcid):
-    match = orcid_pattern.search(orcid)
-    if not match:
-        raise ValidationError(_("core.validators.validate_orcid.not_valid"))
