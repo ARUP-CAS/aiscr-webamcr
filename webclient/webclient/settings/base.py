@@ -533,8 +533,10 @@ FEDORA_PROTOCOL = get_secret("FEDORA_PROTOCOL", "https")
 FEDORA_TRANSACTION_URL = get_secret("FEDORA_TRANSACTION_URL", "")
 
 DATACITE_URL = get_secret("DATACITE_URL", "")
-DATACITE_USER = get_secret("DATACITE_USER", "")
-DATACITE_USER_PASSWORD = get_secret("DATACITE_USER_PASSWORD", "")
+DOI_USER = get_secret("DOI_USER", "")
+DOI_USER_PASSWORD = get_secret("DOI_USER_PASSWORD", "")
+IGSN_USER = get_secret("IGSN_USER", "")
+IGSN_USER_PASSWORD = get_secret("IGSN_USER_PASSWORD", "")
 DOI_PREFIX = get_secret("DOI_PREFIX", "")
 IGSN_PREFIX = get_secret("IGSN_PREFIX", "")
 

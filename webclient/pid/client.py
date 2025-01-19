@@ -9,7 +9,7 @@ from pas.models import SamostatnyNalez
 from pid.model_serializers import DokumentSerializer, LokalitaSerializer, SamostatnyNalezSerializer
 from requests.auth import HTTPBasicAuth
 
-from webclient.settings.base import DATACITE_URL, DATACITE_USER, DATACITE_USER_PASSWORD
+from webclient.settings.base import DATACITE_URL, DOI_USER, DOI_USER_PASSWORD, IGSN_USER, IGSN_USER_PASSWORD
 
 logger = logging.getLogger(__name__)
 
@@ -35,22 +35,20 @@ class DoiConnectionError(DoiWriteError):
 
   
 class DigitalObjectIdentifierClient:
-    auth = HTTPBasicAuth(DATACITE_USER, DATACITE_USER_PASSWORD)
     headers = {"Content-Type": "application/vnd.api+json"}
 
     record_serializer_map = {
-        Dokument: (DokumentSerializer, "doi"),
-        Lokalita: (LokalitaSerializer, "igsn"),
-        SamostatnyNalez: (SamostatnyNalezSerializer, "igsn"),
+        Dokument: (DokumentSerializer, "doi", HTTPBasicAuth(DOI_USER, DOI_USER_PASSWORD)),
+        Lokalita: (LokalitaSerializer, "igsn", HTTPBasicAuth(IGSN_USER, IGSN_USER_PASSWORD)),
+        SamostatnyNalez: (SamostatnyNalezSerializer, "igsn", HTTPBasicAuth(IGSN_USER, IGSN_USER_PASSWORD)),
     }
 
     def __init__(self, record):
         self.record = record
         record_type = type(record)
         if record_type in self.record_serializer_map:
-            serializer_class, attribute_name = self.record_serializer_map[record_type]
+            serializer_class, self.attribute_name, self.auth = self.record_serializer_map[record_type]
             self.serializer = serializer_class(self.record)  # Access serializer class dynamically
-            self.attribute_name = attribute_name
         else:
             logger.error("doi.client.DigitalObjectIdentifierClient.invalid_record_class")
             raise ValueError(_("doi.client.DigitalObjectIdentifierClient.invalid_record_class"))
