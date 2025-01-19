@@ -33,7 +33,7 @@ class DoiNoTransactionError(DoiWriteError):
 class DoiConnectionError(DoiWriteError):
     pass
 
-  
+
 class DigitalObjectIdentifierClient:
     headers = {"Content-Type": "application/vnd.api+json"}
 
@@ -60,6 +60,7 @@ class DigitalObjectIdentifierClient:
                 extra={
                     "ident_cely": self.serializer.get_ident_cely(),
                     "status_code": response.status_code,
+                    "request_url": response.url,
                 },
             )
             raise DoiWriteError
