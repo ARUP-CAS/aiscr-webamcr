@@ -69,7 +69,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         return results
 
 
-class OrcidAutocompleteView(LoginRequiredMixin, ApiView):
+class OrcidAutocompleteView(ApiView):
     API_URL = "https://pub.orcid.org/v3.0/expanded-search"
     HEADERS = {"Accept": "application/json", "User-Agent": "Python-Requests"}
     CACHE_PREFIX = "ORCID"

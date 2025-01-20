@@ -80,7 +80,7 @@ class AuthUserCreationForm(RegistrationForm):
             widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
             label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
             help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
-            initial_value=args[0].get("orcid") if args else None,
+            initial_value=kwargs.get("data").get("orcid") if kwargs.get("data") else None,
             required=False,
         )
         self.helper.form_tag = False
