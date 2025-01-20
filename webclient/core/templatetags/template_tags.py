@@ -2,7 +2,8 @@ import logging
 from datetime import date, datetime
 
 import core.message_constants as mc
-from core.models import CustomAdminSettings, OdstavkaSystemu
+from core.models import OdstavkaSystemu
+from core.setting_models import CustomAdminSettings
 from django import template
 from django.conf import settings
 from django.core.cache import cache

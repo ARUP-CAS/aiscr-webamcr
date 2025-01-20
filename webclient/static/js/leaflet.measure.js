@@ -84,6 +84,7 @@ L.Control.Measure = L.Control.extend({
   _toggleMeasure: function () {
     this._measuring = !this._measuring
     if (this._measuring) {
+      this._map.fire('measure:start')
       L.DomUtil.addClass(this._container, 'leaflet-control-measure-on')
       this._startMeasuring()
     } else {

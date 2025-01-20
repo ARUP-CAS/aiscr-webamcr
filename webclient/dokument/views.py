@@ -8,6 +8,7 @@ from arch_z.models import Akce, ArcheologickyZaznam
 from cacheops import invalidate_model
 from core.constants import (
     ARCHIVACE_DOK,
+    AZ_STAV_ARCHIVOVANY,
     D_STAV_ARCHIVOVANY,
     D_STAV_ODESLANY,
     D_STAV_ZAPSANY,
@@ -18,6 +19,7 @@ from core.constants import (
     ROLE_ARCHIVAR_ID,
     ZAPSANI_DOK,
 )
+from core.coordTransform import convertToJTSK
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
 from core.forms import CheckStavNotChangedForm, VratitForm
 from core.ident_cely import get_cast_dokumentu_ident, get_dokument_rada, get_temp_dokument_ident
@@ -241,6 +243,7 @@ class Model3DListView(SearchListView):
     redis_snapshot_prefix = "dokument"
     redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
+    vypis_app = "model"
 
     def init_translations(self):
         super().init_translations()
@@ -310,6 +313,7 @@ class DokumentListView(SearchListView):
     redis_snapshot_prefix = "dokument"
     redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
+    vypis_app = "dokument"
 
     def init_translations(self):
         super().init_translations()
@@ -1248,6 +1252,7 @@ def edit_model_3D(request, ident_cely):
             x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
             if x1 > 0 and x2 > 0:
                 geom = Point(x1, x2)
+                geom_sjtsk = Point(convertToJTSK(x1, x2))
         except Exception:
             logger.debug("dokument.views.edit_model_3D.coord_error", extra={"x1": x1, "x2": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
@@ -1267,6 +1272,7 @@ def edit_model_3D(request, ident_cely):
                 i = i + 1
             if geom is not None:
                 dokument.extra_data.geom = geom
+                dokument.extra_data.geom_sjtsk = geom_sjtsk
             form_extra.save()
             komponenta = form_komponenta.save(commit=False)
             komponenta.active_transaction = fedora_transaction
@@ -1400,6 +1406,10 @@ def create_model_3D(request):
             x2 = float(form_extra.data.get("coordinate_wgs84_x2"))
             if x1 > 0 and x2 > 0:
                 geom = Point(x1, x2)
+                try:
+                    geom_sjtsk = Point(convertToJTSK(x1, x2))
+                except Exception:
+                    geom_sjtsk = None
         except Exception:
             logger.debug("dokument.views.create_model_3D.coord_error", extra={"x1": x1, "x2": x2})
 
@@ -1442,6 +1452,9 @@ def create_model_3D(request):
                 extra_data.dokument = dokument
                 if geom is not None:
                     extra_data.geom = geom
+                if geom_sjtsk is not None:
+                    extra_data.geom_sjtsk = geom_sjtsk
+                extra_data.geom_system = "4326"
                 extra_data.save()
 
                 komponenta = form_komponenta.save(commit=False)
@@ -1569,6 +1582,16 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ARCHIVOVAN)
         dokument.active_transaction = fedora_transaction
+        dokument.doi_publish()
+        dokument.set_doi()
+        for item in dokument.casti.all():
+            item: DokumentCast
+            if (
+                item.archeologicky_zaznam
+                and item.archeologicky_zaznam.lokalita
+                and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            ):
+                item.archeologicky_zaznam.lokalita.igsn_update()
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
@@ -1600,6 +1623,7 @@ def archivovat(request, ident_cely):
     context = {
         "object": dokument,
         "title": _("dokument.views.archivovat.title"),
+        "text": _("dokument.views.archivovat.doi_exists_warning") if dokument.doi_exists else None,
         "id_tag": "archivovat-dokument-form",
         "button": _("dokument.views.archivovat.submitButton.text"),
         "form_check": form_check,
@@ -1623,6 +1647,8 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             dokument.create_transaction(request.user, DOKUMENT_USPESNE_VRACEN)
+            if dokument.stav == D_STAV_ARCHIVOVANY:
+                dokument.doi_hide()
             duvod = form.cleaned_data["reason"]
             if dokument.stav == D_STAV_ODESLANY:
                 Mailer.send_ek02(document=dokument, reason=duvod)
@@ -1755,6 +1781,7 @@ def get_detail_template_shows(dokument, user):
         soubor_nahled = check_permissions(p.actionChoices.soubor_nahled_model3d, user, dokument.ident_cely)
         soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_model3d, user, dokument.ident_cely)
         soubor_nahradit = check_permissions(p.actionChoices.soubor_nahradit_model3d, user, dokument.ident_cely)
+        vypis = check_permissions(p.actionChoices.vypis_model3d, user, dokument.ident_cely)
     else:
         show_edit = check_permissions(p.actionChoices.dok_edit, user, dokument.ident_cely)
         soubor_stahnout_dokument = check_permissions(
@@ -1763,6 +1790,7 @@ def get_detail_template_shows(dokument, user):
         soubor_nahled = check_permissions(p.actionChoices.soubor_nahled_dokument, user, dokument.ident_cely)
         soubor_smazat = check_permissions(p.actionChoices.soubor_smazat_dokument, user, dokument.ident_cely)
         soubor_nahradit = check_permissions(p.actionChoices.soubor_nahradit_dokument, user, dokument.ident_cely)
+        vypis = check_permissions(p.actionChoices.vypis_dokument, user, dokument.ident_cely)
     show_arch_links = dokument.stav == D_STAV_ARCHIVOVANY
     show_tvary = True if dokument.rada.zkratka in ["LD", "LN", "DL"] else False
     show = {
@@ -1782,6 +1810,7 @@ def get_detail_template_shows(dokument, user):
         "soubor_nahled": soubor_nahled,
         "soubor_smazat": soubor_smazat,
         "soubor_nahradit": soubor_nahradit,
+        "vypis": vypis,
     }
     return show
 

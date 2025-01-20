@@ -83,8 +83,6 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         db_index=True,
     )
     stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN, db_index=True)
-    geom_updated_at = models.DateTimeField(blank=True, null=True)
-    geom_sjtsk_updated_at = models.DateTimeField(blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

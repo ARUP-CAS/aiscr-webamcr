@@ -1,4 +1,3 @@
-import html
 import json
 import logging
 import os
@@ -13,6 +12,7 @@ import pandas
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
+    LIMIT_PRVKU_ZOBRAZENI_HEATMAP,
     MAX_POCET_SOUBORU_PROJEKTU,
     ROLE_ADMIN_ID,
     ROLE_ARCHEOLOG_ID,
@@ -894,7 +894,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     toolbar = "toolbar_akce.html"
     redis_value_list_field = None
     redis_snapshot_prefix = None
-    progress_bar_coefficient = 0.8
+    vypis_app = "core"
 
     def create_export(self, export_format):
         from redis import Redis
@@ -906,13 +906,27 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             return aborted
 
         def update_progress_bar(r_inner: Redis, key_inner: str, new_value: int):
-            new_value *= self.progress_bar_coefficient
             r_inner.set(key_inner, int(new_value))
+
+        def file_iterator(content, r, redis_variable_name, chunk_size=8192):
+            bytes_sent = 0
+            file_size = len(content)
+            try:
+                for i in range(0, len(content), chunk_size):
+                    chunk = content[i : i + chunk_size]
+                    bytes_sent += len(chunk)
+                    if file_size > 50 and bytes_sent % (file_size // 50) < chunk_size:
+                        update_progress_bar(r, redis_variable_name, int(bytes_sent / file_size * 50 + 50))
+                    yield chunk
+            except GeneratorExit:
+                logger.warning("core.views.SearchListView.file_iterator.Connection_closed_by_client")
+            except Exception as e:
+                logger.warning("core.views.SearchListView.file_iterator.Error_during_streaming", extra={"errors": e})
+                raise
 
         logger.debug("core.views.SearchListView.create_export.start", extra={"export_format": export_format})
         if self.redis_value_list_field and self.redis_snapshot_prefix:
             r = RedisConnector.get_connection()
-            response = HttpResponse()
             dataset = self.get_table_data()
             ident_cely_list = set(dataset.values_list(self.redis_value_list_field, flat=True))
             ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
@@ -925,17 +939,18 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             r.set(redis_variable_name, 0)
             ident_cely_list_len = len(ident_cely_list)
             pipe = r.pipeline()
+            data = []
             for i, key in enumerate(ident_cely_list):
                 pipe.hgetall(key)
-                if i % 1000 == 0:
+                if (ident_cely_list_len > 100 and i % (ident_cely_list_len // 50) == 0) or i == ident_cely_list_len - 1:
                     if check_if_aborted(r, redis_variable_name):
                         logger.debug(
                             "core.views.SearchListView.create_export.aborted",
                             extra={"redis_variable_name": redis_variable_name},
                         )
                         return HttpResponse()
-                    update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 60))
-            data = pipe.execute()
+                    update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 50))
+                    data.extend(pipe.execute())
             data = pandas.DataFrame(data)
             data.columns = [x.decode("utf-8") for x in data.columns]
             filtered_column_order = [col.name for col in self.get_table().columns if col.name in data.columns]
@@ -953,23 +968,22 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 )
                 return HttpResponse()
             if export_format == TableExport.CSV:
-                response["Content-Disposition"] = 'attachment; filename="export.csv"'
-                data.to_csv(path_or_buf=response, index=False)
+                filetype = 'attachment; filename="export.csv"'
+                resdata = data.to_csv(index=False)
             elif export_format == TableExport.JSON:
-                response["Content-Disposition"] = 'attachment; filename="export.json"'
-                data.to_json(path_or_buf=response, orient="records", force_ascii=False, index=False)
+                filetype = 'attachment; filename="export.json"'
+                resdata = data.to_json(orient="records", force_ascii=False, index=False)
             elif export_format == TableExport.XLSX:
                 excel_file = BytesIO()
                 with pandas.ExcelWriter(excel_file, engine="openpyxl") as writer:
                     data.to_excel(writer, index=False)
-                excel_file.seek(0)
-                response = HttpResponse(
-                    excel_file.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-                response["Content-Disposition"] = "attachment; filename=export.xlsx"
+                resdata = excel_file.getvalue()
+                filetype = "attachment; filename=export.xlsx"
             else:
                 return HttpResponse(_("core.views.SearchListView.create_export.export_format_not_supported"))
-            update_progress_bar(r, redis_variable_name, 100)
+            response = StreamingHttpResponse(file_iterator(resdata, r, redis_variable_name))
+            response["Content-Disposition"] = filetype
+            update_progress_bar(r, redis_variable_name, 50)
             logger.debug(
                 "core.views.SearchListView.create_export.end",
                 extra={
@@ -984,7 +998,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                     extra={"redis_variable_name": redis_variable_name},
                 )
                 return HttpResponse()
-            response["Content-Length"] = len(response.content)
+            response["X-Accel-Buffering"] = "no"  # Zakázání bufferování v NGINX
             return response
 
     def init_translations(self):
@@ -1025,41 +1039,9 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["toolbar_name"] = self.toolbar_name
         context["toolbar_label"] = self.toolbar_label
         context["sort_params"] = self._get_sort_params()
+        context["idents"] = context["table"].get_all_idents()
+        context["vypis_app"] = self.vypis_app
         return context
-
-
-class SearchListChangeColumnsView(LoginRequiredMixin, View):
-    """
-    Třída pohledu pro změnu zobrazení sloupcu u tabulky.
-    """
-
-    def post(self, request, *args, **kwargs):
-        if "vychozi_skryte_sloupce" not in request.session:
-            request.session["vychozi_skryte_sloupce"] = {}
-        app = json.loads(request.body.decode("utf8"))["app"]
-        sloupec = html.escape(json.loads(request.body.decode("utf8"))["sloupec"])
-        zmena = json.loads(request.body.decode("utf8"))["zmena"]
-        if app not in request.session["vychozi_skryte_sloupce"]:
-            request.session["vychozi_skryte_sloupce"][app] = []
-        skryte_sloupce = request.session["vychozi_skryte_sloupce"][app]
-        if zmena == "zobraz":
-            try:
-                skryte_sloupce.remove(sloupec)
-                request.session.modified = True
-                help_translation = _("core.views.SearchListChangeColumnsView.show")  # Odebrano ze skrytych
-                return HttpResponse(f"{help_translation} {sloupec}")
-            except ValueError:
-                logger.error(
-                    "core.SearchListChangeColumnsView.post.odebrat_sloupec_z_vychozich.error",
-                    extra={"sloupec": sloupec},
-                )  # Nelze odebrat sloupec
-                help_translation = _("core.views.SearchListChangeColumnsView.failed")
-                HttpResponse(f"{help_translation} {sloupec}", status=400)
-        else:
-            skryte_sloupce.append(sloupec)
-            request.session.modified = True
-        help_translation = _("core.views.SearchListChangeColumnsView.hide")
-        return HttpResponse(f"{help_translation} {sloupec}")
 
 
 class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
@@ -1103,25 +1085,28 @@ def post_ajax_get_pas_and_pian_limit(request):
     """
     body = json.loads(request.body.decode("utf-8"))
     params = [
-        body["southEast"]["lng"],
-        body["northWest"]["lat"],
-        body["northWest"]["lng"],
-        body["southEast"]["lat"],
+        body["bounds"]["topLeft"]["lng"],
+        body["bounds"]["bottomLeft"]["lat"],
+        body["bounds"]["bottomRight"]["lng"],
+        body["bounds"]["topRight"]["lat"],
         body["zoom"],
     ]
     num = 0
     req_pian = body["pian"]
     req_pas = body["pas"]
+    pians = None
     if req_pas:
-        pases = get_pas_from_envelope(*params[0:4], request).distinct()
+        pases = get_pas_from_envelope(body["bounds"], request).distinct()
         num = num + pases.count()
 
     if req_pian:
-        pians, count = get_pian_from_envelope(*params[0:5], request)
+        pians, count = get_pian_from_envelope(body["bounds"], body["zoom"], request)
         num = num + count
 
     logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"num": num})
-    if (num < 5000 and not req_pian) or (num < 5000 and req_pian and pians is not None):
+    if (num < LIMIT_PRVKU_ZOBRAZENI_HEATMAP and not req_pian) or (
+        num < LIMIT_PRVKU_ZOBRAZENI_HEATMAP and req_pian and pians is not None
+    ):
         back = []
 
         if req_pas:

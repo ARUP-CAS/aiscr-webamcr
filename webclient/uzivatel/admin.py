@@ -28,7 +28,7 @@ from notifikace_projekty.forms import KATASTR_CONTENT_TYPE, KRAJ_CONTENT_TYPE, O
 from notifikace_projekty.models import Pes
 from services.mailer import Mailer
 
-from .forms import AuthUserCreationForm
+from .forms import AuthUserChangeAdminForm, AuthUserCreationForm
 from .models import User, UserNotificationType
 
 logger = logging.getLogger(__name__)
@@ -149,6 +149,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     """
 
     add_form = AuthUserCreationForm
+    form = AuthUserChangeAdminForm
     model = User
     list_display = (
         "ident_cely",
@@ -185,6 +186,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                     "last_name",
                     "telefon",
                     "osoba",
+                    "orcid",
                     "groups",
                 )
             },
@@ -206,12 +208,21 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                     "last_name",
                     "telefon",
                     "osoba",
+                    "orcid",
                     "groups",
                 ),
             },
         ),
     )
-    search_fields = ("email", "organizace__nazev_zkraceny", "ident_cely", "first_name", "last_name", "telefon")
+    search_fields = (
+        "email",
+        "organizace__nazev_zkraceny",
+        "ident_cely",
+        "first_name",
+        "last_name",
+        "telefon",
+        "orcid",
+    )
     ordering = ("email",)
     change_actions = ("metadata",)
 

@@ -5,6 +5,7 @@ from core.widgets import ForeignKeyReadOnlyTextInput
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Field, Layout
+from dal import autocomplete
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
@@ -19,6 +20,8 @@ from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Invisible
 from django_registration.backends.activation.forms import ActivationForm
 from django_registration.forms import RegistrationForm
+from pid.fields import OrcidAutocompleteField
+from pid.verificators import verify_orcid, verify_wikidata
 from services.mailer import Mailer
 
 from .models import Osoba, User, UserNotificationType
@@ -39,6 +42,7 @@ class AuthUserCreationForm(RegistrationForm):
             "email",
             "telefon",
             "organizace",
+            "orcid",
             "password1",
             "password2",
         )
@@ -72,6 +76,13 @@ class AuthUserCreationForm(RegistrationForm):
         self.helper = FormHelper(self)
         self.fields["telefon"].validators = [validate_phone_number]
         self.fields["telefon"].widget.input_type = "tel"
+        self.fields["orcid"] = OrcidAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
+            help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
+            initial_value=kwargs.get("data").get("orcid") if kwargs.get("data") else None,
+            required=False,
+        )
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Field("first_name"),
@@ -79,6 +90,7 @@ class AuthUserCreationForm(RegistrationForm):
             Field("email"),
             Field("telefon"),
             Field("organizace"),
+            Field("orcid"),
             AppendedText(
                 "password1",
                 mark_safe('<i class="bi bi-eye-slash" id="togglePassword1"></i>'),
@@ -124,12 +136,12 @@ class AuthUserChangeForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ("telefon",)
+        fields = ("telefon", "orcid")
         labels = {
-            "telefon": _("uzivatel.forms.userChange.telefon.label"),
+            "telefon": _("uzivatel.forms.AuthUserChangeForm.telefon.label"),
         }
         help_texts = {
-            "telefon": _("uzivatel.forms.userChange.telefon.tooltip"),
+            "telefon": _("uzivatel.forms.AuthUserChangeForm.telefon.tooltip"),
         }
 
         widgets = {
@@ -143,8 +155,16 @@ class AuthUserChangeForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div("telefon", css_class="col-sm-3"),
+                Div("orcid", css_class="col-sm-3"),
                 css_class="row",
             )
+        )
+        self.fields["orcid"] = OrcidAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
+            help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
+            instance=self.instance,
+            initial_value=args[0].get("orcid") if args else None,
         )
 
 
@@ -211,6 +231,21 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
                 Div("groups", css_class="col-sm-3"),
                 css_class="row",
             )
+        )
+
+
+class AuthUserChangeAdminForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["orcid"] = OrcidAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            label=_("uzivatel.forms.AuthUserChangeAdminForm.orcid.label"),
+            instance=self.instance,
+            initial_value=args[0].get("orcid") if args else None,
         )
 
 
@@ -381,6 +416,8 @@ class OsobaForm(forms.ModelForm):
         fields = (
             "jmeno",
             "prijmeni",
+            "orcid",
+            "wikidata"
             # "rok_narozeni",
             # "rok_umrti",
             # "rodne_prijmeni",
@@ -388,11 +425,15 @@ class OsobaForm(forms.ModelForm):
         widgets = {
             "jmeno": forms.TextInput(),
             "prijmeni": forms.TextInput(),
+            "orcid": forms.TextInput(),
+            "wikidata": forms.TextInput(),
             # "rodne_prijmeni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
         labels = {
             "jmeno": _("uzivatel.forms.osoba.jmeno.label"),
             "prijmeni": _("uzivatel.forms.osoba.prijmeni.label"),
+            "orcid": _("uzivatel.forms.osoba.orcid.label"),
+            "wikidata": _("uzivatel.forms.osoba.wikidata.label"),
             # "rok_narozeni": _("uzivatel.forms.osoba.rok_narozeni.label"),
             # "rok_umrti": _("uzivatel.forms.osoba.rok_umrti.label"),
             # "rodne_prijmeni": _("uzivatel.forms.osoba.rodne_prijmeni.label"),
@@ -400,6 +441,8 @@ class OsobaForm(forms.ModelForm):
         help_texts = {
             "jmeno": _("uzivatel.forms.osoba.jmeno.tooltip"),
             "prijmeni": _("uzivatel.forms.osoba.prijmeni.tooltip"),
+            "orcid": _("uzivatel.forms.osoba.orcid.tooltip"),
+            "wikidata": _("uzivatel.forms.osoba.wikidata.tooltip"),
             # "rok_narozeni": _("uzivatel.forms.osoba.rok_narozeni.tooltip"),
             # "rok_umrti": _("uzivatel.forms.osoba.rok_umrti.tooltip"),
             # "rodne_prijmeni": _("uzivatel.forms.osoba.rodne_prijmeni.tooltip"),
@@ -412,6 +455,8 @@ class OsobaForm(forms.ModelForm):
             Div(
                 Div("jmeno", css_class="col-sm-6"),
                 Div("prijmeni", css_class="col-sm-6"),
+                Div("orcid", css_class="col-sm-6"),
+                Div("wikidata", css_class="col-sm-6"),
                 # Div("rok_narozeni", css_class="col-sm-6"),
                 # Div("rok_umrti", css_class="col-sm-6"),
                 # Div("rodne_prijmeni", css_class="col-sm-12"),
@@ -419,6 +464,24 @@ class OsobaForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+
+    def clean_orcid(self):
+        orcid = self.cleaned_data.get("orcid")
+        if not verify_orcid(orcid):
+            raise forms.ValidationError(
+                _("uzivatel.forms.OsobaForm.orcid.error"),
+                code="orcid_error",
+            )
+        return orcid
+
+    def clean_wikidata(self):
+        wikidata = self.cleaned_data.get("wikidata")
+        if not verify_wikidata(wikidata):
+            raise forms.ValidationError(
+                _("uzivatel.forms.OsobaForm.wikidata.error"),
+                code="orcid_error",
+            )
+        return wikidata
 
 
 class AuthActivationForm(ActivationForm):

@@ -9,7 +9,7 @@ import core.message_constants as mc
 import django
 import requests
 from arch_z.models import ArcheologickyZaznam
-from core.constants import ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
+from core.constants import EPSG_WGS84, LIMIT_PRVKU_ZOBRAZENI_HEATMAP, ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
 from core.message_constants import (
     VALIDATION_EMPTY,
     VALIDATION_LINE_LENGTH,
@@ -20,7 +20,7 @@ from core.message_constants import (
 from dj.models import DokumentacniJednotka
 from django.apps import apps
 from django.conf import ENVIRONMENT_VARIABLE, settings
-from django.contrib.gis.db.models.functions import Centroid, PointOnSurface
+from django.contrib.gis.db.models.functions import PointOnSurface
 from django.core.cache import caches
 from django.db import connection, transaction
 from django.urls import reverse
@@ -153,7 +153,7 @@ def get_cadastre_from_point(point):
         )
         return katastr
     except IndexError:
-        logger.error("core.utils.get_cadastre_from_point.error", extra={"point_0": point[0], "point_1": point[1]})
+        logger.warning("core.utils.get_cadastre_from_point.error", extra={"point_0": point[0], "point_1": point[1]})
         return None
 
 
@@ -664,7 +664,7 @@ def get_num_pass_from_envelope(left, bottom, right, top, request):
         return None
 
 
-def get_pas_from_envelope(left, bottom, right, top, request):
+def get_pas_from_envelope(bounds, request):
     """
     Funkce pro získaní pas ze čtverce.
     @janhnat zohlednit pristupnost - done
@@ -677,7 +677,18 @@ def get_pas_from_envelope(left, bottom, right, top, request):
     from pas.models import SamostatnyNalez
 
     c1 = Q(geom__isnull=False)
-    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    c2 = Q(
+        geom__within=Polygon(
+            (
+                (bounds["bottomLeft"]["lng"], bounds["bottomLeft"]["lat"]),
+                (bounds["bottomRight"]["lng"], bounds["bottomRight"]["lat"]),
+                (bounds["topRight"]["lng"], bounds["topRight"]["lat"]),
+                (bounds["topLeft"]["lng"], bounds["topLeft"]["lat"]),
+                (bounds["bottomLeft"]["lng"], bounds["bottomLeft"]["lat"]),
+            )
+        )
+    )
+
     queryset = SamostatnyNalez.objects.filter(c2).filter(c1)
     perm_object = PermissionFilterMixin()
     perm_object.request = request
@@ -686,45 +697,11 @@ def get_pas_from_envelope(left, bottom, right, top, request):
     try:
         return perm_object.check_filter_permission(queryset, p.actionChoices.mapa_pas).only("id", "ident_cely", "geom")
     except IndexError:
-        logger.debug(
-            "core.utils.get__pas_from_envelope.no_points",
-            extra={"left": left, "bottom": bottom, "right": right, "top": top},
-        )
+        logger.debug("core.utils.get__pas_from_envelope.no_points")
         return None
 
 
-def get_num_pian_from_envelope(left, bottom, right, top, request):
-    """
-    Funkce pro získaní počtu pianu ze čtverce.
-    @janhnat zohlednit pristupnost - done
-    musi zohlednit pristupnost [mapa_pian]
-    """
-    from core.models import Permissions as p
-    from django.contrib.gis.geos import Polygon
-    from django.db.models import Q
-    from pian.views import PianPermissionFilterMixin
-
-    pian_queryset = Pian.objects.filter(
-        Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
-        | Q(geom__intersects=Polygon.from_bbox([right, top, left, bottom]))
-    )
-    perm_object = PianPermissionFilterMixin()
-    perm_object.request = request
-
-    pian_filtered = perm_object.check_filter_permission(pian_queryset, p.actionChoices.mapa_pian)
-
-    try:
-        return pian_filtered.annotate(centroid=Centroid("geom"))
-        # return DokumentacniJednotka.objects.filter(pian__in=pian_filtered).count()
-    except IndexError:
-        logger.debug(
-            "core.utils.get_num_pian_from_envelope.no_points",
-            extra={"left": left, "bottom": bottom, "right": right, "top": top},
-        )
-        return None
-
-
-def get_pian_from_envelope(left, bottom, right, top, zoom, request):
+def get_pian_from_envelope(bounds, zoom, request):
     """
     Funkce pro získaní pianů ze čtverce.
     @janhnat zohlednit pristupnost - done
@@ -732,18 +709,17 @@ def get_pian_from_envelope(left, bottom, right, top, zoom, request):
     """
 
     from core.constants import PIAN_POTVRZEN, ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
-    from django.contrib.gis.geos import Polygon
     from django.db import connection
     from heslar.hesla import HESLAR_PIAN_PRESNOST
     from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_BADATEL_ID
     from heslar.models import Heslar
 
-    bbox = Polygon.from_bbox([right, top, left, bottom])
+    bbox = f"""POLYGON(({bounds['bottomLeft']['lng']} {bounds['bottomLeft']['lat']}, {bounds['bottomRight']['lng']} {bounds['bottomRight']['lat']}, {bounds['topRight']['lng']} {bounds['topRight']['lat']}, {bounds['topLeft']['lng']} {bounds['topLeft']['lat']}, {bounds['bottomLeft']['lng']} {bounds['bottomLeft']['lat']}))"""
     presnost = Heslar.objects.filter(nazev_heslare__id=HESLAR_PIAN_PRESNOST).first().id - 1
 
-    querysum = f"""select sum(p.count) from amcr_heat_pian_l2 p where "p"."st_centroid" && ST_MakeEnvelope({left}, {bottom}, {right}, {top} ,4326)"""
+    querysum = f"""select sum(p.count) from amcr_heat_pian_l2 p where "p"."st_centroid" && ST_GeomFromText('{bbox}', {EPSG_WGS84})"""
 
-    query = f"""select  p.ident_cely as "ident_cely", p.presnost-{presnost} as "presnost",'pian' as "type", ST_AsText(p.geom) as "geom",ST_AsText(ST_PointOnSurface(p.geom)) as "centroid" from pian p where ST_Intersects("p"."geom",ST_GeomFromText('{bbox}', 4326))"""
+    query = f"""select  p.ident_cely as "ident_cely", p.presnost-{presnost} as "presnost",'pian' as "type", ST_AsText(p.geom) as "geom",ST_AsText(ST_PointOnSurface(p.geom)) as "centroid" from pian p where ST_Intersects("p"."geom",ST_GeomFromText('{bbox}', {EPSG_WGS84}))"""
     if request.user.hlavni_role.id == ROLE_BADATEL_ID:
         query1 = f""" and (exists (select 1 from historie h where h.vazba = p.historie and h.uzivatel = {request.user.id} and h.typ_zmeny = 'PI01') or exists (select 1 from dokumentacni_jednotka dj where dj.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj.archeologicky_zaznam and exists (select 1 from historie h2 where h2.vazba = az.historie and h2.uzivatel = {request.user.id} and h2.typ_zmeny = 'AZ01'))) or (exists (select 1 from dokumentacni_jednotka dj1 where dj1.pian = p.id and exists (select 1 from archeologicky_zaznam az where az.id = dj1.archeologicky_zaznam and az.pristupnost in ({PRISTUPNOST_ANONYM_ID}, {PRISTUPNOST_BADATEL_ID}))) and p.stav ={PIAN_POTVRZEN})) """
         query += query1
@@ -756,7 +732,7 @@ def get_pian_from_envelope(left, bottom, right, top, zoom, request):
         cursor.execute(querysum)
         result = cursor.fetchone()
         count = int(result[0]) if result[0] is not None else 0
-        if count < 5000 or zoom > 13:
+        if count < LIMIT_PRVKU_ZOBRAZENI_HEATMAP * 2 or zoom > 7:
             cursor.execute(query)
             pians = dictfetchall(cursor)
             count = len(pians)
@@ -1092,17 +1068,7 @@ class SearchTable(ColumnShiftTableBootstrap4):
     app = None
 
     def get_column_default_show(self):
-        self.column_default_show = list(self.columns.columns.keys())
-        if "vychozi_skryte_sloupce" not in self.request.session:
-            self.request.session["vychozi_skryte_sloupce"] = {}
-        if self.app in self.request.session["vychozi_skryte_sloupce"]:
-            columns_to_hide = set(self.request.session["vychozi_skryte_sloupce"][self.app])
-        else:
-            columns_to_hide = self.columns_to_hide
-            self.request.session["vychozi_skryte_sloupce"][self.app] = columns_to_hide
-        for column in columns_to_hide:
-            if column is not None and column in self.column_default_show:
-                self.column_default_show.remove(column)
+        self.column_default_show = list(set(self.columns.columns.keys()) - set(self.columns_to_hide))
         return super(SearchTable, self).get_column_default_show()
 
     def render_nahled(self, value, record):
@@ -1134,6 +1100,12 @@ class SearchTable(ColumnShiftTableBootstrap4):
                 soubor_url,
             )
         return ""
+
+    def get_all_idents(self):
+        """
+        Vrátí seznam identifikátorů záznamů tabulky.
+        """
+        return ",".join([record.record.ident_cely for record in self.paginated_rows])
 
 
 def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party_apps=False):

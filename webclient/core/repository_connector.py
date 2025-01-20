@@ -18,6 +18,8 @@ from requests.auth import HTTPBasicAuth
 from xml_generator.generator import DocumentGenerator
 from xml_generator.models import ModelWithMetadata
 
+from redis import ResponseError
+
 logger = logging.getLogger(__name__)
 
 
@@ -699,6 +701,33 @@ class FedoraRepositoryConnector:
             output_buffer.seek(0)
             return output_buffer
 
+        def __generate_thumb_from_icon(file_name: str, file_content: BytesIO, large=False):
+            from core.models import Soubor
+
+            thumb_icon, mime_type = Soubor.get_thumb_icon(file_content)
+            if mime_type.startswith("image/"):
+                file_content = thumb_icon
+                try:
+                    thumbnail = resize_image(file_content, large)
+                    logger.debug(
+                        "core_repository_connector.__generate_thumb.end", extra={"file_name": file_name, "large": large}
+                    )
+                    return thumbnail
+                except Exception as err:
+                    logger.info(
+                        "core_repository_connector.__generate_thumb.error",
+                        extra={"err": err, "file_name": file_name, "large": large},
+                    )
+                    if thumb_icon is not None:
+                        try:
+                            return resize_image(thumb_icon, large)
+                        except Exception as err:
+                            logger.error(
+                                "core_repository_connector.__generate_thumb_icon.error",
+                                extra={"err": err, "file_name": file_name, "large": large},
+                            )
+                    return None
+
         if file_name.lower().endswith(".pdf"):
             try:
                 images = convert_from_bytes(file_content.getvalue(), first_page=1, last_page=1)
@@ -715,25 +744,9 @@ class FedoraRepositoryConnector:
                     "core_repository_connector.__generate_thumb.error",
                     extra={"err": err, "file_name": file_name, "large": large},
                 )
-                return None
+                return __generate_thumb_from_icon(file_name, file_content, large)
         else:
-            from core.models import Soubor
-
-            thumb_icon = Soubor.get_thumb_icon(file_content)
-            if thumb_icon is not None:
-                file_content = thumb_icon
-            try:
-                thumbnail = resize_image(file_content, large)
-                logger.debug(
-                    "core_repository_connector.__generate_thumb.end", extra={"file_name": file_name, "large": large}
-                )
-                return thumbnail
-            except Exception as err:
-                logger.debug(
-                    "core_repository_connector.__generate_thumb.error",
-                    extra={"err": err, "file_name": file_name, "large": large},
-                )
-                return None
+            return __generate_thumb_from_icon(file_name, file_content, large)
 
     def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None):
         logger.debug(
@@ -1337,7 +1350,13 @@ class FedoraTransaction:
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         if operation == FedoraTransactionOperation.COMMIT:
             response = requests.put(url, auth=auth, verify=False)
-            self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
+            try:
+                self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
+            except ResponseError as err:
+                logger.error(
+                    "core_repository_connector.FedoraTransaction._save_transaction_result_to_redis.failed",
+                    extra={"transaction": self.uid, "err": err},
+                )
         elif operation == FedoraTransactionOperation.ROLLBACK:
             response = requests.delete(url, auth=auth, verify=False)
             self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)
@@ -1437,15 +1456,15 @@ class FedoraTransaction:
                 i.active(),
             )
         except Exception as e:
-            logger.error(
-                "core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_error",
+            logger.warning(
+                "core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_warning",
                 extra={"Exception": e, "app": app},
             )
             call_digiarchiv_update_task.apply_async()
         for queue in queues:
             if queue is None:
-                logger.error(
-                    "core_repository_connector.FedoraTransaction.call_digiarchiv_update.error",
+                logger.warning(
+                    "core_repository_connector.FedoraTransaction.call_digiarchiv_update.warning",
                     extra={"i": i, "queues": queues},
                 )
                 break

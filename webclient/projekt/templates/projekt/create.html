@@ -35,7 +35,7 @@
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
   <!-- static leaflet additional import-->
 <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}?v2"/>
-<script src="{% static 'leaflet.measure.js' %}?v1"></script>
+<script src="{% static 'leaflet.measure.js' %}?v2"></script>
 <script type="text/javascript" src="{% static 'leaflet.coor.js' %}?v1"></script>
 <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
 <link rel="stylesheet" type="text/css" href="{% static 'daterangepicker.css' %}"/>
@@ -81,6 +81,7 @@
       cuzkOrtofotomapa: '{% trans "mapa.cuzkOrtofotomapa" %}',
       cuzkStinovanyeelief5G: '{% trans "mapa.cuzkStinovanyeelief5G" %}',
       cuzkzakladniMapyCr: '{% trans "mapa.cuzkzakladniMapyCr" %}',
+      cuzkzakladniMapyCrGrey: '{% trans "mapa.cuzkzakladniMapyCrGrey" %}',
       npuPamatkovaOchrana: '{% trans "mapa.npuPamatkovaOchrana" %}',
       DefaultTitle: '{% trans "mapa.DefaultTitle" %}',
       EditTurnOff: '{% trans "mapa.EditTurnOff" %}',
@@ -89,8 +90,6 @@
       FullscreenTitleClose: '{% trans "mapa.FullscreenTitleClose" %}',
       lokalizaceProjektu: '{% trans "mapa.lokalizaceProjektu" %}',
       MeasureTitle: '{% trans "mapa.MeasureTitle" %}',
-      openStreetMap: '{% trans "mapa.openStreetMap" %}',
-      openStreetMapSeda: '{% trans "mapa.openStreetMapSeda" %}',
       projektyP1: '{% trans "mapa.projektyP1" %}',
       projektyP2: '{% trans "mapa.projektyP2" %}',
       projektyP3: '{% trans "mapa.projektyP3" %}',
@@ -120,11 +119,14 @@
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'coordTransform.js' %}"></script>
-  <script src="{% static 'mapa_basic_grey.js' %}?v1"></script>
+  <script src="{% static 'leaflet-grayscale.js' %}"></script>
+  <script src="{% static 'mapa_settings_jtsk.js' %}"></script>
+  <script src="{% static 'mapa_functions.js' %}?v1"></script>
+  <script src="{% static 'mapa_basic_functions.js' %}?v1"></script>
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script src="{% static 'leaflet_subgroup.js' %}"></script>
-  <script src="{% static 'mapa_projekty.js' %}?v2"></script>
+  <script src="{% static 'mapa_projekty.js' %}?v4"></script>
   <script>var object_id = "{{ confirm.ident_cely }}";</script>
   <script>
       global_map_can_edit = true;

@@ -7,6 +7,9 @@
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
       {{ sn.ident_cely }}{% if show.backtoprojekt %}<span class="app-pipe"></span><a href="{% url 'projekt:detail' sn.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarPas.backToProjekt.label" %}</a>{% endif %}
+      {% if sn.igsn %}
+        <span style="font-weight: normal">({{ sn.igsn }})</span>
+      {% endif %}
     </div>
   </div>
   {% if showcontrols %}
@@ -53,6 +56,9 @@
           <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'samostatny_nalez' sn.ident_cely %}">{% trans "templates.toolbarPas.metadataDownload.label" %}</a>
           {% endif %}
           <a class="dropdown-item" href="{% url 'pas:create-copy' sn.ident_cely %}">{% trans "templates.toolbarPas.createCopy.label" %}</a>
+          {% if show.vypis%}
+          <a class="dropdown-item" href="{% url 'vypis:vypis' 'pas' sn.ident_cely %}" target=”_blank”>{% trans "templates.toolbarPas.vypis.label" %}</a>
+          {% endif %}
         </div>
       </div>
     </div>

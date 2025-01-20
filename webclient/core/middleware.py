@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 
 from core.connectors import RedisConnector
 from core.message_constants import NEPRODUKCNI_PROSTREDI_INFO, ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
-from core.models import Permissions
 from core.repository_connector import FedoraError, FedoraTransaction, FedoraTransactionResult
 from django.conf import settings
 from django.contrib import messages
@@ -34,6 +33,8 @@ class PermissionMiddleware:
         """
         Metóda pro kontrolu oprvávnení pro každý view.
         """
+        from core.models import Permissions
+
         if request.user.is_authenticated:
             resolver = request.resolver_match
             filter = {

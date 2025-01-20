@@ -49,6 +49,19 @@
           </tbody>
       </table>
     </div>
+    <div class="app-rosetta module">
+      <table>
+        <caption>
+          {% trans "core.templates.admin.appList.doi_management" %}
+        </caption>
+        <tbody>
+          <tr>
+            <th scope="row" colspan="3"><a href="{% url 'admin:update_doi' %}">{% trans "core.templates.admin.appList.update_doi" %}</a></th>
+            <td></td>
+            </tr>
+          </tbody>
+      </table>
+    </div>
   {% endif %}
   {% if request.user|can_translate  %}
     <div class="app-rosetta module">
