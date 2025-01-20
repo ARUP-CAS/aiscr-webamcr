@@ -4,8 +4,8 @@ from dal import autocomplete, forward
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from heslar.models import HeslarHierarchie, HeslarNazev, HeslarOdkaz
-from pid.verificators import verify_orcid, verify_ror, verify_wikidata
-from uzivatel.models import Osoba
+from pid.fields import OrcidAutocompleteField, RorAutocompleteField, WikiDataAutocompleteField
+from uzivatel.models import Organizace, Osoba
 
 logger = logging.getLogger(__name__)
 
@@ -79,35 +79,31 @@ class OsobaAdminForm(forms.ModelForm):
         model = Osoba
         fields = "__all__"
 
-    def clean_orcid(self):
-        orcid = self.cleaned_data.get("orcid")
-        if orcid and not verify_orcid(orcid):
-            raise forms.ValidationError(
-                _("heslar.forms.OsobaAdminForm.orcid.error"),
-                code="orcid_error",
-            )
-        return orcid
-
-    def clean_wikidata(self):
-        wikidata = self.cleaned_data.get("wikidata")
-        if not verify_wikidata(wikidata):
-            raise forms.ValidationError(
-                _("uzivatel.forms.OsobaAdminForm.wikidata.error"),
-                code="orcid_error",
-            )
-        return wikidata
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["orcid"] = OrcidAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            label=_("heslar.forms.OsobaAdminForm.orcid.label"),
+            instance=self.instance,
+            initial_value=args[0].get("orcid") if args else None,
+        )
+        self.fields["wikidata"] = WikiDataAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:wikidata-autocomplete"),
+            label=_("heslar.forms.OsobaAdminForm.wikidata.label"),
+            instance=self.instance,
+            initial_value=args[0].get("wikidata") if args else None,
+        )
 
 
 class OrganizaceAdminForm(forms.ModelForm):
     class Meta:
-        model = Osoba
+        model = Organizace
         fields = "__all__"
 
-    def clean_ror(self):
-        ror = self.cleaned_data.get("ror")
-        if ror and not verify_ror(ror):
-            raise forms.ValidationError(
-                _("heslar.forms.OrganizaceAdminForm.orcid.error"),
-                code="orcid_error",
-            )
-        return ror
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["ror"] = RorAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:ror-autocomplete"),
+            label=_("heslar.forms.OrganizaceAdminForm.ror.label"),
+            instance=self.instance,
+        )

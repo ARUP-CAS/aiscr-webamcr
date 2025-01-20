@@ -395,7 +395,7 @@ LOGGING = {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
-        "doi": {
+        "pid": {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },

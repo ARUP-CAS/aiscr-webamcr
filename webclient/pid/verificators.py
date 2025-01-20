@@ -5,7 +5,7 @@ import requests
 DOI_API_URL = "https://doi.org/api/handles/"
 ORCID_API_URL = "https://pub.orcid.org/v3.0/"
 ROR_API_URL = "https://api.ror.org/organizations/"
-WIKIDATA_API_URL = "https://www.wikidata.org/wiki/Special:EntityData/"
+WIKIDATA_API_URL = "https://www.wikidata.org/wiki/"
 
 
 def verify_doi(doi):

@@ -737,6 +737,7 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
 
     @property
     def anonym(self):
+        # TODO: Implement this when anonym detection is added
         return False
 
 

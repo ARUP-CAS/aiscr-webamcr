@@ -1,10 +1,11 @@
 import logging
 
-from core.validators import validate_orcid, validate_phone_number
+from core.validators import validate_phone_number
 from core.widgets import ForeignKeyReadOnlyTextInput
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Field, Layout
+from dal import autocomplete
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
@@ -19,6 +20,7 @@ from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Invisible
 from django_registration.backends.activation.forms import ActivationForm
 from django_registration.forms import RegistrationForm
+from pid.fields import OrcidAutocompleteField
 from pid.verificators import verify_orcid, verify_wikidata
 from services.mailer import Mailer
 
@@ -31,13 +33,6 @@ class AuthUserCreationForm(RegistrationForm):
     """
     Formulář pro vytvoření uživatele.
     """
-
-    orcid = forms.CharField(
-        validators=[validate_orcid],
-        help_text=_("uzivatel.forms.AuthUserCreationForm.orcid.tooltip"),
-        label=_("uzivatel.forms.AuthUserCreationForm.orcid.label"),
-        widget=forms.TextInput(),
-    )
 
     class Meta(RegistrationForm):
         model = User
@@ -81,6 +76,13 @@ class AuthUserCreationForm(RegistrationForm):
         self.helper = FormHelper(self)
         self.fields["telefon"].validators = [validate_phone_number]
         self.fields["telefon"].widget.input_type = "tel"
+        self.fields["orcid"] = OrcidAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
+            help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
+            initial_value=kwargs.get("data").get("orcid") if kwargs.get("data") else None,
+            required=False,
+        )
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Field("first_name"),
@@ -103,15 +105,6 @@ class AuthUserCreationForm(RegistrationForm):
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
-
-    def clean_orcid(self):
-        orcid = self.cleaned_data.get("orcid")
-        if not verify_orcid(orcid):
-            raise forms.ValidationError(
-                _("uzivatel.forms.AuthUserCreationForm.orcid.error"),
-                code="orcid_error",
-            )
-        return self.cleaned_data.get("orcid")
 
 
 class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
@@ -141,21 +134,14 @@ class AuthUserChangeForm(forms.ModelForm):
     Formulář pro editaci uživatele.
     """
 
-    orcid = forms.CharField(
-        validators=[validate_orcid],
-        help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
-        label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
-        widget=forms.TextInput(),
-    )
-
     class Meta:
         model = User
         fields = ("telefon", "orcid")
         labels = {
-            "telefon": _("uzivatel.forms.userChange.telefon.label"),
+            "telefon": _("uzivatel.forms.AuthUserChangeForm.telefon.label"),
         }
         help_texts = {
-            "telefon": _("uzivatel.forms.userChange.telefon.tooltip"),
+            "telefon": _("uzivatel.forms.AuthUserChangeForm.telefon.tooltip"),
         }
 
         widgets = {
@@ -173,15 +159,13 @@ class AuthUserChangeForm(forms.ModelForm):
                 css_class="row",
             )
         )
-
-    def clean_orcid(self):
-        orcid = self.cleaned_data.get("orcid")
-        if not verify_orcid(orcid):
-            raise forms.ValidationError(
-                _("uzivatel.forms.AuthUserChangeForm.orcid.error"),
-                code="orcid_error",
-            )
-        return self.cleaned_data.get("orcid")
+        self.fields["orcid"] = OrcidAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
+            help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
+            instance=self.instance,
+            initial_value=args[0].get("orcid") if args else None,
+        )
 
 
 class AuthReadOnlyUserChangeForm(forms.ModelForm):
@@ -255,14 +239,14 @@ class AuthUserChangeAdminForm(forms.ModelForm):
         model = User
         fields = "__all__"
 
-    def clean_orcid(self):
-        orcid = self.cleaned_data.get("orcid")
-        if not verify_orcid(orcid):
-            raise forms.ValidationError(
-                _("heslar.forms.OsobaForm.orcid.error"),
-                code="orcid_error",
-            )
-        return self.cleaned_data.get("orcid")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["orcid"] = OrcidAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            label=_("uzivatel.forms.AuthUserChangeAdminForm.orcid.label"),
+            instance=self.instance,
+            initial_value=args[0].get("orcid") if args else None,
+        )
 
 
 class NotificationsForm(forms.ModelForm):
@@ -426,14 +410,6 @@ class OsobaForm(forms.ModelForm):
     """
     Formulář pro vytvoření osoby.
     """
-
-    orcid = forms.CharField(
-        validators=[validate_orcid],
-        help_text=_("uzivatel.forms.OsobaForm.orcid.tooltip"),
-        label=_("uzivatel.forms.OsobaForm.orcid.label"),
-        widget=forms.TextInput(),
-        required=False,
-    )
 
     class Meta:
         model = Osoba

@@ -1,5 +1,4 @@
 import logging
-import re
 
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 from crispy_forms.bootstrap import AppendedText
@@ -7,12 +6,11 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from dal import autocomplete
 from django import forms
-from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from dokument.forms import AutoriField
-from pid.verificators import verify_doi
+from pid.fields import DoiAutocompleteField
 from uzivatel.models import Osoba
 
 from .models import ExterniZdroj
@@ -142,20 +140,17 @@ class ExterniZdrojForm(forms.ModelForm):
             "doi": _("ez.forms.externiZdrojForm.doi.tooltip"),
         }
 
-    def clean_doi(self):
-        doi = self.cleaned_data["doi"]
-        if doi:
-            match = re.search(r"10\.\d{4,9}\/[-._;()/:a-zA-Z0-9]+", doi)
-            if not match:
-                raise ValidationError(_("ez.forms.externiZdrojForm.doi.error"))
-            doi = match.group()
-            if not verify_doi(doi):
-                raise ValidationError(_("ez.forms.externiZdrojForm.doi_does_not_exists.error"))
-        return doi
-
     def __init__(self, *args, required=None, required_next=None, readonly=False, **kwargs):
         super(ExterniZdrojForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
+        if not readonly:
+            self.fields["doi"] = DoiAutocompleteField(
+                widget=autocomplete.ListSelect2(url="pid:doi-autocomplete"),
+                label=_("ez.forms.ExterniZdrojForm.doi.label"),
+                help_text=_("ez.forms.ExterniZdrojForm.doi.help_text"),
+                instance=self.instance,
+                initial_value=args[0].get("doi") if args else None,
+            )
         if readonly:
             autori = Div(
                 "autori",
