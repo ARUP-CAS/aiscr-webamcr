@@ -1,0 +1,5 @@
+<div>
+{% for vb in field.zaznamy %}
+    <li> {{ vb.ident_cely }} ({{ vb.typ }}) {{vb.poloha_gml}} {{vb.poloha_wkt}}</li>
+{% endfor %}
+</div>

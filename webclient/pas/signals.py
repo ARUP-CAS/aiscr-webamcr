@@ -65,6 +65,7 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
     invalidate_model(Projekt)
     invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
+    instance.igsn_delete()
 
     def save_metadata(close_transaction=False):
         if instance.projekt:

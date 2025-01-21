@@ -47,6 +47,9 @@
           {% if show.stahnout_metadata%}
           <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'externi_zdroj' zaznam.ident_cely %}">{% trans "templates.toolbarExterniZdroj.metadataDownload.label" %}</a>
           {% endif %}
+          {% if show.vypis%}
+          <a class="dropdown-item" href="{% url 'vypis:vypis' 'ez' zaznam.ident_cely %}" target=”_blank”>{% trans "templates.toolbarExterniZdroj.vypis.label" %}</a>
+          {% endif %}
         </div>
       </div>
     </div>

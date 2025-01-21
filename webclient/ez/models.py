@@ -2,6 +2,7 @@ import logging
 
 from core.connectors import RedisConnector
 from core.constants import (
+    AZ_STAV_ARCHIVOVANY,
     EZ_STAV_ODESLANY,
     EZ_STAV_POTVRZENY,
     EZ_STAV_ZAPSANY,
@@ -83,6 +84,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
     )
     autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
     editori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
+    doi = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         db_table = "externi_zdroj"
@@ -106,6 +108,12 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         """
         Metóda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
         """
+        for akce in self.externi_odkazy_zdroje.all():
+            from arch_z.models import Akce
+
+            akce: Akce
+            if akce.archeologicky_zaznam.lokalita and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY:
+                akce.archeologicky_zaznam.lokalita.igsn_update()
         self.stav = EZ_STAV_ODESLANY
         historie_poznamka = self.check_set_permanent_ident()
         Historie(

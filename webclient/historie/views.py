@@ -6,6 +6,7 @@ from core.views import ExportMixinDate
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import CharField, F, Value
 from django.db.models.functions import Concat
+from django.shortcuts import get_object_or_404
 from django.utils.translation import get_language
 from django.views.generic import ListView
 from django_tables2 import SingleTableMixin
@@ -175,7 +176,7 @@ class SouborHistorieListView(HistorieListView):
         soubor_id = self.kwargs["soubor_id"]
         context["typ"] = "soubor"
         context["entity"] = context["typ"]
-        soubor = Soubor.objects.get(pk=soubor_id)
+        soubor = get_object_or_404(Soubor, pk=soubor_id)
         try:
             context["projekt"] = soubor.vazba.projekt_souboru
         except Projekt.DoesNotExist:

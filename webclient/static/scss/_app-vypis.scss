@@ -1,0 +1,54 @@
+// --- PROJEKT---
+
+&.app-vypis {
+  #app-page-wrapper {
+    margin-left: 0;
+
+    .container-fluid {
+      max-width: $container-max-width-xl;
+    }
+  }
+
+  .app-content-wrapper {
+
+
+    button {
+      border: none;
+      background: none;
+    }
+
+    .section-name {
+      font-weight: bolder;
+    }
+
+    .under-header {
+      .row {
+        margin: 0;
+      }
+    }
+
+    hr {
+      border-top: 2px solid rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .main-header {
+      font-weight: bolder;
+      font-size: 1.5rem;
+
+    }
+
+    .sub-header {
+      color: rgb(103, 103, 103);
+    }
+  }
+}
+
+#id-modal-content {
+  .dropdown-menu {
+    &.inner {
+      &.show {
+        width: 100%;
+      }
+    }
+  }
+}

@@ -826,9 +826,15 @@ class DokumentFilter(Model3DFilter):
         label=" ",
         lookup_expr="lte",
     )
-    id_vazby = CharFilter(
-        method="filter_id_vazby",
-        label=_("dokument.filters.dokumentFilter.idVazby.label"),
+    id_AZ = CharFilter(
+        method="filter_id_AZ",
+        label=_("dokument.filters.dokumentFilter.idAZ.label"),
+        distinct=True,
+    )
+
+    id_projekt = CharFilter(
+        method="filter_id_projekt",
+        label=_("dokument.filters.dokumentFilter.idProjekt.label"),
         distinct=True,
     )
 
@@ -992,13 +998,17 @@ class DokumentFilter(Model3DFilter):
             | Q(let__ucel_letu__icontains=value)
         ).distinct()
 
-    def filter_id_vazby(self, queryset, name, value):
+    def filter_id_AZ(self, queryset, name, value):
         """
-        Metóda pro filtrování podle id vazby.
+        Metóda pro filtrování podle id AZ.
         """
-        return queryset.filter(
-            Q(casti__archeologicky_zaznam__ident_cely__icontains=value) | Q(casti__projekt__ident_cely__icontains=value)
-        ).distinct()
+        return queryset.filter(Q(casti__archeologicky_zaznam__ident_cely__icontains=value)).distinct()
+
+    def filter_id_projekt(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle id projektu.
+        """
+        return queryset.filter(Q(casti__projekt__ident_cely__icontains=value)).distinct()
 
     def filter_exist_neident_akce(self, queryset, name, value):
         """
@@ -1294,7 +1304,8 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     css_class="col-sm-12 app-btn-show-more collapsed",
                 ),
                 Div(
-                    Div("id_vazby", css_class="col-sm-2"),
+                    Div("id_AZ", css_class="col-sm-2"),
+                    Div("id_projekt", css_class="col-sm-2"),
                     id="vazbyCollapse",
                     css_class="collapse row",
                 ),

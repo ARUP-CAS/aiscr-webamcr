@@ -4,6 +4,8 @@ from dal import autocomplete, forward
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from heslar.models import HeslarHierarchie, HeslarNazev, HeslarOdkaz
+from pid.fields import OrcidAutocompleteField, RorAutocompleteField, WikiDataAutocompleteField
+from uzivatel.models import Organizace, Osoba
 
 logger = logging.getLogger(__name__)
 
@@ -70,3 +72,38 @@ class HeslarOdkazForm(forms.ModelForm):
         logger.debug(self.instance)
         if self.instance.pk is not None:
             self.fields["heslar_nazev"].initial = self.instance.heslo.nazev_heslare
+
+
+class OsobaAdminForm(forms.ModelForm):
+    class Meta:
+        model = Osoba
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["orcid"] = OrcidAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            label=_("heslar.forms.OsobaAdminForm.orcid.label"),
+            instance=self.instance,
+            initial_value=args[0].get("orcid") if args else None,
+        )
+        self.fields["wikidata"] = WikiDataAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:wikidata-autocomplete"),
+            label=_("heslar.forms.OsobaAdminForm.wikidata.label"),
+            instance=self.instance,
+            initial_value=args[0].get("wikidata") if args else None,
+        )
+
+
+class OrganizaceAdminForm(forms.ModelForm):
+    class Meta:
+        model = Organizace
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["ror"] = RorAutocompleteField(
+            widget=autocomplete.ListSelect2(url="pid:ror-autocomplete"),
+            label=_("heslar.forms.OrganizaceAdminForm.ror.label"),
+            instance=self.instance,
+        )

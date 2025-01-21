@@ -1,30 +1,80 @@
 var global_map_can_edit = true;
 var point_global_WGS84 = [0, 0];
 var point_global_JTSK = [0, 0];
-var lock = false;
-var global_map_can_load_projects=true
-var boundsLock=false
 
 var poi_model= L.layerGroup();
 var poi_all = L.markerClusterGroup({ disableClusteringAtZoom: 20 })
 
-map.addLayer(poi_model);
+var map = L.map('projectMap',{attributionControl:false,zoomControl:false, layers: [cuzkZM,poi_model]}).setView(init_position, init_zoom_mercator);
+
+var baseLayers = {
+    [map_translations['cuzkzakladniMapyCr']]: cuzkZM,
+    [map_translations['cuzkOrtofotomapa']]: cuzkOrt,
+    [map_translations['cuzkStinovanyeelief5G']]: cuzkEL,
+    [map_translations['openStreetMapSeda']]: osmGrey,
+};
 
 var overlays = {
-    [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
-    [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
-    [map_translations['npuPamatkovaOchrana']]: npuOchrana,
-    [map_translations['Location3D']]:poi_model,
-    [map_translations['Library3D']]:poi_all,
+   [map_translations['cuzkKatastralniMapa']]: cuzkWMS,
+   [map_translations['cuzkKatastralniUzemi']]: cuzkWMS2,
+   [map_translations['npuPamatkovaOchrana']]: npuOchrana,
+   [map_translations['Location3D']]:poi_model,
+   [map_translations['Library3D']]:poi_all,
 };
-global_map_layers.remove(map);//remove previous overlay
-L.control.layers(baseLayers, overlays).addTo(map);
+
+var global_map_layers = L.control.layers(baseLayers,overlays).addTo(map);
+L.control.scale({imperial: false, metric: true,  maxWidth: 100}).addTo(map);
+
+var searchControl=new L.Control.Search({
+    position:'topleft',
+    initial: false,
+    marker: false,
+    propertyName: 'text',
+    propertyMagicKey:'magicKey',
+    minLength:3,
+    translations:leaflet_search_translations,
+    layerKN:cuzkWMS, 
+    zoom:6
+}).addTo(map);
+
+map.addControl(new L.Control.Fullscreen({
+    title: {
+        'false': [map_translations['FullscreenTitle']],
+        'true': [map_translations['FullscreenTitleClose']]
+    }
+}));
+map.addControl(new L.control.zoom(
+    {
+        zoomInText: '+',
+        zoomInTitle: [map_translations['zoomInTitle']],
+        zoomOutText: '-',
+        zoomOutTitle: [map_translations['zoomOutTitle']]
+    }))
+
+let global_measuring_toolbox=new L.control.measure(
+    {
+        title: [map_translations['MeasureTitle']],
+        icon:'<img src="'+static_url+'img/ruler-bold-32.png" style="width:20px"/>'
+    });
+map.addControl(global_measuring_toolbox);
+
+map.addControl(new L.control.coordinates(
+    {
+    position:"bottomright",
+    useDMS:false,
+    decimals: 7,
+	decimalSeperator: ",",
+    labelTemplateLat:"N {y}",
+    labelTemplateLng:"E {x}",
+    useLatLngOrder:false,
+    centerUserCoordinates: true,
+    markerType: null
+    }).addTo(map));
 
 map.on('click', function (e) {
-    if (!global_measuring_toolbox._measuring) {
-        let point_leaf= amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
+    if (!global_measuring_toolbox._measuring) {        
         if (global_map_can_edit) {
-            if (!lock) {
+                let point_leaf= amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
                 point_global_WGS84 = [...point_leaf].reverse();
                 document.getElementById('id_visible_x1').value = point_global_WGS84[0] //visible
                 document.getElementById('id_visible_x2').value = point_global_WGS84[1]
@@ -35,46 +85,9 @@ map.on('click', function (e) {
                 $("#visible_x2").change();
                 addUniquePointToPoiLayer(point_leaf, '', false, true)
                 replace_coor();
-            }
         }
     }
 });
-
-map.on('popupclose', function (e) {
-
-    // make the tooltip for this feature visible again
-    // but check first, not all features will have tooltips!
-    var tooltip = e.popup._source.getTooltip();
-    if (tooltip) tooltip.setOpacity(0.9);
-
-});
-
-map.on('popupopen', function (e) {
-
-    var tooltip = e.popup._source.getTooltip();
-    // not all features will have tooltips!
-    if (tooltip) 
-    {
-        // close the open tooltip, if you have configured animations on the tooltip this looks snazzy
-        e.popup._source.closeTooltip()
-        // use opacity to make the tooltip for this feature invisible while the popup is active.
-        e.popup._source.getTooltip().setOpacity(0);
-    }
-
-});
-
-var is_in_czech_republic = (x2, x1) => {
-    console.log("Test coordinates for bounding box");
-
-    if (x1 >= 12.06 && x1 <= 18.87 && x2 >= 48.55 && x2 <= 51.08) {
-        return true;
-    } else {
-        console.log("Coordinates not inside CR");
-        point_global_WGS84 = [0, 0];
-        poi_model.clearLayers();
-        return false
-    }
-};
 
 var addUniquePointToPoiLayer = (arg_point_leaf, ident_cely, zoom = true,redIcon= false) => {
     var point_leaf = amcr_static_coordinate_precision_wgs84(arg_point_leaf);
@@ -92,97 +105,74 @@ var addUniquePointToPoiLayer = (arg_point_leaf, ident_cely, zoom = true,redIcon=
     }
 
     if (point_leaf[0] && point_leaf[1] && zoom) {
-        map.setView(point_leaf, 9);
+        map.setView(point_leaf, zoom_mercator);
     }
     point_global_WGS84 = [...point_leaf].reverse()
 }
 
 var addReadOnlyUniquePointToPoiLayer = (point_leaf, ident_cely) => {
     addUniquePointToPoiLayer(point_leaf, ident_cely, true)
-    lock = false;
 };
-
-//Get position - needed in GetLocation method
-function showPosition(position) {
-    var [latitude, longitude] = amcr_static_coordinate_precision_wgs84([position.coords.latitude, position.coords.longitude]);
-    var latlng = new L.LatLng(latitude, longitude);
-
-    map.setView(latlng, 10);
-    addUniquePointToPoiLayer([latitude, longitude], '', false, true)
-
-    point_global_WGS84 = [longitude, latitude];
-    document.getElementById('id_visible_x1').value = point_global_WGS84[0] //visible
-    document.getElementById('id_visible_x2').value = point_global_WGS84[1]
-    document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0] //hiden
-    document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
-
-    L.marker(latlng).addTo(poi_model)
-        .bindPopup([map_translations['CurrentLocation']]) // "Vaše současná poloha"
-        .openPopup();
-}
-
 
 var replace_coor = () => {
     var x1='id_visible_x1';
     var x2='id_visible_x2';
-    if(typeof InstallTrigger == 'undefined'){//!firefox
-        document.getElementById(x1).value=(document.getElementById(x1).value);
-        document.getElementById(x2).value=(document.getElementById(x2).value);
-    }else{
-        document.getElementById(x1).value=(document.getElementById(x1).value.replace(".",","));
-        document.getElementById(x2).value=(document.getElementById(x2).value.replace(".",","));
-    }
+    document.getElementById(x1).value=(document.getElementById(x1).value.replace(".",","));
+    document.getElementById(x2).value=(document.getElementById(x2).value.replace(".",","));
 }
 
+// Načtení stavu při načtení stránky
+loadMapState('doc');
+// Připojení eventů pro sledování změn
+addEventLayerChange('doc');
+
 map.on('moveend', function () {
-    switchMap(false);
+    switchMap();
 });
 
 $(document).ready(function () {
-    switchMap(false);
+    switchMap();
 })
 
-switchMap = function (overview = false) {
+//načtení 3d dokumentů při každém překreslení mapy
+switchMap = function () {
     var bounds = map.getBounds();
     let zoom = map.getZoom();
     var northWest = bounds.getNorthWest(),
         southEast = bounds.getSouthEast();
-    if (global_map_can_load_projects) {
-        if (overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest) {
-            console.log("Change: " + northWest + "  " + southEast + " " + zoom);
-            boundsLock = bounds;
-            let xhr_3d_all = new XMLHttpRequest();
-            xhr_3d_all.open('POST', '/dokument/model/mapa-3d');
-            xhr_3d_all.setRequestHeader('Content-type', 'application/json');
-            if (typeof global_csrftoken !== 'undefined') {
-                xhr_3d_all.setRequestHeader('X-CSRFToken', global_csrftoken);
-            }
-            map.spin(false);
-            map.spin(true);
-            xhr_3d_all.send(JSON.stringify(
-                {
-                    'northWest': northWest,
-                    'southEast': southEast,
-                    'zoom': zoom,
-                }));
 
-            xhr_3d_all.onload = function () {
-                try{
-                    poi_all.clearLayers(poi_all);
-                    let resPoints = JSON.parse(this.responseText).points
-                    resPoints.forEach((i) => {
-                        let ge = i.geom.split("(")[1].split(")")[0];
-                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurple3D })
-                        .bindTooltip(i.ident_cely, { sticky: true })
-                        .bindPopup('<a href="/dokument/model/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
-                        .addTo(poi_all)
-                    })
-                    map.spin(false);
-                } catch(e){map.spin(false);}
-            };
-            xhr_3d_all.onerror = function () {
-                map.spin(false);
-            };
-        }
+    let xhr_3d_all = new XMLHttpRequest();
+    xhr_3d_all.open('POST', '/dokument/model/mapa-3d');
+    xhr_3d_all.setRequestHeader('Content-type', 'application/json');
+    if (typeof global_csrftoken !== 'undefined') {
+        xhr_3d_all.setRequestHeader('X-CSRFToken', global_csrftoken);
     }
+    map.spin(true);
+    xhr_3d_all.send(JSON.stringify(
+        {
+            'northWest': northWest,
+            'southEast': southEast,
+            'zoom': zoom,
+        }));
+
+    xhr_3d_all.onload = function () {
+        try{
+            poi_all.clearLayers(poi_all);
+            let resPoints = JSON.parse(this.responseText).points
+            resPoints.forEach((i) => {
+                let ge = i.geom.split("(")[1].split(")")[0];
+                L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurple3D })
+                .bindTooltip(i.ident_cely, { sticky: true })
+                .bindPopup('<a href="/dokument/model/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
+                .addTo(poi_all)
+            })
+            map.spin(false);
+        } catch(e){map.spin(false);}
+    };
+    xhr_3d_all.onerror = function () {
+        map.spin(false);
+    };
+
+    
 }
+

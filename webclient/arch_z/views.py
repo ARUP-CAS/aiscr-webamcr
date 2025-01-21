@@ -13,6 +13,7 @@ from core.constants import (
     AZ_STAV_ARCHIVOVANY,
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
+    D_STAV_ARCHIVOVANY,
     ODESLANI_AZ,
     PIAN_NEPOTVRZEN,
     PIAN_POTVRZEN,
@@ -746,6 +747,20 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         fedora_transaction = az.create_transaction(request.user)
+        for item in az.casti_dokumentu.all():
+            item: DokumentCast
+            if item.dokument.stav == D_STAV_ARCHIVOVANY:
+                item.dokument.doi_update()
+        try:
+            if not az.lokalita.igsn:
+                az.lokalita.igsn_publish()
+                az.lokalita.set_igsn()
+                az.lokalita.save()
+            else:
+                az.lokalita.igsn_update()
+        except ObjectDoesNotExist:
+            pass
+
         az.set_archivovany(request.user)
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
@@ -769,9 +784,17 @@ def archivovat(request, ident_cely):
                 status=403,
             )
     form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
+    try:
+        if az.lokalita.igsn_exists:
+            doi_exists_warning = _("arch_z.views.archivovat.doi_exists_warning")
+        else:
+            doi_exists_warning = None
+    except ObjectDoesNotExist:
+        doi_exists_warning = None
     context = {
         "object": az,
         "title": _("arch_z.views.archivovat.title.text"),
+        "text": doi_exists_warning,
         "id_tag": "archivovat-akci-form",
         "button": _("arch_z.views.archivovat.submitButton.text"),
         "form_check": form_check,
@@ -805,6 +828,11 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             fedora_trasnaction = az.create_transaction(request.user)
+            try:
+                if az.lokalita and az.stav == AZ_STAV_ARCHIVOVANY:
+                    az.lokalita.igsn_hide()
+            except ObjectDoesNotExist:
+                pass
             duvod = form.cleaned_data["reason"]
             projekt = None
             if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -1386,6 +1414,11 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
         "stahnout_metadata": check_permissions(
             p.actionChoices.stahnout_metadata, user, archeologicky_zaznam.ident_cely
         ),
+        "vypis": check_permissions(
+            p.actionChoices.vypis_lokalita if app == "lokalita" else p.actionChoices.vypis_arch_z,
+            user,
+            archeologicky_zaznam.ident_cely,
+        ),
     }
     return show
 
@@ -1521,6 +1554,7 @@ class AkceListView(SearchListView):
     typ_zmeny_lookup = ZAPSANI_AZ
     redis_snapshot_prefix = "akce"
     redis_value_list_field = "archeologicky_zaznam__ident_cely"
+    vypis_app = "akce"
 
     def init_translations(self):
         super().init_translations()

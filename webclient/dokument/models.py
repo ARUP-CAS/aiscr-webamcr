@@ -23,6 +23,7 @@ from core.constants import (
 )
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
 from core.models import ModelWithMetadata, Soubor, SouborVazby
+from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -174,6 +175,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     tvary = models.ManyToManyField(Heslar, through="Tvar", related_name="dokumenty_tvary")
     autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
     osoby_snapshot = models.CharField(max_length=5000, null=True, blank=True)
+    doi = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = "dokument"
@@ -199,6 +201,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         if "3D" in self.ident_cely:
             return reverse("dokument:detail-model-3D", kwargs={"ident_cely": self.ident_cely})
         return reverse("dokument:detail", kwargs={"ident_cely": self.ident_cely})
+
+    def set_doi(self):
+        self.doi = f"{settings.DOI_PREFIX}/{self.ident_cely}"
 
     def set_zapsany(self, user):
         """
@@ -519,6 +524,35 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             data = RedisConnector.prepare_model_for_redis(table)
             return self.redis_snapshot_id, data
 
+    def get_komponenty(self, arch_z_status=None):
+        komponenty = []
+        for cast in self.casti.all():
+            if arch_z_status and (not cast.archeologicky_zaznam or cast.archeologicky_zaznam.stav != arch_z_status):
+                continue
+            komponenty += [komp for komp in cast.komponenty.komponenty.all()]
+        return komponenty
+
+    def _get_doi_client(self):
+        from pid.client import DigitalObjectIdentifierClient
+
+        return DigitalObjectIdentifierClient(self)
+
+    @property
+    def doi_exists(self):
+        return self._get_doi_client().check_record_exists()
+
+    def doi_delete(self):
+        return self._get_doi_client().delete_record()
+
+    def doi_hide(self):
+        return self._get_doi_client().hide_record()
+
+    def doi_publish(self):
+        return self._get_doi_client().publish_record()
+
+    def doi_update(self):
+        return self._get_doi_client().update_record()
+
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     """
@@ -674,6 +708,8 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
     rok_do = models.PositiveIntegerField(blank=True, null=True)
     duveryhodnost = models.PositiveIntegerField(blank=True, null=True, validators=[MaxValueValidator(100)])
     geom = PointField(blank=True, null=True, srid=4326)
+    geom_sjtsk = PointField(blank=True, null=True, srid=5514)
+    geom_system = models.CharField(max_length=6, default="4326")
 
     class Meta:
         db_table = "dokument_extra_data"
@@ -698,6 +734,11 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
         db_table = "dokument_autor"
         unique_together = (("dokument", "autor"), ("dokument", "poradi"))
         ordering = ("poradi",)
+
+    @property
+    def anonym(self):
+        # TODO: Implement this when anonym detection is added
+        return False
 
 
 class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):

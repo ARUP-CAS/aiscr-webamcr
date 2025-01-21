@@ -8,6 +8,7 @@ from cacheops import invalidate_model
 from core.constants import (
     ARCHIVACE_PROJ,
     AZ_STAV_ZAPSANY,
+    D_STAV_ARCHIVOVANY,
     D_STAV_ZAPSANY,
     NAVRZENI_KE_ZRUSENI_PROJ,
     OBLAST_CECHY,
@@ -38,6 +39,7 @@ from core.constants import (
     ZAPSANI_PROJ,
     ZAPSANI_SN,
 )
+from core.coordTransform import convertToJTSK
 from core.decorators import allowed_user_groups
 from core.exceptions import MaximalIdentNumberError
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -398,6 +400,8 @@ def create(request):
             fedora_transaction: FedoraTransaction = projekt.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN)
             if x1 and x2:
                 projekt.geom = Point(x1, x2)
+                projekt.geom_sjtsk = Point(convertToJTSK(x1, x2))
+                projekt.geom_system = "5514"
             try:
                 projekt.set_permanent_ident_cely(False)
             except MaximalIdentNumberError:
@@ -511,6 +515,7 @@ def edit(request, ident_cely):
             geom_changed = False
             if old_geom is None or new_geom.coords != old_geom.coords:
                 projekt.geom = new_geom
+                projekt.geom_sjtsk = Point(convertToJTSK(x1, x2))
                 projekt.save()
                 geom_changed = True
                 logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": projekt.geom})
@@ -627,6 +632,7 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
     typ_zmeny_lookup = ZAPSANI_PROJ
     redis_snapshot_prefix = "projekt"
     redis_value_list_field = "ident_cely"
+    vypis_app = "projekt"
 
     def init_translations(self):
         super().init_translations()
@@ -995,6 +1001,10 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
+        for item in projekt.casti_dokumentu.all():
+            item: DokumentCast
+            if item.dokument.stav == D_STAV_ARCHIVOVANY:
+                item.dokument.doi_update()
         projekt.set_archivovany(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
@@ -1384,37 +1394,8 @@ def get_detail_template_shows(projekt, user):
     Returns:
         show: dictionary možností pro zobrazení.
     """
-    show_oznamovatel = False
-    if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
-        if user.is_archiver_or_more:
-            show_oznamovatel = True
-        elif user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
-            if projekt.stav == PROJEKT_STAV_ZAPSANY:
-                show_oznamovatel = True
-            elif projekt.organizace == user.organizace:
-                if projekt.stav in [
-                    PROJEKT_STAV_PRIHLASENY,
-                    PROJEKT_STAV_ZAHAJENY_V_TERENU,
-                    PROJEKT_STAV_UKONCENY_V_TERENU,
-                ]:
-                    show_oznamovatel = True
-                elif projekt.stav == PROJEKT_STAV_UZAVRENY:
-                    last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
-                    if last_uzavreni and last_uzavreni["datum"] >= datetime.now(
-                        last_uzavreni["datum"].tzinfo
-                    ) - timedelta(days=90):
-                        show_oznamovatel = True
-            elif projekt.stav in [
-                PROJEKT_STAV_PRIHLASENY,
-                PROJEKT_STAV_ZAHAJENY_V_TERENU,
-                PROJEKT_STAV_UKONCENY_V_TERENU,
-                PROJEKT_STAV_UZAVRENY,
-            ]:
-                last_prihlaseni = projekt.historie.get_last_transaction_date(PRIHLASENI_PROJ)
-                if last_prihlaseni and last_prihlaseni["datum"] >= datetime.now(
-                    last_prihlaseni["datum"].tzinfo
-                ) - timedelta(days=30):
-                    show_oznamovatel = True
+    show_oznamovatel = get_show_oznamovatel(projekt, user)
+
     show_samostatne_nalezy = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
     show_pridat_akci = False
     show_pridat_sam_nalez = False
@@ -1475,8 +1456,43 @@ def get_detail_template_shows(projekt, user):
         "zadost_odhlaseni_projektu": check_permissions(
             p.actionChoices.projekt_zadost_odhlaseni_projektu, user, projekt.ident_cely
         ),
+        "vypis": check_permissions(p.actionChoices.vypis_projekt, user, projekt.ident_cely),
     }
     return show
+
+
+def get_show_oznamovatel(projekt, user):
+    if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
+        if user.is_archiver_or_more:
+            return True
+        elif user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
+            if projekt.stav == PROJEKT_STAV_ZAPSANY:
+                return True
+            elif projekt.organizace == user.organizace:
+                if projekt.stav in [
+                    PROJEKT_STAV_PRIHLASENY,
+                    PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                    PROJEKT_STAV_UKONCENY_V_TERENU,
+                ]:
+                    return True
+                elif projekt.stav == PROJEKT_STAV_UZAVRENY:
+                    last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
+                    if last_uzavreni and last_uzavreni["datum"] >= datetime.now(
+                        last_uzavreni["datum"].tzinfo
+                    ) - timedelta(days=90):
+                        return True
+            elif projekt.stav in [
+                PROJEKT_STAV_PRIHLASENY,
+                PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                PROJEKT_STAV_UKONCENY_V_TERENU,
+                PROJEKT_STAV_UZAVRENY,
+            ]:
+                last_prihlaseni = projekt.historie.get_last_transaction_date(PRIHLASENI_PROJ)
+                if last_prihlaseni and last_prihlaseni["datum"] >= datetime.now(
+                    last_prihlaseni["datum"].tzinfo
+                ) - timedelta(days=30):
+                    return True
+    return False
 
 
 def get_required_fields(zaznam=None, next=0):
