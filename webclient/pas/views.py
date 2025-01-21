@@ -56,7 +56,9 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 from django.views.generic import CreateView, DetailView, View
 from dokument.forms import CoordinatesDokumentForm
@@ -232,6 +234,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
             )
         return geom, geom_sjtsk
 
+    @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """Handle GET request and check project type."""
         ident_cely = kwargs.get("ident_cely")
@@ -279,6 +282,7 @@ def detail(request, ident_cely):
     return render(request, "pas/detail.html", context)
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):

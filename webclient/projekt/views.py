@@ -101,6 +101,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views import View
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 from django.views.generic import RedirectView, TemplateView
 from dokument.models import Dokument, DokumentCast
@@ -145,6 +146,7 @@ def index(request):
     return render(request, "projekt/index.html")
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
@@ -360,6 +362,7 @@ class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilter
             return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET", "POST"])
 def create(request):
@@ -456,6 +459,7 @@ def create(request):
     )
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
