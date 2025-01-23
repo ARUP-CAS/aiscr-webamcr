@@ -212,6 +212,7 @@ HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE = get_id_from_heslar("HES-000889")
 HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE = get_id_from_heslar("HES-000886")
 
 JAZYK_CS = get_id_from_heslar("HES-000167")
+JAZYK_NERELEVANTNI = get_id_from_heslar("HES-000174")
 PRIMARNE_DIGITALNI = get_id_from_heslar("HES-001166")
 
 heslar = get_settings("constants", "heslar")

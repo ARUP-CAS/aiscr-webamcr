@@ -383,7 +383,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return self.redis_snapshot_id, data
 
     def set_igsn(self):
-        self.igsn = f"{settings.DOI_PREFIX}/{self.ident_cely}"
+        self.igsn = f"{settings.IGSN_PREFIX}/{self.ident_cely}"
 
     def _get_igsn_client(self):
         from pid.client import DigitalObjectIdentifierClient

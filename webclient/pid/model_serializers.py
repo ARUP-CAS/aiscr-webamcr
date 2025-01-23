@@ -15,7 +15,7 @@ from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from dokument.models import Dokument, DokumentCast
-from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID
+from heslar.hesla_dynamicka import JAZYK_NERELEVANTNI, PRISTUPNOST_ANONYM_ID
 from heslar.models import RuianKatastr
 from komponenta.models import Komponenta
 from lokalita.models import Lokalita
@@ -202,7 +202,7 @@ class ModelSerializer(ABC):
                     "subjects": self._serialize_subjects(),
                     "contributors": self._serialize_contributors(),
                     "dates": self._serialize_dates(),
-                    "language": self._get_language(),
+                    **({"language": jayzk} if (jayzk := self._get_language()) is not None else {}),
                     "types": self._serialize_types(),
                     "relatedIdentifiers": self._serialize_related_identifiers(),
                     "sizes": [
@@ -352,7 +352,10 @@ class DokumentSerializer(ModelSerializer):
         return self.record.ident_cely
 
     def _get_language(self):
-        return self.record.jazyky.first().heslo_en
+        jazyk = self.record.jazyky.exclude(pk=JAZYK_NERELEVANTNI).first()
+        if jazyk is None:
+            return None
+        return jazyk.zkratka
 
     def _get_publication_year(self):
         return self.record.rok_vzniku
