@@ -202,7 +202,7 @@ class ModelSerializer(ABC):
                     "subjects": self._serialize_subjects(),
                     "contributors": self._serialize_contributors(),
                     "dates": self._serialize_dates(),
-                    **({"language": jayzk} if (jayzk := self._get_language()) is not None else {}),
+                    "language": self._get_language() or "",
                     "types": self._serialize_types(),
                     "relatedIdentifiers": self._serialize_related_identifiers(),
                     "sizes": [
