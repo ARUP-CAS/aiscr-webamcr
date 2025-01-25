@@ -31,6 +31,9 @@ KOMPONENTU_SE_NEPOVEDLO_EDITOVAT: Final = _(
 )  # Komponentu se nepovedlo editovat.
 ZAZNAM_USPESNE_SMAZAN: Final = _("common.message.ZAZNAM_USPESNE_SMAZAN.text")  # Záznam byl úspěšně smazán.
 ZAZNAM_SE_NEPOVEDLO_SMAZAT: Final = _("common.message.ZAZNAM_SE_NEPOVEDLO_SMAZAT.text")  # Záznam nebyl smazán.
+ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE: Final = _(
+    "common.message.ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE.text"
+)  # Záznam nebyl smazán.
 ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY: Final = _(
     "common.message.ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY.text"
 )  # Záznam nebyl smazán kvůli navázaným záznamům.
