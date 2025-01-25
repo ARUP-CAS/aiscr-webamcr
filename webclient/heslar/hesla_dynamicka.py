@@ -2,6 +2,7 @@ import json
 import logging
 
 from core.setting_models import CustomAdminSettings
+from django.db import OperationalError
 from heslar.models import Heslar
 from uzivatel.models import Organizace, Osoba
 
@@ -36,9 +37,12 @@ def get_id_from_osoba(ident_cely):
 
 
 def get_settings(item_group, item_id):
-    settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
-    if settings_query.count() > 0:
-        return json.loads(settings_query.last().value)
+    try:
+        settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
+        if settings_query.count() > 0:
+            return json.loads(settings_query.last().value)
+    except OperationalError as e:
+        logger.error("heslar.get_settings.error", extra={"error": str(e)})
     return {}
 
 
