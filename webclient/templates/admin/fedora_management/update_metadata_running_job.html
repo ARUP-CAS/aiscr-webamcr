@@ -1,0 +1,90 @@
+{% extends 'admin/change_list.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+{% load static %}
+
+{% block extrastyle %}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+{% endblock %}
+
+{% block pagination %}{% endblock %}
+{% block filters %}{% endblock filters %}
+{% block object-tools %}{% endblock object-tools %}
+{% block search %}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "core.templates.admin.fedora_management.home_link" %}</a>
+    {% if page_name %} &rsaquo; {{ page_name }}{% endif %}
+  </div>
+{% endblock %}
+
+<h2>{% trans "core.templates.admin.fedora_management.heading" %}</h2>
+
+{% block content %}
+  {% if request.user.is_superuser %}
+    <div id="content-main">
+      <p><b>{% trans "core.templates.admin.fedora_management.job_id" %}</b>: {{ job_id }}</p>
+    </div>
+    {% if error %}
+      <p>{{ error }}</p>
+    {% else %}
+      <div class="row">
+        <button class="btn" id="stopRequests">{% trans "core.templates.admin.fedora_management.stop_request" %}</button>
+      </div>
+      <table id="result_list" class="table table-bordered table-striped">
+        <tr>
+          <th>{% trans "core.templates.admin.fedora_management.ident_cely" %}</th>
+          <th>{% trans "core.templates.admin.fedora_management.transaction_id" %}</th>
+          <th>{% trans "core.templates.admin.fedora_management.result" %}</th>
+        </tr>
+      </table>
+    {% endif %}
+  {% else %}
+    <p>{% trans "core.templates.admin.fedora_management.not_superuser" %}</p>
+  {% endif %}
+
+  <script>
+      let stopRequests = false;
+      document.getElementById("stopRequests").addEventListener("click", () => {
+          stopRequests = true;
+      });
+
+      async function sendRequest(url) {
+          try {
+              const response = await fetch(url);
+              if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
+              }
+
+              const data = await response.json();
+
+              if (data.ident_count === 0 || stopRequests) {
+                  console.log("No more requests or stopped by user.");
+                  return;
+              }
+
+              const table = document.getElementById("result_list");
+              const newRow = table.insertRow();
+
+              const cell1 = newRow.insertCell(0);
+              const cell2 = newRow.insertCell(1);
+              const cell3 = newRow.insertCell(2);
+
+              cell1.textContent = data.ident_cely;
+              cell2.textContent = data.transaction_id;
+              cell3.textContent = data.result;
+
+              sendRequest(url);
+          } catch (error) {
+              console.error("Error fetching data:", error);
+          }
+      }
+
+      const requestUrl = "{% url 'fedora:continue-processing' job_id %}";
+
+      sendRequest(requestUrl);
+
+  </script>
+
+{% endblock %}
