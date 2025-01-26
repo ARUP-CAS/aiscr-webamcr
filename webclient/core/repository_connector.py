@@ -436,7 +436,7 @@ class FedoraRepositoryConnector:
                 else:
                     fedora_transaction = FedoraTransaction(uid=self.transaction_uid)
                     fedora_transaction.rollback_transaction()
-                if "being updated by another transaction" in response.text:
+                if response.status_code == 409:
                     logger.info(
                         "core_repository_connector._send_request.response.another_transaction_error", extra=extra
                     )
