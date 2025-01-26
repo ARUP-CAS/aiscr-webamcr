@@ -618,44 +618,7 @@
       </div>
       <div class="card-body content-with-table-responsive">
         {% if akce %}
-        <table class="table table-striped table-hover table-sm mb-0">
-          <thead>
-            <tr>
-              <th>{% trans "projekt.templates.detail.akcePart.table.identCely.label" %}</th>
-              <th>{% trans "projekt.templates.detail.akcePart.table.hlavniKatastr.label" %}</th>
-              <th>{% trans "projekt.templates.detail.akcePart.table.datumZahajeni.label" %}</th>
-              <th>{% trans "projekt.templates.detail.akcePart.table.datumUkonceni.label" %}</th>
-              <th>{% trans "projekt.templates.detail.akcePart.table.hlavniTyp.label" %}</th>
-              <th>{% trans "projekt.templates.detail.akcePart.table.stav.label" %}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for a in akce %}
-              <tr>
-                <td class="app-ident-cely">
-                  <a href="{% url 'arch_z:detail' a.archeologicky_zaznam.ident_cely %}">
-                    <span class="material-icons">brush</span>
-                    {{ a.archeologicky_zaznam.ident_cely }}
-                  </a>
-                </td>
-                <td>
-                  <strong>{{ a.archeologicky_zaznam.hlavni_katastr }}</strong>
-                  {% if a.archeologicky_zaznam.katastry.all %}, {{ a.archeologicky_zaznam.katastry.all|katastry_to_list }}{% endif %}
-                </td>
-                <td>{{ a.datum_zahajeni|date:'Y-m-d' }}</td>
-                <td>{{ a.datum_ukonceni|date:'Y-m-d' }}</td>
-                <td>{{ a.hlavni_typ|check_if_none }}</td>
-                <td>
-                  <div class="container">
-                      <span class="badge-span">
-                        <span class="badge">{{ a.archeologicky_zaznam.get_stav_display }}</span>
-                      </span>
-                  </div>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        {% include "ez/ez_odkazy_table_only.html" with zaznamy=akce type="arch_z" card_type="akce" %}
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
