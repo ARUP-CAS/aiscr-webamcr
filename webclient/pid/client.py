@@ -1,7 +1,6 @@
 import logging
 
 import requests
-from django.conf import settings
 from django.utils.translation import gettext as _
 from dokument.models import Dokument
 from lokalita.models import Lokalita
@@ -66,7 +65,7 @@ class DigitalObjectIdentifierClient:
             raise DoiWriteError
 
     def _get_record_url(self):
-        return f"{DATACITE_URL.rstrip('/')}/{settings.DOI_PREFIX}/{self.serializer.get_ident_cely()}"
+        return f"{DATACITE_URL.rstrip('/')}/{self.serializer._get_prefix()}/{self.serializer.get_ident_cely()}"
 
     def check_record_exists(self):
         response = requests.get(self._get_record_url(), auth=self.auth)

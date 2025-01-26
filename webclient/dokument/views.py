@@ -1412,6 +1412,7 @@ def create_model_3D(request):
             prefix="komponenta",
         )
         geom = None
+        geom_sjtsk = None
         x1 = None
         x2 = None
         try:
