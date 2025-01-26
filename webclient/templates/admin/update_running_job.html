@@ -5,6 +5,18 @@
 
 {% block extrastyle %}
   <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+  <style>
+      #progressBarBox {
+          width: 100%;
+          background-color: grey;
+      }
+
+      #progressBar {
+          width: 0;
+          height: 30px;
+          background-color: rgb(32, 80, 103);
+      }
+  </style>
 {% endblock %}
 
 {% block pagination %}{% endblock %}
@@ -14,7 +26,7 @@
 
 {% block breadcrumbs %}
   <div class="breadcrumbs">
-    <a href="{% url 'admin:index' %}">{% trans "core.templates.admin.fedora_management.home_link" %}</a>
+    <a href="{% url 'admin:index' %}">{% trans "core.templates.admin.update_running_job.home_link" %}</a>
     {% if page_name %} &rsaquo; {{ page_name }}{% endif %}
   </div>
 {% endblock %}
@@ -29,14 +41,18 @@
     {% if error %}
       <p>{{ error }}</p>
     {% else %}
-      <div class="row">
-        <button class="btn" id="stopRequests">{% trans "core.templates.admin.fedora_management.stop_request" %}</button>
+      <div class="submit-row">
+        <input type="submit" id="stopRequests" class="default"
+               value="{% trans "core.templates.admin.fedora_management.stop_request" %}">
+      </div>
+      <div id="progressBarBox" style="margin-bottom: 1rem">
+        <div id="progressBar"></div>
       </div>
       <table id="result_list" class="table table-bordered table-striped">
         <tr>
-          <th>{% trans "core.templates.admin.fedora_management.ident_cely" %}</th>
-          <th>{% trans "core.templates.admin.fedora_management.transaction_id" %}</th>
-          <th>{% trans "core.templates.admin.fedora_management.result" %}</th>
+          <th>{% trans "core.templates.admin.ident_cely" %}</th>
+          <th>{% trans "core.templates.admin.result" %}</th>
+          <th>{% trans "core.templates.admin.detail" %}</th>
         </tr>
       </table>
     {% endif %}
@@ -50,8 +66,14 @@
           stopRequests = true;
       });
 
+      const requestUrl = "{{ url }}";
+
       async function sendRequest(url) {
           try {
+              if (stopRequests) {
+                  return;
+              }
+
               const response = await fetch(url);
               if (!response.ok) {
                   throw new Error(`HTTP error! status: ${response.status}`);
@@ -59,29 +81,30 @@
 
               const data = await response.json();
 
-              if (data.ident_count === 0 || stopRequests) {
-                  console.log("No more requests or stopped by user.");
-                  return;
-              }
+              const progressBar = document.getElementById("progressBar");
+              progressBar.style.width = data.progress + "%"
 
               const table = document.getElementById("result_list");
-              const newRow = table.insertRow();
+              const newRow = table.insertRow(1);
 
               const cell1 = newRow.insertCell(0);
               const cell2 = newRow.insertCell(1);
               const cell3 = newRow.insertCell(2);
 
               cell1.textContent = data.ident_cely;
-              cell2.textContent = data.transaction_id;
-              cell3.textContent = data.result;
+              cell2.textContent = data.result;
+              cell3.textContent = data.detail;
 
-              sendRequest(url);
+              if (data.remaining <= 0) {
+                  stopRequests = true;
+              }
+              if (stopRequests) {
+                  sendRequest(url);
+              }
           } catch (error) {
               console.error("Error fetching data:", error);
           }
       }
-
-      const requestUrl = "{% url 'fedora:continue-processing' job_id %}";
 
       sendRequest(requestUrl);
 
