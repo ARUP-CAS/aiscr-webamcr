@@ -256,13 +256,13 @@ class DownloadFile(LoginRequiredMixin, View):
             return redirect(safe_redirect)
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
         if soubor.repository_uuid:
-            if self.thumb_small:
+            if self.thumb_small and soubor.small_thumbnail is not None:
                 return soubor.small_thumbnail
-            elif self.thumb_large:
+            elif self.thumb_large and soubor.large_thumbnail is not None:
                 return soubor.large_thumbnail
-            else:
+            elif soubor.content_file_response is not None:
                 return soubor.content_file_response
-        return HttpResponse()
+        raise Http404
 
 
 class DownloadThumbnailSmall(DownloadFile):

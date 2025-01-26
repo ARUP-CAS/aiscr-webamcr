@@ -74,7 +74,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         )
 
     def set_igsn(self):
-        self.igsn = f"{settings.DOI_PREFIX}/{self.archeologicky_zaznam.ident_cely}"
+        self.igsn = f"{settings.IGSN_PREFIX}/{self.archeologicky_zaznam.ident_cely}"
 
     def set_snapshots(self):
         if not self.archeologicky_zaznam.katastry.all():

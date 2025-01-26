@@ -39,11 +39,8 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             },
         )
         self.ElementClick(By.CSS_SELECTOR, "#btnGroupDropTable > .material-icons")
-        if (
-            self.driver.find_element(By.XPATH, f"//*[@data-td-class='{element_id_initial}']").get_attribute(
-                "data-state"
-            )
-            == "on"
+        if "display: none" not in self.driver.find_element(By.ID, f"ico_check_{element_id_initial}").get_attribute(
+            "style"
         ):
             self.ElementClick(By.XPATH, f"//*[@data-td-class='{element_id_initial}']")
         table = self.driver.find_element(By.TAG_NAME, "table")
