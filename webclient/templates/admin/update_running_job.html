@@ -98,7 +98,7 @@
               if (data.remaining <= 0) {
                   stopRequests = true;
               }
-              if (stopRequests) {
+              if (!stopRequests) {
                   sendRequest(url);
               }
           } catch (error) {
