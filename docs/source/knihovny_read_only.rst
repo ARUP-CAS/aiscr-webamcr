@@ -108,7 +108,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/django/asgiref/
    * - attrs
-     - 24.3.0
+     - 25.1.0
      - UNKNOWN
      - https://www.attrs.org/en/stable/changelog.html
    * - babel
@@ -232,9 +232,9 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/django-crispy-forms/django-crispy-forms
    * - django-debug-toolbar
-     - 4.4.6
+     - 5.0.1
      - BSD License
-     - https://github.com/jazzband/django-debug-toolbar
+     - https://github.com/django-commons/django-debug-toolbar
    * - django-debug-toolbar-template-profiler
      - 2.1.0
      - BSD License
@@ -312,7 +312,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.16.1
+     - 3.17.0
      - The Unlicense (Unlicense)
      - https://github.com/tox-dev/py-filelock
    * - funcy
@@ -524,7 +524,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
-     - 4.27.1
+     - 4.28.0
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
@@ -612,7 +612,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Python Software Foundation License
      - https://github.com/python/typing_extensions
    * - tzdata
-     - 2024.2
+     - 2025.1
      - Apache Software License
      - https://github.com/python/tzdata
    * - uWSGI
