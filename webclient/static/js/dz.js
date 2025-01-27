@@ -18,13 +18,18 @@ const get_description = () => {
     return "";
 };
 
-const UploadResultsEnum = {
+const ActionResultsEnum = {
     success: 0,
     duplicate: 1,
     reject: 2,
     error: 3,
     renamed: 4,
     duplicate_renamed: 4,
+}
+
+const ActionTypeEnum = {
+    upload: 0,
+    delete: 1,
 }
 
 const check_sidebar_state = () => {
@@ -38,7 +43,7 @@ const check_sidebar_state = () => {
     return false;
 }
 
-const show_upload_successful_message = (file, result = UploadResultsEnum.success, message = "") => {
+const show_action_result_message = (file, result = ActionResultsEnum.success, message = "", action = ActionTypeEnum.upload) => {
     const collection = document.getElementsByClassName("message-container");
     if (collection.length > 0) {
         const sidebar_affected_class = check_sidebar_state() ? "app-alert-floating-file-upload-no-left-bar " : "";
@@ -47,25 +52,33 @@ const show_upload_successful_message = (file, result = UploadResultsEnum.success
         const sidebar_element_query = document.getElementsByClassName("app-sidebar-wrapper");
         const floating_class = sidebar_element_query.length > 0 ? "app-alert-floating-file-upload" : "app-alert-floating-file-upload-oznameni";
         const alert_common_classes = "alert alert-success alert-dismissible fade show app-alert-floating-file-upload";
-        if (result === UploadResultsEnum.success) {
+        if (result === ActionResultsEnum.success) {
             const alert_status_class = "alert-success";
             alert_element.setAttribute("class", `${alert_status_class} ${alert_common_classes} ${floating_class} ${sidebar_affected_class}`);
-        } else if (result === UploadResultsEnum.duplicate || result === UploadResultsEnum.renamed || result === UploadResultsEnum.duplicate_renamed) {
+        } else if (result === ActionResultsEnum.duplicate || result === ActionResultsEnum.renamed || result === ActionResultsEnum.duplicate_renamed) {
             const alert_status_class = "alert-warning";
             alert_element.setAttribute("class", `${alert_status_class} ${alert_common_classes} ${floating_class} ${sidebar_affected_class}`);
-        } else if (result === UploadResultsEnum.reject || result === UploadResultsEnum.error) {
+        } else if (result === ActionResultsEnum.reject || result === ActionResultsEnum.error) {
             const alert_status_class = "alert-danger";
             alert_element.setAttribute("class", `${alert_status_class} ${alert_common_classes} ${floating_class} ${sidebar_affected_class} ${message}`);
         }
         alert_element.setAttribute("role", "alert");
-        if (result === UploadResultsEnum.success) {
-            alert_element.textContent = `${dz_trans["alertsUploadSuccesfullPart1"]} ${file.name} ${dz_trans["alertsUploadSuccesfullPart2"]}`;
-        } else if (result === UploadResultsEnum.duplicate || result === UploadResultsEnum.renamed || result === UploadResultsEnum.duplicate_renamed) {
-            alert_element.textContent = message;
-        } else if (result === UploadResultsEnum.reject) {
-            alert_element.textContent = `${dz_trans["alertsUploadRejectPart1"]} ${file.name} ${dz_trans["alertsUploadRejectPart2"]}${message}`;
-        } else if (result === UploadResultsEnum.error) {
-            alert_element.textContent = `${dz_trans["alertsUploadErrorPart1"]} ${file.name} ${dz_trans["alertsUploadErrorPart2"]}${message}`;
+        if (action === ActionTypeEnum.upload) {
+            if (result === ActionResultsEnum.success) {
+                alert_element.textContent = `${dz_trans["alertsUploadSuccessfulPart1"]} ${file.name} ${dz_trans["alertsUploadSuccessfulPart2"]}`;
+            } else if (result === ActionResultsEnum.duplicate || result === ActionResultsEnum.renamed || result === ActionResultsEnum.duplicate_renamed) {
+                alert_element.textContent = message;
+            } else if (result === ActionResultsEnum.reject) {
+                alert_element.textContent = `${dz_trans["alertsUploadRejectPart1"]} ${file.name} ${dz_trans["alertsUploadRejectPart2"]}${message}`;
+            } else if (result === ActionResultsEnum.error) {
+                alert_element.textContent = `${dz_trans["alertsUploadErrorPart1"]} ${file.name} ${dz_trans["alertsUploadErrorPart2"]}${message}`;
+            }
+        } else if (action === ActionTypeEnum.reject) {
+            if (result === ActionResultsEnum.success) {
+                alert_element.textContent = `${dz_trans["alertsDeleteSuccessfulPart1"]} ${file.name} ${dz_trans["alertsDeleteSuccessfulPart2"]}`;
+            } else if (result === ActionResultsEnum.error) {
+                alert_element.textContent = `${dz_trans["alertsDeleteErrorPart1"]} ${file.name} ${dz_trans["alertsDeleteErrorPart2"]}`;
+            }
         }
         const button_element = document.createElement("button");
         button_element.setAttribute('type', 'button');
@@ -187,22 +200,22 @@ window.onload = function () {
                 let result = null;
                 let message = "";
                 if (response.duplicate && response.file_renamed) {
-                    result = UploadResultsEnum.duplicate_renamed;
+                    result = ActionResultsEnum.duplicate_renamed;
                     message = `${response.duplicate} ${response.file_renamed}`;
                 } else if (response.renamed) {
-                    result = UploadResultsEnum.renamed;
+                    result = ActionResultsEnum.renamed;
                     message = response.file_renamed;
                 } else if (response.duplicate) {
-                    result = UploadResultsEnum.duplicate;
+                    result = ActionResultsEnum.duplicate;
                     message = response.duplicate;
                 } else {
-                    result = UploadResultsEnum.success;
+                    result = ActionResultsEnum.success;
                 }
-                if (result !== UploadResultsEnum.success) {
-                    show_upload_successful_message(file, result, message);
+                if (result !== ActionResultsEnum.success) {
+                    show_action_result_message(file, result, message);
                     console.log("success > " + file.name);
                 } else {
-                    show_upload_successful_message(file, result, message);
+                    show_action_result_message(file, result, message);
                 }
             });
             this.on("complete", function (file, response) {
@@ -217,6 +230,15 @@ window.onload = function () {
                     xhttp.open("POST", "/soubor/smazat/" + typ_vazby + "/" + object_id + "/" + file.id);
                     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                     xhttp.setRequestHeader('X-CSRFToken', csrfcookie());
+                    xhttp.onreadystatechange = () => {
+                        if (xhttp.readyState === XMLHttpRequest.DONE) {
+                            if (xhttp.status === 200) {
+                                show_action_result_message(file, ActionResultsEnum.success, "success");
+                            } else {
+                                show_action_result_message(file, ActionResultsEnum.error, "success");
+                            }
+                        }
+                    };
                     xhttp.send("dropzone=true");
                 }
             });
@@ -233,12 +255,12 @@ window.onload = function () {
         error: function (file, response) {
             console.log(response);
             if (Array.isArray(response) && response.includes('reject')) {
-                show_upload_successful_message(file, UploadResultsEnum.reject, response);
+                show_action_result_message(file, ActionResultsEnum.reject, response);
             }
             else if (response.hasOwnProperty("error")) {
-                show_upload_successful_message(file, UploadResultsEnum.error, response.error);
+                show_action_result_message(file, ActionResultsEnum.error, response.error);
             } else {
-                show_upload_successful_message(file, UploadResultsEnum.error, response);
+                show_action_result_message(file, ActionResultsEnum.error, response);
             }
 
             this.removeFile(file);

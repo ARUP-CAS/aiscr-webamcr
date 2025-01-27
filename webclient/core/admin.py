@@ -153,6 +153,7 @@ class CustomAdminSettingsAdmin(admin.ModelAdmin):
     Admin panel pro vlastních nastavení.
     """
 
+    change_list_template = "core/custom_settings_changelist.html"
     model = CustomAdminSettings
     list_display = ("item_id", "item_group")
 
