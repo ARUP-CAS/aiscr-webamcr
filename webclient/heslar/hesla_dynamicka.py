@@ -2,6 +2,7 @@ import json
 import logging
 
 from core.setting_models import CustomAdminSettings
+from django.db import OperationalError
 from heslar.models import Heslar
 from uzivatel.models import Organizace, Osoba
 
@@ -36,9 +37,12 @@ def get_id_from_osoba(ident_cely):
 
 
 def get_settings(item_group, item_id):
-    settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
-    if settings_query.count() > 0:
-        return json.loads(settings_query.last().value)
+    try:
+        settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
+        if settings_query.count() > 0:
+            return json.loads(settings_query.last().value)
+    except OperationalError as e:
+        logger.error("heslar.get_settings.error", extra={"error": str(e)})
     return {}
 
 
@@ -212,12 +216,13 @@ HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE = get_id_from_heslar("HES-000889")
 HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE = get_id_from_heslar("HES-000886")
 
 JAZYK_CS = get_id_from_heslar("HES-000167")
+JAZYK_NERELEVANTNI = get_id_from_heslar("HES-000174")
 PRIMARNE_DIGITALNI = get_id_from_heslar("HES-001166")
 
 heslar = get_settings("constants", "heslar")
 for key, value in heslar.items():
-    if key in globals():
-        logger.warning("heslar.hesla_dynamicka.heslar.variable_exist", extra={"key": key})
+    if key not in globals():
+        logger.warning("heslar.hesla_dynamicka.heslar.variable_not_exist", extra={"key": key})
     globals()[key] = get_id_from_heslar(value)
 
 heslar_group = get_settings("constants", "heslar_group")
@@ -225,14 +230,14 @@ for key, values in heslar_group.items():
     group = []
     for val in values:
         group.append(globals().get(val))
-    if key in globals():
-        logger.warning("heslar.hesla_dynamicka.heslar_group.variable_exist", extra={"key": key})
+    if key not in globals():
+        logger.warning("heslar.hesla_dynamicka.heslar_group.variable_not_exist", extra={"key": key})
     globals()[key] = group
 
 organizace = get_settings("constants", "organizace")
 for key, value in organizace.items():
-    if key in globals():
-        logger.warning("heslar.hesla_dynamicka.organizace.variable_exist", extra={"key": key})
+    if key not in globals():
+        logger.warning("heslar.hesla_dynamicka.organizace.variable_not_exist", extra={"key": key})
     globals()[key] = get_id_from_organizace(value)
 
 organizace_group = get_settings("constants", "organizace_group")
@@ -240,14 +245,14 @@ for key, values in organizace_group.items():
     group = []
     for val in values:
         group.append(globals().get(val))
-    if key in globals():
-        logger.warning("heslar.hesla_dynamicka.organizace_group.variable_exist", extra={"key": key})
+    if key not in globals():
+        logger.warning("heslar.hesla_dynamicka.organizace_group.variable_not_exist", extra={"key": key})
     globals()[key] = group
 
 osoba = get_settings("constants", "osoba")
 for key, value in osoba.items():
-    if key in globals():
-        logger.warning("heslar.hesla_dynamicka.osoba.variable_exist", extra={"key": key})
+    if key not in globals():
+        logger.warning("heslar.hesla_dynamicka.osoba.variable_not_exist", extra={"key": key})
     globals()[key] = get_id_from_heslar(value)
 
 osoba_group = get_settings("constants", "osoba_group")
@@ -255,6 +260,6 @@ for key, values in osoba_group.items():
     group = []
     for val in values:
         group.append(globals().get(val))
-    if key in globals():
-        logger.warning("heslar.hesla_dynamicka.osoba_group.variable_exist", extra={"key": key})
+    if key not in globals():
+        logger.warning("heslar.hesla_dynamicka.osoba_group.variable_not_exist", extra={"key": key})
     globals()[key] = group
