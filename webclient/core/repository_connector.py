@@ -28,11 +28,16 @@ class FedoraValidationError(Exception):
 
 
 class FedoraError(Exception):
-    def __init__(self, url, message, code):
+    def __init__(self, url, message, code, headers=None):
         self.url = url
         self.message = message
         self.code = code
+        self.headers = headers
         super().__init__(self.message)
+
+
+class FedoraUpdatedByAnotherTransactionError(FedoraError):
+    pass
 
 
 class IdentChangeFedoraError(Exception):
@@ -426,13 +431,21 @@ class FedoraRepositoryConnector:
                     "transaction": self.transaction_uid,
                     "url": url,
                 }
-                logger.error("core_repository_connector._send_request.response.error", extra=extra)
                 if self.transaction:
                     self.transaction.rollback_transaction()
                 else:
                     fedora_transaction = FedoraTransaction(uid=self.transaction_uid)
                     fedora_transaction.rollback_transaction()
-                raise FedoraError(url, response.text, response.status_code)
+                if response.status_code == 409:
+                    logger.info(
+                        "core_repository_connector._send_request.response.another_transaction_error", extra=extra
+                    )
+                    raise FedoraUpdatedByAnotherTransactionError(
+                        url, response.text, response.status_code, response.headers
+                    )
+                else:
+                    logger.error("core_repository_connector._send_request.response.error", extra=extra)
+                    raise FedoraError(url, response.text, response.status_code, response.headers)
         elif request_type in (
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE,
@@ -1290,6 +1303,12 @@ class FedoraTransactionResult(Enum):
     ABORTED = 2
 
 
+class FedoraTransactionStatus(Enum):
+    ACTIVE = 1
+    COMMITTED = 2
+    ABORTED = 3
+
+
 class FedoraTransaction:
     def __init__(
         self,
@@ -1317,6 +1336,7 @@ class FedoraTransaction:
             logger.debug("core_repository_connector.FedoraTransaction.__init__", extra={"uid": self.uid})
         self.request = request
         self.suppress_message = suppress_message
+        self.__status = FedoraTransactionStatus.ACTIVE
 
     def __str__(self):
         return self.uid
@@ -1328,6 +1348,10 @@ class FedoraTransaction:
     @property
     def _transaction_redis_key(self):
         return self.get_transaction_redis_key(self.main_record.ident_cely, self.transaction_user.id)
+
+    @property
+    def status(self):
+        return self.__status
 
     def _save_transaction_result_to_redis(self, result: FedoraTransactionResult):
         if self.main_record and self.transaction_user and not self.suppress_message:
@@ -1377,6 +1401,7 @@ class FedoraTransaction:
             "core_repository_connector.FedoraTransaction.rollback_transaction.start", extra={"transaction": self.uid}
         )
         self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
+        self.__status = FedoraTransactionStatus.ABORTED
         logger.debug(
             "core_repository_connector.FedoraTransaction.rollback_transaction.end", extra={"transaction": self.uid}
         )
@@ -1390,6 +1415,7 @@ class FedoraTransaction:
         self._perform_post_commit_tasks()
         if settings.DIGIARCHIV_URL != "":
             self.call_digiarchiv_update()
+        self.__status = FedoraTransactionStatus.COMMITTED
         logger.debug(
             "core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
             extra={"transaction": self.uid},

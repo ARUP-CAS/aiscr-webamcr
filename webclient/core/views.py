@@ -34,10 +34,17 @@ from core.message_constants import (
     TRANSLATION_DELETE_SUCCESS,
     TRANSLATION_UPLOAD_SUCCESS,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
+    ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE,
     ZAZNAM_USPESNE_SMAZAN,
 )
 from core.models import Soubor
-from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.repository_connector import (
+    FedoraError,
+    FedoraRepositoryConnector,
+    FedoraTransaction,
+    FedoraTransactionStatus,
+    FedoraUpdatedByAnotherTransactionError,
+)
 from core.utils import (
     find_pos_with_backup,
     get_heatmap_pas,
@@ -57,6 +64,7 @@ from django.contrib.gis.db.models.functions import AsWKT
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.core.validators import URLValidator
+from django.db import transaction
 from django.db.models import FilteredRelation, Q, Value
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseRedirect, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -128,7 +136,6 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "method": request.method},
     )
     soubor: Soubor = get_object_or_404(Soubor, pk=pk)
-    fedora_transaction = FedoraTransaction()
     try:
         check_soubor_vazba(typ_vazby, ident_cely, pk)
     except ZaznamSouborNotmatching as err:
@@ -152,12 +159,42 @@ def delete_file(request, typ_vazby, ident_cely, pk):
             safe_redirect = "/"
         return redirect(safe_redirect)
     if request.method == "POST":
-        logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor.pk})
+        fedora_transaction = FedoraTransaction()
+        logger.debug(
+            "core.views.delete_file.not_deleted",
+            extra={"soubor": soubor.pk, "fedora_transaction": fedora_transaction.uid},
+        )
         soubor.deleted_by_user = request.user
         soubor.active_transaction = fedora_transaction
         soubor_pk = soubor.pk
-        soubor.delete()
-        if Soubor.objects.filter(pk=soubor_pk).exists():
+        transaction_error = False
+        with transaction.atomic():
+            try:
+                soubor.delete()
+                connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
+                if not request.POST.get("dropzone", False):
+                    logger.debug("core.views.delete_file.deleted.delete_binary_file", extra={"soubor_pk": soubor_pk})
+                    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+                    connector.delete_binary_file(soubor)
+                else:
+                    logger.debug(
+                        "core.views.delete_file.deleted.delete_binary_file_completely", extra={"soubor_pk": soubor_pk}
+                    )
+                    connector.delete_binary_file_completely(soubor)
+                    fedora_transaction.mark_transaction_as_closed()
+                    return JsonResponse({"success": True})
+            except FedoraUpdatedByAnotherTransactionError as err:
+                logger.debug(
+                    "core.views.delete_file.another_transaction",
+                    extra={"soubor_pk": soubor_pk, "err": err, "fedora_transaction": fedora_transaction.uid},
+                )
+                messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
+                transaction_error = True
+                if request.POST.get("dropzone", False):
+                    if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                        fedora_transaction.rollback_transaction()
+                    return JsonResponse({"success": False}, status=400)
+        if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
             # Not sure if 404 is the only correct option
             logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
@@ -172,18 +209,6 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 )
             fedora_transaction.rollback_transaction()
             return JsonResponse({"messages": django_messages}, status=400)
-        else:
-            logger.debug("core.views.delete_file.deleted", extra={"soubor_pk": soubor_pk})
-            connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
-            if not request.POST.get("dropzone", False):
-                logger.debug("core.views.delete_file.deleted.delete_binary_file", extra={"soubor_pk": soubor_pk})
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-                connector.delete_binary_file(soubor)
-            else:
-                logger.debug(
-                    "core.views.delete_file.deleted.delete_binary_file_completely", extra={"soubor_pk": soubor_pk}
-                )
-                connector.delete_binary_file_completely(soubor)
         next_url = request.POST.get("next")
         if next_url:
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
@@ -193,7 +218,10 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 response = reverse("core:home")
         else:
             response = reverse("core:home")
-        fedora_transaction.mark_transaction_as_closed()
+        if not transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+            fedora_transaction.mark_transaction_as_closed()
+        elif transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+            fedora_transaction.rollback_transaction()
         return JsonResponse({"redirect": response})
     else:
         context = {
@@ -411,7 +439,16 @@ def post_upload(request):
                 )
             else:
                 renamed = False
-            rep_bin_file = conn.save_binary_file(new_name, mimetype, soubor_data)
+            try:
+                rep_bin_file = conn.save_binary_file(new_name, mimetype, soubor_data)
+            except FedoraUpdatedByAnotherTransactionError as err:
+                logger.debug("core.views.post_upload.upload_failed_another_transaction", extra={"error": err})
+                help_translation = _("core.views.post_upload.upload_failed_another_transaction")
+                return JsonResponse({"error": help_translation}, status=400)
+            except FedoraError as err:
+                logger.error("core.views.post_upload.fedora_error", extra={"error": err})
+                help_translation = _("core.views.post_upload.fedora_error")
+                return JsonResponse({"error": help_translation}, status=400)
             sha_512 = rep_bin_file.sha_512
             soubor_instance: Soubor = Soubor(
                 vazba=objekt.soubory,
@@ -504,7 +541,18 @@ def post_upload(request):
             if soubor_instance.repository_uuid is not None:
                 extension = soubor.name.split(".")[-1]
                 new_name = f'{".".join(soubor_instance.nazev.split(".")[:-1])}.{extension}'
-                rep_bin_file = conn.update_binary_file(new_name, mimetype, soubor_data, soubor_instance.repository_uuid)
+                try:
+                    rep_bin_file = conn.update_binary_file(
+                        new_name, mimetype, soubor_data, soubor_instance.repository_uuid
+                    )
+                except FedoraUpdatedByAnotherTransactionError as err:
+                    logger.debug("core.views.post_upload.update_failed_another_transaction", extra={"error": err})
+                    help_translation = _("core.views.post_upload.update_failed_another_transaction")
+                    return JsonResponse({"error": help_translation}, status=400)
+                except FedoraError as err:
+                    logger.error("core.views.post_upload.fedora_error", extra={"error": err})
+                    help_translation = _("core.views.post_upload.fedora_error")
+                    return JsonResponse({"error": help_translation}, status=400)
                 logger.debug(
                     "core.views.post_upload.update",
                     extra={"pk": soubor_instance.pk, "new_name": new_name, "original_name": original_name},
