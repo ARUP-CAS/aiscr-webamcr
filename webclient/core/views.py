@@ -399,7 +399,7 @@ def post_upload(request):
         )
         soubor_instance: Soubor = get_object_or_404(Soubor, id=request.POST["fileID"])
         soubor_instance.active_transaction = fedora_transaction
-        logger.debug("core.views.post_upload.update", extra={"s": soubor_instance.pk})
+        logger.debug("core.views.post_upload.update", extra={"soubor_pk": soubor_instance.pk})
         objekt = soubor_instance.vazba.navazany_objekt
         new_name = soubor_instance.nazev
     soubor: TemporaryUploadedFile = request.FILES.get("file")
@@ -1037,7 +1037,6 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 "core.views.SearchListView.create_export.end",
                 extra={
                     "export_format": export_format,
-                    "column_names": column_names,
                     "redis_variable_name": redis_variable_name,
                 },
             )

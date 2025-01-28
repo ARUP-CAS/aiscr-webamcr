@@ -949,7 +949,7 @@ def uzavrit(request, ident_cely):
     else:
         # Check business rules
         warnings = projekt.check_pred_uzavrenim()
-        logger.debug("projekt.views.uzavrit.warnings", extra={"warnings": warnings})
+        logger.debug("projekt.views.uzavrit.warnings", extra={"warnings": str(warnings)})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
@@ -1015,7 +1015,7 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
     else:
         warnings = projekt.check_pred_archivaci()
-        logger.debug("projekt.views.archivovat.warnings", extra={"warnings": warnings})
+        logger.debug("projekt.views.archivovat.warnings", extra={"warnings": str(warnings)})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []

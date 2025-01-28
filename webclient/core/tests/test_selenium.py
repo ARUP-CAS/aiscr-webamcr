@@ -169,7 +169,6 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                     data = json.load(file)
                 if data["deleted"] is True and name in data["id"]:
                     matches = data["id"][data["id"].find("/") + 1 :]
-                    logger.error(f"delete {url}{matches}")
                     self.purge_container(f"{url}{matches}")
 
     def wipe_Fedora(self):

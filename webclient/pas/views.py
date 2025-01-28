@@ -85,7 +85,6 @@ def get_detail_context(sn, request):
     context["ulozeni_form"] = PotvrditNalezForm(instance=sn, readonly=True)
     context["history_dates"] = get_history_dates(sn.historie, request.user)
     context["show"] = get_detail_template_shows(sn, request.user)
-    logger.debug("pas.views.get_detail_context", extra=context)
     if sn.soubory:
         context["soubory"] = sorted(sn.soubory.soubory.all(), key=lambda x: (x.nazev.replace(".", "0"), x.nazev))
     else:

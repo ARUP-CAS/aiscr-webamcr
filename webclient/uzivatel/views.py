@@ -303,7 +303,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
     def post(self, request, *args, **kwargs):
         request_data = dict(request.POST)
-        logger.debug("uzivatel.views.UserAccountUpdateView.post.start", extra={"request_data": request_data})
+        logger.debug("uzivatel.views.UserAccountUpdateView.post.start")
         form = self.form_class(data=request.POST, instance=self.request.user)
         has_changed = (
             request.POST.get("telefon") != self.request.user.telefon

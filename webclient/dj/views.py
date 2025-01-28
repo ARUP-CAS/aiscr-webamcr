@@ -186,10 +186,7 @@ def detail(request, typ_vazby, ident_cely):
                 vyskovy_bod: VyskovyBod
                 vyskovy_bod.active_transaction = fedora_transaction
                 if isinstance(vyskovy_bod, VyskovyBod):
-                    logger.debug(
-                        "dj.views.detail.adb_zapsat_vyskove_body.save",
-                        extra={"vyskovy_bod": vyskovy_bod.__dict__, "vyskovy_bod_form": vyskovy_bod_form.__dict__},
-                    )
+                    logger.debug("dj.views.detail.adb_zapsat_vyskove_body.save")
                     vyskovy_bod.set_geom(
                         vyskovy_bod_form.cleaned_data.get("northing", 0),
                         vyskovy_bod_form.cleaned_data.get("easting", 0),

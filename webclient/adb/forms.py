@@ -275,7 +275,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
                 ) == round(y, 2)
                 logger.debug(
                     "adb.forms.create_vyskovy_bod_form.pian",
-                    extra={"cleaned_data": cleaned_data, "x": x, "y": y, "has_initial_values": has_initial_values},
+                    extra={"x": x, "y": y, "has_initial_values": has_initial_values},
                 )
             if has_initial_values and niveleta:
                 has_initial_values = cleaned_data.get("niveleta", None) == niveleta
