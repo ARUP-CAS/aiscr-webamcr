@@ -406,6 +406,10 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     def igsn_update(self):
         return self._get_igsn_client().update_record()
 
+    @property
+    def igsn_url(self):
+        return self._get_igsn_client().get_record_url()
+
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):
     """
