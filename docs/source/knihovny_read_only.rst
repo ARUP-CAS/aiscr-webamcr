@@ -340,9 +340,9 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - UNKNOWN
    * - isort
-     - 5.13.2
+     - 6.0.0
      - MIT License
-     - https://pycqa.github.io/isort/
+     - https://github.com/pycqa/isort/blob/main/CHANGELOG.md
    * - kombu
      - 5.4.2
      - BSD License
@@ -464,7 +464,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 5.1.0
+     - 5.2.0
      - BSD License
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -524,7 +524,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
-     - 4.28.0
+     - 4.28.1
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
@@ -584,7 +584,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/andialbrecht/sqlparse
    * - tablib
-     - 3.7.0
+     - 3.8.0
      - MIT License
      - https://tablib.readthedocs.io
    * - tabulate
