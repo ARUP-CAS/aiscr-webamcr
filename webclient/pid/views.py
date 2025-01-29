@@ -210,8 +210,8 @@ class ContinuePidProcessing(AdminRecordProcessingView):
                     result["detail"] = record.doi_url
                 else:
                     result["result"] = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-        elif isinstance(record, ArcheologickyZaznam):
-            if performed_action == "post_publish" and record.lokalita:
+        elif isinstance(record, ArcheologickyZaznam) and record.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
+            if performed_action == "post_publish":
                 if not record.lokalita.igsn and record.stav == AZ_STAV_ARCHIVOVANY:
                     result["result"] = self._perform_client_action(
                         record, "igsn", record.lokalita.igsn_publish, record.lokalita.set_igsn

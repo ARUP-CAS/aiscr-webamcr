@@ -1602,7 +1602,7 @@ def archivovat(request, ident_cely):
             item: DokumentCast
             if (
                 item.archeologicky_zaznam
-                and item.archeologicky_zaznam.lokalita
+                and item.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
                 and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
             ):
                 item.archeologicky_zaznam.lokalita.igsn_update()
