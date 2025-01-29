@@ -64,11 +64,11 @@ class DigitalObjectIdentifierClient:
             )
             raise DoiWriteError
 
-    def _get_record_url(self):
+    def get_record_url(self):
         return f"{DATACITE_URL.rstrip('/')}/{self.serializer._get_prefix()}/{self.serializer.get_ident_cely()}"
 
     def check_record_exists(self):
-        response = requests.get(self._get_record_url(), auth=self.auth)
+        response = requests.get(self.get_record_url(), auth=self.auth)
         if str(response.status_code).startswith("5"):
             logger.error(
                 "doi.client.DigitalObjectIdentifierClient.check_record_exists.error",
@@ -84,7 +84,7 @@ class DigitalObjectIdentifierClient:
         if not isinstance(self.record, Lokalita) and not hasattr(self.record, "active_transaction"):
             raise DoiNoTransactionError
         response = requests.put(
-            self._get_record_url(), headers=self.headers, json=self.serializer.serialize_delete(), auth=self.auth
+            self.get_record_url(), headers=self.headers, json=self.serializer.serialize_delete(), auth=self.auth
         )
         self._check_response_status(response)
         return response.json()
@@ -93,7 +93,7 @@ class DigitalObjectIdentifierClient:
         if not isinstance(self.record, Lokalita) and not hasattr(self.record, "active_transaction"):
             raise DoiNoTransactionError
         response = requests.put(
-            self._get_record_url(), headers=self.headers, json=self.serializer.serialize_hide(), auth=self.auth
+            self.get_record_url(), headers=self.headers, json=self.serializer.serialize_hide(), auth=self.auth
         )
         self._check_response_status(response)
         return response.json()
@@ -103,7 +103,7 @@ class DigitalObjectIdentifierClient:
             raise DoiNoTransactionError
         if self.check_record_exists():
             response = requests.put(
-                self._get_record_url(), headers=self.headers, json=self.serializer.serialize_publish(), auth=self.auth
+                self.get_record_url(), headers=self.headers, json=self.serializer.serialize_publish(), auth=self.auth
             )
         else:
             response = requests.post(
@@ -114,7 +114,7 @@ class DigitalObjectIdentifierClient:
 
     def update_record(self):
         response = requests.put(
-            self._get_record_url(), headers=self.headers, json=self.serializer.serialize_update(), auth=self.auth
+            self.get_record_url(), headers=self.headers, json=self.serializer.serialize_update(), auth=self.auth
         )
         self._check_response_status(response)
         return response.json()

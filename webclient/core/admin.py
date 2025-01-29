@@ -3,36 +3,31 @@ import io
 import json
 import logging
 import os
+import random
 import re
+import string
 
 import pandas as pd
-from arch_z.models import ArcheologickyZaznam
 from bs4 import BeautifulSoup
 from cacheops import invalidate_model
-from core.ident_cely import get_record_from_ident
-from core.repository_connector import FedoraError, FedoraTransaction
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.management import call_command
-from django.http import Http404, HttpResponse
+from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.translation import gettext as _
-from dokument.models import Dokument
 from fedora_management.forms import UpdateMetadataFileForm
-from pas.models import SamostatnyNalez
 from pid.forms import UpdateDocumentObjectIdentifierFileForm
 from polib import pofile
 from uzivatel.models import User
-from xml_generator.models import ModelWithMetadata
 
+from .connectors import RedisConnector
 from .constants import (
-    AZ_STAV_ARCHIVOVANY,
-    D_STAV_ARCHIVOVANY,
     PERMISSIONS_IMPORT_SHEET,
     PERMISSIONS_SHEET_ACTION_NAME,
     PERMISSIONS_SHEET_APP_NAME,
@@ -42,7 +37,6 @@ from .constants import (
     PERMISSIONS_SHEET_VLASTNICTVI_NAME,
     PERMISSIONS_SHEET_ZAKLADNI_NAME,
     ROLE_NASTAVENI_ODSTAVKY,
-    SN_ARCHIVOVANY,
 )
 from .exceptions import WrongCSVError, WrongSheetError
 from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
@@ -590,7 +584,10 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
 
 class FedoraCustomAdminSite(admin.AdminSite):
-    def _read_file(self, uploaded_file, context):
+    redis_connector = RedisConnector().get_connection()
+
+    @staticmethod
+    def _read_file(uploaded_file, context):
         sheet = None
         if uploaded_file.content_type == "text/csv":
             try:
@@ -619,17 +616,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
             ]
             sheet["ident_cely"] = sheet["ident_cely"].str.strip()
             sheet = sheet.set_index("ident_cely")
-            sheet["result"] = ""
-            sheet["detail"] = ""
         return sheet
-
-    @staticmethod
-    def _perform_client_action(record, attribute_name, publish_callable_method, set_callable_method=None):
-        result = json.dumps(publish_callable_method())
-        if set_callable_method:
-            set_callable_method()
-            record.save()
-        return result
 
     def update_doi(self, request):
         context = {
@@ -643,85 +630,12 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 uploaded_file = request.FILES["ident_list_file"]
                 sheet = self._read_file(uploaded_file, context)
                 if isinstance(sheet, pd.DataFrame):
-                    for ident_cely in sheet.index.unique():
-                        record = get_record_from_ident(ident_cely)
-                        fedora_transaction = FedoraTransaction()
-                        record.active_transaction = fedora_transaction
-                        result = None
-                        if isinstance(record, Dokument):
-                            if form.cleaned_data["performed_action"] == "post_publish":
-                                if not record.doi and record.stav == D_STAV_ARCHIVOVANY:
-                                    result = self._perform_client_action(
-                                        record, "doi", record.doi_publish, record.set_doi
-                                    )
-                                else:
-                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-                            elif form.cleaned_data["performed_action"] == "put_publish":
-                                if record.doi and record.stav == D_STAV_ARCHIVOVANY:
-                                    result = self._perform_client_action(record, "doi", record.doi_publish)
-                                else:
-                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-                            elif form.cleaned_data["performed_action"] == "hide":
-                                if record.doi and record.stav != D_STAV_ARCHIVOVANY:
-                                    result = self._perform_client_action(record, "doi", record.doi_hide)
-                                else:
-                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-                            elif form.cleaned_data["performed_action"] == "update":
-                                if record.doi:
-                                    result = self._perform_client_action(record, "doi", record.doi_update)
-                                else:
-                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-                        elif isinstance(record, ArcheologickyZaznam):
-                            if form.cleaned_data["performed_action"] == "post_publish" and record.lokalita:
-                                if not record.lokalita.igsn and record.stav == AZ_STAV_ARCHIVOVANY:
-                                    result = self._perform_client_action(
-                                        record, "igsn", record.lokalita.igsn_publish, record.lokalita.set_igsn
-                                    )
-                                else:
-                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-                            elif form.cleaned_data["performed_action"] == "put_publish":
-                                if record.lokalita.igsn and record.stav == AZ_STAV_ARCHIVOVANY:
-                                    result = self._perform_client_action(record, "igsn", record.lokalita.igsn_publish)
-                                else:
-                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-                            elif form.cleaned_data["performed_action"] == "hide":
-                                if record.lokalita.igsn and record.stav != AZ_STAV_ARCHIVOVANY:
-                                    result = self._perform_client_action(record, "igsn", record.lokalita.igsn_hide)
-                                else:
-                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-                            elif form.cleaned_data["performed_action"] == "update":
-                                if record.lokalita.igsn:
-                                    result = self._perform_client_action(record, "igsn", record.lokalita.igsn_update)
-                                else:
-                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-                        elif isinstance(record, SamostatnyNalez):
-                            if form.cleaned_data["performed_action"] == "post_publish":
-                                if not record.igsn and record.stav == SN_ARCHIVOVANY:
-                                    result = self._perform_client_action(
-                                        record, "igsn", record.igsn_publish, record.set_igsn
-                                    )
-                                else:
-                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-                            elif form.cleaned_data["performed_action"] == "put_publish":
-                                if record.igsn and record.stav == SN_ARCHIVOVANY:
-                                    result = self._perform_client_action(record, "igsn", record.igsn_publish)
-                                else:
-                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-                            elif form.cleaned_data["performed_action"] == "hide":
-                                if record.igsn and record.stav != SN_ARCHIVOVANY:
-                                    result = self._perform_client_action(record, "igsn", record.igsn_hide)
-                                else:
-                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-                            elif form.cleaned_data["performed_action"] == "update":
-                                if record.igsn and record.stav != SN_ARCHIVOVANY:
-                                    result = self._perform_client_action(record, "igsn", record.igsn_update)
-                                else:
-                                    result = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
-                        else:
-                            result = _("core.admin.FedoraCustomAdminSite.cannot_load_record")
-                        sheet.loc[ident_cely, "result"] = result
-                        sheet.loc[ident_cely, "detail"] = result
-                context["text"] = sheet.to_html(index=True)
+                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+                    job_id = f"update_pid_{job_id}"
+                    self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
+                    performed_action = form.cleaned_data["performed_action"]
+                    context["url"] = reverse("pid:continue-processing", args=[job_id, performed_action])
+            return TemplateResponse(request, "admin/update_running_job.html", context)
         else:
             context["form"] = UpdateDocumentObjectIdentifierFileForm()
         return TemplateResponse(request, "admin/doi_management/update_doi.html", context)
@@ -737,47 +651,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 uploaded_file = request.FILES["ident_list_file"]
                 sheet = self._read_file(uploaded_file, context)
                 if isinstance(sheet, pd.DataFrame):
-                    for ident_cely in sheet.index.unique():
-                        try:
-                            record = get_record_from_ident(ident_cely)
-                        except Http404 as err:
-                            record = None
-                            logger.debug(
-                                "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload"
-                                ".not_found",
-                                extra={"ident_cely": ident_cely, "err": err},
-                            )
-                        if record and isinstance(record, ModelWithMetadata) or isinstance(record, User):
-                            try:
-                                fedora_transaction = FedoraTransaction()
-                                record.save_metadata(fedora_transaction)
-                                fedora_transaction.mark_transaction_as_closed()
-                                sheet.loc[ident_cely, "result"] = _(
-                                    "fedora_management.admin.YourCustomAdminSite.update_metadata_file_upload.success"
-                                )
-                                sheet.loc[ident_cely, "detail"] = fedora_transaction.uid
-                            except FedoraError as err:
-                                sheet.loc[ident_cely, "result"] = _(
-                                    "fedora_management.admin.YourCustomAdminSite.update_metadata_file_upload.error"
-                                )
-                                logger.debug(
-                                    "fedora_management.admin.FedoraCustomAdminSite.fedora_error" ".not_found",
-                                    extra={"ident_cely": ident_cely, "err": err},
-                                )
-                        else:
-                            sheet.loc[ident_cely, "result"] = _(
-                                "fedora_management.admin.YourCustomAdminSite.update_metadata_file_upload.does_not_exist"
-                            )
-                    sheet = sheet.reset_index(drop=False)
-                    context.update(
-                        {
-                            "text": sheet.to_html(index=False),
-                            "page_name": "Custom Page",
-                            "app_list": self.get_app_list(request),
-                            **self.each_context(request),
-                        }
-                    )
-            context["form"] = form
+                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+                    job_id = f"update_metadata_{job_id}"
+                    self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
+                    context["url"] = reverse("fedora:continue-processing", args=[job_id])
+            return TemplateResponse(request, "admin/update_running_job.html", context)
         else:
             context["form"] = UpdateMetadataFileForm()
         return TemplateResponse(request, "admin/fedora_management/update_metadata.html", context)

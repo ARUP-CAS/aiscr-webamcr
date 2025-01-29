@@ -202,7 +202,7 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
         "arch_z.signals.delete_arch_z_repository_update_connected_records.start",
         extra={"record_ident": instance.ident_cely},
     )
-    if instance.lokalita:
+    if instance.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
         instance.lokalita.igsn_delete()
     fedora_transaction: FedoraTransaction = instance.active_transaction
 

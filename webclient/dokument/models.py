@@ -553,6 +553,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     def doi_update(self):
         return self._get_doi_client().update_record()
 
+    @property
+    def doi_url(self):
+        return self._get_doi_client().get_record_url()
+
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     """
