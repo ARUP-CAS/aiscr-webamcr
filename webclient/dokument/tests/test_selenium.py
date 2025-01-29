@@ -162,7 +162,6 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-000000003").first().stav, D_STAV_ZAPSANY)
         logger.info("AkceDokumenty.test_067_odeslani_dokumentu_n_001.end")
 
-    @unittest.skip
     def test_068_archivace_dokumentu_p_001(self):
         # Scenar_68 Archivace dokumentu (pozitivní scénář 1)
         logger.info("AkceDokumenty.test_068_archivace_dokumentu_p_001.start")

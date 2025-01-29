@@ -64,7 +64,7 @@ class DigitalObjectIdentifierClient:
             )
             raise DoiWriteError
 
-    def _get_record_url(self):
+    def get_record_url(self):
         return f"{DATACITE_URL.rstrip('/')}/{self.serializer._get_prefix()}/{self.serializer.get_ident_cely()}"
 
     def check_record_exists(self):
