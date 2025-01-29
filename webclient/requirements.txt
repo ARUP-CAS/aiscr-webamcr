@@ -17,13 +17,13 @@ django-rosetta==0.10.1
 django-auto-logout==0.5.1
 reportlab==4.2.5
 PyRTF3==0.47.5
-pypdf==5.1.0
+pypdf==5.2.0
 Pillow==11.1.0
 beautifulsoup4==4.12.3
 django-extensions==3.2.3
 celery==5.4.0
 django-add-default-value==0.10.0
-selenium==4.28.0
+selenium==4.28.1
 redis==5.2.1
 django-celery-beat==2.7.0
 django-celery-results==2.5.1
@@ -40,9 +40,9 @@ rarfile==4.2
 django-cacheops==7.1
 django-model-utils==5.0.0
 pandas==2.2.3
-tablib[all]==3.7.0
+tablib[all]==3.8.0
 pre-commit==4.1.0
-isort==5.13.2
+isort==6.0.0
 coverage==7.6.10
 django-debug-toolbar==5.0.1
 black==24.10.0
