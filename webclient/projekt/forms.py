@@ -849,3 +849,21 @@ class UpravitDatumOznameniForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+
+
+class NeodeslatMailForm(forms.Form):
+    """
+    Formulář neodeslání mailu oznamovateli.
+    """
+
+    send_mail = forms.BooleanField(
+        initial=True,
+        required=False,
+        label=_("oznameni.forms.oznamovatelForm.send_mail.label"),
+        help_text=_("oznameni.forms.oznamovatelForm.send_mail.tooltip"),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
