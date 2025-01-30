@@ -667,13 +667,13 @@ class GenerovatNovePotvrzeniForm(forms.Form):
 
 
 TYP_VYZKUMU_CHOICES = [
+    ("dohled", _("projekt.forms.GenerovatExpertniListForm.dohled.typ_vyzkumu.text")),
     ("predstihovy", _("projekt.forms.GenerovatExpertniListForm.predstihovy.typ_vyzkumu.text")),
     ("zachranny", _("projekt.forms.GenerovatExpertniListForm.zachranny.typ_vyzkumu.text")),
-    ("dohled", _("projekt.forms.GenerovatExpertniListForm.dohled.typ_vyzkumu.text")),
 ]
 VYSLEDEK_CHOICES = [
-    ("pozitivni", _("projekt.forms.GenerovatExpertniListForm.vysledek.pozitivni.text")),
     ("negativni", _("projekt.forms.GenerovatExpertniListForm.vysledek.negativni.text")),
+    ("pozitivni", _("projekt.forms.GenerovatExpertniListForm.vysledek.pozitivni.text")),
     ("jine", _("projekt.forms.GenerovatExpertniListForm.vysledek.jine.text")),
 ]
 
