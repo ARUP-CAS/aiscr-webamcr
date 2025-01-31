@@ -147,7 +147,7 @@ class ExterniZdrojForm(forms.ModelForm):
             self.fields["doi"] = DoiAutocompleteField(
                 widget=autocomplete.ListSelect2(url="pid:doi-autocomplete"),
                 label=_("ez.forms.ExterniZdrojForm.doi.label"),
-                help_text=_("ez.forms.ExterniZdrojForm.doi.help_text"),
+                help_text=_("ez.forms.externiZdrojForm.doi.tooltip"),
                 instance=self.instance,
                 initial_value=args[0].get("doi") if args else None,
             )
