@@ -725,12 +725,12 @@ MODEL_CONFIG = {
             ),
             "template": SimpleSectionTemplateName("vypis/soubory.html"),
             "small_thumbnail": SouborField(
-                _("vypis.model3d.dokument_casti.small_thumbnail.label"), "small_thumbnail", "model3d"
+                _("vypis.model3d.soubory.small_thumbnail.label"), "small_thumbnail", "model3d"
             ),
-            "path": SouborDownloadField(_("vypis.model3d.dokument_casti.path.label"), "path", "model3d"),
-            "rozsah": Field(_("vypis.model3d.dokument_casti.rozsah.label"), "rozsah"),
-            "size_mb": Field(_("vypis.model3d.dokument_casti.size_mb.label"), "size_mb"),
-            "sha_512": Field(_("vypis.model3d.dokument_casti.sha_512.label"), "sha_512"),
+            "path": SouborDownloadField(_("vypis.model3d.soubory.path.label"), "path", "model3d"),
+            "rozsah": Field(_("vypis.model3d.soubory.rozsah.label"), "rozsah"),
+            "size_mb": Field(_("vypis.model3d.soubory.size_mb.label"), "size_mb"),
+            "sha_512": Field(_("vypis.model3d.soubory.sha_512.label"), "sha_512"),
             "historie": HistorieSubSectionField(None, _("vypis.model3d.soubory.historie.label")),
         },
     },
