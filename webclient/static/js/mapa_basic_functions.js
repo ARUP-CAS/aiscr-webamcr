@@ -100,6 +100,13 @@ function onMarkerClick(ident_cely,e) {
         if(text=="") text="--"
         popup.setContent(text);
     }
- }
+}
 
- 
+map.on('zoomend', function () {
+    if (map.getZoom() > 11) {
+        map.getContainer().style.cursor = 'default';
+    } else {
+        map.getContainer().style.cursor = 'grab';
+    }
+});
+map.getContainer().style.cursor = 'grab';
