@@ -606,7 +606,7 @@ PAS_CONFIG = {
             "presna_datace": Field(_("vypis.pas.presna_datace.label"), "presna_datace"),
             "druh_nalezu": Field(_("vypis.pas.druh_nalezu.label"), "druh_nalezu"),
             "specifikace": Field(_("vypis.pas.specifikace.label"), "specifikace"),
-            "katastr": Field(_("vypis.projekty.katastr.label"), "katastr"),
+            "katastr": Field(_("vypis.pas.katastr.label"), "katastr"),
         },
     },
     "sections": {
