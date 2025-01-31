@@ -611,7 +611,7 @@ PAS_CONFIG = {
     },
     "sections": {
         "popis_pas": {
-            "section_name": SimpleSectionTemplateName(_("vypis.pas.popis_projektu.section_name")),
+            "section_name": SimpleSectionTemplateName(_("vypis.pas.popis_nalezu.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
             "projekt": Field(_("vypis.pas.popis_pas.projekt.label"), "projekt"),
             "lokalizace": Field(_("vypis.pas.popis_pas.lokalizace.label"), "lokalizace"),
