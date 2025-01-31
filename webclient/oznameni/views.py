@@ -2,6 +2,7 @@ import logging
 
 import simplejson as json
 from core.constants import OBLAST_CECHY, PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_VYTVORENY
+from core.coordTransform import convertToJTSK
 from core.decorators import odstavka_in_progress
 from core.forms import CheckStavNotChangedForm
 from core.ident_cely import get_temporary_project_ident
@@ -78,6 +79,10 @@ def index(request, test_run=False):
                 float(request.POST.get("coordinate_x1")),
                 float(request.POST.get("coordinate_x2")),
             )
+            projekt.geom_sjtsk = Point(
+                convertToJTSK(float(request.POST.get("coordinate_x1")), float(request.POST.get("coordinate_x2")))
+            )
+            projekt.geom_system = "5514"
             projekt.hlavni_katastr = get_cadastre_from_point(projekt.geom)
             logger.debug(
                 "oznameni.views.index.hlavni_katastr",
