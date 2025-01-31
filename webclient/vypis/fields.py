@@ -413,9 +413,9 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         aktivity = getattr(instance, self.accessor[5]).all()
         second_part = ""
         vypis_jistota_translated = (
-            _("vypis.vyppis_config.KomponentaRepeatableSectionNameWithAccessor.jistota.Ano")
+            _("vypis.vypis_config.komponenta.jistota.Ano")
             if jistota
-            else _("vypis.vyppis_config.KomponentaRepeatableSectionNameWithAccessor.jistota.Ne")
+            else _("vypis.vypis_config.komponenta.jistota.Ne")
         )
         if obdobi:
             second_part = f" - {obdobi}"
