@@ -17,6 +17,7 @@ class UpdateDocumentObjectIdentifierFileForm(forms.Form):
     )
     performed_action = forms.CharField(
         required=True,
+        label=_("core.forms.UpdateDocumentObjectIdentifierFileForm.action.label"),
         widget=forms.Select(
             choices=[
                 ("post_publish", _("core.forms.UpdateDocumentObjectIdentifierFileForm.post_publish")),
