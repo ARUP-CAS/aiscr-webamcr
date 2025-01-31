@@ -48,6 +48,7 @@ if (global_map_layers) {
 }
 var control = L.control.layers(baseLayers, overlays).addTo(map);
 
+//tlačítko výchozí zobrazení
 L.easyButton('bi bi-skip-backward-fill', function () {
     poi_correct.clearLayers();
     if (poi_sugest.getLayers().length>0) {
@@ -84,6 +85,7 @@ var button_map_lock = L.easyButton({
         onClick: function (control) {
             global_map_can_edit = !global_map_can_edit;
             control.state('remove-lock');
+            setCursor();
         }
     }, {
         icon: 'bi bi-geo-alt',
@@ -92,6 +94,7 @@ var button_map_lock = L.easyButton({
         onClick: function (control) {
             global_map_can_edit = !global_map_can_edit;
             control.state('add-lock');
+            setCursor();
         }
     }]
 }).addTo(map);

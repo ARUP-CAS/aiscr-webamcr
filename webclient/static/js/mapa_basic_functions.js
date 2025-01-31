@@ -102,11 +102,16 @@ function onMarkerClick(ident_cely,e) {
     }
 }
 
-map.on('zoomend', function () {
-    if (map.getZoom() > 11) {
+function setCursor() {
+    if (map.getZoom() > 11 && (typeof global_map_can_edit === "undefined" || global_map_can_edit)) {
         map.getContainer().style.cursor = 'default';
     } else {
         map.getContainer().style.cursor = 'grab';
-    }
+    }    
+}
+
+map.on('zoomend', function () {
+    setCursor()
 });
+
 map.getContainer().style.cursor = 'grab';
