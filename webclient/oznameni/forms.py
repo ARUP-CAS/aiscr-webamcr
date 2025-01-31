@@ -220,8 +220,8 @@ class ProjektOznameniForm(forms.ModelForm):
             "katastry",
         )
         widgets = {
-            "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "lokalizace": forms.TextInput(),
+            "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40, "maxlength": 255}),
+            "lokalizace": forms.TextInput(attrs={"maxlength": 255}),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "oznaceni_stavby": forms.TextInput(),
             "katastry": autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
