@@ -216,8 +216,6 @@ def organizace_delete_repository_container(sender, instance: Organizace, **kwarg
         "uzivatel.signals.organizace_delete_repository_container.end",
         extra={"ident_cely": instance.ident_cely, "transaction": transaction},
     )
-    if instance.ror and "/" in instance.ror:
-        instance.ror = instance.ror.split("/")[-1]
 
 
 @receiver(user_logged_in, weak=False)
