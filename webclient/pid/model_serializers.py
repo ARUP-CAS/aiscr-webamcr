@@ -300,7 +300,7 @@ def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contribu
                 [
                     {
                         "schemeUri": "https://orcid.org",
-                        "nameIdentifier": f"https://orcid.org/{osoba.orcid}",
+                        "nameIdentifier": osoba.orcid,
                         "nameIdentifierScheme": "ORCID",
                     }
                 ]

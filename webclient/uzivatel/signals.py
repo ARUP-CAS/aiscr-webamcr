@@ -3,7 +3,6 @@ import logging
 from cacheops import invalidate_model
 from core.ident_cely import get_uzivatel_ident
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
-from core.validators import orcid_pattern
 from django.contrib.auth import user_logged_in
 from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -34,9 +33,6 @@ def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
 
 @receiver(pre_save, sender=Osoba, weak=False)
 def osoba_pre_save(sender, instance: Osoba, **kwargs):
-    if instance.orcid:
-        match = orcid_pattern.search(instance.orcid)
-        instance.orcid = match.group() if match else None
     if instance.wikidata and "/" in instance.wikidata:
         instance.wikidata = instance.wikidata.split("/")[-1]
 
@@ -66,9 +62,6 @@ def create_ident_cely(sender, instance: User, **kwargs):
             instance.old = database_user_query.first()
         else:
             instance.old = None
-    if instance.orcid:
-        match = orcid_pattern.search(instance.orcid)
-        instance.orcid = match.group() if match else None
     if instance.pk is None:
         instance.model_is_updated = False
         logger.debug("uzivatel.signals.create_ident_cely.running_create_ident_cely_receiver")

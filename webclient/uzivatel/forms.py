@@ -120,6 +120,7 @@ class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
             "organizace",
             "password1",
             "password2",
+            "orcid",
             "captcha",
         )
 
@@ -165,6 +166,7 @@ class AuthUserChangeForm(forms.ModelForm):
             help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
             instance=self.instance,
             initial_value=args[0].get("orcid") if args else None,
+            required=False,
         )
 
 
