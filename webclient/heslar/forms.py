@@ -106,4 +106,5 @@ class OrganizaceAdminForm(forms.ModelForm):
             widget=autocomplete.ListSelect2(url="pid:ror-autocomplete"),
             label=_("heslar.forms.OrganizaceAdminForm.ror.label"),
             instance=self.instance,
+            required=False,
         )

@@ -17,8 +17,15 @@
       background: none;
     }
 
+    .record {
+      margin-bottom: 16px;
+      background-color: #fff8e1;
+      padding: 15px;
+    }
+    
     .section-name {
       font-weight: bolder;
+      font-style: italic;
     }
 
     .under-header {
@@ -28,17 +35,44 @@
     }
 
     hr {
-      border-top: 2px solid rgba(0, 0, 0, 0.3) !important;
+      border-top: 1px solid rgba(0, 0, 0, 0.3) !important;
+      margin-bottom: 0.1rem;
     }
 
     .main-header {
       font-weight: bolder;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
 
     }
 
     .sub-header {
       color: rgb(103, 103, 103);
+    }
+
+    .label {
+      flex: 0 0 auto;
+      max-width: 180px;
+    }
+
+    .content{
+      flex: 0 0 auto;
+      max-width: 900px;
+    }
+
+    .thumb{
+      flex: 0 0 auto;
+      max-width: 120px;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .file{
+      flex: 0 0 auto;
+      max-width: 964px;
+      word-wrap: break-word;
+      .content {
+        max-width: 784px;
+      }
     }
   }
 }

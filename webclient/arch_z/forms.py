@@ -432,7 +432,7 @@ class CreateAkceForm(forms.ModelForm):
             self.fields["organizace"].initial = projekt.organizace
             self.fields["datum_zahajeni"].initial = projekt.datum_zahajeni
             self.fields["datum_ukonceni"].initial = projekt.datum_ukonceni
-            self.fields["lokalizace_okolnosti"].initial = f"{projekt.lokalizace}. Parc.č.: {projekt.parcelni_cislo}"
+            self.fields["lokalizace_okolnosti"].initial = f"{projekt.lokalizace}. Parcelní číslo: {projekt.parcelni_cislo}"
         self.helper = FormHelper(self)
         if uzamknout_specifikace:
             self.fields["specifikace_data"].disabled = True
