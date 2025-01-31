@@ -594,7 +594,7 @@ PAS_CONFIG = {
         "sub_header": {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/sub_header.html"),
-            "predano": Field(_("vypis.pas.typ.label"), "predano"),
+            "predano": Field(_("vypis.pas.predano.label"), "predano"),
             "predano_organizace": Field(_("vypis.pas.predano_organizace.label"), "predano_organizace"),
             "evidencni_cislo": Field(_("vypis.pas.evidencni_cislo.label"), "evidencni_cislo"),
             "pristupnost": Field(_("vypis.pas.pristupnost.label"), "pristupnost"),
