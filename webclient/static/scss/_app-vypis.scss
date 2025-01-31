@@ -50,12 +50,29 @@
     }
 
     .label {
-      flex: 0 0 180px;
+      flex: 0 0 auto;
       max-width: 180px;
     }
 
     .content{
       flex: 0 0 auto;
+      max-width: 900px;
+    }
+
+    .thumb{
+      flex: 0 0 auto;
+      max-width: 120px;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .file{
+      flex: 0 0 auto;
+      max-width: 964px;
+      word-wrap: break-word;
+      .content {
+        max-width: 784px;
+      }
     }
   }
 }

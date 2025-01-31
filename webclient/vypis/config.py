@@ -5,6 +5,7 @@ from .fields import (
     DoubleField,
     Field,
     ForeignDoubleField,
+    ForeignDoubleFieldNum,
     ForeignField,
     ForeignGeomGmlField,
     ForeignGeomWktField,
@@ -51,7 +52,7 @@ NEIDENT_AKCE_CONFIG = {
     "vedouci": ForeignManyToManyField(
         _("vypis.dokumenty.neidentifikovane_akce.vedouci.label"), "vedouci", "neident_akce"
     ),
-    "rok": ForeignDoubleField(
+    "rok": ForeignDoubleFieldNum(
         _("vypis.dokumenty.neidentifikovane_akce.rok.label"), ["rok_zahajeni", "rok_ukonceni"], "neident_akce"
     ),
     "lokalizace": ForeignField(
@@ -205,7 +206,7 @@ DOKUMENTY_CONFIG = {
                 _("vypis.dokumenty.popis_dokumentu.typ_udalosti.label"), "udalost_typ", "extra_data"
             ),
             "udalost": ForeignField(_("vypis.dokumenty.popis_dokumentu.udalost.label"), "udalost", "extra_data"),
-            "roky": ForeignDoubleField(
+            "roky": ForeignDoubleFieldNum(
                 _("vypis.dokumenty.popis_dokumentu.roky.label"), ["rok_od", "rok_do"], "extra_data"
             ),
             "osoba": ManyToManyField(_("vypis.dokumenty.popis_dokumentu.osoba.label"), "osoby"),
@@ -218,6 +219,7 @@ DOKUMENTY_CONFIG = {
             "section_name": SectionNameWithAccessor(_("vypis.dokumenty.let.section_name"), "ident_cely", "let"),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
             "datum": ForeignField(_("vypis.dokumenty.let.datum.label"), "datum", "let"),
+            "cas": ForeignDoubleFieldNum(_("vypis.dokumenty.let.cas.label"), ["hodina_zacatek", "hodina_konec"], "let"),
             "trasa": ForeignDoubleField(_("vypis.dokumenty.let.trasa.label"), ["letiste_start", "letiste_cil"], "let"),
             "ucel_letu": ForeignField(_("vypis.dokumenty.let.ucel_letu.label"), "ucel_letu", "let"),
             "pozorovatel": ForeignField(_("vypis.dokumenty.let.pozorovatel.label"), "pozorovatel", "let"),

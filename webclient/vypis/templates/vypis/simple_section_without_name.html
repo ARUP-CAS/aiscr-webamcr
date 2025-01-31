@@ -1,8 +1,8 @@
 {% for section, field in section.items %}
         {% if section != "section_name" and section != "template" %}
         {% if field.value %}
-        <div class=row>
-            <div class=col-4><strong>{{field.label}}:</strong></div><div class=col-8> {{ field.value }}</div>
+        <div class="row">
+            <div class="label"><strong>{{field.label}}:</strong></div><div class="content"> {{ field.value }}</div>
         </div>
         {% endif %}
         {% endif %}

@@ -1,3 +1,3 @@
 {% for zaznam in field.zaznamy %}
-<a href="{% url 'core:redirect_ident' zaznam.ident_cely %}">{{ zaznam.ident_cely }}</a>{% if zaznam.paginace %} ({{zaznam.paginace}}){%endif%}{% if not forloop.last %}, {% endif %}
+<a href="{% url 'core:redirect_ident' zaznam.ident_cely %}" target="_blank">{{ zaznam.ident_cely }}</a>{% if zaznam.paginace %} ({{zaznam.paginace}}){%endif%}{% if not forloop.last %}, {% endif %}
 {% endfor %}

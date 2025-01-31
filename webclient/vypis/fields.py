@@ -231,14 +231,14 @@ class ForeignGeomWktField(ForeignField):
 class ManyToManyField(Field):
     def get_value(self, instance):
         related_manager = getattr(instance, self.accessor)
-        return ", ".join([str(v) for v in related_manager.all()])
+        return "; ".join([str(v) for v in related_manager.all()])
 
 
 class ForeignManyToManyField(ForeignField):
     def get_value(self, instance):
         if getattr(instance, self.foreign_key, False):
             related_manager = getattr(getattr(instance, self.foreign_key), self.accessor)
-            return ", ".join([str(v) for v in related_manager.all()])
+            return "; ".join([str(v) for v in related_manager.all()])
         return None
 
 
@@ -264,6 +264,19 @@ class ForeignDoubleField(ForeignField):
                     values.append(str(value))
             if values:
                 return " - ".join(values)
+        return None
+
+
+class ForeignDoubleFieldNum(ForeignField):
+    def get_value(self, instance):
+        if getattr(instance, self.foreign_key, False):
+            values = []
+            for accessor in self.accessor:
+                value = getattr(getattr(instance, self.foreign_key), accessor)
+                if value:
+                    values.append(str(value))
+            if values:
+                return "-".join(values)
         return None
 
 
