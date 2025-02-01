@@ -151,7 +151,7 @@ class SouborDownloadField(SouborField):
             return {
                 "value": accessor,
                 "download": reverse(
-                    "core:download_thumbnail",
+                    "core:download_file",
                     args=(
                         self.key_name,
                         instance.vazba.navazany_objekt.ident_cely,
