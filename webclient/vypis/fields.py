@@ -151,7 +151,7 @@ class SouborDownloadField(SouborField):
             return {
                 "value": accessor,
                 "download": reverse(
-                    "core:download_thumbnail",
+                    "core:download_file",
                     args=(
                         self.key_name,
                         instance.vazba.navazany_objekt.ident_cely,
@@ -204,8 +204,8 @@ class GeomWktField(Field):
     def get_value(self, instance):
         geom = getattr(instance, self.accessor)
         if geom:
-            epsg = get_wkt(geom)
-            wkt = geom.srid
+            epsg = geom.srid
+            wkt = get_wkt(geom)
             return f"EPSG: {epsg}, {wkt}"
         return None
 
@@ -222,8 +222,8 @@ class ForeignGeomWktField(ForeignField):
     def get_value(self, instance):
         geom = getattr(getattr(instance, self.foreign_key), self.accessor)
         if geom:
-            epsg = get_wkt(geom)
-            wkt = geom.srid
+            epsg = geom.srid
+            wkt = get_wkt(geom)
             return f"EPSG: {epsg}, {wkt}"
         return None
 
