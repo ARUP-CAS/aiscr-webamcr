@@ -13,7 +13,7 @@ from core.connectors import RedisConnector
 from core.utils import get_mime_type, replace_last
 from django.conf import settings
 from pdf2image import convert_from_bytes
-from PIL import Image
+from PIL import Image, ImageOps
 from requests.auth import HTTPBasicAuth
 from xml_generator.generator import DocumentGenerator
 from xml_generator.models import ModelWithMetadata
@@ -707,6 +707,7 @@ class FedoraRepositoryConnector:
 
         def resize_image(image: BytesIO, large_inner=False):
             image = Image.open(image)
+            image = ImageOps.exif_transpose(image)
             max_size = ((1 + large_inner * 7) * 100, (1 + large_inner * 7) * 100)
             image.thumbnail(max_size)
             output_buffer = BytesIO()
@@ -719,7 +720,6 @@ class FedoraRepositoryConnector:
 
             thumb_icon, mime_type = Soubor.get_thumb_icon(file_content)
             if mime_type.startswith("image/"):
-                file_content = thumb_icon
                 try:
                     thumbnail = resize_image(file_content, large)
                     logger.debug(
@@ -740,6 +740,8 @@ class FedoraRepositoryConnector:
                                 extra={"err": err, "file_name": file_name, "large": large},
                             )
                     return None
+            else:
+                return resize_image(thumb_icon, large)
 
         if file_name.lower().endswith(".pdf"):
             try:
@@ -1271,6 +1273,22 @@ class FedoraRepositoryConnector:
         queryset = Soubor.objects.filter(pk__in=records).order_by("pk")
         for item in queryset:
             cls.save_single_file_from_storage(item, storage_path, save_thumbs, disable_antivirus)
+
+    @classmethod
+    def create_missing_thumbnail(cls, uploaded_file: str) -> None:
+        import pandas as pd
+        from core.models import Soubor
+
+        sheet = pd.read_csv(uploaded_file, sep=",")
+        c = len(sheet)
+        for index, row in sheet.iterrows():
+            if index % max(c // 100, 1) == 0:
+                print(f"\r{round(index / c * 100)}%", end="")
+            try:
+                soubor = Soubor.objects.get(path=row["record"])
+                FedoraRepositoryConnector.generate_thumb_for_single_file(soubor.pk)
+            except Exception as err:
+                print(f"Chyba: {row['record']} {err}")
 
 
 class FedoraTransactionQueueClosedError(Exception):

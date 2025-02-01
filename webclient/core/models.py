@@ -8,6 +8,7 @@ import zipfile
 from typing import Optional, Union
 
 import magic
+import piexif
 import py7zr
 import rarfile
 from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
@@ -29,6 +30,7 @@ from historie.models import Historie, HistorieVazby
 from nalez.models import NalezObjekt, NalezPredmet
 from notifikace_projekty.models import Pes
 from pian.models import Pian
+from PIL import Image
 from uzivatel.models import User
 from xml_generator.models import ModelWithMetadata
 
@@ -372,6 +374,42 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 "core.models.Soubor.get_mime_type.end", extra={"mime_type": mime_type, "check_archive": check_archive}
             )
             return mime_type
+
+    @classmethod
+    def remove_gps_data(cls, bytes_io: io.BytesIO) -> io.BytesIO:
+        try:
+            img = Image.open(bytes_io)
+        except Exception as err:
+            logger.warning("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"err": err})
+            bytes_io.seek(0)
+            return bytes_io
+        exif_data = img.getexif()
+        if not exif_data:
+            bytes_io.seek(0)
+            return bytes_io
+
+        exif_dict = piexif.load(img.info.get("exif"))
+
+        # Odstranění GPS dat, pokud existují
+        if "GPS" in exif_dict and exif_dict["GPS"] != {}:
+            del exif_dict["GPS"]
+        else:
+            logger.debug("core.models.Soubor.remove_gps_data.no_GPS_data")
+            bytes_io.seek(0)
+            return bytes_io
+        if 41729 in exif_dict["Exif"] and isinstance(exif_dict["Exif"][41729], int):
+            exif_dict["Exif"][41729] = str(exif_dict["Exif"][41729]).encode("utf-8")
+        try:
+            new_exif_bytes = piexif.dump(exif_dict)
+            output_io = io.BytesIO()
+            img.save(output_io, format=img.format, exif=new_exif_bytes)
+            output_io.seek(0)
+            logger.debug("core.models.Soubor.remove_gps_data.GPS_data_removed")
+            return output_io
+        except Exception as err:
+            logger.error("core.models.Soubor.remove_gps_data.cannot_save_file", extra={"err": err})
+            bytes_io.seek(0)
+            return bytes_io
 
     @classmethod
     def check_mime_for_url(cls, file, source_url=""):
