@@ -1,8 +1,10 @@
 import logging
+from datetime import timedelta
 
 import django_tables2 as tables
 from core.utils import SearchTable
 from django.utils.translation import gettext_lazy as _
+from psycopg2._range import DateRange
 
 from .models import Projekt
 
@@ -114,6 +116,15 @@ class ProjektTable(SearchTable):
             "termin_odevzdani_nz",
             "kulturni_pamatka",
         )
+
+    def render_planovane_zahajeni(self, value):
+        if value == "" or value is None:
+            return None
+        if isinstance(value, DateRange):
+            if value.lower and value.upper:
+                format_str = "%Y-%m-%d"
+                return value.lower.strftime(format_str) + " - " + (value.upper - timedelta(days=1)).strftime(format_str)
+        return str(value)
 
     def __init__(self, *args, **kwargs):
         super(ProjektTable, self).__init__(*args, **kwargs)
