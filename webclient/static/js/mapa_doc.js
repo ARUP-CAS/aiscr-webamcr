@@ -31,7 +31,7 @@ var searchControl=new L.Control.Search({
     marker: false,
     propertyName: 'text',
     propertyMagicKey:'magicKey',
-    minLength:3,
+    minLength:2,
     translations:leaflet_search_translations,
     layerKN:cuzkWMS, 
     zoom:6
