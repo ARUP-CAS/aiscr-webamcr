@@ -1183,7 +1183,7 @@ class FedoraRepositoryConnector:
             rep_bin_file = conn.get_binary_file(record.repository_uuid)
             if rep_bin_file:
                 conn.save_thumbs(record.nazev, rep_bin_file.content, record.repository_uuid)
-                fedora_transaction.mark_transaction_as_closed()
+        fedora_transaction.mark_transaction_as_closed()
 
     @classmethod
     def generate_thumbs(cls, records: Union[list, range]) -> None:
@@ -1287,6 +1287,41 @@ class FedoraRepositoryConnector:
             try:
                 soubor = Soubor.objects.get(path=row["record"])
                 FedoraRepositoryConnector.generate_thumb_for_single_file(soubor.pk)
+            except Exception as err:
+                print(f"Chyba: {row['record']} {err}")
+
+    @classmethod
+    def remove_GPS_data_from_existing_files(cls, uploaded_file: str) -> None:
+        import pandas as pd
+        from core.models import Soubor
+        from xml_generator.models import ModelWithMetadata
+
+        sheet = pd.read_csv(uploaded_file, sep=",")
+        c = len(sheet)
+        for index, row in sheet.iterrows():
+            if index % max(c // 100, 1) == 0:
+                print(f"\r{round(index / c * 100)}%", end="")
+            try:
+                record = Soubor.objects.get(path=row["record"])
+
+                related_record: ModelWithMetadata = record.vazba.navazany_objekt
+                fedora_transaction = FedoraTransaction()
+                record.active_transaction = fedora_transaction
+                conn = FedoraRepositoryConnector(related_record, fedora_transaction)
+
+                rep_bin_file = conn.get_binary_file(record.repository_uuid)
+                if rep_bin_file:
+                    rep_bin_file_new = Soubor.remove_gps_data(rep_bin_file.content)
+                    if rep_bin_file_new is not rep_bin_file.content:
+                        rep_bin_file = conn.update_binary_file(
+                            record.nazev, record.mimetype, rep_bin_file_new, record.repository_uuid
+                        )
+                        record.size_mb = rep_bin_file.size_mb
+                        record.sha_512 = rep_bin_file.sha_512
+                        record.save()
+
+                fedora_transaction.mark_transaction_as_closed()
+
             except Exception as err:
                 print(f"Chyba: {row['record']} {err}")
 
