@@ -160,6 +160,7 @@ DOKUMENTY_CONFIG = {
         "under_header": {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/simple_section_without_name.html"),
+            "doi": Field(_("vypis.dokumenty.doi.label"), "doi"),
             "organizace": Field(_("vypis.dokumenty.organizace.label"), "organizace"),
             "popis": Field(_("vypis.dokumenty.popis.label"), "popis"),
         },
@@ -530,6 +531,7 @@ LOKALITA_CONFIG = {
         "under_header": {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/simple_section_without_name.html"),
+            "igsn": ForeignField(_("vypis.lokalita.igsn.label"), "igsn", "lokalita"),
             "katastry": ManyToManyField(_("vypis.lokalita.katastry.label"), "katastry"),
         },
     },
@@ -610,6 +612,7 @@ PAS_CONFIG = {
         "under_header": {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/pas/under_header.html"),
+            "igsn": Field(_("vypis.pas.igsn.label"), "igsn"),
             "obdobi": Field(_("vypis.pas.obdobi.label"), "obdobi"),
             "presna_datace": Field(_("vypis.pas.presna_datace.label"), "presna_datace"),
             "druh_nalezu": Field(_("vypis.pas.druh_nalezu.label"), "druh_nalezu"),
@@ -722,6 +725,9 @@ MODEL_CONFIG = {
                 _("vypis.model3d.dokument_casti.section_name"), ["ident_cely", "poznamka"], "dokument_casti", "dokument"
             ),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
+            "dok_zaznam": ChooseField(
+                _("vypis.model3d.dokument_casti.dok_zaznam.label"), ["archeologicky_zaznam", "projekt"]
+            ),
             "komponenty": SubSectionField(KOMPONENTY_DOKU_CONFIG),
         },
         "historie": {
@@ -766,7 +772,7 @@ EZ_CONFIG = {
         "under_header": {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/simple_section_without_name.html"),
-            "nazev": Field(_("vypis.ez.typ.label"), "nazev"),
+            "nazev": Field(_("vypis.ez.nazev.label"), "nazev"),
         },
     },
     "sections": {

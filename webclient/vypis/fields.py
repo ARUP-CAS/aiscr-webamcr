@@ -421,18 +421,19 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         areal = getattr(instance, self.accessor[4])
         aktivity = getattr(instance, self.accessor[5]).all()       
         second_part = ""
+        third_part = ""
         vypis_jistota_translated = _("vypis.vypis_config.komponenta.jistota.Ne")
         if not jistota:
-            second_part += f"({vypis_jistota_translated}"
+            second_part += f" ({vypis_jistota_translated}"
             if presna_datace:
                 second_part += f"; {presna_datace})"
             else:
                 second_part += ")"
         elif presna_datace:
-            second_part += f"({presna_datace})"
+            second_part += f" ({presna_datace})"
         if aktivity:
-            third_part = f"({'; '.join([str(a) for a in aktivity])})"
-        return f"{self.name} {getattr(instance, self.accessor[0])} - {obdobi} {second_part} - {areal} {third_part}"
+            third_part = f" ({'; '.join([str(a) for a in aktivity])})"
+        return f"{self.name} {getattr(instance, self.accessor[0])} - {obdobi}{second_part} - {areal}{third_part}"
 
 
 class SubSectionField:

@@ -1,8 +1,28 @@
 
 {% load i18n %}
 <div class="under-header">
-<div class="row"><strong>{{section.obdobi.label}}:</strong> {{section.obdobi.value}} {% if section.presna_datace.value %}({{section.presna_datace.value}}){%endif%} |
-<strong>{{section.areal.label}}:</strong> {{section.areal.value}}</div>
-{% if section.odkaz.value %}<div class="row"><strong>{{section.odkaz.label}}:</strong> {{section.odkaz.value}}</div>{%endif%}
-<div class="row"><strong>{{section.popis.label}}:</strong> {{section.popis.value}}</div>
+    {% if section.obdobi.value %}
+    <div class="row">
+        <div class="label"><strong>{{section.obdobi.label}}:</strong></div>
+        <div class="content"> {{section.obdobi.value}}{% if section.presna_datace.value %} ({{section.presna_datace.value}}){%endif%}</div>
+    </div>
+    {%endif%}
+    {% if section.areal.value %}
+    <div class="row">
+        <div class="label"><strong>{{section.areal.label}}:</strong></div>
+        <div class="content"> {{section.areal.value}}</div>
+    </div>
+    {%endif%}
+    {% if section.odkaz.value %}
+    <div class="row">
+        <div class="label"><strong>{{section.odkaz.label}}:</strong></div>
+        <div class="content"> <a href="{{section.odkaz.value}}" target="_blank">{{section.odkaz.value}}</a></div>
+    </div>    
+    {%endif%}
+    {% if section.popis.value %}
+    <div class="row">
+        <div class="label"><strong>{{section.popis.label}}:</strong></div>
+        <div class="content"> {{section.popis.value}}</div>
+    </div>
+    {%endif%}
 </div>
