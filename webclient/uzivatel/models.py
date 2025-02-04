@@ -451,8 +451,8 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
         blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rodne_prijmeni"), max_length=100
     )
     ident_cely = models.CharField(max_length=20, unique=True)
-    orcid = models.CharField(max_length=255, null=True, blank=True)
-    wikidata = models.CharField(max_length=255, null=True, blank=True)
+    orcid = models.CharField(max_length=255, null=True, blank=True, unique=True)
+    wikidata = models.CharField(max_length=255, null=True, blank=True, unique=True)
 
     def save(self, *args, **kwargs):
         """
