@@ -112,7 +112,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - UNKNOWN
      - https://www.attrs.org/en/stable/changelog.html
    * - babel
-     - 2.16.0
+     - 2.17.0
      - BSD License
      - https://babel.pocoo.org/
    * - beautifulsoup4
@@ -124,7 +124,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/billiard
    * - black
-     - 24.10.0
+     - 25.1.0
      - MIT License
      - https://github.com/psf/black
    * - celery
@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.53
+     - 8.13.54
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -488,7 +488,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://github.com/ahupp/python-magic
    * - pytz
-     - 2024.2
+     - 2025.1
      - MIT License
      - http://pythonhosted.org/pytz
    * - pyzstd
