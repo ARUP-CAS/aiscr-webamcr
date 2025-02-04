@@ -192,7 +192,7 @@ def create_osoba(request):
             logger.debug("Form is not valid.")
             logger.debug(form.errors)
     else:
-        form = OsobaForm()
+        form = OsobaForm(create=True)
 
     return render(request, "uzivatel/create_osoba.html", {"form": form})
 
