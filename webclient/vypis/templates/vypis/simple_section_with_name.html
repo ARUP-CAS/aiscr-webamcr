@@ -10,7 +10,8 @@
                 {% include field.template with section=field %}
             {% elif section != "section_name" %}
             <div class="row">
-                <div class="label"><strong>{{field.label}}:</strong></div><div class="content"> {{ field.value }}</div>
+                <div class="label"><strong>{{field.label}}:</strong></div>
+                <div class="content"> {{ field.value }}</div>
             </div>
             {% endif %}
         </div>

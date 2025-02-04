@@ -160,6 +160,7 @@ DOKUMENTY_CONFIG = {
         "under_header": {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/simple_section_without_name.html"),
+            "doi": Field(_("vypis.dokumenty.doi.label"), "doi"),
             "organizace": Field(_("vypis.dokumenty.organizace.label"), "organizace"),
             "popis": Field(_("vypis.dokumenty.popis.label"), "popis"),
         },
@@ -181,8 +182,11 @@ DOKUMENTY_CONFIG = {
             "objekt_kontext": ForeignField(
                 _("vypis.dokumenty.popis_dokumentu.objekt_kontext.label"), "cislo_objektu", "extra_data"
             ),
-            "poloha_gml": ForeignField(_("vypis.dokumenty.popis_dokumentu.poloha_gml.label"), "geom", "extra_data"),
-            "poloha_wkt": ForeignField(_("vypis.dokumenty.popis_dokumentu.poloha_wkt.label"), "geom", "extra_data"),
+            "primarni_epsg": ForeignField(_("vypis.dokumenty.popis_dokumentu.primarni_epsg.label"), "geom_system", "extra_data"),
+            "poloha_gml": ForeignGeomGmlField(_("vypis.dokumenty.popis_dokumentu.poloha_gml.label"), "geom", "extra_data"),
+            "poloha_gml_sjtsk": ForeignGeomGmlField(_("vypis.dokumenty.popis_dokumentu.poloha_gml_sjtsk.label"), "geom_sjtsk", "extra_data"),
+            "poloha_wkt": ForeignGeomWktField(_("vypis.dokumenty.popis_dokumentu.poloha_wkt.label"), "geom", "extra_data"),
+            "poloha_wkt_sjtsk": ForeignGeomWktField(_("vypis.dokumenty.popis_dokumentu.poloha_wkt_sjtsk.label"), "geom_sjtsk", "extra_data"),
             "format": ForeignField(_("vypis.dokumenty.popis_dokumentu.format.label"), "format", "extra_data"),
             "vyska": ForeignField(_("vypis.dokumenty.popis_dokumentu.vyska.label"), "vyska", "extra_data"),
             "sirka": ForeignField(_("vypis.dokumenty.popis_dokumentu.sirka.label"), "sirka", "extra_data"),
@@ -318,8 +322,11 @@ PROJEKTY_CONFIG = {
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
             "lokalizace": Field(_("vypis.projekty.popis_projektu.lokalizace.label"), "lokalizace"),
             "parcelni_cislo": Field(_("vypis.projekty.popis_projektu.parcelni_cislo.label"), "parcelni_cislo"),
+            "primarni_epsg": Field(_("vypis.projekty.primarni_epsg.label"), "geom_system"),
             "poloha_gml": GeomGmlField(_("vypis.projekty.popis_projektu.poloha_gml.label"), "geom"),
+            "poloha_gml_sjtsk": GeomGmlField(_("vypis.projekty.popis_projektu.poloha_gml_sjtsk.label"), "geom_sjtsk"),
             "poloha_wkt": GeomWktField(_("vypis.projekty.popis_projektu.poloha_wkt.label"), "geom"),
+            "poloha_wkt_sjtsk": GeomWktField(_("vypis.projekty.popis_projektu.poloha_wkt_sjtsk.label"), "geom_sjtsk"),
             "planovane_zahajeni": Field(
                 _("vypis.projekty.popis_projektu.planovane_zahajeni.label"), "planovane_zahajeni_str"
             ),
@@ -524,6 +531,7 @@ LOKALITA_CONFIG = {
         "under_header": {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/simple_section_without_name.html"),
+            "igsn": ForeignField(_("vypis.lokalita.igsn.label"), "igsn", "lokalita"),
             "katastry": ManyToManyField(_("vypis.lokalita.katastry.label"), "katastry"),
         },
     },
@@ -604,6 +612,7 @@ PAS_CONFIG = {
         "under_header": {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/pas/under_header.html"),
+            "igsn": Field(_("vypis.pas.igsn.label"), "igsn"),
             "obdobi": Field(_("vypis.pas.obdobi.label"), "obdobi"),
             "presna_datace": Field(_("vypis.pas.presna_datace.label"), "presna_datace"),
             "druh_nalezu": Field(_("vypis.pas.druh_nalezu.label"), "druh_nalezu"),
@@ -674,6 +683,7 @@ MODEL_CONFIG = {
         "under_header": {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/model/under_header.html"),
+            "doi": Field(_("vypis.model3d.doi.label"), "doi"),
             "obdobi": Model3dKomponentaField(_("vypis.model3d.obdobi.label"), "obdobi"),
             "presna_datace": Model3dKomponentaField(_("vypis.model3d.presna_datace.label"), "presna_datace"),
             "areal": Model3dKomponentaField(_("vypis.model3d.areal.label"), "areal"),
@@ -690,11 +700,18 @@ MODEL_CONFIG = {
             "oznaceni_originalu": Field(
                 _("vypis.model3d.popis_model3d.oznaceni_originalu.label"), "oznaceni_originalu"
             ),
+            "primarni_epsg": ForeignField(_("vypis.model3d.popis_dokumentu.primarni_epsg.label"), "geom_system", "extra_data"),
             "poloha_gml": ForeignGeomGmlField(
                 _("vypis.model3d.popis_dokumentu.poloha_gml.label"), "geom", "extra_data"
             ),
+            "poloha_gml_sjtsk": ForeignGeomGmlField(
+                _("vypis.model3d.popis_dokumentu.poloha_gml_sjtsk.label"), "geom_sjtsk", "extra_data"
+            ),
             "poloha_wkt": ForeignGeomWktField(
                 _("vypis.model3d.popis_dokumentu.poloha_wkt.label"), "geom", "extra_data"
+            ),
+            "poloha_wkt_sjtsk": ForeignGeomWktField(
+                _("vypis.model3d.popis_dokumentu.poloha_wkt_sjtsk.label"), "geom_sjtsk", "extra_data"
             ),
             "format": ForeignField(_("vypis.model3d.popis_model3d.format.label"), "format", "extra_data"),
             "zeme": ForeignField(_("vypis.model3d.popis_model3d.zeme.label"), "zeme", "extra_data"),
@@ -709,6 +726,9 @@ MODEL_CONFIG = {
                 _("vypis.model3d.dokument_casti.section_name"), ["ident_cely", "poznamka"], "dokument_casti", "dokument"
             ),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
+            "dok_zaznam": ChooseField(
+                _("vypis.model3d.dokument_casti.dok_zaznam.label"), ["archeologicky_zaznam", "projekt"]
+            ),
             "komponenty": SubSectionField(KOMPONENTY_DOKU_CONFIG),
         },
         "historie": {
@@ -753,7 +773,7 @@ EZ_CONFIG = {
         "under_header": {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/simple_section_without_name.html"),
-            "nazev": Field(_("vypis.ez.typ.label"), "nazev"),
+            "nazev": Field(_("vypis.ez.nazev.label"), "nazev"),
         },
     },
     "sections": {
