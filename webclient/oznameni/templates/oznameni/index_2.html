@@ -11,7 +11,6 @@
   var maxFiles = 40;
   var object_id = "{{ ident_cely }}";
   var addRemoveLinks = true;
-  window.history.replaceState(null, null, window.location.href);
   </script>
   <link rel="stylesheet" type="text/css" href="{% static 'dropzone.min.css' %}"/>
   <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}" />
@@ -50,55 +49,55 @@
     <tbody>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.projekt" %}:</th>
-        <td>{{ confirm.ident_cely }}</td>
+        <td>{{ projekt.ident_cely }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.ozanamovatel" %}:</th>
-        <td>{{ confirm.oznamovatel }}</td>
+        <td>{{ projekt.oznamovatel.oznamovatel }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.zastupceOznamovatele" %}:</th>
-        <td>{{ confirm.zastupce }}</td>
+        <td>{{ projekt.oznamovatel.odpovedna_osoba }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.adresa" %}:</th>
-        <td>{{ confirm.adresa }}</td>
+        <td>{{ projekt.oznamovatel.adresa }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.telefon" %}:</th>
-        <td>{{ confirm.telefon }}</td>
+        <td>{{ projekt.oznamovatel.telefon }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.email" %}:</th>
-        <td>{{ confirm.email }}</td>
+        <td>{{ projekt.oznamovatel.email }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.katastralniUzemi" %}:</th>
-        <td>{{ confirm.katastr }}</td>
+        <td>{{ projekt.hlavni_katastr }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.dalsiKatastry" %}:</th>
-        <td>{{ confirm.dalsi_katastry|katastry_to_list }}</td>
+        <td>{{ projekt.katastry.all|katastry_to_list }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.planovaneZahajeni" %}:</th>
-        <td>{{ confirm.planovane_zahajeni|render_daterange }}</td>
+        <td>{{ projekt.planovane_zahajeni|render_daterange }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.podnet" %}:</th>
-        <td>{{ confirm.podnet }}</td>
+        <td>{{ projekt.podnet }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.lokalizace" %}:</th>
-        <td>{{ confirm.lokalizace }}</td>
+        <td>{{ projekt.lokalizace }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.parcelniCislo" %}:</th>
-        <td>{{ confirm.parcelni_cislo }}</td>
+        <td>{{ projekt.parcelni_cislo }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.oznaceniStavby" %}:</th>
-        <td>{{ confirm.oznaceni_stavby }}</td>
+        <td>{{ projekt.oznaceni_stavby }}</td>
       </tr>
     </tbody>
   </table>
@@ -114,8 +113,8 @@
 
   <form method="post">
     {% csrf_token %}
-    <input name="ident_cely" type="hidden" value="{{ confirm.ident_cely }}">
-    <a href="{% url 'oznameni:index' %}?ident_cely={{confirm.ident_cely}}" class="btn btn-secondary">{% trans "oznameni.templates.oznameni.index_2.upravitOznameni" %}</a>
+    <input name="ident_cely" type="hidden" value="{{ projekt.ident_cely }}">
+    <a href="{% url 'oznameni:index' ident_cely=projekt.ident_cely %}" class="btn btn-secondary">{% trans "oznameni.templates.oznameni.index_2.upravitOznameni" %}</a>
     <button type="submit" class="btn btn-success btn-disable-when-running-upload" id="submit_btn">{% trans "oznameni.templates.oznameni.index_2.dokoncitOznameni" %}
       <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
       style="display: none"></span>
@@ -126,7 +125,7 @@
 
 {% block script %}
   <script src="{% static 'dropzone.min.js' %}"></script>
-  <script>var object_id = "{{ confirm.ident_cely }}";</script>
+  <script>var object_id = "{{ projekt.ident_cely }}";</script>
   {% if file_id %}
         <script>var maxFiles = 1;</script>
         <script>var file_id = "{{ file_id }}";
