@@ -8,7 +8,7 @@ from crispy_forms.layout import Div, Field, Layout
 from dal import autocomplete
 from django import forms
 from django.conf import settings
-from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, UserChangeForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
@@ -235,7 +235,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         )
 
 
-class AuthUserChangeAdminForm(forms.ModelForm):
+class AuthUserChangeAdminForm(UserChangeForm):
     class Meta:
         model = User
         fields = "__all__"
