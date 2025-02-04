@@ -1,6 +1,12 @@
 
 {% load i18n %}
 <div class="under-header">
+    {% if section.doi.value %}
+    <div class="row">
+        <div class="label"><strong>{{section.doi.label}}:</strong></div>
+        <div class="content"> {{section.doi.value}}</div>
+    </div>
+    {%endif%}
     {% if section.obdobi.value %}
     <div class="row">
         <div class="label"><strong>{{section.obdobi.label}}:</strong></div>

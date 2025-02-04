@@ -683,6 +683,7 @@ MODEL_CONFIG = {
         "under_header": {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/model/under_header.html"),
+            "doi": Field(_("vypis.model3d.doi.label"), "doi"),
             "obdobi": Model3dKomponentaField(_("vypis.model3d.obdobi.label"), "obdobi"),
             "presna_datace": Model3dKomponentaField(_("vypis.model3d.presna_datace.label"), "presna_datace"),
             "areal": Model3dKomponentaField(_("vypis.model3d.areal.label"), "areal"),
