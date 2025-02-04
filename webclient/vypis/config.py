@@ -181,8 +181,11 @@ DOKUMENTY_CONFIG = {
             "objekt_kontext": ForeignField(
                 _("vypis.dokumenty.popis_dokumentu.objekt_kontext.label"), "cislo_objektu", "extra_data"
             ),
-            "poloha_gml": ForeignField(_("vypis.dokumenty.popis_dokumentu.poloha_gml.label"), "geom", "extra_data"),
-            "poloha_wkt": ForeignField(_("vypis.dokumenty.popis_dokumentu.poloha_wkt.label"), "geom", "extra_data"),
+            "primarni_epsg": ForeignField(_("vypis.dokumenty.popis_dokumentu.primarni_epsg.label"), "geom_system", "extra_data"),
+            "poloha_gml": ForeignGeomGmlField(_("vypis.dokumenty.popis_dokumentu.poloha_gml.label"), "geom", "extra_data"),
+            "poloha_gml_sjtsk": ForeignGeomGmlField(_("vypis.dokumenty.popis_dokumentu.poloha_gml_sjtsk.label"), "geom_sjtsk", "extra_data"),
+            "poloha_wkt": ForeignGeomWktField(_("vypis.dokumenty.popis_dokumentu.poloha_wkt.label"), "geom", "extra_data"),
+            "poloha_wkt_sjtsk": ForeignGeomWktField(_("vypis.dokumenty.popis_dokumentu.poloha_wkt_sjtsk.label"), "geom_sjtsk", "extra_data"),
             "format": ForeignField(_("vypis.dokumenty.popis_dokumentu.format.label"), "format", "extra_data"),
             "vyska": ForeignField(_("vypis.dokumenty.popis_dokumentu.vyska.label"), "vyska", "extra_data"),
             "sirka": ForeignField(_("vypis.dokumenty.popis_dokumentu.sirka.label"), "sirka", "extra_data"),
@@ -318,8 +321,11 @@ PROJEKTY_CONFIG = {
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
             "lokalizace": Field(_("vypis.projekty.popis_projektu.lokalizace.label"), "lokalizace"),
             "parcelni_cislo": Field(_("vypis.projekty.popis_projektu.parcelni_cislo.label"), "parcelni_cislo"),
+            "primarni_epsg": Field(_("vypis.projekty.primarni_epsg.label"), "geom_system"),
             "poloha_gml": GeomGmlField(_("vypis.projekty.popis_projektu.poloha_gml.label"), "geom"),
+            "poloha_gml_sjtsk": GeomGmlField(_("vypis.projekty.popis_projektu.poloha_gml_sjtsk.label"), "geom_sjtsk"),
             "poloha_wkt": GeomWktField(_("vypis.projekty.popis_projektu.poloha_wkt.label"), "geom"),
+            "poloha_wkt_sjtsk": GeomWktField(_("vypis.projekty.popis_projektu.poloha_wkt_sjtsk.label"), "geom_sjtsk"),
             "planovane_zahajeni": Field(
                 _("vypis.projekty.popis_projektu.planovane_zahajeni.label"), "planovane_zahajeni_str"
             ),
@@ -690,11 +696,18 @@ MODEL_CONFIG = {
             "oznaceni_originalu": Field(
                 _("vypis.model3d.popis_model3d.oznaceni_originalu.label"), "oznaceni_originalu"
             ),
+            "primarni_epsg": ForeignField(_("vypis.model3d.popis_dokumentu.primarni_epsg.label"), "geom_system", "extra_data"),
             "poloha_gml": ForeignGeomGmlField(
                 _("vypis.model3d.popis_dokumentu.poloha_gml.label"), "geom", "extra_data"
             ),
+            "poloha_gml_sjtsk": ForeignGeomGmlField(
+                _("vypis.model3d.popis_dokumentu.poloha_gml_sjtsk.label"), "geom_sjtsk", "extra_data"
+            ),
             "poloha_wkt": ForeignGeomWktField(
                 _("vypis.model3d.popis_dokumentu.poloha_wkt.label"), "geom", "extra_data"
+            ),
+            "poloha_wkt_sjtsk": ForeignGeomWktField(
+                _("vypis.model3d.popis_dokumentu.poloha_wkt_sjtsk.label"), "geom_sjtsk", "extra_data"
             ),
             "format": ForeignField(_("vypis.model3d.popis_model3d.format.label"), "format", "extra_data"),
             "zeme": ForeignField(_("vypis.model3d.popis_model3d.zeme.label"), "zeme", "extra_data"),
