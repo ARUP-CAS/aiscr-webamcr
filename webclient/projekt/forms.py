@@ -323,11 +323,11 @@ class EditProjektForm(forms.ModelForm):
                                 Div("planovane_zahajeni", css_class="col-sm-3"),
                                 css_class="row",
                             ),
-                            css_class="col-sm-9",
+                            css_class="col-sm-6",
                         ),
                         Div(
                             Div(id="projectMap"),
-                            css_class="col-sm-3",
+                            css_class="col-sm-6",
                         ),
                         css_class="row",
                     ),
