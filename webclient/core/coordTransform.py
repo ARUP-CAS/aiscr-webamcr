@@ -36,7 +36,7 @@ def convertToJTSK(longitude, latitude, height=0):
         [latitude, longitude] = wgs84_to_bessel(latitude, longitude, height)
         [X05, Y05] = bessel_to_jtsk(latitude, longitude)
         [X, Y] = jtsk05_to_jtsk(X05, Y05)
-        return [-Y, -X]
+        return [round(-Y, 2), round(-X, 2)]
 
 
 # Conversion from JTSK to WGS-84
@@ -46,7 +46,7 @@ def convertToWGS84(minusY, minusX, height=0):
     [X05, Y05] = jtsk_to_jtsk05(-minusX, -minusY)
     [latitude, longitude] = jtsk_to_bessel(X05, Y05)
     [latitude, longitude] = bessel_to_wgs84(latitude, longitude, height)
-    return [longitude, latitude]
+    return [round(longitude, 7), round(latitude, 7)]
 
 
 # Conversion from ellipsoid WGS-84 to Bessel's ellipsoid

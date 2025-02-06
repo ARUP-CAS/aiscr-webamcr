@@ -11,34 +11,72 @@
 
   .app-content-wrapper {
 
-
     button {
       border: none;
       background: none;
     }
 
+    .record {
+      margin-bottom: 16px;
+      background-color: #fff8e1;
+      padding: 15px;
+    }
+    
     .section-name {
       font-weight: bolder;
+      font-style: italic;
     }
 
-    .under-header {
-      .row {
-        margin: 0;
-      }
+    .row {
+      margin: 0;
     }
 
     hr {
-      border-top: 2px solid rgba(0, 0, 0, 0.3) !important;
+      border-top: 1px solid rgba(0, 0, 0, 0.3) !important;
+      margin-bottom: 0.1rem;
     }
 
     .main-header {
       font-weight: bolder;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
 
     }
 
     .sub-header {
       color: rgb(103, 103, 103);
+    }
+
+    .label {
+      flex: 0 0 180px;
+      max-width: 180px;
+    }
+
+    .content{
+      flex: 0 0 auto;
+      max-width: 82%;
+    }
+
+    .thumb{
+      flex: 0 0 120px;
+      max-width: 120px;
+      text-align: center;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .file{
+      flex: 0 0 auto;
+      max-width: 88%;
+      word-wrap: break-word;
+      .content {
+        flex: 0 0 auto;
+        max-width: 80%;
+      }
+    }
+
+    .small{
+      font-size: 0.8rem;
+      padding-left: 40px;
     }
   }
 }

@@ -151,7 +151,7 @@ class SouborDownloadField(SouborField):
             return {
                 "value": accessor,
                 "download": reverse(
-                    "core:download_thumbnail",
+                    "core:download_file",
                     args=(
                         self.key_name,
                         instance.vazba.navazany_objekt.ident_cely,
@@ -204,9 +204,7 @@ class GeomWktField(Field):
     def get_value(self, instance):
         geom = getattr(instance, self.accessor)
         if geom:
-            epsg = get_wkt(geom)
-            wkt = geom.srid
-            return f"EPSG: {epsg}, {wkt}"
+            return get_wkt(geom)
         return None
 
 
@@ -222,23 +220,21 @@ class ForeignGeomWktField(ForeignField):
     def get_value(self, instance):
         geom = getattr(getattr(instance, self.foreign_key), self.accessor)
         if geom:
-            epsg = get_wkt(geom)
-            wkt = geom.srid
-            return f"EPSG: {epsg}, {wkt}"
+            return get_wkt(geom)
         return None
 
 
 class ManyToManyField(Field):
     def get_value(self, instance):
         related_manager = getattr(instance, self.accessor)
-        return ", ".join([str(v) for v in related_manager.all()])
+        return "; ".join([str(v) for v in related_manager.all()])
 
 
 class ForeignManyToManyField(ForeignField):
     def get_value(self, instance):
         if getattr(instance, self.foreign_key, False):
             related_manager = getattr(getattr(instance, self.foreign_key), self.accessor)
-            return ", ".join([str(v) for v in related_manager.all()])
+            return "; ".join([str(v) for v in related_manager.all()])
         return None
 
 
@@ -264,6 +260,19 @@ class ForeignDoubleField(ForeignField):
                     values.append(str(value))
             if values:
                 return " - ".join(values)
+        return None
+
+
+class ForeignDoubleFieldNum(ForeignField):
+    def get_value(self, instance):
+        if getattr(instance, self.foreign_key, False):
+            values = []
+            for accessor in self.accessor:
+                value = getattr(getattr(instance, self.foreign_key), accessor)
+                if value:
+                    values.append(str(value))
+            if values:
+                return "-".join(values)
         return None
 
 
@@ -410,34 +419,21 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         jistota = getattr(instance, self.accessor[2])
         presna_datace = getattr(instance, self.accessor[3])
         areal = getattr(instance, self.accessor[4])
-        aktivity = getattr(instance, self.accessor[5]).all()
+        aktivity = getattr(instance, self.accessor[5]).all()       
         second_part = ""
-        vypis_jistota_translated = (
-            _("vypis.vyppis_config.KomponentaRepeatableSectionNameWithAccessor.jistota.Ano")
-            if jistota
-            else _("vypis.vyppis_config.KomponentaRepeatableSectionNameWithAccessor.jistota.Ne")
-        )
-        if obdobi:
-            second_part = f" - {obdobi}"
+        third_part = ""
+        vypis_jistota_translated = _("vypis.vypis_config.komponenta.jistota.Ne")
+        if not jistota:
             second_part += f" ({vypis_jistota_translated}"
             if presna_datace:
                 second_part += f"; {presna_datace})"
             else:
                 second_part += ")"
-        else:
-            second_part = f" - ({vypis_jistota_translated}"
-            if presna_datace:
-                second_part += f"; {presna_datace})"
-            else:
-                second_part += ")"
-        third_part = ""
-        if areal:
-            third_part = f" - {areal}"
-            if aktivity:
-                third_part += f" ({', '.join([str(a) for a in aktivity])})"
-        elif aktivity:
-            third_part = f" - ({', '.join([str(a) for a in aktivity])})"
-        return f"{self.name} {getattr(instance, self.accessor[0])}{second_part}{third_part}"
+        elif presna_datace:
+            second_part += f" ({presna_datace})"
+        if aktivity:
+            third_part = f" ({'; '.join([str(a) for a in aktivity])})"
+        return f"{self.name} {getattr(instance, self.accessor[0])} - {obdobi}{second_part} - {areal}{third_part}"
 
 
 class SubSectionField:

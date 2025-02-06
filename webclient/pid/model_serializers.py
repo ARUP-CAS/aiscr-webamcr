@@ -277,7 +277,7 @@ def _serialize_komponenty_m2n_fields(komponenty):
 def serialize_organizace(organizace: Organizace):
     serialized_organizace = {"name": organizace.nazev}
     if organizace.ror:
-        serialized_organizace["affiliationIdentifier"] = f"https://ror.org/{organizace.ror}"
+        serialized_organizace["affiliationIdentifier"] = organizace.ror
         serialized_organizace["affiliationIdentifierScheme"] = "ROR"
         serialized_organizace["schemeUri"] = "https://ror.org/"
     return serialized_organizace
@@ -300,7 +300,7 @@ def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contribu
                 [
                     {
                         "schemeUri": "https://orcid.org",
-                        "nameIdentifier": f"https://orcid.org/{osoba.orcid}",
+                        "nameIdentifier": osoba.orcid,
                         "nameIdentifierScheme": "ORCID",
                     }
                 ]

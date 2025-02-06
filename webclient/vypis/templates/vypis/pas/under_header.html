@@ -1,7 +1,28 @@
 
 {% load i18n %}
 <div class="under-header">
-<div class="row"><strong>{{section.obdobi.label}}:</strong> {{section.obdobi.value}} ({{section.presna_datace.value}}) |
-<strong>{{section.druh_nalezu.label}}:</strong> {{section.druh_nalezu.value}} ({{section.specifikace.value}})</div>
-<div class = "row"><strong>{{section.katastr.label}}:</strong> {{section.katastr.value}}</div>
+    {% if section.igsn.value %}
+    <div class="row">
+        <div class="label"><strong>{{section.igsn.label}}:</strong></div>
+        <div class="content"> {{section.igsn.value}}</div>
+    </div>
+    {%endif%}
+    {% if section.obdobi.value %}
+    <div class="row">
+        <div class="label"><strong>{{section.obdobi.label}}:</strong></div>
+        <div class="content"> {{section.obdobi.value}}{% if section.presna_datace.value %} ({{section.presna_datace.value}}){%endif%}</div>
+    </div>
+    {%endif%}
+    {% if section.druh_nalezu.value %}
+    <div class="row">
+        <div class="label"><strong>{{section.druh_nalezu.label}}:</strong></div>
+        <div class="content"> {{section.druh_nalezu.value}}{% if section.specifikace.value %} ({{section.specifikace.value}}){%endif%}</div>
+    </div>
+    {%endif%}
+    {% if section.katastr.value %}
+    <div class="row">
+        <div class="label"><strong>{{section.katastr.label}}:</strong></div>
+        <div class="content"> {{section.katastr.value}}</div>
+    </div>
+    {%endif%}
 </div>
