@@ -220,6 +220,9 @@
               }
             }
 
+            &.app-cell-badge {
+              padding-left: 0;
+            }
             .badge {
               background-color: $color !important;
               color: $white;
