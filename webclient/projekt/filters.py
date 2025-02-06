@@ -491,6 +491,20 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         distinct=True,
     )
 
+    pristupnost = ModelMultipleChoiceFilter(
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
+        label=_("projekt.filters.projektFilter.pristupnost.label"),
+        method="filter_pristupnost",
+        widget=SelectMultiple(
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
+        ),
+        distinct=True,
+    )
+
     def filter_queryset(self, queryset):
         logger.debug("projekt.filters.AkceFilter.filter_queryset.start")
         queryset = super(ProjektFilter, self).filter_queryset(queryset)
@@ -665,6 +679,18 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
             | Q(casti_dokumentu__dokument__ident_cely__icontains=value)
         ).distinct()
 
+    def filter_pristupnost(self, queryset, name, value):
+        if Heslar.objects.get(ident_cely="HES-000865") in value:
+            return queryset.filter(
+                Q(samostatne_nalezy__pristupnost__in=value)
+                | Q(akce__archeologicky_zaznam__pristupnost__in=value)
+                | Q(Q(samostatne_nalezy__isnull=True) & Q(akce__isnull=True))
+            ).distinct()
+        else:
+            return queryset.filter(
+                Q(samostatne_nalezy__pristupnost__in=value) | Q(akce__archeologicky_zaznam__pristupnost__in=value)
+            ).distinct()
+
     class Meta:
         model = Projekt
         fields = [
@@ -718,6 +744,7 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
                     Div("datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
                     Div("datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
                     Div("termin_odevzdani_nz", css_class="col-sm-4 app-daterangepicker"),
+                    Div("pristupnost", css_class="col-sm-2"),
                     css_class="row",
                 ),
                 Div(
