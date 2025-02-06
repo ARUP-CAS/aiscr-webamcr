@@ -52,7 +52,12 @@ class CreateProjektForm(forms.ModelForm):
         )
         widgets = {
             "typ_projektu": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                    "autocomplete": "off",
+                }
             ),
             "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "lokalizace": forms.TextInput(),
