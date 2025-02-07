@@ -1130,6 +1130,8 @@ def zrusit(request, ident_cely):
             duvod = form.cleaned_data["reason_text"]
             projekt.create_transaction(request.user, PROJEKT_USPESNE_ZRUSEN)
             projekt.set_zruseny(request.user, duvod)
+            if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
+                projekt.create_cancel_confirmation_document(request.user)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             Mailer.send_ep04(project=projekt, reason=duvod)

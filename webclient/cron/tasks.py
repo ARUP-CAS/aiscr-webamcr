@@ -395,8 +395,11 @@ def cancel_old_projects():
         for project in projects:
             project: Projekt
             project.active_transaction = FedoraTransaction()
-            project.close_active_transaction_when_finished = True
             project.set_zruseny(User.objects.get(email="amcr@arup.cas.cz"), cancelled_string, RUSENI_STARE_PROJ)
+            if project.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
+                project.create_cancel_confirmation_document(User.objects.get(email="amcr@arup.cas.cz"))
+            project.close_active_transaction_when_finished = True
+            project.save()
             logger.debug("core.cron.cancel_old_projects.do.project", extra={"ident_cely": project.ident_cely})
         logger.debug("core.cron.cancel_old_projects.do.end")
     except Exception as err:

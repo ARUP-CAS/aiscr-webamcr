@@ -34,6 +34,7 @@ from django.utils import timezone
 from historie.models import Historie
 from oznameni.models import Oznamovatel
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
+from projekt.doc_utils import ZruseniPDFCreator
 
 from .mlstripper import MLStripper
 
@@ -713,6 +714,26 @@ class Mailer:
                 )
 
     @classmethod
+    def _get_ep06_attachment(cls, project) -> RepositoryBinaryFile | None:
+        project_files = project.soubory.soubory.filter(
+            nazev__startswith=f"{ZruseniPDFCreator.FILENAME_PREFIX}_{project.ident_cely}", nazev__endswith=".pdf"
+        )
+        project_files = list(sorted(project_files, key=lambda x: x.vytvoreno.datum_zmeny))
+        logger.debug(
+            "services.mailer.get_ep06_attachments.query",
+            extra={"project_files": project_files, "ident_cely": project.ident_cely},
+        )
+        if len(project_files) > 0:
+            project_file = project_files[0]
+            logger.debug(
+                "services.mailer.get_ep06_attachments.attachment_found",
+                extra={"nazev": project_file.nazev, "ident_cely": project.ident_cely},
+            )
+            repository_coonector = FedoraRepositoryConnector(project)
+            attachment = repository_coonector.get_binary_file(project_file.repository_uuid)
+            return attachment
+
+    @classmethod
     def _send_ep06(cls, project, notification_type, reason):
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         oznameni = Historie.objects.filter(
@@ -735,7 +756,11 @@ class Mailer:
             }
             html = render_to_string(notification_type.cesta_sablony, context)
             cls.__send(
-                subject=subject, to=project.oznamovatel.email, html_content=html, notification_type=notification_type
+                subject=subject,
+                to=project.oznamovatel.email,
+                html_content=html,
+                notification_type=notification_type,
+                attachment=cls._get_ep06_attachment(project),
             )
 
     @classmethod
