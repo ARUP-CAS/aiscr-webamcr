@@ -73,7 +73,7 @@ const show_action_result_message = (file, result = ActionResultsEnum.success, me
             } else if (result === ActionResultsEnum.error) {
                 alert_element.textContent = `${dz_trans["alertsUploadErrorPart1"]} ${file.name} ${dz_trans["alertsUploadErrorPart2"]}${message}`;
             }
-        } else if (action === ActionTypeEnum.reject) {
+        } else if (action === ActionTypeEnum.delete) {
             if (result === ActionResultsEnum.success) {
                 alert_element.textContent = `${dz_trans["alertsDeleteSuccessfulPart1"]} ${file.name} ${dz_trans["alertsDeleteSuccessfulPart2"]}`;
             } else if (result === ActionResultsEnum.error) {
@@ -233,9 +233,9 @@ window.onload = function () {
                     xhttp.onreadystatechange = () => {
                         if (xhttp.readyState === XMLHttpRequest.DONE) {
                             if (xhttp.status === 200) {
-                                show_action_result_message(file, ActionResultsEnum.success, "success");
+                                show_action_result_message(file, ActionResultsEnum.success, "success",ActionTypeEnum.delete);
                             } else {
-                                show_action_result_message(file, ActionResultsEnum.error, "success");
+                                show_action_result_message(file, ActionResultsEnum.error, "success",ActionTypeEnum.delete);
                             }
                         }
                     };
