@@ -593,7 +593,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             "projekt.models.create_confirmation_document.start",
             extra={
                 "projekt_ident": self.ident_cely,
-                "additional": additional,
                 "user": user,
                 "transaction": fedora_transaction.uid,
             },

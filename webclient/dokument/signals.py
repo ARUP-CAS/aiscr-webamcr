@@ -179,7 +179,7 @@ def let_delete_repository_container(sender, instance: Let, **kwargs):
 
 @receiver(post_save, sender=DokumentCast, weak=False)
 def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **kwargs):
-    extra = {"dokument_cast": instance.pk, "signal_created": created}
+    extra = {"pk": instance.pk, "signal_created": created}
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra=extra)
     from core.repository_connector import FedoraTransaction
 
@@ -196,7 +196,7 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
                 instance.archeologicky_zaznam.save_metadata(fedora_transaction)
                 extra.update(
                     {
-                        "archeologicky_zaznam": instance.archeologicky_zaznam.ident_cely,
+                        "ident_cely": instance.archeologicky_zaznam.ident_cely,
                         "record_pk": instance.archeologicky_zaznam.pk,
                     }
                 )
@@ -204,7 +204,7 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
                 instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction)
                 extra.update(
                     {
-                        "initial_archeologicky_zaznam": instance.initial_archeologicky_zaznam.ident_cely,
+                        "initial_ident_cely": instance.initial_archeologicky_zaznam.ident_cely,
                         "initial_record_pk": instance.initial_archeologicky_zaznam.pk,
                     }
                 )
@@ -215,7 +215,7 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
                 instance.initial_projekt.save_metadata(fedora_transaction)
                 extra.update(
                     {
-                        "initial_projekt": instance.initial_projekt.ident_cely,
+                        "initial_ident_cely": instance.initial_projekt.ident_cely,
                         "initial_record_pk": instance.initial_projekt.pk,
                     }
                 )

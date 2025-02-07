@@ -59,7 +59,7 @@ def zapsat(request, dj_ident_cely):
                 )
                 messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
     else:
-        logger.debug("adb.views.zapsat.not_valid", extra={"errors": form.errors})
+        logger.debug("adb.views.zapsat.not_valid", extra={"errors": str(form.errors)})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
     response = redirect(dj.get_absolute_url())

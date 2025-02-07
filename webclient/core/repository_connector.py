@@ -1491,7 +1491,7 @@ class FedoraTransaction:
             if queue is None:
                 logger.warning(
                     "core_repository_connector.FedoraTransaction.call_digiarchiv_update.warning",
-                    extra={"i": i, "queues": queues},
+                    extra={"key": i, "queues": queues},
                 )
                 break
             for queue_name, queue_tasks in queue.items():

@@ -464,7 +464,7 @@ def post_upload(request):
             duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
             response_data = {"filename": soubor_instance.nazev}
             if not duplikat.exists():
-                logger.debug("core.views.post_upload.saving", extra={"s": soubor_instance})
+                logger.debug("core.views.post_upload.saving", extra={"instance": soubor_instance})
                 soubor_instance.save()
                 if not request.user.is_authenticated:
                     user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
@@ -472,7 +472,7 @@ def post_upload(request):
                 else:
                     soubor_instance.zaznamenej_nahrani(request.user, original_filename)
             else:
-                logger.debug("core.views.post_upload.already_exists", extra={"s": soubor_instance})
+                logger.debug("core.views.post_upload.already_exists", extra={"instance": soubor_instance})
                 soubor_instance.save()
                 if not request.user.is_authenticated:
                     user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()

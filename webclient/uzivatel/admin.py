@@ -254,7 +254,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             "uzivatel.admin.save_model.start",
             extra={
                 "user": user.pk,
-                "obj_pk": obj.pk,
+                "pk": obj.pk,
                 "change": change,
                 "form": form,
                 "transaction": fedora_transaction.uid,

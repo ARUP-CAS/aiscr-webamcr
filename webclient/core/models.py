@@ -407,9 +407,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             unaccepted_mime_types = mime.difference(accepted_mime_types)
             for item in unaccepted_mime_types:
                 if not item.startswith("image/"):
-                    logger.debug(
-                        "core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"accepted_mime_types": item}
-                    )
+                    logger.debug("core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"mime_type": item})
                     return False
             return True
         else:
@@ -430,9 +428,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             unaccepted_mime_types = mime.difference(accepted_mime_types)
             for item in unaccepted_mime_types:
                 if not item.startswith("image/"):
-                    logger.debug(
-                        "core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"accepted_mime_types": item}
-                    )
+                    logger.debug("core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"mime_type": item})
                     return False
             return True
 

@@ -1062,7 +1062,7 @@ def post_point_position_2_katastre(request):
     Funkce pro získaní názvu katastru z bodu.
     """
     body = json.loads(request.body.decode("utf-8"))
-    logger.debug("pas.views.post_point_position_2_katastre", extra={"body": body})
+    logger.debug("pas.views.post_point_position_2_katastre", extra={"data": body})
     katastr_name = get_cadastre_from_point(Point(body["x1"], body["x2"]))
     if katastr_name is not None:
         return JsonResponse(

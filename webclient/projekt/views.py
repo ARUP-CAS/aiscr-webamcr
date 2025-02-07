@@ -442,7 +442,7 @@ def create(request):
                         _("arch_z.views.zapsat.samostatnaAkce." "check_container_deleted_or_not_exists_error"),
                     )
         else:
-            logger.debug("projekt.views.create.form_projekt_not_valid", extra={"errors": form_projekt.errors})
+            logger.debug("projekt.views.create.form_projekt_not_valid", extra={"errors": str(form_projekt.errors)})
     else:
         form_projekt = CreateProjektForm(required=required_fields, required_next=required_fields_next)
         form_oznamovatel = OznamovatelProjektForm(uzamknout_formular=True)
@@ -842,7 +842,7 @@ def zahajit_v_terenu(request, ident_cely):
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.zahajit_v_terenu.form_not_valid", extra={"errors": form.errors})
+            logger.debug("projekt.views.zahajit_v_terenu.form_not_valid", extra={"errors": str(form.errors)})
     else:
         form = ZahajitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(

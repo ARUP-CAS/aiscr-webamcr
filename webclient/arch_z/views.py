@@ -629,7 +629,7 @@ def edit(request, ident_cely):
         else:
             logger.warning(
                 "arch_z.views.edit.form_az_valid",
-                extra={"form_az_errors": form_az.errors, "form_akce_errors": form_akce.errors},
+                extra={"az_error": str(form_az.errors), "akce_error": str(form_akce.errors)},
             )
     else:
         form_az = CreateArchZForm(instance=zaznam)
@@ -1005,7 +1005,7 @@ def zapsat(request, projekt_ident_cely=None):
                         )
                     akce.set_snapshots()
                     fedora_transaction.success_message = get_message(az, "USPESNE_ZAPSANA")
-                    logger.debug("arch_z.views.zapsat.success", extra={"akce": akce.pk, "projekt": projekt_ident_cely})
+                    logger.debug("arch_z.views.zapsat.success", extra={"pk": akce.pk, "ident_cely": projekt_ident_cely})
                     az.close_active_transaction_when_finished = True
                     az.save()
                     return redirect("arch_z:detail", az.ident_cely)
@@ -1286,7 +1286,7 @@ def post_akce2kat(request):
     Funkce pohledu pro získaní souradnic katastru akce.
     """
     body = json.loads(request.body.decode("utf-8"))
-    logger.debug("arch_z.views.post_akce2kat.start", extra={"body": body})
+    logger.debug("arch_z.views.post_akce2kat.start", extra={"data": body})
     katastr_name = body["cadastre"]
     try:
         kod = katastr_name[katastr_name.find(";") + 1 : katastr_name.find(")")].strip()
@@ -1473,16 +1473,14 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
     """
     Funkce pohledu pro smazání dalšího vedoucího akce.
     """
-    logger.debug(
-        "arch_z.views.smazat_akce_vedoucí.start", extra={"ident_cely": ident_cely, "akce_vedouci_id": akce_vedouci_id}
-    )
+    logger.debug("arch_z.views.smazat_akce_vedoucí.start", extra={"ident_cely": ident_cely, "pk": akce_vedouci_id})
     zaznam: AkceVedouci = AkceVedouci.objects.get(id=akce_vedouci_id)
     az: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if request.method == "POST":
         if zaznam.akce.archeologicky_zaznam.ident_cely != ident_cely:
             logger.debug(
                 "arch_z.views.smazat_akce_vedoucí.error",
-                extra={"ident_cely": ident_cely, "akce_vedouci_id": akce_vedouci_id},
+                extra={"ident_cely": ident_cely, "pk": akce_vedouci_id},
             )
             messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
             return JsonResponse({"redirect": az.get_absolute_url()}, status=403)
@@ -1491,13 +1489,11 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
         az.save_metadata(fedora_transaction, close_transaction=True)
         logger.debug(
             "arch_z.views.smazat_akce_vedoucí.success",
-            extra={"ident_cely": ident_cely, "akce_vedouci_id": akce_vedouci_id},
+            extra={"ident_cely": ident_cely, "pk": akce_vedouci_id},
         )
         return JsonResponse({"redirect": reverse("arch_z:edit", kwargs={"ident_cely": ident_cely})})
     else:
-        logger.debug(
-            "arch_z.views.smazat_akce_vedoucí.get", extra={"ident_cely": ident_cely, "akce_vedouci_id": akce_vedouci_id}
-        )
+        logger.debug("arch_z.views.smazat_akce_vedoucí.get", extra={"ident_cely": ident_cely, "pk": akce_vedouci_id})
         context = {
             "object": zaznam,
             "title": _("arch_z.views.smazat_akce_vedoucí.title.text"),
