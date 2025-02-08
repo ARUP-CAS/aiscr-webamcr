@@ -146,16 +146,11 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         )
         messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
         if request.method == "POST":
-            if url_has_allowed_host_and_scheme(
-                request.POST.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
-            ):
-                safe_redirect = request.POST.get("next", "core:home")
-            else:
-                safe_redirect = "/"
-        elif url_has_allowed_host_and_scheme(
-            request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
-        ):
-            safe_redirect = request.GET.get("next", "core:home")
+            next_url = request.POST.get("next", "core:home")
+        else:
+            next_url = request.GET.get("next", "core:home")
+        if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+            safe_redirect = next_url
         else:
             safe_redirect = "/"
         return redirect(safe_redirect)
