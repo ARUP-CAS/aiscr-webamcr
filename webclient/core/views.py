@@ -466,7 +466,7 @@ def post_upload(request):
                 logger.debug("core.views.post_upload.saving", extra={"s": soubor_instance})
                 soubor_instance.save()
                 if not request.user.is_authenticated:
-                    user_admin = User.objects.filter(ident_cely=hesla_dynamicka.ADMIN_USER).first()
+                    user_admin = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
                     soubor_instance.zaznamenej_nahrani(user_admin, original_filename)
                 else:
                     soubor_instance.zaznamenej_nahrani(request.user, original_filename)
@@ -474,7 +474,7 @@ def post_upload(request):
                 logger.debug("core.views.post_upload.already_exists", extra={"s": soubor_instance})
                 soubor_instance.save()
                 if not request.user.is_authenticated:
-                    user_admin = User.objects.filter(ident_cely=hesla_dynamicka.ADMIN_USER).first()
+                    user_admin = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
                     soubor_instance.zaznamenej_nahrani(user_admin, original_filename)
                 else:
                     soubor_instance.zaznamenej_nahrani(request.user, original_filename)

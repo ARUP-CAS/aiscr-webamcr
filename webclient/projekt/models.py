@@ -172,8 +172,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         historie_objects = self.historie.historie_set.filter(typ_zmeny=OZNAMENI_PROJ_MANUALNI)
         if historie_objects.exists():
             return historie_objects.last().datum_zmeny
-        historie_objects = self.historie.historie_set.filter(typ_zmeny=OZNAMENI_PROJ)
-        if historie_objects.exists():
+        else:
             return historie_objects.first().datum_zmeny
 
     def __init__(self, *args, **kwargs):
@@ -206,7 +205,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Metóda pro nastavení pomocného stavu vytvořený.
         """
         self.stav = PROJEKT_STAV_VYTVORENY
-        owner = get_object_or_404(User, ident_cely=hesla_dynamicka.ADMIN_USER)
+        owner = get_object_or_404(User, pk=hesla_dynamicka.ADMIN_USER)
         hist, created = Historie.objects.update_or_create(
             vazba=self.historie, typ_zmeny=OZNAMENI_PROJ, defaults={"uzivatel": owner, "datum_zmeny": now()}
         )
@@ -217,7 +216,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Metóda pro nastavení stavu oznámený a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_OZNAMENY
-        owner = get_object_or_404(User, ident_cely=hesla_dynamicka.ADMIN_USER)
+        owner = get_object_or_404(User, pk=hesla_dynamicka.ADMIN_USER)
         hist, created = Historie.objects.update_or_create(
             vazba=self.historie, typ_zmeny=OZNAMENI_PROJ, defaults={"uzivatel": owner, "datum_zmeny": now()}
         )

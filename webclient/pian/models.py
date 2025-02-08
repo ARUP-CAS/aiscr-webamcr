@@ -313,7 +313,7 @@ def vytvor_pian(katastr, fedora_transaction):
         pian.active_transaction = fedora_transaction
         pian.set_permanent_ident_cely()
         pian.save()
-        pian.zaznamenej_zapsani(User.objects.filter(ident_cely=hesla_dynamicka.ADMIN_USER).first())
+        pian.zaznamenej_zapsani(User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first())
         katastr.pian = pian
         katastr.save()
         return pian

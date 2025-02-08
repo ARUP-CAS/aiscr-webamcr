@@ -4,7 +4,7 @@ import logging
 from core.setting_models import CustomAdminSettings
 from django.db import OperationalError
 from heslar.models import Heslar
-from uzivatel.models import Organizace, Osoba
+from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,14 @@ def get_id_from_osoba(ident_cely):
     except Exception:
         # This will happen when automated tests are run
         return int(ident_cely.replace("OS-", ""))
+
+
+def get_id_from_user(ident_cely):
+    try:
+        return User.objects.get(ident_cely=ident_cely).pk
+    except Exception:
+        # This will happen when automated tests are run
+        return int(ident_cely.replace("U-", ""))
 
 
 def get_settings(item_group, item_id):
@@ -219,7 +227,7 @@ JAZYK_CS = get_id_from_heslar("HES-000167")
 JAZYK_NERELEVANTNI = get_id_from_heslar("HES-000174")
 PRIMARNE_DIGITALNI = get_id_from_heslar("HES-001166")
 
-ADMIN_USER = "U-000322"
+ADMIN_USER = get_id_from_user("U-000322")
 
 heslar = get_settings("constants", "heslar")
 for key, value in heslar.items():
@@ -267,5 +275,5 @@ for key, values in osoba_group.items():
     globals()[key] = group
 
 user = get_settings("constants", "user")
-for key, value in osoba_group.items():
+for key, value in user.items():
     globals()[key] = value
