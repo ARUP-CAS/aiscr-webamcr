@@ -403,7 +403,7 @@ def create(request):
             fedora_transaction: FedoraTransaction = projekt.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN)
             if x1 and x2:
                 projekt.geom = Point(x1, x2)
-                projekt.geom_sjtsk = Point(convertToJTSK(x1, x2))
+                projekt.geom_sjtsk = Point(*convertToJTSK(x1, x2))
                 projekt.geom_system = "5514"
             try:
                 projekt.set_permanent_ident_cely(False)
@@ -515,18 +515,15 @@ def edit(request, ident_cely):
             projekt = form.save(commit=False)
             projekt.save()
             old_geom = projekt.geom
-            new_geom = Point(x1, x2)
-            geom_changed = False
-            if old_geom is None or new_geom.coords != old_geom.coords:
-                projekt.geom = new_geom
-                projekt.geom_sjtsk = Point(convertToJTSK(x1, x2))
-                projekt.save()
-                geom_changed = True
-                logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": projekt.geom})
-            else:
-                logger.warning("projekt.views.edit.form_valid.geom_not_updated")
-            if form.changed_data or geom_changed:
-                logger.debug("projekt.views.edit.form_valid.form_changed", extra={"changed_data": form.changed_data})
+            if x1 and x2:
+                new_geom = Point(x1, x2)
+                if old_geom is None or new_geom.coords != old_geom.coords:
+                    projekt.geom = new_geom
+                    projekt.geom_sjtsk = Point(*convertToJTSK(x1, x2))
+                    projekt.save()
+                    logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": projekt.geom})
+                else:
+                    logger.warning("projekt.views.edit.form_valid.geom_not_updated")
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             form.save_m2m()
