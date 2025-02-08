@@ -9,7 +9,7 @@ from uzivatel.models import Organizace, Osoba
 logger = logging.getLogger(__name__)
 
 
-def get_id_from_heslar(ident_cely):
+def get_id_from_heslar(ident_cely) -> int:
     try:
         pk = Heslar.objects.get(ident_cely=ident_cely).pk
         return pk

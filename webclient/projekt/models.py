@@ -44,7 +44,7 @@ from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PROJEKT_TYP
-from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from projekt.doc_utils import DocumentCreator, OznameniPDFCreator, ZruseniPDFCreator
@@ -704,7 +704,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                     pristupnosti_ids.add(akce.archeologicky_zaznam.pristupnost.id)
         if len(pristupnosti_ids) > 0:
             return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
-        return Heslar.objects.get(ident_cely="HES-000865")
+        return Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
 
     @property
     def planovane_zahajeni_str(self):

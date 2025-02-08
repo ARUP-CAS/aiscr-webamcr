@@ -22,7 +22,7 @@ from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
-from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR
+from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR, PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import User
@@ -104,7 +104,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
                 return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
         except ValueError as err:
             logger.debug("pian.models.Pian.pristupnost_pom.value_error", extra={"err": err})
-        return Heslar.objects.get(ident_cely="HES-000865")
+        return Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
 
     @property
     def pristupnost(self):
@@ -124,7 +124,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             pristupnosti_ids.add(added_pristupnost_id)
         if len(pristupnosti_ids) > 0:
             return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
-        return Heslar.objects.get(ident_cely="HES-000865")
+        return Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
 
     class Meta:
         db_table = "pian"
