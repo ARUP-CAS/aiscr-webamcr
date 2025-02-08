@@ -1,7 +1,7 @@
 import logging
 
 import crispy_forms
-from arch_z.models import ArcheologickyZaznam
+from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
     OBLAST_CECHY,
     OBLAST_CHOICES,
@@ -13,7 +13,8 @@ from core.constants import (
 from core.forms import SelectMultipleSeparator
 from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
-from django.db.models import Q, QuerySet
+from django.db.models import OuterRef, Q, QuerySet, Subquery
+from django.db.models.functions import Coalesce
 from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
 from django_filters import CharFilter, DateFromToRangeFilter, FilterSet, ModelMultipleChoiceFilter, MultipleChoiceFilter
@@ -26,9 +27,16 @@ from heslar.hesla import (
     HESLAR_PRISTUPNOST,
     HESLAR_PROJEKT_TYP,
 )
+from heslar.hesla_dynamicka import (
+    PRISTUPNOST_ANONYM_ID,
+    TYP_PROJEKTU_BADATELSKY_ID,
+    TYP_PROJEKTU_PRUZKUM_ID,
+    TYP_PROJEKTU_ZACHRANNY_ID,
+)
 from heslar.models import Heslar, RuianKatastr, RuianKraj, RuianOkres
 from heslar.views import heslar_12
 from historie.models import Historie
+from pas.models import SamostatnyNalez
 from projekt.forms import ProjektFilterForm
 from projekt.models import Projekt
 from psycopg2._range import DateRange
@@ -680,16 +688,30 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         ).distinct()
 
     def filter_pristupnost(self, queryset, name, value):
-        if Heslar.objects.get(ident_cely="HES-000865") in value:
-            return queryset.filter(
-                Q(samostatne_nalezy__pristupnost__in=value)
-                | Q(akce__archeologicky_zaznam__pristupnost__in=value)
-                | Q(Q(samostatne_nalezy__isnull=True) & Q(akce__isnull=True))
+        if not value:
+            return queryset
+        first_samostatne_nalez_pristupnost = Subquery(
+            SamostatnyNalez.objects.filter(projekt=OuterRef("pk"))
+            .order_by("pristupnost__razeni")
+            .values("pristupnost")[:1]
+        )
+        first_akce_pristupnost = Subquery(
+            Akce.objects.filter(projekt=OuterRef("pk"))
+            .order_by("archeologicky_zaznam__pristupnost__razeni")
+            .values("archeologicky_zaznam__pristupnost")[:1]
+        )
+        queryset = queryset.annotate(
+            first_pristupnost=Coalesce(first_samostatne_nalez_pristupnost, first_akce_pristupnost)
+        )
+        if Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID) in value:
+            queryset = queryset.filter(
+                Q(first_pristupnost__in=value)
+                | (Q(typ_projektu__in=(TYP_PROJEKTU_ZACHRANNY_ID, TYP_PROJEKTU_PRUZKUM_ID)) & Q(akce__isnull=True))
+                | (Q(typ_projektu=TYP_PROJEKTU_BADATELSKY_ID) & Q(samostatne_nalezy__isnull=True))
             ).distinct()
         else:
-            return queryset.filter(
-                Q(samostatne_nalezy__pristupnost__in=value) | Q(akce__archeologicky_zaznam__pristupnost__in=value)
-            ).distinct()
+            queryset = queryset.filter(first_pristupnost__in=value).distinct()
+        return queryset
 
     class Meta:
         model = Projekt
