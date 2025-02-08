@@ -18,6 +18,7 @@ from core.constants import (
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
+    SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
 from core.forms import CheckStavNotChangedForm, TransaltionImportForm
 from core.ident_cely import get_record_from_ident
@@ -146,16 +147,11 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         )
         messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
         if request.method == "POST":
-            if url_has_allowed_host_and_scheme(
-                request.POST.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
-            ):
-                safe_redirect = request.POST.get("next", "core:home")
-            else:
-                safe_redirect = "/"
-        elif url_has_allowed_host_and_scheme(
-            request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
-        ):
-            safe_redirect = request.GET.get("next", "core:home")
+            next_url = request.POST.get("next", "core:home")
+        else:
+            next_url = request.GET.get("next", "core:home")
+        if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+            safe_redirect = next_url
         else:
             safe_redirect = "/"
         return redirect(safe_redirect)
@@ -440,6 +436,8 @@ def post_upload(request):
                 )
             else:
                 renamed = False
+            if mimetype in ["image/png", "image/jpeg", "image/tiff"] and samostatny_nalez.exists():
+                soubor_data = Soubor.remove_gps_data(soubor_data)
             try:
                 rep_bin_file = conn.save_binary_file(new_name, mimetype, soubor_data)
             except FedoraUpdatedByAnotherTransactionError as err:
@@ -539,6 +537,11 @@ def post_upload(request):
                 )
             else:
                 renamed = False
+            if (
+                mimetype in ["image/png", "image/jpeg", "image/tiff"]
+                and soubor_instance.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE
+            ):
+                soubor_data = Soubor.remove_gps_data(soubor_data)
             if soubor_instance.repository_uuid is not None:
                 extension = soubor.name.split(".")[-1]
                 new_name = f'{".".join(soubor_instance.nazev.split(".")[:-1])}.{extension}'

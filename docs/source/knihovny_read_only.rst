@@ -112,7 +112,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - UNKNOWN
      - https://www.attrs.org/en/stable/changelog.html
    * - babel
-     - 2.16.0
+     - 2.17.0
      - BSD License
      - https://babel.pocoo.org/
    * - beautifulsoup4
@@ -124,7 +124,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/billiard
    * - black
-     - 24.10.0
+     - 25.1.0
      - MIT License
      - https://github.com/psf/black
    * - celery
@@ -132,7 +132,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://docs.celeryq.dev/
    * - certifi
-     - 2024.12.14
+     - 2025.1.31
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
@@ -340,9 +340,9 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - UNKNOWN
    * - isort
-     - 5.13.2
+     - 6.0.0
      - MIT License
-     - https://pycqa.github.io/isort/
+     - https://github.com/pycqa/isort/blob/main/CHANGELOG.md
    * - kombu
      - 5.4.2
      - BSD License
@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.53
+     - 8.13.54
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - pillow
@@ -464,7 +464,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 5.1.0
+     - 5.2.0
      - BSD License
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -488,7 +488,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://github.com/ahupp/python-magic
    * - pytz
-     - 2024.2
+     - 2025.1
      - MIT License
      - http://pythonhosted.org/pytz
    * - pyzstd
@@ -524,7 +524,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rjsmin/
    * - selenium
-     - 4.28.0
+     - 4.28.1
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
@@ -584,7 +584,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/andialbrecht/sqlparse
    * - tablib
-     - 3.7.0
+     - 3.8.0
      - MIT License
      - https://tablib.readthedocs.io
    * - tabulate

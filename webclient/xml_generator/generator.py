@@ -15,10 +15,10 @@ from lxml import etree
 from lxml import etree as ET
 from xml_generator.models import ModelWithMetadata
 
-AMCR_NAMESPACE_URL = "https://api.aiscr.cz/schema/amcr/2.0/"
-AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd"
+AMCR_NAMESPACE_URL = "https://api.aiscr.cz/schema/amcr/2.1/"
+AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.1/amcr.xsd"
 AMCR_XSD_FILENAME = "amcr.xsd"
-SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.0/ https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd"
+SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.1/ https://api.aiscr.cz/schema/amcr/2.1/amcr.xsd"
 logger = logging.getLogger(__name__)
 
 

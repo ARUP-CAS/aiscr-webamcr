@@ -1,5 +1,10 @@
-<div>
+<div class="section-name">{{vb.label}}</div>
+<div class="pl-4">
 {% for vb in field.zaznamy %}
-    <li> <a href="{% url 'core:redirect_ident' vb.ident_cely %}" target="_blank">{{ vb.ident_cely }}</a> ({{ vb.typ }}) {{vb.poloha_gml}} {{vb.poloha_wkt}}</li>
+    <li>
+        <a href="{% url 'core:redirect_ident' vb.ident_cely %}" target="_blank">{{ vb.ident_cely }}</a> ({{ vb.typ }})
+        <br /><span class="small">{{vb.poloha_gml}}</span>
+        <br /><span class="small">{{vb.poloha_wkt}}</span>
+    </li>
 {% endfor %}
 </div>

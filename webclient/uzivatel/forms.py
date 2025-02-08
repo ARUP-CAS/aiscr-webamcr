@@ -8,7 +8,7 @@ from crispy_forms.layout import Div, Field, Layout
 from dal import autocomplete
 from django import forms
 from django.conf import settings
-from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, UserChangeForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
@@ -20,8 +20,7 @@ from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Invisible
 from django_registration.backends.activation.forms import ActivationForm
 from django_registration.forms import RegistrationForm
-from pid.fields import OrcidAutocompleteField
-from pid.verificators import verify_orcid, verify_wikidata
+from pid.fields import OrcidAutocompleteField, WikiDataAutocompleteField
 from services.mailer import Mailer
 
 from .models import Osoba, User, UserNotificationType
@@ -120,6 +119,7 @@ class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
             "organizace",
             "password1",
             "password2",
+            "orcid",
             "captcha",
         )
 
@@ -165,6 +165,7 @@ class AuthUserChangeForm(forms.ModelForm):
             help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
             instance=self.instance,
             initial_value=args[0].get("orcid") if args else None,
+            required=False,
         )
 
 
@@ -234,7 +235,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         )
 
 
-class AuthUserChangeAdminForm(forms.ModelForm):
+class AuthUserChangeAdminForm(UserChangeForm):
     class Meta:
         model = User
         fields = "__all__"
@@ -449,7 +450,21 @@ class OsobaForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        create = kwargs.pop("create", False)
         super(OsobaForm, self).__init__(*args, **kwargs)
+        if create:
+            self.fields["orcid"] = OrcidAutocompleteField(
+                widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+                label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
+                help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
+                required=False,
+            )
+            self.fields["wikidata"] = WikiDataAutocompleteField(
+                widget=autocomplete.ListSelect2(url="pid:wikidata-autocomplete"),
+                label=_("heslar.forms.OsobaAdminForm.wikidata.label"),
+                instance=self.instance,
+                required=False,
+            )
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
@@ -464,24 +479,6 @@ class OsobaForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
-
-    def clean_orcid(self):
-        orcid = self.cleaned_data.get("orcid")
-        if not verify_orcid(orcid):
-            raise forms.ValidationError(
-                _("uzivatel.forms.OsobaForm.orcid.error"),
-                code="orcid_error",
-            )
-        return orcid
-
-    def clean_wikidata(self):
-        wikidata = self.cleaned_data.get("wikidata")
-        if not verify_wikidata(wikidata):
-            raise forms.ValidationError(
-                _("uzivatel.forms.OsobaForm.wikidata.error"),
-                code="orcid_error",
-            )
-        return wikidata
 
 
 class AuthActivationForm(ActivationForm):
