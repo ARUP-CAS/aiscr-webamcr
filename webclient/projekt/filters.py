@@ -706,8 +706,8 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         if Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID) in value:
             queryset = queryset.filter(
                 Q(first_pristupnost__in=value)
-                | (Q(typ_projektu__in=(TYP_PROJEKTU_ZACHRANNY_ID, TYP_PROJEKTU_PRUZKUM_ID)) & Q(akce__isnull=True))
-                | (Q(typ_projektu=TYP_PROJEKTU_BADATELSKY_ID) & Q(samostatne_nalezy__isnull=True))
+                | (Q(typ_projektu__in=(TYP_PROJEKTU_ZACHRANNY_ID, TYP_PROJEKTU_BADATELSKY_ID)) & Q(akce__isnull=True))
+                | (Q(typ_projektu=TYP_PROJEKTU_PRUZKUM_ID) & Q(samostatne_nalezy__isnull=True))
             ).distinct()
         else:
             queryset = queryset.filter(first_pristupnost__in=value).distinct()
