@@ -264,4 +264,5 @@ class ContinuePidProcessing(AdminRecordProcessingView):
                     result["result"] = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
         else:
             result["result"] = _("core.admin.FedoraCustomAdminSite.cannot_load_record")
+        fedora_transaction.mark_transaction_as_closed()
         return result
