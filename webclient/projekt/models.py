@@ -42,6 +42,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
+from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PROJEKT_TYP
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
@@ -205,7 +206,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Metóda pro nastavení pomocného stavu vytvořený.
         """
         self.stav = PROJEKT_STAV_VYTVORENY
-        owner = get_object_or_404(User, email="amcr@arup.cas.cz")
+        owner = get_object_or_404(User, ident_cely=hesla_dynamicka.ADMIN_USER)
         hist, created = Historie.objects.update_or_create(
             vazba=self.historie, typ_zmeny=OZNAMENI_PROJ, defaults={"uzivatel": owner, "datum_zmeny": now()}
         )
@@ -216,7 +217,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Metóda pro nastavení stavu oznámený a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_OZNAMENY
-        owner = get_object_or_404(User, email="amcr@arup.cas.cz")
+        owner = get_object_or_404(User, ident_cely=hesla_dynamicka.ADMIN_USER)
         hist, created = Historie.objects.update_or_create(
             vazba=self.historie, typ_zmeny=OZNAMENI_PROJ, defaults={"uzivatel": owner, "datum_zmeny": now()}
         )

@@ -8,6 +8,7 @@ from cacheops import invalidate_model
 from celery import shared_task
 from core.connectors import RedisConnector
 from core.constants import (
+    ADMIN_USER_EMAIL,
     PRISTUPNOST_MIN_RAZENI,
     PROJEKT_STAV_VYTVORENY,
     PROJEKT_STAV_ZAPSANY,
@@ -395,9 +396,9 @@ def cancel_old_projects():
         for project in projects:
             project: Projekt
             project.active_transaction = FedoraTransaction()
-            project.set_zruseny(User.objects.get(email="amcr@arup.cas.cz"), cancelled_string, RUSENI_STARE_PROJ)
+            project.set_zruseny(User.objects.get(email=ADMIN_USER_EMAIL), cancelled_string, RUSENI_STARE_PROJ)
             if project.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
-                project.create_cancel_confirmation_document(User.objects.get(email="amcr@arup.cas.cz"))
+                project.create_cancel_confirmation_document(User.objects.get(email=ADMIN_USER_EMAIL))
             project.close_active_transaction_when_finished = True
             project.save()
             logger.debug("core.cron.cancel_old_projects.do.project", extra={"ident_cely": project.ident_cely})

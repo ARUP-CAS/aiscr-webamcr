@@ -87,6 +87,7 @@ from django_tables2 import SingleTableMixin
 from django_tables2.export import ExportMixin, TableExport
 from dokument.models import Dokument, get_dokument_soubor_name
 from ez.models import ExterniZdroj
+from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import (
     PRISTUPNOST_ANONYM_ID,
@@ -465,7 +466,7 @@ def post_upload(request):
                 logger.debug("core.views.post_upload.saving", extra={"s": soubor_instance})
                 soubor_instance.save()
                 if not request.user.is_authenticated:
-                    user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
+                    user_admin = User.objects.filter(ident_cely=hesla_dynamicka.ADMIN_USER).first()
                     soubor_instance.zaznamenej_nahrani(user_admin, original_filename)
                 else:
                     soubor_instance.zaznamenej_nahrani(request.user, original_filename)
@@ -473,7 +474,7 @@ def post_upload(request):
                 logger.debug("core.views.post_upload.already_exists", extra={"s": soubor_instance})
                 soubor_instance.save()
                 if not request.user.is_authenticated:
-                    user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
+                    user_admin = User.objects.filter(ident_cely=hesla_dynamicka.ADMIN_USER).first()
                     soubor_instance.zaznamenej_nahrani(user_admin, original_filename)
                 else:
                     soubor_instance.zaznamenej_nahrani(request.user, original_filename)

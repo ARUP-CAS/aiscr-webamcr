@@ -191,3 +191,4 @@ LIMIT_PRVKU_ZOBRAZENI_HEATMAP = 7_000  # Počet prvků v mapovém výřezu, při
 EPSG_WGS84 = 4326
 
 AIS_AMCR_ROR = "https://ror.org/01a7rqj69"
+ADMIN_USER_EMAIL = "amcr@arup.cas.cz"

@@ -219,6 +219,8 @@ JAZYK_CS = get_id_from_heslar("HES-000167")
 JAZYK_NERELEVANTNI = get_id_from_heslar("HES-000174")
 PRIMARNE_DIGITALNI = get_id_from_heslar("HES-001166")
 
+ADMIN_USER = "U-000322"
+
 heslar = get_settings("constants", "heslar")
 for key, value in heslar.items():
     if key not in globals():
@@ -263,3 +265,7 @@ for key, values in osoba_group.items():
     if key not in globals():
         logger.warning("heslar.hesla_dynamicka.osoba_group.variable_not_exist", extra={"key": key})
     globals()[key] = group
+
+user = get_settings("constants", "user")
+for key, value in osoba_group.items():
+    globals()[key] = value
