@@ -1,4 +1,3 @@
-import html
 import json
 import logging
 import os
@@ -19,6 +18,7 @@ from core.constants import (
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
+    SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
 from core.forms import CheckStavNotChangedForm, TransaltionImportForm
 from core.ident_cely import get_record_from_ident
@@ -35,10 +35,17 @@ from core.message_constants import (
     TRANSLATION_DELETE_SUCCESS,
     TRANSLATION_UPLOAD_SUCCESS,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
+    ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE,
     ZAZNAM_USPESNE_SMAZAN,
 )
 from core.models import Soubor
-from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.repository_connector import (
+    FedoraError,
+    FedoraRepositoryConnector,
+    FedoraTransaction,
+    FedoraTransactionStatus,
+    FedoraUpdatedByAnotherTransactionError,
+)
 from core.utils import (
     find_pos_with_backup,
     get_heatmap_pas,
@@ -58,6 +65,7 @@ from django.contrib.gis.db.models.functions import AsWKT
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.core.validators import URLValidator
+from django.db import transaction
 from django.db.models import FilteredRelation, Q, Value
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseRedirect, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -67,6 +75,7 @@ from django.utils.functional import cached_property
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views import View
+from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
@@ -129,7 +138,6 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "method": request.method},
     )
     soubor: Soubor = get_object_or_404(Soubor, pk=pk)
-    fedora_transaction = FedoraTransaction()
     try:
         check_soubor_vazba(typ_vazby, ident_cely, pk)
     except ZaznamSouborNotmatching as err:
@@ -139,26 +147,51 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         )
         messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
         if request.method == "POST":
-            if url_has_allowed_host_and_scheme(
-                request.POST.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
-            ):
-                safe_redirect = request.POST.get("next", "core:home")
-            else:
-                safe_redirect = "/"
-        elif url_has_allowed_host_and_scheme(
-            request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
-        ):
-            safe_redirect = request.GET.get("next", "core:home")
+            next_url = request.POST.get("next", "core:home")
+        else:
+            next_url = request.GET.get("next", "core:home")
+        if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+            safe_redirect = next_url
         else:
             safe_redirect = "/"
         return redirect(safe_redirect)
     if request.method == "POST":
-        logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor.pk})
+        fedora_transaction = FedoraTransaction()
+        logger.debug(
+            "core.views.delete_file.not_deleted",
+            extra={"soubor": soubor.pk, "fedora_transaction": fedora_transaction.uid},
+        )
         soubor.deleted_by_user = request.user
         soubor.active_transaction = fedora_transaction
         soubor_pk = soubor.pk
-        soubor.delete()
-        if Soubor.objects.filter(pk=soubor_pk).exists():
+        transaction_error = False
+        with transaction.atomic():
+            try:
+                soubor.delete()
+                connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
+                if not request.POST.get("dropzone", False):
+                    logger.debug("core.views.delete_file.deleted.delete_binary_file", extra={"soubor_pk": soubor_pk})
+                    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+                    connector.delete_binary_file(soubor)
+                else:
+                    logger.debug(
+                        "core.views.delete_file.deleted.delete_binary_file_completely", extra={"soubor_pk": soubor_pk}
+                    )
+                    connector.delete_binary_file_completely(soubor)
+                    fedora_transaction.mark_transaction_as_closed()
+                    return JsonResponse({"success": True})
+            except FedoraUpdatedByAnotherTransactionError as err:
+                logger.debug(
+                    "core.views.delete_file.another_transaction",
+                    extra={"soubor_pk": soubor_pk, "err": err, "fedora_transaction": fedora_transaction.uid},
+                )
+                messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
+                transaction_error = True
+                if request.POST.get("dropzone", False):
+                    if fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+                        fedora_transaction.rollback_transaction()
+                    return JsonResponse({"success": False}, status=400)
+        if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
             # Not sure if 404 is the only correct option
             logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
@@ -173,18 +206,6 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 )
             fedora_transaction.rollback_transaction()
             return JsonResponse({"messages": django_messages}, status=400)
-        else:
-            logger.debug("core.views.delete_file.deleted", extra={"soubor_pk": soubor_pk})
-            connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
-            if not request.POST.get("dropzone", False):
-                logger.debug("core.views.delete_file.deleted.delete_binary_file", extra={"soubor_pk": soubor_pk})
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-                connector.delete_binary_file(soubor)
-            else:
-                logger.debug(
-                    "core.views.delete_file.deleted.delete_binary_file_completely", extra={"soubor_pk": soubor_pk}
-                )
-                connector.delete_binary_file_completely(soubor)
         next_url = request.POST.get("next")
         if next_url:
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
@@ -194,7 +215,10 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                 response = reverse("core:home")
         else:
             response = reverse("core:home")
-        fedora_transaction.mark_transaction_as_closed()
+        if not transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+            fedora_transaction.mark_transaction_as_closed()
+        elif transaction_error and fedora_transaction.status == FedoraTransactionStatus.ACTIVE:
+            fedora_transaction.rollback_transaction()
         return JsonResponse({"redirect": response})
     else:
         context = {
@@ -229,13 +253,13 @@ class DownloadFile(LoginRequiredMixin, View):
             return redirect(safe_redirect)
         soubor: Soubor = get_object_or_404(Soubor, id=pk)
         if soubor.repository_uuid:
-            if self.thumb_small:
+            if self.thumb_small and soubor.small_thumbnail is not None:
                 return soubor.small_thumbnail
-            elif self.thumb_large:
+            elif self.thumb_large and soubor.large_thumbnail is not None:
                 return soubor.large_thumbnail
-            else:
+            elif soubor.content_file_response is not None:
                 return soubor.content_file_response
-        return HttpResponse()
+        raise Http404
 
 
 class DownloadThumbnailSmall(DownloadFile):
@@ -412,7 +436,18 @@ def post_upload(request):
                 )
             else:
                 renamed = False
-            rep_bin_file = conn.save_binary_file(new_name, mimetype, soubor_data)
+            if mimetype in ["image/png", "image/jpeg", "image/tiff"] and samostatny_nalez.exists():
+                soubor_data = Soubor.remove_gps_data(soubor_data)
+            try:
+                rep_bin_file = conn.save_binary_file(new_name, mimetype, soubor_data)
+            except FedoraUpdatedByAnotherTransactionError as err:
+                logger.debug("core.views.post_upload.upload_failed_another_transaction", extra={"error": err})
+                help_translation = _("core.views.post_upload.upload_failed_another_transaction")
+                return JsonResponse({"error": help_translation}, status=400)
+            except FedoraError as err:
+                logger.error("core.views.post_upload.fedora_error", extra={"error": err})
+                help_translation = _("core.views.post_upload.fedora_error")
+                return JsonResponse({"error": help_translation}, status=400)
             sha_512 = rep_bin_file.sha_512
             soubor_instance: Soubor = Soubor(
                 vazba=objekt.soubory,
@@ -502,10 +537,26 @@ def post_upload(request):
                 )
             else:
                 renamed = False
+            if (
+                mimetype in ["image/png", "image/jpeg", "image/tiff"]
+                and soubor_instance.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE
+            ):
+                soubor_data = Soubor.remove_gps_data(soubor_data)
             if soubor_instance.repository_uuid is not None:
                 extension = soubor.name.split(".")[-1]
                 new_name = f'{".".join(soubor_instance.nazev.split(".")[:-1])}.{extension}'
-                rep_bin_file = conn.update_binary_file(new_name, mimetype, soubor_data, soubor_instance.repository_uuid)
+                try:
+                    rep_bin_file = conn.update_binary_file(
+                        new_name, mimetype, soubor_data, soubor_instance.repository_uuid
+                    )
+                except FedoraUpdatedByAnotherTransactionError as err:
+                    logger.debug("core.views.post_upload.update_failed_another_transaction", extra={"error": err})
+                    help_translation = _("core.views.post_upload.update_failed_another_transaction")
+                    return JsonResponse({"error": help_translation}, status=400)
+                except FedoraError as err:
+                    logger.error("core.views.post_upload.fedora_error", extra={"error": err})
+                    help_translation = _("core.views.post_upload.fedora_error")
+                    return JsonResponse({"error": help_translation}, status=400)
                 logger.debug(
                     "core.views.post_upload.update",
                     extra={"pk": soubor_instance.pk, "new_name": new_name, "original_name": original_name},
@@ -895,7 +946,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     toolbar = "toolbar_akce.html"
     redis_value_list_field = None
     redis_snapshot_prefix = None
-    progress_bar_coefficient = 0.8
+    vypis_app = "core"
 
     def create_export(self, export_format):
         from redis import Redis
@@ -907,13 +958,27 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             return aborted
 
         def update_progress_bar(r_inner: Redis, key_inner: str, new_value: int):
-            new_value *= self.progress_bar_coefficient
             r_inner.set(key_inner, int(new_value))
+
+        def file_iterator(content, r, redis_variable_name, chunk_size=8192):
+            bytes_sent = 0
+            file_size = len(content)
+            try:
+                for i in range(0, len(content), chunk_size):
+                    chunk = content[i : i + chunk_size]
+                    bytes_sent += len(chunk)
+                    if file_size > 50 and bytes_sent % (file_size // 50) < chunk_size:
+                        update_progress_bar(r, redis_variable_name, int(bytes_sent / file_size * 50 + 50))
+                    yield chunk
+            except GeneratorExit:
+                logger.warning("core.views.SearchListView.file_iterator.Connection_closed_by_client")
+            except Exception as e:
+                logger.warning("core.views.SearchListView.file_iterator.Error_during_streaming", extra={"errors": e})
+                raise
 
         logger.debug("core.views.SearchListView.create_export.start", extra={"export_format": export_format})
         if self.redis_value_list_field and self.redis_snapshot_prefix:
             r = RedisConnector.get_connection()
-            response = HttpResponse()
             dataset = self.get_table_data()
             ident_cely_list = set(dataset.values_list(self.redis_value_list_field, flat=True))
             ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
@@ -926,17 +991,18 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             r.set(redis_variable_name, 0)
             ident_cely_list_len = len(ident_cely_list)
             pipe = r.pipeline()
+            data = []
             for i, key in enumerate(ident_cely_list):
                 pipe.hgetall(key)
-                if i % 1000 == 0:
+                if (ident_cely_list_len > 100 and i % (ident_cely_list_len // 50) == 0) or i == ident_cely_list_len - 1:
                     if check_if_aborted(r, redis_variable_name):
                         logger.debug(
                             "core.views.SearchListView.create_export.aborted",
                             extra={"redis_variable_name": redis_variable_name},
                         )
                         return HttpResponse()
-                    update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 60))
-            data = pipe.execute()
+                    update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 50))
+                    data.extend(pipe.execute())
             data = pandas.DataFrame(data)
             data.columns = [x.decode("utf-8") for x in data.columns]
             filtered_column_order = [col.name for col in self.get_table().columns if col.name in data.columns]
@@ -954,23 +1020,22 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 )
                 return HttpResponse()
             if export_format == TableExport.CSV:
-                response["Content-Disposition"] = 'attachment; filename="export.csv"'
-                data.to_csv(path_or_buf=response, index=False)
+                filetype = 'attachment; filename="export.csv"'
+                resdata = data.to_csv(index=False)
             elif export_format == TableExport.JSON:
-                response["Content-Disposition"] = 'attachment; filename="export.json"'
-                data.to_json(path_or_buf=response, orient="records", force_ascii=False, index=False)
+                filetype = 'attachment; filename="export.json"'
+                resdata = data.to_json(orient="records", force_ascii=False, index=False)
             elif export_format == TableExport.XLSX:
                 excel_file = BytesIO()
                 with pandas.ExcelWriter(excel_file, engine="openpyxl") as writer:
                     data.to_excel(writer, index=False)
-                excel_file.seek(0)
-                response = HttpResponse(
-                    excel_file.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-                response["Content-Disposition"] = "attachment; filename=export.xlsx"
+                resdata = excel_file.getvalue()
+                filetype = "attachment; filename=export.xlsx"
             else:
                 return HttpResponse(_("core.views.SearchListView.create_export.export_format_not_supported"))
-            update_progress_bar(r, redis_variable_name, 100)
+            response = StreamingHttpResponse(file_iterator(resdata, r, redis_variable_name))
+            response["Content-Disposition"] = filetype
+            update_progress_bar(r, redis_variable_name, 50)
             logger.debug(
                 "core.views.SearchListView.create_export.end",
                 extra={
@@ -985,7 +1050,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                     extra={"redis_variable_name": redis_variable_name},
                 )
                 return HttpResponse()
-            response["Content-Length"] = len(response.content)
+            response["X-Accel-Buffering"] = "no"  # Zakázání bufferování v NGINX
             return response
 
     def init_translations(self):
@@ -1026,41 +1091,13 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["toolbar_name"] = self.toolbar_name
         context["toolbar_label"] = self.toolbar_label
         context["sort_params"] = self._get_sort_params()
+        context["idents"] = context["table"].get_all_idents()
+        context["vypis_app"] = self.vypis_app
         return context
 
-
-class SearchListChangeColumnsView(LoginRequiredMixin, View):
-    """
-    Třída pohledu pro změnu zobrazení sloupcu u tabulky.
-    """
-
-    def post(self, request, *args, **kwargs):
-        if "vychozi_skryte_sloupce" not in request.session:
-            request.session["vychozi_skryte_sloupce"] = {}
-        app = json.loads(request.body.decode("utf8"))["app"]
-        sloupec = html.escape(json.loads(request.body.decode("utf8"))["sloupec"])
-        zmena = json.loads(request.body.decode("utf8"))["zmena"]
-        if app not in request.session["vychozi_skryte_sloupce"]:
-            request.session["vychozi_skryte_sloupce"][app] = []
-        skryte_sloupce = request.session["vychozi_skryte_sloupce"][app]
-        if zmena == "zobraz":
-            try:
-                skryte_sloupce.remove(sloupec)
-                request.session.modified = True
-                help_translation = _("core.views.SearchListChangeColumnsView.show")  # Odebrano ze skrytych
-                return HttpResponse(f"{help_translation} {sloupec}")
-            except ValueError:
-                logger.error(
-                    "core.SearchListChangeColumnsView.post.odebrat_sloupec_z_vychozich.error",
-                    extra={"sloupec": sloupec},
-                )  # Nelze odebrat sloupec
-                help_translation = _("core.views.SearchListChangeColumnsView.failed")
-                HttpResponse(f"{help_translation} {sloupec}", status=400)
-        else:
-            skryte_sloupce.append(sloupec)
-            request.session.modified = True
-        help_translation = _("core.views.SearchListChangeColumnsView.hide")
-        return HttpResponse(f"{help_translation} {sloupec}")
+    @method_decorator(never_cache)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 
 class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):

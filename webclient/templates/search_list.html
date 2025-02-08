@@ -10,7 +10,8 @@
 {% block head %}{% endblock %}
 
 {% block content %}
-  <div class="app-entity-{% if app == "spoluprace" %}samostatny_nalez{%else%}{{app}}{%endif%} app-table-list-container">
+  <div id="{{ table.uniq_table_class_name }}" class="column-shifter-container app-entity-{% if app == "spoluprace" %}samostatny_nalez{%else%}{{app}}{%endif%} app-table-list-container">
+
     {% include toolbar with name=toolbar_name %}
 
     {% if filter %}
@@ -91,6 +92,11 @@
                       {% trans "templates.searchList.stahnout.label" %} <code>.{{ format }}</code>
                     </a>
                   {% endfor %}
+                  {% if app != "spoluprace"  and idents %}
+                  <a class="dropdown-item" href="{% url 'vypis:vypisy' vypis_app idents %}" target='_blank'>
+                    {% trans "templates.searchList.vypis.label" %}
+                  </a>
+                  {% endif %}
                 </div>
               </div>
             </div>
@@ -154,54 +160,7 @@
         $(this).tooltip('hide')
       }
     });
-    // send change in columns shown
-    const getCookie = (name) => {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-          let cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-              let cookie = jQuery.trim(cookies[i]);
-              // Does this cookie string begin with the name we want?
-              if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                  break;
-              }
-          }
-      }
-      return cookieValue;
-    }
-
-    const zmen_status_sloupce = (sloupec, stav_sloupce,target) => {
-      if (stav_sloupce == "off"){
-        zmena = "zobraz"
-        target.setAttribute("data-state","on")
-      }
-      else {
-        zmena = "skryj"
-        target.setAttribute("data-state","off")
-      }
-        fetch("{% url 'core:zmena_sloupcu_listu' %}", {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                "X-CSRFToken": getCookie("csrftoken"),
-                "Accept": "application/json",
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "sloupec": sloupec,
-                "zmena": zmena,
-                "app": "{{app}}"
-            })
-        });
-    };
-
-    const userSelection = document.getElementsByClassName('btn-shift-column dropdown-item');
-
-    for (let i = 0; i < userSelection.length; i++) {
-        const sloupec = userSelection[i].getAttribute("data-td-class")
-        userSelection[i].addEventListener('click', (e) => zmen_status_sloupce(sloupec, userSelection[i].getAttribute("data-state"),e.currentTarget));
-    }
+   
 });
 $('#export-progress-modal').on('show.bs.modal', (event) => {
       const hideDownloadLink = () => {

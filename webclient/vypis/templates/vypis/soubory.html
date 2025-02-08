@@ -1,0 +1,40 @@
+<div class = "section-name">{{section.section_name}}</div>
+<div class="pl-4">
+    <div class="row">
+            <div class="thumb"><a href="{{section.path.value.download}}" target="_blank"><img src="{{section.small_thumbnail.value}}" class="image-nahled" loading="lazy" style="opacity:0" onload="this.style.opacity=100"></a></div>
+            <div class="file">
+                {% if section.path %}
+                <div class="row">
+                    <div class="label"><strong>{{ section.path.label }}:</strong></div>
+                    <div class="content"> {{ section.path.value.value }}</div>
+                </div>
+                {% endif %}
+                {% if section.rozsah %}
+                <div class="row">
+                    <div class="label"><strong>{{ section.rozsah.label }}:</strong></div>
+                    <div class="content"> {{ section.rozsah.value }}</div>
+                </div>
+                {% endif %}
+                {% if section.size_mb %}
+                <div class="row">
+                    <div class="label"><strong>{{ section.size_mb.label }}:</strong></div>
+                    <div class="content"> {{ section.size_mb.value }}</div>
+                </div>
+                {% endif %}
+                {% if section.sha_512 %}
+                <div class="row">
+                    <div class="label"><strong>{{ section.sha_512.label }}:</strong></div>
+                    <div class="content"> {{ section.sha_512.value }}</div>
+                </div>
+                {% endif %}
+            </div>
+            {% for key, value in section.items %}
+                {% if forloop.last and "historie" in key %}
+                <div class="col-12">
+                    {% include value.template with section=value %}
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>

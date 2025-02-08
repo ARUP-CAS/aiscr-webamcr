@@ -31,6 +31,12 @@ def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
         )
 
 
+@receiver(pre_save, sender=Osoba, weak=False)
+def osoba_pre_save(sender, instance: Osoba, **kwargs):
+    if instance.wikidata and "/" in instance.wikidata:
+        instance.wikidata = instance.wikidata.split("/")[-1]
+
+
 @receiver(post_save, sender=Osoba, weak=False)
 def osoba_save_metadata(sender, instance: Osoba, **kwargs):
     logger.debug("uzivatel.signals.osoba_save_metadata.start", extra={"ident_cely": instance.ident_cely})

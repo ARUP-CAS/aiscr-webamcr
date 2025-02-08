@@ -89,6 +89,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         limit_choices_to={"ident_cely__icontains": "S-E-"},
         default=only_notification_groups,
     )
+    orcid = models.CharField(max_length=255, blank=True, null=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -382,6 +383,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
     zanikla = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.zanikla"))
     ident_cely = models.CharField(max_length=20, unique=True)
     cteni_dokumentu = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.cteni_dokumentu"))
+    ror = models.CharField(max_length=255, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         """
@@ -417,6 +419,10 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
             else:
                 return ""
 
+    @property
+    def general(self):
+        return False
+
     class Meta:
         db_table = "organizace"
         ordering = [Collate("nazev_zkraceny", "cs-CZ-x-icu")]
@@ -445,6 +451,8 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
         blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rodne_prijmeni"), max_length=100
     )
     ident_cely = models.CharField(max_length=20, unique=True)
+    orcid = models.CharField(max_length=255, null=True, blank=True, unique=True)
+    wikidata = models.CharField(max_length=255, null=True, blank=True, unique=True)
 
     def save(self, *args, **kwargs):
         """
@@ -474,6 +482,11 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
 
     def __str__(self):
         return self.vypis_cely
+
+    @property
+    def anonym(self):
+        # TODO: Implement this when anonym detection is added
+        return False
 
 
 class UserNotificationType(ExportModelOperationsMixin("user_notification_type"), models.Model):

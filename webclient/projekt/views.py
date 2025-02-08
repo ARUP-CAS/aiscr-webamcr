@@ -8,6 +8,7 @@ from cacheops import invalidate_model
 from core.constants import (
     ARCHIVACE_PROJ,
     AZ_STAV_ZAPSANY,
+    D_STAV_ARCHIVOVANY,
     D_STAV_ZAPSANY,
     NAVRZENI_KE_ZRUSENI_PROJ,
     OBLAST_CECHY,
@@ -38,6 +39,7 @@ from core.constants import (
     ZAPSANI_PROJ,
     ZAPSANI_SN,
 )
+from core.coordTransform import convertToJTSK
 from core.decorators import allowed_user_groups
 from core.exceptions import MaximalIdentNumberError
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -99,6 +101,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views import View
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 from django.views.generic import RedirectView, TemplateView
 from dokument.models import Dokument, DokumentCast
@@ -107,7 +110,7 @@ from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie
-from oznameni.forms import OznamovatelProjektForm
+from oznameni.forms import OznamovatelProjektCreateForm
 from pas.models import SamostatnyNalez
 from pas.views import PasPermissionFilterMixin
 from pian.views import PianPermissionFilterMixin
@@ -118,6 +121,7 @@ from projekt.forms import (
     GenerovatExpertniListForm,
     GenerovatNovePotvrzeniForm,
     NavrhnoutZruseniProjektForm,
+    NeodeslatMailForm,
     PrihlaseniProjektForm,
     UkoncitVTerenuForm,
     UpravitDatumOznameniForm,
@@ -143,6 +147,7 @@ def index(request):
     return render(request, "projekt/index.html")
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
@@ -358,6 +363,7 @@ class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilter
             return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET", "POST"])
 def create(request):
@@ -374,7 +380,7 @@ def create(request):
             required = True
         else:
             required = False
-        form_oznamovatel = OznamovatelProjektForm(request.POST, required=required)
+        form_oznamovatel = OznamovatelProjektCreateForm(request.POST, required=required)
         if form_projekt.is_valid():
             logger.debug("projekt.views.create.form_valid")
             x2 = form_projekt.cleaned_data["coordinate_x2"]
@@ -398,6 +404,8 @@ def create(request):
             fedora_transaction: FedoraTransaction = projekt.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN)
             if x1 and x2:
                 projekt.geom = Point(x1, x2)
+                projekt.geom_sjtsk = Point(*convertToJTSK(x1, x2))
+                projekt.geom_system = "5514"
             try:
                 projekt.set_permanent_ident_cely(False)
             except MaximalIdentNumberError:
@@ -415,11 +423,14 @@ def create(request):
                         oznamovatel.active_transaction = fedora_transaction
                         oznamovatel.projekt = projekt
                         oznamovatel.save()
-                    if projekt.should_generate_confirmation_document:
-                        rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
-                    else:
-                        rep_bin_file = True
-                    projekt.send_ep01(rep_bin_file)
+                    send_mail = form_oznamovatel.cleaned_data["send_mail"]
+                    if send_mail:
+                        if projekt.should_generate_confirmation_document:
+                            rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
+                        else:
+                            rep_bin_file = True
+                        projekt.send_ep01(rep_bin_file)
+
                     projekt.close_active_transaction_when_finished = True
                     projekt.save()
                     return redirect("projekt:detail", ident_cely=projekt.ident_cely)
@@ -438,7 +449,7 @@ def create(request):
             logger.debug("projekt.views.create.form_projekt_not_valid", extra={"errors": form_projekt.errors})
     else:
         form_projekt = CreateProjektForm(required=required_fields, required_next=required_fields_next)
-        form_oznamovatel = OznamovatelProjektForm(uzamknout_formular=True)
+        form_oznamovatel = OznamovatelProjektCreateForm(uzamknout_formular=True)
     return render(
         request,
         "projekt/create.html",
@@ -452,6 +463,7 @@ def create(request):
     )
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
@@ -507,17 +519,15 @@ def edit(request, ident_cely):
             projekt = form.save(commit=False)
             projekt.save()
             old_geom = projekt.geom
-            new_geom = Point(x1, x2)
-            geom_changed = False
-            if old_geom is None or new_geom.coords != old_geom.coords:
-                projekt.geom = new_geom
-                projekt.save()
-                geom_changed = True
-                logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": projekt.geom})
-            else:
-                logger.warning("projekt.views.edit.form_valid.geom_not_updated")
-            if form.changed_data or geom_changed:
-                logger.debug("projekt.views.edit.form_valid.form_changed", extra={"changed_data": form.changed_data})
+            if x1 and x2:
+                new_geom = Point(x1, x2)
+                if old_geom is None or new_geom.coords != old_geom.coords:
+                    projekt.geom = new_geom
+                    projekt.geom_sjtsk = Point(*convertToJTSK(x1, x2))
+                    projekt.save()
+                    logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": projekt.geom})
+                else:
+                    logger.warning("projekt.views.edit.form_valid.geom_not_updated")
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             form.save_m2m()
@@ -627,6 +637,7 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
     typ_zmeny_lookup = ZAPSANI_PROJ
     redis_snapshot_prefix = "projekt"
     redis_value_list_field = "ident_cely"
+    vypis_app = "projekt"
 
     def init_translations(self):
         super().init_translations()
@@ -711,11 +722,15 @@ def schvalit(request, ident_cely):
                     extra={"old_ident": old_ident, "new_ident_cely": projekt.ident_cely},
                 )
         projekt.set_schvaleny(request.user, old_ident)
-        if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
-            rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
-        else:
-            rep_bin_file = None
-        projekt.send_ep01(rep_bin_file)
+        form = NeodeslatMailForm(request.POST)
+        if form.is_valid():
+            send_mail = form.cleaned_data["send_mail"]  # Získání hodnoty checkboxu
+            if send_mail:
+                if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
+                    rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
+                else:
+                    rep_bin_file = None
+                projekt.send_ep01(rep_bin_file)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
         logger.debug(
@@ -724,9 +739,11 @@ def schvalit(request, ident_cely):
         )
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": projekt.ident_cely})})
     form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
+    form = NeodeslatMailForm(initial={"send_mail": True})
     context = {
         "object": projekt,
         "title": _("projekt.views.schvalit.title.text"),
+        "form": form,
         "id_tag": "schvalit-form",
         "button": _("projekt.views.schvalit.submitButton.text"),
         "form_check": form_check,
@@ -995,6 +1012,10 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
+        for item in projekt.casti_dokumentu.all():
+            item: DokumentCast
+            if item.dokument.stav == D_STAV_ARCHIVOVANY:
+                item.dokument.doi_update()
         projekt.set_archivovany(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
@@ -1384,37 +1405,8 @@ def get_detail_template_shows(projekt, user):
     Returns:
         show: dictionary možností pro zobrazení.
     """
-    show_oznamovatel = False
-    if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
-        if user.is_archiver_or_more:
-            show_oznamovatel = True
-        elif user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
-            if projekt.stav == PROJEKT_STAV_ZAPSANY:
-                show_oznamovatel = True
-            elif projekt.organizace == user.organizace:
-                if projekt.stav in [
-                    PROJEKT_STAV_PRIHLASENY,
-                    PROJEKT_STAV_ZAHAJENY_V_TERENU,
-                    PROJEKT_STAV_UKONCENY_V_TERENU,
-                ]:
-                    show_oznamovatel = True
-                elif projekt.stav == PROJEKT_STAV_UZAVRENY:
-                    last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
-                    if last_uzavreni and last_uzavreni["datum"] >= datetime.now(
-                        last_uzavreni["datum"].tzinfo
-                    ) - timedelta(days=90):
-                        show_oznamovatel = True
-            elif projekt.stav in [
-                PROJEKT_STAV_PRIHLASENY,
-                PROJEKT_STAV_ZAHAJENY_V_TERENU,
-                PROJEKT_STAV_UKONCENY_V_TERENU,
-                PROJEKT_STAV_UZAVRENY,
-            ]:
-                last_prihlaseni = projekt.historie.get_last_transaction_date(PRIHLASENI_PROJ)
-                if last_prihlaseni and last_prihlaseni["datum"] >= datetime.now(
-                    last_prihlaseni["datum"].tzinfo
-                ) - timedelta(days=30):
-                    show_oznamovatel = True
+    show_oznamovatel = get_show_oznamovatel(projekt, user)
+
     show_samostatne_nalezy = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
     show_pridat_akci = False
     show_pridat_sam_nalez = False
@@ -1475,8 +1467,43 @@ def get_detail_template_shows(projekt, user):
         "zadost_odhlaseni_projektu": check_permissions(
             p.actionChoices.projekt_zadost_odhlaseni_projektu, user, projekt.ident_cely
         ),
+        "vypis": check_permissions(p.actionChoices.vypis_projekt, user, projekt.ident_cely),
     }
     return show
+
+
+def get_show_oznamovatel(projekt, user):
+    if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
+        if user.is_archiver_or_more:
+            return True
+        elif user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
+            if projekt.stav == PROJEKT_STAV_ZAPSANY:
+                return True
+            elif projekt.organizace == user.organizace:
+                if projekt.stav in [
+                    PROJEKT_STAV_PRIHLASENY,
+                    PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                    PROJEKT_STAV_UKONCENY_V_TERENU,
+                ]:
+                    return True
+                elif projekt.stav == PROJEKT_STAV_UZAVRENY:
+                    last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
+                    if last_uzavreni and last_uzavreni["datum"] >= datetime.now(
+                        last_uzavreni["datum"].tzinfo
+                    ) - timedelta(days=90):
+                        return True
+            elif projekt.stav in [
+                PROJEKT_STAV_PRIHLASENY,
+                PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                PROJEKT_STAV_UKONCENY_V_TERENU,
+                PROJEKT_STAV_UZAVRENY,
+            ]:
+                last_prihlaseni = projekt.historie.get_last_transaction_date(PRIHLASENI_PROJ)
+                if last_prihlaseni and last_prihlaseni["datum"] >= datetime.now(
+                    last_prihlaseni["datum"].tzinfo
+                ) - timedelta(days=30):
+                    return True
+    return False
 
 
 def get_required_fields(zaznam=None, next=0):

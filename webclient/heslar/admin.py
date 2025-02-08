@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.http import StreamingHttpResponse
 from django_object_actions import DjangoObjectActions, action
-from heslar.forms import HeslarHierarchieForm, HeslarOdkazForm
+from heslar.forms import HeslarHierarchieForm, HeslarOdkazForm, OrganizaceAdminForm, OsobaAdminForm
 from heslar.models import (
     Heslar,
     HeslarDatace,
@@ -150,7 +150,7 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     """
 
     list_display = ("heslo_ident_cely", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
-    fields = ("heslar_nazev", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
+    fields = ("heslar_nazev", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation", "scheme_uri")
     search_fields = ("heslo__ident_cely", "heslo__heslo", "zdroj", "nazev_kodu", "kod", "uri")
     list_filter = ("zdroj", "skos_mapping_relation")
     form = HeslarOdkazForm
@@ -186,6 +186,8 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
     Admin část pro správu modelu osob.
     """
 
+    form = OsobaAdminForm
+
     list_display = (
         "ident_cely",
         "vypis_cely",
@@ -196,8 +198,19 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
         "rok_narozeni",
         "rok_umrti",
     )
-    fields = ("ident_cely", "jmeno", "prijmeni", "rodne_prijmeni", "vypis_cely", "vypis", "rok_narozeni", "rok_umrti")
-    search_fields = ("ident_cely", "vypis_cely", "vypis", "prijmeni", "rodne_prijmeni", "jmeno")
+    fields = (
+        "ident_cely",
+        "jmeno",
+        "prijmeni",
+        "rodne_prijmeni",
+        "vypis_cely",
+        "vypis",
+        "rok_narozeni",
+        "rok_umrti",
+        "orcid",
+        "wikidata",
+    )
+    search_fields = ("ident_cely", "vypis_cely", "vypis", "prijmeni", "rodne_prijmeni", "jmeno", "orcid", "wikidata")
     readonly_fields = ("ident_cely",)
 
     def has_delete_permission(self, request, obj=None):
@@ -212,6 +225,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
     Admin část pro správu modelu organizace.
     """
 
+    form = OrganizaceAdminForm
     list_display = (
         "ident_cely",
         "nazev",
@@ -241,6 +255,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
         "adresa",
         "email",
         "telefon",
+        "ror",
     )
     fields = (
         "ident_cely",
@@ -259,6 +274,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
         "soucast",
         "zanikla",
         "cteni_dokumentu",
+        "ror",
     )
     readonly_fields = ("ident_cely",)
 

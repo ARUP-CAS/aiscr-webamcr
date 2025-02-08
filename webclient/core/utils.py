@@ -153,7 +153,7 @@ def get_cadastre_from_point(point):
         )
         return katastr
     except IndexError:
-        logger.error("core.utils.get_cadastre_from_point.error", extra={"point_0": point[0], "point_1": point[1]})
+        logger.warning("core.utils.get_cadastre_from_point.error", extra={"point_0": point[0], "point_1": point[1]})
         return None
 
 
@@ -714,7 +714,19 @@ def get_pian_from_envelope(bounds, zoom, request):
     from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_BADATEL_ID
     from heslar.models import Heslar
 
-    bbox = f"""POLYGON(({bounds['bottomLeft']['lng']} {bounds['bottomLeft']['lat']}, {bounds['bottomRight']['lng']} {bounds['bottomRight']['lat']}, {bounds['topRight']['lng']} {bounds['topRight']['lat']}, {bounds['topLeft']['lng']} {bounds['topLeft']['lat']}, {bounds['bottomLeft']['lng']} {bounds['bottomLeft']['lat']}))"""
+    bbox = """POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))"""
+    bbox_query_params = [
+        bounds["bottomLeft"]["lng"],
+        bounds["bottomLeft"]["lat"],
+        bounds["bottomRight"]["lng"],
+        bounds["bottomRight"]["lat"],
+        bounds["topRight"]["lng"],
+        bounds["topRight"]["lat"],
+        bounds["topLeft"]["lng"],
+        bounds["topLeft"]["lat"],
+        bounds["bottomLeft"]["lng"],
+        bounds["bottomLeft"]["lat"],
+    ]
     presnost = Heslar.objects.filter(nazev_heslare__id=HESLAR_PIAN_PRESNOST).first().id - 1
 
     querysum = f"""select sum(p.count) from amcr_heat_pian_l2 p where "p"."st_centroid" && ST_GeomFromText('{bbox}', {EPSG_WGS84})"""
@@ -729,11 +741,11 @@ def get_pian_from_envelope(bounds, zoom, request):
 
     pians = None
     with connection.cursor() as cursor:
-        cursor.execute(querysum)
+        cursor.execute(querysum, bbox_query_params)
         result = cursor.fetchone()
         count = int(result[0]) if result[0] is not None else 0
         if count < LIMIT_PRVKU_ZOBRAZENI_HEATMAP * 2 or zoom > 7:
-            cursor.execute(query)
+            cursor.execute(query, bbox_query_params)
             pians = dictfetchall(cursor)
             count = len(pians)
 
@@ -1068,17 +1080,7 @@ class SearchTable(ColumnShiftTableBootstrap4):
     app = None
 
     def get_column_default_show(self):
-        self.column_default_show = list(self.columns.columns.keys())
-        if "vychozi_skryte_sloupce" not in self.request.session:
-            self.request.session["vychozi_skryte_sloupce"] = {}
-        if self.app in self.request.session["vychozi_skryte_sloupce"]:
-            columns_to_hide = set(self.request.session["vychozi_skryte_sloupce"][self.app])
-        else:
-            columns_to_hide = self.columns_to_hide
-            self.request.session["vychozi_skryte_sloupce"][self.app] = columns_to_hide
-        for column in columns_to_hide:
-            if column is not None and column in self.column_default_show:
-                self.column_default_show.remove(column)
+        self.column_default_show = list(set(self.columns.columns.keys()) - set(self.columns_to_hide))
         return super(SearchTable, self).get_column_default_show()
 
     def render_nahled(self, value, record):
@@ -1110,6 +1112,12 @@ class SearchTable(ColumnShiftTableBootstrap4):
                 soubor_url,
             )
         return ""
+
+    def get_all_idents(self):
+        """
+        Vrátí seznam identifikátorů záznamů tabulky.
+        """
+        return ",".join([record.record.ident_cely for record in self.paginated_rows])
 
 
 def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party_apps=False):

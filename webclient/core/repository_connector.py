@@ -13,10 +13,12 @@ from core.connectors import RedisConnector
 from core.utils import get_mime_type, replace_last
 from django.conf import settings
 from pdf2image import convert_from_bytes
-from PIL import Image
+from PIL import Image, ImageOps
 from requests.auth import HTTPBasicAuth
 from xml_generator.generator import DocumentGenerator
 from xml_generator.models import ModelWithMetadata
+
+from redis import ResponseError
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +28,16 @@ class FedoraValidationError(Exception):
 
 
 class FedoraError(Exception):
-    def __init__(self, url, message, code):
+    def __init__(self, url, message, code, headers=None):
         self.url = url
         self.message = message
         self.code = code
+        self.headers = headers
         super().__init__(self.message)
+
+
+class FedoraUpdatedByAnotherTransactionError(FedoraError):
+    pass
 
 
 class IdentChangeFedoraError(Exception):
@@ -424,13 +431,21 @@ class FedoraRepositoryConnector:
                     "transaction": self.transaction_uid,
                     "url": url,
                 }
-                logger.error("core_repository_connector._send_request.response.error", extra=extra)
                 if self.transaction:
                     self.transaction.rollback_transaction()
                 else:
                     fedora_transaction = FedoraTransaction(uid=self.transaction_uid)
                     fedora_transaction.rollback_transaction()
-                raise FedoraError(url, response.text, response.status_code)
+                if response.status_code == 409:
+                    logger.info(
+                        "core_repository_connector._send_request.response.another_transaction_error", extra=extra
+                    )
+                    raise FedoraUpdatedByAnotherTransactionError(
+                        url, response.text, response.status_code, response.headers
+                    )
+                else:
+                    logger.error("core_repository_connector._send_request.response.error", extra=extra)
+                    raise FedoraError(url, response.text, response.status_code, response.headers)
         elif request_type in (
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE,
@@ -692,12 +707,41 @@ class FedoraRepositoryConnector:
 
         def resize_image(image: BytesIO, large_inner=False):
             image = Image.open(image)
+            image = ImageOps.exif_transpose(image)
             max_size = ((1 + large_inner * 7) * 100, (1 + large_inner * 7) * 100)
             image.thumbnail(max_size)
             output_buffer = BytesIO()
             image.save(output_buffer, format="PNG")
             output_buffer.seek(0)
             return output_buffer
+
+        def __generate_thumb_from_icon(file_name: str, file_content: BytesIO, large=False):
+            from core.models import Soubor
+
+            thumb_icon, mime_type = Soubor.get_thumb_icon(file_content)
+            if mime_type.startswith("image/"):
+                try:
+                    thumbnail = resize_image(file_content, large)
+                    logger.debug(
+                        "core_repository_connector.__generate_thumb.end", extra={"file_name": file_name, "large": large}
+                    )
+                    return thumbnail
+                except Exception as err:
+                    logger.info(
+                        "core_repository_connector.__generate_thumb.error",
+                        extra={"err": err, "file_name": file_name, "large": large},
+                    )
+                    if thumb_icon is not None:
+                        try:
+                            return resize_image(thumb_icon, large)
+                        except Exception as err:
+                            logger.error(
+                                "core_repository_connector.__generate_thumb_icon.error",
+                                extra={"err": err, "file_name": file_name, "large": large},
+                            )
+                    return None
+            else:
+                return resize_image(thumb_icon, large)
 
         if file_name.lower().endswith(".pdf"):
             try:
@@ -715,25 +759,9 @@ class FedoraRepositoryConnector:
                     "core_repository_connector.__generate_thumb.error",
                     extra={"err": err, "file_name": file_name, "large": large},
                 )
-                return None
+                return __generate_thumb_from_icon(file_name, file_content, large)
         else:
-            from core.models import Soubor
-
-            thumb_icon = Soubor.get_thumb_icon(file_content)
-            if thumb_icon is not None:
-                file_content = thumb_icon
-            try:
-                thumbnail = resize_image(file_content, large)
-                logger.debug(
-                    "core_repository_connector.__generate_thumb.end", extra={"file_name": file_name, "large": large}
-                )
-                return thumbnail
-            except Exception as err:
-                logger.debug(
-                    "core_repository_connector.__generate_thumb.error",
-                    extra={"err": err, "file_name": file_name, "large": large},
-                )
-                return None
+            return __generate_thumb_from_icon(file_name, file_content, large)
 
     def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None):
         logger.debug(
@@ -1155,7 +1183,7 @@ class FedoraRepositoryConnector:
             rep_bin_file = conn.get_binary_file(record.repository_uuid)
             if rep_bin_file:
                 conn.save_thumbs(record.nazev, rep_bin_file.content, record.repository_uuid)
-                fedora_transaction.mark_transaction_as_closed()
+        fedora_transaction.mark_transaction_as_closed()
 
     @classmethod
     def generate_thumbs(cls, records: Union[list, range]) -> None:
@@ -1246,6 +1274,57 @@ class FedoraRepositoryConnector:
         for item in queryset:
             cls.save_single_file_from_storage(item, storage_path, save_thumbs, disable_antivirus)
 
+    @classmethod
+    def create_missing_thumbnail(cls, uploaded_file: str) -> None:
+        import pandas as pd
+        from core.models import Soubor
+
+        sheet = pd.read_csv(uploaded_file, sep=",")
+        c = len(sheet)
+        for index, row in sheet.iterrows():
+            if index % max(c // 100, 1) == 0:
+                print(f"\r{round(index / c * 100)}%", end="")
+            try:
+                soubor = Soubor.objects.get(path=row["record"])
+                FedoraRepositoryConnector.generate_thumb_for_single_file(soubor.pk)
+            except Exception as err:
+                print(f"Chyba: {row['record']} {err}")
+
+    @classmethod
+    def remove_GPS_data_from_existing_files(cls, uploaded_file: str) -> None:
+        import pandas as pd
+        from core.models import Soubor
+        from xml_generator.models import ModelWithMetadata
+
+        sheet = pd.read_csv(uploaded_file, sep=",")
+        c = len(sheet)
+        for index, row in sheet.iterrows():
+            if index % max(c // 100, 1) == 0:
+                print(f"\r{round(index / c * 100)}%", end="")
+            try:
+                record = Soubor.objects.get(path=row["record"])
+
+                related_record: ModelWithMetadata = record.vazba.navazany_objekt
+                fedora_transaction = FedoraTransaction()
+                record.active_transaction = fedora_transaction
+                conn = FedoraRepositoryConnector(related_record, fedora_transaction)
+
+                rep_bin_file = conn.get_binary_file(record.repository_uuid)
+                if rep_bin_file:
+                    rep_bin_file_new = Soubor.remove_gps_data(rep_bin_file.content)
+                    if rep_bin_file_new is not rep_bin_file.content:
+                        rep_bin_file = conn.update_binary_file(
+                            record.nazev, record.mimetype, rep_bin_file_new, record.repository_uuid
+                        )
+                        record.size_mb = rep_bin_file.size_mb
+                        record.sha_512 = rep_bin_file.sha_512
+                        record.save()
+
+                fedora_transaction.mark_transaction_as_closed()
+
+            except Exception as err:
+                print(f"Chyba: {row['record']} {err}")
+
 
 class FedoraTransactionQueueClosedError(Exception):
     pass
@@ -1277,6 +1356,12 @@ class FedoraTransactionResult(Enum):
     ABORTED = 2
 
 
+class FedoraTransactionStatus(Enum):
+    ACTIVE = 1
+    COMMITTED = 2
+    ABORTED = 3
+
+
 class FedoraTransaction:
     def __init__(
         self,
@@ -1304,6 +1389,7 @@ class FedoraTransaction:
             logger.debug("core_repository_connector.FedoraTransaction.__init__", extra={"uid": self.uid})
         self.request = request
         self.suppress_message = suppress_message
+        self.__status = FedoraTransactionStatus.ACTIVE
 
     def __str__(self):
         return self.uid
@@ -1315,6 +1401,10 @@ class FedoraTransaction:
     @property
     def _transaction_redis_key(self):
         return self.get_transaction_redis_key(self.main_record.ident_cely, self.transaction_user.id)
+
+    @property
+    def status(self):
+        return self.__status
 
     def _save_transaction_result_to_redis(self, result: FedoraTransactionResult):
         if self.main_record and self.transaction_user and not self.suppress_message:
@@ -1337,7 +1427,13 @@ class FedoraTransaction:
         auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         if operation == FedoraTransactionOperation.COMMIT:
             response = requests.put(url, auth=auth, verify=False)
-            self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
+            try:
+                self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
+            except ResponseError as err:
+                logger.error(
+                    "core_repository_connector.FedoraTransaction._save_transaction_result_to_redis.failed",
+                    extra={"transaction": self.uid, "err": err},
+                )
         elif operation == FedoraTransactionOperation.ROLLBACK:
             response = requests.delete(url, auth=auth, verify=False)
             self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)
@@ -1358,6 +1454,7 @@ class FedoraTransaction:
             "core_repository_connector.FedoraTransaction.rollback_transaction.start", extra={"transaction": self.uid}
         )
         self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
+        self.__status = FedoraTransactionStatus.ABORTED
         logger.debug(
             "core_repository_connector.FedoraTransaction.rollback_transaction.end", extra={"transaction": self.uid}
         )
@@ -1371,6 +1468,7 @@ class FedoraTransaction:
         self._perform_post_commit_tasks()
         if settings.DIGIARCHIV_URL != "":
             self.call_digiarchiv_update()
+        self.__status = FedoraTransactionStatus.COMMITTED
         logger.debug(
             "core_repository_connector.FedoraTransaction.mark_transaction_as_closed.end",
             extra={"transaction": self.uid},
@@ -1437,15 +1535,15 @@ class FedoraTransaction:
                 i.active(),
             )
         except Exception as e:
-            logger.error(
-                "core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_error",
+            logger.warning(
+                "core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_warning",
                 extra={"Exception": e, "app": app},
             )
             call_digiarchiv_update_task.apply_async()
         for queue in queues:
             if queue is None:
-                logger.error(
-                    "core_repository_connector.FedoraTransaction.call_digiarchiv_update.error",
+                logger.warning(
+                    "core_repository_connector.FedoraTransaction.call_digiarchiv_update.warning",
                     extra={"i": i, "queues": queues},
                 )
                 break

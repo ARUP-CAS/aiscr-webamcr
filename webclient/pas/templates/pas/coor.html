@@ -117,7 +117,7 @@
         <div class="form-group">
             <label for="visible_x1">{{ formCoor.visible_x1.label }}</label>
             {% if global_map_can_edit %}
-            {% render_field formCoor.visible_x1 class="form-control form-control-sm float required-next" id="visible_x1" %}
+            {% render_field formCoor.visible_x1 class="form-control form-control-sm float required-next" id="visible_x1" autocomplete="off" %}
             <small class="form-text text-muted" id="hint_id_visible_x1">{% trans "pas.templates.coor.visible_x1.tooltip" %}</small>
             {% else %}
             {% render_field formCoor.visible_x1|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="visible_x1" lang="cs-CZ" %}
@@ -129,7 +129,7 @@
         <div class="form-group">
             <label for="visible_x2">{{ formCoor.visible_x2.label }}</label>
             {% if global_map_can_edit %}
-            {% render_field formCoor.visible_x2 class="form-control form-control-sm float required-next"  id="visible_x2" %}
+            {% render_field formCoor.visible_x2 class="form-control form-control-sm float required-next"  id="visible_x2" autocomplete="off" %}
             <small class="form-text text-muted" id="hint_id_visible_x2">{% trans "pas.templates.coor.visible_x2.tooltip" %}</small>
             {% else %}
             {% render_field formCoor.visible_x2|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="visible_x2" %}
@@ -224,12 +224,13 @@
 <script src="{% static 'coordTransform.js' %}"></script>
 <script src="{% static 'leaflet-grayscale.js' %}"></script>
 <script src="{% static 'mapa_settings_jtsk.js' %}"></script>
+<script src="{% static 'mapa_functions.js' %}?v1"></script>
 <script src="{% static 'mapa_basic_functions.js' %}?v1"></script>
 <script src="{% static 'coordTransform.js' %}"></script>
 <script src="{% static 'leaflet_subgroup.js' %}"></script>
 <script src="{% static 'spin/spin.min.js' %}"></script>
 <script src="{% static 'leaflet.spin.min.js' %}"></script>
-<script src="{% static 'mapa_pas.js' %}?v3"></script>
+<script src="{% static 'mapa_pas.js' %}?v4"></script>
     <script>
         $(document).ready(function () {
             $('[readonly]').addClass("disabled");

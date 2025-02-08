@@ -12,6 +12,9 @@
     <div id="id-app-entity-item" class="app-entity-item">
       {% if d.ident_cely %}
         {{ d.ident_cely }}
+        {% if d.doi %}
+          <span style="font-weight: normal">({{ d.doi }})</span>
+        {% endif %}
         {% if showback %}<div id="document-back" style="display:none"><span class="app-pipe"></span><a href="" class="app-entity-color font-weight-normal"></a></div>{% endif %}
         {% elif index%}
         {% else %}
@@ -55,6 +58,12 @@
           <a class="dropdown-item" href="{{OAPI_link|add:d.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarDokument.OAIAPI.label" %}</a>
           {% if show.stahnout_metadata%}
           <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'dokument' d.ident_cely %}">{% trans "templates.toolbarDokument.metadataDownload.label" %}</a>
+          {% endif %}
+          {% if show.vypis and is_3d %}
+          <a class="dropdown-item" href="{% url 'vypis:vypis' 'model' d.ident_cely %}" target=”_blank”>{% trans "templates.toolbarDokument.vypis.label" %}</a>
+          {% endif %}
+          {% if show.vypis and not is_3d %}
+          <a class="dropdown-item" href="{% url 'vypis:vypis' 'dokument' d.ident_cely %}" target=”_blank”>{% trans "templates.toolbarDokument.vypis.label" %}</a>
           {% endif %}
         </div>
       </div>

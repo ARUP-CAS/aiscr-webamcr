@@ -1,0 +1,3 @@
+{% for zaznam in field.zaznamy %}
+<a href="{% url 'core:redirect_ident' zaznam.ident_cely %}" target="_blank">{{ zaznam.ident_cely }}</a>{% if not forloop.last %}, {% endif %}
+{% endfor %}

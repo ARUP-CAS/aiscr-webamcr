@@ -86,6 +86,7 @@ L.Control.Search = L.Control.extend({
 		textCancel: 'Cancel',		    //title in cancel button
 		hideMarkerOnCollapse: false,    //remove circle and marker on search control collapsed
 		position: 'topleft',
+		initialSearchUrl: 'geonames',
 		marker: {						//custom L.Marker or false for hide
 			icon: false,				//custom L.Icon for maker location or false for hide
 			animate: true,				//animate a circle over location found
@@ -168,12 +169,13 @@ L.Control.Search = L.Control.extend({
             urlServiceParcela:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Prohlizeci_sluzba_nad_daty_RUIAN/MapServer/5/query?f=json&outSR=4326',
                 zoom: this.options.zoom+9
             };
-        this._currentUrl=this._url["okresy"];
+        this._currentUrl=this._url[this.options.initialSearchUrl];
 		this._inputMinSize= this._currentUrl.name.length;
 		this.options.textCancel=this.options.translations.SearchTextCancel;
 		this.options.textErr=this.options.translations.SearchTextError;
 		this._parcela={};
-		this._parcela.mode=false;
+		if(this.options.initialSearchUrl=='parcely') this._parcela.mode=true;
+		else this._parcela.mode=false;
 		this._parcela.codeKU=null;
 		this._parcela.nameKU="";
 
@@ -499,8 +501,16 @@ L.Control.Search = L.Control.extend({
 		L.DomEvent
 			.disableClickPropagation(tip)
 			.on(tip, 'click', L.DomEvent.stop, this)
-			.on(tip, 'click', function(e) {
-				//this._input.value = text;
+			.on(tip, 'click', function(e) {this.changeChooseTip( key,text )
+				this._map.fire('search:changeChooseTip',{key: key});
+			}, this);
+
+		return tip;
+	},
+	
+	changeChooseTip: function(key){
+
+				//this._input.value = this._url[key];
 				this._handleChoose()
 				/*this._handleAutoresize();
 				this._input.focus();
@@ -512,19 +522,16 @@ L.Control.Search = L.Control.extend({
 				if(key=="parcely") {
 					this._input_parcela.style.display = 'block';
 					this._parcela.mode = true;
-                    this._input.placeholder= text.name_place;
-					this._inputMinSize= text.name_place.length;
+                    this._input.placeholder= this._url[key].name_place;
+					this._inputMinSize= this._url[key].name_place.length;
 				}
 	  			else {
 					this._input_parcela.style.display = 'none';
 					this._parcela.mode = false;
-                    this._input.placeholder= text.name;
-					this._inputMinSize= text.name.length;
+                    this._input.placeholder= this._url[key].name;
+					this._inputMinSize= this._url[key].name.length;
 				}
-				//this._input.label.value = text;
-			}, this);
-
-		return tip;
+				//this._input.label.value = this._url[key];
 	},
 
 

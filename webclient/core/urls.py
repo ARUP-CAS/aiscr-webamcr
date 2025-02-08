@@ -45,11 +45,6 @@ urlpatterns = [
         name="tr_mwgs84",
     ),
     path(
-        "tabulka/zmenit-sloupce",
-        views.SearchListChangeColumnsView.as_view(),
-        name="zmena_sloupcu_listu",
-    ),
-    path(
         "metadata/stahnout/<str:model_name>/<str:ident_cely>",
         views.StahnoutMetadataIdentCelyView.as_view(),
         name="stahnout_metadata",

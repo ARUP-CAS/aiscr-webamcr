@@ -139,7 +139,7 @@
       }
 
       .badge {
-        background-color: $color;
+        background-color: $color !important;
         color: $white;
       }
 
@@ -220,8 +220,11 @@
               }
             }
 
+            &.app-cell-badge {
+              padding-left: 0;
+            }
             .badge {
-              background-color: $color;
+              background-color: $color !important;
               color: $white;
             }
           }
@@ -276,7 +279,7 @@
             }
 
             .badge {
-              background-color: $color;
+              background-color: $color !important;
               color: $white;
             }
           }

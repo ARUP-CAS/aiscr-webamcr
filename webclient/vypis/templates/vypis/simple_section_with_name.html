@@ -1,0 +1,19 @@
+{% for section, field in section.items %}
+        {% if section != "template" %}
+            {% if section == "section_name" %}
+            <div class = "section-name">{{field}}</div>
+            {% endif %}
+            <div class="pl-4">
+            {% if field.value.template_name %}
+                {% include field.value.template_name with field=field.value %}
+            {% elif field.template %}
+                {% include field.template with section=field %}
+            {% elif section != "section_name" %}
+            <div class="row">
+                <div class="label"><strong>{{field.label}}:</strong></div>
+                <div class="content"> {{ field.value }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% endfor %}

@@ -5,7 +5,7 @@ var point_global_JTSK = [0, 0];
 var poi_model= L.layerGroup();
 var poi_all = L.markerClusterGroup({ disableClusteringAtZoom: 20 })
 
-var map = L.map('projectMap',{attributionControl:false,zoomControl:false, layers: [cuzkZM,poi_model]}).setView(init_position, init_zoom_mercator);
+var map = L.map('projectMap',{attributionControl:false,zoomControl:false, layers: [osmGrey,poi_model]}).setView(init_position, init_zoom_mercator);
 
 var baseLayers = {
     [map_translations['cuzkzakladniMapyCr']]: cuzkZM,
@@ -31,7 +31,7 @@ var searchControl=new L.Control.Search({
     marker: false,
     propertyName: 'text',
     propertyMagicKey:'magicKey',
-    minLength:3,
+    minLength:2,
     translations:leaflet_search_translations,
     layerKN:cuzkWMS, 
     zoom:6
@@ -120,6 +120,11 @@ var replace_coor = () => {
     document.getElementById(x1).value=(document.getElementById(x1).value.replace(".",","));
     document.getElementById(x2).value=(document.getElementById(x2).value.replace(".",","));
 }
+
+// Načtení stavu při načtení stránky
+loadMapState('doc');
+// Připojení eventů pro sledování změn
+addEventLayerChange('doc');
 
 map.on('moveend', function () {
     switchMap();

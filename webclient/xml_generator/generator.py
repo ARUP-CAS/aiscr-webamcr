@@ -15,10 +15,10 @@ from lxml import etree
 from lxml import etree as ET
 from xml_generator.models import ModelWithMetadata
 
-AMCR_NAMESPACE_URL = "https://api.aiscr.cz/schema/amcr/2.0/"
-AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd"
+AMCR_NAMESPACE_URL = "https://api.aiscr.cz/schema/amcr/2.1/"
+AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.1/amcr.xsd"
 AMCR_XSD_FILENAME = "amcr.xsd"
-SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.0/ https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd"
+SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.1/ https://api.aiscr.cz/schema/amcr/2.1/amcr.xsd"
 logger = logging.getLogger(__name__)
 
 
@@ -234,9 +234,17 @@ class DocumentGenerator:
             from pian.models import Pian
             from projekt.models import Projekt
 
-            if isinstance(record, Projekt) or isinstance(record, DokumentExtraData) or isinstance(record, VyskovyBod):
+            if isinstance(record, Projekt) or isinstance(record, DokumentExtraData):
                 record = record.__class__.objects.annotate(
-                    geom_st_asgml=AsGML("geom", nprefix="gml"), geom_st_astext=AsText("geom")
+                    geom_st_asgml=AsGML("geom", nprefix="gml"),
+                    geom_st_astext=AsText("geom"),
+                    geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
+                    geom_sjtsk_st_astext=AsText("geom_sjtsk"),
+                ).get(pk=record.pk)
+            elif isinstance(record, VyskovyBod):
+                record = record.__class__.objects.annotate(
+                    geom_st_asgml=AsGML("geom", nprefix="gml"),
+                    geom_st_astext=AsText("geom"),
                 ).get(pk=record.pk)
             elif isinstance(record, SamostatnyNalez) or isinstance(record, Pian):
                 record = record.__class__.objects.annotate(

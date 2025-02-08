@@ -262,7 +262,6 @@
       TempPIAN: '{% trans "mapa.TempPIAN" %}',
       zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
       zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}',
-      eidt_coordinates:'{% trans "mapa.editCoordinates" %}',
       EditCoordSave: '{% trans "mapa.EditCoordSave" %}',
       EditCoordStorno: '{% trans "mapa.EditCoordStorno" %}',
       EditCoordTooltip: '{% trans "mapa.EditCoordTooltip" %}',
@@ -291,7 +290,8 @@
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script src="{% static 'leaflet-grayscale.js' %}"></script>
   <script src="{% static 'mapa_settings_jtsk.js' %}"></script>
-  <script src="{% static 'mapa_arch_z.js' %}?v1"></script>
+  <script src="{% static 'mapa_functions.js' %}?v1"></script>
+  <script src="{% static 'mapa_arch_z.js' %}?v2"></script>
   <script>
       function get_create_pain_form_action(selected_dj_ident) {
           const url = "/pian/zapsat/1";

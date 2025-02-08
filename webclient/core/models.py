@@ -8,6 +8,7 @@ import zipfile
 from typing import Optional, Union
 
 import magic
+import piexif
 import py7zr
 import rarfile
 from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_BADATEL_ID
@@ -29,6 +30,7 @@ from historie.models import Historie, HistorieVazby
 from nalez.models import NalezObjekt, NalezPredmet
 from notifikace_projekty.models import Pes
 from pian.models import Pian
+from PIL import Image
 from uzivatel.models import User
 from xml_generator.models import ModelWithMetadata
 
@@ -286,20 +288,27 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             "application/rtf": "rtf.png",
             "application/vnd.oasis.opendocument.text": "odt.png",
             "application/vnd.oasis.opendocument.spreadsheet": "ods.png",
-        }.get(mime_type, None)
-        if icon_filename:
-            file_path = os.path.join(settings.STATICFILES_DIRS[0], "icons", icon_filename)
-            file_bytes = io.BytesIO()
-            with open(file_path, "rb") as file:
-                file_bytes.write(file.read())
-            file_bytes.seek(0)
-            logger.debug(
-                "core.models.Soubor.get_thumb_icon.end", extra={"mime_type": mime_type, "icon_filename": icon_filename}
-            )
-            return file_bytes
-        else:
-            logger.debug("core.models.Soubor.get_thumb_icon.no_icon", extra={"mime_type": mime_type})
-            return None
+            "application/pdf": "pdf.png",
+            "image/bmp": "bmp.png",
+            "image/gif": "gif.png",
+            "image/jpeg": "jpg.png",
+            "image/png": "png.png",
+            "image/svg+xml": "svg.png",
+            "image/tiff": "tif.png",
+        }.get(mime_type, "file.png")
+
+        file_path = os.path.join(settings.STATICFILES_DIRS[0], "icons", icon_filename)
+        file_bytes = io.BytesIO()
+        with open(file_path, "rb") as file:
+            file_bytes.write(file.read())
+        file_bytes.seek(0)
+        logger.debug(
+            "core.models.Soubor.get_thumb_icon.end", extra={"mime_type": mime_type, "icon_filename": icon_filename}
+        )
+        if icon_filename == "file.png":
+            logger.warning("core.models.Soubor.get_thumb_icon.no_icon", extra={"mime_type": mime_type})
+            return None, mime_type
+        return file_bytes, mime_type
 
     @classmethod
     def get_mime_types(cls, file, check_archive=False) -> Union[set, bool, str]:
@@ -365,6 +374,42 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 "core.models.Soubor.get_mime_type.end", extra={"mime_type": mime_type, "check_archive": check_archive}
             )
             return mime_type
+
+    @classmethod
+    def remove_gps_data(cls, bytes_io: io.BytesIO) -> io.BytesIO:
+        try:
+            img = Image.open(bytes_io)
+        except Exception as err:
+            logger.warning("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"err": err})
+            bytes_io.seek(0)
+            return bytes_io
+        exif_data = img.getexif()
+        if not exif_data:
+            bytes_io.seek(0)
+            return bytes_io
+
+        exif_dict = piexif.load(img.info.get("exif"))
+
+        # Odstranění GPS dat, pokud existují
+        if "GPS" in exif_dict and exif_dict["GPS"] != {}:
+            del exif_dict["GPS"]
+        else:
+            logger.debug("core.models.Soubor.remove_gps_data.no_GPS_data")
+            bytes_io.seek(0)
+            return bytes_io
+        if 41729 in exif_dict["Exif"] and isinstance(exif_dict["Exif"][41729], int):
+            exif_dict["Exif"][41729] = str(exif_dict["Exif"][41729]).encode("utf-8")
+        try:
+            new_exif_bytes = piexif.dump(exif_dict)
+            output_io = io.BytesIO()
+            img.save(output_io, format=img.format, exif=new_exif_bytes)
+            output_io.seek(0)
+            logger.debug("core.models.Soubor.remove_gps_data.GPS_data_removed")
+            return output_io
+        except Exception as err:
+            logger.error("core.models.Soubor.remove_gps_data.cannot_save_file", extra={"err": err})
+            bytes_io.seek(0)
+            return bytes_io
 
     @classmethod
     def check_mime_for_url(cls, file, source_url=""):
@@ -462,14 +507,20 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def large_thumbnail(self) -> FileResponse | None:
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_large=True)
         if self.repository_uuid is not None and rep_bin_file:
-            return self._create_file_response(rep_bin_file)
+            response = self._create_file_response(rep_bin_file)
+            response["Content-Type"] = "image/png"
+            response["Content-Disposition"] = f"attachment; filename={self.nazev}.png"
+            return response
         return None
 
     @cached_property
     def small_thumbnail(self) -> FileResponse | None:
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_small=True)
         if self.repository_uuid is not None and rep_bin_file:
-            return self._create_file_response(rep_bin_file)
+            response = self._create_file_response(rep_bin_file)
+            response["Content-Type"] = "image/png"
+            response["Content-Disposition"] = f"attachment; filename={self.nazev}.png"
+            return response
         return None
 
     @cached_property
@@ -573,16 +624,6 @@ class GeomMigrationJob(ExportModelOperationsMixin("geom_migration_job"), models.
 
     class Meta:
         db_table = "amcr_geom_migrations_jobs"
-
-
-class CustomAdminSettings(ExportModelOperationsMixin("custom_admin_settings"), models.Model):
-    item_group = models.CharField(max_length=100)
-    item_id = models.CharField(max_length=100)
-    value = models.TextField()
-
-    class Meta:
-        verbose_name = _("core.model.CustomAdminSettings.modelTitle.label")
-        verbose_name_plural = _("core.model.CustomAdminSettings.modelTitles.label")
 
 
 class Permissions(models.Model):
@@ -828,6 +869,13 @@ class Permissions(models.Model):
         dokumenty_tabulka_arch_z = "dokumenty_tabulka_arch_z", _(
             "core.models.permissions.actionChoices.dokumenty_tabulka_arch_z"
         )
+        vypis_dokument = "vypis_dokument", _("core.models.permissions.actionChoices.vypis_dokument")
+        vypis_projekt = "vypis_projekt", _("core.models.permissions.actionChoices.vypis_projekt")
+        vypis_arch_z = "vypis_arch_z", _("core.models.permissions.actionChoices.vypis_arch_z")
+        vypis_lokalita = "vypis_lokalita", _("core.models.permissions.actionChoices.vypis_lokalita")
+        vypis_pas = "vypis_pas", _("core.models.permissions.actionChoices.vypis_pas")
+        vypis_model3d = "vypis_model3d", _("core.models.permissions.actionChoices.vypis_model3d")
+        vypis_ez = "vypis_ez", _("core.models.permissions.actionChoices.vypis_ez")
 
     pristupnost_to_groups = {
         PRISTUPNOST_ANONYM_ID: 0,
