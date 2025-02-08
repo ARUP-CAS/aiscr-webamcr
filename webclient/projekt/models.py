@@ -632,7 +632,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def create_cancel_confirmation_document(self, user=None) -> RepositoryBinaryFile:
         """
-        Metóda na vytvoření oznámovací dokumentace.
+        Metoda na vytvoření potvrzení o zrušení oznámení.
         """
         logger.debug(
             "projekt.models.create_cancel_confirmation_document.start",
