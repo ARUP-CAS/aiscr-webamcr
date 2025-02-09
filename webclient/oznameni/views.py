@@ -91,7 +91,7 @@ class OznameniZapsatView(OznameniView):
                     float(request.POST.get("coordinate_x2")),
                 )
                 projekt.geom_sjtsk = Point(
-                    convertToJTSK(float(request.POST.get("coordinate_x1")), float(request.POST.get("coordinate_x2")))
+                    *convertToJTSK(float(request.POST.get("coordinate_x1")), float(request.POST.get("coordinate_x2")))
                 )
                 projekt.geom_system = "5514"
                 projekt.hlavni_katastr = get_cadastre_from_point(projekt.geom)
