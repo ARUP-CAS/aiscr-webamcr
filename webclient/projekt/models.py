@@ -8,7 +8,6 @@ from core.constants import (
     NAVRZENI_KE_ZRUSENI_PROJ,
     OBLAST_CECHY,
     OZNAMENI_PROJ,
-    OZNAMENI_PROJ_MANUALNI,
     PRIHLASENI_PROJ,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
@@ -169,11 +168,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def datum_oznameni(self):
-        historie_objects = self.historie.historie_set.filter(typ_zmeny=OZNAMENI_PROJ_MANUALNI)
-        if historie_objects.exists():
-            return historie_objects.last().datum_zmeny
-        else:
-            return historie_objects.first().datum_zmeny
+        return self.historie.historie_set.order_by("datum_zmeny").first().datum_zmeny
 
     def __init__(self, *args, **kwargs):
         super(Projekt, self).__init__(*args, **kwargs)
