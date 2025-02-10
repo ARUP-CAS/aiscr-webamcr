@@ -8,7 +8,7 @@ from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 
-import pandas
+import polars as pl
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
@@ -978,7 +978,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
         logger.debug("core.views.SearchListView.create_export.start", extra={"export_format": export_format})
         if self.redis_value_list_field and self.redis_snapshot_prefix:
-            r = RedisConnector.get_connection()
+            r = RedisConnector.get_connection_decode()
             dataset = self.get_table_data()
             ident_cely_list = set(dataset.values_list(self.redis_value_list_field, flat=True))
             ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
@@ -1005,16 +1005,15 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                         return HttpResponse()
                     update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 100))
                     data.extend(pipe.execute())
-            data = pandas.DataFrame(data)
-            data.columns = [x.decode("utf-8") for x in data.columns]
+            data = pl.DataFrame(data)
             filtered_column_order = [col.name for col in self.get_table().columns if col.name in data.columns]
-            data = data[filtered_column_order]
-            column_names = {}
-            for column in self.get_table().columns:
-                column_names[str(column.name)] = column.verbose_name
-            data = data.rename(columns=column_names)
-            for column in data.select_dtypes(include=["object"]):
-                data[column] = data[column].str.decode("utf-8")
+            data = data.select(filtered_column_order)
+            column_names = {str(column.name): str(column.verbose_name) for column in self.get_table().columns}
+            data = data.rename(column_names)
+            for column in data.columns:
+                if data[column].dtype == pl.Utf8:
+                    data = data.with_columns(pl.col(column).str.strip_chars())
+
             if check_if_aborted(r, redis_variable_name):
                 logger.debug(
                     "core.views.SearchListView.create_export.aborted",
@@ -1023,21 +1022,20 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 return HttpResponse()
             if export_format == TableExport.CSV:
                 filetype = 'attachment; filename="export.csv"'
-                resdata = data.to_csv(index=False)
+                resdata = data.write_csv()
             elif export_format == TableExport.JSON:
                 filetype = 'attachment; filename="export.json"'
-                resdata = data.to_json(orient="records", force_ascii=False, index=False)
+                resdata = data.write_json()
             elif export_format == TableExport.XLSX:
                 excel_file = BytesIO()
-                with pandas.ExcelWriter(excel_file, engine="openpyxl") as writer:
-                    data.to_excel(writer, index=False)
+                data.write_excel(workbook=excel_file)
                 resdata = excel_file.getvalue()
                 filetype = "attachment; filename=export.xlsx"
             else:
                 return HttpResponse(_("core.views.SearchListView.create_export.export_format_not_supported"))
             response = StreamingHttpResponse(file_iterator(resdata, r, redis_variable_name))
             response["Content-Disposition"] = filetype
-            update_progress_bar(r, redis_variable_name, 50)
+            update_progress_bar(r, redis_variable_name, 100)
             logger.debug(
                 "core.views.SearchListView.create_export.end",
                 extra={
