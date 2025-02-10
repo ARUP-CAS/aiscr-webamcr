@@ -967,8 +967,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 for i in range(0, len(content), chunk_size):
                     chunk = content[i : i + chunk_size]
                     bytes_sent += len(chunk)
-                    if file_size > 50 and bytes_sent % (file_size // 50) < chunk_size:
-                        update_progress_bar(r, redis_variable_name, int(bytes_sent / file_size * 50 + 50))
+                    if file_size > 100 and bytes_sent % (file_size // 100) < chunk_size:
+                        update_progress_bar(r, redis_variable_name, int(bytes_sent / file_size * 100))
                     yield chunk
             except GeneratorExit:
                 logger.warning("core.views.SearchListView.file_iterator.Connection_closed_by_client")
@@ -994,14 +994,16 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             data = []
             for i, key in enumerate(ident_cely_list):
                 pipe.hgetall(key)
-                if (ident_cely_list_len > 100 and i % (ident_cely_list_len // 50) == 0) or i == ident_cely_list_len - 1:
+                if (
+                    ident_cely_list_len > 100 and i % (ident_cely_list_len // 100) == 0
+                ) or i == ident_cely_list_len - 1:
                     if check_if_aborted(r, redis_variable_name):
                         logger.debug(
                             "core.views.SearchListView.create_export.aborted",
                             extra={"redis_variable_name": redis_variable_name},
                         )
                         return HttpResponse()
-                    update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 50))
+                    update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 100))
                     data.extend(pipe.execute())
             data = pandas.DataFrame(data)
             data.columns = [x.decode("utf-8") for x in data.columns]
