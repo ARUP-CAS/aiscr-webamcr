@@ -2,9 +2,20 @@
 <tr>
     <td class="app-ident-cely">
       <a href="{% url type|add:':detail' arch_z.ident_cely %}">
+        {% if card_type == "akce" %}
+        <span class="material-icons">brush</span>
+        {% else %}
         <span class="material-icons">location_on</span>
+        {% endif %}
         {{ arch_z.ident_cely }}
       </a>
+    </td>
+    <td class="app-cell-badge">
+      <div class="container">
+          <span class="badge-span">
+            <span class="badge">{{ arch_z.get_stav_display }}</span>
+          </span>
+      </div>
     </td>
     <td>{{ arch_z.hlavni_katastr }}</td>
     {% if card_type == "akce" %}

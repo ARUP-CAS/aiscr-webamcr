@@ -162,6 +162,8 @@ class CreateDJForm(forms.ModelForm):
                 }
             ),
         )
+        if len(self.fields["typ"].queryset) == 1:
+            self.fields["typ"].initial = self.fields["typ"].queryset.first()
         if self.instance:
             self.fields["pian_text"].initial = self.instance.pian
         self.helper = FormHelper(self)

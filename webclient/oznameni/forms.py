@@ -70,7 +70,7 @@ class DateRangeWidget(forms.TextInput):
 
 class OznamovatelForm(forms.ModelForm):
     """
-    Hlavní formulář pro vytvoření oznámení.
+    Hlavní formulář pro vytvoření oznámení oznamovatelem.
     """
 
     telefon = forms.CharField(
@@ -110,13 +110,13 @@ class OznamovatelForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        uzamknout_formular = kwargs.pop("uzamknout_formular", False)
+        self.uzamknout_formular = kwargs.pop("uzamknout_formular", False)
         required = kwargs.pop("required", True)
         required_next = kwargs.pop("required_next", False)
         add_oznamovatel = kwargs.pop("add_oznamovatel", False)
         super(OznamovatelForm, self).__init__(*args, **kwargs)
         self.fields["telefon"].widget.input_type = "tel"
-        if uzamknout_formular:
+        if self.uzamknout_formular:
             self.fields["oznamovatel"].widget.attrs["readonly"] = True
             self.fields["odpovedna_osoba"].widget.attrs["readonly"] = True
             self.fields["adresa"].widget.attrs["readonly"] = True
@@ -185,6 +185,44 @@ class OznamovatelProjektForm(OznamovatelForm):
     )
 
 
+class OznamovatelProjektCreateForm(OznamovatelProjektForm):
+    """
+    Hlavní formulář pro vytvoření oznámení.
+    """
+
+    send_mail = forms.BooleanField(
+        initial=True,
+        required=False,
+        label=_("oznameni.forms.oznamovatelForm.send_mail.label"),
+        help_text=_("oznameni.forms.oznamovatelForm.send_mail.tooltip"),
+    )
+
+    def clean_send_mail(self):
+        return self.cleaned_data.get("send_mail", False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "send_mail" in self.data and self.data["send_mail"] == "":
+            self.data = self.data.copy()
+            self.data["send_mail"] = "on"
+        if self.uzamknout_formular:
+            self.fields["send_mail"].widget.attrs["readonly"] = True
+        self.fields["send_mail"].required = False
+        self.helper.layout.fields[0].fields[1] = Div(
+            Div(
+                Div("oznamovatel", css_class="col-sm-6"),
+                Div("odpovedna_osoba", css_class="col-sm-6"),
+                Div("adresa", css_class="col-sm-6"),
+                Div("telefon", css_class="col-sm-2"),
+                Div("email", css_class="col-sm-2"),
+                Div("send_mail", css_class="col-sm-2 d-flex align-items-center"),
+                Div("poznamka", css_class="col-sm-12"),
+                css_class="row",
+            ),
+            css_class="card-body oznamovatel-form-card",
+        )
+
+
 class ProjektOznameniForm(forms.ModelForm):
     """
     Hlavní formulář pro editaci a doplňení oznamovatele do projektu.
@@ -220,8 +258,8 @@ class ProjektOznameniForm(forms.ModelForm):
             "katastry",
         )
         widgets = {
-            "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "lokalizace": forms.TextInput(),
+            "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40, "maxlength": 255}),
+            "lokalizace": forms.TextInput(attrs={"maxlength": 255}),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "oznaceni_stavby": forms.TextInput(),
             "katastry": autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),

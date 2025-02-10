@@ -136,10 +136,14 @@ L.Control.EditCoordControl = L.Control.extend({
 
     _lineMarkerClick: function (squareMarker, latlng, index, layer, latlngs) {
         this._fillInputContainer(latlng)
-        L.popup()
+        this._deactivateTooltip()
+        let popup = L.popup()
             .setLatLng(latlng)
             .setContent(this._inputcontainer)
             .openOn(this._map);
+        popup.on("remove", function() {
+                this._createTooltip();
+            },this);
         this._inputcontainer.squareMarker=squareMarker;
         this._inputcontainer.latlng=latlng;
         this._inputcontainer.index=index;
@@ -208,6 +212,7 @@ L.Control.EditCoordControl = L.Control.extend({
             'div',
             'uiElement input uiHidden'
         )
+        this._inputcontainer.style="text-align: right;" ;
         this._inputcontainerWGS84 = L.DomUtil.create(
             'div',
             '',
@@ -281,8 +286,8 @@ L.Control.EditCoordControl = L.Control.extend({
             let y = parseFloat(this._inputYJTSK.value)
             if (x !== undefined && y !== undefined) {
                 let latlng = convertToWGS84(x, y)
-                this._inputX.value = latlng[0]
-                this._inputY.value = latlng[1]
+                this._inputX.value =  Math.round(latlng[0] * 10000000) / 10000000
+                this._inputY.value =  Math.round(latlng[1] * 10000000) / 10000000
                 this._epsg=5514
             }
         }
@@ -319,6 +324,7 @@ L.Control.EditCoordControl = L.Control.extend({
         let pos = this._map.latLngToLayerPoint(e.latlng)
         tooltipContainer = this.tooltip._container
         if (this.tooltip) {
+				tooltipContainer.style.visibility = 'inherit';
             L.DomUtil.setPosition(tooltipContainer, pos)
         }
         return this
@@ -379,7 +385,9 @@ L.Control.EditCoordControl = L.Control.extend({
     _ensurePointVisible: function (latlng) {
         let bounds = this._map.getBounds();
         if (!bounds.contains(latlng)) {
-            this._map.panInside(latlng);
+            //this._map.panInside(latlng);
+            let zoom=this._map.getZoom()
+            this._map.setView(latlng, zoom) ;  
         }
     },
 

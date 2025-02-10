@@ -3,7 +3,9 @@ import io
 import json
 import logging
 import os
+import random
 import re
+import string
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -19,9 +21,12 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.translation import gettext as _
+from fedora_management.forms import UpdateMetadataFileForm
+from pid.forms import UpdateDocumentObjectIdentifierFileForm
 from polib import pofile
 from uzivatel.models import User
 
+from .connectors import RedisConnector
 from .constants import (
     PERMISSIONS_IMPORT_SHEET,
     PERMISSIONS_SHEET_ACTION_NAME,
@@ -128,15 +133,15 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         """
         Pomocní metóda pro úpravu template zobrazených počas odstávky.
         """
-        with open("/vol/web/nginx/data/" + language + "/custom_50x.html") as fp:
+        with open("/vol/web/nginx/data/" + language + "/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
             soup.find("h1").string.replace_with(form.cleaned_data["error_text_" + language])
-        with open("/vol/web/nginx/data/" + language + "/custom_50x.html", "w") as fp:
+        with open("/vol/web/nginx/data/" + language + "/custom_503.html", "w") as fp:
             fp.write(str(soup))
-        with open("/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html") as fp:
+        with open("/vol/web/nginx/data/" + language + "/oznameni/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
             soup.find("h1").string.replace_with(form.cleaned_data["error_text_oznam_" + language])
-        with open("/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html", "w") as fp:
+        with open("/vol/web/nginx/data/" + language + "/oznameni/custom_503.html", "w") as fp:
             fp.write(str(soup))
 
 
@@ -148,6 +153,7 @@ class CustomAdminSettingsAdmin(admin.ModelAdmin):
     Admin panel pro vlastních nastavení.
     """
 
+    change_list_template = "core/custom_settings_changelist.html"
     model = CustomAdminSettings
     list_display = ("item_id", "item_group")
 
@@ -575,3 +581,100 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         return response
 
     export_as_csv.short_description = _("core.admin.permissionSkipAdmin.downloadAction_label")
+
+
+class FedoraCustomAdminSite(admin.AdminSite):
+    redis_connector = RedisConnector().get_connection()
+
+    @staticmethod
+    def _read_file(uploaded_file, context):
+        sheet = None
+        if uploaded_file.content_type == "text/csv":
+            try:
+                sheet = pd.read_csv(uploaded_file, sep=",")
+            except Exception as err:
+                logger.debug(
+                    "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".cannot_read_file",
+                    extra={"err": err},
+                )
+                context["error"] = _("fedora_management.admin.YourCustomAdminSite.cannot_read_file")
+        else:
+            try:
+                sheet = pd.read_excel(uploaded_file)
+            except Exception as err:
+                logger.debug(
+                    "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".cannot_read_file",
+                    extra={"err": err},
+                )
+                context["error"] = _("fedora_management.admin.YourCustomAdminSite.cannot_read_file")
+        if sheet.shape[1] != 1:
+            context["error"] = _("fedora_management.admin.YourCustomAdminSite.too_many_columns")
+            sheet = None
+        if isinstance(sheet, pd.DataFrame):
+            sheet.columns = [
+                "ident_cely",
+            ]
+            sheet["ident_cely"] = sheet["ident_cely"].str.strip()
+            sheet = sheet.set_index("ident_cely")
+        return sheet
+
+    def update_doi(self, request):
+        context = {
+            "app_list": self.get_app_list(request),
+            **self.each_context(request),
+        }
+        if request.method == "POST" and request.user.is_superuser:
+            form = UpdateDocumentObjectIdentifierFileForm(request.POST, request.FILES)
+            context["form"] = form
+            if form.is_valid():
+                uploaded_file = request.FILES["ident_list_file"]
+                sheet = self._read_file(uploaded_file, context)
+                if isinstance(sheet, pd.DataFrame):
+                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+                    job_id = f"update_pid_{job_id}"
+                    self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
+                    performed_action = form.cleaned_data["performed_action"]
+                    context["url"] = reverse("pid:continue-processing", args=[job_id, performed_action])
+            return TemplateResponse(request, "admin/update_running_job.html", context)
+        else:
+            context["form"] = UpdateDocumentObjectIdentifierFileForm()
+        return TemplateResponse(request, "admin/doi_management/update_doi.html", context)
+
+    def update_metadata_file_upload(self, request):
+        context = {
+            "app_list": self.get_app_list(request),
+            **self.each_context(request),
+        }
+        if request.method == "POST" and request.user.is_superuser:
+            form = UpdateMetadataFileForm(request.POST, request.FILES)
+            if form.is_valid():
+                uploaded_file = request.FILES["ident_list_file"]
+                sheet = self._read_file(uploaded_file, context)
+                if isinstance(sheet, pd.DataFrame):
+                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+                    job_id = f"update_metadata_{job_id}"
+                    self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
+                    context["url"] = reverse("fedora:continue-processing", args=[job_id])
+            return TemplateResponse(request, "admin/update_running_job.html", context)
+        else:
+            context["form"] = UpdateMetadataFileForm()
+        return TemplateResponse(request, "admin/fedora_management/update_metadata.html", context)
+
+    def get_urls(
+        self,
+    ):
+        return [
+            path(
+                "update-metadata/",
+                self.admin_view(self.update_metadata_file_upload),
+                name="update_metadata",
+            ),
+            path(
+                "update-doi/",
+                self.admin_view(self.update_doi),
+                name="update_doi",
+            ),
+        ] + super().get_urls()
+
+
+admin.site.__class__ = FedoraCustomAdminSite

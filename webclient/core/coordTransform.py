@@ -29,6 +29,8 @@ readCoef(CORRTABLE)
 
 # Conversion from WGS-84 to JTSK
 def convertToJTSK(longitude, latitude, height=0):
+    if not isinstance(longitude, (int, float)) or not isinstance(latitude, (int, float)):
+        return [None, None]
     if latitude < 40 or latitude > 60 or longitude < 5 or longitude > 25:
         # return x,y
         raise Exception(f"convertToJTSK coordinates are out of range: longitude {longitude} latitude {latitude} ")
@@ -36,17 +38,19 @@ def convertToJTSK(longitude, latitude, height=0):
         [latitude, longitude] = wgs84_to_bessel(latitude, longitude, height)
         [X05, Y05] = bessel_to_jtsk(latitude, longitude)
         [X, Y] = jtsk05_to_jtsk(X05, Y05)
-        return [-Y, -X]
+        return [round(-Y, 2), round(-X, 2)]
 
 
 # Conversion from JTSK to WGS-84
 def convertToWGS84(minusY, minusX, height=0):
+    if not isinstance(longitude, (int, float)) or not isinstance(latitude, (int, float)):
+        return [None, None]
     if minusY < -905000 or minusY > -400000 or minusX < -1230000 or minusX > -930000:
         raise Exception(f"convertToWGS84 coordinates are out of range: X {minusY} Y {minusX}")
     [X05, Y05] = jtsk_to_jtsk05(-minusX, -minusY)
     [latitude, longitude] = jtsk_to_bessel(X05, Y05)
     [latitude, longitude] = bessel_to_wgs84(latitude, longitude, height)
-    return [longitude, latitude]
+    return [round(longitude, 7), round(latitude, 7)]
 
 
 # Conversion from ellipsoid WGS-84 to Bessel's ellipsoid

@@ -17,15 +17,15 @@ def check_if_task_queued(class_name, pk, task_name):
         i = app.control.inspect(["worker1@amcr"])
         queues = (i.scheduled(),)
     except Exception as e:
-        logger.error(
-            "xml_generator.models.ModelWithMetadata.check_if_task_queued.Celery_error",
+        logger.warning(
+            "xml_generator.models.ModelWithMetadata.check_if_task_queued.Celery_warning",
             extra={"Exception": e, "app": app},
         )
         return False
     for queue in queues:
         if queue is None:
-            logger.error(
-                "xml_generator.models.ModelWithMetadata.check_if_task_queued.error",
+            logger.warning(
+                "xml_generator.models.ModelWithMetadata.check_if_task_queued.warning",
                 extra={"class_name": class_name, "pk": pk, "i": i, "queues": queues},
             )
             return False

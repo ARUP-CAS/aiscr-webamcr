@@ -29,7 +29,7 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
     zkratka = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("heslar.models.Heslar.zkratka"))
     heslo_en = models.CharField(max_length=255, verbose_name=_("heslar.models.Heslar.heslo_en"))
     popis_en = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.popis_en"))
-    razeni = models.IntegerField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.razeni"))
+    razeni = models.IntegerField(blank=True, null=True, db_index=True, verbose_name=_("heslar.models.Heslar.razeni"))
 
     ident_prefix = "HES"
 
@@ -250,6 +250,7 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
         verbose_name=_("heslar.models.HeslarOdkaz.skos_mapping_relation"),
         choices=SKOS_MAPPING_RELATION_CHOICES,
     )
+    scheme_uri = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = "heslar_odkaz"

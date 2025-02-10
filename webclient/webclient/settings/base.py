@@ -180,6 +180,7 @@ INSTALLED_APPS = [
     "django_object_actions",
     "cacheops",
     "fedora_management",
+    "pid.apps.PidConfig",
     "vypis",
 ]
 
@@ -394,6 +395,10 @@ LOGGING = {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
+        "pid": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+        },
         "dokument": {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
@@ -527,6 +532,14 @@ FEDORA_ADMIN_USER_PASSWORD = get_secret("FEDORA_ADMIN_USER_PASSWORD", "")
 FEDORA_PROTOCOL = get_secret("FEDORA_PROTOCOL", "https")
 FEDORA_TRANSACTION_URL = get_secret("FEDORA_TRANSACTION_URL", "")
 
+DATACITE_URL = get_secret("DATACITE_URL", "")
+DOI_USER = get_secret("DOI_USER", "")
+DOI_USER_PASSWORD = get_secret("DOI_USER_PASSWORD", "")
+IGSN_USER = get_secret("IGSN_USER", "")
+IGSN_USER_PASSWORD = get_secret("IGSN_USER_PASSWORD", "")
+DOI_PREFIX = get_secret("DOI_PREFIX", "")
+IGSN_PREFIX = get_secret("IGSN_PREFIX", "")
+
 DIGIARCHIV_SERVER_URL = get_secret("DIGIARCHIV_SERVER_URL", "https://digiarchiv.aiscr.cz/")
 
 REST_FRAMEWORK = {
@@ -544,7 +557,7 @@ TEST_ENV = get_secret("TEST_ENV", "True") == "True"
 CLAMD_HOST = None
 CLAMD_PORT = None
 
-DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "")
+DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "https://digiarchiv.aiscr.cz/id/")
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

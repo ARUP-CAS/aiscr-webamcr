@@ -10,6 +10,9 @@ from django.utils.translation import gettext_lazy as _
 logger = logging.getLogger(__name__)
 
 
+orcid_pattern = re.compile(r"\d{4}-\d{4}-\d{4}-\d{4}")
+
+
 def validate_phone_number(number):
     """
     Validátor pro ověření telefonního čísla na správny formát.

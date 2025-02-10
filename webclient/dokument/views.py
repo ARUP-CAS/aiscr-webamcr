@@ -8,6 +8,7 @@ from arch_z.models import Akce, ArcheologickyZaznam
 from cacheops import invalidate_model
 from core.constants import (
     ARCHIVACE_DOK,
+    AZ_STAV_ARCHIVOVANY,
     D_STAV_ARCHIVOVANY,
     D_STAV_ODESLANY,
     D_STAV_ZAPSANY,
@@ -68,9 +69,11 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views import View
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
 from django.views.generic.edit import UpdateView
@@ -242,6 +245,7 @@ class Model3DListView(SearchListView):
     redis_snapshot_prefix = "dokument"
     redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
+    vypis_app = "model"
 
     def init_translations(self):
         super().init_translations()
@@ -311,6 +315,7 @@ class DokumentListView(SearchListView):
     redis_snapshot_prefix = "dokument"
     redis_value_list_field = "ident_cely"
     typ_zmeny_lookup = ZAPSANI_DOK
+    vypis_app = "dokument"
 
     def init_translations(self):
         super().init_translations()
@@ -551,6 +556,10 @@ class DokumentDetailView(RelatedContext):
 
     template_name = "dokument/dok/detail.html"
 
+    @method_decorator(never_cache)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
 
 class DokumentCastDetailView(RelatedContext):
     """
@@ -708,6 +717,10 @@ class KomponentaDokumentCreateView(RelatedContext):
         self.get_cast(context, cast)
         context["komponenta_form_create"] = CreateKomponentaForm(get_obdobi_choices(), get_areal_choices())
         return context
+
+    @method_decorator(never_cache)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 
 class TvarEditView(LoginRequiredMixin, View):
@@ -1101,6 +1114,7 @@ class DokumentNeidentAkceSmazatView(TransakceView):
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
@@ -1203,6 +1217,7 @@ def edit(request, ident_cely):
     )
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit_model_3D(request, ident_cely):
@@ -1242,14 +1257,14 @@ def edit_model_3D(request, ident_cely):
             prefix="komponenta",
         )
         geom = None
+        geom_sjtsk = None
         x1 = None
         x2 = None
         try:
             x1 = float(form_coor.data.get("coordinate_wgs84_x1"))
             x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
-            if x1 > 0 and x2 > 0:
-                geom = Point(x1, x2)
-                geom_sjtsk = Point(convertToJTSK(x1, x2))
+            geom = Point(x1, x2)
+            geom_sjtsk = Point(*convertToJTSK(x1, x2))
         except Exception:
             logger.debug("dokument.views.edit_model_3D.coord_error", extra={"x1": x1, "x2": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
@@ -1366,6 +1381,7 @@ def zapsat_do_projektu(request, proj_ident_cely):
     return zapsat(request, zaznam)
 
 
+@never_cache
 @login_required
 @require_http_methods(["GET", "POST"])
 def create_model_3D(request):
@@ -1396,17 +1412,14 @@ def create_model_3D(request):
             prefix="komponenta",
         )
         geom = None
+        geom_sjtsk = None
         x1 = None
         x2 = None
         try:
             x1 = float(form_extra.data.get("coordinate_wgs84_x1"))
             x2 = float(form_extra.data.get("coordinate_wgs84_x2"))
-            if x1 > 0 and x2 > 0:
-                geom = Point(x1, x2)
-                try:
-                    geom_sjtsk = Point(convertToJTSK(x1, x2))
-                except Exception:
-                    geom_sjtsk = None
+            geom = Point(x1, x2)
+            geom_sjtsk = Point(*convertToJTSK(x1, x2))
         except Exception:
             logger.debug("dokument.views.create_model_3D.coord_error", extra={"x1": x1, "x2": x2})
 
@@ -1579,6 +1592,16 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ARCHIVOVAN)
         dokument.active_transaction = fedora_transaction
+        dokument.doi_publish()
+        dokument.set_doi()
+        for item in dokument.casti.all():
+            item: DokumentCast
+            if (
+                item.archeologicky_zaznam
+                and item.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            ):
+                item.archeologicky_zaznam.lokalita.igsn_update()
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
@@ -1610,6 +1633,7 @@ def archivovat(request, ident_cely):
     context = {
         "object": dokument,
         "title": _("dokument.views.archivovat.title"),
+        "text": _("dokument.views.archivovat.doi_exists_warning") if dokument.doi_exists else None,
         "id_tag": "archivovat-dokument-form",
         "button": _("dokument.views.archivovat.submitButton.text"),
         "form_check": form_check,
@@ -1633,6 +1657,8 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             dokument.create_transaction(request.user, DOKUMENT_USPESNE_VRACEN)
+            if dokument.stav == D_STAV_ARCHIVOVANY:
+                dokument.doi_hide()
             duvod = form.cleaned_data["reason"]
             if dokument.stav == D_STAV_ODESLANY:
                 Mailer.send_ek02(document=dokument, reason=duvod)
@@ -1799,6 +1825,7 @@ def get_detail_template_shows(dokument, user):
     return show
 
 
+@never_cache
 @login_required
 def zapsat(request, zaznam=None):
     """

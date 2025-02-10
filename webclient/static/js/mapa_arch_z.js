@@ -81,7 +81,7 @@ var searchControl=new L.Control.Search({
     marker: false,
     propertyName: 'text',
     propertyMagicKey:'magicKey',
-    minLength:3,
+    minLength:2,
     translations:leaflet_search_translations,
     layerKN:cuzkWMS
 }).addTo(map);
@@ -693,7 +693,7 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
             if(global_measuring_toolbox._measuring){
                 return;
             }
-            if(coordinates_editor.activate)coordinates_editor.deactivate();
+            if(coordinates_editor._active)coordinates_editor.deactivate();
             //pian připnout z mapy
             if(global_map_can_grab_geom_from_map!==false && !global_map_can_edit ){
                 map.spin(false);

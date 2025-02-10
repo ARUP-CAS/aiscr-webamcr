@@ -78,3 +78,9 @@ class LokalitaTable(SearchTable):
             "zachovalost",
             "jistota",
         )
+
+    def get_all_idents(self):
+        """
+        Vrátí seznam identifikátorů archeologických záznamů pro lokalitu.
+        """
+        return ",".join([record.record.archeologicky_zaznam.ident_cely for record in self.paginated_rows])

@@ -83,6 +83,8 @@ urlpatterns = [
     path("notifikace-projekty/", include("notifikace_projekty.urls")),
     path("vypis/", include("vypis.urls")),
     path("i18n/", include("django.conf.urls.i18n")),
+    path("pid/", include("pid.urls")),
+    path("fedora/", include("fedora_management.urls")),
 ]
 urlpatterns += [re_path(r"^healthcheck/", include("healthcheck.urls"))]
 
