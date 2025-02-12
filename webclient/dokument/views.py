@@ -111,6 +111,7 @@ from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     MODEL_3D_DOKUMENT_TYPES,
+    PRIMARNE_DIGITALNI,
     PRISTUPNOST_ANONYM_ID,
     TYP_PROJEKTU_PRUZKUM_ID,
 )
@@ -1257,14 +1258,14 @@ def edit_model_3D(request, ident_cely):
             prefix="komponenta",
         )
         geom = None
+        geom_sjtsk = None
         x1 = None
         x2 = None
         try:
             x1 = float(form_coor.data.get("coordinate_wgs84_x1"))
             x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
-            if x1 > 0 and x2 > 0:
-                geom = Point(x1, x2)
-                geom_sjtsk = Point(convertToJTSK(x1, x2))
+            geom = Point(x1, x2)
+            geom_sjtsk = Point(*convertToJTSK(x1, x2))
         except Exception:
             logger.debug("dokument.views.edit_model_3D.coord_error", extra={"x1": x1, "x2": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
@@ -1418,12 +1419,8 @@ def create_model_3D(request):
         try:
             x1 = float(form_extra.data.get("coordinate_wgs84_x1"))
             x2 = float(form_extra.data.get("coordinate_wgs84_x2"))
-            if x1 > 0 and x2 > 0:
-                geom = Point(x1, x2)
-                try:
-                    geom_sjtsk = Point(convertToJTSK(x1, x2))
-                except Exception:
-                    geom_sjtsk = None
+            geom = Point(x1, x2)
+            geom_sjtsk = Point(*convertToJTSK(x1, x2))
         except Exception:
             logger.debug("dokument.views.create_model_3D.coord_error", extra={"x1": x1, "x2": x2})
 
@@ -1441,6 +1438,7 @@ def create_model_3D(request):
             else:
                 dokument.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ANONYM_ID)
                 dokument.stav = D_STAV_ZAPSANY
+                dokument.ulozeni_originalu = Heslar.objects.get(id=PRIMARNE_DIGITALNI)
                 dokument.save()
                 dokument.set_zapsany(request.user)
                 # Vytvorit defaultni cast dokumentu

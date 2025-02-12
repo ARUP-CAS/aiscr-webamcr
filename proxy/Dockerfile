@@ -15,7 +15,6 @@ RUN mkdir -p /vol/static
 RUN chmod 755 /vol/static
 
 RUN mkdir -p /vol/nginx/data
-ADD ./custom_html /vol/nginx/data
 RUN chmod 777 -R  /vol/nginx/data
 
 COPY ./run-healthcheck_proxy.sh /scripts/

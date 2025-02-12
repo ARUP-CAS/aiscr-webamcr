@@ -52,7 +52,12 @@ class CreateProjektForm(forms.ModelForm):
         )
         widgets = {
             "typ_projektu": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                    "autocomplete": "off",
+                }
             ),
             "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "lokalizace": forms.TextInput(),
@@ -323,11 +328,11 @@ class EditProjektForm(forms.ModelForm):
                                 Div("planovane_zahajeni", css_class="col-sm-3"),
                                 css_class="row",
                             ),
-                            css_class="col-sm-9",
+                            css_class="col-sm-6",
                         ),
                         Div(
                             Div(id="projectMap"),
-                            css_class="col-sm-3",
+                            css_class="col-sm-6",
                         ),
                         css_class="row",
                     ),
@@ -848,4 +853,22 @@ class UpravitDatumOznameniForm(forms.ModelForm):
                 css_class="card app-card-form",
             )
         )
+        self.helper.form_tag = False
+
+
+class NeodeslatMailForm(forms.Form):
+    """
+    Formulář neodeslání mailu oznamovateli.
+    """
+
+    send_mail = forms.BooleanField(
+        initial=True,
+        required=False,
+        label=_("oznameni.forms.oznamovatelForm.send_mail.label"),
+        help_text=_("oznameni.forms.oznamovatelForm.send_mail.tooltip"),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
         self.helper.form_tag = False

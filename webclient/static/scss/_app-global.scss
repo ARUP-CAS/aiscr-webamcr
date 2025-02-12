@@ -1041,7 +1041,7 @@ span.badge-span .badge {
   table-layout: fixed;
 }
 
-.btn-group:has(.dropdown-menu):first-child:not(:has(.dropdown-item)) {
+.btn-group:has(.dropdown-menu):not(:has(.dropdown-item)) {
   #others.btn {
     display: none;
   }

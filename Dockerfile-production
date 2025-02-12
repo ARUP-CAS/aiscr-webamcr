@@ -44,6 +44,7 @@ COPY ./webclient /code
 WORKDIR /code
 COPY ./scripts /scripts
 RUN chmod +x /scripts/*
+ADD ./proxy/custom_html /custom_html
 
 # Uploaded images
 RUN mkdir -p /vol/web/media
@@ -64,6 +65,8 @@ RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 RUN chown -R user:user /code
 RUN chmod -R 755 /code
+RUN chown -R user:user /custom_html
+RUN chmod -R 755 /custom_html
 
 # Apply cron
 RUN crontab -u user /scripts/crontab.txt
