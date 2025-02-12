@@ -98,7 +98,7 @@
       var bounds, zoom, scale;
       var generatedData = { max: this._max, min: this._min, data: [] };
 
-      bounds = this._map.getBounds();
+      bounds = this._map.getBounds().pad(1);
       zoom = this._map.getZoom();
       scale = Math.pow(2, zoom);
 
