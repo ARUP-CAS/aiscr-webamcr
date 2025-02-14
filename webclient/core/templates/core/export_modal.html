@@ -22,12 +22,9 @@
               <p>{% trans "core.templates.core.export_modal.too_many_rows" %}</p>
             {% endif %}
           {% endif %}
-          <p id="export-progress-model-file-being-generated"
+          <p id="export-progress-model-file-message"
              {% if table.rows|length >= 50000 %}style="display: none"{% endif %}>
             {% trans "core.templates.core.export_modal.file_being_generated" %}
-          </p>
-          <p id="export-progress-model-generated" style="display: none">
-            {% trans "core.templates.core.export_modal.file_generated" %}
           </p>
         </div>
         <div class="modal-footer">
@@ -38,40 +35,33 @@
     </div>
   </div>
   <script>
-      const updateProgressBar = (progressPercentage = 0) => {
+      const updateProgressBar = (progressPercentage = 0, message="") => {
           const progressBar = document.querySelector('#export-progress-modal .progress-bar');
           if (progressBar) {
               progressBar.style.width = progressPercentage + '%';
               progressBar.setAttribute('aria-valuenow', progressPercentage);
           }
-          if (progressPercentage >= 80) {
-              const parBeingGenerated = document.getElementById('export-progress-model-file-being-generated');
-              parBeingGenerated.style.display = "none";
-              const parGenerated = document.getElementById('export-progress-model-generated');
-              parGenerated.style.display = null;
-          }
+          const parMessage = document.getElementById('export-progress-model-file-message');
+          parMessage.textContent = message;
       }
       
       const controller = new AbortController();
       const signal = controller.signal;
 
       const manageExportDownload = (downloadUrl, redis_variable_name) => {
-          let downloadFinished = false;
           
           document.addEventListener('downloadStart', () => {
-              const parBeingGenerated = document.getElementById('export-progress-model-file-being-generated');
-              parBeingGenerated.style.display = null;
+              const parMessage = document.getElementById('export-progress-model-file-message');
+              parMessage.style.display = null;
           });
 
           document.addEventListener('downloadComplete', () => {
-              updateProgressBar(100);
-              downloadFinished = true;
+              updateProgressBar(100,"");
+              clearInterval(intervalId);
               fetch(`{% url 'core:delete_temp_value' %}?temp_name=${redis_variable_name}`)
                   .catch(error => console.error('Error in Check Value Function:', error));
               setTimeout(() => {
                   $('#export-progress-modal').modal('hide')
-                  const parGenerated = document.getElementById('export-progress-model-generated')
-                  parGenerated.style.display = "none"
               }, 500);
           });
           
@@ -95,10 +85,7 @@
               fetch(`{% url 'core:read_temp_value' %}?temp_name=${redis_variable_name}`)
                   .then(response => response.json())
                   .then(data => {
-                      updateProgressBar(data.value);
-                      if (downloadFinished) {
-                          clearInterval(intervalId);
-                      }
+                      updateProgressBar(data.percent,data.text);
                   })
                   .catch(error => console.error('Error in Check Value Function:', error));
           }
@@ -108,19 +95,9 @@
                   .catch(error => console.error('Error in reset function:', error));
           }
 
-
-          const intervalId = setInterval(() => {
-              if (!downloadFinished) {
-                  checkDownloadStatus();
-              }
+          const intervalId = setInterval(() => {              
+                checkDownloadStatus();           
           }, 1000);
-
-          fetch(`{% url 'core:read_temp_value' %}?temp_name=${redis_variable_name}`)
-              .then(response => response.json())
-              .then(data => {
-                  updateProgressBar(data.value);
-              })
-              .catch(error => console.error('Error in Check Value Function:', error));
 
           fetch(downloadUrl, {signal})
               .then(response => {
@@ -147,6 +124,7 @@
               })
           
           document.getElementById('export-progress-modal-button-cancel').addEventListener('click', () => {
+              clearInterval(intervalId);
               updateRedisDownloadAbort()
               controller.abort("AbortedByUser")
               location.reload()
