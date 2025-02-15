@@ -44,7 +44,23 @@ def check_if_task_queued(class_name, pk, task_name):
     return False
 
 
-class ModelWithMetadata(models.Model):
+class BaseAmcrModel(models.Model):
+    """
+    Základní model pro všechny modely v aplikaci.
+    """
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return f"{self.pk}"
+
+    @property
+    def get_ident_cely_link(self):
+        return f"<a href='{self.get_absolute_url()}'>{self.ident_cely}</a>"
+
+
+class ModelWithMetadata(BaseAmcrModel):
     ident_cely = models.TextField(unique=True)
 
     def __init__(self, *args, **kwargs):

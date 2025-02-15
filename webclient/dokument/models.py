@@ -56,6 +56,7 @@ from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba
+from xml_generator.models import BaseAmcrModel
 
 logger = logging.getLogger(__name__)
 
@@ -558,7 +559,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         return self._get_doi_client().get_record_url()
 
 
-class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
+class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
     """
     Class pro db model dokument část.
     """

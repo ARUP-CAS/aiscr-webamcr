@@ -419,6 +419,20 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
             else:
                 return ""
 
+    def get_nazev(self):
+        if get_language() == "en":
+            if self.nazev_en:
+                return self.nazev_en
+            elif self.nazev:
+                return self.nazev
+            else:
+                return ""
+        else:
+            if self.nazev:
+                return self.nazev
+            else:
+                return ""
+
     @property
     def general(self):
         return False

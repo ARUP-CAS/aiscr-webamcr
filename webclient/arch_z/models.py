@@ -632,6 +632,12 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
         unique_together = (("akce", "vedouci"),)
         ordering = ["vedouci__prijmeni", "vedouci__jmeno"]
 
+    def __str__(self):
+        """
+        Metóda vráti jako str reprezentaci modelu vedouci.
+        """
+        return f"{self.vedouci.vypis_cely} ({self.organizace})"
+
 
 class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
     """
