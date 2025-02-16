@@ -28,7 +28,7 @@ urlpatterns = [
     path("spoluprace/aktivovat/<int:pk>", views.aktivace, name="spoluprace_aktivace"),
     path(
         "spoluprace/deaktivovat/<int:pk>",
-        views.deaktivace,
+        views.DeaktivaceSpolupraceView.as_view(),
         name="spoluprace_deaktivace",
     ),
     path(
