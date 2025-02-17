@@ -1,5 +1,4 @@
 import logging
-import uuid
 
 import simplejson as json
 from core.constants import OBLAST_CECHY, PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_OZNAMENY, PROJEKT_STAV_VYTVORENY
@@ -9,14 +8,13 @@ from core.forms import CheckStavNotChangedForm
 from core.ident_cely import get_temporary_project_ident
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.repository_connector import FedoraTransaction
-from core.utils import get_cadastre_from_point
+from core.utils import SessionIdentifier, get_cadastre_from_point
 from core.views import check_stav_changed
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
-from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -37,14 +35,8 @@ logger = logging.getLogger(__name__)
 
 
 class OznameniView(View):
-    def get_session_id(self, request):
-        if "session_uuid" not in request.session:
-            request.session["session_uuid"] = str(uuid.uuid4())  # Vytvoří unikátní ID
-            request.session.modified = True
-        return request.session["session_uuid"]
-
     def dispatch(self, request, *args, **kwargs):
-        self.cache_key = f"session_{self.get_session_id(request)}_oznameni_projekt"
+        self.session_identifier = SessionIdentifier(request)
         self.ident_cely = kwargs.pop("ident_cely", None)
         return super().dispatch(request, *args, **kwargs)
 
@@ -113,7 +105,7 @@ class OznameniZapsatView(OznameniView):
                 projekt.set_vytvoreny()
                 projekt.katastry.add(*[i for i in dalsi_katastry])
                 projekt.save()
-                cache.set(self.cache_key, projekt.ident_cely, timeout=3600)
+                self.session_identifier.set_ident(projekt.ident_cely)
                 return redirect("oznameni:index2", ident_cely=projekt.ident_cely)
             else:
                 extra = {"form_ozn_errors": form_ozn.errors, "form_projekt_errors": form_projekt.errors}
@@ -134,9 +126,7 @@ class OznameniZapsatView(OznameniView):
     @method_decorator(never_cache)
     def get(self, request):
         if self.ident_cely:
-
-            cache_project = cache.get(self.cache_key, None)
-
+            cache_project = self.session_identifier.get_ident()
             logger.debug("oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely})
 
             logger.debug(
@@ -216,7 +206,7 @@ class OznameniDokumentaceView(OznameniView):
     @method_decorator(never_cache)
     def get(self, request):
         if self.ident_cely:
-            cache_project = cache.get(self.cache_key, None)
+            cache_project = self.session_identifier.get_ident()
             logger.debug(
                 "oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely, "cache_project": cache_project}
             )
@@ -229,8 +219,11 @@ class OznameniDokumentaceView(OznameniView):
                     )
                     raise PermissionDenied
                 else:
-                    cache.set(self.cache_key, projekt.ident_cely, timeout=3600)
-                    return render(request, "oznameni/index_2.html", {"projekt": projekt})
+                    queryset = projekt.soubory.soubory.all()
+                    seznam_mock = [obj.getMock() for obj in queryset]
+                    json_mock = json.dumps(seznam_mock, ensure_ascii=False)
+                    self.session_identifier.set_ident(projekt.ident_cely)
+                    return render(request, "oznameni/index_2.html", {"projekt": projekt, "seznam_mock": json_mock})
 
             else:
                 logger.debug(
@@ -250,7 +243,7 @@ class OznameniPotvrzeniView(OznameniView):
     @method_decorator(never_cache)
     def get(self, request):
         if self.ident_cely:
-            cache_project = cache.get(self.cache_key, None)
+            cache_project = self.session_identifier.get_ident()
             logger.debug(
                 "oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely, "cache_project": cache_project}
             )
@@ -263,7 +256,7 @@ class OznameniPotvrzeniView(OznameniView):
                     )
                     raise PermissionDenied
                 else:
-                    cache.set(self.cache_key, self.ident_cely, timeout=300)
+                    self.session_identifier.set_ident(self.ident_cely, 300)
                     context = {"ident_cely": self.ident_cely}
                     return render(request, "oznameni/success.html", context)
 

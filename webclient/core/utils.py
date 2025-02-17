@@ -4,6 +4,7 @@ import logging
 import mimetypes
 import os
 import tempfile
+import uuid
 
 import core.message_constants as mc
 import django
@@ -1239,3 +1240,47 @@ def replace_last(source_string, old, new):
         end_part = source_string[index + len(old) :]
         return start_part + replace_part + end_part
     return source_string
+
+
+class SessionIdentifier:
+    def __init__(self, request):
+        self.cache_key = self._generate_session_key(request)
+
+    def _generate_session_key(self, request):
+        if "session_uuid" not in request.session:
+            request.session["session_uuid"] = str(uuid.uuid4())  # Vytvoří unikátní ID
+            request.session.modified = True
+        return f"session_{request.session['session_uuid']}_key"
+
+    def clear_cached_files(self):
+        cache.delete(f"{self.cache_key}_files")
+
+    def set_ident(self, ident_cely, timeout=3600):
+        old_ident_cely = self.get_ident()
+        if old_ident_cely != ident_cely:
+            self.clear_cached_files()
+        cache.set(self.cache_key, ident_cely, timeout)
+
+    def get_ident(self):
+        return cache.get(self.cache_key, None)
+
+    def add_file_reference(self, ident, timeout=3600):
+        files = cache.get(f"{self.cache_key}_files", set())
+        files.add(ident)
+        cache.set(f"{self.cache_key}_files", files, timeout)
+
+    def file_exists(self, ident):
+        files = cache.get(f"{self.cache_key}_files", set())
+        if ident in files:
+            return True
+        return False
+
+    def remove_file_reference(self, ident):
+        files = cache.get(f"{self.cache_key}_files", set())
+        if ident in files:
+            files.remove(ident)
+            cache.set(f"{self.cache_key}_files", files)
+
+    def get_cached_files(self):
+        files = cache.get(f"{self.cache_key}_files", set())
+        return files

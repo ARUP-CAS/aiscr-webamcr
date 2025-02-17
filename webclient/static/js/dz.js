@@ -227,7 +227,7 @@ window.onload = function () {
             });
             this.on("removedfile", function (file) {
                 if (file.id) {
-                    xhttp.open("POST", "/soubor/smazat/" + typ_vazby + "/" + object_id + "/" + file.id);
+                    xhttp.open("POST", "/soubor/smazat-DZ/" + typ_vazby + "/" + object_id + "/" + file.id);
                     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                     xhttp.setRequestHeader('X-CSRFToken', csrfcookie());
                     xhttp.onreadystatechange = () => {
@@ -270,5 +270,16 @@ window.onload = function () {
     };
     const uploader = document.querySelector('#my-awesome-dropzone');
     newDropzone = new Dropzone(uploader, dropzoneOptions);
+    mock=JSON.parse(mock_str);
+    mock.forEach(file => {
+        let mockFile = {
+            name: file.name,
+            size: file.size,
+            id: file.id // Přidání ID pro mazání
+        };
+        newDropzone.emit("addedfile", mockFile);
+        newDropzone.emit("complete", mockFile);
+    });
+
     console.log("Loaded");
 };
