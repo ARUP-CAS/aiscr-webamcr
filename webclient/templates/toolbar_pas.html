@@ -12,10 +12,10 @@
           <span class="material-icons" onclick="copy_ident_link('{{sn.ident_cely}}')">content_copy</span>
         </button>
       {% endif %}
-      {% if show.backtoprojekt %}<span class="app-pipe"></span><a href="{% url 'projekt:detail' sn.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarPas.backToProjekt.label" %}</a>{% endif %}
       {% if sn.igsn %}
         <span style="font-weight: normal">({{ sn.igsn }})</span>
       {% endif %}
+      {% if show.backtoprojekt %}<span class="app-pipe"></span><a href="{% url 'projekt:detail' sn.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarPas.backToProjekt.label" %}</a>{% endif %}
     </div>
   </div>
   {% if showcontrols %}
