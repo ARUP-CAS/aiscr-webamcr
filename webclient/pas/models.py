@@ -465,7 +465,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         ).save()
         self.save()
 
-    def set_neaktivni(self, user):
+    def set_neaktivni(self, user, duvod):
         """
         Metóda pro nastavení stavu neaktivní a uložení změny do historie pro spolupráci.
         """
@@ -474,6 +474,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
             typ_zmeny=SPOLUPRACE_DEAKTIVACE,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=duvod,
         ).save()
         self.save()
 

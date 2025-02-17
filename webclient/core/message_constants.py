@@ -171,6 +171,9 @@ SPOLUPRACE_BYLA_AKTIVOVANA: Final = _("common.message.SPOLUPRACE_BYLA_AKTIVOVANA
 SPOLUPRACE_BYLA_DEAKTIVOVANA: Final = _(
     "common.message.SPOLUPRACE_BYLA_DEAKTIVOVANA.text"
 )  # Spolupráce byla deaktivována.
+SPOLUPRACE_NEBYLA_DEAKTIVOVANA: Final = _(
+    "common.message.SPOLUPRACE_NEBYLA_DEAKTIVOVANA.text"
+)  # Spolupráce nebyla deaktivována kvuly chybe.
 SPOLUPRACI_NELZE_AKTIVOVAT: Final = _("common.message.SPOLUPRACI_NELZE_AKTIVOVAT.text")  # Spolupráci nejde aktivovat.
 SPOLUPRACI_NELZE_DEAKTIVOVAT: Final = _(
     "common.message.SPOLUPRACI_NELZE_DEAKTIVOVAT.text"
