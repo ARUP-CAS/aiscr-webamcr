@@ -10,7 +10,7 @@
       {{zaznam.ident_cely}}
       {% if zaznam.ident_cely %}
         <button>
-          <span class="material-icons" onclick="copy_ident_link('{{zaznam.ident_cely}}')">content_copy</span>
+          <span class="material-icons" onclick="copy_ident_link('{{zaznam.ident_cely}}')" rel="tooltip" title="{% trans 'templates.toolbarEZ.copyIdentLink.label' %}">content_copy</span>
         </button>
       {% endif %}
     </div>

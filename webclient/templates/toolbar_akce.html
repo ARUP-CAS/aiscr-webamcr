@@ -10,7 +10,7 @@
       {{ zaznam.ident_cely }}
       {% if zaznam.ident_cely %}
       <button>
-        <span class="material-icons" onclick="copy_ident_link('{{zaznam.ident_cely}}')">content_copy</span>
+        <span class="material-icons" onclick="copy_ident_link('{{zaznam.ident_cely}}')" rel="tooltip" title="{% trans 'templates.toolbarAkce.copyIdentLink.label' %}">content_copy</span>
       </button>
       {% endif %}
       {% if showbackdetail and app == "pr" %}<span class="app-pipe"></span><a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarAkce.backToProjekt.label" %}</a>{% endif %}
