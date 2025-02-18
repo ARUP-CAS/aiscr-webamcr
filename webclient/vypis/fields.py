@@ -213,15 +213,20 @@ class ForeignField(Field):
     def get_value(self, instance, user=None):
         accessors = self.accessor.split("__")
         new_instance = ""
-        if getattr(instance, self.foreign_key):
-            new_instance = getattr(instance, self.foreign_key)
-            for key in accessors:
-                logger.debug(f"Key: {key}")
-                if getattr(new_instance, key, False) or getattr(new_instance, key) == 0:
-                    new_instance = getattr(new_instance, key)
-                    logger.debug(f"New instance: {new_instance}")
-                else:
-                    new_instance = ""
+        logger.debug(f"Accessors: {accessors}")
+        logger.debug(f"fkey: {self.foreign_key}")
+        try:
+            if getattr(instance, self.foreign_key):
+                new_instance = getattr(instance, self.foreign_key)
+                for key in accessors:
+                    logger.debug(f"Key: {key}")
+                    if getattr(new_instance, key, False) or getattr(new_instance, key) == 0:
+                        new_instance = getattr(new_instance, key)
+                        logger.debug(f"New instance: {new_instance}")
+                    else:
+                        new_instance = ""
+        except Dokument.extra_data.RelatedObjectDoesNotExist:
+            new_instance = ""
         return mark_safe(new_instance)
 
 
@@ -243,17 +248,23 @@ class GeomWktField(Field):
 
 class ForeignGeomGmlField(ForeignField):
     def get_value(self, instance, user=None):
-        geom = getattr(getattr(instance, self.foreign_key), self.accessor)
-        if geom:
-            return get_gml(geom)
+        try:
+            geom = getattr(getattr(instance, self.foreign_key), self.accessor)
+            if geom:
+                return get_gml(geom)
+        except Dokument.extra_data.RelatedObjectDoesNotExist:
+            return None
         return None
 
 
 class ForeignGeomWktField(ForeignField):
     def get_value(self, instance, user=None):
-        geom = getattr(getattr(instance, self.foreign_key), self.accessor)
-        if geom:
-            return get_wkt(geom)
+        try:
+            geom = getattr(getattr(instance, self.foreign_key), self.accessor)
+            if geom:
+                return get_wkt(geom)
+        except Dokument.extra_data.RelatedObjectDoesNotExist:
+            return None
         return None
 
 
