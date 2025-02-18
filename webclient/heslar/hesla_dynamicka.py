@@ -229,6 +229,26 @@ PRIMARNE_DIGITALNI = get_id_from_heslar("HES-001166")
 
 ADMIN_USER = get_id_from_user("U-000322")
 
+OSOBA_ANONYM = get_id_from_osoba("OS-007414")
+
+ORGANIZACE_OVM = get_id_from_organizace("ORG-000003")
+ORGANIZACE_AMATER = get_id_from_organizace("ORG-000011")
+ORGANIZACE_NEURCENA = get_id_from_organizace("ORG-000012")
+ORGANIZACE_ARCHEOLOG = get_id_from_organizace("ORG-000013")
+ORGANIZACE_ZAHRANICI = get_id_from_organizace("ORG-000014")
+ORGANIZACE_JINA = get_id_from_organizace("ORG-000043")
+ORGANIZACE_ZDROJ = get_id_from_organizace("ORG-000055")
+
+ORGANIZACE_OBECNE = [
+    ORGANIZACE_OVM,
+    ORGANIZACE_AMATER,
+    ORGANIZACE_NEURCENA,
+    ORGANIZACE_ARCHEOLOG,
+    ORGANIZACE_ZAHRANICI,
+    ORGANIZACE_JINA,
+    ORGANIZACE_ZDROJ,
+]
+
 heslar = get_settings("constants", "heslar")
 for key, value in heslar.items():
     if key not in globals():
@@ -263,7 +283,7 @@ osoba = get_settings("constants", "osoba")
 for key, value in osoba.items():
     if key not in globals():
         logger.warning("heslar.hesla_dynamicka.osoba.variable_not_exist", extra={"key": key})
-    globals()[key] = get_id_from_heslar(value)
+    globals()[key] = get_id_from_osoba(value)
 
 osoba_group = get_settings("constants", "osoba_group")
 for key, values in osoba_group.items():
