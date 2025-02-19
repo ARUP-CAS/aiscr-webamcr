@@ -328,7 +328,7 @@ switchMap = function (overview = false) {
                     if(i.pocet>maxHeat){
                         maxHeat=i.pocet;
                     }
-                        //from: {"id": "1", "pocet": 32, "density": 0, "geom": "POINT(14.8 50.120000000000005)"}
+                        //from: {"id": "1", "pocet": 32, "geom": "POINT(14.8 50.120000000000005)"}
                         //to: {lat: 24.6408, lng:46.7728, count: 3}
                     heatPoints.push({lat:parseFloat(geom[1]), lng:parseFloat(geom[0]), count:i.pocet});//chyba je to geome
                 })

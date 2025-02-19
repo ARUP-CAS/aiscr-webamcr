@@ -78,7 +78,6 @@ from core.models import check_permissions
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
     get_heatmap_project,
-    get_heatmap_project_density,
     get_num_projects_from_envelope,
     get_project_geom,
     get_project_pas_from_envelope,
@@ -248,15 +247,6 @@ def post_ajax_get_projects_limit(request):
         else:
             return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
     else:
-        density = get_heatmap_project_density(
-            body["southEast"]["lng"],
-            body["northWest"]["lat"],
-            body["northWest"]["lng"],
-            body["southEast"]["lat"],
-            body["zoom"],
-        )
-        logger.debug("projekt.views.post_ajax_get_projects_limit.density", extra={"density": density})
-
         heats = get_heatmap_project(
             body["southEast"]["lng"],
             body["northWest"]["lat"],
@@ -272,7 +262,6 @@ def post_ajax_get_projects_limit(request):
                 {
                     "id": str(cid),
                     "pocet": heat["count"],
-                    "density": 0,
                     "geom": heat["geometry"].replace(", ", ","),
                 }
             )
