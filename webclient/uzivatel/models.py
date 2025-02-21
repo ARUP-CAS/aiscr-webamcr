@@ -419,9 +419,6 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
             else:
                 return ""
 
-    @property
-    def general(self):
-        return False
 
     class Meta:
         db_table = "organizace"
@@ -482,11 +479,6 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
 
     def __str__(self):
         return self.vypis_cely
-
-    @property
-    def anonym(self):
-        # TODO: Implement this when anonym detection is added
-        return False
 
 
 class UserNotificationType(ExportModelOperationsMixin("user_notification_type"), models.Model):
