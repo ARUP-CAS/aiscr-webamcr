@@ -81,7 +81,7 @@ class OrcidAutocompleteView(ApiView):
     CACHE_PREFIX = "ORCID"
 
     @classmethod
-    def api_call(cls, q, use_cache=False):
+    def api_call(cls, q, use_cache=True):
         if use_cache:
             cached_value = cls._get_value_from_cache(q)
             if cached_value:
