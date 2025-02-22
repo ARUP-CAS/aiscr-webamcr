@@ -55,6 +55,8 @@ def create_ident_cely(sender, instance: User, **kwargs):
     Přidelení identu celý pro usera.
     """
     logger.debug("uzivatel.signals.create_ident_cely.start")
+    if instance.orcid and not instance.orcid.startswith("https://orcid.org/"):
+        instance.orcid = f"https://orcid.org/{instance.orcid}"
     if not kwargs["update_fields"] and instance.id:
         # Save it, so it can be used in post_save
         database_user_query = User.objects.filter(id=instance.id)
