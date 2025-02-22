@@ -142,7 +142,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     def __str__(self):
         return self.ident_cely + " (" + self.get_stav_display() + ")"
 
-    def get_absolute_url(self, request):
+    def get_absolute_url(self, request=None):
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         if dok_jednotky:
             for dok_jednotka in dok_jednotky:
@@ -150,7 +150,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
                     return dok_jednotka.get_absolute_url()
         else:
             logger.debug("pian without connection to DJ")
-            messages.error(request, _("pian.models.Pian.get_absolute_url.noDJ.message.text"))
+            if request:
+                messages.error(request, _("pian.models.Pian.get_absolute_url.noDJ.message.text"))
             return reverse("core:home")
 
     def get_permission_object(self):

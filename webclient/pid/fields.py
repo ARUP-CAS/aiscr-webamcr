@@ -13,11 +13,15 @@ class PidAutocompleteField(autocomplete.Select2ListChoiceField):
         super().__init__(**kwargs)
         self._set_initial_values()
 
+    def _get_initial_value_from_instance(self):
+        return getattr(self.instance, self.attribute_name)
+
     def _set_initial_values(self):
         if self.initial_value:
             result_list = self.autocomplete_class.api_call(self.initial_value, True)
         elif self.instance and getattr(self.instance, self.attribute_name, None):
-            result_list = self.autocomplete_class.api_call(getattr(self.instance, self.attribute_name))
+            value = self._get_initial_value_from_instance()
+            result_list = self.autocomplete_class.api_call(value)
         else:
             result_list = []
         if result_list:
@@ -38,6 +42,14 @@ class DoiAutocompleteField(PidAutocompleteField):
 class OrcidAutocompleteField(PidAutocompleteField):
     autocomplete_class = OrcidAutocompleteView
     attribute_name = "orcid"
+
+    def _get_initial_value_from_instance(self):
+        value = super()._get_initial_value_from_instance()
+        value = value.replace("https://orcid.org/", "")
+        return value
+
+    def prepare_value(self, value):
+        return value.replace("https://orcid.org/", "")
 
     def valid_value(self, value):
         return verify_orcid(value)

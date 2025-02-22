@@ -8,6 +8,11 @@
     <div id="id-app-entity-item" class="app-entity-item">
       {% if toolbar_label %}{{toolbar_label}}{%endif%}
       {{zaznam.ident_cely}}
+      {% if zaznam.ident_cely %}
+        <button>
+          <span class="material-icons" onclick="copy_ident_link('{{zaznam.ident_cely}}')" rel="tooltip" title="{% trans 'templates.toolbarEZ.copyIdentLink.label' %}">content_copy</span>
+        </button>
+      {% endif %}
     </div>
   </div>
   {% if showcontrols %}

@@ -707,6 +707,13 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             return ""
 
+    @property
+    def planovane_zahajeni_vypis(self):
+        if self.planovane_zahajeni:
+            return f"{self.planovane_zahajeni.lower.strftime('%-d.%-m.%Y')} - {(self.planovane_zahajeni.upper + datetime.timedelta(days=-1)).strftime('%-d.%-m.%Y')}"
+        else:
+            return ""
+
     def get_permission_object(self):
         return self
 

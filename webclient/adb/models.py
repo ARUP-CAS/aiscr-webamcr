@@ -13,7 +13,7 @@ from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_T
 from heslar.models import Heslar
 from model_utils import FieldTracker
 from uzivatel.models import Osoba
-from xml_generator.models import ModelWithMetadata
+from xml_generator.models import BaseAmcrModel, ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +151,7 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
         raise MaximalIdentNumberError(max_count)
 
 
-class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
+class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
     """
     Class pre db model vyškový bod.
     Obsahuje vazbu na ADB.

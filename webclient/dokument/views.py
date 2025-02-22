@@ -111,6 +111,7 @@ from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     MODEL_3D_DOKUMENT_TYPES,
+    PRIMARNE_DIGITALNI,
     PRISTUPNOST_ANONYM_ID,
     TYP_PROJEKTU_PRUZKUM_ID,
 )
@@ -1437,6 +1438,7 @@ def create_model_3D(request):
             else:
                 dokument.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ANONYM_ID)
                 dokument.stav = D_STAV_ZAPSANY
+                dokument.ulozeni_originalu = Heslar.objects.get(id=PRIMARNE_DIGITALNI)
                 dokument.save()
                 dokument.set_zapsany(request.user)
                 # Vytvorit defaultni cast dokumentu
