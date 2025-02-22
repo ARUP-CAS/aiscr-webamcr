@@ -6,7 +6,7 @@ from core.forms import SelectMultipleSeparator
 from crispy_forms.layout import HTML, Div, Layout
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
-from django_filters import ModelMultipleChoiceFilter
+from django_filters import CharFilter, ModelMultipleChoiceFilter
 from heslar.hesla import HESLAR_JISTOTA_URCENI, HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_TYP, HESLAR_STAV_DOCHOVANI
 from heslar.models import Heslar
 
@@ -19,6 +19,12 @@ class LokalitaFilter(ArchZaznamFilter):
     """
     Třída pro zakladní filtrování lokality a jejich potomků.
     """
+
+    igsn = CharFilter(
+        lookup_expr="icontains",
+        label=_("lokalita.filters.LokalitaFilter.igsn.label"),
+        distinct=True,
+    )
 
     typ_lokality = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LOKALITA_TYP),
@@ -125,6 +131,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 Div(
                     Div("ident_cely", css_class="col-sm-2"),
+                    Div("igsn", css_class="col-sm-2"),
                     Div("typ_lokality", css_class="col-sm-2"),
                     Div("druh_lokality", css_class="col-sm-2"),
                     Div("zachovalost_lokality", css_class="col-sm-2"),
