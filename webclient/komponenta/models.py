@@ -7,6 +7,7 @@ from django.urls import reverse
 from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import HESLAR_AKTIVITA, HESLAR_AREAL, HESLAR_OBDOBI
 from heslar.models import Heslar
+from xml_generator.models import BaseAmcrModel
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
             return self.dokumentacni_jednotka
 
 
-class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
+class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
     """
     Class pro db model komponenty.
     """

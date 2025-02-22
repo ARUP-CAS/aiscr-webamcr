@@ -1,0 +1,15 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% block content %}
+    <p>Dobrý den,</p>
+    <p>
+      spolupráce spolupracovníka <b>{{ name }}</b> <b>{{ surname }}</b> (<b>{{ organization }}</b>) a vedoucího <b>{{ vedouci_name }}</b> <b>{{ vedouci_surname }}</b> (<b>{{ vedouci_organization }}</b>) byla deaktivována.
+    </p>
+    <p>
+      <b>Důvod:</b> {{ reason }}
+    </p>
+    <p>Detaily o spolupráci získáte po přihlášení do AMČR-PAS.</p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
+{% endblock %}

@@ -397,7 +397,7 @@ def cancel_old_projects():
             project: Projekt
             project.active_transaction = FedoraTransaction()
             project.set_zruseny(User.objects.get(pk=hesla_dynamicka.ADMIN_USER), cancelled_string, RUSENI_STARE_PROJ)
-            if project.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
+            if project.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID and project.has_oznamovatel():
                 project.create_cancel_confirmation_document(User.objects.get(pk=hesla_dynamicka.ADMIN_USER))
             project.close_active_transaction_when_finished = True
             project.save()

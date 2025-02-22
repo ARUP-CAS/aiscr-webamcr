@@ -73,6 +73,7 @@ ALWAYS_ACTIVE = [
     "E-P-06a",
     "E-P-06b",
     "E-N-06",
+    "E-N-07",
     "E-K-02",
 ]
 
@@ -883,6 +884,41 @@ class Mailer:
             cls.__send(
                 subject=subject,
                 to=cooperation.spolupracovnik.email,
+                html_content=html,
+                notification_type=notification_type,
+            )
+
+    @classmethod
+    def send_en07(cls, cooperation: "pas.models.UzivatelSpoluprace", reason):
+        IDENT_CELY = "E-N-07"
+        logger.debug("services.mailer.send_en07", extra={"ident_cely": IDENT_CELY})
+        notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+        subject = notification_type.predmet
+        html = render_to_string(
+            notification_type.cesta_sablony,
+            {
+                "ident_cely": cooperation.pk,
+                "name": cooperation.spolupracovnik.first_name,
+                "surname": cooperation.spolupracovnik.last_name,
+                "organization": cooperation.spolupracovnik.organizace.nazev,
+                "vedouci_name": cooperation.vedouci.first_name,
+                "vedouci_surname": cooperation.vedouci.last_name,
+                "vedouci_organization": cooperation.vedouci.organizace.nazev,
+                "reason": reason,
+                "site_url": settings.SITE_URL,
+            },
+        )
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=cooperation.spolupracovnik):
+            cls.__send(
+                subject=subject,
+                to=cooperation.spolupracovnik.email,
+                html_content=html,
+                notification_type=notification_type,
+            )
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=cooperation.vedouci):
+            cls.__send(
+                subject=subject,
+                to=cooperation.vedouci.email,
                 html_content=html,
                 notification_type=notification_type,
             )

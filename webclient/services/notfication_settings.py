@@ -152,6 +152,11 @@ notification_settings = {
         "predmet": "AMČR-PAS: spolupráce potvrzena | AMCR-PAS: collaboration confirmed",
         "cesta_sablony": "emails/E-N-06.html",
     },
+    "E-N-07": {
+        "zasilat_neaktivnim": False,
+        "predmet": "AMČR-PAS: spolupráce deaktivována | AMCR-PAS: collaboration deactivated",
+        "cesta_sablony": "emails/E-N-07.html",
+    },
     "E-K-01": {
         "zasilat_neaktivnim": False,
         "predmet": "AMČR - Knihovna 3D: dokument {ident_cely} archivován | AMCR - 3D Library: document {ident_cely} archived",

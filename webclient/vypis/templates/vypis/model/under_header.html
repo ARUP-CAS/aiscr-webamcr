@@ -16,7 +16,7 @@
     {% if section.areal.value %}
     <div class="row">
         <div class="label"><strong>{{section.areal.label}}:</strong></div>
-        <div class="content"> {{section.areal.value}}</div>
+        <div class="content"> {{section.areal.value}} {% if section.aktivity.value %}({{section.aktivity.value}}){% endif %}</div>
     </div>
     {%endif%}
     {% if section.odkaz.value %}

@@ -12,6 +12,11 @@
     <div id="id-app-entity-item" class="app-entity-item">
       {% if d.ident_cely %}
         {{ d.ident_cely }}
+        {% if d.ident_cely %}
+        <button>
+          <span class="material-icons" onclick="copy_ident_link('{{d.ident_cely}}')" rel="tooltip" title="{% trans 'templates.toolbarDokument.copyIdentLink.label' %}">content_copy</span>
+        </button>
+        {% endif %}
         {% if d.doi %}
           <span style="font-weight: normal">({{ d.doi }})</span>
         {% endif %}

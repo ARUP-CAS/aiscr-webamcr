@@ -345,3 +345,20 @@ class CreateZadostForm(forms.Form):
 
 class PasFilterForm(BaseFilterForm):
     list_to_check = ["historie_datum_zmeny_od", "datum_nalezu"]
+
+
+class DeaktivovatSpolupraciForm(forms.Form):
+    """
+    Formulář pro deaktivaci záznamu. Obsahuje jen text pole pro zdůvodnění deaktivace.
+    """
+
+    reason = forms.CharField(
+        label=_("pas.forms.DeaktivovatSpolupraciForm.reason.label"),
+        required=True,
+        help_text=_("pas.forms.DeaktivovatSpolupraciForm.reason.tooltip"),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(DeaktivovatSpolupraciForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False

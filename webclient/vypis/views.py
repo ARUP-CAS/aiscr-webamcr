@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
 
 from .config import get_config
@@ -29,10 +30,16 @@ def add_section_data(instance, section, fields, sections_data, iterator=False, u
                         fields,
                         sections_data,
                         iterator=True,
+                        user=user,
                     )
                 except Exception:
                     add_section_data(
-                        section_instance, f"{section}_{section_instance.nazev}", fields, sections_data, iterator=True
+                        section_instance,
+                        f"{section}_{section_instance.nazev}",
+                        fields,
+                        sections_data,
+                        iterator=True,
+                        user=user,
                     )
             return None
     if isinstance(fields["section_name"], SectionNameWithAccessor):
@@ -50,12 +57,13 @@ def add_section_data(instance, section, fields, sections_data, iterator=False, u
                 field.get_config(),
                 sections_data[section],
                 iterator=False,
+                user=user,
             )
             continue
         if label == "section_name" or label == "template":
-            sections_data[section][label] = field.get_name(instance)
-        elif field.get_value(instance):
-            sections_data[section][label] = {"label": field.get_label(), "value": field.get_value(instance)}
+            sections_data[section][label] = mark_safe(field.get_name(instance))
+        elif field.get_value(instance, user):
+            sections_data[section][label] = {"label": field.get_label(), "value": field.get_value(instance, user)}
     if not any(k not in ["section_name", "template"] for k in sections_data[section].keys()) and not iterator:
         logger.debug(f"Deleting empty section {section}")
         del sections_data[section]
