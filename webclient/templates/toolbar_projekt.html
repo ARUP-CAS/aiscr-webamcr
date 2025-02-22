@@ -7,6 +7,11 @@
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
       {{ projekt.ident_cely }}
+      {% if projekt.ident_cely %}
+        <button>
+          <span class="material-icons" onclick="copy_ident_link('{{projekt.ident_cely}}')" rel="tooltip" title="{% trans 'templates.toolbarProjekt.copyIdentLink.label' %}">content_copy</span>
+        </button>
+      {% endif %}
     </div>
   </div>
   {% if showcontrols %}

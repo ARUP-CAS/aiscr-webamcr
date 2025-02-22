@@ -8,7 +8,7 @@ from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 
-import pandas
+import polars as pl
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
@@ -88,6 +88,7 @@ from django_tables2 import SingleTableMixin
 from django_tables2.export import ExportMixin, TableExport
 from dokument.models import Dokument, get_dokument_soubor_name
 from ez.models import ExterniZdroj
+from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import (
     PRISTUPNOST_ANONYM_ID,
@@ -554,7 +555,7 @@ def post_upload(request):
                 logger.debug("core.views.post_upload.saving", extra={"s": soubor_instance})
                 soubor_instance.save()
                 if not request.user.is_authenticated:
-                    user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
+                    user_admin = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
                     soubor_instance.zaznamenej_nahrani(user_admin, original_filename)
                 else:
                     soubor_instance.zaznamenej_nahrani(request.user, original_filename)
@@ -562,7 +563,7 @@ def post_upload(request):
                 logger.debug("core.views.post_upload.already_exists", extra={"s": soubor_instance})
                 soubor_instance.save()
                 if not request.user.is_authenticated:
-                    user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
+                    user_admin = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
                     soubor_instance.zaznamenej_nahrani(user_admin, original_filename)
                 else:
                     soubor_instance.zaznamenej_nahrani(request.user, original_filename)
@@ -1042,13 +1043,14 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         from redis import Redis
 
         def check_if_aborted(r_inner: Redis, key_inner: str):
-            aborted = r_inner.get(key_inner) == -1
+            aborted = r_inner.get(key_inner + "_stat") == "-1"
             if aborted:
                 r_inner.delete(key_inner)
             return aborted
 
-        def update_progress_bar(r_inner: Redis, key_inner: str, new_value: int):
-            r_inner.set(key_inner, int(new_value))
+        def update_progress_bar(r_inner: Redis, key_inner: str, new_value: int, message: str):
+            r_inner.set(key_inner, json.dumps({"percent": int(new_value), "text": message}), ex=3600)
+            return check_if_aborted(r_inner, key_inner)
 
         def file_iterator(content, r, redis_variable_name, chunk_size=8192):
             bytes_sent = 0
@@ -1057,23 +1059,30 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 for i in range(0, len(content), chunk_size):
                     chunk = content[i : i + chunk_size]
                     bytes_sent += len(chunk)
-                    if file_size > 50 and bytes_sent % (file_size // 50) < chunk_size:
-                        update_progress_bar(r, redis_variable_name, int(bytes_sent / file_size * 50 + 50))
+                    if file_size > 100 and bytes_sent % (file_size // 20) < chunk_size:
+                        update_progress_bar(
+                            r,
+                            redis_variable_name,
+                            int(bytes_sent / file_size * 100),
+                            _("core.templates.core.export_modal.sending_data"),
+                        )
                     yield chunk
             except GeneratorExit:
                 logger.warning("core.views.SearchListView.file_iterator.Connection_closed_by_client")
+                r.delete(redis_variable_name)
             except Exception as e:
                 logger.warning("core.views.SearchListView.file_iterator.Error_during_streaming", extra={"errors": e})
                 raise
 
         logger.debug("core.views.SearchListView.create_export.start", extra={"export_format": export_format})
         if self.redis_value_list_field and self.redis_snapshot_prefix:
-            r = RedisConnector.get_connection()
+            r = RedisConnector.get_connection_decode()
+            export_suffix_string = self.request.GET["export_suffix_string"]
+            redis_variable_name = f"export_{self.request.user.email.replace('@', '(at)')}_{export_suffix_string}"
+            update_progress_bar(r, redis_variable_name, 0, _("core.templates.core.export_modal.collecting_data"))
             dataset = self.get_table_data()
             ident_cely_list = set(dataset.values_list(self.redis_value_list_field, flat=True))
             ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
-            export_suffix_string = self.request.GET["export_suffix_string"]
-            redis_variable_name = f"export_{self.request.user.email.replace('@', '(at)')}_{export_suffix_string}"
             logger.debug(
                 "core.views.SearchListView.create_export.redis_variable_name",
                 extra={"redis_variable_name": redis_variable_name},
@@ -1082,50 +1091,61 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             ident_cely_list_len = len(ident_cely_list)
             pipe = r.pipeline()
             data = []
+            base_index = 0
             for i, key in enumerate(ident_cely_list):
                 pipe.hgetall(key)
-                if (ident_cely_list_len > 100 and i % (ident_cely_list_len // 50) == 0) or i == ident_cely_list_len - 1:
-                    if check_if_aborted(r, redis_variable_name):
-                        logger.debug(
-                            "core.views.SearchListView.create_export.aborted",
-                            extra={"redis_variable_name": redis_variable_name},
-                        )
+                if (i % 20000) == 0 or i == ident_cely_list_len - 1:
+                    if update_progress_bar(
+                        r,
+                        redis_variable_name,
+                        int(i / ident_cely_list_len * 100),
+                        _("core.templates.core.export_modal.collecting_data"),
+                    ):
                         return HttpResponse()
-                    update_progress_bar(r, redis_variable_name, int(i / ident_cely_list_len * 50))
-                    data.extend(pipe.execute())
-            data = pandas.DataFrame(data)
-            data.columns = [x.decode("utf-8") for x in data.columns]
-            filtered_column_order = [col.name for col in self.get_table().columns if col.name in data.columns]
-            data = data[filtered_column_order]
-            column_names = {}
-            for column in self.get_table().columns:
-                column_names[str(column.name)] = column.verbose_name
-            data = data.rename(columns=column_names)
-            for column in data.select_dtypes(include=["object"]):
-                data[column] = data[column].str.decode("utf-8")
-            if check_if_aborted(r, redis_variable_name):
-                logger.debug(
-                    "core.views.SearchListView.create_export.aborted",
-                    extra={"redis_variable_name": redis_variable_name},
-                )
+                    results = pipe.execute()
+                    for index, result in enumerate(results):
+                        if not result:
+                            ident_cely = ident_cely_list[base_index + index].split("_")[-1]
+                            logger.error(
+                                "core.views.SearchListView.snapshot.error",
+                                extra={"ident_cely": ident_cely},
+                            )
+                            item = self.model.objects.get(ident_cely=ident_cely)
+                            key, value = item.generate_redis_snapshot()
+                            if key and value:
+                                r.hset(key, mapping=value)
+                                results[index] = value
+                    data.extend(results)
+                    base_index = i + 1
+
+            if update_progress_bar(r, redis_variable_name, 100, _("core.templates.core.export_modal.converting_data")):
                 return HttpResponse()
+            data = pl.DataFrame(data)
+            filtered_column_order = [col.name for col in self.get_table().columns if col.name in data.columns]
+            data = data.select(filtered_column_order)
+            column_names = {str(column.name): str(column.verbose_name) for column in self.get_table().columns}
+            data = data.rename(column_names, strict=False)
+            for column in data.columns:
+                if data[column].dtype == pl.Utf8:
+                    data = data.with_columns(pl.col(column).str.strip_chars())
+
             if export_format == TableExport.CSV:
                 filetype = 'attachment; filename="export.csv"'
-                resdata = data.to_csv(index=False)
+                resdata = data.write_csv()
             elif export_format == TableExport.JSON:
                 filetype = 'attachment; filename="export.json"'
-                resdata = data.to_json(orient="records", force_ascii=False, index=False)
+                resdata = data.write_json()
             elif export_format == TableExport.XLSX:
                 excel_file = BytesIO()
-                with pandas.ExcelWriter(excel_file, engine="openpyxl") as writer:
-                    data.to_excel(writer, index=False)
+                data.write_excel(workbook=excel_file)
                 resdata = excel_file.getvalue()
                 filetype = "attachment; filename=export.xlsx"
             else:
                 return HttpResponse(_("core.views.SearchListView.create_export.export_format_not_supported"))
             response = StreamingHttpResponse(file_iterator(resdata, r, redis_variable_name))
             response["Content-Disposition"] = filetype
-            update_progress_bar(r, redis_variable_name, 50)
+            if update_progress_bar(r, redis_variable_name, 100, _("core.templates.core.export_modal.file_generated")):
+                return HttpResponse()
             logger.debug(
                 "core.views.SearchListView.create_export.end",
                 extra={
@@ -1305,16 +1325,15 @@ def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
 
 class ReadTempValueView(View):
     def get(self, request):
-        r = RedisConnector.get_connection()
+        r = RedisConnector.get_connection_decode()
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
             value = r.get(temp_name)
-            logger.debug("core.views.ReadTempValueView.get.result", extra={"value": value, "temp_name": temp_name})
-            if value is not None:
-                return JsonResponse({"value": int(value.decode("utf-8"))})
-            else:
+            try:
+                return JsonResponse(json.loads(value))
+            except Exception:
                 # Handling the case where the key does not exist in Redis
-                return JsonResponse({"value": 0})
+                return JsonResponse({"percent": 0, "text": _("core.templates.core.export_modal.file_being_generated")})
         else:
             # Return a JSON response with a 403 Forbidden status
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
@@ -1338,7 +1357,7 @@ class AbortDownloadUpdateTempValueView(View):
         r = RedisConnector.get_connection()
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
-            r.set(temp_name, -1)
+            r.set(temp_name + "_stat", -1, ex=3500)
             logger.debug("core.views.AbortDownloadUpdateTempValueView.get.result", extra={"temp_name": temp_name})
             return JsonResponse({"result": "success"})
         else:

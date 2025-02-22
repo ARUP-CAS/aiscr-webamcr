@@ -60,6 +60,7 @@ from core.constants import (
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
+from heslar import hesla_dynamicka
 from uzivatel.models import Organizace, User
 
 logger = logging.getLogger(__name__)
@@ -167,7 +168,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         if hasattr(record, "deleted_by_user") and record.deleted_by_user is not None:
             uzivatel = record.deleted_by_user
         else:
-            uzivatel = User.objects.get(email="amcr@arup.cas.cz")
+            uzivatel = User.objects.get(pk=hesla_dynamicka.ADMIN_USER)
         if isinstance(record, User):
             vazba = record.history_vazba
         elif hasattr(record, "historie"):

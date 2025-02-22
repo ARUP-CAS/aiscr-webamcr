@@ -625,7 +625,7 @@ var clickOnMap=(e)=>{
             global_unwanted_popup=null
         }
         if(typeof e.target.bindPopup === 'function'){ 
-            e.target.bindPopup("").openPopup();
+            e.target.bindPopup("").openPopup(e.latlng);
             global_unwanted_popup=e.target
             onMarkerClick(e.target.getTooltip().getContent().split(" ")[0],e)
             var features = 0;
