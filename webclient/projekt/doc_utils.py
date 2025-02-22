@@ -183,7 +183,6 @@ class DocumentCreator(ABC):
         self.styles.add(
             ListStyle("amListTextIndent", parent=self.styles["amListText"], leftIndent=10, fontName="OpenSans")
         )
-
         self.styles.add(
             ParagraphStyle(
                 "amSignature",
