@@ -730,7 +730,11 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return contributors
 
     def _serialize_creators(self):
-        return [serialize_osoba(self.record.nalezce, self.record.projekt.organizace)]
+        if self.record.nalezce:
+            result = [serialize_osoba(self.record.nalezce, self.record.projekt.organizace)]
+        else:
+            result = []
+        return result
 
     def _serialize_dates(self):
         dates = []
