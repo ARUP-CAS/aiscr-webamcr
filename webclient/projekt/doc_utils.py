@@ -183,6 +183,16 @@ class DocumentCreator(ABC):
         self.styles.add(
             ListStyle("amListTextIndent", parent=self.styles["amListText"], leftIndent=10, fontName="OpenSans")
         )
+        self.styles.add(
+            ParagraphStyle(
+                "amSignature",
+                parent=self.styles["amBodyText"],
+                alignment=TA_RIGHT,
+                spaceAfter=0,
+                spaceBefore=0,
+                fontName="OpenSans",
+            )
+        )
 
     def _initiate_document(self):
         pdf_buffer = BytesIO()
@@ -540,7 +550,7 @@ class ZruseniPDFCreator(DocumentCreator):
 
         self.texts["header_tab_1_1"] = "<strong>Oznámení ze dne</strong>"
         self.texts["header_tab_1_2"] = "<strong>Evidenční číslo</strong>"
-        self.texts["header_tab_1_3"] = "<strong>V {DOK_MESTO[self.dok_index]} dne</strong>"
+        self.texts["header_tab_1_3"] = f"<strong>V {DOK_VE_MESTE[self.dok_index]} dne</strong>"
         self.texts["header_tab_2_1"] = (
             self.projekt.datum_oznameni.strftime("%d. %m. %Y") if self.projekt.datum_oznameni else ""
         )
@@ -558,7 +568,7 @@ class ZruseniPDFCreator(DocumentCreator):
         self.texts["data_part_5"] = f"<strong>Označení stavby</strong>: {self.projekt.oznaceni_stavby}"
         self.texts[
             "data_part_6"
-        ] = f"Plánované zahájení: {self.projekt.planovane_zahajeni.lower.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.planovane_zahajeni else ''} - {self.projekt.planovane_zahajeni.upper.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.planovane_zahajeni else ''}"
+        ] = f"<strong>Plánované zahájení</strong>: {self.projekt.planovane_zahajeni.lower.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.planovane_zahajeni else ''} - {self.projekt.planovane_zahajeni.upper.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.planovane_zahajeni else ''}"
 
         self.texts[
             "doc_par_1"
@@ -689,9 +699,9 @@ class ZruseniPDFCreator(DocumentCreator):
         ]
 
         signature = [
-            Paragraph(self.texts.get("doc_sign_1"), styles.get("amBodyTextSmallerSpaceAfter")),
-            Paragraph(self.texts.get("doc_sign_2"), styles.get("amBodyTextSmallerSpaceAfter")),
-            Paragraph(self.texts.get("doc_sign_3"), styles.get("amBodyTextSmallerSpaceAfter")),
+            Paragraph(self.texts.get("doc_sign_1"), styles.get("amSignature")),
+            Paragraph(self.texts.get("doc_sign_2"), styles.get("amSignature")),
+            Paragraph(self.texts.get("doc_sign_3"), styles.get("amSignature")),
         ]
 
         document_content = header + doc + signature
