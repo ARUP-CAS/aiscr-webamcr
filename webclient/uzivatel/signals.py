@@ -33,8 +33,8 @@ def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
 
 @receiver(pre_save, sender=Osoba, weak=False)
 def osoba_pre_save(sender, instance: Osoba, **kwargs):
-    if instance.wikidata and "/" in instance.wikidata:
-        instance.wikidata = instance.wikidata.split("/")[-1]
+    if instance.wikidata and not instance.wikidata.startswith("https://www.wikidata.org/entity/"):
+        instance.wikidata = f"https://www.wikidata.org/entity/{instance.wikidata}"
 
 
 @receiver(post_save, sender=Osoba, weak=False)

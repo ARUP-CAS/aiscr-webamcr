@@ -45,11 +45,11 @@ class OrcidAutocompleteField(PidAutocompleteField):
 
     def _get_initial_value_from_instance(self):
         value = super()._get_initial_value_from_instance()
-        value = value.replace("https://orcid.org/", "")
+        value = value.replace("https://orcid.org/", "") if value else ""
         return value
 
     def prepare_value(self, value):
-        return value.replace("https://orcid.org/", "")
+        return value.replace("https://orcid.org/", "") if value else ""
 
     def valid_value(self, value):
         return verify_orcid(value)
@@ -72,6 +72,14 @@ class RorAutocompleteField(PidAutocompleteField):
 class WikiDataAutocompleteField(PidAutocompleteField):
     autocomplete_class = WikiDataAutocompleteView
     attribute_name = "wikidata"
+
+    def _get_initial_value_from_instance(self):
+        value = super()._get_initial_value_from_instance()
+        value = value.replace("https://www.wikidata.org/entity/", "") if value else ""
+        return value
+
+    def prepare_value(self, value):
+        return value.replace("https://www.wikidata.org/entity/", "") if value else ""
 
     def valid_value(self, value):
         return verify_wikidata(value)
