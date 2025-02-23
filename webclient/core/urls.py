@@ -32,6 +32,7 @@ urlpatterns = [
         name="download_thumbnail_large",
     ),
     path("soubor/smazat/<str:typ_vazby>/<str:ident_cely>/<int:pk>", views.delete_file, name="delete_file"),
+    path("soubor/smazat-DZ/<str:typ_vazby>/<str:ident_cely>/<int:pk>", views.delete_file_DZ, name="delete_file_DZ"),
     path("id/<str:ident_cely>", views.redirect_ident_view, name="redirect_ident"),
     path("session/prodlouzit/", views.prolong_session, name="prolong_session"),
     path(
