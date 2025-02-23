@@ -84,7 +84,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
     )
     autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
     editori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
-    doi = models.CharField(max_length=255, blank=True, null=True)
+    doi = models.CharField(max_length=255, blank=True, null=True, db_index=True)
 
     class Meta:
         db_table = "externi_zdroj"

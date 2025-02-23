@@ -149,7 +149,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         null=True,
         related_name="sn_historie",
     )
-    igsn = models.CharField(max_length=255, blank=True, null=True)
+    igsn = models.CharField(max_length=255, blank=True, null=True, db_index=True)
 
     @property
     def initial_pristupnost(self):

@@ -18,6 +18,7 @@ class Model3DTable(SearchTable):
     """
 
     ident_cely = tables.Column(linkify=True, verbose_name=_("dokument.tables.modelTable.ident_cely.label"))
+    doi = tables.Column(verbose_name=_("dokument.tables.modelTable.doi.label"), default="")
     typ_dokumentu = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.typ_dokumentu.label"))
     organizace = tables.columns.Column(
         default="", verbose_name=_("dokument.tables.modelTable.organizace.label"), order_by="organizace__nazev_zkraceny"
@@ -51,6 +52,7 @@ class Model3DTable(SearchTable):
         verbose_name=_("dokument.tables.modelTable.nahled.label"),
     )
     columns_to_hide = (
+        "doi",
         "extra_data__zeme",
         "extra_data__region_extra",
     )
@@ -59,6 +61,7 @@ class Model3DTable(SearchTable):
         model = Dokument
         fields = (
             "ident_cely",
+            "doi",
             "stav",
             "typ_dokumentu",
             "organizace",
@@ -73,6 +76,7 @@ class Model3DTable(SearchTable):
         sequence = (
             "nahled",
             "ident_cely",
+            "doi",
             "stav",
             "typ_dokumentu",
             "autori",
@@ -130,6 +134,7 @@ class DokumentTable(SearchTable):
     """
 
     ident_cely = tables.Column(linkify=True, verbose_name=_("dokument.tables.dokumentTable.ident_cely.label"))
+    doi = tables.Column(verbose_name=_("dokument.tables.dokumentTable.doi.label"), default="")
     typ_dokumentu = tables.columns.Column(
         default="", verbose_name=_("dokument.tables.dokumentTable.typ_dokumentu.label")
     )
@@ -205,6 +210,7 @@ class DokumentTable(SearchTable):
         verbose_name=_("dokument.tables.dokumentTable.extra_data__duveryhodnost.label")
     )
     columns_to_hide = (
+        "doi",
         "pristupnost",
         "datum_zverejneni",
         "oznaceni_originalu",
@@ -275,6 +281,7 @@ class DokumentTable(SearchTable):
         fields = (
             "nahled",
             "ident_cely",
+            "doi",
             "stav",
             "organizace",
             "autori",
@@ -311,6 +318,7 @@ class DokumentTable(SearchTable):
         sequence = (
             "nahled",
             "ident_cely",
+            "doi",
             "stav",
             "pristupnost",
             "datum_zverejneni",

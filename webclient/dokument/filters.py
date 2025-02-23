@@ -177,6 +177,8 @@ class Model3DFilter(HistorieFilter, FilterSet):
 
     ident_cely = CharFilter(lookup_expr="icontains", label=_("dokument.filters.dokumentFilter.ident_cely.label"))
 
+    doi = CharFilter(lookup_expr="icontains", label=_("dokument.filters.dokumentFilter.doi.label"))
+
     typ_dokumentu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(id__in=MODEL_3D_DOKUMENT_TYPES),
         label=_("dokument.filters.dokumentFilter.typDokumentu.label"),
@@ -474,6 +476,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 Div(
                     Div("ident_cely", css_class="col-sm-2"),
+                    Div("doi", css_class="col-sm-2"),
                     Div("typ_dokumentu", css_class="col-sm-2"),
                     Div("format", css_class="col-sm-2"),
                     Div("stav", css_class="col-sm-2"),
@@ -1132,6 +1135,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 Div(
                     Div("ident_cely", css_class="col-sm-2"),
+                    Div("doi", css_class="col-sm-2"),
                     Div("rada", css_class="col-sm-2"),
                     Div("typ_dokumentu", css_class="col-sm-2"),
                     Div("material_originalu", css_class="col-sm-2"),
