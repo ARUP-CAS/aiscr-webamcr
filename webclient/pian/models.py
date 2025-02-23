@@ -20,6 +20,7 @@ from django.db.models import CheckConstraint, Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
+from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
 from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR, PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
@@ -313,10 +314,10 @@ def vytvor_pian(katastr, fedora_transaction):
         pian.active_transaction = fedora_transaction
         pian.set_permanent_ident_cely()
         pian.save()
-        pian.zaznamenej_zapsani(User.objects.filter(email="amcr@arup.cas.cz").first())
+        pian.zaznamenej_zapsani(User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first())
         katastr.pian = pian
         katastr.save()
         return pian
     except ObjectDoesNotExist as err:
-        logger.error("dj.signals.create_dokumentacni_jednotka.ObjectDoesNotExist", err=err)
+        logger.error("dj.signals.create_dokumentacni_jednotka.ObjectDoesNotExist", extra={"err": err})
         raise ObjectDoesNotExist()
