@@ -24,7 +24,13 @@ from django.http import StreamingHttpResponse
 from django.utils.translation import gettext_lazy as _
 from django_object_actions import DjangoObjectActions, action
 from historie.models import Historie
-from notifikace_projekty.forms import KATASTR_CONTENT_TYPE, KRAJ_CONTENT_TYPE, OKRES_CONTENT_TYPE, create_pes_form
+from notifikace_projekty.forms import (
+    KATASTR_CONTENT_TYPE,
+    KRAJ_CONTENT_TYPE,
+    OKRES_CONTENT_TYPE,
+    PES_NOTIFICATIONS,
+    create_pes_form,
+)
 from notifikace_projekty.models import Pes
 from services.mailer import Mailer
 
@@ -72,6 +78,8 @@ class UserNotificationTypeInline(admin.TabularInline):
     model = UserNotificationType.user.through
     form = UserNotificationTypeInlineForm
     formset = UserNotificationTypeInlineFormset
+    verbose_name = _("uzivatel.admin.form.notifikace.user")
+    verbose_name_plural = _("uzivatel.admin.form.notifikace.user")
 
     def get_queryset(self, request):
         logger.debug(self.model._default_manager)
@@ -143,6 +151,60 @@ class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
     verbose_name_plural = _("uzivatel.admin.form.notifikace.katastry")
 
 
+class PesUserNotificationTypeInlineForm(forms.ModelForm):
+    """
+    Inline form pro nastavení notifikací uživatele.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(PesUserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
+        self.fields["usernotificationtype"].queryset = UserNotificationType.objects.filter(
+            Q(ident_cely__in=PES_NOTIFICATIONS)
+        )
+
+
+class PesUserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
+    model = UserNotificationType.user.through
+
+    def __init__(self, *args, **kwargs):
+        super(PesUserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
+        if not self.instance.pk and not self.data:
+            notification_ids = UserNotificationType.objects.filter(Q(ident_cely__in=PES_NOTIFICATIONS)).values_list(
+                "id", flat=True
+            )
+            self.initial = []
+            for id in notification_ids:
+                self.initial.append(
+                    {
+                        "usernotificationtype": id,
+                    }
+                )
+
+
+class PesUserNotificationTypeInline(admin.TabularInline):
+    """
+    Inline panel pro nastavení notifikací uživatele.
+    """
+
+    model = UserNotificationType.user.through
+    form = PesUserNotificationTypeInlineForm
+    formset = PesUserNotificationTypeInlineFormset
+    verbose_name = _("uzivatel.admin.form.notifikace.pes")
+    verbose_name_plural = _("uzivatel.admin.form.notifikace.psy")
+
+    def get_queryset(self, request):
+        logger.debug(self.model._default_manager)
+        queryset = super(PesUserNotificationTypeInline, self).get_queryset(request)
+        queryset = queryset.filter(Q(usernotificationtype__ident_cely__in=PES_NOTIFICATIONS))
+        return queryset
+
+    def get_extra(self, request, obj=None, **kwargs):
+        extra = 1  # default 0
+        if not obj:  # new create only
+            extra = UserNotificationType.objects.filter(Q(ident_cely__in=PES_NOTIFICATIONS)).count()
+        return extra
+
+
 class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     """
     Admin panel pro správu uživatele.
@@ -169,6 +231,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     readonly_fields = ("ident_cely",)
     inlines = [
         UserNotificationTypeInline,
+        PesUserNotificationTypeInline,
         PesKrajNotificationTypeInline,
         PesOkresNotificationTypeInline,
         PesKatastrNotificationTypeInline,

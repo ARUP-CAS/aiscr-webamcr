@@ -506,6 +506,9 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
         "S-E-N-05": _("uzivatel.model.userNotificationType.S-E-N-05.text"),
         "S-E-K-01": _("uzivatel.model.userNotificationType.S-E-K-01.text"),
         "E-U-04": _("uzivatel.model.userNotificationType.E-U-04.text"),
+        "S-E-P-02a": _("uzivatel.model.userNotificationType.S-E-P-02a.text"),
+        "S-E-P-02b": _("uzivatel.model.userNotificationType.S-E-P-02b.text"),
+        "S-E-P-02c": _("uzivatel.model.userNotificationType.S-E-P-02c.text"),
     }
 
     ident_cely = models.TextField(unique=True)

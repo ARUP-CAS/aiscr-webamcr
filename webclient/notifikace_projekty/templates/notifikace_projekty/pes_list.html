@@ -17,20 +17,35 @@
 
 {% block content %}
     <div class="card app-card-form">
-        {% for formset in formsets %}
         <div class="card app-card-form app-card-inner">
-            <div class="card-body formset-table">
-              <h5>{{formset.name}}</h5>
-                <form class="mb-3 submit-spinner" method="POST" action="{% url 'notifikace_projekty:zapsat' %}?model-typ={{formset.model_typ}}">
-                    {% crispy formset.form pes_helper %}
-                  <button type="submit" id="editPesSubmitButton" class="btn btn-primary">{% trans "notifikaceProjekty.templates.pesList.submitButton" %}
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
-                    style="display: none"></span>
-                  </button>
-                </form>
-            </div>
+          <form method="post" class="mb-3 submit-spinner" action="{% url 'notifikace_projekty:zapsat' %}">
+            {% csrf_token %}
+            <div class="card-header">
+              <div class="app-fx app-left">
+                <h5>{% trans "notifikace_projekty.templates.pes_list.PesNotifikace.title" %}</h5>
+              </div>
           </div>
-        {% endfor %}
+            <div class="card-body formset-table">
+                    {% crispy form_notifications %}
+            </div>
+            {% for formset in formsets %}
+            <div class="card-header">
+              <div class="app-fx app-left">
+                <h5>{{formset.name}}</h5>
+              </div>
+            </div>
+            <div class="card-body formset-table">
+                    {% crispy formset.form pes_helper %}
+            {% if forloop.last %}
+            <button type="submit" id="editPesSubmitButton" class="btn btn-primary">{% trans "notifikaceProjekty.templates.pesList.submitButton" %}
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+              style="display: none"></span>
+            </button>
+            {% endif %}
+            </div>
+            {% endfor %}
+          </form>
+          </div>
     </div>
     <div class="mt-3">
         <div class="form-group">

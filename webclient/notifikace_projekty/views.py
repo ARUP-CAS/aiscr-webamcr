@@ -19,14 +19,17 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import TemplateView
 from heslar.models import RuianKatastr, RuianKraj, RuianOkres
-from uzivatel.models import User
+from uzivatel.models import User, UserNotificationType
 
 from .forms import (
     CONTENT_TYPES,
     KATASTR_CONTENT_TYPE,
     KRAJ_CONTENT_TYPE,
     OKRES_CONTENT_TYPE,
+    PES_NOTIFICATIONS,
     PesFormSetHelper,
+    PesInlineFormSet,
+    PesNotificationsForm,
     create_pes_form,
 )
 from .models import Pes
@@ -53,7 +56,6 @@ class PesListView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         old_pes_post = self.request.session.pop("_old_pes_post", None)
-        old_pes_type = self.request.session.pop("_old_pes_type", None)
         PesFormset = {}
         context["formsets"] = []
         for model_type in CONTENT_TYPES:
@@ -64,22 +66,24 @@ class PesListView(LoginRequiredMixin, TemplateView):
                     model_typ=model_type,
                 ),
                 extra=1,
+                formset=PesInlineFormSet,
                 can_delete=False,
             )
             filter_type = ContentType.objects.get(model=model_type).model_class()
             nazev = filter_type.objects.filter(id=OuterRef("object_id")).values("nazev")
-            if old_pes_post and old_pes_type == model_type:
+            if old_pes_post:
                 pes_formset = PesFormset[model_type](
                     data=old_pes_post,
                     instance=self.request.user,
+                    prefix=model_type,
                     queryset=Pes.objects.filter(content_type__model=model_type)
                     .annotate(razeni=Subquery(nazev))
                     .order_by("razeni"),
                 )
-                pes_formset.is_valid()
             else:
                 pes_formset = PesFormset[model_type](
                     instance=self.request.user,
+                    prefix=model_type,
                     queryset=Pes.objects.filter(content_type__model=model_type)
                     .annotate(razeni=Subquery(nazev))
                     .order_by("razeni"),
@@ -90,6 +94,23 @@ class PesListView(LoginRequiredMixin, TemplateView):
                     "form": pes_formset,
                     "model_typ": model_type,
                 }
+            )
+        old_pes_notifications = {
+            "notifications-notification_types": self.request.session.pop("_old_pes_notifications", None)
+        }
+        if (
+            old_pes_notifications["notifications-notification_types"]
+            or old_pes_notifications["notifications-notification_types"] == []
+        ):
+            context["form_notifications"] = PesNotificationsForm(
+                data=old_pes_notifications,
+                instance=self.request.user,
+                prefix="notifications",
+            )
+        else:
+            context["form_notifications"] = PesNotificationsForm(
+                instance=self.request.user,
+                prefix="notifications",
             )
         context["pes_helper"] = PesFormSetHelper()
         context["show"] = {"editovat": True}
@@ -104,30 +125,57 @@ class PesCreateView(LoginRequiredMixin, View):
     http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
-        model_typ = request.GET.get("model-typ")
-        PesFormset = inlineformset_factory(
-            User,
-            Pes,
-            form=create_pes_form(model_typ=model_typ),
-            extra=1,
-        )
-        formset_pes = PesFormset(
-            request.POST,
-            instance=request.user,
-            queryset=Pes.objects.filter(content_type__model=model_typ),
-        )
-        if formset_pes.is_valid():
-            logger.debug("notifikace_projekty.PesCreateView.post.is_valid")
-            formset_pes.save()
-            messages.add_message(request, messages.SUCCESS, HLIDACI_PES_USPESNE_VYTVOREN)
+        formsets = []
+        valid = True
+        pes_form_valid = False
+        pes_object_count = 0
+        for model_typ in CONTENT_TYPES:
+            PesFormset = inlineformset_factory(
+                User,
+                Pes,
+                form=create_pes_form(model_typ=model_typ),
+                extra=1,
+                formset=PesInlineFormSet,
+            )
+            formset_pes = PesFormset(
+                request.POST,
+                instance=request.user,
+                prefix=model_typ,
+                queryset=Pes.objects.filter(content_type__model=model_typ),
+            )
+            if not formset_pes.is_valid():
+                valid = False
+                break
+            formsets.append(formset_pes)
+            pes_object_count += formset_pes.count_non_empty_forms()
+
+        pes_form = PesNotificationsForm(pes_object_count, request.POST, prefix="notifications")
+        if pes_form.is_valid():
+            pes_form_valid = True
+
+        if valid and pes_form_valid:
+            for formset_pes in formsets:
+                formset_pes.save()
+            notifications = pes_form.cleaned_data.get("notification_types")
             user: User = request.user
-            user.active_transaction = FedoraTransaction()
+            user.active_transaction = FedoraTransaction(user, request.user)
+            notification_group_idents = {x.ident_cely: x for x in notifications.all()}
+            for group_ident in PES_NOTIFICATIONS:
+                if group_ident in notification_group_idents:
+                    user.notification_types.add(notification_group_idents[group_ident])
+                else:
+                    type_obj = UserNotificationType.objects.get(ident_cely=group_ident)
+                    user.notification_types.remove(type_obj)
+            messages.add_message(request, messages.SUCCESS, HLIDACI_PES_USPESNE_VYTVOREN)
+
             user.close_active_transaction_when_finished = True
             user.save()
         else:
-            logger.debug("notifikace_projekty.PesCreateView.post.not_valid", extra={"errors": formset_pes.errors})
+            logger.debug(
+                "notifikace_projekty.PesCreateView.post.not_valid", extra={"errors": [fs.errors for fs in formsets]}
+            )
             request.session["_old_pes_post"] = request.POST
-            request.session["_old_pes_type"] = model_typ
+            request.session["_old_pes_notifications"] = request.POST.getlist("notifications-notification_types")
             messages.add_message(request, messages.ERROR, HLIDACI_PES_NEUSPESNE_VYTVOREN)
         return redirect("notifikace_projekty:list")
 
@@ -178,6 +226,8 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         try:
             zaznam = self.get_zaznam()
             zaznam.delete()
+            if Pes.objects.filter(user=request.user).count() == 0:
+                request.user.notification_types.clear()
             messages.add_message(request, messages.SUCCESS, HLIDACI_PES_USPESNE_SMAZAN)
             user: User = request.user
             user.active_transaction = FedoraTransaction()
