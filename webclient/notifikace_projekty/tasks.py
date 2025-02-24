@@ -5,14 +5,27 @@ from celery import shared_task
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from heslar.hesla_dynamicka import TYP_PROJEKTU_BADATELSKY_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import RuianKatastr, RuianKraj, RuianOkres
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import UserNotificationType
+from uzivatel.models import User, UserNotificationType
 
 from .models import Pes
 
 logger = logging.getLogger(__name__)
+
+
+def get_project_type_notification(projekt_type):
+    """
+    Vrací typ notifikace pro projekt podle typu.
+    """
+    projekt_notifikace = {
+        TYP_PROJEKTU_BADATELSKY_ID: "S-E-P-02a",
+        TYP_PROJEKTU_PRUZKUM_ID: "S-E-P-02b",
+        TYP_PROJEKTU_ZACHRANNY_ID: "S-E-P-02c",
+    }
+    return UserNotificationType.objects.get(ident_cely=projekt_notifikace.get(projekt_type))
 
 
 @shared_task
@@ -32,34 +45,44 @@ def check_hlidaci_pes(projekt_id):
     all_katastre = RuianKatastr.objects.filter(
         Q(pk=projekt.hlavni_katastr.id) | Q(pk__in=projekt.katastry.values_list("id"))
     )
+    projekt_notify_type = get_project_type_notification(projekt.typ_projektu_id)
+    users_with_notification = User.objects.filter(notification_types__ident_cely=projekt_notify_type)
+    if users_with_notification.count() == 0:
+        return
     if notification_type.zasilat_neaktivnim:
         users_to_notify |= Pes.objects.filter(
             content_type=ContentType.objects.get_for_model(RuianKraj),
             object_id__in=all_katastre.values_list("okres__kraj__id"),
+            user__in=users_with_notification,
         )
         users_to_notify |= Pes.objects.filter(
             content_type=ContentType.objects.get_for_model(RuianOkres),
             object_id__in=all_katastre.values_list("okres__id"),
+            user__in=users_with_notification,
         )
         users_to_notify |= Pes.objects.filter(
             content_type=ContentType.objects.get_for_model(RuianKatastr),
             object_id__in=all_katastre.values_list("id"),
+            user__in=users_with_notification,
         )
     else:
         users_to_notify |= Pes.objects.filter(
             content_type=ContentType.objects.get_for_model(RuianKraj),
             object_id__in=all_katastre.values_list("okres__kraj__id"),
             user__is_active=True,
+            user__in=users_with_notification,
         )
         users_to_notify |= Pes.objects.filter(
             content_type=ContentType.objects.get_for_model(RuianOkres),
             object_id__in=all_katastre.values_list("okres__id"),
             user__is_active=True,
+            user__in=users_with_notification,
         )
         users_to_notify |= Pes.objects.filter(
             content_type=ContentType.objects.get_for_model(RuianKatastr),
             object_id__in=all_katastre.values_list("id"),
             user__is_active=True,
+            user__in=users_with_notification,
         )
     logger.debug(
         "cron.Notifications.collect_watchdogs.watchdog_list",

@@ -8,6 +8,7 @@ from django.db.models import CharField, Value
 from django.db.models.functions import Concat
 from django.utils.translation import gettext_lazy as _
 from heslar.models import RuianKatastr, RuianKraj, RuianOkres
+from uzivatel.models import User, UserNotificationType
 
 from .models import Pes
 
@@ -17,6 +18,11 @@ KRAJ_CONTENT_TYPE = "ruiankraj"
 OKRES_CONTENT_TYPE = "ruianokres"
 KATASTR_CONTENT_TYPE = "ruiankatastr"
 CONTENT_TYPES = [KRAJ_CONTENT_TYPE, OKRES_CONTENT_TYPE, KATASTR_CONTENT_TYPE]
+PES_NOTIFICATIONS = [
+    "S-E-P-02a",
+    "S-E-P-02b",
+    "S-E-P-02c",
+]
 
 
 def create_pes_form(not_readonly=True, model_typ=None):
@@ -140,3 +146,44 @@ class PesFormSetHelper(FormHelper):
         self.template = "inline_formset.html"
         self.form_tag = False
         self.form_id = "pes"
+
+
+class PesNotificationsForm(forms.ModelForm):
+    """
+    Formulář pro správu typu notifikací.
+    """
+
+    notification_types = forms.ModelMultipleChoiceField(
+        queryset=UserNotificationType.objects.filter(ident_cely__in=PES_NOTIFICATIONS),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label=_("notifikaceProjekty.forms.PesNotificationsForm.notification_types.notification_types_label"),
+        help_text=_("notifikaceProjekty.forms.PesNotificationsForm.notification_types.notification_types.tooltip"),
+    )
+
+    class Meta:
+        model = User
+        fields = ("notification_types",)
+
+    def __init__(self, pes_object_count=0, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.pes_object_count = pes_object_count
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.pes_object_count == 0 or not cleaned_data.get("notification_types"):
+            self.add_error(
+                "notification_types", _("notifikaceProjekty.forms.PesNotificationsForm.pes_object_count.error")
+            )
+        return cleaned_data
+
+
+class PesInlineFormSet(forms.BaseInlineFormSet):
+    def count_non_empty_forms(self):
+        non_empty_count = 0
+        for form in self.forms:
+            if any(field_value for field_value in form.cleaned_data.values()):
+                non_empty_count += 1
+        return non_empty_count
