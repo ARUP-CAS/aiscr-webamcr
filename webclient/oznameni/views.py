@@ -1,14 +1,14 @@
 import logging
 
 import simplejson as json
-from core.constants import OBLAST_CECHY, PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_VYTVORENY
+from core.constants import OBLAST_CECHY, PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_OZNAMENY, PROJEKT_STAV_VYTVORENY
 from core.coordTransform import convertToJTSK
 from core.decorators import odstavka_in_progress
 from core.forms import CheckStavNotChangedForm
 from core.ident_cely import get_temporary_project_ident
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.repository_connector import FedoraTransaction
-from core.utils import get_cadastre_from_point
+from core.utils import SessionIdentifier, get_cadastre_from_point
 from core.views import check_stav_changed
 from django.conf import settings
 from django.contrib import messages
@@ -18,10 +18,12 @@ from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
+from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, View
 from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
 from projekt.models import Projekt
@@ -32,175 +34,239 @@ from .forms import FormWithCaptcha, OznamovatelForm, OznamovatelProjektForm, Pro
 logger = logging.getLogger(__name__)
 
 
-@odstavka_in_progress
-@require_http_methods(["GET", "POST"])
-def index(request, test_run=False):
+class OznameniView(View):
+    def dispatch(self, request, *args, **kwargs):
+        self.session_identifier = SessionIdentifier(request)
+        self.ident_cely = kwargs.pop("ident_cely", None)
+        return super().dispatch(request, *args, **kwargs)
+
+
+@method_decorator(odstavka_in_progress, name="dispatch")
+class OznameniZapsatView(OznameniView):
     """
-    Funkce pohledu pro oznámení. Oznámení je dvoustupňové.
-    V prvém kroku uživatel zadáva údaje a v druhém je potvrzuje a případně uploaduje soubory.
+    Třida pohledu pro 1. stranu oznámení.
     """
-    logger.debug("oznameni.views.index.start", extra={"text_run": test_run})
-    try:
-        request_test = request.GET["test"].lower()
-    except Exception:
-        request_test = "false"
-    test_run = test_run or request_test == "true"
-    # First step of the form
-    if request.method == "POST" and "oznamovatel" in request.POST:
-        logger.debug("oznameni.views.index.first_part_start")
-        ident_cely = request.POST.get("ident_cely", None)
-        if ident_cely:
-            logger.debug("oznameni.views.index.first_part_start.ident_set", extra={"ident_cely": ident_cely})
-            projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-            form_ozn = OznamovatelForm(request.POST, instance=projekt.oznamovatel)
-            form_projekt = ProjektOznameniForm(request.POST, instance=projekt)
-        else:
-            logger.debug("oznameni.views.index.first_part_start.ident_not_set")
-            form_ozn = OznamovatelForm(request.POST)
-            form_projekt = ProjektOznameniForm(request.POST)
-        form_captcha = FormWithCaptcha(request.POST)
-        logger.debug("oznameni.views.index.form_ozn.valid", extra={"valid": form_ozn.is_valid()})
-        logger.debug("oznameni.views.index.form_projekt.valid", extra={"valid": form_projekt.is_valid()})
-        logger.debug("oznameni.views.index.form_captcha.valid", extra={"valid": form_captcha.is_valid()})
-        if (
-            form_ozn.is_valid()
-            and form_projekt.is_valid()
-            and (test_run or settings.SKIP_RECAPTCHA or form_captcha.is_valid())
-        ):
-            logger.debug("oznameni.views.index.all_forms_valid")
-            oznamovatel = form_ozn.save(commit=False)
-            projekt: Projekt = form_projekt.save(commit=False)
-            fedora_transaction = FedoraTransaction()
-            projekt.suppress_signal = True
-            projekt.active_transaction = fedora_transaction
-            projekt.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
-            dalsi_katastry = form_projekt.cleaned_data["katastry"]
-            projekt.geom = Point(
-                float(request.POST.get("coordinate_x1")),
-                float(request.POST.get("coordinate_x2")),
-            )
-            projekt.geom_sjtsk = Point(
-                convertToJTSK(float(request.POST.get("coordinate_x1")), float(request.POST.get("coordinate_x2")))
-            )
-            projekt.geom_system = "5514"
-            projekt.hlavni_katastr = get_cadastre_from_point(projekt.geom)
-            logger.debug(
-                "oznameni.views.index.hlavni_katastr",
-                extra={
-                    "hlavni_katastr": projekt.hlavni_katastr,
-                    "transaction": getattr(fedora_transaction, "uid", None),
-                },
-            )
-            # p.save()
-            if projekt.hlavni_katastr is not None and not ident_cely:
-                projekt.ident_cely = get_temporary_project_ident(projekt.hlavni_katastr.okres.kraj.rada_id)
+
+    def post(self, request):
+        """
+        Funkce pohledu pro oznámení. Oznámení je dvoustupňové.
+        V prvém kroku uživatel zadáva údaje a v druhém je potvrzuje a případně uploaduje soubory.
+        """
+        logger.debug("oznameni.views.index.start")
+        if "oznamovatel" in request.POST:
+            logger.debug("oznameni.views.index.first_part_start")
+            if self.ident_cely:
+                logger.debug("oznameni.views.index.first_part_start.ident_set", extra={"ident_cely": self.ident_cely})
+                projekt = get_object_or_404(Projekt, ident_cely=self.ident_cely)
+                form_ozn = OznamovatelForm(request.POST, instance=projekt.oznamovatel)
+                form_projekt = ProjektOznameniForm(request.POST, instance=projekt)
             else:
-                logger.debug("oznameni.views.index.unknow_location", extra={"point": str(projekt.geom)})
-            projekt.save()
-            oznamovatel.projekt = projekt
-            oznamovatel.save()
-            projekt.set_vytvoreny()
-            projekt.katastry.add(*[i for i in dalsi_katastry])
-            projekt.save()
-
-            confirmation = {
-                "oznamovatel": oznamovatel.oznamovatel,
-                "zastupce": oznamovatel.odpovedna_osoba,
-                "adresa": oznamovatel.adresa,
-                "telefon": oznamovatel.telefon,
-                "email": oznamovatel.email,
-                "katastr": projekt.hlavni_katastr,
-                "dalsi_katastry": dalsi_katastry,
-                "ident_cely": projekt.ident_cely,
-                "planovane_zahajeni": projekt.planovane_zahajeni,
-                "podnet": projekt.podnet,
-                "lokalizace": projekt.lokalizace,
-                "parcelni_cislo": projekt.parcelni_cislo,
-                "oznaceni_stavby": projekt.oznaceni_stavby,
-            }
-
-            context = {"confirm": confirmation}
-            response = render(request, "oznameni/index_2.html", context)
-            response.set_cookie(
-                "project", hash(projekt.ident_cely), 3600, secure=True, httponly=True, samesite="Strict"
-            )
-            return response
-        else:
-            extra = {"form_ozn_errors": form_ozn.errors, "form_projekt_errors": form_projekt.errors}
-            if not test_run:
-                extra["form_captcha_errors"] = form_captcha.errors
-            logger.debug("oznameni.views.index.form_not_valid", extra=extra)
-
-    # Part 2 of the announcement form
-    elif request.method == "POST" and "ident_cely" in request.POST:
-        logger.debug("oznameni.views.index.second_part.start", extra={"ident_cely": request.POST["ident_cely"]})
-        projekt = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
-        fedora_transaction = FedoraTransaction()
-        projekt.active_transaction = fedora_transaction
-        projekt.set_oznameny()
-        projekt.close_active_transaction_when_finished = True
-        projekt.save()
-        context = {"ident_cely": request.POST["ident_cely"]}
-        if projekt.ident_cely[2].upper() == OBLAST_CECHY:
-            Mailer.send_eo01(project=projekt)
-        else:
-            Mailer.send_eo02(project=projekt)
-        logger.debug(
-            "oznameni.views.index.second_part.end",
-            extra={"ident_cely": request.POST["ident_cely"], "transaction": fedora_transaction.uid},
-        )
-        return render(request, "oznameni/success.html", context)
-    elif request.method == "GET" and "ident_cely" in request.GET:
-        cookie_project = request.COOKIES.get("project", None)
-        ident = request.GET.get("ident_cely")
-        logger.debug("oznameni.views.index.get.start", extra={"ident_cely": ident})
-        hash_from_ident = hash(ident)
-        logger.debug(
-            "oznameni.views.index.get.cookie",
-            extra={"ident_cely": ident, "cookie_project": cookie_project, "hash_from_ident": hash_from_ident},
-        )
-        if cookie_project is not None and str(hash_from_ident) == str(cookie_project):
-            projekty = Projekt.objects.filter(ident_cely=request.GET.get("ident_cely"), stav=PROJEKT_STAV_VYTVORENY)
-            if not projekty:
-                logger.debug(
-                    "oznameni.views.index.get.permission_denied",
-                    extra={"ident_cely": ident, "cookie_project": cookie_project, "hash_from_ident": hash_from_ident},
+                logger.debug("oznameni.views.index.first_part_start.ident_not_set")
+                form_ozn = OznamovatelForm(request.POST)
+                form_projekt = ProjektOznameniForm(request.POST)
+            form_captcha = FormWithCaptcha(request.POST) if not settings.SKIP_RECAPTCHA else None
+            logger.debug("oznameni.views.index.form_ozn.valid", extra={"valid": form_ozn.is_valid()})
+            logger.debug("oznameni.views.index.form_projekt.valid", extra={"valid": form_projekt.is_valid()})
+            if not settings.SKIP_RECAPTCHA:
+                logger.debug("oznameni.views.index.form_captcha.valid", extra={"valid": form_captcha.is_valid()})
+            if form_ozn.is_valid() and form_projekt.is_valid() and (settings.SKIP_RECAPTCHA or form_captcha.is_valid()):
+                logger.debug("oznameni.views.index.all_forms_valid")
+                oznamovatel = form_ozn.save(commit=False)
+                projekt: Projekt = form_projekt.save(commit=False)
+                fedora_transaction = FedoraTransaction()
+                projekt.suppress_signal = True
+                projekt.active_transaction = fedora_transaction
+                projekt.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
+                dalsi_katastry = form_projekt.cleaned_data["katastry"]
+                projekt.geom = Point(
+                    float(request.POST.get("coordinate_x1")),
+                    float(request.POST.get("coordinate_x2")),
                 )
-                raise PermissionDenied
-            else:
-                projekt = projekty[0]
-                form_ozn = OznamovatelForm(instance=projekt.oznamovatel)
-                form_projekt = ProjektOznameniForm(instance=projekt, change=True)
-                form_captcha = FormWithCaptcha() if not settings.SKIP_RECAPTCHA else None
+                projekt.geom_sjtsk = Point(
+                    *convertToJTSK(float(request.POST.get("coordinate_x1")), float(request.POST.get("coordinate_x2")))
+                )
+                projekt.geom_system = "5514"
+                projekt.hlavni_katastr = get_cadastre_from_point(projekt.geom)
                 logger.debug(
-                    "oznameni.views.index.get.projekt",
+                    "oznameni.views.index.hlavni_katastr",
                     extra={
-                        "ident_cely": ident,
-                        "cookie_project": cookie_project,
-                        "hash_from_ident": hash_from_ident,
-                        "projekt": projekt.ident_cely,
+                        "hlavni_katastr": projekt.hlavni_katastr,
+                        "transaction": getattr(fedora_transaction, "uid", None),
                     },
                 )
-        else:
-            logger.debug(
-                "oznameni.views.index.get.permission_denied",
-                extra={"ident_cely": ident, "cookie_project": cookie_project, "hash_from_ident": hash_from_ident},
-            )
-            raise PermissionDenied
-    else:
-        form_ozn = OznamovatelForm()
-        form_projekt = ProjektOznameniForm()
-        form_captcha = FormWithCaptcha() if not settings.SKIP_RECAPTCHA else None
+                # p.save()
+                if projekt.hlavni_katastr is not None and not self.ident_cely:
+                    projekt.ident_cely = get_temporary_project_ident(projekt.hlavni_katastr.okres.kraj.rada_id)
+                else:
+                    logger.debug("oznameni.views.index.unknow_location", extra={"point": str(projekt.geom)})
+                projekt.save()
+                oznamovatel.projekt = projekt
+                oznamovatel.save()
+                projekt.set_vytvoreny()
+                projekt.katastry.add(*[i for i in dalsi_katastry])
+                projekt.save()
+                self.session_identifier.set_ident(projekt.ident_cely)
+                return redirect("oznameni:index2", ident_cely=projekt.ident_cely)
+            else:
+                extra = {"form_ozn_errors": form_ozn.errors, "form_projekt_errors": form_projekt.errors}
+                if not settings.SKIP_RECAPTCHA:
+                    extra["form_captcha_errors"] = form_captcha.errors
+                logger.debug("oznameni.views.index.form_not_valid", extra=extra)
+                return render(
+                    request,
+                    "oznameni/index.html",
+                    {
+                        "form_oznamovatel": form_ozn,
+                        "form_projekt": form_projekt,
+                        "form_captcha": form_captcha,
+                    },
+                )
+        raise PermissionDenied
 
-    return render(
-        request,
-        "oznameni/index.html",
-        {
-            "form_oznamovatel": form_ozn,
-            "form_projekt": form_projekt,
-            "form_captcha": form_captcha,
-        },
-    )
+    @method_decorator(never_cache)
+    def get(self, request):
+        if self.ident_cely:
+            cache_project = self.session_identifier.get_ident()
+            logger.debug("oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely})
+
+            logger.debug(
+                "oznameni.views.index.get.cookie",
+                extra={"ident_cely": self.ident_cely, "cookie_project": cache_project},
+            )
+            if cache_project is not None and self.ident_cely == cache_project:
+                projekty = Projekt.objects.filter(ident_cely=self.ident_cely, stav=PROJEKT_STAV_VYTVORENY)
+                if not projekty:
+                    logger.debug(
+                        "oznameni.views.index.get.permission_denied",
+                        extra={"ident_cely": self.ident_cely, "cookie_project": cache_project},
+                    )
+                    raise PermissionDenied
+                else:
+                    projekt = projekty[0]
+                    form_ozn = OznamovatelForm(instance=projekt.oznamovatel)
+                    form_projekt = ProjektOznameniForm(instance=projekt, change=True)
+                    form_captcha = FormWithCaptcha() if not settings.SKIP_RECAPTCHA else None
+                    logger.debug(
+                        "oznameni.views.index.get.projekt",
+                        extra={
+                            "ident_cely": self.ident_cely,
+                            "cookie_project": cache_project,
+                            "projekt": projekt.ident_cely,
+                        },
+                    )
+            else:
+                logger.debug(
+                    "oznameni.views.index.get.permission_denied",
+                    extra={"ident_cely": self.ident_cely, "cookie_project": cache_project},
+                )
+                raise PermissionDenied
+
+        else:
+            form_ozn = OznamovatelForm()
+            form_projekt = ProjektOznameniForm()
+            form_captcha = FormWithCaptcha() if not settings.SKIP_RECAPTCHA else None
+
+        return render(
+            request,
+            "oznameni/index.html",
+            {
+                "form_oznamovatel": form_ozn,
+                "form_projekt": form_projekt,
+                "form_captcha": form_captcha,
+            },
+        )
+
+
+@method_decorator(odstavka_in_progress, name="dispatch")
+class OznameniDokumentaceView(OznameniView):
+    """
+    Třida pohledu pro 2. stranu oznámení.
+    """
+
+    def post(self, request):
+        if "ident_cely" in request.POST:
+            logger.debug("oznameni.views.index.second_part.start", extra={"ident_cely": request.POST["ident_cely"]})
+            projekt = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
+            fedora_transaction = FedoraTransaction()
+            projekt.active_transaction = fedora_transaction
+            projekt.set_oznameny()
+            projekt.close_active_transaction_when_finished = True
+            projekt.save()
+            if projekt.ident_cely[2].upper() == OBLAST_CECHY:
+                Mailer.send_eo01(project=projekt)
+            else:
+                Mailer.send_eo02(project=projekt)
+            logger.debug(
+                "oznameni.views.index.second_part.end",
+                extra={"ident_cely": request.POST["ident_cely"], "transaction": fedora_transaction.uid},
+            )
+            return redirect("oznameni:index3", ident_cely=projekt.ident_cely)
+        raise PermissionDenied
+
+    @method_decorator(never_cache)
+    def get(self, request):
+        if self.ident_cely:
+            cache_project = self.session_identifier.get_ident()
+            logger.debug(
+                "oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely, "cache_project": cache_project}
+            )
+            if cache_project is not None and self.ident_cely == cache_project:
+                projekt = Projekt.objects.filter(ident_cely=self.ident_cely, stav=PROJEKT_STAV_VYTVORENY).first()
+                if not projekt:
+                    logger.debug(
+                        "oznameni.views.index.get.permission_denied",
+                        extra={"ident_cely": self.ident_cely, "cache_project": cache_project},
+                    )
+                    raise PermissionDenied
+                else:
+                    queryset = projekt.soubory.soubory.all()
+                    seznam_mock = [obj.getMock() for obj in queryset]
+                    json_mock = json.dumps(seznam_mock, ensure_ascii=False)
+                    self.session_identifier.set_ident(projekt.ident_cely)
+                    return render(request, "oznameni/index_2.html", {"projekt": projekt, "seznam_mock": json_mock})
+
+            else:
+                logger.debug(
+                    "oznameni.views.index.get.permission_denied",
+                    extra={"ident_cely": self.ident_cely, "cookie_project": cache_project},
+                )
+                raise PermissionDenied
+        return redirect("oznameni:index")
+
+
+@method_decorator(odstavka_in_progress, name="dispatch")
+class OznameniPotvrzeniView(OznameniView):
+    """
+    Třida pohledu pro potvrzení oznámení.
+    """
+
+    @method_decorator(never_cache)
+    def get(self, request):
+        if self.ident_cely:
+            cache_project = self.session_identifier.get_ident()
+            logger.debug(
+                "oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely, "cache_project": cache_project}
+            )
+            if cache_project is not None and self.ident_cely == cache_project:
+                projekty = Projekt.objects.filter(ident_cely=self.ident_cely, stav=PROJEKT_STAV_OZNAMENY)
+                if not projekty:
+                    logger.debug(
+                        "oznameni.views.index.get.permission_denied",
+                        extra={"ident_cely": self.ident_cely, "cache_project": cache_project},
+                    )
+                    raise PermissionDenied
+                else:
+                    self.session_identifier.set_ident(self.ident_cely, 300)
+                    context = {"ident_cely": self.ident_cely}
+                    return render(request, "oznameni/success.html", context)
+
+            else:
+                logger.debug(
+                    "oznameni.views.index.get.permission_denied",
+                    extra={"ident_cely": self.ident_cely, "cookie_project": cache_project},
+                )
+                raise PermissionDenied
+        return redirect("oznameni:index")
 
 
 @login_required

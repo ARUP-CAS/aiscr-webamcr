@@ -4,6 +4,7 @@ import logging
 import mimetypes
 import os
 import tempfile
+import uuid
 
 import core.message_constants as mc
 import django
@@ -714,7 +715,19 @@ def get_pian_from_envelope(bounds, zoom, request):
     from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_BADATEL_ID
     from heslar.models import Heslar
 
-    bbox = f"""POLYGON(({bounds['bottomLeft']['lng']} {bounds['bottomLeft']['lat']}, {bounds['bottomRight']['lng']} {bounds['bottomRight']['lat']}, {bounds['topRight']['lng']} {bounds['topRight']['lat']}, {bounds['topLeft']['lng']} {bounds['topLeft']['lat']}, {bounds['bottomLeft']['lng']} {bounds['bottomLeft']['lat']}))"""
+    bbox = """POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))"""
+    bbox_query_params = [
+        bounds["bottomLeft"]["lng"],
+        bounds["bottomLeft"]["lat"],
+        bounds["bottomRight"]["lng"],
+        bounds["bottomRight"]["lat"],
+        bounds["topRight"]["lng"],
+        bounds["topRight"]["lat"],
+        bounds["topLeft"]["lng"],
+        bounds["topLeft"]["lat"],
+        bounds["bottomLeft"]["lng"],
+        bounds["bottomLeft"]["lat"],
+    ]
     presnost = Heslar.objects.filter(nazev_heslare__id=HESLAR_PIAN_PRESNOST).first().id - 1
 
     querysum = f"""select sum(p.count) from amcr_heat_pian_l2 p where "p"."st_centroid" && ST_GeomFromText('{bbox}', {EPSG_WGS84})"""
@@ -729,11 +742,11 @@ def get_pian_from_envelope(bounds, zoom, request):
 
     pians = None
     with connection.cursor() as cursor:
-        cursor.execute(querysum)
+        cursor.execute(querysum, bbox_query_params)
         result = cursor.fetchone()
         count = int(result[0]) if result[0] is not None else 0
         if count < LIMIT_PRVKU_ZOBRAZENI_HEATMAP * 2 or zoom > 7:
-            cursor.execute(query)
+            cursor.execute(query, bbox_query_params)
             pians = dictfetchall(cursor)
             count = len(pians)
 
@@ -1227,3 +1240,47 @@ def replace_last(source_string, old, new):
         end_part = source_string[index + len(old) :]
         return start_part + replace_part + end_part
     return source_string
+
+
+class SessionIdentifier:
+    def __init__(self, request):
+        self.cache_key = self._generate_session_key(request)
+
+    def _generate_session_key(self, request):
+        if "session_uuid" not in request.session:
+            request.session["session_uuid"] = str(uuid.uuid4())  # Vytvoří unikátní ID
+            request.session.modified = True
+        return f"session_{request.session['session_uuid']}_key"
+
+    def clear_cached_files(self):
+        cache.delete(f"{self.cache_key}_files")
+
+    def set_ident(self, ident_cely, timeout=3600):
+        old_ident_cely = self.get_ident()
+        if old_ident_cely != ident_cely:
+            self.clear_cached_files()
+        cache.set(self.cache_key, ident_cely, timeout)
+
+    def get_ident(self):
+        return cache.get(self.cache_key, None)
+
+    def add_file_reference(self, ident, timeout=3600):
+        files = cache.get(f"{self.cache_key}_files", set())
+        files.add(ident)
+        cache.set(f"{self.cache_key}_files", files, timeout)
+
+    def file_exists(self, ident):
+        files = cache.get(f"{self.cache_key}_files", set())
+        if ident in files:
+            return True
+        return False
+
+    def remove_file_reference(self, ident):
+        files = cache.get(f"{self.cache_key}_files", set())
+        if ident in files:
+            files.remove(ident)
+            cache.set(f"{self.cache_key}_files", files)
+
+    def get_cached_files(self):
+        files = cache.get(f"{self.cache_key}_files", set())
+        return files

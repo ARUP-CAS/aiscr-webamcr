@@ -58,6 +58,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
     HISTORIE_TYP_ZMENY_STARTS_WITH = "SN"
 
     ident_cely = CharFilter(lookup_expr="icontains", label=_("pas.filters.pasFilter.ident_cely.label"))
+    igsn = CharFilter(lookup_expr="icontains", label=_("pas.filters.pasFilter.igsn.label"))
 
     stav = MultipleChoiceFilter(
         choices=SamostatnyNalez.PAS_STATES,
@@ -440,6 +441,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 Div(
                     Div("ident_cely", css_class="col-sm-2"),
+                    Div("igsn", css_class="col-sm-2"),
                     Div("nalezce", css_class="col-sm-2"),
                     Div("datum_nalezu", css_class="col-sm-4 app-daterangepicker"),
                     Div("predano_organizace", css_class="col-sm-2"),

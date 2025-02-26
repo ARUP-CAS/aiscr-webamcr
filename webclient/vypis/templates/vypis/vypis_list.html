@@ -50,34 +50,43 @@
         if (progressPercentage == 100) {
             $('.vypisy-content .progress').css("display", "none");
         }
-    }
+    };
+
     $(document).ready(function() {
         currentUrl = window.location.href;
-        console.log(currentUrl);
         typ_vazby = currentUrl.split("/").slice(-3)[0];
-        console.log(typ_vazby);
         identy = currentUrl.split("/").slice(-2)[0];
-        console.log(identy);
         identy_list = identy.split(",");
         identy_num = identy_list.length;
         current_done = 0;
         vypis_url = '{% url "vypis:vypis_only" typ_vazby "ident" %}';
-        for (i = 0; i < identy_list.length; i++) {
-            $.ajax({
-                type: "GET",
-                url: vypis_url.replace("ident", identy_list[i]),
-                data: {},
-                success : function(data,status,xhr) {
-                    var $container = $(data)
-                    $container.find('#title_row').remove()
-                    $('.vypisy-content').append($container);
-                    current_done += 1;
-                    updateProgressBar(current_done / identy_num * 100);
-                }
-            });
+        let responses = new Array(identy_list.length);
+
+        for (let i = 0; i < identy_list.length; i++) {
+            (function(index) {
+                $.ajax({
+                    type: "GET",
+                    url: vypis_url.replace("ident", identy_list[index]),
+                    data: {},
+                    success: function(data, status, xhr) {
+                        var $container = $(data);
+                        $container.find('#title_row').remove();
+                        responses[index] = $container;
+                        current_done += 1;
+                        updateProgressBar(current_done / identy_num * 100);
+
+                        if (current_done === identy_list.length) {
+                            for (let j = 0; j < responses.length; j++) {
+                                $('.vypisy-content').append(responses[j]);
+                            }
+                        }
+                    }
+                });
+            })(i);
         }
     }
-    )
+    );
+
 </script>
 <script>
     function copy_html() {    

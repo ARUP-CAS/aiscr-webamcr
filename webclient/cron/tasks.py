@@ -29,6 +29,7 @@ from django.db.models.functions import Coalesce, Upper
 from django.utils import timezone
 from dokument.models import Dokument, DokumentExtraData
 from ez.models import ExterniZdroj
+from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
@@ -395,8 +396,11 @@ def cancel_old_projects():
         for project in projects:
             project: Projekt
             project.active_transaction = FedoraTransaction()
+            project.set_zruseny(User.objects.get(pk=hesla_dynamicka.ADMIN_USER), cancelled_string, RUSENI_STARE_PROJ)
+            if project.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID and project.has_oznamovatel():
+                project.create_cancel_confirmation_document(User.objects.get(pk=hesla_dynamicka.ADMIN_USER))
             project.close_active_transaction_when_finished = True
-            project.set_zruseny(User.objects.get(email="amcr@arup.cas.cz"), cancelled_string, RUSENI_STARE_PROJ)
+            project.save()
             logger.debug("core.cron.cancel_old_projects.do.project", extra={"ident_cely": project.ident_cely})
         logger.debug("core.cron.cancel_old_projects.do.end")
     except Exception as err:

@@ -11,6 +11,7 @@ class ExterniZdrojTable(SearchTable):
     """
 
     ident_cely = tables.Column(linkify=True, verbose_name=_("ez.tables.ezTable.ident_cely.label"))
+    doi = tables.Column(verbose_name=_("ez.tables.ezTable.doi.label"), default="")
     autori = tables.Column(default="", accessor="autori_snapshot", verbose_name=_("ez.tables.ezTable.autori.label"))
     editori = tables.Column(default="", accessor="editori_snapshot", verbose_name=_("ez.tables.ezTable.editori.label"))
     casopis_denik_nazev = tables.columns.Column(
@@ -34,6 +35,7 @@ class ExterniZdrojTable(SearchTable):
     misto = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.misto.label"))
     nazev = tables.columns.Column(default="", verbose_name=_("ez.tables.ezTable.nazev.label"))
     columns_to_hide = (
+        "doi",
         "datum_rd",
         "edice_rada",
         "misto",
@@ -73,6 +75,7 @@ class ExterniZdrojTable(SearchTable):
         )
         sequence = (
             "ident_cely",
+            "doi",
             "stav",
             "typ",
             "autori",

@@ -20,8 +20,9 @@ from django.db.models import CheckConstraint, Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
+from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
-from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR
+from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR, PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import User
@@ -103,7 +104,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
                 return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
         except ValueError as err:
             logger.debug("pian.models.Pian.pristupnost_pom.value_error", extra={"err": err})
-        return Heslar.objects.get(ident_cely="HES-000865")
+        return Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
 
     @property
     def pristupnost(self):
@@ -123,7 +124,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             pristupnosti_ids.add(added_pristupnost_id)
         if len(pristupnosti_ids) > 0:
             return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
-        return Heslar.objects.get(ident_cely="HES-000865")
+        return Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
 
     class Meta:
         db_table = "pian"
@@ -141,7 +142,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     def __str__(self):
         return self.ident_cely + " (" + self.get_stav_display() + ")"
 
-    def get_absolute_url(self, request):
+    def get_absolute_url(self, request=None):
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         if dok_jednotky:
             for dok_jednotka in dok_jednotky:
@@ -149,7 +150,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
                     return dok_jednotka.get_absolute_url()
         else:
             logger.debug("pian without connection to DJ")
-            messages.error(request, _("pian.models.Pian.get_absolute_url.noDJ.message.text"))
+            if request:
+                messages.error(request, _("pian.models.Pian.get_absolute_url.noDJ.message.text"))
             return reverse("core:home")
 
     def get_permission_object(self):
@@ -312,10 +314,10 @@ def vytvor_pian(katastr, fedora_transaction):
         pian.active_transaction = fedora_transaction
         pian.set_permanent_ident_cely()
         pian.save()
-        pian.zaznamenej_zapsani(User.objects.filter(email="amcr@arup.cas.cz").first())
+        pian.zaznamenej_zapsani(User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first())
         katastr.pian = pian
         katastr.save()
         return pian
     except ObjectDoesNotExist as err:
-        logger.error("dj.signals.create_dokumentacni_jednotka.ObjectDoesNotExist", err=err)
+        logger.error("dj.signals.create_dokumentacni_jednotka.ObjectDoesNotExist", extra={"err": err})
         raise ObjectDoesNotExist()

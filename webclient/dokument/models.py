@@ -56,6 +56,7 @@ from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba
+from xml_generator.models import BaseAmcrModel
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +176,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     tvary = models.ManyToManyField(Heslar, through="Tvar", related_name="dokumenty_tvary")
     autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
     osoby_snapshot = models.CharField(max_length=5000, null=True, blank=True)
-    doi = models.CharField(max_length=255, null=True, blank=True)
+    doi = models.CharField(max_length=255, null=True, blank=True, db_index=True)
 
     class Meta:
         db_table = "dokument"
@@ -524,14 +525,6 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             data = RedisConnector.prepare_model_for_redis(table)
             return self.redis_snapshot_id, data
 
-    def get_komponenty(self, arch_z_status=None):
-        komponenty = []
-        for cast in self.casti.all():
-            if arch_z_status and (not cast.archeologicky_zaznam or cast.archeologicky_zaznam.stav != arch_z_status):
-                continue
-            komponenty += [komp for komp in cast.komponenty.komponenty.all()]
-        return komponenty
-
     def _get_doi_client(self):
         from pid.client import DigitalObjectIdentifierClient
 
@@ -558,7 +551,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         return self._get_doi_client().get_record_url()
 
 
-class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
+class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
     """
     Class pro db model dokument část.
     """
@@ -640,6 +633,11 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         transaction_user: User
         self.active_transaction = FedoraTransaction(self.dokument, transaction_user, success_message, error_message)
         return self.active_transaction
+
+    @property
+    def dokument_doi(self):
+        if self.dokument:
+            return self.dokument.doi
 
 
 class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):
@@ -738,11 +736,6 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
         db_table = "dokument_autor"
         unique_together = (("dokument", "autor"), ("dokument", "poradi"))
         ordering = ("poradi",)
-
-    @property
-    def anonym(self):
-        # TODO: Implement this when anonym detection is added
-        return False
 
 
 class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):

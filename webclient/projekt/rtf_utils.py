@@ -1,5 +1,6 @@
 import datetime
 import io
+import os
 import sys
 
 from historie.models import Historie
@@ -49,6 +50,15 @@ class ExpertniListCreator(DocumentCreator):
         else:
             return ""
 
+    @classmethod
+    def _format_date(cls, date_obj):
+        if date_obj is None:
+            return ""
+        if os.name == "nt":
+            return date_obj.strftime("%#d. %#m. %Y")
+        else:
+            return date_obj.strftime("%-d. %-m. %Y")
+
     def _get_vysledek_text(self):
         if self.popup_parametry["vysledek"] == "pozitivni":
             text = """Potvrzujeme, že došlo ke splnění oznamovací povinnosti a bylo umožněno provést na dotčeném \n\
@@ -97,12 +107,12 @@ class ExpertniListCreator(DocumentCreator):
         section = Section()
         self.docucment.Sections.append(section)
 
-        if "cislo_jednaci" in self.popup_parametry:
+        if "cislo_jednaci" in self.popup_parametry and self.popup_parametry["cislo_jednaci"] != "":
             p = Paragraph(
                 self._convert_text(f"Č.j.: {self.popup_parametry['cislo_jednaci']}"),
                 ParagraphPropertySet(alignment=ParagraphPropertySet.RIGHT),
             )
-        section.append(p)
+            section.append(p)
         p = Paragraph(
             self.stylesheet.ParagraphStyles.Heading1,
             self._convert_text("POTVRZENÍ O PROVEDENÍ ARCHEOLOGICKÉHO VÝZKUMU – EXPERTNÍ LIST"),
@@ -123,10 +133,25 @@ class ExpertniListCreator(DocumentCreator):
                 "Výzkum provedla organizace:",
                 Paragraph(self.stylesheet.ParagraphStyles.BoldText, self._convert_text(self.projekt.organizace.nazev)),
             ),
-            ("", f"{self.projekt.organizace.adresa}"),
-            ("", f"E-mail: {self.projekt.organizace.email}"),
-            ("", f"Tel.: {self.projekt.organizace.telefon}"),
-            ("Katastrální území (okres):", self.projekt.hlavni_katastr.nazev),
+            *(
+                []
+                if self.projekt.organizace.adresa is None or self.projekt.organizace.adresa == ""
+                else [("", f"{self.projekt.organizace.adresa}")]
+            ),
+            *(
+                []
+                if self.projekt.organizace.email is None or self.projekt.organizace.email == ""
+                else [("", f"E-mail: {self.projekt.organizace.email}")]
+            ),
+            *(
+                []
+                if self.projekt.organizace.telefon is None or self.projekt.organizace.telefon == ""
+                else [("", f"Tel.: {self.projekt.organizace.telefon}")]
+            ),
+            (
+                "Katastrální území (okres):",
+                f"{self.projekt.hlavni_katastr.nazev} ({self.projekt.hlavni_katastr.okres.nazev})",
+            ),
             ("Lokalizace:", self.projekt.lokalizace),
             ("Parcelní číslo:", self.projekt.parcelni_cislo),
         ]
@@ -156,7 +181,14 @@ class ExpertniListCreator(DocumentCreator):
                 if self.projekt.has_oznamovatel()
                 else "",
             ),
-            ("Datum výzkumu:", f"{self.projekt.datum_zahajeni} - {self.projekt.datum_ukonceni}"),
+            (
+                ["Datum výzkumu:", f"{self._format_date(self.projekt.datum_zahajeni)}"]
+                if self.projekt.datum_zahajeni == self.projekt.datum_ukonceni
+                else [
+                    "Datum výzkumu:",
+                    f"{self._format_date(self.projekt.datum_zahajeni)} - {self._format_date(self.projekt.datum_ukonceni)}",
+                ]
+            ),
             ("Typ výzkumu:", self._get_typ_vyzkumu_text()),
         ]
 
@@ -251,6 +283,7 @@ class ExpertniListCreator(DocumentCreator):
         self._generate_text()
         output = io.StringIO()
         DR = Renderer()
+        self.docucment.DefaultLanguage = 1029
         DR.Write(self.docucment, output)
         output.seek(0)
         return output

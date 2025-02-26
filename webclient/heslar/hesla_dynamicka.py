@@ -4,12 +4,12 @@ import logging
 from core.setting_models import CustomAdminSettings
 from django.db import OperationalError
 from heslar.models import Heslar
-from uzivatel.models import Organizace, Osoba
+from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
 
-def get_id_from_heslar(ident_cely):
+def get_id_from_heslar(ident_cely) -> int:
     try:
         pk = Heslar.objects.get(ident_cely=ident_cely).pk
         return pk
@@ -34,6 +34,14 @@ def get_id_from_osoba(ident_cely):
     except Exception:
         # This will happen when automated tests are run
         return int(ident_cely.replace("OS-", ""))
+
+
+def get_id_from_user(ident_cely):
+    try:
+        return User.objects.get(ident_cely=ident_cely).pk
+    except Exception:
+        # This will happen when automated tests are run
+        return int(ident_cely.replace("U-", ""))
 
 
 def get_settings(item_group, item_id):
@@ -219,6 +227,28 @@ JAZYK_CS = get_id_from_heslar("HES-000167")
 JAZYK_NERELEVANTNI = get_id_from_heslar("HES-000174")
 PRIMARNE_DIGITALNI = get_id_from_heslar("HES-001166")
 
+ADMIN_USER = get_id_from_user("U-000322")
+
+OSOBA_ANONYM = get_id_from_osoba("OS-007414")
+
+ORGANIZACE_OVM = get_id_from_organizace("ORG-000003")
+ORGANIZACE_AMATER = get_id_from_organizace("ORG-000011")
+ORGANIZACE_NEURCENA = get_id_from_organizace("ORG-000012")
+ORGANIZACE_ARCHEOLOG = get_id_from_organizace("ORG-000013")
+ORGANIZACE_ZAHRANICI = get_id_from_organizace("ORG-000014")
+ORGANIZACE_JINA = get_id_from_organizace("ORG-000043")
+ORGANIZACE_ZDROJ = get_id_from_organizace("ORG-000055")
+
+ORGANIZACE_OBECNE = [
+    ORGANIZACE_OVM,
+    ORGANIZACE_AMATER,
+    ORGANIZACE_NEURCENA,
+    ORGANIZACE_ARCHEOLOG,
+    ORGANIZACE_ZAHRANICI,
+    ORGANIZACE_JINA,
+    ORGANIZACE_ZDROJ,
+]
+
 heslar = get_settings("constants", "heslar")
 for key, value in heslar.items():
     if key not in globals():
@@ -253,7 +283,7 @@ osoba = get_settings("constants", "osoba")
 for key, value in osoba.items():
     if key not in globals():
         logger.warning("heslar.hesla_dynamicka.osoba.variable_not_exist", extra={"key": key})
-    globals()[key] = get_id_from_heslar(value)
+    globals()[key] = get_id_from_osoba(value)
 
 osoba_group = get_settings("constants", "osoba_group")
 for key, values in osoba_group.items():
@@ -263,3 +293,7 @@ for key, values in osoba_group.items():
     if key not in globals():
         logger.warning("heslar.hesla_dynamicka.osoba_group.variable_not_exist", extra={"key": key})
     globals()[key] = group
+
+user = get_settings("constants", "user")
+for key, value in user.items():
+    globals()[key] = value

@@ -149,7 +149,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         null=True,
         related_name="sn_historie",
     )
-    igsn = models.CharField(max_length=255, blank=True, null=True)
+    igsn = models.CharField(max_length=255, blank=True, null=True, db_index=True)
 
     @property
     def initial_pristupnost(self):
@@ -465,7 +465,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         ).save()
         self.save()
 
-    def set_neaktivni(self, user):
+    def set_neaktivni(self, user, duvod):
         """
         Metóda pro nastavení stavu neaktivní a uložení změny do historie pro spolupráci.
         """
@@ -474,6 +474,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
             typ_zmeny=SPOLUPRACE_DEAKTIVACE,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=duvod,
         ).save()
         self.save()
 

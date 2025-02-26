@@ -110,7 +110,7 @@ from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie
-from oznameni.forms import OznamovatelProjektForm
+from oznameni.forms import OznamovatelProjektCreateForm
 from pas.models import SamostatnyNalez
 from pas.views import PasPermissionFilterMixin
 from pian.views import PianPermissionFilterMixin
@@ -121,6 +121,7 @@ from projekt.forms import (
     GenerovatExpertniListForm,
     GenerovatNovePotvrzeniForm,
     NavrhnoutZruseniProjektForm,
+    NeodeslatMailForm,
     PrihlaseniProjektForm,
     UkoncitVTerenuForm,
     UpravitDatumOznameniForm,
@@ -379,7 +380,7 @@ def create(request):
             required = True
         else:
             required = False
-        form_oznamovatel = OznamovatelProjektForm(request.POST, required=required)
+        form_oznamovatel = OznamovatelProjektCreateForm(request.POST, required=required)
         if form_projekt.is_valid():
             logger.debug("projekt.views.create.form_valid")
             x2 = form_projekt.cleaned_data["coordinate_x2"]
@@ -403,7 +404,7 @@ def create(request):
             fedora_transaction: FedoraTransaction = projekt.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN)
             if x1 and x2:
                 projekt.geom = Point(x1, x2)
-                projekt.geom_sjtsk = Point(convertToJTSK(x1, x2))
+                projekt.geom_sjtsk = Point(*convertToJTSK(x1, x2))
                 projekt.geom_system = "5514"
             try:
                 projekt.set_permanent_ident_cely(False)
@@ -422,11 +423,14 @@ def create(request):
                         oznamovatel.active_transaction = fedora_transaction
                         oznamovatel.projekt = projekt
                         oznamovatel.save()
-                    if projekt.should_generate_confirmation_document:
-                        rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
-                    else:
-                        rep_bin_file = True
-                    projekt.send_ep01(rep_bin_file)
+                    send_mail = form_oznamovatel.cleaned_data["send_mail"]
+                    if send_mail:
+                        if projekt.should_generate_confirmation_document:
+                            rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
+                        else:
+                            rep_bin_file = True
+                        projekt.send_ep01(rep_bin_file)
+
                     projekt.close_active_transaction_when_finished = True
                     projekt.save()
                     return redirect("projekt:detail", ident_cely=projekt.ident_cely)
@@ -445,7 +449,7 @@ def create(request):
             logger.debug("projekt.views.create.form_projekt_not_valid", extra={"errors": str(form_projekt.errors)})
     else:
         form_projekt = CreateProjektForm(required=required_fields, required_next=required_fields_next)
-        form_oznamovatel = OznamovatelProjektForm(uzamknout_formular=True)
+        form_oznamovatel = OznamovatelProjektCreateForm(uzamknout_formular=True)
     return render(
         request,
         "projekt/create.html",
@@ -515,18 +519,15 @@ def edit(request, ident_cely):
             projekt = form.save(commit=False)
             projekt.save()
             old_geom = projekt.geom
-            new_geom = Point(x1, x2)
-            geom_changed = False
-            if old_geom is None or new_geom.coords != old_geom.coords:
-                projekt.geom = new_geom
-                projekt.geom_sjtsk = Point(convertToJTSK(x1, x2))
-                projekt.save()
-                geom_changed = True
-                logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": projekt.geom})
-            else:
-                logger.warning("projekt.views.edit.form_valid.geom_not_updated")
-            if form.changed_data or geom_changed:
-                logger.debug("projekt.views.edit.form_valid.form_changed", extra={"changed_data": form.changed_data})
+            if x1 and x2:
+                new_geom = Point(x1, x2)
+                if old_geom is None or new_geom.coords != old_geom.coords:
+                    projekt.geom = new_geom
+                    projekt.geom_sjtsk = Point(*convertToJTSK(x1, x2))
+                    projekt.save()
+                    logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": projekt.geom})
+                else:
+                    logger.warning("projekt.views.edit.form_valid.geom_not_updated")
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             form.save_m2m()
@@ -721,11 +722,15 @@ def schvalit(request, ident_cely):
                     extra={"old_ident": old_ident, "new_ident_cely": projekt.ident_cely},
                 )
         projekt.set_schvaleny(request.user, old_ident)
-        if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
-            rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
-        else:
-            rep_bin_file = None
-        projekt.send_ep01(rep_bin_file)
+        form = NeodeslatMailForm(request.POST)
+        if form.is_valid():
+            send_mail = form.cleaned_data["send_mail"]  # Získání hodnoty checkboxu
+            if send_mail:
+                if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
+                    rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
+                else:
+                    rep_bin_file = None
+                projekt.send_ep01(rep_bin_file)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
         logger.debug(
@@ -734,9 +739,11 @@ def schvalit(request, ident_cely):
         )
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": projekt.ident_cely})})
     form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
+    form = NeodeslatMailForm(initial={"send_mail": True})
     context = {
         "object": projekt,
         "title": _("projekt.views.schvalit.title.text"),
+        "form": form,
         "id_tag": "schvalit-form",
         "button": _("projekt.views.schvalit.submitButton.text"),
         "form_check": form_check,
@@ -1130,6 +1137,8 @@ def zrusit(request, ident_cely):
             duvod = form.cleaned_data["reason_text"]
             projekt.create_transaction(request.user, PROJEKT_USPESNE_ZRUSEN)
             projekt.set_zruseny(request.user, duvod)
+            if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
+                projekt.create_cancel_confirmation_document(request.user)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             Mailer.send_ep04(project=projekt, reason=duvod)

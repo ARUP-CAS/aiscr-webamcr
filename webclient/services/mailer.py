@@ -34,6 +34,7 @@ from django.utils import timezone
 from historie.models import Historie
 from oznameni.models import Oznamovatel
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
+from projekt.doc_utils import ZruseniPDFCreator
 
 from .mlstripper import MLStripper
 
@@ -72,6 +73,7 @@ ALWAYS_ACTIVE = [
     "E-P-06a",
     "E-P-06b",
     "E-N-06",
+    "E-N-07",
     "E-K-02",
 ]
 
@@ -712,6 +714,26 @@ class Mailer:
                 )
 
     @classmethod
+    def _get_ep06_attachment(cls, project) -> RepositoryBinaryFile | None:
+        project_files = project.soubory.soubory.filter(
+            nazev__startswith=f"{ZruseniPDFCreator.FILENAME_PREFIX}_{project.ident_cely}", nazev__endswith=".pdf"
+        )
+        project_files = list(sorted(project_files, key=lambda x: x.vytvoreno.datum_zmeny))
+        logger.debug(
+            "services.mailer.get_ep06_attachments.query",
+            extra={"project_files": project_files, "ident_cely": project.ident_cely},
+        )
+        if len(project_files) > 0:
+            project_file = project_files[0]
+            logger.debug(
+                "services.mailer.get_ep06_attachments.attachment_found",
+                extra={"nazev": project_file.nazev, "ident_cely": project.ident_cely},
+            )
+            repository_coonector = FedoraRepositoryConnector(project)
+            attachment = repository_coonector.get_binary_file(project_file.repository_uuid)
+            return attachment
+
+    @classmethod
     def _send_ep06(cls, project, notification_type, reason):
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         oznameni = Historie.objects.filter(
@@ -734,7 +756,11 @@ class Mailer:
             }
             html = render_to_string(notification_type.cesta_sablony, context)
             cls.__send(
-                subject=subject, to=project.oznamovatel.email, html_content=html, notification_type=notification_type
+                subject=subject,
+                to=project.oznamovatel.email,
+                html_content=html,
+                notification_type=notification_type,
+                attachment=cls._get_ep06_attachment(project),
             )
 
     @classmethod
@@ -857,6 +883,41 @@ class Mailer:
             cls.__send(
                 subject=subject,
                 to=cooperation.spolupracovnik.email,
+                html_content=html,
+                notification_type=notification_type,
+            )
+
+    @classmethod
+    def send_en07(cls, cooperation: "pas.models.UzivatelSpoluprace", reason):
+        IDENT_CELY = "E-N-07"
+        logger.debug("services.mailer.send_en07", extra={"ident_cely": IDENT_CELY})
+        notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+        subject = notification_type.predmet
+        html = render_to_string(
+            notification_type.cesta_sablony,
+            {
+                "ident_cely": cooperation.pk,
+                "name": cooperation.spolupracovnik.first_name,
+                "surname": cooperation.spolupracovnik.last_name,
+                "organization": cooperation.spolupracovnik.organizace.nazev,
+                "vedouci_name": cooperation.vedouci.first_name,
+                "vedouci_surname": cooperation.vedouci.last_name,
+                "vedouci_organization": cooperation.vedouci.organizace.nazev,
+                "reason": reason,
+                "site_url": settings.SITE_URL,
+            },
+        )
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=cooperation.spolupracovnik):
+            cls.__send(
+                subject=subject,
+                to=cooperation.spolupracovnik.email,
+                html_content=html,
+                notification_type=notification_type,
+            )
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=cooperation.vedouci):
+            cls.__send(
+                subject=subject,
+                to=cooperation.vedouci.email,
                 html_content=html,
                 notification_type=notification_type,
             )
