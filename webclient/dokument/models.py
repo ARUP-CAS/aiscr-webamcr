@@ -176,7 +176,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     tvary = models.ManyToManyField(Heslar, through="Tvar", related_name="dokumenty_tvary")
     autori_snapshot = models.CharField(max_length=5000, null=True, blank=True)
     osoby_snapshot = models.CharField(max_length=5000, null=True, blank=True)
-    doi = models.CharField(max_length=255, null=True, blank=True)
+    doi = models.CharField(max_length=255, null=True, blank=True, db_index=True)
 
     class Meta:
         db_table = "dokument"
@@ -633,6 +633,11 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
         transaction_user: User
         self.active_transaction = FedoraTransaction(self.dokument, transaction_user, success_message, error_message)
         return self.active_transaction
+
+    @property
+    def dokument_doi(self):
+        if self.dokument:
+            return self.dokument.doi
 
 
 class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):
