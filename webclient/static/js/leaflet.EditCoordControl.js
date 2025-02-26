@@ -293,8 +293,8 @@ L.Control.EditCoordControl = L.Control.extend({
         }
     },
     _fillInputContainer: function (latlng) {
-        this._inputX.value = latlng.lng
-        this._inputY.value = latlng.lat
+        this._inputX.value = Math.round(latlng.lng * 10000000) / 10000000 
+        this._inputY.value = Math.round(latlng.lat * 10000000) / 10000000
         let coords = convertToJTSK(latlng.lng, latlng.lat)
         this._inputXJTSK.value = Math.round(coords[0] * 100) / 100
         this._inputYJTSK.value = Math.round(coords[1] * 100) / 100
