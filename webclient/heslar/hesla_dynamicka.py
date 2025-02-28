@@ -49,12 +49,12 @@ def get_settings(item_group, item_id):
     return {}
 
 
-def load_constants(constant_name, get_id_from_func=None):
+def load_constants(constant_name, get_id_from_func):
     # přepsání kostant z databáze
     # umožňuje přepsat pouze existující konstanty
     heslar = get_settings("constants", constant_name)
     for key, value in heslar.items():
-        index = value if get_id_from_func is None else get_id_from_func(value)
+        index = get_id_from_func(value)
         if key in globals() and index is not None:
             globals()[key] = index
         else:
@@ -279,4 +279,4 @@ ORGANIZACE_OBECNE = [
 load_constants("heslar", get_id_from_heslar)
 load_constants("organizace", get_id_from_organizace)
 load_constants("osoba", get_id_from_osoba)
-load_constants("user")
+load_constants("user", get_id_from_user)
