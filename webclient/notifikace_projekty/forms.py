@@ -1,7 +1,7 @@
 import logging
 
+from core.widgets import AutocompleteListSelect2
 from crispy_forms.helper import FormHelper
-from dal import autocomplete
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import CharField, Value
@@ -97,7 +97,7 @@ def create_pes_form(not_readonly=True, model_typ=None):
                 self.fields["object_id"] = forms.ChoiceField(
                     label=_("notifikaceProjekty.forms.pesForm.katastr.label"),
                     help_text=_("notifikaceProjekty.forms.pesForm.katastr.tooltip"),
-                    widget=autocomplete.ListSelect2(url="heslar:katastr-autocomplete"),
+                    widget=AutocompleteListSelect2(url="heslar:katastr-autocomplete"),
                     choices=katastre_choices,
                     required=True,
                 )

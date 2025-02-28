@@ -4,9 +4,9 @@ import os
 
 from core.utils import get_cadastre_from_point
 from core.validators import validate_date_min_1600, validate_phone_number
+from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
-from dal import autocomplete
 from django import forms
 from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -262,7 +262,7 @@ class ProjektOznameniForm(forms.ModelForm):
             "lokalizace": forms.TextInput(attrs={"maxlength": 255}),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "oznaceni_stavby": forms.TextInput(),
-            "katastry": autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
+            "katastry": AutocompleteModelSelect2Multiple(url="heslar:katastr-autocomplete"),
             "ident_cely": forms.HiddenInput(),
         }
         labels = {

@@ -5,9 +5,9 @@ import re
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.forms import BaseFilterForm, TwoLevelSelectField
 from core.validators import validate_date_min_1600
+from core.widgets import AutocompleteModelSelect2, AutocompleteModelSelect2Multiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
-from dal import autocomplete
 from django import forms
 from django.forms import ValidationError
 from django.utils import formats
@@ -68,7 +68,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
                 }
             else:
                 widgets = {
-                    "vedouci": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
+                    "vedouci": AutocompleteModelSelect2(url="heslar:osoba-autocomplete"),
                     "organizace": forms.Select(
                         attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                     ),
@@ -109,8 +109,8 @@ class CreateArchZForm(forms.ModelForm):
             "katastry": _("arch_z.forms.CreateArchZForm.katastry.label"),
         }
         widgets = {
-            "hlavni_katastr": autocomplete.ModelSelect2(url="heslar:katastr-autocomplete"),
-            "katastry": autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
+            "hlavni_katastr": AutocompleteModelSelect2(url="heslar:katastr-autocomplete"),
+            "katastry": AutocompleteModelSelect2Multiple(url="heslar:katastr-autocomplete"),
             "uzivatelske_oznaceni": forms.TextInput(),
             "pristupnost": forms.Select(
                 attrs={
@@ -338,7 +338,7 @@ class CreateAkceForm(forms.ModelForm):
         }
 
         widgets = {
-            "hlavni_vedouci": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
+            "hlavni_vedouci": AutocompleteModelSelect2(url="heslar:osoba-autocomplete"),
             "organizace": forms.Select(
                 attrs={
                     "class": "selectpicker",
@@ -432,7 +432,9 @@ class CreateAkceForm(forms.ModelForm):
             self.fields["organizace"].initial = projekt.organizace
             self.fields["datum_zahajeni"].initial = projekt.datum_zahajeni
             self.fields["datum_ukonceni"].initial = projekt.datum_ukonceni
-            self.fields["lokalizace_okolnosti"].initial = f"{projekt.lokalizace}. Parcelní číslo: {projekt.parcelni_cislo}"
+            self.fields[
+                "lokalizace_okolnosti"
+            ].initial = f"{projekt.lokalizace}. Parcelní číslo: {projekt.parcelni_cislo}"
         self.helper = FormHelper(self)
         if uzamknout_specifikace:
             self.fields["specifikace_data"].disabled = True
