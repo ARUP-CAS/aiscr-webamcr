@@ -358,7 +358,6 @@
         </li>
         <li class="nav-item app-pipe"></li>
         <li class="nav-item app-flags">
-          {% get_current_language as LANGUAGE_CODE %}
           <button id="czech" class="nav-link {% if "cs" in LANGUAGE_CODE  %}app-active{% endif %}" >
             <img src="{% static 'flag-cs.svg' %}" alt="" class="app-flag" />
           </button>
