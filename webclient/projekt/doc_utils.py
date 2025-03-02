@@ -431,6 +431,188 @@ class OznameniPDFCreator(DocumentCreator):
             bulletFormat="%s.",
         )
 
+        self.texts["doc_attachment_heading_main_1"] = "PŘÍLOHA – INFORMACE O ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ"
+
+        self.texts["doc_attachment_heading_main_2"] = "POUČENÍ O PRÁVECH V SOUVISLOSTI S OCHRANOU OSOBNÍCH ÚDAJŮ"
+
+        self.texts["doc_attachment_heading_1"] = "<u>ÚVODNÍ INFORMACE</u>"
+
+        self.texts[
+            "doc_attachment_par_1"
+        ] = """
+               Prosím, věnujte pozornost následujícímu dokumentu, jehož prostřednictvím Vám poskytujeme informace
+               o zpracování Vašich osobních údajů a o právech souvisejících s Vaší povinností jako stavebníka dle
+               § 22 odst. 2 zákona č. 20/1987 Sb., o státní památkové péči (dále rovněž jen „zákon“), poskytnout informace
+               o záměru provádět stavební činnost na území s archeologickými nálezy nebo jinou činnost, kterou by m
+               ohlo být ohroženo provádění archeologických výzkumů, a to buď <strong>Archeologickému ústavu AV ČR, Praha,
+               v. v. i., IČ 67985912, se sídlem Letenská 4, 118 01 Praha 1,</strong> nebo <strong>Archeologickému ústavu
+               AV ČR, Brno, v. v. i., IČ 68081758, se sídlem Čechyňská 363/19, 602 00 Brno,</strong> jako oprávněným institucím
+               dle daného ustanovení zákona. Jakékoliv nakládání s osobními údaji se řídí platnými právními předpisy,
+               zejména zákonem o ochraně osobních údajů a nařízením Evropského parlamentu a Rady č. 2016/679
+               ze dne 27. 4. 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu
+               těchto údajů a o zrušení směrnice 95/46/ES (dále jen „obecné nařízení o ochraně osobních údajů“). V souladu
+               s ustanovením čl. 13 a následujícího obecného nařízení o ochraně osobních údajů Vám jako tzv. subjektům
+               údajů poskytujeme následující informace. Tento dokument je veřejný a slouží k Vašemu řádnému informování
+               o rozsahu, účelu, době zpracování osobních údajů a k poučení o Vašich právech v souvislosti
+               s jejich ochranou.
+               """
+
+        self.texts[
+            "doc_attachment_heading_2"
+        ] = """
+               <u>KDO JE SPRÁVCEM OSOBNÍCH ÚDAJŮ?</u>
+               """
+
+        self.texts[
+            "doc_attachment_par_2"
+        ] = """
+               Společnými správci osobních údajů jsou Archeologický ústav AV ČR, Praha, v. v. i., IČ:67985912,
+               se sídlem Letenská 4, 118 01 Praha 1, a Archeologický ústav AV ČR, Brno, v. v. i., IČ:68081758,
+               se sídlem Čechyňská 363/19, 602 00 Brno (dále jen <strong>„Správce“</strong> či <strong>„Archeologický ústav“</strong>).
+               """
+
+        self.texts[
+            "doc_attachment_heading_3"
+        ] = """
+               <u>OBECNĚ - CO VŠE PATŘÍ MEZI OSOBNÍ ÚDAJE?</u>
+               """
+
+        self.texts[
+            "doc_attachment_par_3"
+        ] = """
+               Osobními údaji jsou veškeré informace vztahující se k identifikované či identifikovatelné fyzické osobě
+               (člověku), na základě kterých lze konkrétní fyzickou osobu přímo či nepřímo identifikovat. Mezi osobní údaje
+               tak patří široká škála informací, jako je například jméno, pohlaví, věk a datum narození, osobní stav,
+               fotografie (resp. jakékoliv zobrazení podoby), rodné číslo, místo trvalého pobytu, telefonní číslo, e-mail,
+               údaje o zdravotní pojišťovně, státní občanství, údaje o zdravotním stavu (fyzickém i psychickém),
+               ale také otisk prstu, podpis nebo IP adresa.
+               """
+
+        self.texts[
+            "doc_attachment_heading_4"
+        ] = """
+               <u>ZA JAKÝM ÚČELEM A NA JAKÉM ZÁKLADĚ ZPRACOVÁVÁME VAŠE OSOBNÍ ÚDAJE?</u>
+               """
+
+        self.texts[
+            "doc_attachment_par_4"
+        ] = """
+               Vaše osobní údaje zpracováváme, jelikož nám to ukládá zákon, konkrétně § 22 odst. 2 zákona č. 20/1987 Sb.,
+               o státní památkové péči, který stanoví stavebníkovi, který má záměr provádět stavební činnost v území
+               s archeologickými nálezy, nebo jinou činnost, kterou by mohlo být ohroženo provádění archeologických
+               výzkumů, povinnost oznámit nejprve tento záměr Archeologickému ústavu. Odrazem této povinnosti stavebníka je
+               povinnost archeologického ústavu toto oznámení přijmout a zpracovat jej. Při zpracování oznámení stavebníka
+               dochází ze strany Archeologického ústavu ke zpracování osobních údajů stavebníka jako subjektu osobních údajů
+               dle čl. 6 odst. 1 písm. c), e) obecného nařízení o ochraně osobních údajů a Archeologický ústav je
+               v postavení Správce. Vaše osobní údaje v níže uvedeném rozsahu zpracováváme, pouze aby Vás
+               Archeologický ústav či jiná oprávněná organizace dle zákona mohly kontaktovat za účelem provedení
+               záchranného archeologického průzkumu."""
+
+        self.texts[
+            "doc_attachment_heading_5"
+        ] = """
+               <u>ROZSAH OSOBNÍCH ÚDAJŮ ZPRACOVÁVANÝCH SPRÁVCEM</u>
+               """
+
+        self.texts[
+            "doc_attachment_par_5"
+        ] = """
+               Informujeme Vás, že Vaše osobní údaje jsou zpracovávány v rozsahu Vámi vyplněného formuláře, \n\
+               a to konkrétně v rozsahu:"""
+
+        self.texts["doc_attachment_par_5_bullets"] = ListFlowable(
+            [
+                Paragraph("jméno", self.styles.get("amBodyTextSmallerSpaceAfter")),
+                Paragraph("příjmení", self.styles.get("amBodyTextSmallerSpaceAfter")),
+                Paragraph("adresa", self.styles.get("amBodyTextSmallerSpaceAfter")),
+                Paragraph("telefonní číslo", self.styles.get("amBodyTextSmallerSpaceAfter")),
+                Paragraph("e-mail", self.styles.get("amBodyTextSmallerSpaceAfter")),
+                Paragraph(
+                    "údaje o nemovité věci (parcelní číslo a bližší specifikace předmětu oznámení).",
+                    self.styles.get("amBodyTextSmallerSpaceAfter"),
+                ),
+            ],
+            bulletType="bullet",
+        )
+
+        self.texts[
+            "doc_attachment_heading_6"
+        ] = """
+               <u>DOBA ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ</u>
+               """
+
+        self.texts[
+            "doc_attachment_par_6"
+        ] = """
+               Vaše osobní údaje budeme ukládat po dobu nezbytně nutnou maximálně však po dobu deseti let. Tyto lhůty \n\
+               vyplývají ze zákonných požadavků a z titulu ochrany zájmu subjektu údajů na prokázání \n\
+               splnění své zákonné povinnosti.
+               """
+
+        self.texts[
+            "doc_attachment_heading_7"
+        ] = """
+               <u>DALŠÍ INFORMACE O ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ</u>
+               """
+
+        self.texts[
+            "doc_attachment_par_7_part_1"
+        ] = """
+               Osobní údaje subjektu údajů jsou zpracovávány automatizovaně v elektronické formě.
+               Příjemci Vašich osobních údajů, resp. výsledků jejich zpracování jsou:
+               """
+
+        self.texts["doc_attachment_par_7_bullets"] = ListFlowable(
+            [
+                Paragraph("oprávněné organizace dle zákona", self.styles.get("amBodyTextSmallerSpaceAfter")),
+            ],
+            bulletType="bullet",
+        )
+
+        self.texts[
+            "doc_attachment_par_7_part_2"
+        ] = """
+               Vaše osobní údaje nepředáváme a nemáme v úmyslu předat do třetí země nebo mezinárodní organizaci.
+               """
+
+        self.texts[
+            "doc_attachment_heading_8"
+        ] = """
+               <u>POUČENÍ O PRÁVECH SUBJEKTŮ ÚDAJŮ</u>
+               """
+
+        self.texts[
+            "doc_attachment_par_8_1"
+        ] = """
+               Subjekt údajů má právo požádat Správce o poskytnutí informace o zpracování jeho osobních údajů.
+               """
+
+        self.texts[
+            "doc_attachment_par_8_2"
+        ] = """
+               Subjekt údajů má právo, aby Správce bez zbytečného odkladu opravil nepřesné osobní údaje, které se ho týkají. \n\
+               S přihlédnutím k účelům zpracování má subjekt údajů právo na doplnění neúplných osobních údajů, a to i \n\
+               poskytnutím dodatečného prohlášení.
+               Subjekt údajů má právo, aby Správce bez zbytečného odkladu vymazal osobní údaje, které se daného subjektu \n\
+               údajů týkají, a Správce má povinnost osobní údaje bez zbytečného odkladu vymazat, pokud je dán některý z důvodů \n\
+               stanovených obecným nařízením o ochraně osobních údajů.
+               """
+
+        self.texts[
+            "doc_attachment_par_8_3"
+        ] = """
+               Subjekt údajů má právo, aby Správce omezil zpracování osobních údajů, v případech stanovených obecným \n\
+               nařízením o ochraně osobních údajů.
+               """
+
+        self.texts[
+            "doc_attachment_par_8_4"
+        ] = """
+               Pokud se subjekt údajů domnívá, že došlo k porušení právních předpisů v souvislosti s ochranou jeho osobních \n\
+               údajů, má právo podat stížnost u dozorového úřadu. Dozorovým úřadem je v České republice \n\
+               Úřad pro ochranu osobních údajů.
+               """
+
     def build_document(self) -> RepositoryBinaryFile:
         pdf_buffer, my_doc = self._initiate_document()
         styles = self.styles
@@ -456,12 +638,39 @@ class OznameniPDFCreator(DocumentCreator):
         signature = self._create_signature_doc()
 
         notes = [
-            PageBreak(),
             Paragraph(self.texts.get("notes_heading"), body_style),
             self.texts.get("notes", body_style),
         ]
 
-        document_content = header + doc + signature + notes
+        attachment = [
+            PageBreak(),
+            Paragraph(self.texts.get("doc_attachment_heading_main_1"), styles["amHeading2"]),
+            Paragraph(self.texts.get("doc_attachment_heading_main_2"), styles["amHeading2"]),
+            Paragraph(self.texts.get("doc_attachment_heading_1"), body_style),
+            Paragraph(self.texts.get("doc_attachment_par_1"), body_style),
+            Paragraph(self.texts.get("doc_attachment_heading_2"), body_style),
+            Paragraph(self.texts.get("doc_attachment_par_2"), body_style),
+            Paragraph(self.texts.get("doc_attachment_heading_3"), body_style),
+            Paragraph(self.texts.get("doc_attachment_par_3"), body_style),
+            Paragraph(self.texts.get("doc_attachment_heading_4"), body_style),
+            Paragraph(self.texts.get("doc_attachment_par_4"), body_style),
+            Paragraph(self.texts.get("doc_attachment_heading_5"), body_style),
+            Paragraph(self.texts.get("doc_attachment_par_5"), body_style),
+            self.texts.get("doc_attachment_par_5_bullets"),
+            Paragraph(self.texts.get("doc_attachment_heading_6"), body_style),
+            Paragraph(self.texts.get("doc_attachment_par_6"), body_style),
+            Paragraph(self.texts.get("doc_attachment_heading_7"), body_style),
+            Paragraph(self.texts.get("doc_attachment_par_7_part_1"), body_style),
+            self.texts.get("doc_attachment_par_7_bullets"),
+            Paragraph(self.texts.get("doc_attachment_par_7_part_2"), body_style),
+            Paragraph(self.texts.get("doc_attachment_heading_8"), body_style),
+            Paragraph(self.texts.get("doc_attachment_par_8_1"), body_style),
+            Paragraph(self.texts.get("doc_attachment_par_8_2"), body_style),
+            Paragraph(self.texts.get("doc_attachment_par_8_3"), body_style),
+            Paragraph(self.texts.get("doc_attachment_par_8_4"), body_style),
+        ]
+
+        document_content = header + doc + signature + notes + attachment
         return self._generate_repository_file(my_doc, document_content, pdf_buffer)
 
 
