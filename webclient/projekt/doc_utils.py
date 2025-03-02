@@ -17,7 +17,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.pdfmetrics import registerFontFamily
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import ListFlowable, Paragraph, SimpleDocTemplate, Table
+from reportlab.platypus import ListFlowable, PageBreak, Paragraph, SimpleDocTemplate, Table
 
 from webclient.settings.base import STATIC_ROOT
 
@@ -329,6 +329,8 @@ class OznameniPDFCreator(DocumentCreator):
         doklad pro dodatečné stavební povolení.</strong>
         """
 
+        self._create_signature()
+
         self.texts["notes_heading"] = "<strong>Poučení</strong>"
         self.texts["notes"] = ListFlowable(
             [
@@ -429,8 +431,6 @@ class OznameniPDFCreator(DocumentCreator):
             bulletFormat="%s.",
         )
 
-        self._create_signature()
-
     def build_document(self) -> RepositoryBinaryFile:
         pdf_buffer, my_doc = self._initiate_document()
         styles = self.styles
@@ -451,13 +451,17 @@ class OznameniPDFCreator(DocumentCreator):
             Paragraph(self.texts.get("doc_par_1"), body_style),
             Paragraph(self.texts.get("doc_par_2"), body_style),
             Paragraph(self.texts.get("doc_par_3"), styles["amBodyTextCenter"]),
-            Paragraph(self.texts.get("notes_heading"), body_style),
-            self.texts.get("notes", body_style),
         ]
 
         signature = self._create_signature_doc()
 
-        document_content = header + doc + signature
+        notes = [
+            PageBreak(),
+            Paragraph(self.texts.get("notes_heading"), body_style),
+            self.texts.get("notes", body_style),
+        ]
+
+        document_content = header + doc + signature + notes
         return self._generate_repository_file(my_doc, document_content, pdf_buffer)
 
 
