@@ -22,9 +22,22 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
 
 class AutocompleteSelect2WidgetMixin(Select2WidgetMixin):
     def build_attrs(self, *args, **kwargs):
-        """Nastaveni placeholderu pro pole, pokud neni."""
+        """Nastaveni placeholderu pro pole, pokud neni poskytnuto a zmena zakladni tridy."""
         attrs = super(AutocompleteSelect2WidgetMixin, self).build_attrs(*args, **kwargs)
         attrs.setdefault("data-placeholder", _("core.widgets.AutocompleteSelect2WidgetMixin.data-placeholder"))
+
+        class_replacements = {
+            "autocompletemodelselect2multiple": "modelselect2multiple",
+            "autocompletemodelselect2": "modelselect2",
+            "autocompleteselect2multiple": "select2multiple",
+            "autocompletelistselect2": "listselect2",
+        }
+
+        for old_class, new_class in class_replacements.items():
+            if old_class in attrs["class"]:
+                attrs["class"] = attrs["class"].replace(old_class, new_class)
+                break
+
         return attrs
 
 
