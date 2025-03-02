@@ -1,5 +1,6 @@
 import datetime
 import logging
+from typing import Dict, Union
 
 from core.connectors import RedisConnector
 from core.constants import (
@@ -42,7 +43,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 from heslar import hesla_dynamicka
-from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PROJEKT_TYP
+from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PRISTUPNOST, HESLAR_PROJEKT_TYP
 from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
@@ -164,6 +165,14 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         related_name="projekty_hlavnich_katastru",
         verbose_name=_("projekt.models.projekt.hlavniKatastr.label"),
         db_index=True,
+    )
+    pristupnost_snapshot = models.ForeignKey(
+        Heslar,
+        models.RESTRICT,
+        limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
+        db_index=True,
+        null=True,
+        related_name="projekty",
     )
 
     @property
@@ -677,8 +686,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def get_absolute_url(self):
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
 
-    @property
-    def pristupnost(self):
+    def set_pristupnost(self, fixes: Union[Dict, None] = None):
         pristupnosti_ids = set()
         if self.typ_projektu.pk == TYP_PROJEKTU_PRUZKUM_ID:
             samostatne_nalezy = self.samostatne_nalezy.all()
@@ -697,8 +705,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 if akce.archeologicky_zaznam.pristupnost is not None:
                     pristupnosti_ids.add(akce.archeologicky_zaznam.pristupnost.id)
         if len(pristupnosti_ids) > 0:
-            return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
-        return Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
+            self.pristupnost_snapshot = Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
+        else:
+            self.pristupnost_snapshot = Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
 
     @property
     def planovane_zahajeni_str(self):

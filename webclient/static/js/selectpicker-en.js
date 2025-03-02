@@ -16,13 +16,13 @@
                 : n(e.jQuery);
 })(this, function (e) {
     e.fn.selectpicker.defaults = {
-        noneSelectedText: "Vyberte ze seznamu",
-        noneResultsText: "Pro hled\xe1n\xed {0} nebyly nalezeny \u017e\xe1dn\xe9 v\xfdsledky",
-        countSelectedText: "Vybran\xe9 {0} z {1}",
-        maxOptionsText: ["Limit p\u0159ekro\u010den ({n} {var} max)", "Limit skupiny p\u0159ekro\u010den ({n} {var} max)", ["polo\u017eek", "polo\u017eka"]],
-        multipleSeparator: ", ",
-        selectAllText: "Vybrat v\u0161e",
-        deselectAllText: "Zru\u0161it v\xfdb\u011br",
+        //noneSelectedText: "Vyberte ze seznamu",
+        //noneResultsText: "Pro hled\xe1n\xed {0} nebyly nalezeny \u017e\xe1dn\xe9 v\xfdsledky",
+        //countSelectedText: "Vybran\xe9 {0} z {1}",
+        //maxOptionsText: ["Limit p\u0159ekro\u010den ({n} {var} max)", "Limit skupiny p\u0159ekro\u010den ({n} {var} max)", ["polo\u017eek", "polo\u017eka"]],
+        multipleSeparator: "; ",
+        //selectAllText: "Vybrat v\u0161e",
+        //deselectAllText: "Zru\u0161it v\xfdb\u011br",
         actionsBox: true,
     };
 });
