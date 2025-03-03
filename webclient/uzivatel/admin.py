@@ -3,16 +3,13 @@ from typing import Union
 
 from cacheops import invalidate_model
 from core.constants import (
-    ADMIN_UPDATE,
     ROLE_ADMIN_ID,
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
     ZMENA_HESLA_ADMIN,
-    ZMENA_HESLA_UZIVATEL,
     ZMENA_HLAVNI_ROLE,
     ZMENA_UDAJU_ADMIN,
-    ZMENA_UDAJU_UZIVATEL,
 )
 from core.repository_connector import FedoraTransaction
 from django import forms
@@ -472,7 +469,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def render_change_form(self, request, context, **kwargs):
         object_id = request.resolver_match.kwargs.get("object_id")
-        user_account_history, user_account_other_records = self.get_histore_replated_records(object_id)
+        user_account_history, user_account_other_records = self.get_histore_related_records(object_id)
         context.update(
             {
                 "show_delete_history_button": True,
@@ -494,23 +491,15 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         ]
         return custom_urls + urls
 
-    def get_histore_replated_records(self, object_id):
-        history = Historie.objects.filter(uzivatel=object_id)
-        user_account_history = history.filter(
-            typ_zmeny__in=(
-                ZMENA_HLAVNI_ROLE,
-                ZMENA_UDAJU_ADMIN,
-                ADMIN_UPDATE,
-                ZMENA_HESLA_ADMIN,
-                ZMENA_UDAJU_UZIVATEL,
-                ZMENA_HESLA_UZIVATEL,
-            )
-        )
+    def get_histore_related_records(self, object_id):
+        uzivatel = User.objects.get(pk=object_id)
+        history = Historie.objects.filter(uzivatel=uzivatel)
+        user_account_history = history.filter(vazba=uzivatel.history_vazba)
         user_account_other_records = history.filter(~Q(id__in=(user_account_history.values_list("id", flat=True))))
         return user_account_history, user_account_other_records
 
     def delete_history_records(self, request, object_id, *args, **kwargs):
-        user_account_history, user_account_other_records = self.get_histore_replated_records(object_id)
+        user_account_history, user_account_other_records = self.get_histore_related_records(object_id)
         if request.method == "GET":
             obj = self.get_object(request, object_id)
             context = {
