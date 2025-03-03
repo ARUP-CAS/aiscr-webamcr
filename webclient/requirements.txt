@@ -43,7 +43,7 @@ django-model-utils==5.0.0
 pandas==2.2.3
 tablib[all]==3.8.0
 pre-commit==4.1.0
-isort==6.0.0
+isort==6.0.1
 coverage==7.6.12
 django-debug-toolbar==5.0.1
 black==25.1.0
