@@ -1,9 +1,9 @@
 import logging
 
 from arch_z.models import Akce, ArcheologickyZaznam
+from core.widgets import AutocompleteModelSelect2
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
-from dal import autocomplete
 from dj.models import DokumentacniJednotka
 from django import forms
 from django.db.models import Q
@@ -15,7 +15,7 @@ from heslar.models import Heslar, RuianKatastr
 logger = logging.getLogger(__name__)
 
 
-class MyAutocompleteWidget(autocomplete.ModelSelect2):
+class MyAutocompleteWidget(AutocompleteModelSelect2):
     def media(self):
         return ()
 
@@ -205,7 +205,7 @@ class ChangeKatastrForm(forms.Form):
 
     katastr = forms.ModelChoiceField(
         label=_("dj.forms.ChangeKatastrForm.katastr.label"),
-        widget=autocomplete.ModelSelect2(url="heslar:katastr-autocomplete"),
+        widget=AutocompleteModelSelect2(url="heslar:katastr-autocomplete"),
         queryset=RuianKatastr.objects.all(),
         help_text=_("dj.forms.ChangeKatastrForm.katastr.tooltip"),
         required=True,
