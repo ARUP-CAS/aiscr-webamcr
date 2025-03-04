@@ -474,8 +474,10 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             {
                 "show_delete_history_button": True,
                 "object_id": object_id,
-                "user_account_history_exists": user_account_history.exists(),
-                "user_account_other_records_exists": user_account_other_records.exists(),
+                "user_account_history_exists": user_account_history.exists() if user_account_history else None,
+                "user_account_other_records_exists": user_account_other_records.exists()
+                if user_account_other_records
+                else None,
             }
         )
         return super().render_change_form(request, context, **kwargs)
@@ -492,11 +494,14 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         return custom_urls + urls
 
     def get_histore_related_records(self, object_id):
-        uzivatel = User.objects.get(pk=object_id)
-        history = Historie.objects.filter(uzivatel=uzivatel)
-        user_account_history = history.filter(vazba=uzivatel.history_vazba)
-        user_account_other_records = history.filter(~Q(id__in=(user_account_history.values_list("id", flat=True))))
-        return user_account_history, user_account_other_records
+        if User.objects.filter(pk=object_id).exists():
+            uzivatel = User.objects.get(pk=object_id)
+            history = Historie.objects.filter(uzivatel=uzivatel)
+            user_account_history = history.filter(vazba=uzivatel.history_vazba)
+            user_account_other_records = history.filter(~Q(id__in=(user_account_history.values_list("id", flat=True))))
+            return user_account_history, user_account_other_records
+        else:
+            return None, None
 
     def delete_history_records(self, request, object_id, *args, **kwargs):
         user_account_history, user_account_other_records = self.get_histore_related_records(object_id)
@@ -511,15 +516,16 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             }
             return TemplateResponse(request, "admin/admin_user_change_delete_history_records.html", context)
         else:
-            if user_account_other_records.exists():
-                self.message_user(
-                    request, "uzivatel.admin.CustomUserAdmin.delete_history_records.cannot_delete", messages.ERROR
-                )
-            else:
-                user_account_history.delete()
-                self.message_user(
-                    request, "uzivatel.admin.CustomUserAdmin.delete_history_records.success", messages.SUCCESS
-                )
+            if user_account_history is not None and user_account_other_records is not None:
+                if user_account_other_records.exists():
+                    self.message_user(
+                        request, "uzivatel.admin.CustomUserAdmin.delete_history_records.cannot_delete", messages.ERROR
+                    )
+                else:
+                    user_account_history.delete()
+                    self.message_user(
+                        request, "uzivatel.admin.CustomUserAdmin.delete_history_records.success", messages.SUCCESS
+                    )
             change_url = reverse("admin:uzivatel_user_change", args=[object_id])
             return HttpResponseRedirect(change_url)
 
