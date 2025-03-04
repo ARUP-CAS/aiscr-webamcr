@@ -527,7 +527,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
-        context["pian_form_update"] = PianCreateForm(presnost=context["j"].pian.presnost)
+        context["pian_form_update"] = PianCreateForm(instance=context["j"].pian)
         return context
 
     def get(self, request, *args, **kwargs):
@@ -1598,6 +1598,7 @@ class AkceListView(SearchListView):
             "specifikace_data": "specifikace_data__razeni",
             "hlavni_typ": "hlavni_typ__razeni",
             "vedlejsi_typ": "vedlejsi_typ__razeni",
+            "doi": "archeologicky_zaznam__casti_dokumentu__dokument__doi",
         }.get(field, field)
 
     def get_queryset(self):

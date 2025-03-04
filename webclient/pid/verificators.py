@@ -26,5 +26,7 @@ def verify_ror(ror):
 
 
 def verify_wikidata(wikidata):
+    if wikidata.startswith("https://www.wikidata.org/entity/"):
+        wikidata = wikidata.replace("https://www.wikidata.org/entity/", "")
     response = requests.get(f"{WIKIDATA_API_URL}{wikidata}")
     return response.status_code == 200

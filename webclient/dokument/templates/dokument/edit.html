@@ -108,6 +108,11 @@
             $(settings.modalIDD).modal("hide");
           };
           document.addEventListener('DOMContentLoaded', function (event) {
+            // https://stackoverflow.com/questions/18487056/select2-doesnt-work-when-embedded-in-a-bootstrap-modal/19574076#19574076
+            $('#create-autor').on('click', function () {
+                $.fn.modal.Constructor.prototype._enforceFocus = function () {
+                };
+            })
             var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
             formURL: "{% url 'heslar:create_osoba' %}",
             formID: "create-osoba-form",

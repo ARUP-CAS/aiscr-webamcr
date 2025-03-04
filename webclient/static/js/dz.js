@@ -73,7 +73,7 @@ const show_action_result_message = (file, result = ActionResultsEnum.success, me
             } else if (result === ActionResultsEnum.error) {
                 alert_element.textContent = `${dz_trans["alertsUploadErrorPart1"]} ${file.name} ${dz_trans["alertsUploadErrorPart2"]}${message}`;
             }
-        } else if (action === ActionTypeEnum.reject) {
+        } else if (action === ActionTypeEnum.delete) {
             if (result === ActionResultsEnum.success) {
                 alert_element.textContent = `${dz_trans["alertsDeleteSuccessfulPart1"]} ${file.name} ${dz_trans["alertsDeleteSuccessfulPart2"]}`;
             } else if (result === ActionResultsEnum.error) {
@@ -227,15 +227,15 @@ window.onload = function () {
             });
             this.on("removedfile", function (file) {
                 if (file.id) {
-                    xhttp.open("POST", "/soubor/smazat/" + typ_vazby + "/" + object_id + "/" + file.id);
+                    xhttp.open("POST", "/soubor/smazat-DZ/" + typ_vazby + "/" + object_id + "/" + file.id);
                     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                     xhttp.setRequestHeader('X-CSRFToken', csrfcookie());
                     xhttp.onreadystatechange = () => {
                         if (xhttp.readyState === XMLHttpRequest.DONE) {
                             if (xhttp.status === 200) {
-                                show_action_result_message(file, ActionResultsEnum.success, "success");
+                                show_action_result_message(file, ActionResultsEnum.success, "success",ActionTypeEnum.delete);
                             } else {
-                                show_action_result_message(file, ActionResultsEnum.error, "success");
+                                show_action_result_message(file, ActionResultsEnum.error, "success",ActionTypeEnum.delete);
                             }
                         }
                     };
@@ -270,5 +270,16 @@ window.onload = function () {
     };
     const uploader = document.querySelector('#my-awesome-dropzone');
     newDropzone = new Dropzone(uploader, dropzoneOptions);
+    mock=JSON.parse(mock_str);
+    mock.forEach(file => {
+        let mockFile = {
+            name: file.name,
+            size: file.size,
+            id: file.id // Přidání ID pro mazání
+        };
+        newDropzone.emit("addedfile", mockFile);
+        newDropzone.emit("complete", mockFile);
+    });
+
     console.log("Loaded");
 };

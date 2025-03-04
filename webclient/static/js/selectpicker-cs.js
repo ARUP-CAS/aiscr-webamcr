@@ -9,11 +9,11 @@
     void 0 === e && void 0 !== window && (e = window),
         "function" == typeof define && define.amd
             ? define(["jquery"], function (e) {
-                  return n(e);
-              })
+                return n(e);
+            })
             : "object" == typeof module && module.exports
-            ? (module.exports = n(require("jquery")))
-            : n(e.jQuery);
+                ? (module.exports = n(require("jquery")))
+                : n(e.jQuery);
 })(this, function (e) {
     e.fn.selectpicker.defaults = {
         noneSelectedText: "Vyberte ze seznamu",
@@ -23,5 +23,6 @@
         multipleSeparator: ", ",
         selectAllText: "Vybrat v\u0161e",
         deselectAllText: "Zru\u0161it v\xfdb\u011br",
+        actionsBox: true,
     };
 });

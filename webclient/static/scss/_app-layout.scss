@@ -72,7 +72,7 @@ body {
     -o-transition: none !important;
     transition: none !important;
   }
-  
+
   @import "app-navbar";
   @import "app-toolbar";
   @import "app-bs-stepper";
@@ -253,5 +253,15 @@ div .app-right .btn-group .btn {
 
   td small {
     grid-column: span 3;
+  }
+}
+
+.app-notifikace-projekty {
+  .card.app-card-form.app-card-inner {
+    .card-header {
+      h5 {
+        margin-bottom: 0rem;
+      }
+    }
   }
 }

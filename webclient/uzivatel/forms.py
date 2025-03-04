@@ -1,11 +1,10 @@
 import logging
 
 from core.validators import validate_phone_number
-from core.widgets import ForeignKeyReadOnlyTextInput
+from core.widgets import AutocompleteListSelect2, ForeignKeyReadOnlyTextInput
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Field, Layout
-from dal import autocomplete
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, UserChangeForm
@@ -76,7 +75,7 @@ class AuthUserCreationForm(RegistrationForm):
         self.fields["telefon"].validators = [validate_phone_number]
         self.fields["telefon"].widget.input_type = "tel"
         self.fields["orcid"] = OrcidAutocompleteField(
-            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
             label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
             help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
             initial_value=kwargs.get("data").get("orcid") if kwargs.get("data") else None,
@@ -160,7 +159,7 @@ class AuthUserChangeForm(forms.ModelForm):
             )
         )
         self.fields["orcid"] = OrcidAutocompleteField(
-            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
             label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
             help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
             instance=self.instance,
@@ -243,7 +242,7 @@ class AuthUserChangeAdminForm(UserChangeForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["orcid"] = OrcidAutocompleteField(
-            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
             label=_("uzivatel.forms.AuthUserChangeAdminForm.orcid.label"),
             instance=self.instance,
             initial_value=args[0].get("orcid") if args else None,
@@ -454,13 +453,13 @@ class OsobaForm(forms.ModelForm):
         super(OsobaForm, self).__init__(*args, **kwargs)
         if create:
             self.fields["orcid"] = OrcidAutocompleteField(
-                widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+                widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
                 label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
                 help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
                 required=False,
             )
             self.fields["wikidata"] = WikiDataAutocompleteField(
-                widget=autocomplete.ListSelect2(url="pid:wikidata-autocomplete"),
+                widget=AutocompleteListSelect2(url="pid:wikidata-autocomplete"),
                 label=_("heslar.forms.OsobaAdminForm.wikidata.label"),
                 instance=self.instance,
                 required=False,

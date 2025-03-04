@@ -2,9 +2,8 @@ import json
 import logging
 
 from core.setting_models import CustomAdminSettings
-from django.db import OperationalError
 from heslar.models import Heslar
-from uzivatel.models import Organizace, Osoba
+from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +13,7 @@ def get_id_from_heslar(ident_cely) -> int:
         pk = Heslar.objects.get(ident_cely=ident_cely).pk
         return pk
     except Exception:
-        # This will happen when automated tests are run
-        return int(ident_cely.replace("HES-", ""))
+        return None
 
 
 def get_id_from_organizace(ident_cely):
@@ -23,8 +21,7 @@ def get_id_from_organizace(ident_cely):
         pk = Organizace.objects.get(ident_cely=ident_cely).pk
         return pk
     except Exception:
-        # This will happen when automated tests are run
-        return int(ident_cely.replace("ORG-", ""))
+        return None
 
 
 def get_id_from_osoba(ident_cely):
@@ -32,8 +29,14 @@ def get_id_from_osoba(ident_cely):
         pk = Osoba.objects.get(ident_cely=ident_cely).pk
         return pk
     except Exception:
-        # This will happen when automated tests are run
-        return int(ident_cely.replace("OS-", ""))
+        return None
+
+
+def get_id_from_user(ident_cely):
+    try:
+        return User.objects.get(ident_cely=ident_cely).pk
+    except Exception:
+        return None
 
 
 def get_settings(item_group, item_id):
@@ -41,9 +44,44 @@ def get_settings(item_group, item_id):
         settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
         if settings_query.count() > 0:
             return json.loads(settings_query.last().value)
-    except OperationalError as e:
+    except Exception as e:
         logger.error("heslar.get_settings.error", extra={"error": str(e)})
     return {}
+
+
+def load_constants(constant_name, get_id_from_func):
+    # přepsání kostant z databáze
+    # umožňuje přepsat pouze existující konstanty
+    heslar = get_settings("constants", constant_name)
+    for key, value in heslar.items():
+        index = get_id_from_func(value)
+        if key in globals() and index is not None:
+            globals()[key] = index
+        else:
+            logger.warning(
+                "heslar.hesla_dynamicka.load_constants.variable_not_exist",
+                extra={"key": key, "constant": constant_name, "value": value},
+            )
+
+    heslar_group = get_settings("constants", f"{constant_name}_group")
+    for key, values in heslar_group.items():
+        group = []
+        for val in values:
+            index = globals().get(val)
+            if index is not None:
+                group.append(globals().get(val))
+            else:
+                logger.warning(
+                    "heslar.hesla_dynamicka.load_constants_group.item_not_exist",
+                    extra={"val": val, "constant": constant_name},
+                )
+        if key in globals():
+            globals()[key] = group
+        else:
+            logger.warning(
+                "heslar.hesla_dynamicka.load_constants_group.variable_not_exist",
+                extra={"key": key, "constant": constant_name},
+            )
 
 
 # Pouzite heslare v kodu
@@ -51,19 +89,16 @@ TYP_PROJEKTU_ZACHRANNY_ID = get_id_from_heslar("HES-001136")
 TYP_PROJEKTU_PRUZKUM_ID = get_id_from_heslar("HES-001138")
 TYP_PROJEKTU_BADATELSKY_ID = get_id_from_heslar("HES-001137")
 
-KULTURNI_PAMATKA_OP = get_id_from_heslar("HES-000176")
 KULTURNI_PAMATKA_KP = get_id_from_heslar("HES-000177")
 KULTURNI_PAMATKA_NKP = get_id_from_heslar("HES-000178")
 KULTURNI_PAMATKA_PZ = get_id_from_heslar("HES-000179")
 KULTURNI_PAMATKA_PR = get_id_from_heslar("HES-000180")
-KULTURNI_PAMATKA_UN = get_id_from_heslar("HES-000181")
+
 KULTURNI_PAMATKY = [
-    KULTURNI_PAMATKA_OP,
     KULTURNI_PAMATKA_KP,
     KULTURNI_PAMATKA_NKP,
     KULTURNI_PAMATKA_PZ,
     KULTURNI_PAMATKA_PR,
-    KULTURNI_PAMATKA_UN,
 ]
 
 PRISTUPNOST_BADATEL_ID = get_id_from_heslar("HES-000866")
@@ -219,47 +254,29 @@ JAZYK_CS = get_id_from_heslar("HES-000167")
 JAZYK_NERELEVANTNI = get_id_from_heslar("HES-000174")
 PRIMARNE_DIGITALNI = get_id_from_heslar("HES-001166")
 
-heslar = get_settings("constants", "heslar")
-for key, value in heslar.items():
-    if key not in globals():
-        logger.warning("heslar.hesla_dynamicka.heslar.variable_not_exist", extra={"key": key})
-    globals()[key] = get_id_from_heslar(value)
+ADMIN_USER = get_id_from_user("U-000322")
 
-heslar_group = get_settings("constants", "heslar_group")
-for key, values in heslar_group.items():
-    group = []
-    for val in values:
-        group.append(globals().get(val))
-    if key not in globals():
-        logger.warning("heslar.hesla_dynamicka.heslar_group.variable_not_exist", extra={"key": key})
-    globals()[key] = group
+OSOBA_ANONYM = get_id_from_osoba("OS-007414")
 
-organizace = get_settings("constants", "organizace")
-for key, value in organizace.items():
-    if key not in globals():
-        logger.warning("heslar.hesla_dynamicka.organizace.variable_not_exist", extra={"key": key})
-    globals()[key] = get_id_from_organizace(value)
+ORGANIZACE_OVM = get_id_from_organizace("ORG-000003")
+ORGANIZACE_AMATER = get_id_from_organizace("ORG-000011")
+ORGANIZACE_NEURCENA = get_id_from_organizace("ORG-000012")
+ORGANIZACE_ARCHEOLOG = get_id_from_organizace("ORG-000013")
+ORGANIZACE_ZAHRANICI = get_id_from_organizace("ORG-000014")
+ORGANIZACE_JINA = get_id_from_organizace("ORG-000043")
+ORGANIZACE_ZDROJ = get_id_from_organizace("ORG-000055")
 
-organizace_group = get_settings("constants", "organizace_group")
-for key, values in organizace_group.items():
-    group = []
-    for val in values:
-        group.append(globals().get(val))
-    if key not in globals():
-        logger.warning("heslar.hesla_dynamicka.organizace_group.variable_not_exist", extra={"key": key})
-    globals()[key] = group
+ORGANIZACE_OBECNE = [
+    ORGANIZACE_OVM,
+    ORGANIZACE_AMATER,
+    ORGANIZACE_NEURCENA,
+    ORGANIZACE_ARCHEOLOG,
+    ORGANIZACE_ZAHRANICI,
+    ORGANIZACE_JINA,
+    ORGANIZACE_ZDROJ,
+]
 
-osoba = get_settings("constants", "osoba")
-for key, value in osoba.items():
-    if key not in globals():
-        logger.warning("heslar.hesla_dynamicka.osoba.variable_not_exist", extra={"key": key})
-    globals()[key] = get_id_from_heslar(value)
-
-osoba_group = get_settings("constants", "osoba_group")
-for key, values in osoba_group.items():
-    group = []
-    for val in values:
-        group.append(globals().get(val))
-    if key not in globals():
-        logger.warning("heslar.hesla_dynamicka.osoba_group.variable_not_exist", extra={"key": key})
-    globals()[key] = group
+load_constants("heslar", get_id_from_heslar)
+load_constants("organizace", get_id_from_organizace)
+load_constants("osoba", get_id_from_osoba)
+load_constants("user", get_id_from_user)

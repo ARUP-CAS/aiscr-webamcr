@@ -2,10 +2,10 @@ import logging
 
 from adb.models import Adb, VyskovyBod
 from core.coordTransform import convertToJTSK
+from core.widgets import AutocompleteModelSelect2
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
-from dal import autocomplete
 from django import forms
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -72,8 +72,8 @@ class CreateADBForm(forms.ModelForm):
             "parcelni_cislo": forms.TextInput(),
             "stratigraficke_jednotky": forms.TextInput(),
             "poznamka": forms.TextInput(),
-            "autor_popisu": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
-            "autor_revize": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
+            "autor_popisu": AutocompleteModelSelect2(url="heslar:osoba-autocomplete"),
+            "autor_revize": AutocompleteModelSelect2(url="heslar:osoba-autocomplete"),
             "rok_popisu": forms.DateInput(
                 attrs={
                     "class": "dateinput form-control date_roky",

@@ -419,9 +419,19 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
             else:
                 return ""
 
-    @property
-    def general(self):
-        return False
+    def get_nazev(self):
+        if get_language() == "en":
+            if self.nazev_en:
+                return self.nazev_en
+            elif self.nazev:
+                return self.nazev
+            else:
+                return ""
+        else:
+            if self.nazev:
+                return self.nazev
+            else:
+                return ""
 
     class Meta:
         db_table = "organizace"
@@ -483,11 +493,6 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
     def __str__(self):
         return self.vypis_cely
 
-    @property
-    def anonym(self):
-        # TODO: Implement this when anonym detection is added
-        return False
-
 
 class UserNotificationType(ExportModelOperationsMixin("user_notification_type"), models.Model):
     """
@@ -501,6 +506,9 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
         "S-E-N-05": _("uzivatel.model.userNotificationType.S-E-N-05.text"),
         "S-E-K-01": _("uzivatel.model.userNotificationType.S-E-K-01.text"),
         "E-U-04": _("uzivatel.model.userNotificationType.E-U-04.text"),
+        "S-E-P-02a": _("uzivatel.model.userNotificationType.S-E-P-02a.text"),
+        "S-E-P-02b": _("uzivatel.model.userNotificationType.S-E-P-02b.text"),
+        "S-E-P-02c": _("uzivatel.model.userNotificationType.S-E-P-02c.text"),
     }
 
     ident_cely = models.TextField(unique=True)

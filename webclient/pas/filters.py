@@ -14,8 +14,8 @@ from core.constants import (
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
 )
 from core.forms import SelectMultipleSeparator
+from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
-from dal import autocomplete
 from django.contrib.auth.models import Group
 from django.db import utils
 from django.db.models import Q
@@ -58,6 +58,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
     HISTORIE_TYP_ZMENY_STARTS_WITH = "SN"
 
     ident_cely = CharFilter(lookup_expr="icontains", label=_("pas.filters.pasFilter.ident_cely.label"))
+    igsn = CharFilter(lookup_expr="icontains", label=_("pas.filters.pasFilter.igsn.label"))
 
     stav = MultipleChoiceFilter(
         choices=SamostatnyNalez.PAS_STATES,
@@ -107,7 +108,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         queryset=RuianKatastr.objects.all(),
         field_name="katastr",
         label=_("pas.filters.samostatnyNalezFilter.katastr.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:katastr-autocomplete"),
     )
 
     vlastnik = ModelMultipleChoiceFilter(
@@ -128,7 +129,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
     )
 
     nalezce = ModelMultipleChoiceFilter(
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         label=_("pas.filters.samostatnyNalezFilter.nalezce.label"),
         queryset=Osoba.objects.all(),
     )
@@ -333,14 +334,14 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
         queryset=User.objects.select_related("organizace"),
         field_name="vedouci",
         label=_("pas.filters.uzivatelSpolupraceFilter.vedouci.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
     )
 
     spolupracovnik = ModelMultipleChoiceFilter(
         queryset=User.objects.select_related("organizace"),
         field_name="spolupracovnik",
         label=_("pas.filters.uzivatelSpolupraceFilter.spolupracovnik.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
     )
 
     stav = MultipleChoiceFilter(
@@ -367,26 +368,26 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
                 queryset=User.objects.select_related("organizace"),
                 field_name="vedouci",
                 label=_("pas.filters.spolupraceFilter.vedouci.label"),
-                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
+                widget=AutocompleteModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
             )
             self.filters["spolupracovnik"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.select_related("organizace"),
                 field_name="spolupracovnik",
                 label=_("pas.filters.spolupraceFilter.spolupracovnik.label"),
-                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
+                widget=AutocompleteModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
             )
         else:
             self.filters["vedouci"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.select_related("organizace"),
                 field_name="vedouci",
                 label=_("pas.filters.spolupraceFilter.vedouci.label"),
-                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
+                widget=AutocompleteModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
             )
             self.filters["spolupracovnik"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.select_related("organizace"),
                 field_name="spolupracovnik",
                 label=_("pas.filters.spolupraceFilter.spolupracovnik.label"),
-                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
+                widget=AutocompleteModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
             )
         try:
             self.filters["vedouci"].extra.update(
@@ -440,6 +441,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 Div(
                     Div("ident_cely", css_class="col-sm-2"),
+                    Div("igsn", css_class="col-sm-2"),
                     Div("nalezce", css_class="col-sm-2"),
                     Div("datum_nalezu", css_class="col-sm-4 app-daterangepicker"),
                     Div("predano_organizace", css_class="col-sm-2"),

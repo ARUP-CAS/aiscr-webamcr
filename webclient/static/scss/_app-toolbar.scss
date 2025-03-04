@@ -61,6 +61,15 @@
       @media (max-width: 768px) {
         display: none;
       }
+      button {
+        background: 100%;
+        border: 0;
+        padding-left:2px;
+        .material-icons{
+          vertical-align: text-bottom;
+          font-size: 1rem;
+        }
+      }
     }
   }
 

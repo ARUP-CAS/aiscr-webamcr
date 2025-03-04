@@ -1126,7 +1126,8 @@ function loadKatastry() {
 function save_edited_geometry_session(){
     addLogText("arch_z_detail_map.save_edited_geometry_session")
     const currentUrl = window.location.href;
-    localStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:$("#"+global_map_element).val(),epsg:$("#"+global_map_element_epsg).val()}))
+    if($("#"+global_map_element).val()!='')
+        localStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:$("#"+global_map_element).val(),epsg:$("#"+global_map_element_epsg).val()}))
 }
 
 function checkBlockedByQWuery(){
@@ -1158,39 +1159,27 @@ function loadSession(){
     const currentUrl = window.location.href;
     const urlParams = new URLSearchParams(window.location.search);
     //global_map_can_grab_geom_from_map = true;
-    if(typeof geom !== 'undefined' && geom.geometry !==''){
-        global_map_can_grab_geom_from_map = true;
-        global_blocked_by_query_geom=true;
-        drawnItems.clearLayers();
-        drawnItemsBuffer.clearLayers();
-        addPointQuery(null,  drawnItems,geom.label,geom.geometry,false, map_translations.currentlyEditedPian);
-        geomToText(geom.epsg);
-        save_edited_geometry_session()
-        let viewParam=map._getBoundsCenterZoom(drawnItems.getBounds());
-        if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, zoom_jtsk)    ;                
-        else map.setView(viewParam.center, viewParam.zoom) ;  
-    } else{
-        let geom_session=localStorage.getItem("Geom-session")
-        if(geom_session != null){
-            geom_session=JSON.parse(geom_session)
-            if(geom_session.url==currentUrl && geom_session.geometry !=null){
-                global_blocked_by_query_geom=true;
-                global_map_can_edit=true;
-                map_show_edit(global_map_can_edit);
-                drawnItems.clearLayers();
-                drawnItemsBuffer.clearLayers();
-                addPointQuery(null,  drawnItems,map_translations.currentlyEditedPian,geom_session.geometry,false,
-                    map_translations.currentlyEditedPian);
-                geomToText(geom_session.epsg);
-                let viewParam=map._getBoundsCenterZoom(drawnItems.getBounds());
-                if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, zoom_jtsk)    ;                
-                else map.setView(viewParam.center, viewParam.zoom) ;  
-            }
-            else{
-                localStorage.removeItem("Geom-session");
-            }
+    let geom_session=localStorage.getItem("Geom-session")
+    if(geom_session != null){
+        geom_session=JSON.parse(geom_session)
+        if(geom_session.url==currentUrl && geom_session.geometry !=null && geom_session.geometry !=''){
+            global_blocked_by_query_geom=true;
+            global_map_can_edit=true;
+            map_show_edit(global_map_can_edit);
+            drawnItems.clearLayers();
+            drawnItemsBuffer.clearLayers();
+            addPointQuery(null,  drawnItems,map_translations.currentlyEditedPian,geom_session.geometry,false,
+                map_translations.currentlyEditedPian);
+            geomToText(geom_session.epsg);
+            let viewParam=map._getBoundsCenterZoom(drawnItems.getBounds());
+            if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, zoom_jtsk)    ;                
+            else map.setView(viewParam.center, viewParam.zoom) ;  
+        }
+        else{
+            localStorage.removeItem("Geom-session");
         }
     }
+
 }
 
 //zobrazení pianů akce a zoom na ně
@@ -1218,7 +1207,7 @@ function arch_select_perspective(currentUrl,selected_ku,selected_ident_cely,sele
                 DJ_pians_ident_cely.push(pian.pian_ident_cely);
                 var layer = poi_dj ;
                 if(pian.color=="gold" && global_map_can_edit == true) layer = drawnItems;
-                if(global_blocked_by_query_geom==false && pian.hasOwnProperty("DJ_ident_cely")) {                       
+                if((global_blocked_by_query_geom==false || pian.color!="gold")  && pian.hasOwnProperty("DJ_ident_cely")) {                       
                     coor=addDJPian([pian.lat, pian.lng],  layer,pian.pian_ident_cely,pian.geom,pian.presnost,pian.color,pian.DJ_ident_cely);
                 }
                 if(pian.color=="gold" && pian.zoom!=zoom_jtsk && global_blocked_by_query_geom==false){

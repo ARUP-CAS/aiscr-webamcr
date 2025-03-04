@@ -15,6 +15,10 @@ class LokalitaTable(SearchTable):
         linkify=True,
         accessor="archeologicky_zaznam__ident_cely",
     )
+    igsn = tables.Column(
+        verbose_name=_("lokalita.tables.lokalitaTable.igsn.label"),
+        default="",
+    )
     katastr = tables.Column(
         verbose_name=_("lokalita.tables.lokalitaTable.katastr.label"),
         default="",
@@ -52,7 +56,7 @@ class LokalitaTable(SearchTable):
         accessor="archeologicky_zaznam__pristupnost",
     )
 
-    columns_to_hide = ("pristupnost", "uzivatelske_oznaceni", "dalsi_katastry")
+    columns_to_hide = ("igsn", "pristupnost", "uzivatelske_oznaceni", "dalsi_katastry")
     app = "lokalita"
     first_columns = None
 
@@ -67,6 +71,7 @@ class LokalitaTable(SearchTable):
         )
         sequence = (
             "ident_cely",
+            "igsn",
             "stav",
             "pristupnost",
             "uzivatelske_oznaceni",

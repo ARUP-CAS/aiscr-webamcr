@@ -530,6 +530,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             return self._create_file_response(rep_bin_file)
         return None
 
+    def getMock(self):
+        return {"name": self.nazev, "size": float(self.size_mb * 1000000), "type": self.mimetype, "id": self.pk}
+
 
 class ProjektSekvence(models.Model):
     """

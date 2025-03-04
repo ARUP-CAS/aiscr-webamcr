@@ -1,5 +1,6 @@
 import datetime
 import logging
+from typing import Dict, Union
 
 from core.connectors import RedisConnector
 from core.constants import (
@@ -41,11 +42,12 @@ from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
-from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PROJEKT_TYP
+from heslar import hesla_dynamicka
+from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PRISTUPNOST, HESLAR_PROJEKT_TYP
 from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
-from projekt.doc_utils import OznameniPDFCreator
+from projekt.doc_utils import DocumentCreator, OznameniPDFCreator, ZruseniPDFCreator
 from projekt.rtf_utils import ExpertniListCreator
 from uzivatel.models import Organizace, Osoba, User
 from xml_generator.models import ModelWithMetadata
@@ -164,6 +166,18 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         verbose_name=_("projekt.models.projekt.hlavniKatastr.label"),
         db_index=True,
     )
+    pristupnost_snapshot = models.ForeignKey(
+        Heslar,
+        models.RESTRICT,
+        limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
+        db_index=True,
+        null=True,
+        related_name="projekty",
+    )
+
+    @property
+    def datum_oznameni(self):
+        return self.historie.historie_set.order_by("datum_zmeny").first().datum_zmeny
 
     def __init__(self, *args, **kwargs):
         super(Projekt, self).__init__(*args, **kwargs)
@@ -195,7 +209,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Metóda pro nastavení pomocného stavu vytvořený.
         """
         self.stav = PROJEKT_STAV_VYTVORENY
-        owner = get_object_or_404(User, email="amcr@arup.cas.cz")
+        owner = get_object_or_404(User, pk=hesla_dynamicka.ADMIN_USER)
         hist, created = Historie.objects.update_or_create(
             vazba=self.historie, typ_zmeny=OZNAMENI_PROJ, defaults={"uzivatel": owner, "datum_zmeny": now()}
         )
@@ -206,7 +220,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Metóda pro nastavení stavu oznámený a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_OZNAMENY
-        owner = get_object_or_404(User, email="amcr@arup.cas.cz")
+        owner = get_object_or_404(User, pk=hesla_dynamicka.ADMIN_USER)
         hist, created = Historie.objects.update_or_create(
             vazba=self.historie, typ_zmeny=OZNAMENI_PROJ, defaults={"uzivatel": owner, "datum_zmeny": now()}
         )
@@ -248,8 +262,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         self.stav = PROJEKT_STAV_ZAPSANY
         Historie(typ_zmeny=ZAPSANI_PROJ, uzivatel=user, vazba=self.historie).save()
         self.save()
-        if self.typ_projektu == TYP_PROJEKTU_ZACHRANNY_ID:
-            self.create_confirmation_document(self.active_transaction, user=user)
 
     def set_prihlaseny(self, user):
         """
@@ -583,26 +595,13 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             },
         )
 
-    def create_confirmation_document(
-        self, fedora_transaction: FedoraTransaction, additional=False, user=None
+    def _save_document(
+        self, creator: DocumentCreator, fedora_transaction: FedoraTransaction, user=None, check_duplicate=True
     ) -> RepositoryBinaryFile:
-        """
-        Metóda na vytvoření oznámovací dokumentace.
-        """
-        logger.debug(
-            "projekt.models.create_confirmation_document.start",
-            extra={
-                "projekt_ident": self.ident_cely,
-                "additional": additional,
-                "user": user,
-                "transaction": fedora_transaction.uid,
-            },
-        )
-        creator = OznameniPDFCreator(self.oznamovatel, self, fedora_transaction, additional)
         rep_bin_file: RepositoryBinaryFile = creator.build_document()
         duplikat = Soubor.objects.filter(nazev=rep_bin_file.filename)
         filename = rep_bin_file.filename
-        if not duplikat.exists():
+        if not duplikat.exists() or not check_duplicate:
             soubor = Soubor(
                 vazba=self.soubory,
                 nazev=rep_bin_file.filename,
@@ -614,7 +613,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             soubor.active_transaction = fedora_transaction
             soubor.save()
             logger.debug(
-                "projekt.models.create_confirmation_document.created",
+                "projekt.models._save_document.created",
                 extra={
                     "projekt_ident": self.ident_cely,
                     "soubor": soubor.pk,
@@ -633,6 +632,39 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 extra={"projekt_ident": self.ident_cely, "filename": filename, "transaction": fedora_transaction.uid},
             )
         return rep_bin_file
+
+    def create_cancel_confirmation_document(self, user=None) -> RepositoryBinaryFile:
+        """
+        Metoda na vytvoření potvrzení o zrušení oznámení.
+        """
+        logger.debug(
+            "projekt.models.create_cancel_confirmation_document.start",
+            extra={
+                "projekt_ident": self.ident_cely,
+                "user": user,
+                "transaction": self.active_transaction.uid,
+            },
+        )
+        creator = ZruseniPDFCreator(self.oznamovatel, self, self.active_transaction)
+        return self._save_document(creator, self.active_transaction, user, check_duplicate=False)
+
+    def create_confirmation_document(
+        self, fedora_transaction: FedoraTransaction, additional=False, user=None
+    ) -> RepositoryBinaryFile:
+        """
+        Metóda na vytvoření oznámovací dokumentace.
+        """
+        logger.debug(
+            "projekt.models.create_confirmation_document.start",
+            extra={
+                "projekt_ident": self.ident_cely,
+                "additional": additional,
+                "user": user,
+                "transaction": fedora_transaction.uid,
+            },
+        )
+        creator = OznameniPDFCreator(self.oznamovatel, self, fedora_transaction, additional)
+        return self._save_document(creator, fedora_transaction, user)
 
     @property
     def expert_list_can_be_created(self):
@@ -654,8 +686,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def get_absolute_url(self):
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
 
-    @property
-    def pristupnost(self):
+    def set_pristupnost(self, fixes: Union[Dict, None] = None):
         pristupnosti_ids = set()
         if self.typ_projektu.pk == TYP_PROJEKTU_PRUZKUM_ID:
             samostatne_nalezy = self.samostatne_nalezy.all()
@@ -674,13 +705,21 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 if akce.archeologicky_zaznam.pristupnost is not None:
                     pristupnosti_ids.add(akce.archeologicky_zaznam.pristupnost.id)
         if len(pristupnosti_ids) > 0:
-            return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
-        return Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
+            self.pristupnost_snapshot = Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
+        else:
+            self.pristupnost_snapshot = Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
 
     @property
     def planovane_zahajeni_str(self):
         if self.planovane_zahajeni:
             return f"[{self.planovane_zahajeni.lower}, {self.planovane_zahajeni.upper + datetime.timedelta(days=-1)}]"
+        else:
+            return ""
+
+    @property
+    def planovane_zahajeni_vypis(self):
+        if self.planovane_zahajeni:
+            return f"{self.planovane_zahajeni.lower.strftime('%-d.%-m.%Y')} - {(self.planovane_zahajeni.upper + datetime.timedelta(days=-1)).strftime('%-d.%-m.%Y')}"
         else:
             return ""
 

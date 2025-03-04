@@ -2,10 +2,10 @@ import logging
 
 from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
 from core.forms import BaseFilterForm
+from core.widgets import AutocompleteModelSelect2Multiple, AutocompleteSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
-from dal import autocomplete
 from django import forms
 from django.db import utils
 from django.db.models import IntegerField, Value
@@ -227,7 +227,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 queryset=Osoba.objects.all(),
                 label=_("dokument.forms.editDokumentExtraDataForm.dokumentovaneOsoby.label"),
                 required=False,
-                widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+                widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
                 help_text=_("dokument.forms.editDokumentExtraDataForm.dokumentOsoba.tooltip"),
             )
             self.fields["let"] = forms.ChoiceField(
@@ -244,7 +244,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 queryset=Osoba.objects.none(),
                 label=_("dokument.forms.editDokumentExtraDataForm.osoby.label"),
                 required=False,
-                widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+                widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
             )
             self.fields["let"] = forms.ChoiceField(
                 choices=tuple(("", "")),
@@ -336,7 +336,7 @@ class EditDokumentForm(forms.ModelForm):
 
     autori = AutoriField(
         Osoba.objects.all(),
-        widget=autocomplete.Select2Multiple(
+        widget=AutocompleteSelect2Multiple(
             url="heslar:osoba-autocomplete",
         ),
         help_text=_("dokument.forms.editDokumentForm.autori.tooltip"),
@@ -549,7 +549,7 @@ class CreateModelDokumentForm(forms.ModelForm):
 
     autori = AutoriField(
         Osoba.objects.all(),
-        widget=autocomplete.Select2Multiple(
+        widget=AutocompleteSelect2Multiple(
             url="heslar:osoba-autocomplete",
         ),
         help_text=_("dokument.forms.createModelDokumentForm.autori.tooltip"),
@@ -739,7 +739,7 @@ class PripojitDokumentForm(forms.Form):
             choices=list(
                 Dokument.objects.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY)).values_list("id", "ident_cely")
             ),
-            widget=autocomplete.Select2Multiple(url=reverse("dokument:dokument-autocomplete")),
+            widget=AutocompleteSelect2Multiple(url=reverse("dokument:dokument-autocomplete")),
             help_text=_("dokument.forms.pripojitDokumentForm.dokument.tooltip"),
         )
         self.fields["dokument"].required = True

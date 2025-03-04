@@ -4,10 +4,10 @@ from arch_z import validators
 from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU
 from core.forms import BaseFilterForm
 from core.validators import validate_date_min_1600
+from core.widgets import AutocompleteListSelect2, AutocompleteModelSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
-from dal import autocomplete
 from django import forms
 from django.forms import HiddenInput
 from django.urls import reverse
@@ -64,7 +64,7 @@ class CreateProjektForm(forms.ModelForm):
             "parcelni_cislo": forms.TextInput(),
             "oznaceni_stavby": forms.TextInput(),
             "hlavni_katastr": forms.TextInput(attrs={"readonly": "readonly"}),
-            "katastry": autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
+            "katastry": AutocompleteModelSelect2Multiple(url="heslar:katastr-autocomplete"),
         }
         labels = {
             "typ_projektu": _("projekt.forms.createProjekt.typProjektu.label"),
@@ -221,7 +221,7 @@ class EditProjektForm(forms.ModelForm):
             "hlavni_katastr": forms.TextInput(
                 attrs={"readonly": "readonly"},
             ),
-            "katastry": autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
+            "katastry": AutocompleteModelSelect2Multiple(url="heslar:katastr-autocomplete"),
             "vedouci_projektu": forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
@@ -765,8 +765,8 @@ class PripojitProjektForm(forms.Form):
         self.fields["projekt"] = forms.ChoiceField(
             label=_("projekt.forms.projektPripojit.projekt.label"),
             choices=new_choices,
-            widget=autocomplete.ListSelect2(
-                url=reverse("projekt:projekt-autocomplete-bez-zrusenych", kwargs={"typ": typ})
+            widget=AutocompleteListSelect2(
+                url=reverse("projekt:projekt-autocomplete-bez-zrusenych", kwargs={"typ": typ}),
             ),
             help_text=_("projekt.forms.projektPripojit.projekt.tooltip"),
         )

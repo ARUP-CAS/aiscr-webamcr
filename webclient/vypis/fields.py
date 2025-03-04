@@ -1,17 +1,21 @@
 import logging
+from datetime import date
 
 from adb.models import VyskovyBod
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
 from core.models import Soubor
 from dj.models import DokumentacniJednotka
 from django.db import connection, transaction
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from dokument.models import Dokument, DokumentCast, Tvar
 from ez.models import ExterniZdroj
 from historie.models import Historie
 from komponenta.models import Komponenta
 from nalez.models import NalezObjekt, NalezPredmet
+from neidentakce.models import NeidentAkce
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from projekt.views import get_show_oznamovatel
@@ -97,6 +101,7 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
         if getattr(instance, self.foreign_key):
             pian = getattr(instance, self.foreign_key)
             stav = getattr(pian, self.accessor[1])()
+            logger.debug(f"ident: {getattr(pian, self.accessor[0])}")
             return f"{self.name} {getattr(pian, self.accessor[0])} ({stav}) - {getattr(pian, self.accessor[2])} ({getattr(pian, self.accessor[3])})"
         else:
             return None
@@ -118,7 +123,10 @@ class Field:
     def __str__(self):
         return self.label
 
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
+        value = getattr(instance, self.accessor)
+        if isinstance(value, date) and value:
+            return value.strftime("%-d.%-m.%Y")
         return getattr(instance, self.accessor)
 
     def get_label(self):
@@ -130,7 +138,7 @@ class SouborField(Field):
         super().__init__(label, accessor)
         self.key_name = key_name
 
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         soubor = getattr(instance, self.accessor)
         if soubor:
             return reverse(
@@ -145,7 +153,7 @@ class SouborField(Field):
 
 
 class SouborDownloadField(SouborField):
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         accessor = getattr(instance, self.accessor)
         if accessor:
             return {
@@ -163,21 +171,37 @@ class SouborDownloadField(SouborField):
 
 
 class Model3dKomponentaField(Field):
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         return getattr(instance.casti.first().komponenty.komponenty.first(), self.accessor)
 
 
+class Model3dKomponentaAktivityField(Model3dKomponentaField):
+    def get_value(self, instance, user=None):
+        related_manager = super().get_value(instance, user)
+        return "; ".join([str(v) for v in related_manager.all()])
+
+
 class ChooseField(Field):
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         for accessor in self.accessor:
             value = getattr(instance, accessor)
             if value:
-                return str(value)
+                return mark_safe(value.get_ident_cely_link)
         return None
 
 
 class StatusField(Field):
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
+        return getattr(instance, self.accessor)()
+
+
+class ZjisteniField(Field):
+    def get_value(self, instance, user=None):
+        if getattr(instance, self.accessor) is not None:
+            if getattr(instance, self.accessor):
+                return _("vypis.vypis_config.dj.zjisteni.Ano")
+            else:
+                return _("vypis.vypis_config.dj.zjisteni.Ne")
         return getattr(instance, self.accessor)()
 
 
@@ -186,14 +210,28 @@ class ForeignField(Field):
         super().__init__(name, accessor)
         self.foreign_key = foreign_key
 
-    def get_value(self, instance):
-        if getattr(instance, self.foreign_key, False):
-            return getattr(getattr(instance, self.foreign_key), self.accessor)
-        return None
+    def get_value(self, instance, user=None):
+        accessors = self.accessor.split("__")
+        new_instance = ""
+        logger.debug(f"Accessors: {accessors}")
+        logger.debug(f"fkey: {self.foreign_key}")
+        try:
+            if getattr(instance, self.foreign_key):
+                new_instance = getattr(instance, self.foreign_key)
+                for key in accessors:
+                    logger.debug(f"Key: {key}")
+                    if getattr(new_instance, key, False) or getattr(new_instance, key) == 0:
+                        new_instance = getattr(new_instance, key)
+                        logger.debug(f"New instance: {new_instance}")
+                    else:
+                        new_instance = ""
+        except Dokument.extra_data.RelatedObjectDoesNotExist:
+            new_instance = ""
+        return mark_safe(new_instance)
 
 
 class GeomGmlField(Field):
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         geom = getattr(instance, self.accessor)
         if geom:
             return get_gml(geom)
@@ -201,7 +239,7 @@ class GeomGmlField(Field):
 
 
 class GeomWktField(Field):
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         geom = getattr(instance, self.accessor)
         if geom:
             return get_wkt(geom)
@@ -209,29 +247,35 @@ class GeomWktField(Field):
 
 
 class ForeignGeomGmlField(ForeignField):
-    def get_value(self, instance):
-        geom = getattr(getattr(instance, self.foreign_key), self.accessor)
-        if geom:
-            return get_gml(geom)
+    def get_value(self, instance, user=None):
+        try:
+            geom = getattr(getattr(instance, self.foreign_key), self.accessor)
+            if geom:
+                return get_gml(geom)
+        except Dokument.extra_data.RelatedObjectDoesNotExist:
+            return None
         return None
 
 
 class ForeignGeomWktField(ForeignField):
-    def get_value(self, instance):
-        geom = getattr(getattr(instance, self.foreign_key), self.accessor)
-        if geom:
-            return get_wkt(geom)
+    def get_value(self, instance, user=None):
+        try:
+            geom = getattr(getattr(instance, self.foreign_key), self.accessor)
+            if geom:
+                return get_wkt(geom)
+        except Dokument.extra_data.RelatedObjectDoesNotExist:
+            return None
         return None
 
 
 class ManyToManyField(Field):
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         related_manager = getattr(instance, self.accessor)
         return "; ".join([str(v) for v in related_manager.all()])
 
 
 class ForeignManyToManyField(ForeignField):
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         if getattr(instance, self.foreign_key, False):
             related_manager = getattr(getattr(instance, self.foreign_key), self.accessor)
             return "; ".join([str(v) for v in related_manager.all()])
@@ -239,7 +283,22 @@ class ForeignManyToManyField(ForeignField):
 
 
 class DoubleField(Field):
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
+        values = []
+        for accessor in self.accessor:
+            value = getattr(instance, accessor)
+            if value:
+                if isinstance(value, date):
+                    values.append(value.strftime("%-d.%-m.%Y"))
+                else:
+                    values.append(str(value))
+        if values:
+            return " - ".join(values)
+        return None
+
+
+class DoubleFieldNum(Field):
+    def get_value(self, instance, user=None):
         values = []
         for accessor in self.accessor:
             value = getattr(instance, accessor)
@@ -251,7 +310,7 @@ class DoubleField(Field):
 
 
 class ForeignDoubleField(ForeignField):
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         if getattr(instance, self.foreign_key, False):
             values = []
             for accessor in self.accessor:
@@ -264,7 +323,7 @@ class ForeignDoubleField(ForeignField):
 
 
 class ForeignDoubleFieldNum(ForeignField):
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         if getattr(instance, self.foreign_key, False):
             values = []
             for accessor in self.accessor:
@@ -287,7 +346,7 @@ class RepeatableField(ForeignField):
             return get_model(self.foreign_key).objects.filter(**{self.model_name: instance})
         return get_model(self.foreign_key).objects.filter(**{instance._meta.model_name: instance})
 
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         related_manager = self.get_related_manager(instance)
         data = {
             "template_name": self.template_name,
@@ -308,7 +367,7 @@ class RepeatableField(ForeignField):
 
 
 class VbRepeatableField(RepeatableField):
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         related_manager = self.get_related_manager(instance)
         data = {
             "template_name": self.template_name,
@@ -332,7 +391,7 @@ class HistorieRepeatableField(RepeatableField):
     def get_related_manager(self, instance):
         return Historie.objects.filter(**{"vazba": instance.historie})
 
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         related_manager = self.get_related_manager(instance)
         data = {
             "template_name": self.template_name,
@@ -343,7 +402,11 @@ class HistorieRepeatableField(RepeatableField):
                 item = {}
                 logger.debug(v)
                 for accessor in self.accessor:
-                    if accessor.endswith("display"):
+                    if accessor == "uzivatel_protected":
+                        item[accessor] = v.uzivatel_protected(
+                            user.hlavni_role.pk not in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
+                        )
+                    elif accessor.endswith("display"):
                         item[accessor] = getattr(v, accessor)()
                     else:
                         item[accessor] = getattr(v, accessor)
@@ -357,12 +420,14 @@ class RepeatableSectionField(RepeatableField):
         return super().get_label()
 
     def get_sections(self, instance):
-        related_manager = get_model(self.foreign_key).objects.filter(**{instance._meta.model_name: instance})
+        related_manager = (
+            get_model(self.foreign_key).objects.filter(**{instance._meta.model_name: instance}).order_by("ident_cely")
+        )
         if related_manager.count() > 0:
             return related_manager
         return None
 
-    def get_value(self, instance):
+    def get_value(self, instance, user=None):
         related_manager = get_model(self.foreign_key).objects.filter(**{instance._meta.model_name: instance})
         data = {
             "template_name": self.template_name,
@@ -390,7 +455,9 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
         self.model_name = model_name
 
     def get_sections(self, instance):
-        related_manager = get_model(self.foreign_key).objects.filter(**{self.model_name: instance})
+        related_manager = (
+            get_model(self.foreign_key).objects.filter(**{self.model_name: instance}).order_by("ident_cely")
+        )
         if related_manager.count() > 0:
             return related_manager
         return None
@@ -407,10 +474,16 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
 
 class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor):
     def get_sections(self, instance):
-        related_manager = get_model(self.foreign_key).objects.filter(**{"vazba": instance.soubory})
+        related_manager = get_model(self.foreign_key).objects.filter(**{"vazba": instance.soubory}).order_by("pk")
         if related_manager.count() > 0:
             return related_manager
         return None
+
+    def get_name(self, instance):
+        new_name = f"{self.name} {getattr(instance, self.accessor[0])}"
+        if getattr(instance, self.accessor[-1]):
+            return f"{new_name} <div class='mime-type'>({getattr(instance, self.accessor[-1])})</div>"
+        return new_name
 
 
 class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor):
@@ -419,12 +492,16 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         jistota = getattr(instance, self.accessor[2])
         presna_datace = getattr(instance, self.accessor[3])
         areal = getattr(instance, self.accessor[4])
-        aktivity = getattr(instance, self.accessor[5]).all()       
+        aktivity = getattr(instance, self.accessor[5]).all()
         second_part = ""
         third_part = ""
-        vypis_jistota_translated = _("vypis.vypis_config.komponenta.jistota.Ne")
-        if not jistota:
-            second_part += f" ({vypis_jistota_translated}"
+        vypis_jistota_translated_ne = _("vypis.vypis_config.komponenta.jistota.Ne")
+        vypis_jistota_translated_ano = _("vypis.vypis_config.komponenta.jistota.Ano")
+        if jistota is not None:
+            if jistota:
+                second_part += f" ({vypis_jistota_translated_ano}"
+            else:
+                second_part += f" ({vypis_jistota_translated_ne}"
             if presna_datace:
                 second_part += f"; {presna_datace})"
             else:
@@ -453,6 +530,17 @@ class SubSectionField:
         return instance
 
 
+class NeidentAkceSubSectionField(SubSectionField):
+    def get_instance(self, instance):
+        try:
+            neident_akce = NeidentAkce.objects.get(dokument_cast=instance)
+            logger.debug(f"Neident akce: {neident_akce}")
+            return neident_akce
+        except Exception as e:
+            logger.error(f"Error getting neident akce: {e}")
+            return None
+
+
 def get_historie_config(label_key):
     logger.debug(f"Getting historie config for {label_key}")
     return {
@@ -460,7 +548,7 @@ def get_historie_config(label_key):
         "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
         "historie": HistorieRepeatableField(
             label_key,
-            ["datum_zmeny", "uzivatel", "get_typ_zmeny_display", "poznamka"],
+            ["datum_zmeny", "uzivatel_protected", "get_typ_zmeny_display", "poznamka"],
             "historie",
             "vypis/historie.html",
         ),

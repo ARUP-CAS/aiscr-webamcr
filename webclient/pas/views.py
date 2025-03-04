@@ -34,6 +34,7 @@ from core.message_constants import (
     SAMOSTATNY_NALEZ_VRACEN,
     SPOLUPRACE_BYLA_AKTIVOVANA,
     SPOLUPRACE_BYLA_DEAKTIVOVANA,
+    SPOLUPRACE_NEBYLA_DEAKTIVOVANA,
     SPOLUPRACI_NELZE_AKTIVOVAT,
     SPOLUPRACI_NELZE_DEAKTIVOVAT,
     ZADOST_O_SPOLUPRACI_VYTVORENA,
@@ -60,13 +61,13 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
-from django.views.generic import CreateView, DetailView, View
+from django.views.generic import CreateView, DetailView, TemplateView, View
 from dokument.forms import CoordinatesDokumentForm
 from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID, TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
-from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, PotvrditNalezForm
+from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, DeaktivovatSpolupraciForm, PotvrditNalezForm
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from projekt.models import Projekt
@@ -947,37 +948,54 @@ class AktivaceEmailView(LoginRequiredMixin, DetailView):
         return redirect(reverse("pas:spoluprace_list") + "?sort=organizace_vedouci&sort=spolupracovnik")
 
 
-@login_required
-@require_http_methods(["GET", "POST"])
-def deaktivace(request, pk):
+class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
     """
-    Funkce pohledu pro deaktivaci spolupráce pomocí modalu.
+    class pohledu pro deaktivaci spolupráce pomocí modalu.
     """
-    spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
-    if request.method == "POST":
-        spoluprace.active_transaction = FedoraTransaction()
-        spoluprace.close_active_transaction_when_finished = True
-        spoluprace.set_neaktivni(request.user)
-        messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_DEAKTIVOVANA)
-        return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
-    else:
-        warnings = spoluprace.check_pred_deaktivaci()
-        logger.info("pas.views.deaktivace.warnings", extra={"warnings": warnings})
+
+    template_name = "core/transakce_modal.html"
+
+    def get_object(self):
+        return get_object_or_404(UzivatelSpoluprace, id=self.kwargs["pk"])
+
+    def get_context_data(self, *args, **kwargs):
+        obj: UzivatelSpoluprace = self.get_object()
+        form = DeaktivovatSpolupraciForm()
+        context = {
+            "object": obj,
+            "title": (
+                _("pas.views.deaktivace.title.part1")
+                + obj.vedouci.email
+                + _("pas.views.deaktivace.title.part2")
+                + obj.spolupracovnik.email
+            ),
+            "id_tag": "deaktivace-spoluprace-form",
+            "button": _("pas.views.deaktivace.submitButton.text"),
+            "form": form,
+        }
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        warnings = context["object"].check_pred_deaktivaci()
         if warnings:
+            logger.info("pas.views.deaktivace.warnings", extra={"warnings": warnings})
             messages.add_message(request, messages.ERROR, f"{SPOLUPRACI_NELZE_DEAKTIVOVAT} {warnings[0]}")
             return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
-    context = {
-        "object": spoluprace,
-        "title": (
-            _("pas.views.deaktivace.title.part1")
-            + spoluprace.vedouci.email
-            + _("pas.views.deaktivace.title.part2")
-            + spoluprace.spolupracovnik.email
-        ),
-        "id_tag": "deaktivace-spoluprace-form",
-        "button": _("pas.views.deaktivace.submitButton.text"),
-    }
-    return render(request, "core/transakce_modal.html", context)
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        obj: UzivatelSpoluprace = self.get_object()
+        form = DeaktivovatSpolupraciForm(request.POST)
+        if form.is_valid():
+            obj.active_transaction = FedoraTransaction()
+            obj.close_active_transaction_when_finished = True
+            obj.set_neaktivni(request.user, form.cleaned_data["reason"])
+            Mailer.send_en07(cooperation=obj, reason=form.cleaned_data["reason"])
+            messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_DEAKTIVOVANA)
+        else:
+            messages.add_message(request, messages.ERROR, SPOLUPRACE_NEBYLA_DEAKTIVOVANA)
+        return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
 
 
 @login_required

@@ -20,6 +20,7 @@ class SamostatnyNalezTable(SearchTable):
     """
 
     ident_cely = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.ident_cely.label"), linkify=True)
+    igsn = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.igsn.label"), default="")
     katastr = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.katastr.label"), default="")
     datum_nalezu = tables.columns.DateTimeColumn(
         verbose_name=_("pas.tables.samostatnyNalezTable.datum_nalezu.label"), format="Y-m-d", default=""
@@ -58,6 +59,7 @@ class SamostatnyNalezTable(SearchTable):
         verbose_name=_("pas.tables.samostatnyNalezTable.nahled.label"),
     )
     columns_to_hide = (
+        "igsn",
         "predano",
         "pristupnost",
         "evidencni_cislo",
@@ -94,6 +96,7 @@ class SamostatnyNalezTable(SearchTable):
         sequence = (
             "nahled",
             "ident_cely",
+            "igsn",
             "stav",
             "predano",
             "pristupnost",

@@ -1,5 +1,6 @@
 # flake8: noqa: E201, E202
 import re
+import unicodedata
 
 import requests
 from arch_z.models import ArcheologickyZaznam
@@ -81,7 +82,7 @@ class OrcidAutocompleteView(ApiView):
     CACHE_PREFIX = "ORCID"
 
     @classmethod
-    def api_call(cls, q, use_cache=False):
+    def api_call(cls, q, use_cache=True):
         if use_cache:
             cached_value = cls._get_value_from_cache(q)
             if cached_value:
@@ -138,6 +139,8 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def api_call(cls, q, use_cache=False):
+        if q.startswith("https://www.wikidata.org/entity/"):
+            q = q.replace("https://www.wikidata.org/entity/", "")
         if cls.ID_REGEX.match(q):
             query = f"""
                 SELECT ?item ?itemLabel WHERE {{
@@ -148,6 +151,7 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
                 LIMIT 50
             """
         else:
+            q = unicodedata.normalize("NFKD", q)
             query = f"""
                 SELECT ?item ?itemLabel WHERE {{
                   ?item wdt:P31 wd:Q5.

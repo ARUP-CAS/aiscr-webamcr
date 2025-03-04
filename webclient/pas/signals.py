@@ -43,7 +43,9 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
 
         def save_metadata(close_transaction=False):
             if (created or instance.initial_pristupnost != instance.pristupnost) and instance.projekt:
-                instance.projekt.save_metadata(fedora_transaction)
+                instance.projekt.set_pristupnost()
+                instance.projekt.active_transaction = fedora_transaction
+                instance.projekt.save()
             instance.save_metadata(fedora_transaction, close_transaction=close_transaction)
 
         if instance.close_active_transaction_when_finished:

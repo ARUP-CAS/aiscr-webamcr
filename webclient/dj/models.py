@@ -7,9 +7,10 @@ from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
 from model_utils import FieldTracker
 from pian.models import Pian
+from xml_generator.models import BaseAmcrModel
 
 
-class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), models.Model):
+class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), BaseAmcrModel):
     """
     Class pro db model dokumentační jednotky.
     """

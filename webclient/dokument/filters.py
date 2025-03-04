@@ -6,8 +6,8 @@ import crispy_forms
 from core.constants import DOKUMENT_RELATION_TYPE, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZMENA_KATASTRU
 from core.forms import SelectMultipleSeparator
 from core.models import Soubor
+from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
-from dal import autocomplete
 from django.db import models
 from django.db.models import Q
 from django.forms import NumberInput, SelectMultiple
@@ -91,7 +91,7 @@ class HistorieFilter(FilterSet):
                 queryset=User.objects.all(),
                 field_name="historie__historie__uzivatel",
                 label=_("dokument.filters.historieFilter.historieUzivatel.label"),
-                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
+                widget=AutocompleteModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
                 distinct=True,
             )
         else:
@@ -99,7 +99,7 @@ class HistorieFilter(FilterSet):
                 queryset=User.objects.all(),
                 field_name="historie__historie__uzivatel",
                 label=_("dokument.filters.historieFilter.historieUzivatel.label"),
-                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
+                widget=AutocompleteModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
                 distinct=True,
             )
         self.filters["historie_typ_zmeny"] = MultipleChoiceFilter(
@@ -177,6 +177,8 @@ class Model3DFilter(HistorieFilter, FilterSet):
 
     ident_cely = CharFilter(lookup_expr="icontains", label=_("dokument.filters.dokumentFilter.ident_cely.label"))
 
+    doi = CharFilter(lookup_expr="icontains", label=_("dokument.filters.dokumentFilter.doi.label"))
+
     typ_dokumentu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(id__in=MODEL_3D_DOKUMENT_TYPES),
         label=_("dokument.filters.dokumentFilter.typDokumentu.label"),
@@ -218,7 +220,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
     autor = ModelMultipleChoiceFilter(
         label=_("dokument.filters.dokumentFilter.autor.label"),
         field_name="autori",
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
     )
 
@@ -474,6 +476,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 Div(
                     Div("ident_cely", css_class="col-sm-2"),
+                    Div("doi", css_class="col-sm-2"),
                     Div("typ_dokumentu", css_class="col-sm-2"),
                     Div("format", css_class="col-sm-2"),
                     Div("stav", css_class="col-sm-2"),
@@ -623,7 +626,7 @@ class DokumentFilter(Model3DFilter):
 
     osoby = ModelMultipleChoiceFilter(
         label=_("dokument.filters.dokumentFilter.osoby.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
     )
     duveryhodnost_od = NumberFilter(
@@ -680,14 +683,14 @@ class DokumentFilter(Model3DFilter):
         queryset=RuianKatastr.objects.all(),
         label=_("dokument.filters.dokumentFilter.neidentAkceKatastr.label"),
         field_name="casti__neident_akce__katastr",
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:katastr-autocomplete"),
         distinct=True,
     )
 
     neident_vedouci = ModelMultipleChoiceFilter(
         label=_("dokument.filters.dokumentFilter.neidentVedouci.label"),
         field_name="casti__neident_akce__neidentakcevedouci__vedouci",
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
     )
 
@@ -732,7 +735,7 @@ class DokumentFilter(Model3DFilter):
     let_pozorovatel = ModelMultipleChoiceFilter(
         label=_("dokument.filters.dokumentFilter.letPozorovatel.label"),
         field_name="let__pozorovatel",
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
     )
 
@@ -1132,6 +1135,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 Div(
                     Div("ident_cely", css_class="col-sm-2"),
+                    Div("doi", css_class="col-sm-2"),
                     Div("rada", css_class="col-sm-2"),
                     Div("typ_dokumentu", css_class="col-sm-2"),
                     Div("material_originalu", css_class="col-sm-2"),

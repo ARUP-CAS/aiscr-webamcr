@@ -59,7 +59,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         primary_key=True,
     )
     dalsi_katastry_snapshot = models.CharField(max_length=5000, null=True, blank=True)
-    igsn = models.CharField(max_length=255, blank=True, null=True)
+    igsn = models.CharField(max_length=255, blank=True, null=True, db_index=True)
 
     class Meta:
         db_table = "lokalita"
