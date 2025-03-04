@@ -106,13 +106,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         distinct=True,
     )
 
-    doi = CharFilter(
-        field_name="archeologicky_zaznam__casti_dokumentu__dokument__doi",
-        lookup_expr="icontains",
-        label=_("arch_z.filters.ArchZaznamFilter.doi.label"),
-        distinct=True,
-    )
-
     pristupnost = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
         label=_("arch_z.filters.ArchZaznamFilter.pristupnost.label"),
@@ -743,7 +736,6 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 Div(
                     Div("ident_cely", css_class="col-sm-2"),
-                    Div("doi", css_class="col-sm-2"),
                     Div("typ", css_class="col-sm-2"),
                     Div("stav", css_class="col-sm-2"),
                     Div("organizace", css_class="col-sm-2"),
