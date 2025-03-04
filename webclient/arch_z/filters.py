@@ -584,11 +584,11 @@ class AkceFilter(ArchZaznamFilter):
         Metóda pro filtrování mezi projektovými a samostatnými akcemi.
         """
         if value is None:
-            return queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA)
+            return queryset.filter(~Q(typ=Akce.TYP_AKCE_PROJEKTOVA))
         if "True" in value:
             return queryset
         elif "False" in value:
-            return queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA)
+            return queryset.filter(~Q(typ=Akce.TYP_AKCE_PROJEKTOVA))
 
     def filter_has_positive_find(self, queryset, name, value):
         """
