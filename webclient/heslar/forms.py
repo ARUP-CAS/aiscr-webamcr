@@ -1,6 +1,7 @@
 import logging
 
-from dal import autocomplete, forward
+from core.widgets import AutocompleteListSelect2, AutocompleteModelSelect2
+from dal import forward
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from heslar.models import HeslarHierarchie, HeslarNazev, HeslarOdkaz
@@ -15,7 +16,7 @@ class HeslarHierarchieForm(forms.ModelForm):
         empty_label=None,
         label=_("heslar.forms.heslarOdkazForm.heslar_nazev_podrazene.label"),
         help_text=_("heslar.forms.heslarOdkazForm.heslar_nazev_podrazene.tooltip"),
-        widget=autocomplete.ModelSelect2(url="heslar:heslar_nazev-autocomplete"),
+        widget=AutocompleteModelSelect2(url="heslar:heslar_nazev-autocomplete"),
         queryset=HeslarNazev.objects.all(),
         required=False,
     )
@@ -23,7 +24,7 @@ class HeslarHierarchieForm(forms.ModelForm):
         empty_label=None,
         label=_("heslar.forms.heslarOdkazForm.heslar_nazev_nadrazene.label"),
         help_text=_("heslar.forms.heslarOdkazForm.heslar_nazev_nadrazene.tooltip"),
-        widget=autocomplete.ModelSelect2(url="heslar:heslar_nazev-autocomplete"),
+        widget=AutocompleteModelSelect2(url="heslar:heslar_nazev-autocomplete"),
         queryset=HeslarNazev.objects.all(),
         required=False,
     )
@@ -36,10 +37,10 @@ class HeslarHierarchieForm(forms.ModelForm):
             "typ",
         )
         widgets = {
-            "heslo_podrazene": autocomplete.ModelSelect2(
+            "heslo_podrazene": AutocompleteModelSelect2(
                 url="heslar:heslar-autocomplete", forward=(forward.Field("heslar_nazev_podrazene", "heslar_nazev"),)
             ),
-            "heslo_nadrazene": autocomplete.ModelSelect2(
+            "heslo_nadrazene": AutocompleteModelSelect2(
                 url="heslar:heslar-autocomplete", forward=(forward.Field("heslar_nazev_nadrazene", "heslar_nazev"),)
             ),
         }
@@ -57,7 +58,7 @@ class HeslarOdkazForm(forms.ModelForm):
         empty_label=None,
         label=_("heslar.forms.heslarOdkazForm.heslar_nazev.label"),
         help_text=_("heslar.forms.heslarOdkazForm.heslar_nazev.tooltip"),
-        widget=autocomplete.ModelSelect2(url="heslar:heslar_nazev-autocomplete"),
+        widget=AutocompleteModelSelect2(url="heslar:heslar_nazev-autocomplete"),
         queryset=HeslarNazev.objects.all(),
         required=False,
     )
@@ -65,7 +66,7 @@ class HeslarOdkazForm(forms.ModelForm):
     class Meta:
         model = HeslarOdkaz
         fields = "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation"
-        widgets = {"heslo": autocomplete.ModelSelect2(url="heslar:heslar-autocomplete", forward=["heslar_nazev"])}
+        widgets = {"heslo": AutocompleteModelSelect2(url="heslar:heslar-autocomplete", forward=["heslar_nazev"])}
 
     def __init__(self, *args, **kwargs):
         super(HeslarOdkazForm, self).__init__(*args, **kwargs)
@@ -82,13 +83,13 @@ class OsobaAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["orcid"] = OrcidAutocompleteField(
-            widget=autocomplete.ListSelect2(url="pid:orcid-autocomplete"),
+            widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
             label=_("heslar.forms.OsobaAdminForm.orcid.label"),
             instance=self.instance,
             initial_value=args[0].get("orcid") if args else None,
         )
         self.fields["wikidata"] = WikiDataAutocompleteField(
-            widget=autocomplete.ListSelect2(url="pid:wikidata-autocomplete"),
+            widget=AutocompleteListSelect2(url="pid:wikidata-autocomplete"),
             label=_("heslar.forms.OsobaAdminForm.wikidata.label"),
             instance=self.instance,
             initial_value=args[0].get("wikidata") if args else None,
@@ -103,7 +104,7 @@ class OrganizaceAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["ror"] = RorAutocompleteField(
-            widget=autocomplete.ListSelect2(url="pid:ror-autocomplete"),
+            widget=AutocompleteListSelect2(url="pid:ror-autocomplete"),
             label=_("heslar.forms.OrganizaceAdminForm.ror.label"),
             instance=self.instance,
             required=False,

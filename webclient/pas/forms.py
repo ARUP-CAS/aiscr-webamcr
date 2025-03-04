@@ -2,10 +2,10 @@ import logging
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from core.forms import BaseFilterForm, TwoLevelSelectField
+from core.widgets import AutocompleteModelSelect2
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
-from dal import autocomplete
 from django import forms
 from django.contrib.auth.models import Group
 from django.contrib.gis.forms import ValidationError
@@ -170,7 +170,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "poznamka",
         )
         widgets = {
-            "nalezce": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
+            "nalezce": AutocompleteModelSelect2(url="heslar:osoba-autocomplete"),
             "okolnosti": forms.Select(
                 attrs={
                     "class": "selectpicker",
