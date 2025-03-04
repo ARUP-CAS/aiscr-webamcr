@@ -34,7 +34,7 @@ class AutocompleteSelect2WidgetMixin(Select2WidgetMixin):
         }
 
         for old_class, new_class in class_replacements.items():
-            if old_class in attrs["class"]:
+            if "class" in attrs and old_class in attrs["class"]:
                 attrs["class"] = attrs["class"].replace(old_class, new_class)
                 break
 
