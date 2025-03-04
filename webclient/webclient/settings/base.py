@@ -74,7 +74,7 @@ def get_redis_pass(default_value=""):
 REDIS_HOST = get_secret("REDIS_HOST", "redis")
 REDIS_PORT = get_secret("REDIS_PORT", 6379)
 
-CACHEOPS_REDIS = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}"
+CACHEOPS_REDIS = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}/2"
 
 CACHEOPS = {
     "adb.Adb": {"ops": ("fetch",), "timeout": 60 * 10},

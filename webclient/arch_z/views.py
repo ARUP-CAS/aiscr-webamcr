@@ -527,7 +527,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
-        context["pian_form_update"] = PianCreateForm(presnost=context["j"].pian.presnost)
+        context["pian_form_update"] = PianCreateForm(instance=context["j"].pian)
         return context
 
     def get(self, request, *args, **kwargs):

@@ -99,9 +99,16 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                     and (
                         instance.akce.initial_projekt is None
                         or instance.akce.projekt.ident_cely != instance.initial_projekt.ident_cely
+                        or instance.initial_pristupnost != instance.pristupnost
                     )
                 ):
-                    instance.akce.projekt.save_metadata(fedora_transaction)
+                    projekt: Projekt = instance.akce.projekt
+                    if instance.initial_pristupnost != instance.pristupnost:
+                        projekt.set_pristupnost()
+                        projekt.active_transaction = fedora_transaction
+                        projekt.save()
+                    else:
+                        projekt.save_metadata(fedora_transaction)
             except (ObjectDoesNotExist, AttributeError) as err:
                 logger.debug(
                     "arch_z.signals.create_arch_z_metadata.no_akce",
