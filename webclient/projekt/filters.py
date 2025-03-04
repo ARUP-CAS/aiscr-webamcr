@@ -14,7 +14,6 @@ from core.forms import SelectMultipleSeparator
 from core.widgets import AutocompleteModelSelect2, AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
 from django.db.models import Q, QuerySet
-from django.db.models.functions import Coalesce
 from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
 from django_filters import CharFilter, DateFromToRangeFilter, FilterSet, ModelMultipleChoiceFilter, MultipleChoiceFilter
