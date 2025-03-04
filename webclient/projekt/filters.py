@@ -11,8 +11,8 @@ from core.constants import (
     SCHVALENI_OZNAMENI_PROJ,
 )
 from core.forms import SelectMultipleSeparator
+from core.widgets import AutocompleteModelSelect2, AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
-from dal import autocomplete
 from django.db.models import Q, QuerySet
 from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
@@ -37,7 +37,7 @@ from uzivatel.models import Organizace, Osoba, User
 logger = logging.getLogger(__name__)
 
 
-class MyAutocompleteWidget(autocomplete.ModelSelect2):
+class MyAutocompleteWidget(AutocompleteModelSelect2):
     """
     Override na třídu atocomplete widgetu pro nevrácení media objektů - js scriptů.
     """
@@ -89,7 +89,7 @@ class KatastrFilterMixin(FilterSet):
         queryset=RuianKatastr.objects.all(),
         method="filtr_katastr",
         label=_("projekt.filters.katastrFilter.katastr.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:katastr-autocomplete"),
         distinct=True,
     )
 
@@ -195,7 +195,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     vedouci_projektu = ModelMultipleChoiceFilter(
         queryset=Osoba.objects.all(),
         label=_("projekt.filters.projektFilter.vedouci.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         distinct=True,
     )
     organizace = ModelMultipleChoiceFilter(
@@ -316,7 +316,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         queryset=RuianKatastr.objects.all(),
         field_name="katastr",
         label=_("projekt.filters.projektFilter.akceKatastr.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:katastr-autocomplete"),
     )
 
     akce_kraj = MultipleChoiceFilter(
@@ -350,7 +350,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     akce_vedouci = ModelMultipleChoiceFilter(
         method="filtr_akce_vedouci",
         label=_("projekt.filters.projektFilter.akceVedouci.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
         distinct=True,
     )

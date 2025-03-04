@@ -1,8 +1,8 @@
 import logging
 
+from core.widgets import AutocompleteModelSelect2, AutocompleteModelSelect2Multiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
-from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
@@ -29,10 +29,10 @@ class NeidentAkceForm(forms.ModelForm):
             "poznamka",
         )
         widgets = {
-            "katastr": autocomplete.ModelSelect2(
+            "katastr": AutocompleteModelSelect2(
                 url="heslar:katastr-autocomplete",
             ),
-            "vedouci": autocomplete.ModelSelect2Multiple(
+            "vedouci": AutocompleteModelSelect2Multiple(
                 url="heslar:osoba-autocomplete",
             ),
             "pian": forms.TextInput(),

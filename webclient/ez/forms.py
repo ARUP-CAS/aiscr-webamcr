@@ -1,10 +1,10 @@
 import logging
 
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+from core.widgets import AutocompleteListSelect2, AutocompleteSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
-from dal import autocomplete
 from django import forms
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -25,7 +25,7 @@ class ExterniZdrojForm(forms.ModelForm):
 
     autori = AutoriField(
         Osoba.objects.all(),
-        widget=autocomplete.Select2Multiple(
+        widget=AutocompleteSelect2Multiple(
             url="heslar:osoba-autocomplete",
         ),
         label=_("ez.forms.externiZdrojForm.autori.label"),
@@ -33,7 +33,7 @@ class ExterniZdrojForm(forms.ModelForm):
     )
     editori = AutoriField(
         Osoba.objects.all(),
-        widget=autocomplete.Select2Multiple(
+        widget=AutocompleteSelect2Multiple(
             url="heslar:osoba-autocomplete",
         ),
         label=_("ez.forms.externiZdrojForm.editori.label"),
@@ -145,7 +145,7 @@ class ExterniZdrojForm(forms.ModelForm):
         self.helper = FormHelper(self)
         if not readonly:
             self.fields["doi"] = DoiAutocompleteField(
-                widget=autocomplete.ListSelect2(url="pid:doi-autocomplete"),
+                widget=AutocompleteListSelect2(url="pid:doi-autocomplete"),
                 label=_("ez.forms.externiZdrojForm.doi.label"),
                 help_text=_("ez.forms.externiZdrojForm.doi.tooltip"),
                 instance=self.instance,
@@ -302,7 +302,7 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
         self.fields["arch_z"] = forms.ChoiceField(
             label=ez_label,
             choices=new_choices,
-            widget=autocomplete.ListSelect2(url=reverse("arch_z:arch-z-autocomplete", kwargs={"type": type_arch})),
+            widget=AutocompleteListSelect2(url=reverse("arch_z:arch-z-autocomplete", kwargs={"type": type_arch})),
             help_text=ez_tooltip,
         )
         self.helper = FormHelper(self)
@@ -329,7 +329,7 @@ class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
             label=_("ez.forms.pripojitExterniOdkazForm.vyberEZ.label"),
             help_text=_("ez.forms.pripojitExterniOdkazForm.vyberEZ.tooltip"),
             choices=new_choices,
-            widget=autocomplete.ListSelect2(url=reverse("ez:ez-autocomplete")),
+            widget=AutocompleteListSelect2(url=reverse("ez:ez-autocomplete")),
         )
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
