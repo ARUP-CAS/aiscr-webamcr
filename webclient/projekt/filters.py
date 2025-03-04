@@ -13,8 +13,7 @@ from core.constants import (
 from core.forms import SelectMultipleSeparator
 from core.widgets import AutocompleteModelSelect2, AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
-from dal import autocomplete
-from django.db.models import OuterRef, Q, QuerySet, Subquery
+from django.db.models import Q, QuerySet
 from django.db.models.functions import Coalesce
 from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
