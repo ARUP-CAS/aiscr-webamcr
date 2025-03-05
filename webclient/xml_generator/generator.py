@@ -10,6 +10,7 @@ from typing import Optional, Union
 from adb.models import VyskovyBod
 from django.contrib.gis.db import models
 from django.contrib.gis.db.models.functions import AsGML, GeoFunc
+from django.core.exceptions import ObjectDoesNotExist
 from heslar.models import RuianKraj, RuianOkres
 from lxml import etree
 from lxml import etree as ET
@@ -303,11 +304,26 @@ class DocumentGenerator:
                 else:
                     attributes = [record_attribute]
             elif len(record_name_split) == 2:
-                related_record = getattr(record, record_name_split[0])
-                if hasattr(related_record, "all"):
+                try:
+                    related_record = getattr(record, record_name_split[0])
+                except ObjectDoesNotExist:
+                    related_record = None
+                    from uzivatel.models import User
+
+                    # Know issue - user deletion fails when it has a notification set
+                    if not (isinstance(record, User) and record_name_split[0] == "history_vazba"):
+                        logger.warning(
+                            "xml_generator.generator.DocumentGenerator."
+                            "_get_attribute_of_record_unbounded.object_does_not_exist",
+                            extra={
+                                "ident_cely": getattr(record, "ident_cely", None),
+                                "attribute_name": record_name_split[0],
+                            },
+                        )
+                if related_record and hasattr(related_record, "all"):
                     for item in related_record.all():
                         attributes.append(getattr(item, record_name_split[1], None))
-                else:
+                elif related_record:
                     related_record = getattr(record, record_name_split[0], None)
                     related_record = getattr(related_record, record_name_split[1], None)
                     if hasattr(related_record, "all"):

@@ -1,0 +1,33 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_modify %}
+
+{% block submit_buttons_bottom %}
+  {{ block.super }}
+  <script>
+      document.addEventListener('DOMContentLoaded', function () {
+          const submitRow = document.querySelector('.submit-row');
+          {% if user_account_history_exists and not user_account_other_records_exists %}
+              if (submitRow) {
+                  const deleteLink = document.createElement('a');
+                  deleteLink.href = "{% url 'admin:delete_history_records' object_id %}";
+                  deleteLink.textContent = "{% trans 'admin.admin_user_change.delete_history_records' %}";
+                  deleteLink.style.display = "block";
+                  deleteLink.style.background = "var(--delete-button-bg)";
+                  deleteLink.style.borderRadius = "4px";
+                  deleteLink.style.padding = "0.625rem 0.9375rem";
+                  deleteLink.style.height = "0.9375rem";
+                  deleteLink.style.lineHeight = "0.9375rem";
+                  deleteLink.style.color = "var(--button-fg)";
+                  deleteLink.style.marginLeft = "auto";
+                  submitRow.appendChild(deleteLink);
+              }
+          {% endif %}
+          {% if user_account_history_exists or user_account_other_records_exists %}
+              const deleteLink = document.querySelector('.submit-row .deletelink');
+              if (deleteLink) {
+                  deleteLink.remove();
+              }
+          {% endif %}
+      });
+  </script>
+{% endblock %}
