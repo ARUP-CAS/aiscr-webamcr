@@ -2,7 +2,7 @@ import logging
 
 from arch_z.models import Akce, ArcheologickyZaznam
 from cacheops import invalidate_model
-from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
+from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_OZNAMENY, PROJEKT_STAV_ZAPSANY
 from core.models import SouborVazby
 from cron.tasks import update_single_redis_snapshot
 from dateutil.relativedelta import relativedelta
@@ -33,7 +33,7 @@ def projekt_pre_save(sender, instance: Projekt, **kwargs):
         if instance.pk is not None:
             instance.__original_stav = Projekt.objects.get(pk=instance.id).stav
         else:
-            instance.__original_stav = None
+            instance.__original_stav = PROJEKT_STAV_OZNAMENY
 
 
 def change_termin_odevzdani_NZ(sender, instance, **kwargs):
