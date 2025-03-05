@@ -1321,8 +1321,8 @@ class FedoraRepositoryConnector:
                         )
                         record.size_mb = rep_bin_file.size_mb
                         record.sha_512 = rep_bin_file.sha_512
-                        record.save()
                         record.zaznamenej_nahrani_nove_verze(adminUser, record.nazev)
+                        record.save()
                 fedora_transaction.mark_transaction_as_closed()
 
             except Exception as err:
