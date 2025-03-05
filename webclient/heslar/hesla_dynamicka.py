@@ -12,7 +12,8 @@ def get_id_from_heslar(ident_cely) -> int:
     try:
         pk = Heslar.objects.get(ident_cely=ident_cely).pk
         return pk
-    except Exception:
+    except Exception as e:
+        logger.error("heslar.get_id_from_heslar.error", extra={"error": str(e)})
         return None
 
 
@@ -20,7 +21,8 @@ def get_id_from_organizace(ident_cely):
     try:
         pk = Organizace.objects.get(ident_cely=ident_cely).pk
         return pk
-    except Exception:
+    except Exception as e:
+        logger.error("heslar.get_id_from_organizace.error", extra={"error": str(e)})
         return None
 
 
@@ -28,14 +30,16 @@ def get_id_from_osoba(ident_cely):
     try:
         pk = Osoba.objects.get(ident_cely=ident_cely).pk
         return pk
-    except Exception:
+    except Exception as e:
+        logger.error("heslar.get_id_from_osoba.error", extra={"error": str(e)})
         return None
 
 
 def get_id_from_user(ident_cely):
     try:
-        return User.objects.get(ident_cely=ident_cely).pk
-    except Exception:
+        return User.objects.filter(ident_cely=ident_cely).values_list("pk", flat=True).get()
+    except Exception as e:
+        logger.error("heslar.get_id_from_user.error", extra={"error": str(e)})
         return None
 
 
