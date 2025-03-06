@@ -870,9 +870,9 @@ class LokalitaSerializer(ModelSerializer):
     def _get_soubory_queryset(self):
         return None
 
-    def _serialize_dates(self):
-        dates = []
-        for date in self.record.historie.historie_set.all():
+    def _serialize_dates(self) -> List[Dict]:
+        dates: List[Dict] = []
+        for date in self.record.archeologicky_zaznam.historie.historie_set.all():
             date: Historie
             if date.typ_zmeny == ZAPSANI_AZ:
                 dates += [{"date": self.format_date_time(date.datum_zmeny), "dateType": "Created"}]
@@ -884,12 +884,13 @@ class LokalitaSerializer(ModelSerializer):
                 dates += [{"date": self.format_date_time(date.datum_zmeny), "dateType": "Issued"}]
             elif date.typ_zmeny == VRACENI_AZ:
                 dates += [{"date": self.format_date_time(date.datum_zmeny), "dateType": "Withdrawn"}]
+        dates: List[frozenset] = [frozenset(d.items()) for d in dates]
         for dj in self.record.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
             dj: DokumentacniJednotka
             for komp in dj.komponenty.komponenty.all():
                 komp: Komponenta
                 dates += [serialize_dates_coverage(komp.obdobi)]
-        dates = [dict(item) for item in set(dates) if item]
+        dates: List[Dict] = [dict(item) for item in set(dates) if item]
         return dates
 
     def _serialize_descriptions(self):
