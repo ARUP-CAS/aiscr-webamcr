@@ -417,13 +417,14 @@ def create(request):
                     projekt.save()
                     projekt.set_zapsany(request.user)
                     form_projekt.save_m2m()
+                    send_mail = True
                     if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                         # Vytvoreni oznamovatele - kontrola formu uz je na zacatku
                         oznamovatel = form_oznamovatel.save(commit=False)
                         oznamovatel.active_transaction = fedora_transaction
                         oznamovatel.projekt = projekt
                         oznamovatel.save()
-                    send_mail = form_oznamovatel.cleaned_data["send_mail"]
+                        send_mail = form_oznamovatel.cleaned_data["send_mail"]
                     if send_mail:
                         if projekt.should_generate_confirmation_document:
                             rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
