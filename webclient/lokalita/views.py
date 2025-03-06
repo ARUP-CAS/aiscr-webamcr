@@ -369,7 +369,7 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
         logger.debug(
             "arch_z.views.DokumentacniJednotkaUpdateView.get_object",
-            extra={"dj_ident_cely": dj_ident_cely},
+            extra={"ident_cely": dj_ident_cely},
         )
         object = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return object
@@ -479,7 +479,7 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
                     if stat != "OK":
                         raise Exception("lokalita.views.LokalitaPianCreateView.get.transormation_error")
             except Exception as err:
-                logger.error("lokalita.views.LokalitaPianCreateView.get.import_pian.error", extra={"err": err})
+                logger.error("lokalita.views.LokalitaPianCreateView.get.import_pian.error", extra={"error": err})
                 messages.add_message(
                     self.request,
                     messages.ERROR,
@@ -541,7 +541,7 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
                     if stat != "OK":
                         raise Exception("lokalita.views.LokalitaPianUpdateView.get.transormation_error")
             except Exception as err:
-                logger.error("lokalita.views.LokalitaPianUpdateView.get.import_pian.error", extra={"err": err})
+                logger.error("lokalita.views.LokalitaPianUpdateView.get.import_pian.error", extra={"error": err})
                 messages.add_message(
                     self.request,
                     messages.ERROR,

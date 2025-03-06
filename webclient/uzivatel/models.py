@@ -200,25 +200,23 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         """
         save metóda pro přidelení identu celý.
         """
-        logger.debug("uzivatel.User.save.start", extra={"state_adding": self._state.adding})
+        logger.debug("uzivatel.User.save.start", extra={"option": self._state.adding})
         # Random string is temporary before the id is assigned
         if not self._state.adding and (not self.is_active or self.hlavni_role.pk == ROLE_BADATEL_ID):
             if self.is_active:
                 logger.debug(
                     "uzivatel.User.save.deactivate_spoluprace",
-                    extra={"hlavni_role_id": self.hlavni_role.pk, "is_active": self.is_active},
+                    extra={"pk": self.hlavni_role.pk, "option": self.is_active},
                 )
             else:
-                logger.debug("uzivatel.User.save.deactivate_spoluprace", extra={"is_active": self.is_active})
+                logger.debug("uzivatel.User.save.deactivate_spoluprace", extra={"option": self.is_active})
             # local import to avoid circual import issue
             from pas.models import UzivatelSpoluprace
 
             spoluprace_query = UzivatelSpoluprace.objects.filter(vedouci=self)
-            logger.debug(
-                "uzivatel.User.save.deactivate_spoluprace", extra={"spoluprace_count": spoluprace_query.count()}
-            )
+            logger.debug("uzivatel.User.save.deactivate_spoluprace", extra={"count": spoluprace_query.count()})
             for spoluprace in spoluprace_query:
-                logger.debug("uzivatel.User.save.deactivate_spoluprace", extra={"spoluprace_id": spoluprace.pk})
+                logger.debug("uzivatel.User.save.deactivate_spoluprace", extra={"pk": spoluprace.pk})
                 spoluprace.stav = SPOLUPRACE_NEAKTIVNI
                 spoluprace.save()
         if self.history_vazba is None:

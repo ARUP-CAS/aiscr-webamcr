@@ -40,7 +40,7 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
             instance.save()
             logger.debug(
                 "dj.signals.save_dokumentacni_jednotka.finined",
-                extra={"dj_pk": instance.pk, "transaction": getattr(fedora_transaction, "uid", None)},
+                extra={"pk": instance.pk, "transaction": getattr(fedora_transaction, "uid", None)},
             )
         else:
             try:
@@ -49,18 +49,18 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
                 instance.save()
                 logger.debug(
                     "dj.signals.save_dokumentacni_jednotka.finined",
-                    extra={"dj_pk": instance.pk, "transaction": getattr(fedora_transaction, "uid", None)},
+                    extra={"pk": instance.pk, "transaction": getattr(fedora_transaction, "uid", None)},
                 )
             except Exception as err:
                 logger.debug(
                     "dj.signals.save_dokumentacni_jednotka.not_created",
-                    extra={"err": err, "transaction": getattr(fedora_transaction, "uid", None)},
+                    extra={"error": err, "transaction": getattr(fedora_transaction, "uid", None)},
                 )
     elif instance.pian != instance.initial_pian:
         logger.debug(
             "dj.signals.save_dokumentacni_jednotka.update_pian",
             extra={
-                "pian_db": instance.initial_pian.ident_cely if instance.initial_pian else "None",
+                "ident_cely": instance.initial_pian.ident_cely if instance.initial_pian else "None",
                 "pian": instance.pian.ident_cely if instance.pian else "None",
                 "transaction": fedora_transaction.uid,
             },
@@ -90,7 +90,7 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
         except ValueError as err:
             logger.debug(
                 "dj.signals.save_dokumentacni_jednotka.deleted",
-                extra={"transaction": fedora_transaction.uid, "err": err, "ident_cely": instance.ident_cely},
+                extra={"transaction": fedora_transaction.uid, "error": err, "ident_cely": instance.ident_cely},
             )
 
     def arch_z_save_metadata(inner_close_transaction=False):
@@ -127,7 +127,7 @@ def pre_delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **k
         if pian.ident_cely.startswith("N-") and not dj_query.exists():
             logger.debug(
                 "dj.signals.delete_dokumentacni_jednotka.delete",
-                extra={"ident_cely": instance.ident_cely, "pian_ident_cely": pian.ident_cely},
+                extra={"ident_cely": instance.ident_cely, "pian": pian.ident_cely},
             )
             instance.pian = None
             instance.suppress_signal = True
@@ -141,7 +141,7 @@ def pre_delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **k
         else:
             logger.debug(
                 "dj.signals.delete_dokumentacni_jednotka.update_pian_metadata",
-                extra={"ident_cely": instance.ident_cely, "pian_ident_cely": pian.ident_cely},
+                extra={"ident_cely": instance.ident_cely, "pian": pian.ident_cely},
             )
             instance.save_pian_metadata = True
             instance.pian = None

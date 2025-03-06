@@ -148,7 +148,7 @@ class CreateDJForm(forms.ModelForm):
             try:
                 typ_akce = self.instance.archeologicky_zaznam.akce.typ
             except Exception as err:
-                logger.debug("dj.forms.CreateDJForm.__init__.cannot_get_typ_akce", extra={"err": err})
+                logger.debug("dj.forms.CreateDJForm.__init__.cannot_get_typ_akce", extra={"error": err})
         self.fields["typ"] = forms.ModelChoiceField(
             label=_("dj.forms.createDjForm.typ.label"),
             queryset=self.get_typ_queryset(jednotky, self.instance, typ_arch_z, typ_akce),

@@ -236,7 +236,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                     + str(dj.ident_cely)
                     + _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni.text2")
                 )
-                logger.debug("arch_z.models.ArcheologickyZaznam.dj_komponenta_negativni", extra={"dj": dj.ident_cely})
+                logger.debug(
+                    "arch_z.models.ArcheologickyZaznam.dj_komponenta_negativni", extra={"ident_cely": dj.ident_cely}
+                )
             # Each documentation unit associated with the project event must have a valid PIAN relation.
             if dj.pian is None:
                 result.append(
@@ -244,14 +246,14 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                     + str(dj.ident_cely)
                     + _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian.text2")
                 )
-                logger.debug("arch_z.models.ArcheologickyZaznam.dj_nema_pian", extra={"dj": dj.ident_cely})
+                logger.debug("arch_z.models.ArcheologickyZaznam.dj_nema_pian", extra={"ident_cely": dj.ident_cely})
         for dokument_cast in self.casti_dokumentu.all():
             dokument_warning = dokument_cast.dokument.check_pred_odeslanim()
             if dokument_warning:
                 result.append("Dokument " + dokument_cast.dokument.ident_cely + ": " + ", ".join(dokument_warning))
                 logger.debug(
                     "arch_z.models.ArcheologickyZaznam.dokument_warning",
-                    extra={"ident_cely": dokument_cast.dokument.ident_cely, "dokument_warning": str(dokument_warning)},
+                    extra={"ident_cely": dokument_cast.dokument.ident_cely, "warning": str(dokument_warning)},
                 )
         result = [str(x) for x in result]
         return result
@@ -314,7 +316,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 idents = [sub.lstrip("0") for sub in idents]
                 idents = [eval(i) for i in idents]
                 missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
-                logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
+                logger.debug("arch_z.models.get_akce_ident.missing", extra={"data": missing[0]})
                 logger.debug(missing[0])
                 if missing[0] >= MAXIMUM:
                     logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
@@ -703,7 +705,7 @@ def get_akce_ident(region):
             idents = [sub.lstrip("0") for sub in idents]
             idents = [eval(i) for i in idents]
             missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
-            logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
+            logger.debug("arch_z.models.get_akce_ident.missing", extra={"data": missing[0]})
             logger.debug(missing[0])
             if missing[0] >= MAXIMUM:
                 logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})

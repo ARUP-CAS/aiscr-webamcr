@@ -205,7 +205,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             invalidate_all()
         except Exception as err:
             logger.error(
-                "core.tests.test_selenium.BaseSeleniumTestClass.clone_Database.general_exception", extra={"err": err}
+                "core.tests.test_selenium.BaseSeleniumTestClass.clone_Database.general_exception", extra={"error": err}
             )
         finally:
             if prod_cursor is not None:
@@ -439,7 +439,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             record = None
             logger.debug(
                 "BaseSeleniumTestClass.createFedoraRecord.not_found",
-                extra={"ident_cely": ident_cely, "err": err},
+                extra={"ident_cely": ident_cely, "error": err},
             )
         if record and isinstance(record, ModelWithMetadata) or isinstance(record, User):
             try:
@@ -449,7 +449,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             except FedoraError as err:
                 logger.debug(
                     "BaseSeleniumTestClass.fedora_error.not_found",
-                    extra={"ident_cely": ident_cely, "err": err},
+                    extra={"ident_cely": ident_cely, "error": err},
                 )
 
 

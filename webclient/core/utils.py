@@ -108,7 +108,7 @@ def validate_and_split_geometry(geom):
         transaction.savepoint_commit(sid)
     except Exception as e:
         transaction.savepoint_rollback(sid)
-        logger.debug("core.utils.file_validate_geometry.exception", extra={"e": e})
+        logger.debug("core.utils.file_validate_geometry.exception", extra={"exception": e})
         geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
         new_rows.append(geom)
         return new_rows
@@ -150,11 +150,11 @@ def get_cadastre_from_point(point):
         katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])[0]
         logger.debug(
             "core.utils.get_cadastre_from_point.start",
-            extra={"point_0": point[0], "point_1": point[1], "katastr": katastr},
+            extra={"X": point[0], "Y": point[1], "katastr": katastr},
         )
         return katastr
     except IndexError:
-        logger.warning("core.utils.get_cadastre_from_point.error", extra={"point_0": point[0], "point_1": point[1]})
+        logger.warning("core.utils.get_cadastre_from_point.error", extra={"X": point[0], "Y": point[1]})
         return None
 
 
@@ -169,7 +169,7 @@ def get_cadastre_from_point_with_geometry(point):
     try:
         logger.debug(
             "core.utils.get_cadastre_from_point.start",
-            extra={"point_0": point[0], "point_1": point[1]},
+            extra={"X": point[0], "Y": point[1]},
         )
         cursor = connection.cursor()
         cursor.execute(query, [point[0], point[1]])
@@ -178,7 +178,7 @@ def get_cadastre_from_point_with_geometry(point):
     except IndexError:
         logger.error(
             "core.utils.get_cadastre_from_point_with_geometry.error",
-            extra={"point": point},
+            extra={"geom": point},
         )
         return None
 
@@ -245,7 +245,7 @@ def get_all_pians_with_akce(ident_cely):
         return back
 
     except Exception as e:
-        logger.debug("core.utils.get_all_pians_with_akce.exception", extra={"e": e})
+        logger.debug("core.utils.get_all_pians_with_akce.exception", extra={"exception": e})
         return None
 
 
@@ -314,7 +314,7 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
             for dj in DJs:
                 logger.debug(
                     "core.utils.get_pians_from_akce.loop_dj",
-                    extra={"dj_ident_cely": dj.ident_cely, "pian": getattr(dj.pian, "ident_cely", None)},
+                    extra={"ident_cely": dj.ident_cely, "pian": getattr(dj.pian, "ident_cely", None)},
                 )
                 if dj.pian and dj.pian.geom:
                     bod = dj.pian__centroid
@@ -354,7 +354,7 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     except IndexError as err:
         logger.error(
             "core.utils.get_pians_from_akce.error",
-            extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely, "err": err, "bod": bod},
+            extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely, "error": err, "bod": bod},
         )
         raise CannotFindCadasterCentre()
 
@@ -775,7 +775,7 @@ def get_dj_akce_for_pian(pian_ident_cely, request):
     except IndexError:
         logger.debug(
             "core.utils.get_dj_akce_for_pian.no_records",
-            extra={"pian_ident_cely": pian_ident_cely},
+            extra={"ident_cely": pian_ident_cely},
         )
         return None
 

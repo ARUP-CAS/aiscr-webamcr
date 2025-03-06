@@ -48,7 +48,7 @@ def create_arch_z_vazby(sender, instance, **kwargs):
         hv.save()
         instance.historie = hv
         logger.debug("arch_z.signals.create_arch_z_vazby.created_vazby", extra={"hv_pk": hv.pk})
-    logger.debug("arch_z.signals.create_arch_z_vazby.end", extra={"record_pk": instance.pk})
+    logger.debug("arch_z.signals.create_arch_z_vazby.end", extra={"pk": instance.pk})
 
 
 @receiver(post_save, sender=ArcheologickyZaznam, weak=False)
@@ -56,7 +56,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     """
     Funkce pro aktualizaci metadat archeologického záznamu.
     """
-    logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"record_pk": instance.pk})
+    logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"pk": instance.pk})
 
     invalidate_arch_z_related_models()
     fedora_transaction = instance.active_transaction
@@ -74,8 +74,8 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                             "arch_z.signals.create_arch_z_metadata.update_pian_metadata",
                             extra={
                                 "pian": dok_jednotka.pian.ident_cely,
-                                "initial_pripustnost": initial_pristupnost.pk,
-                                "pripustnost": pristupnost.pk,
+                                "initial": initial_pristupnost.pk,
+                                "pk": pristupnost.pk,
                             },
                         )
                         dok_jednotka.pian.save_metadata(fedora_transaction)
@@ -112,7 +112,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
             except (ObjectDoesNotExist, AttributeError) as err:
                 logger.debug(
                     "arch_z.signals.create_arch_z_metadata.no_akce",
-                    extra={"record_ident_cely": instance.ident_cely, "err": err},
+                    extra={"ident_cely": instance.ident_cely, "error": err},
                 )
             instance.save_metadata(fedora_transaction, close_transaction=inner_close_transaction)
 
@@ -122,13 +122,13 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
             save_metadata()
     logger.debug(
         "arch_z.signals.create_arch_z_metadata.end",
-        extra={"record_pk": instance.pk, "transaction": fedora_transaction.uid},
+        extra={"pk": instance.pk, "transaction": fedora_transaction.uid},
     )
 
 
 @receiver(post_save, sender=Akce, weak=False)
 def update_akce_snapshot(sender, instance: Akce, **kwargs):
-    logger.debug("arch_z.signals.update_akce_snapshot.start", extra={"record_pk": instance.pk})
+    logger.debug("arch_z.signals.update_akce_snapshot.start", extra={"pk": instance.pk})
     if not check_if_task_queued("Akce", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["Akce", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
     invalidate_arch_z_related_models()
@@ -150,7 +150,7 @@ def update_akce_snapshot(sender, instance: Akce, **kwargs):
             instance.initial_projekt.save_metadata(fedora_transaction)
         if instance.close_active_transaction_when_finished:
             fedora_transaction.mark_transaction_as_closed()
-    logger.debug("arch_z.signals.update_akce_snapshot.end", extra={"record_pk": instance.pk})
+    logger.debug("arch_z.signals.update_akce_snapshot.end", extra={"pk": instance.pk})
 
 
 @receiver(post_save, sender=ExterniOdkaz, weak=False)
@@ -158,7 +158,7 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
     """
     Funkce pro aktualizaci metadat externího odkazu.
     """
-    logger.debug("arch_z.signals.create_externi_odkaz_metadata.start", extra={"record_pk": instance.pk})
+    logger.debug("arch_z.signals.create_externi_odkaz_metadata.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
     if not instance.suppress_signal:
         fedora_transaction: FedoraTransaction = instance.active_transaction
@@ -171,7 +171,7 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
             fedora_transaction.mark_transaction_as_closed()
         logger.debug(
             "arch_z.signals.create_externi_odkaz_metadata.end",
-            extra={"record_pk": instance.pk, "transaction": fedora_transaction},
+            extra={"pk": instance.pk, "transaction": fedora_transaction},
         )
 
 
@@ -182,7 +182,7 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
     """
     logger.debug(
         "arch_z.signals.delete_arch_z_repository_container_and_connections.start",
-        extra={"record_ident_cely": instance.ident_cely},
+        extra={"ident_cely": instance.ident_cely},
     )
     komponenty_jednotek_vazby = []
     for dj in instance.dokumentacni_jednotky_akce.all():
@@ -199,7 +199,7 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
         komponenta_vazba.delete()
     logger.debug(
         "arch_z.signals.delete_arch_z_repository_container_and_connections.end",
-        extra={"record_ident_cely": instance.ident_cely},
+        extra={"ident_cely": instance.ident_cely},
     )
 
 
@@ -207,7 +207,7 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
 def delete_arch_z_repository_update_connected_records(sender, instance: ArcheologickyZaznam, **kwargs):
     logger.debug(
         "arch_z.signals.delete_arch_z_repository_update_connected_records.start",
-        extra={"record_ident": instance.ident_cely},
+        extra={"ident_cely": instance.ident_cely},
     )
     if instance.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
         instance.lokalita.igsn_delete()
@@ -221,7 +221,7 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
         except ObjectDoesNotExist as err:
             logger.debug(
                 "arch_z.signals.delete_arch_z_repository_container_and_connections.no_akce",
-                extra={"record_ident_cely": instance.ident_cely, "err": err},
+                extra={"ident_cely": instance.ident_cely, "error": err},
             )
         instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
 
@@ -231,7 +231,7 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
         save_metadata()
     logger.debug(
         "arch_z.signals.delete_arch_z_repository_update_connected_records.end",
-        extra={"record_ident": instance.ident_cely, "transaction": transaction},
+        extra={"ident_cely": instance.ident_cely, "transaction": transaction},
     )
 
 
@@ -242,7 +242,7 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     """
     logger.debug(
         "arch_z.signals.delete_externi_odkaz_repository_container.start",
-        extra={"record_pk": instance.pk, "suppress_signal_arch_z": instance.suppress_signal_arch_z},
+        extra={"pk": instance.pk, "signal": instance.suppress_signal_arch_z},
     )
     fedora_transaction = instance.active_transaction
     invalidate_model(ExterniZdroj)
@@ -264,8 +264,8 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     logger.debug(
         "arch_z.signals.delete_externi_odkaz_repository_container.end",
         extra={
-            "record_pk": instance.pk,
-            "suppress_signal_arch_z": instance.suppress_signal_arch_z,
+            "pk": instance.pk,
+            "signal": instance.suppress_signal_arch_z,
             "transaction": fedora_transaction.uid,
         },
     )

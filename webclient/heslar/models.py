@@ -108,7 +108,7 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
         try:
             self.initial_obdobi = self.obdobi
         except ObjectDoesNotExist as err:
-            logger.debug("heslar.obdobi.HeslarDatace.__init__.no_obdobi", extra={"err": err})
+            logger.debug("heslar.obdobi.HeslarDatace.__init__.no_obdobi", extra={"error": err})
             self.initial_obdobi = None
         self.suppress_signal = False
 

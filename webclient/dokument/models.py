@@ -357,7 +357,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             try:
                 return self.casti.all()[0].komponenty.komponenty.all()[0]
             except Exception as err:
-                logger.error("dokument.models.Dokument.get_komponenta_error", extra={"err": err})
+                logger.error("dokument.models.Dokument.get_komponenta_error", extra={"error": err})
                 raise UnexpectedDataRelations("Neleze ziskat komponentu modelu 3D.")
         else:
             return None
@@ -389,7 +389,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 idents = [sub.lstrip("0") for sub in idents]
                 idents = [eval(i) for i in idents]
                 missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
-                logger.debug("dokuments.models.get_akce_ident.missing", extra={"missing": missing[0]})
+                logger.debug("dokuments.models.get_akce_ident.missing", extra={"data": missing[0]})
                 logger.debug(missing[0])
                 if missing[0] >= MAXIMUM:
                     logger.error("dokuments.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
@@ -936,7 +936,7 @@ def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
         extra={"ident_cely": dokument.ident_cely, "add_to_index": add_to_index},
     )
     files = dokument.soubory.soubory.all().filter(nazev__icontains=dokument.ident_cely.replace("-", ""))
-    logger.debug("dokument.models.get_dokument_soubor_name", extra={"files": files})
+    logger.debug("dokument.models.get_dokument_soubor_name", extra={"file": files})
     if not files.exists():
         return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
     else:
@@ -947,7 +947,7 @@ def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
                 split_file = os.path.splitext(file.nazev)
                 list_last_char.append(split_file[0][-1])
             last_char = max(list_last_char)
-            logger.debug("dokument.models.get_dokument_soubor_name", extra={"last_char": last_char})
+            logger.debug("dokument.models.get_dokument_soubor_name", extra={"value": last_char})
             if last_char != "Z" or add_to_index == 0:
                 return (
                     dokument.ident_cely.replace("-", "")

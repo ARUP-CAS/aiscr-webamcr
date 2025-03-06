@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 def adb_save_metadata(sender, instance: Adb, created, **kwargs):
     logger.debug(
         "adb.signals.adb_save_metadata.start",
-        extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal},
+        extra={"ident_cely": instance.ident_cely, "signal": instance.suppress_signal},
     )
     invalidate_arch_z_related_models()
     if not instance.suppress_signal:
@@ -37,7 +37,7 @@ def adb_save_metadata(sender, instance: Adb, created, **kwargs):
 def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
     logger.debug(
         "adb.signals.vyskovy_bod_save_metadata.start",
-        extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal},
+        extra={"ident_cely": instance.ident_cely, "signal": instance.suppress_signal},
     )
     invalidate_arch_z_related_models()
     if not instance.suppress_signal:
@@ -49,7 +49,7 @@ def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
         )
     logger.debug(
         "adb.signals.vyskovy_bod_save_metadata.end",
-        extra={"ident_cely": instance.ident_cely, "suppress_signal": instance.suppress_signal},
+        extra={"ident_cely": instance.ident_cely, "signal": instance.suppress_signal},
     )
 
 
@@ -66,7 +66,7 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
             except (ObjectDoesNotExist, AttributeError) as err:
                 logger.debug(
                     "adb.signals.adb_delete_repository_container.not_exists",
-                    extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid, "err": err},
+                    extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid, "error": err},
                 )
             instance.record_deletion(fedora_transaction, close_transaction=True)
 

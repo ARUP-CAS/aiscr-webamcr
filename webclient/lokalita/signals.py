@@ -25,7 +25,7 @@ def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
     except ValueError as err:
         logger.debug(
             "lokalita.signals.save_lokalita_snapshot.type_error",
-            extra={"ident_cely": instance.archeologicky_zaznam.ident_cely, "err": err},
+            extra={"ident_cely": instance.archeologicky_zaznam.ident_cely, "error": err},
         )
     else:
         logger.debug(

@@ -65,7 +65,7 @@ class DocumentGenerator:
             for current_class in cls._get_schema_dict():
                 logger.debug(
                     "xml_generator.generator.generate_metadata.loop.strart",
-                    extra={"limit": limit, "current_class": str(current_class)},
+                    extra={"limit": limit, "class_name": str(current_class)},
                 )
                 if not start_with_pk:
                     queryset = current_class.objects.all().order_by("pk")
@@ -82,7 +82,7 @@ class DocumentGenerator:
                     obj.save_metadata(fedora_transaction, close_transaction=True)
                 logger.debug(
                     "xml_generator.generator.generate_metadata.loop.end",
-                    extra={"limit": limit, "current_class": str(current_class)},
+                    extra={"limit": limit, "class_name": str(current_class)},
                 )
         else:
             logger.debug(
@@ -334,7 +334,7 @@ class DocumentGenerator:
                         except Exception as err:
                             logger.info(
                                 "xml_generator.generator._get_attribute_of_record_unbounded.attr.append.error",
-                                extra={"err": err},
+                                extra={"error": err},
                             )
             elif len(record_name_split) == 3:
                 related_record = getattr(record, record_name_split[0])

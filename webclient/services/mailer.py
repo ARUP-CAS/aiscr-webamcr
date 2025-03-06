@@ -111,11 +111,11 @@ class Mailer:
             "services.mailer._notification_should_be_sent",
             extra={
                 "notification_type": notification_type.ident_cely,
-                "user": user,
-                "notification_is_enabled": notification_is_enabled,
+                "ident_cely": user,
+                "option": notification_is_enabled,
                 "user_active": user.is_active,
                 "zasilat_neaktivnim": notification_type.zasilat_neaktivnim,
-                "check_result": result,
+                "value": result,
             },
         )
         return result
@@ -127,7 +127,7 @@ class Mailer:
         notification_log = user.notification_log_items.filter(notification_type=notification_type).first()
         logger.debug(
             "services.mailer._notification_was_sent",
-            extra={"notification_type": notification_type.ident_cely, "user": user},
+            extra={"notification_type": notification_type.ident_cely, "ident_cely": user},
         )
         if notification_log:
             return True
@@ -168,8 +168,8 @@ class Mailer:
             "services.mailer._log_notification",
             extra={
                 "notification_type": notification_type,
-                "user": user_object,
-                "receiver_address": receiver_address,
+                "pk": user_object.pk,
+                "address": receiver_address,
             },
         )
 
@@ -192,7 +192,7 @@ class Mailer:
             logger.info(
                 "services.mailer.send.debug",
                 extra={
-                    "from_email": from_email,
+                    "email": from_email,
                     "to": to,
                     "subject": subject,
                     "attachment": getattr(attachment, "filename", None),
@@ -207,7 +207,7 @@ class Mailer:
             except Exception as e:
                 logger.warning(
                     "services.mailer.send.warning",
-                    extra={"from_email": from_email, "to": to, "subject": subject, "error": e},
+                    extra={"email": from_email, "to": to, "subject": subject, "error": e},
                 )
                 status = "NOK"
                 exception = e
@@ -287,7 +287,7 @@ class Mailer:
         logger.debug("services.mailer.send_eu06", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         if groups[0] is not None:
-            logger.debug("services.mailer.send_eu06.groups", extra={"ident_cely": IDENT_CELY, "groups": groups})
+            logger.debug("services.mailer.send_eu06.groups", extra={"ident_cely": IDENT_CELY, "info": groups})
             roles = ", ".join([group.name for group in groups])
         else:
             roles = ""
@@ -334,7 +334,7 @@ class Mailer:
     def _send_notification_for_projects(cls, projects, notification_type):
         logger.debug(
             "services.mailer._send_notification_for_projects",
-            extra={"notification_type": notification_type, "project_count": projects.count()},
+            extra={"notification_type": notification_type, "count": projects.count()},
         )
         for project in projects:
             Mailer._send_notification_for_project(project, notification_type)
@@ -499,7 +499,7 @@ class Mailer:
         )
         logger.debug(
             "services.mailer._send_ep01",
-            extra={"name": subject, "path": notification_type.cesta_sablony, "ident_cely": project.ident_cely},
+            extra={"subject": subject, "path": notification_type.cesta_sablony, "ident_cely": project.ident_cely},
         )
         if isinstance(rep_bin_file, RepositoryBinaryFile):
             project_file = rep_bin_file

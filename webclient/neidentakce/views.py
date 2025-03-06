@@ -62,5 +62,5 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("neidentakce.views.NeidentAkceEditView.form_invalid", extra={"errors": form.errors})
+        logger.debug("neidentakce.views.NeidentAkceEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)

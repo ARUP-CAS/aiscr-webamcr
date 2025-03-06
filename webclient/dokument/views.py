@@ -642,7 +642,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("dokument.views.DokumentCastEditView.form_invalid", extra={"errors": form.errors})
+        logger.debug("dokument.views.DokumentCastEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
 
 
@@ -863,7 +863,7 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
                 }
             )
         else:
-            logger.debug("dokument.views.VytvoritCastView.post.form_not_valid", extra={"form_errors": form.errors})
+            logger.debug("dokument.views.VytvoritCastView.post.form_not_valid", extra={"error": form.errors})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         return JsonResponse({"redirect": zaznam.get_absolute_url()})
 
@@ -971,9 +971,7 @@ class DokumentCastPripojitAkciView(TransakceView):
             cast.close_active_transaction_when_finished = True
             cast.save()
         else:
-            logger.debug(
-                "dokument.views.DokumentCastPripojitAkciView.post.form_invalid", extra={"form_errors": form.errors}
-            )
+            logger.debug("dokument.views.DokumentCastPripojitAkciView.post.form_invalid", extra={"error": form.errors})
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
 
@@ -1009,7 +1007,7 @@ class DokumentCastPripojitProjektView(TransakceView):
             cast.save()
         else:
             logger.debug(
-                "dokument.views.DokumentCastPripojitProjektView.post.form_invalid", extra={"form_errors": form.errors}
+                "dokument.views.DokumentCastPripojitProjektView.post.form_invalid", extra={"error": form.errors}
             )
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
@@ -1081,7 +1079,7 @@ class DokumentCastSmazatView(TransakceView):
         except ObjectDoesNotExist:
             logger.debug(
                 "dokument.views.DokumentCastSmazatView.post.neident_akce_not_exists",
-                extra={"ident:cely": cast.ident_cely},
+                extra={"ident_cely": cast.ident_cely},
             )
         cast.close_active_transaction_when_finished = True
         cast.delete()
@@ -1188,7 +1186,7 @@ def edit(request, ident_cely):
         else:
             logger.debug(
                 "dokument.views.edit.forms_not_valid",
-                extra={"form_errors": form_d.errors, "form_extra_errors": form_extra.errors},
+                extra={"error": form_d.errors, "form_extra_errors": form_extra.errors},
             )
     else:
         form_d = EditDokumentForm(
@@ -1300,7 +1298,7 @@ def edit_model_3D(request, ident_cely):
             logger.debug(
                 "dokument.views.edit_model_3D.forms_not_valid",
                 extra={
-                    "form_errors": form_d.errors,
+                    "error": form_d.errors,
                     "form_extra_errors": form_extra.errors,
                     "form_komponenta": form_komponenta.errors,
                 },
@@ -1485,7 +1483,7 @@ def create_model_3D(request):
             logger.debug(
                 "dokument.views.create_model_3D.forms_not_valid",
                 extra={
-                    "form_errors": form_d.errors,
+                    "error": form_d.errors,
                     "form_extra_errors": form_extra.errors,
                     "form_komponenta": form_komponenta.errors,
                 },
@@ -1558,7 +1556,7 @@ def odeslat(request, ident_cely):
     else:
         warnings = dokument.check_pred_odeslanim()
         if warnings:
-            logger.debug("dokument.views.odeslat.warnings", extra={"warnings": warnings, "ident_cely": ident_cely})
+            logger.debug("dokument.views.odeslat.warnings", extra={"warning": warnings, "ident_cely": ident_cely})
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
@@ -1626,7 +1624,7 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": get_detail_json_view(dokument.ident_cely)})
     else:
         warnings = dokument.check_pred_archivaci()
-        logger.debug("dokument.views.archivovat.warnings", extra={"warnings": warnings})
+        logger.debug("dokument.views.archivovat.warnings", extra={"warning": warnings})
         if warnings:
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
@@ -1669,7 +1667,7 @@ def vratit(request, ident_cely):
             dokument.save()
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
         else:
-            logger.debug("dokument.views.vratit.not_valid", extra={"errors": form.errors})
+            logger.debug("dokument.views.vratit.not_valid", extra={"error": form.errors})
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     else:
         form = VratitForm(initial={"old_stav": dokument.stav})
@@ -1710,7 +1708,7 @@ def smazat(request, ident_cely):
             item.delete()
         resp1 = dokument.delete()
         if resp1:
-            logger.debug("dokument.views.smazat.deleted", extra={"resp1": resp1})
+            logger.debug("dokument.views.smazat.deleted", extra={"value": resp1})
             fedora_transaction.mark_transaction_as_closed()
             if "3D" in ident_cely:
                 return JsonResponse({"redirect": reverse("dokument:index-model-3D")})
@@ -1972,7 +1970,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
         dokument_cast = dokument_cast_query.first()
         dokument_cast.active_transaction = fedora_transaction
         resp = dokument_cast.delete()
-        logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
+        logger.debug("dokument.views.odpojit.deleted", extra={"value": resp})
         if remove_orphan:
             orphan_dokument.active_transaction = fedora_transaction
             orphan_dokument.record_deletion()
@@ -2054,7 +2052,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                 dokument.save()
                 logger.debug(
                     "dokument.views.pripojit.pripojit",
-                    extra={"debug_name": debug_name, "ident_zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
+                    extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
                 )
             else:
                 messages.add_message(request, messages.WARNING, DOKUMENT_JIZ_BYL_PRIPOJEN)

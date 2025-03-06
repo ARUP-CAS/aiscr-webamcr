@@ -77,7 +77,6 @@ from core.models import check_permissions
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
     get_heatmap_project,
-    get_heatmap_project_density,
     get_num_projects_from_envelope,
     get_project_geom,
     get_project_pas_from_envelope,
@@ -218,7 +217,7 @@ def post_ajax_get_projects_limit(request):
         body["p78"],
         request,
     )
-    logger.debug("projekt.views.post_ajax_get_projects_limit.num", extra={"num": num})
+    logger.debug("projekt.views.post_ajax_get_projects_limit.num", extra={"number": num})
     if num < 5000:
         pians = get_projects_from_envelope(
             body["southEast"]["lng"],
@@ -247,14 +246,6 @@ def post_ajax_get_projects_limit(request):
         else:
             return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
     else:
-        density = get_heatmap_project_density(
-            body["southEast"]["lng"],
-            body["northWest"]["lat"],
-            body["northWest"]["lng"],
-            body["southEast"]["lat"],
-            body["zoom"],
-        )
-        logger.debug("projekt.views.post_ajax_get_projects_limit.density", extra={"density": density})
 
         heats = get_heatmap_project(
             body["southEast"]["lng"],
@@ -389,7 +380,7 @@ def create(request):
             if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                 # Kontrola oznamovatele
                 if not form_oznamovatel.is_valid():
-                    logger.debug("projekt.views.create.form_not_valid", extra={"errors": form_oznamovatel.errors})
+                    logger.debug("projekt.views.create.form_not_valid", extra={"error": form_oznamovatel.errors})
                     return render(
                         request,
                         "projekt/create.html",
@@ -446,7 +437,7 @@ def create(request):
                         _("arch_z.views.zapsat.samostatnaAkce." "check_container_deleted_or_not_exists_error"),
                     )
         else:
-            logger.debug("projekt.views.create.form_projekt_not_valid", extra={"errors": str(form_projekt.errors)})
+            logger.debug("projekt.views.create.form_projekt_not_valid", extra={"error": str(form_projekt.errors)})
     else:
         form_projekt = CreateProjektForm(required=required_fields, required_next=required_fields_next)
         form_oznamovatel = OznamovatelProjektCreateForm(uzamknout_formular=True)
@@ -538,7 +529,7 @@ def edit(request, ident_cely):
             invalidate_model(Historie)
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
-            logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"form_errors": form.errors})
+            logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"error": form.errors})
 
     else:
         form = EditProjektForm(
@@ -719,7 +710,7 @@ def schvalit(request, ident_cely):
             else:
                 logger.debug(
                     "projekt.views.schvalit.perm_ident",
-                    extra={"old_ident": old_ident, "new_ident_cely": projekt.ident_cely},
+                    extra={"ident_cely_old": old_ident, "ident_cely": projekt.ident_cely},
                 )
         projekt.set_schvaleny(request.user, old_ident)
         form = NeodeslatMailForm(request.POST)
@@ -735,7 +726,7 @@ def schvalit(request, ident_cely):
         projekt.save()
         logger.debug(
             "projekt.views.schvalit.post.done",
-            extra={"old_ident": old_ident, "new_ident": ident_cely, "transaction": fedora_transaction.uid},
+            extra={"ident_cely_old": old_ident, "ident_cely": ident_cely, "transaction": fedora_transaction.uid},
         )
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": projekt.ident_cely})})
     form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
@@ -796,7 +787,7 @@ def prihlasit(request, ident_cely):
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.prihlasit.form_not_valid", extra={"errors": form.errors})
+            logger.debug("projekt.views.prihlasit.form_not_valid", extra={"error": form.errors})
     else:
         form = PrihlaseniProjektForm(
             instance=projekt,
@@ -849,7 +840,7 @@ def zahajit_v_terenu(request, ident_cely):
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.zahajit_v_terenu.form_not_valid", extra={"errors": str(form.errors)})
+            logger.debug("projekt.views.zahajit_v_terenu.form_not_valid", extra={"error": str(form.errors)})
     else:
         form = ZahajitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
@@ -894,7 +885,7 @@ def ukoncit_v_terenu(request, ident_cely):
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.ukoncit_v terenu.form_not_valid", extra={"errors": form.errors})
+            logger.debug("projekt.views.ukoncit_v terenu.form_not_valid", extra={"error": form.errors})
     else:
         form = UkoncitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
@@ -956,7 +947,7 @@ def uzavrit(request, ident_cely):
     else:
         # Check business rules
         warnings = projekt.check_pred_uzavrenim()
-        logger.debug("projekt.views.uzavrit.warnings", extra={"warnings": str(warnings)})
+        logger.debug("projekt.views.uzavrit.warnings", extra={"warning": str(warnings)})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
@@ -1022,7 +1013,7 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
     else:
         warnings = projekt.check_pred_archivaci()
-        logger.debug("projekt.views.archivovat.warnings", extra={"warnings": str(warnings)})
+        logger.debug("projekt.views.archivovat.warnings", extra={"warning": str(warnings)})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
@@ -1090,11 +1081,11 @@ def navrhnout_ke_zruseni(request, ident_cely):
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.navrhnout_ke_zruseni.form_not_valid", extra={"errors": form.errors})
+            logger.debug("projekt.views.navrhnout_ke_zruseni.form_not_valid", extra={"error": form.errors})
             context = {"projekt": projekt, "form": form}
     else:
         warnings = projekt.check_pred_navrzeni_k_zruseni()
-        logger.debug("projekt.views.navrhnout_ke_zruseni.warnings", extra={"warnings": warnings})
+        logger.debug("projekt.views.navrhnout_ke_zruseni.warnings", extra={"warning": warnings})
 
         if warnings:
             request.session["temp_data"] = []
@@ -1149,7 +1140,7 @@ def zrusit(request, ident_cely):
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
             form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
-            logger.debug("projekt.views.zrusit.form_not_valid", extra={"errors": form.errors})
+            logger.debug("projekt.views.zrusit.form_not_valid", extra={"error": form.errors})
             context = {
                 "object": projekt,
                 "title": _("projekt.views.zrusit.title.text"),
@@ -1205,7 +1196,7 @@ def vratit(request, ident_cely):
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.vratit.form_not_valid", extra={"errors": form.errors})
+            logger.debug("projekt.views.vratit.form_not_valid", extra={"error": form.errors})
     else:
         form = VratitForm(initial={"old_stav": projekt.stav})
     context = {
@@ -1251,7 +1242,7 @@ def vratit_navrh_zruseni(request, ident_cely):
             Mailer.send_ep05(project=projekt)
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
-            logger.debug("projekt.views.vratit_navrh_zruseni.form_not_valid", extra={"errors": form.errors})
+            logger.debug("projekt.views.vratit_navrh_zruseni.form_not_valid", extra={"error": form.errors})
     else:
         form = VratitForm(initial={"old_stav": projekt.stav})
     context = {
@@ -1310,7 +1301,7 @@ def generovat_oznameni(request, ident_cely):
     """
     logger.debug(
         "projekt.views.generovat_oznameni.start",
-        extra={"ident_cely": ident_cely, "odeslat_oznamovateli": request.POST.get("odeslat_oznamovateli", False)},
+        extra={"ident_cely": ident_cely, "option": request.POST.get("odeslat_oznamovateli", False)},
     )
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.typ_projektu.id != TYP_PROJEKTU_ZACHRANNY_ID:
@@ -1561,19 +1552,17 @@ def katastr_text_to_id(request):
     try:
         kod = hlavni_katastr[hlavni_katastr.find(";") + 1 : hlavni_katastr.find(")")].strip()
     except (ValueError, IndexError) as e:
-        logger.warning(
-            "projekt.views.katastr_text_to_id.wrong_format", extra={"hlavni_katastr": hlavni_katastr, "error": e}
-        )
+        logger.warning("projekt.views.katastr_text_to_id.wrong_format", extra={"katastr": hlavni_katastr, "error": e})
         return request.POST.copy()
     if not kod.isnumeric():
-        logger.warning("projekt.views.katastr_text_to_id.not_numeric", extra={"hlavni_katastr": hlavni_katastr})
+        logger.warning("projekt.views.katastr_text_to_id.not_numeric", extra={"katastr": hlavni_katastr})
         return request.POST.copy()
     katastr_query = RuianKatastr.objects.filter(kod=kod)
     if katastr_query.count() > 0:
         post = request.POST.copy()
         post["hlavni_katastr"] = katastr_query.first().id
         return post
-    logger.warning("projekt.views.katastr_text_to_id.not_found", extra={"hlavni_katastr": hlavni_katastr})
+    logger.warning("projekt.views.katastr_text_to_id.not_found", extra={"katastr": hlavni_katastr})
     return request.POST.copy()
 
 
@@ -1707,7 +1696,7 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
             messages.add_message(request, messages.ERROR, DATUM_OZNAMENI_SE_NEPOVEDLO_EDITOVAT)
             logger.debug(
                 "projekt.views.UpravitDatumOznameniView.form_invalid",
-                extra={"errors": form.errors, "ident_cely": projekt.ident_cely},
+                extra={"error": form.errors, "ident_cely": projekt.ident_cely},
             )
 
         return JsonResponse({"redirect": projekt.get_absolute_url()})

@@ -32,7 +32,7 @@ def zapsat(request, dj_ident_cely):
     Pred uložením do DB se vytvoří relace na DB, nový ident celý je vygenerovaný a sm5 je přidané.
     Po úspešném uložení je uživatel presměrován na pohled detailu DJ.
     """
-    logger.debug("adb.views.zapsat.start", extra={"dj_ident_cely": dj_ident_cely})
+    logger.debug("adb.views.zapsat.start", extra={"ident_cely": dj_ident_cely})
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     dj: DokumentacniJednotka
     form = CreateADBForm(request.POST)
@@ -59,7 +59,7 @@ def zapsat(request, dj_ident_cely):
                 )
                 messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
     else:
-        logger.debug("adb.views.zapsat.not_valid", extra={"errors": str(form.errors)})
+        logger.debug("adb.views.zapsat.not_valid", extra={"error": str(form.errors)})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
     response = redirect(dj.get_absolute_url())
@@ -93,7 +93,7 @@ def smazat(request, ident_cely):
         resp = adb.delete()
 
         if resp:
-            logger.debug("adb.views.smazat.resp", extra={"resp": str(resp)})
+            logger.debug("adb.views.smazat.resp", extra={"value": str(resp)})
             response = JsonResponse({"redirect": dj.get_absolute_url()})
         else:
             logger.warning("adb.views.smazat.error", extra={"ident_cely": str(ident_cely)})
@@ -159,7 +159,7 @@ def smazat_vb(request, ident_cely):
         else:
             response = redirect(safe_redirect)
         if resp:
-            logger.debug("adb.views.smazat.smazat_vb.deleted", extra={"resp": str(resp)})
+            logger.debug("adb.views.smazat.smazat_vb.deleted", extra={"value": str(resp)})
             response = JsonResponse({"redirect": response})
         else:
             logger.warning("adb.views.smazat.smazat_vb.deleted", extra={"ident_cely": str(ident_cely)})

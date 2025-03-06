@@ -91,8 +91,8 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
     logger.debug(
         "uzivatel.signals.user_post_save_method.start",
         extra={
-            "user": instance.ident_cely,
-            "suppress_signal": instance.suppress_signal,
+            "ident_cely": instance.ident_cely,
+            "signal": instance.suppress_signal,
             "transaction": getattr(fedora_transaction, "uid", None),
         },
     )
@@ -126,7 +126,7 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
             instance.save_metadata(fedora_transaction)
         logger.debug(
             "uzivatel.signals.user_post_save_method.end",
-            extra={"user": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)},
+            extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)},
         )
 
 
@@ -134,7 +134,7 @@ def send_deactivation_email(sender, instance: User, **kwargs):
     """
     Signál pro poslání deaktivačního emailu uživately.
     """
-    logger.debug("uzivatel.signals.send_deactivation_email.start", extra={"user": instance.ident_cely})
+    logger.debug("uzivatel.signals.send_deactivation_email.start", extra={"ident_cely": instance.ident_cely})
     if not kwargs.get("update_fields") and hasattr(instance, "old") and instance.old is not None:
         kwargs["update_fields"] = []
         if instance.is_active != instance.old.is_active:
@@ -142,7 +142,7 @@ def send_deactivation_email(sender, instance: User, **kwargs):
     if kwargs["update_fields"]:
         if "is_active" in kwargs["update_fields"] and instance.is_active is False:
             Mailer.send_eu03(user=instance)
-    logger.debug("uzivatel.signals.send_deactivation_email.end", extra={"user": instance.ident_cely})
+    logger.debug("uzivatel.signals.send_deactivation_email.end", extra={"ident_cely": instance.ident_cely})
 
 
 def send_account_confirmed_email(sender, instance: User, created):
@@ -152,14 +152,14 @@ def send_account_confirmed_email(sender, instance: User, created):
     logger.debug(
         "uzivatel.signals.send_account_confirmed_email.start",
         extra={
-            "user": instance.ident_cely,
-            "user_created": created,
-            "created_from_admin_panel": instance.created_from_admin_panel,
+            "ident_cely": instance.ident_cely,
+            "created": created,
+            "option": instance.created_from_admin_panel,
         },
     )
     if created is True and instance.created_from_admin_panel is True:
         Mailer.send_eu02(user=instance)
-    logger.debug("uzivatel.signals.send_account_confirmed_email.end", extra={"user": instance.ident_cely})
+    logger.debug("uzivatel.signals.send_account_confirmed_email.end", extra={"ident_cely": instance.ident_cely})
 
 
 @receiver(pre_delete, sender=User, weak=False)

@@ -278,7 +278,7 @@ def get_adb_ident(pian: Pian) -> str:
             sequence.sekvence += 1
             logger.warning(
                 "core.ident_cely.get_adb_ident.already_exists",
-                extra={"perm_ident_cely": perm_ident_cely, "sequence": sequence.sekvence},
+                extra={"ident_cely": perm_ident_cely, "index": sequence.sekvence},
             )
             perm_ident_cely = record_list + "-" + f"{sequence.sekvence:06}"
         else:
