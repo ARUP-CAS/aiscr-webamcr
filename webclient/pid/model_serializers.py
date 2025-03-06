@@ -249,6 +249,13 @@ class PartialSerializer(ABC):
         pass
 
 
+def convert_geo_location_to_dict(item) -> Dict:
+    item = dict(item)
+    if "geoLocationPoint" in item:
+        item["geoLocationPoint"] = dict(item["geoLocationPoint"])
+    return item
+
+
 def serialize_ez_creator(autor: Osoba) -> Dict[str, str]:
     return {"name": autor.vypis_cely, "givenName": autor.jmeno, "familyName": autor.prijmeni, "nameType": "Personal"}
 
@@ -369,7 +376,7 @@ def serialize_subjects_komponenty(komp: Komponenta):
     return result
 
 
-def serialize_dates_coverage(datace: Heslar):
+def serialize_dates_coverage(datace: Heslar) -> frozenset:
     result = frozenset(
         {
             "date": f"{datace.datace_obdobi.rok_od_min}/{datace.datace_obdobi.rok_do_max}",
@@ -507,12 +514,6 @@ class DokumentSerializer(ModelSerializer):
         return descriptions
 
     def _serialize_geolocations(self):
-        def convert_geo_location_to_dict(item):
-            item = dict(item)
-            if "geoLocationPoint" in item:
-                item["geoLocationPoint"] = dict(item["geoLocationPoint"])
-            return item
-
         geo_locations: List[frozenset] = []
         try:
             if self.record.extra_data.geom and self.record.rada == DOKUMENT_RADA_DATA_3D:
@@ -752,8 +753,11 @@ class SamostatnyNalezSerializer(ModelSerializer):
                 dates += [{"date": self.format_date_time(date.datum_zmeny), "dateType": "Issued"}]
             elif date.typ_zmeny == VRACENI_SN:
                 dates += [{"date": self.format_date_time(date.datum_zmeny), "dateType": "Withdrawn"}]
-        if self.record.obdobi.heslar_datace.exists():
-            dates += [serialize_dates_coverage(self.record.obdobi)]
+        try:
+            if self.record.obdobi.datace_obdobi:
+                dates += [dict(serialize_dates_coverage(self.record.obdobi))]
+        except ObjectDoesNotExist:
+            pass
         return dates
 
     def _serialize_descriptions(self):
@@ -779,10 +783,14 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return descriptions
 
     def _serialize_geolocations(self):
-        geo_locations: List[frozenset] = []
+        geo_locations: List[Dict] = []
         if self.record.katastr:
             verejne = self.record.pristupnost.pk == PRISTUPNOST_ANONYM_ID
-            geo_locations.append(serialize_geom(self.record.katastr.definicni_bod, self.record.katastr, verejne))
+            geo_locations.append(
+                convert_geo_location_to_dict(
+                    serialize_geom(self.record.katastr.definicni_bod, self.record.katastr, verejne)
+                )
+            )
         return geo_locations
 
     def _serialize_related_identifiers(self):
@@ -832,6 +840,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
             serialized_subjects += [
                 serialize_subject(self.record.specifikace),
             ]
+        serialized_subjects = [dict(item) for item in serialized_subjects]
         return serialized_subjects
 
     def _serialize_types(self):
@@ -931,7 +940,7 @@ class LokalitaSerializer(ModelSerializer):
         for katastr in self.record.archeologicky_zaznam.katastry.all():
             katastr: RuianKatastr
             geo_locations.append(serialize_geom(katastr.definicni_bod, katastr, verejne))
-        result = [dict(item) for item in list(set(geo_locations))]
+        result = [convert_geo_location_to_dict(item) for item in list(set(geo_locations))]
         return result
 
     def _get_publication_year(self):
