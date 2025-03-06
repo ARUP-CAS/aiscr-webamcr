@@ -45,11 +45,11 @@ class OrcidAutocompleteField(PidAutocompleteField):
 
     def _get_initial_value_from_instance(self):
         value = super()._get_initial_value_from_instance()
-        value = value.replace("https://orcid.org/", "") if value else ""
+        value = value.replace("https://orcid.org/", "") if value else None
         return value
 
     def prepare_value(self, value):
-        return value.replace("https://orcid.org/", "") if value else ""
+        return value.replace("https://orcid.org/", "") if value else None
 
     def valid_value(self, value):
         return verify_orcid(value)
@@ -75,11 +75,11 @@ class WikiDataAutocompleteField(PidAutocompleteField):
 
     def _get_initial_value_from_instance(self):
         value = super()._get_initial_value_from_instance()
-        value = value.replace("https://www.wikidata.org/entity/", "") if value else ""
+        value = value.replace("https://www.wikidata.org/entity/", "") if value else None
         return value
 
     def prepare_value(self, value):
-        return value.replace("https://www.wikidata.org/entity/", "") if value else ""
+        return value.replace("https://www.wikidata.org/entity/", "") if value else None
 
     def valid_value(self, value):
         return verify_wikidata(value)

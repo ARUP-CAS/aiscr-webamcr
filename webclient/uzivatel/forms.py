@@ -20,6 +20,7 @@ from django_recaptcha.widgets import ReCaptchaV2Invisible
 from django_registration.backends.activation.forms import ActivationForm
 from django_registration.forms import RegistrationForm
 from pid.fields import OrcidAutocompleteField, WikiDataAutocompleteField
+from pid.forms import FormWithOrcid, FormWithWikidata
 from services.mailer import Mailer
 
 from .models import Osoba, User, UserNotificationType
@@ -27,7 +28,7 @@ from .models import Osoba, User, UserNotificationType
 logger = logging.getLogger(__name__)
 
 
-class AuthUserCreationForm(RegistrationForm):
+class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
     """
     Formulář pro vytvoření uživatele.
     """
@@ -128,7 +129,7 @@ class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
             self.fields.pop("captcha")
 
 
-class AuthUserChangeForm(forms.ModelForm):
+class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
     """
     Formulář pro editaci uživatele.
     """
@@ -234,7 +235,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         )
 
 
-class AuthUserChangeAdminForm(UserChangeForm):
+class AuthUserChangeAdminForm(UserChangeForm, FormWithOrcid):
     class Meta:
         model = User
         fields = "__all__"
@@ -406,7 +407,7 @@ class UserPasswordResetForm(PasswordResetForm):
         )
 
 
-class OsobaForm(forms.ModelForm):
+class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
     """
     Formulář pro vytvoření osoby.
     """

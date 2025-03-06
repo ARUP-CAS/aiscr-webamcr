@@ -139,6 +139,8 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def api_call(cls, q, use_cache=False):
+        if not q:
+            return []
         if q.startswith("https://www.wikidata.org/entity/"):
             q = q.replace("https://www.wikidata.org/entity/", "")
         if cls.ID_REGEX.match(q):
