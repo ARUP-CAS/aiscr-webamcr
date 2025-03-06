@@ -5,8 +5,8 @@ from arch_z.forms import ArchzFilterForm
 from arch_z.models import ArcheologickyZaznam
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
 from core.forms import SelectMultipleSeparator
+from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
-from dal import autocomplete
 from dj.models import DokumentacniJednotka
 from django.db.models import Q
 from django.forms import NumberInput, Select, SelectMultiple
@@ -103,13 +103,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         field_name="archeologicky_zaznam__ident_cely",
         lookup_expr="icontains",
         label=_("arch_z.filters.ArchZaznamFilter.ident_cely.label"),
-        distinct=True,
-    )
-
-    doi = CharFilter(
-        field_name="archeologicky_zaznam__casti_dokumentu__dokument__doi",
-        lookup_expr="icontains",
-        label=_("arch_z.filters.ArchZaznamFilter.doi.label"),
         distinct=True,
     )
 
@@ -315,7 +308,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
                 queryset=User.objects.all(),
                 field_name="archeologicky_zaznam__historie__historie__uzivatel",
                 label=_("arch_z.filters.ArchZaznamFilter.historie_uzivatel.label"),
-                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
+                widget=AutocompleteModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
                 distinct=True,
             )
         else:
@@ -323,7 +316,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
                 queryset=User.objects.all(),
                 field_name="archeologicky_zaznam__historie__historie__uzivatel",
                 label=_("arch_z.filters.ArchZaznamFilter.historie_uzivatel.label"),
-                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
+                widget=AutocompleteModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
                 distinct=True,
             )
         self.filters["komponenta_obdobi"] = MultipleChoiceFilter(
@@ -387,7 +380,7 @@ class AkceFilter(ArchZaznamFilter):
     vedouci = ModelMultipleChoiceFilter(
         method="filtr_vedouci",
         label=_("arch_z.filters.AkceFilter.vedouci.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
         distinct=True,
     )
@@ -503,7 +496,7 @@ class AkceFilter(ArchZaznamFilter):
     adb_autori = ModelMultipleChoiceFilter(
         method="filtr_adb_autori",
         label=_("arch_z.filters.AkceFilter.adb_autori.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
         distinct=True,
     )
@@ -591,11 +584,11 @@ class AkceFilter(ArchZaznamFilter):
         Metóda pro filtrování mezi projektovými a samostatnými akcemi.
         """
         if value is None:
-            return queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA)
+            return queryset.filter(~Q(typ=Akce.TYP_AKCE_PROJEKTOVA))
         if "True" in value:
             return queryset
         elif "False" in value:
-            return queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA)
+            return queryset.filter(~Q(typ=Akce.TYP_AKCE_PROJEKTOVA))
 
     def filter_has_positive_find(self, queryset, name, value):
         """
@@ -743,7 +736,6 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 Div(
                     Div("ident_cely", css_class="col-sm-2"),
-                    Div("doi", css_class="col-sm-2"),
                     Div("typ", css_class="col-sm-2"),
                     Div("stav", css_class="col-sm-2"),
                     Div("organizace", css_class="col-sm-2"),

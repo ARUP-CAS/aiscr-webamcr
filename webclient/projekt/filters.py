@@ -1,7 +1,7 @@
 import logging
 
 import crispy_forms
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import ArcheologickyZaznam
 from core.constants import (
     OBLAST_CECHY,
     OBLAST_CHOICES,
@@ -11,10 +11,9 @@ from core.constants import (
     SCHVALENI_OZNAMENI_PROJ,
 )
 from core.forms import SelectMultipleSeparator
+from core.widgets import AutocompleteModelSelect2, AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
-from dal import autocomplete
-from django.db.models import OuterRef, Q, QuerySet, Subquery
-from django.db.models.functions import Coalesce
+from django.db.models import Q, QuerySet
 from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
 from django_filters import CharFilter, DateFromToRangeFilter, FilterSet, ModelMultipleChoiceFilter, MultipleChoiceFilter
@@ -27,16 +26,9 @@ from heslar.hesla import (
     HESLAR_PRISTUPNOST,
     HESLAR_PROJEKT_TYP,
 )
-from heslar.hesla_dynamicka import (
-    PRISTUPNOST_ANONYM_ID,
-    TYP_PROJEKTU_BADATELSKY_ID,
-    TYP_PROJEKTU_PRUZKUM_ID,
-    TYP_PROJEKTU_ZACHRANNY_ID,
-)
 from heslar.models import Heslar, RuianKatastr, RuianKraj, RuianOkres
 from heslar.views import heslar_12
 from historie.models import Historie
-from pas.models import SamostatnyNalez
 from projekt.forms import ProjektFilterForm
 from projekt.models import Projekt
 from psycopg2._range import DateRange
@@ -45,7 +37,7 @@ from uzivatel.models import Organizace, Osoba, User
 logger = logging.getLogger(__name__)
 
 
-class MyAutocompleteWidget(autocomplete.ModelSelect2):
+class MyAutocompleteWidget(AutocompleteModelSelect2):
     """
     Override na třídu atocomplete widgetu pro nevrácení media objektů - js scriptů.
     """
@@ -97,7 +89,7 @@ class KatastrFilterMixin(FilterSet):
         queryset=RuianKatastr.objects.all(),
         method="filtr_katastr",
         label=_("projekt.filters.katastrFilter.katastr.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:katastr-autocomplete"),
         distinct=True,
     )
 
@@ -203,7 +195,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     vedouci_projektu = ModelMultipleChoiceFilter(
         queryset=Osoba.objects.all(),
         label=_("projekt.filters.projektFilter.vedouci.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         distinct=True,
     )
     organizace = ModelMultipleChoiceFilter(
@@ -324,7 +316,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         queryset=RuianKatastr.objects.all(),
         field_name="katastr",
         label=_("projekt.filters.projektFilter.akceKatastr.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:katastr-autocomplete"),
     )
 
     akce_kraj = MultipleChoiceFilter(
@@ -358,7 +350,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     akce_vedouci = ModelMultipleChoiceFilter(
         method="filtr_akce_vedouci",
         label=_("projekt.filters.projektFilter.akceVedouci.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
         distinct=True,
     )
@@ -499,10 +491,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         distinct=True,
     )
 
-    pristupnost = ModelMultipleChoiceFilter(
+    pristupnost_snapshot = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
         label=_("projekt.filters.projektFilter.pristupnost.label"),
-        method="filter_pristupnost",
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -687,32 +678,6 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
             | Q(casti_dokumentu__dokument__ident_cely__icontains=value)
         ).distinct()
 
-    def filter_pristupnost(self, queryset, name, value):
-        if not value:
-            return queryset
-        first_samostatne_nalez_pristupnost = Subquery(
-            SamostatnyNalez.objects.filter(projekt=OuterRef("pk"))
-            .order_by("pristupnost__razeni")
-            .values("pristupnost")[:1]
-        )
-        first_akce_pristupnost = Subquery(
-            Akce.objects.filter(projekt=OuterRef("pk"))
-            .order_by("archeologicky_zaznam__pristupnost__razeni")
-            .values("archeologicky_zaznam__pristupnost")[:1]
-        )
-        queryset = queryset.annotate(
-            first_pristupnost=Coalesce(first_samostatne_nalez_pristupnost, first_akce_pristupnost)
-        )
-        if Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID) in value:
-            queryset = queryset.filter(
-                Q(first_pristupnost__in=value)
-                | (Q(typ_projektu__in=(TYP_PROJEKTU_ZACHRANNY_ID, TYP_PROJEKTU_BADATELSKY_ID)) & Q(akce__isnull=True))
-                | (Q(typ_projektu=TYP_PROJEKTU_PRUZKUM_ID) & Q(samostatne_nalezy__isnull=True))
-            ).distinct()
-        else:
-            queryset = queryset.filter(first_pristupnost__in=value).distinct()
-        return queryset
-
     class Meta:
         model = Projekt
         fields = [
@@ -766,7 +731,7 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
                     Div("datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
                     Div("datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
                     Div("termin_odevzdani_nz", css_class="col-sm-4 app-daterangepicker"),
-                    Div("pristupnost", css_class="col-sm-2"),
+                    Div("pristupnost_snapshot", css_class="col-sm-2"),
                     css_class="row",
                 ),
                 Div(

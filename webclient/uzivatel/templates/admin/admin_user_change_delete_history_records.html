@@ -1,0 +1,37 @@
+{% extends "admin/delete_confirmation.html" %}
+{% load i18n %}
+
+{% block content %}
+  <h1>{% trans "admin.admin_user_change_delete_history_records.title" %} {{ object }}</h1>
+  <div id="content-main">
+    <p>{% trans "admin.admin_user_change_delete_history_records.to_delete" %}</p>
+    <ul>
+      {% for item in user_account_history %}
+        <li><strong>{{ item.datum_zmeny|date:'Y-m-d H:i' }},
+        </strong> - {{ item.get_typ_zmeny_display }}{% if historie_part.poznamka %},
+          {% trans "admin.admin_user_change_delete_history_records.poznamka" %}:
+          {{ historie_part.poznamka }}{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+    {% if user_account_other_records %}
+      <p>{% trans "admin.admin_user_change_delete_history_records.cannot_delete" %}</p>
+      <ul>
+        {% for item in user_account_other_records %}
+          <li><strong>{{ item.datum_zmeny|date:'Y-m-d H:i' }},
+          </strong> - {{ item.get_typ_zmeny_display }}{% if historie_part.poznamka %},
+            {% trans "admin.admin_user_change_delete_history_records.poznamka" %}:
+            {{ historie_part.poznamka }}{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <form method="post">
+        {% csrf_token %}
+        <div class="submit-row">
+          <input type="submit" value="{% translate 'admin.admin_user_change_delete_history_records.confirm' %}">
+        </div>
+      </form>
+    {% endif %}
+  </div>
+{% endblock %}

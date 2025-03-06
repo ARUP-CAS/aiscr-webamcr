@@ -923,6 +923,9 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
         else:
             raise ValidationError(_("dokument.models.Let.save.check_container_deleted_or_not_exists.invalid"))
 
+    def get_absolute_url(self):
+        return reverse("admin:dokument_let_change", args=[self.pk])
+
 
 def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
     """

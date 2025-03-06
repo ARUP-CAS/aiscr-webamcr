@@ -116,7 +116,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://babel.pocoo.org/
    * - beautifulsoup4
-     - 4.12.3
+     - 4.13.3
      - MIT License
      - https://www.crummy.com/software/BeautifulSoup/bs4/
    * - billiard
@@ -172,7 +172,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.6.10
+     - 7.6.11
      - Apache Software License
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
@@ -184,7 +184,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
-     - 44.0.0
+     - 44.0.1
      - Apache Software License; BSD License
      - https://github.com/pyca/cryptography
    * - defusedxml
@@ -324,7 +324,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.6.6
+     - 2.6.7
      - MIT License
      - https://github.com/pre-commit/identify
    * - idna
@@ -352,7 +352,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://sass.github.io/libsass-python/
    * - lxml
-     - 5.3.0
+     - 5.3.1
      - BSD License
      - https://lxml.de/
    * - multivolumefile
@@ -403,6 +403,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 8.13.54
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
+   * - piexif
+     - 1.1.3
+     - MIT License
+     - https://github.com/hMatoba/Piexif
    * - pillow
      - 11.1.0
      - CMU License (MIT-CMU)
@@ -512,7 +516,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.2.5
+     - 4.3.0
      - BSD License
      - https://www.reportlab.com/
    * - requests
@@ -628,7 +632,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.29.1
+     - 20.29.2
      - MIT License
      - https://github.com/pypa/virtualenv
    * - websocket-client

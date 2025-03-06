@@ -4,8 +4,8 @@ import crispy_forms
 from arch_z.models import ArcheologickyZaznam
 from core.constants import EXTERNI_ZDROJ_RELATION_TYPE
 from core.forms import SelectMultipleSeparator
+from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
-from dal import autocomplete
 from django.db.models import Q
 from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
@@ -58,7 +58,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
     autori = ModelMultipleChoiceFilter(
         field_name="externizdrojautor__autor",
         label=_("ez.filters.autori.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
         distinct=True,
     )
@@ -66,7 +66,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
     editori = ModelMultipleChoiceFilter(
         field_name="externizdrojeditor__editor",
         label=_("ez.filters.editori.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
+        widget=AutocompleteModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
         distinct=True,
     )

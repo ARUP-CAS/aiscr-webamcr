@@ -2,7 +2,6 @@ import django_tables2 as tables
 from core.utils import SearchTable
 from django.contrib.postgres.aggregates import StringAgg
 from django.utils.translation import gettext_lazy as _
-from pid.columns import DoiColumn
 
 from .models import Akce
 
@@ -28,15 +27,6 @@ class AkceTable(SearchTable):
         verbose_name=_("arch_z.tables.AkceTable.ident_cely.label"),
         linkify=True,
         accessor="archeologicky_zaznam__ident_cely",
-    )
-    doi = DoiColumn(
-        verbose_name=_("arch_z.tables.AkceTable.doi.label"),
-        default="",
-        accessor="archeologicky_zaznam__casti_dokumentu",
-        order_by="archeologicky_zaznam__casti_dokumentu__dokument__doi",
-        orderable=True,
-        render_property_name="dokument_doi",
-        separator="; ",
     )
     pristupnost = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.pristupnost.label"),
@@ -150,7 +140,6 @@ class AkceTable(SearchTable):
         "odlozena_nz",
         "vedouci",
         "vedouci_organizace",
-        "doi",
     )
     first_columns = None
 
@@ -173,7 +162,6 @@ class AkceTable(SearchTable):
         )
         sequence = (
             "ident_cely",
-            "doi",
             "stav",
             "pristupnost",
             "uzivatelske_oznaceni",
