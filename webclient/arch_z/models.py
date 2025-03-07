@@ -91,6 +91,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         indexes = [
             models.Index(fields=["stav", "ident_cely"]),
             models.Index(fields=["hlavni_katastr", "ident_cely"]),
+            models.Index(fields=["hlavni_katastr", "ident_cely", "typ_zaznamu"]),
             models.Index(fields=["hlavni_katastr", "ident_cely", "stav"]),
             models.Index(fields=["hlavni_katastr", "ident_cely", "historie"]),
             models.Index(fields=["hlavni_katastr", "ident_cely", "historie", "stav"]),

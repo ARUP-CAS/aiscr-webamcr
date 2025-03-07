@@ -2,6 +2,18 @@ from django import forms
 from django.utils.translation import gettext as _
 
 
+class FormWithOrcid:
+    def clean_orcid(self):
+        data = self.cleaned_data["orcid"]
+        return "https://orcid.org/" + data if len(data) > 0 else None
+
+
+class FormWithWikidata:
+    def clean_wikidata(self):
+        data = self.cleaned_data["wikidata"]
+        return "https://www.wikidata.org/entity/" + data if len(data) > 0 else None
+
+
 class UpdateDocumentObjectIdentifierFileForm(forms.Form):
     ident_list_file = forms.FileField(
         required=True,

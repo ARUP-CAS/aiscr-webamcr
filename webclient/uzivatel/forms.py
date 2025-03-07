@@ -11,6 +11,7 @@ from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, Use
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
+from django.db.models import Q
 from django.forms import PasswordInput
 from django.template import loader
 from django.utils.safestring import mark_safe
@@ -20,6 +21,7 @@ from django_recaptcha.widgets import ReCaptchaV2Invisible
 from django_registration.backends.activation.forms import ActivationForm
 from django_registration.forms import RegistrationForm
 from pid.fields import OrcidAutocompleteField, WikiDataAutocompleteField
+from pid.forms import FormWithOrcid, FormWithWikidata
 from services.mailer import Mailer
 
 from .models import Osoba, User, UserNotificationType
@@ -27,7 +29,7 @@ from .models import Osoba, User, UserNotificationType
 logger = logging.getLogger(__name__)
 
 
-class AuthUserCreationForm(RegistrationForm):
+class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
     """
     Formulář pro vytvoření uživatele.
     """
@@ -128,7 +130,7 @@ class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
             self.fields.pop("captcha")
 
 
-class AuthUserChangeForm(forms.ModelForm):
+class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
     """
     Formulář pro editaci uživatele.
     """
@@ -234,7 +236,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         )
 
 
-class AuthUserChangeAdminForm(UserChangeForm):
+class AuthUserChangeAdminForm(UserChangeForm, FormWithOrcid):
     class Meta:
         model = User
         fields = "__all__"
@@ -255,7 +257,9 @@ class NotificationsForm(forms.ModelForm):
     """
 
     notification_types = forms.ModelMultipleChoiceField(
-        queryset=UserNotificationType.objects.filter(ident_cely__icontains="S-E-"),
+        queryset=UserNotificationType.objects.filter(
+            Q(ident_cely__icontains="S-E-A") | Q(ident_cely__icontains="S-E-N") | Q(ident_cely__icontains="S-E-K")
+        ),
         widget=forms.CheckboxSelectMultiple,
         required=False,
         label=_("uzivatel.forms.notifications_form.notification_types.notification_types_label"),
@@ -406,7 +410,7 @@ class UserPasswordResetForm(PasswordResetForm):
         )
 
 
-class OsobaForm(forms.ModelForm):
+class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
     """
     Formulář pro vytvoření osoby.
     """

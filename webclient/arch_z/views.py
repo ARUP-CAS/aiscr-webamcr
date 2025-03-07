@@ -1598,7 +1598,6 @@ class AkceListView(SearchListView):
             "specifikace_data": "specifikace_data__razeni",
             "hlavni_typ": "hlavni_typ__razeni",
             "vedlejsi_typ": "vedlejsi_typ__razeni",
-            "doi": "archeologicky_zaznam__casti_dokumentu__dokument__doi",
         }.get(field, field)
 
     def get_queryset(self):

@@ -6,6 +6,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from heslar.models import HeslarHierarchie, HeslarNazev, HeslarOdkaz
 from pid.fields import OrcidAutocompleteField, RorAutocompleteField, WikiDataAutocompleteField
+from pid.forms import FormWithOrcid, FormWithWikidata
 from uzivatel.models import Organizace, Osoba
 
 logger = logging.getLogger(__name__)
@@ -75,7 +76,7 @@ class HeslarOdkazForm(forms.ModelForm):
             self.fields["heslar_nazev"].initial = self.instance.heslo.nazev_heslare
 
 
-class OsobaAdminForm(forms.ModelForm):
+class OsobaAdminForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
     class Meta:
         model = Osoba
         fields = "__all__"

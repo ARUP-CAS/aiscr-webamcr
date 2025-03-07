@@ -541,10 +541,10 @@ def set_pristupnost_snapshot():
 
     BATCH_SIZE = 100
     projekt_count = Projekt.objects.all().count()
-    for i in range(projekt_count // BATCH_SIZE - 1):
-        print(f"\r{i} / {projekt_count // BATCH_SIZE - 1}", end="", flush=True)
+    for i in range(projekt_count // BATCH_SIZE + 1):
+        print(f"\r{i} / {projekt_count // BATCH_SIZE}", end="", flush=True)
         with transaction.atomic():
-            projekty = list(Projekt.objects.all()[i * BATCH_SIZE : (i + 1) * BATCH_SIZE])
+            projekty = list(Projekt.objects.order_by("id")[i * BATCH_SIZE : (i + 1) * BATCH_SIZE])
             for projekt in projekty:
                 projekt.suppress_signal = True
                 projekt.set_pristupnost()
