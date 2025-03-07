@@ -2,7 +2,7 @@ import logging
 
 from arch_z.models import Akce, ArcheologickyZaznam
 from cacheops import invalidate_model
-from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_OZNAMENY, PROJEKT_STAV_ZAPSANY
+from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
 from core.models import SouborVazby
 from cron.tasks import update_single_redis_snapshot
 from dateutil.relativedelta import relativedelta
@@ -30,10 +30,10 @@ def projekt_pre_save(sender, instance: Projekt, **kwargs):
     change_termin_odevzdani_NZ(sender, instance)
 
     if instance.stav == PROJEKT_STAV_ZAPSANY:
-        if instance.pk is not None:
-            instance.__original_stav = Projekt.objects.get(pk=instance.id).stav
+        if instance._state.adding:
+            instance.__adding = True
         else:
-            instance.__original_stav = PROJEKT_STAV_OZNAMENY
+            instance.__original_stav = Projekt.objects.get(pk=instance.id).stav
 
 
 def change_termin_odevzdani_NZ(sender, instance, **kwargs):
@@ -133,10 +133,9 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
             instance.save_metadata(fedora_transaction)
     if (
         instance.stav == PROJEKT_STAV_ZAPSANY
-        and hasattr(instance, "__original_stav")
-        and instance.stav != instance.__original_stav
+        and getattr(instance, "__adding", False)
         or instance.stav == PROJEKT_STAV_ZAPSANY
-        and not hasattr(instance, "__original_stav")
+        and getattr(instance, "__original_stav") != PROJEKT_STAV_ZAPSANY
     ):
         logger.debug("projekt.signals.projekt_post_save.checked_hlidaci_pes", extra={"instance": instance})
         check_hlidaci_pes.delay(instance.pk)
