@@ -50,7 +50,10 @@ class UserNotificationTypeInlineForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(UserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
         self.fields["usernotificationtype"].queryset = UserNotificationType.objects.filter(
-            Q(ident_cely__icontains="S-E-") | Q(ident_cely="E-U-04")
+            Q(ident_cely__icontains="S-E-A")
+            | Q(ident_cely__icontains="S-E-N")
+            | Q(ident_cely__icontains="S-E-K")
+            | Q(ident_cely="E-U-04")
         )
 
 
@@ -60,9 +63,9 @@ class UserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
     def __init__(self, *args, **kwargs):
         super(UserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
         if not self.instance.pk and not self.data:
-            notification_ids = UserNotificationType.objects.filter(Q(ident_cely__icontains="S-E-")).values_list(
-                "id", flat=True
-            )
+            notification_ids = UserNotificationType.objects.filter(
+                Q(ident_cely__icontains="S-E-A") | Q(ident_cely__icontains="S-E-N") | Q(ident_cely__icontains="S-E-K")
+            ).values_list("id", flat=True)
             self.initial = []
             for id in notification_ids:
                 self.initial.append(
@@ -87,14 +90,19 @@ class UserNotificationTypeInline(admin.TabularInline):
         logger.debug(self.model._default_manager)
         queryset = super(UserNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(
-            Q(usernotificationtype__ident_cely__icontains="S-E-") | Q(usernotificationtype__ident_cely="E-U-04")
+            Q(usernotificationtype__ident_cely__icontains="S-E-A")
+            | Q(usernotificationtype__ident_cely__icontains="S-E-N")
+            | Q(usernotificationtype__ident_cely__icontains="S-E-K")
+            | Q(usernotificationtype__ident_cely="E-U-04")
         )
         return queryset
 
     def get_extra(self, request, obj=None, **kwargs):
         extra = 1  # default 0
         if not obj:  # new create only
-            extra = UserNotificationType.objects.filter(Q(ident_cely__icontains="S-E-")).count()
+            extra = UserNotificationType.objects.filter(
+                Q(ident_cely__icontains="S-E-A") | Q(ident_cely__icontains="S-E-N") | Q(ident_cely__icontains="S-E-K")
+            ).count()
         return extra
 
     def __init__(self, parent_model, admin_site):

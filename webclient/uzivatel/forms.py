@@ -11,6 +11,7 @@ from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, Use
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
+from django.db.models import Q
 from django.forms import PasswordInput
 from django.template import loader
 from django.utils.safestring import mark_safe
@@ -256,7 +257,9 @@ class NotificationsForm(forms.ModelForm):
     """
 
     notification_types = forms.ModelMultipleChoiceField(
-        queryset=UserNotificationType.objects.filter(ident_cely__icontains="S-E-"),
+        queryset=UserNotificationType.objects.filter(
+            Q(ident_cely__icontains="S-E-A") | Q(ident_cely__icontains="S-E-N") | Q(ident_cely__icontains="S-E-K")
+        ),
         widget=forms.CheckboxSelectMultiple,
         required=False,
         label=_("uzivatel.forms.notifications_form.notification_types.notification_types_label"),
