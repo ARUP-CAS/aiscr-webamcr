@@ -98,14 +98,16 @@ class OrcidAutocompleteView(ApiView):
         if response.status_code == 200:
             data = response.json()
 
-            for result in data.get("expanded-result", []):
-                orcid_id = result.get("orcid-id", "")
-                if result.get("family-names") and result.get("given-names"):
-                    full_nane = f"{result['family-names']}, {result['given-names']} ({orcid_id})"
-                else:
-                    full_nane = orcid_id
-                result_list.append([orcid_id, full_nane])
-                cls._save_value_to_cache(orcid_id, full_nane)
+            expanded_result = data.get("expanded-result", None)
+            if expanded_result:
+                for result in expanded_result:
+                    orcid_id = result.get("orcid-id", "")
+                    if result.get("family-names") and result.get("given-names"):
+                        full_nane = f"{result['family-names']}, {result['given-names']} ({orcid_id})"
+                    else:
+                        full_nane = orcid_id
+                    result_list.append([orcid_id, full_nane])
+                    cls._save_value_to_cache(orcid_id, full_nane)
         return result_list
 
 
