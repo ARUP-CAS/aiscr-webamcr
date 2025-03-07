@@ -1135,14 +1135,16 @@ def zrusit(request, ident_cely):
             projekt.create_transaction(request.user, PROJEKT_USPESNE_ZRUSEN)
             projekt.set_zruseny(request.user, duvod)
             if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
-                projekt.create_cancel_confirmation_document(request.user)
+                rep_bin_file = projekt.create_cancel_confirmation_document(request.user)
+            else:
+                rep_bin_file = None
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             Mailer.send_ep04(project=projekt, reason=duvod)
             if projekt.ident_cely[0] == OBLAST_CECHY:
-                Mailer.send_ep06a(project=projekt, reason=duvod)
+                Mailer.send_ep06a(project=projekt, reason=duvod, rep_bin_file=rep_bin_file)
             else:
-                Mailer.send_ep06b(project=projekt, reason=duvod)
+                Mailer.send_ep06b(project=projekt, reason=duvod, rep_bin_file=rep_bin_file)
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
             form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
