@@ -141,6 +141,8 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def api_call(cls, q, use_cache=False):
+        if not q:
+            return []
         if q.startswith("https://www.wikidata.org/entity/"):
             q = q.replace("https://www.wikidata.org/entity/", "")
         if cls.ID_REGEX.match(q):
@@ -155,12 +157,15 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         else:
             q = unicodedata.normalize("NFKD", q)
             query = f"""
-                SELECT ?item ?itemLabel WHERE {{
-                  ?item wdt:P31 wd:Q5.
-                  ?item ?label "{q}"
-                  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,cs". }}
+                SELECT ?item ?itemLabel
+                WHERE {{
+                  {{ ?item rdfs:label "{q}"@en }}
+                  UNION
+                  {{ ?item rdfs:label "{q}"@cs }}
+                  SERVICE wikibase:label {{
+                    bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,cs"
+                  }}
                 }}
-            LIMIT 10
             """
 
         # Set up the SPARQL wrapper
