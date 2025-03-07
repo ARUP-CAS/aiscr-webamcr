@@ -56,11 +56,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.1.6
+     - 5.1.7
      - BSD License
      - https://www.djangoproject.com/
    * - Jinja2
-     - 3.1.5
+     - 3.1.6
      - BSD License
      - https://github.com/pallets/jinja/
    * - MarkupSafe
@@ -644,7 +644,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.29.2
+     - 20.29.3
      - MIT License
      - https://github.com/pypa/virtualenv
    * - websocket-client
