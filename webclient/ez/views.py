@@ -536,12 +536,6 @@ class ExterniOdkazPripojitView(TransakceView):
             eo.active_transaction = self.active_transaction
             eo.close_active_transaction_when_finished = True
             eo.save()
-            if (
-                arch_z.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-                and arch_z.stav == AZ_STAV_ARCHIVOVANY
-                and arch_z.lokalita.igsn
-            ):
-                arch_z.lokalita.igsn_update()
         else:
             logger.debug("ez.views.ExterniOdkazPripojitView.post.form_error", extra={"form_errors": form.errors})
         return JsonResponse({"redirect": ez.get_absolute_url()})

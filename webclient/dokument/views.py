@@ -1052,7 +1052,7 @@ class DokumentCastOdpojitView(TransakceView):
         if (
             archeologicky_zaznam
             and archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-            and archeologicky_zaznam.stav == D_STAV_ARCHIVOVANY
+            and archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
             and archeologicky_zaznam.lokalita.igsn
         ):
             archeologicky_zaznam.lokalita.igsn_update()
@@ -1982,16 +1982,13 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
         fedora_transaction.main_record = zaznam
         dokument_cast = dokument_cast_query.first()
         dokument_cast.active_transaction = fedora_transaction
-        if dokument_cast.dokument.stav == D_STAV_ARCHIVOVANY and dokument_cast.dokument.doi:
-            dokument_cast.dokument.doi_update()
         if (
             isinstance(zaznam, ArcheologickyZaznam)
             and zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-            and zaznam.stav == D_STAV_ARCHIVOVANY
+            and zaznam.stav == AZ_STAV_ARCHIVOVANY
             and zaznam.lokalita.igsn
         ):
             zaznam.lokalita.igsn_update()
-
         resp = dokument_cast.delete()
         logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
         if remove_orphan:
@@ -2073,15 +2070,6 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                     dc.save()
                 dokument.close_active_transaction_when_finished = True
                 dokument.save()
-                if dokument.stav == D_STAV_ARCHIVOVANY and dokument.doi:
-                    dokument.doi_update()
-                if (
-                    isinstance(zaznam, ArcheologickyZaznam)
-                    and zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-                    and zaznam.stav == D_STAV_ARCHIVOVANY
-                    and zaznam.lokalita.igsn
-                ):
-                    zaznam.lokalita.igsn_update()
                 logger.debug(
                     "dokument.views.pripojit.pripojit",
                     extra={"debug_name": debug_name, "ident_zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
