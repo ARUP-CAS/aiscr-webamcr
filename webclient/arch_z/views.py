@@ -763,6 +763,8 @@ def archivovat(request, ident_cely):
             item: DokumentCast
             if item.dokument.stav == D_STAV_ARCHIVOVANY:
                 item.dokument.doi_update()
+        az.set_archivovany(request.user)
+
         try:
             if not az.lokalita.igsn:
                 az.lokalita.igsn_publish()
@@ -773,7 +775,6 @@ def archivovat(request, ident_cely):
         except ObjectDoesNotExist:
             pass
 
-        az.set_archivovany(request.user)
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
                 archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY

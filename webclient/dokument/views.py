@@ -1594,8 +1594,6 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ARCHIVOVAN)
         dokument.active_transaction = fedora_transaction
-        dokument.doi_publish()
-        dokument.set_doi()
         for item in dokument.casti.all():
             item: DokumentCast
             if (
@@ -1619,6 +1617,8 @@ def archivovat(request, ident_cely):
                 dokument.save()
                 logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": dokument.ident_cely})
         dokument.set_archivovany(request.user, old_ident)
+        dokument.doi_publish()
+        dokument.set_doi()
         if dokument.rada == Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D):
             Mailer.send_ek01(document=dokument)
         dokument.close_active_transaction_when_finished = True

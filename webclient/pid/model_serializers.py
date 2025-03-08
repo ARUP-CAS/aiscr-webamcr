@@ -1,5 +1,6 @@
+import json
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List
 
 from arch_z.models import AkceVedouci, ArcheologickyZaznam, ExterniOdkaz
@@ -180,7 +181,7 @@ class ModelSerializer(ABC):
         return {"data": {"type": "dois", "attributes": {"event": "hide"}}}
 
     def serialize_publish(self):
-        return {
+        data = {
             "data": {
                 "type": "dois",
                 "attributes": {
@@ -226,7 +227,7 @@ class ModelSerializer(ABC):
                     and self._get_soubory_queryset()
                     and self._get_soubory_queryset().exists()
                     else [],
-                    "version": datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    "version": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z"),
                     "rightsList": self._serialize_rightslist(),
                     "descriptions": self._serialize_descriptions(),
                     "geoLocations": self._serialize_geolocations(),
@@ -234,6 +235,9 @@ class ModelSerializer(ABC):
                 },
             }
         }
+        with open("export.json", "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+        return data
 
     def serialize_update(self):
         result = self.serialize_publish()

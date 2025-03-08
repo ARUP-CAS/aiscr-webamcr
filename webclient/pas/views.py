@@ -601,10 +601,10 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        sn.igsn_publish()
-        sn.set_igsn()
         sn.create_transaction(request.user, SAMOSTATNY_NALEZ_ARCHIVOVAN)
         sn.set_archivovany(request.user)
+        sn.igsn_publish()
+        sn.set_igsn()
         sn.close_active_transaction_when_finished = True
         sn.save()
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
