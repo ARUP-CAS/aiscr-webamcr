@@ -101,10 +101,11 @@ class ModelSerializer(ABC):
                 "name": "Archaeological Information System of the Czech Republic",
                 "nameType": "Organizational",
                 "contributorType": "HostingInstitution",
+                "lang": "en",
                 "nameIdentifiers": [
                     {
-                        "affiliationIdentifier": "https://ror.org/01a7rqj69",
-                        "affiliationIdentifierScheme": "ROR",
+                        "nameIdentifier": "https://ror.org/01a7rqj69",
+                        "nameIdentifierScheme": "ROR",
                         "schemeUri": "https://ror.org/",
                     }
                 ],
@@ -134,6 +135,9 @@ class ModelSerializer(ABC):
                 "relationType": "HasMetadata",
                 "relatedIdentifier": f"{settings.DIGI_LINKS['OAPI_link']}{self.get_ident_cely()}",
                 "relatedIdentifierType": "URL",
+                "relatedMetadataScheme": "OAI-PMH",
+                "schemeUri": "http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd",
+                "schemeType": "XSD",
             }
         ]
         return result
@@ -150,6 +154,8 @@ class ModelSerializer(ABC):
                     "valueUri": "http://dd.eionet.europa.eu/vocabulary/eurostat/fos07/FOS601",
                     "schemeUri": "http://dd.eionet.europa.eu/vocabulary/eurostat/fos07/",
                     "subjectScheme": "Field of science and technology classification (FOS 2007)",
+                    "lang": "en",
+                    "classificationCode": "FOS601",
                 }.items()
             )
         ]
@@ -294,13 +300,13 @@ def serialize_geom(geom=None, katastr: RuianKatastr | None = None, verejne: bool
     return frozenset(serialized_geom.items())
 
 
-def serialize_organizace(organizace: Organizace):
-    serialized_organizace = {"name": organizace.nazev}
+def serialize_affiliation(organizace: Organizace):
+    serialized_affiliation = {"name": organizace.nazev}
     if organizace.ror:
-        serialized_organizace["affiliationIdentifier"] = organizace.ror
-        serialized_organizace["affiliationIdentifierScheme"] = "ROR"
-        serialized_organizace["schemeUri"] = "https://ror.org/"
-    return serialized_organizace
+        serialized_affiliation["affiliationIdentifier"] = organizace.ror
+        serialized_affiliation["affiliationIdentifierScheme"] = "ROR"
+        serialized_affiliation["schemeUri"] = "https://ror.org/"
+    return serialized_affiliation
 
 
 def serialize_organizace_contributor(organizace: Organizace, contributor_type: str):
@@ -308,10 +314,11 @@ def serialize_organizace_contributor(organizace: Organizace, contributor_type: s
         "name": organizace.nazev,
         "nameType": "Organizational",
         "contributorType": contributor_type,
+        "lang": "cs",
         "nameIdentifiers": [
             {
-                "affiliationIdentifier": organizace.ror,
-                "affiliationIdentifierScheme": "ROR",
+                "nameIdentifier": organizace.ror,
+                "nameIdentifierScheme": "ROR",
                 "schemeUri": "https://ror.org/",
             }
         ]
@@ -347,7 +354,7 @@ def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contribu
         "nameType": "Personal",
         "givenName": osoba.jmeno if osoba.pk != OSOBA_ANONYM else "",
         "familyName": osoba.prijmeni if osoba.pk != OSOBA_ANONYM else "",
-        "affiliation": [serialize_organizace(organizace)]
+        "affiliation": [serialize_affiliation(organizace)]
         if organizace and organizace.pk not in ORGANIZACE_OBECNE
         else [],
         "nameIdentifiers": serialize_osoba_identifiers(osoba),
@@ -357,7 +364,7 @@ def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contribu
     return serialized_record
 
 
-def serialize_subject(serialized_record, subject_attr="heslo_en"):
+def serialize_subject(serialized_record, subject_attr="heslo_en", lang="en"):
     if serialized_record is None:
         return frozenset()
     output = {
@@ -365,6 +372,8 @@ def serialize_subject(serialized_record, subject_attr="heslo_en"):
         "valueUri": f"{settings.DIGI_LINKS['OAPI_link']}{serialized_record.ident_cely}",
         "schemeUri": settings.DIGI_LINKS["OAPI_link"],
         "subjectScheme": "AMCR",
+        "lang": lang,
+        "classificationCode": serialized_record.ident_cely,
     }
     return frozenset(output.items())
 
@@ -616,7 +625,10 @@ class DokumentSerializer(ModelSerializer):
     def _serialize_rightslist(self):
         result = []
         if self.record.licence:
-            serialized_rights = {"rights": self.record.licence.heslo_en}
+            serialized_rights = {
+                    "rights": self.record.licence.heslo_en,
+                    "lang": "en",
+                }
             spdx_query = self.record.licence.heslar_odkaz.filter(zdroj="SPDX").first()
             if spdx_query:
                 serialized_rights["rightsUri"] = spdx_query.uri
@@ -629,7 +641,7 @@ class DokumentSerializer(ModelSerializer):
     def _serialize_subjects(self):
         serialized_subjects = super()._serialize_subjects()
         serialized_subjects += [serialize_subject(posudek) for posudek in self.record.posudky.all()]
-        serialized_subjects += [serialize_subject(osoba, "vypis_cely") for osoba in self.record.osoby.all()]
+        serialized_subjects += [serialize_subject(osoba, "vypis_cely", "") for osoba in self.record.osoby.all()]
         if self.record.has_extra_data():
             serialized_subjects += [serialize_subject(self.record.extra_data.udalost_typ)]
         for cast in self.record.casti.all():
@@ -827,6 +839,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
                 "schemeUri": "https://spdx.org/licenses",
                 "rightsIdentifier": "CC-BY-NC-4.0",
                 "rightsIdentifierScheme": "SPDX",
+                "lang": "en",
             }
         ]
 
@@ -964,6 +977,7 @@ class LokalitaSerializer(ModelSerializer):
                 "schemeUri": "https://spdx.org/licenses",
                 "rightsIdentifier": "CC-BY-NC-4.0",
                 "rightsIdentifierScheme": "SPDX",
+                "lang": "en",
             }
         ]
 
@@ -987,12 +1001,13 @@ class LokalitaSerializer(ModelSerializer):
     def _serialize_creators(self):
         result = [
             {
-                "name": "AIS CR",
+                "name": "Archaeological Information System of the Czech Republic",
                 "nameType": "Organizational",
+                "lang": "en",
                 "nameIdentifiers": [
                     {
-                        "affiliationIdentifier": "https://ror.org/01a7rqj69",
-                        "affiliationIdentifierScheme": "ROR",
+                        "nameIdentifier": "https://ror.org/01a7rqj69",
+                        "nameIdentifierScheme": "ROR",
                         "schemeUri": "https://ror.org/",
                     }
                 ],
@@ -1065,13 +1080,13 @@ class LokalitaSerializer(ModelSerializer):
                     }
                 else:
                     related_item["relatedItemIdentifier"] = {
-                        "relatedItemIdentifier": externi_zdroj.ident_cely,
+                        "relatedItemIdentifier": f"{settings.DIGI_LINKS['Digi_archiv_link']}{externi_zdroj.ident_cely}",
                         "relatedItemIdentifierType": "URL",
                     }
                 related_item["creators"] = [
                     serialize_ez_creator(ea.autor) for ea in externi_zdroj.externizdrojautor_set.all()
                 ]
-                related_item["titles"] = [externi_zdroj.nazev]
+                related_item["titles"] = [{"title": externi_zdroj.nazev}]
                 if externi_zdroj.sbornik_nazev and not externi_zdroj.casopis_denik_nazev:
                     related_item["volume"] = externi_zdroj.sbornik_nazev
                 elif externi_zdroj.casopis_denik_nazev and not externi_zdroj.sbornik_nazev:
