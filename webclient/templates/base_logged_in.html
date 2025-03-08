@@ -349,7 +349,7 @@
           <form action="{% url 'logout' %}" id="logout-form" method="post">
             {% csrf_token %}
             <input type="hidden" name="logout_type" id="logout_type"  value="" />
-            <input type="hidden" name="next" id="next" value="" />
+            <input type="hidden" name="next" id="next" value={{logout_next_url}} />
             <button type="submit" class="nav-link" id="buttonLogout">
               <span class="material-icons">logout</span>
                {% trans "templates.baseLogedIn.navbar.odhlasit" %} 
@@ -572,7 +572,7 @@
   function logoutFunction(param) {
     for (const key in param) {
       if (param.hasOwnProperty(key)) {
-        if (key == 'next' || key == 'logout_type'){
+        if (key == 'logout_type'){
           document.getElementById(key).value = param[key]
         }
       }
