@@ -1631,11 +1631,12 @@ def archivovat(request, ident_cely):
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
-    form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})
+    doi_confirmation = dokument.doi_exists and dokument.doi is None
+    form_check = CheckStavNotChangedForm(require_confirmation=doi_confirmation, initial={"old_stav": dokument.stav})
     context = {
         "object": dokument,
         "title": _("dokument.views.archivovat.title"),
-        "text": _("dokument.views.archivovat.doi_exists_warning") if dokument.doi_exists else None,
+        "pid_confirmation": doi_confirmation,
         "id_tag": "archivovat-dokument-form",
         "button": _("dokument.views.archivovat.submitButton.text"),
         "form_check": form_check,

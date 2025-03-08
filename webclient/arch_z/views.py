@@ -796,18 +796,18 @@ def archivovat(request, ident_cely):
                 {"redirect": az.get_absolute_url()},
                 status=403,
             )
-    form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
     try:
         if az.lokalita.igsn_exists:
-            doi_exists_warning = _("arch_z.views.archivovat.doi_exists_warning")
+            doi_confirmation = az.lokalita and az.lokalita.igsn_exists and not az.lokalita.igsn
         else:
-            doi_exists_warning = None
+            doi_confirmation = False
     except ObjectDoesNotExist:
-        doi_exists_warning = None
+        doi_confirmation = False
+    form_check = CheckStavNotChangedForm(require_confirmation=doi_confirmation, initial={"old_stav": az.stav})
     context = {
         "object": az,
         "title": _("arch_z.views.archivovat.title.text"),
-        "text": doi_exists_warning,
+        "pid_confirmation": doi_confirmation,
         "id_tag": "archivovat-akci-form",
         "button": _("arch_z.views.archivovat.submitButton.text"),
         "form_check": form_check,
