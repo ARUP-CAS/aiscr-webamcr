@@ -210,7 +210,7 @@ class ModelSerializer(ABC):
                     "subjects": self._serialize_subjects(),
                     "contributors": self._serialize_contributors(),
                     "dates": self._serialize_dates(),
-                    "language": self._get_language() or " ",
+                    "language": self._get_language() or "",
                     "types": self._serialize_types(),
                     "relatedIdentifiers": self._serialize_related_identifiers(),
                     "sizes": [
@@ -341,8 +341,8 @@ def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contribu
     serialized_record = {
         "name": osoba.vypis_cely if osoba.pk != OSOBA_ANONYM else ":unkn",
         "nameType": "Personal",
-        "givenName": osoba.jmeno if osoba.pk != OSOBA_ANONYM else " ",
-        "familyName": osoba.prijmeni if osoba.pk != OSOBA_ANONYM else " ",
+        "givenName": osoba.jmeno if osoba.pk != OSOBA_ANONYM else "",
+        "familyName": osoba.prijmeni if osoba.pk != OSOBA_ANONYM else "",
         "affiliation": [serialize_organizace(organizace)]
         if organizace and organizace.pk not in ORGANIZACE_OBECNE
         else [],
