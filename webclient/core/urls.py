@@ -10,7 +10,7 @@ urlpatterns = [
     path("soubor/nahrat/odeslat", views.post_upload, name="post_upload"),
     path(
         "soubor/nahrat/<str:typ_vazby>/nahradit/<str:ident_cely>/<int:file_id>",
-        views.update_file,
+        views.UpdateFileView.as_view(),
         name="update_file",
     ),
     path(

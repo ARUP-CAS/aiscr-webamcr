@@ -423,13 +423,14 @@ def create(request):
                         oznamovatel.active_transaction = fedora_transaction
                         oznamovatel.projekt = projekt
                         oznamovatel.save()
-                    send_mail = form_oznamovatel.cleaned_data["send_mail"]
-                    if send_mail:
-                        if projekt.should_generate_confirmation_document:
-                            rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
-                        else:
-                            rep_bin_file = True
-                        projekt.send_ep01(rep_bin_file)
+                        if form_oznamovatel.cleaned_data["send_mail"]:
+                            if projekt.should_generate_confirmation_document:
+                                rep_bin_file = projekt.create_confirmation_document(
+                                    fedora_transaction, user=request.user
+                                )
+                            else:
+                                rep_bin_file = True
+                            projekt.send_ep01(rep_bin_file)
 
                     projekt.close_active_transaction_when_finished = True
                     projekt.save()
