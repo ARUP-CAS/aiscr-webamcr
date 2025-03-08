@@ -1007,9 +1007,15 @@ class Permissions(models.Model):
     def check_accessibility(self):
         if self.accessibility:
             if not self.check_ownership(self.accessibility):
+                from projekt.models import Projekt
+
+                if isinstance(self.permission_object, Projekt):
+                    permission_object_pristupnost = self.permission_object.pristupnost_snapshot.pk
+                else:
+                    permission_object_pristupnost = self.permission_object.pristupnost.pk
                 try:
-                    if not self.logged_in_user.hlavni_role.id >= self.pristupnost_to_groups.get(
-                        self.permission_object.pristupnost.id
+                    if not self.logged_in_user.hlavni_role.pk >= self.pristupnost_to_groups.get(
+                        permission_object_pristupnost
                     ):
                         return False
                 except Exception as e:
