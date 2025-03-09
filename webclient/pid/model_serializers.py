@@ -15,6 +15,7 @@ from core.constants import (
     ODESLANI_DOK,
     ODESLANI_SN,
     POTVRZENI_SN,
+    PROJEKT_STAV_ARCHIVOVANY,
     VRACENI_AZ,
     VRACENI_DOK,
     VRACENI_SN,
@@ -165,6 +166,10 @@ class ModelSerializer(ABC):
     def _serialize_types(self):
         pass
 
+    @abstractmethod
+    def _get_formats(self):
+        pass
+    
     def serialize_delete(self):
         return {
             "data": {
@@ -228,11 +233,7 @@ class ModelSerializer(ABC):
                     and self._get_soubory_queryset()
                     and self._get_soubory_queryset().exists()
                     else [],
-                    "formats": list(set([soubor.mimetype for soubor in self._get_soubory_queryset().all()]))
-                    if isinstance(self.record, Dokument)
-                    and self._get_soubory_queryset()
-                    and self._get_soubory_queryset().exists()
-                    else [],
+                    "formats": self._get_formats(),                    
                     "version": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z"),
                     "rightsList": self._serialize_rightslist(),
                     "descriptions": self._serialize_descriptions(),
@@ -355,7 +356,7 @@ def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contribu
         "affiliation": [serialize_affiliation(organizace)]
         if organizace and organizace.pk not in ORGANIZACE_OBECNE
         else [],
-        "nameIdentifiers": serialize_osoba_identifiers(osoba),
+        "nameIdentifiers": serialize_osoba_identifiers(osoba) if osoba.pk != OSOBA_ANONYM else [],
     }
     if contributor_type:
         serialized_record["contributorType"] = contributor_type
@@ -457,7 +458,7 @@ class DokumentSerializer(ModelSerializer):
                         contributors += [serialize_osoba(vedouci, contributor_type="ProjectLeader")]
             except ObjectDoesNotExist:
                 pass
-            if cast.archeologicky_zaznam:
+            if cast.archeologicky_zaznam and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY:
                 try:
                     if cast.archeologicky_zaznam.akce.hlavni_vedouci:
                         contributors += [
@@ -474,7 +475,7 @@ class DokumentSerializer(ModelSerializer):
                         ]
                 except ObjectDoesNotExist:
                     pass
-            if cast.projekt and cast.projekt.vedouci_projektu:
+            if cast.projekt and cast.projekt.stav == PROJEKT_STAV_ARCHIVOVANY and cast.projekt.vedouci_projektu:
                 contributors += [
                     serialize_osoba(cast.projekt.vedouci_projektu, cast.projekt.organizace, "ProjectLeader")
                 ]
@@ -507,7 +508,7 @@ class DokumentSerializer(ModelSerializer):
                 for komp in cast.komponenty.komponenty.all():
                     komp: Komponenta
                     dates += [serialize_dates_coverage(komp.obdobi)]
-            if cast.archeologicky_zaznam:
+            if cast.archeologicky_zaznam and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY:
                 for dj in cast.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
                     dj: DokumentacniJednotka
                     for komp in dj.komponenty.komponenty.all():
@@ -540,8 +541,8 @@ class DokumentSerializer(ModelSerializer):
                     )
             except ObjectDoesNotExist:
                 pass
-            if cast.projekt and cast.projekt.hlavni_katastr:
-                verejne = cast.projekt.pristupnost.pk == PRISTUPNOST_ANONYM_ID
+            if cast.projekt and cast.projekt.stav == PROJEKT_STAV_ARCHIVOVANY and cast.projekt.hlavni_katastr:
+                verejne = cast.projekt.pristupnost_snapshot.pk == PRISTUPNOST_ANONYM_ID
                 geo_locations.append(
                     serialize_geom(cast.projekt.hlavni_katastr.definicni_bod, cast.projekt.hlavni_katastr, verejne)
                 )
@@ -600,7 +601,7 @@ class DokumentSerializer(ModelSerializer):
                             "relatedIdentifierType": "URL",
                         }
                     ]
-                elif cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
+                elif cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA and cast.archeologicky_zaznam.lokalita.igsn:
                     related_identifiers += [
                         {
                             "relationType": "Documents",
@@ -609,7 +610,16 @@ class DokumentSerializer(ModelSerializer):
                             "relatedIdentifierType": "IGSN",
                         }
                     ]
-            elif cast.projekt:
+                elif cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA and not cast.archeologicky_zaznam.lokalita.igsn:
+                    related_identifiers += [
+                        {
+                            "relationType": "Documents",
+                            "relatedIdentifier": f"{settings.DIGI_LINKS['Digi_archiv_link']}{cast.archeologicky_zaznam.ident_cely}",
+                            "resourceTypeGeneral": "PhysicalObject",
+                            "relatedIdentifierType": "URL",
+                        }
+                    ]
+            elif cast.projekt and cast.projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
                 related_identifiers += [
                     {
                         "relationType": "Documents",
@@ -687,6 +697,15 @@ class DokumentSerializer(ModelSerializer):
             serialized_types["resourceTypeGeneral"] = "Dataset"
         return serialized_types
 
+    def _get_formats(self):
+        result = []
+        soubory_queryset = self._get_soubory_queryset()
+        if soubory_queryset and soubory_queryset.exists():            
+            result = list(set([soubor.mimetype for soubor in soubory_queryset.all()]))
+        if self.record.rada == DOKUMENT_RADA_DATA_3D:
+            if self.record.extra_data and self.record.extra_data.format:
+                result.append(self.record.extra_data.format.heslo_en)
+        return result
 
 class SamostatnyNalezSerializer(ModelSerializer):
     def __init__(self, record: SamostatnyNalez):
@@ -860,6 +879,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_types(self):
         return {"resourceType": "archaeological object", "resourceTypeGeneral": "PhysicalObject"}
+    
+    def _get_formats(self):
+        pass
 
 
 class LokalitaSerializer(ModelSerializer):
@@ -934,7 +956,7 @@ class LokalitaSerializer(ModelSerializer):
                     "descriptionType": "Abstract",
                 }
             )
-        if self.record.poznamka:
+        if self.record.poznamka and self.record.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID:
             descriptions.append({"lang": "cs", "description": self.record.poznamka, "descriptionType": "TechnicalInfo"})
         return descriptions
 
@@ -1121,6 +1143,9 @@ class LokalitaSerializer(ModelSerializer):
     def _serialize_types(self):
         return {"resourceType": "archaeological site", "resourceTypeGeneral": "PhysicalObject"}
 
+    def _get_formats(self):
+        pass
+    
     def serialize_publish(self):
         publish = super().serialize_publish()
         publish["data"]["attributes"]["relatedItems"] = self._serialize_related_items()
