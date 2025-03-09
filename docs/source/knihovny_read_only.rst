@@ -328,7 +328,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.6.8
+     - 2.6.9
      - MIT License
      - https://github.com/pre-commit/identify
    * - idna
