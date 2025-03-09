@@ -49,6 +49,11 @@ def digi_links_from_settings(request):
     return getattr(settings, "DIGI_LINKS")
 
 
+def logout_next_url(request):
+    logger.debug(f"request path: {request.path}")
+    return {"logout_next_url": request.path}
+
+
 # for autologout function redirect immediatelly
 def auto_logout_client(request):
     """
@@ -95,7 +100,7 @@ def auto_logout_client(request):
 
         if options.get("REDIRECT_TO_LOGIN_IMMEDIATELY"):
             ctx["redirect_to_login_immediately"] = "logoutFunction"
-            ctx["extra_param"] = mark_safe({"logout_type": "autologout", "next": request.path})
+            ctx["extra_param"] = mark_safe({"logout_type": "autologout"})
         else:
             ctx["redirect_to_login_immediately"] = "showTimeToExpire"
             ctx["extra_param"] = mark_safe(_("core.context_processors.autologout.expired.text"))
@@ -112,7 +117,7 @@ def auto_logout_client(request):
         ctx["seconds_until_idle_end"] = int(until_logout.total_seconds())
         ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5
         ctx["redirect_to_login_immediately"] = "logoutFunction"
-        ctx["extra_param"] = mark_safe({"logout_type": "maintenance", "next": request.path})
+        ctx["extra_param"] = mark_safe({"logout_type": "maintenance"})
         ctx["logout_warning_text"] = mark_safe("MAINTENANCE_LOGOUT_WARNING")
         ctx["maintenance"] = mark_safe("true")
 

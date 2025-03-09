@@ -1,4 +1,3 @@
-import json
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Dict, List
@@ -241,8 +240,6 @@ class ModelSerializer(ABC):
                 },
             }
         }
-        with open("export.json", "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
         return data
 
     def serialize_update(self):
@@ -626,9 +623,9 @@ class DokumentSerializer(ModelSerializer):
         result = []
         if self.record.licence:
             serialized_rights = {
-                    "rights": self.record.licence.heslo_en,
-                    "lang": "en",
-                }
+                "rights": self.record.licence.heslo_en,
+                "lang": "en",
+            }
             spdx_query = self.record.licence.heslar_odkaz.filter(zdroj="SPDX").first()
             if spdx_query:
                 serialized_rights["rightsUri"] = spdx_query.uri
@@ -682,7 +679,7 @@ class DokumentSerializer(ModelSerializer):
         )
         serialized_types = {}
         if resource_type_query.exists():
-            serialized_types["resourceType"] = resource_type_query.first().heslo_en
+            serialized_types["resourceType"] = resource_type_query.first().heslo.heslo_en
             serialized_types["resourceTypeGeneral"] = resource_type_query.first().kod
         else:
             serialized_types["resourceType"] = "Dataset"
@@ -1031,6 +1028,7 @@ class LokalitaSerializer(ModelSerializer):
                         "relatedIdentifier": cast.dokument.doi,
                         "resourceTypeGeneral": cast.dokument.typ_dokumentu.heslar_odkaz.filter(zdroj="DataCite")
                         .filter(nazev_kodu="resourceTypeGeneral")
+                        .first()
                         .kod,
                         "relatedIdentifierType": "DOI",
                     }
@@ -1044,6 +1042,7 @@ class LokalitaSerializer(ModelSerializer):
                         "relatedIdentifier": externi_odkaz.externi_zdroj.doi,
                         "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
                         .filter(nazev_kodu="resourceTypeGeneral")
+                        .first()
                         .kod,
                         "relatedIdentifierType": "DOI",
                     }
@@ -1055,6 +1054,7 @@ class LokalitaSerializer(ModelSerializer):
                         "relatedIdentifier": f"{settings.DIGI_LINKS['Digi_archiv_link']}{externi_odkaz.externi_zdroj.ident_cely}",
                         "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
                         .filter(nazev_kodu="resourceTypeGeneral")
+                        .first()
                         .kod,
                         "relatedIdentifierType": "URL",
                     }
@@ -1070,6 +1070,7 @@ class LokalitaSerializer(ModelSerializer):
                 related_item = {
                     "relatedItemType": externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
                     .filter(nazev_kodu="resourceTypeGeneral")
+                    .first()
                     .kod,
                     "relationType": "IsPublishedIn",
                 }
@@ -1130,5 +1131,6 @@ class LokalitaSerializer(ModelSerializer):
 
     def serialize_update(self):
         result = super().serialize_publish()
-        result["data"]["attributes"].pop("event")["relatedItems"] = self._serialize_related_items()
+        result["data"]["attributes"].pop("event")
+        result["data"]["attributes"]["relatedItems"] = self._serialize_related_items()
         return result

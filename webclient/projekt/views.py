@@ -31,6 +31,7 @@ from core.constants import (
     RUSENI_PROJ,
     RUSENI_STARE_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
+    SN_ARCHIVOVANY,
     UKONCENI_V_TERENU_PROJ,
     UZAVRENI_PROJ,
     VRACENI_NAVRHU_ZRUSENI,
@@ -1017,6 +1018,10 @@ def archivovat(request, ident_cely):
             item: DokumentCast
             if item.dokument.stav == D_STAV_ARCHIVOVANY:
                 item.dokument.doi_update()
+        for item in projekt.samostatne_nalezy.all():
+            item: SamostatnyNalez
+            if item.stav == SN_ARCHIVOVANY:
+                item.igsn_update()
         projekt.set_archivovany(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
