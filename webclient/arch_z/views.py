@@ -759,10 +759,6 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         fedora_transaction = az.create_transaction(request.user)
-        for item in az.casti_dokumentu.all():
-            item: DokumentCast
-            if item.dokument.stav == D_STAV_ARCHIVOVANY:
-                item.dokument.doi_update()
         az.set_archivovany(request.user)
 
         try:
@@ -778,6 +774,10 @@ def archivovat(request, ident_cely):
             )
             if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
                 request.session["arch_projekt_link"] = True
+        for item in az.casti_dokumentu.all():
+            item: DokumentCast
+            if item.dokument.stav == D_STAV_ARCHIVOVANY:
+                item.dokument.doi_update()
         fedora_transaction.success_message = get_message(az, "USPESNE_ARCHIVOVANA")
         Mailer.send_ea02(arch_z=az)
         az.close_active_transaction_when_finished = True

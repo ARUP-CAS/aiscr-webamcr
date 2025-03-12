@@ -1014,6 +1014,7 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
+        projekt.set_archivovany(request.user)
         for item in projekt.casti_dokumentu.all():
             item: DokumentCast
             if item.dokument.stav == D_STAV_ARCHIVOVANY:
@@ -1022,7 +1023,6 @@ def archivovat(request, ident_cely):
             item: SamostatnyNalez
             if item.stav == SN_ARCHIVOVANY:
                 item.igsn_update()
-        projekt.set_archivovany(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})

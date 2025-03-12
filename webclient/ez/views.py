@@ -635,12 +635,6 @@ class ExterniOdkazOdpojitAZView(TransakceView):
             logger.debug("Externi odkaz - Archeologicky zaznam wrong relation")
             messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
             return JsonResponse({"redirect": self.get_zaznam().get_absolute_url()}, status=403)
-        if (
-            eo.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-            and eo.arch_z.stav == AZ_STAV_ARCHIVOVANY
-            and eo.arch_z.lokalita.igsn
-        ):
-            eo.arch_z.lokalita.igsn_update()
         return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
@@ -671,6 +665,12 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         self.active_transaction = az.create_transaction(request.user, get_message(az, "EO_USPESNE_ODPOJEN"))
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.active_transaction = self.active_transaction
+        if (
+            eo.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+            and eo.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            and eo.archeologicky_zaznam.lokalita.igsn
+        ):
+            eo.archeologicky_zaznam.lokalita.igsn_update()
         eo.close_active_transaction_when_finished = True
         eo.delete()
         return JsonResponse({"redirect": az.get_absolute_url()})
