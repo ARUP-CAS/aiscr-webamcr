@@ -86,7 +86,7 @@ class CheckStavNotChangedForm(forms.Form):
         self.helper = FormHelper(self)
         if require_confirmation:
             self.fields["confirm"] = forms.BooleanField(
-                required=True, label="core.forms.CheckStavNotChangedForm.confirm"
+                required=True, label=_("core.forms.CheckStavNotChangedForm.confirm")
             )
             self.helper.layout = Layout(
                 Div(

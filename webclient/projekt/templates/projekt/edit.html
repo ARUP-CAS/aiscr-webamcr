@@ -196,6 +196,10 @@
       dropdown.value = response.value;
       $(settings.modalIDD).modal("hide");
     };
+    $('#create-osoba').on('click', function () {
+        $.fn.modal.Constructor.prototype._enforceFocus = function () {
+        };
+    })
     document.addEventListener('DOMContentLoaded', function (event) {
       var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'heslar:create_osoba' %}",

@@ -1,4 +1,3 @@
-import json
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Dict, List
@@ -29,6 +28,7 @@ from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from dokument.models import Dokument, DokumentCast
+from ez.models import ExterniZdroj
 from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     JAZYK_NERELEVANTNI,
@@ -389,13 +389,16 @@ def serialize_subjects_komponenty(komp: Komponenta):
 
 
 def serialize_dates_coverage(datace: Heslar) -> frozenset:
-    result = frozenset(
-        {
-            "date": f"{datace.datace_obdobi.rok_od_min}/{datace.datace_obdobi.rok_do_max}",
-            "dateInformation": datace.heslo_en,
-            "dateType": "Coverage",
-        }.items()
-    )
+    try:
+        result = frozenset(
+            {
+                "date": f"{datace.datace_obdobi.rok_od_min}/{datace.datace_obdobi.rok_do_max}",
+                "dateInformation": datace.heslo_en,
+                "dateType": "Coverage",
+            }.items()
+        )
+    except ObjectDoesNotExist:
+        result = []
     return result
 
 
@@ -634,9 +637,9 @@ class DokumentSerializer(ModelSerializer):
         result = []
         if self.record.licence:
             serialized_rights = {
-                    "rights": self.record.licence.heslo_en,
-                    "lang": "en",
-                }
+                "rights": self.record.licence.heslo_en,
+                "lang": "en",
+            }
             spdx_query = self.record.licence.heslar_odkaz.filter(zdroj="SPDX").first()
             if spdx_query:
                 serialized_rights["rightsUri"] = spdx_query.uri
@@ -690,7 +693,7 @@ class DokumentSerializer(ModelSerializer):
         )
         serialized_types = {}
         if resource_type_query.exists():
-            serialized_types["resourceType"] = resource_type_query.first().heslo_en
+            serialized_types["resourceType"] = resource_type_query.first().heslo.heslo_en
             serialized_types["resourceTypeGeneral"] = resource_type_query.first().kod
         else:
             serialized_types["resourceType"] = "Dataset"
@@ -1051,6 +1054,7 @@ class LokalitaSerializer(ModelSerializer):
                         "relatedIdentifier": cast.dokument.doi,
                         "resourceTypeGeneral": cast.dokument.typ_dokumentu.heslar_odkaz.filter(zdroj="DataCite")
                         .filter(nazev_kodu="resourceTypeGeneral")
+                        .first()
                         .kod,
                         "relatedIdentifierType": "DOI",
                     }
@@ -1064,6 +1068,7 @@ class LokalitaSerializer(ModelSerializer):
                         "relatedIdentifier": externi_odkaz.externi_zdroj.doi,
                         "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
                         .filter(nazev_kodu="resourceTypeGeneral")
+                        .first()
                         .kod,
                         "relatedIdentifierType": "DOI",
                     }
@@ -1075,6 +1080,7 @@ class LokalitaSerializer(ModelSerializer):
                         "relatedIdentifier": f"{settings.DIGI_LINKS['Digi_archiv_link']}{externi_odkaz.externi_zdroj.ident_cely}",
                         "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
                         .filter(nazev_kodu="resourceTypeGeneral")
+                        .first()
                         .kod,
                         "relatedIdentifierType": "URL",
                     }
@@ -1085,11 +1091,12 @@ class LokalitaSerializer(ModelSerializer):
         related_items = []
         for externi_odkaz in self._get_externi_odkaz_query():
             externi_odkaz: ExterniOdkaz
-            externi_zdroj = externi_odkaz.externi_zdroj
+            externi_zdroj: ExterniZdroj = externi_odkaz.externi_zdroj
             if externi_zdroj.stav == EZ_STAV_POTVRZENY:
                 related_item = {
                     "relatedItemType": externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
                     .filter(nazev_kodu="resourceTypeGeneral")
+                    .first()
                     .kod,
                     "relationType": "IsPublishedIn",
                 }
@@ -1114,7 +1121,7 @@ class LokalitaSerializer(ModelSerializer):
                 if externi_zdroj.casopis_rocnik and not externi_zdroj.datum_rd:
                     related_item["issue"] = externi_zdroj.casopis_rocnik
                 elif not externi_zdroj.casopis_rocnik and externi_zdroj.datum_rd:
-                    related_item["issue"] = externi_zdroj.datum_rd
+                    related_item["issue"] = self.format_date(externi_zdroj.datum_rd)
                 if externi_zdroj.vydavatel and not externi_zdroj.organizace:
                     related_item["publisher"] = externi_zdroj.vydavatel
                 elif not externi_zdroj.vydavatel and externi_zdroj.organizace:
@@ -1153,5 +1160,6 @@ class LokalitaSerializer(ModelSerializer):
 
     def serialize_update(self):
         result = super().serialize_publish()
-        result["data"]["attributes"].pop("event")["relatedItems"] = self._serialize_related_items()
+        result["data"]["attributes"].pop("event")
+        result["data"]["attributes"]["relatedItems"] = self._serialize_related_items()
         return result

@@ -168,9 +168,9 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.LINK_TEXT, "C-202309552")
 
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
-        self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
-        # self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
-        # self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+        self.ElementClick(By.ID, "button-add-dj")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_typ .filter-option-inner-inner")
+        self.ElementClick(By.ID, "bs-select-1-0")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_negativni_jednotka .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
 
@@ -676,15 +676,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.login("archeolog")
         pian = DokumentacniJednotka.objects.filter(ident_cely="C-202309724A-D01")[0].pian
         self.assertEqual(pian, None)
-
-        self.go_to_Projekty_vyper()
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202309724")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-202309724")
-        self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
-        self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202309724A_D01 > strong")
+        self.goToAddress("/arch-z/akce/detail/C-202309724A/dj/C-202309724A-D01")
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_C-202309724A-D01 .btn-group:nth-child(1) .material-icons")
         self.ElementClick(By.CSS_SELECTOR, ".show > .dropdown-item:nth-child(2)")
         with open("arch_z/tests/resources/geom.csv", "rb") as image_file:
