@@ -636,7 +636,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
             messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
             return JsonResponse({"redirect": self.get_zaznam().get_absolute_url()}, status=403)
         if (
-            eo.arch_z.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+            eo.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
             and eo.arch_z.stav == AZ_STAV_ARCHIVOVANY
             and eo.arch_z.lokalita.igsn
         ):

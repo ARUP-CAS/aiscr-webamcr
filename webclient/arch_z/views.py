@@ -766,12 +766,9 @@ def archivovat(request, ident_cely):
         az.set_archivovany(request.user)
 
         try:
-            if not az.lokalita.igsn:
-                az.lokalita.igsn_publish()
-                az.lokalita.set_igsn()
-                az.lokalita.save()
-            else:
-                az.lokalita.igsn_update()
+            az.lokalita.igsn_publish()
+            az.lokalita.set_igsn()
+            az.lokalita.save()
         except ObjectDoesNotExist:
             pass
 
