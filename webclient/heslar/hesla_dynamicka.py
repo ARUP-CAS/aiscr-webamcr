@@ -36,9 +36,21 @@ def get_id_from_database(table, heslo, ident_cely, heslarDB) -> int:
 
 def load_constants(model, constant_name, CONSTANTS, COMPOSITE_CONSTANTS={}):
     heslarDB = get_settings("constants", constant_name)
+    missing_keys = set(heslarDB.keys()) - set(CONSTANTS.keys())
+    if missing_keys:
+        logger.error(
+            "heslar.hesla_dynamicka.load_constants.items_not_exist",
+            extra={"val": constant_name, "constant": str(missing_keys)},
+        )
     globals().update({key: get_id_from_database(model, key, value, heslarDB) for key, value in CONSTANTS.items()})
 
     heslar_group = get_settings("constants", f"{constant_name}_group")
+    missing_keys = set(heslar_group.keys()) - set(COMPOSITE_CONSTANTS.keys())
+    if missing_keys:
+        logger.error(
+            "heslar.hesla_dynamicka.load_constants_group.items_not_exist",
+            extra={"val": constant_name, "constant": str(missing_keys)},
+        )
     for key, values in COMPOSITE_CONSTANTS.items():
         group = []
         items = heslar_group[key] if key in heslar_group else values
