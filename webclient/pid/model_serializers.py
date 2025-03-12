@@ -27,6 +27,7 @@ from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from dokument.models import Dokument, DokumentCast
+from ez.models import ExterniZdroj
 from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     JAZYK_NERELEVANTNI,
@@ -387,13 +388,16 @@ def serialize_subjects_komponenty(komp: Komponenta):
 
 
 def serialize_dates_coverage(datace: Heslar) -> frozenset:
-    result = frozenset(
-        {
-            "date": f"{datace.datace_obdobi.rok_od_min}/{datace.datace_obdobi.rok_do_max}",
-            "dateInformation": datace.heslo_en,
-            "dateType": "Coverage",
-        }.items()
-    )
+    try:
+        result = frozenset(
+            {
+                "date": f"{datace.datace_obdobi.rok_od_min}/{datace.datace_obdobi.rok_do_max}",
+                "dateInformation": datace.heslo_en,
+                "dateType": "Coverage",
+            }.items()
+        )
+    except ObjectDoesNotExist:
+        result = []
     return result
 
 
@@ -1065,7 +1069,7 @@ class LokalitaSerializer(ModelSerializer):
         related_items = []
         for externi_odkaz in self._get_externi_odkaz_query():
             externi_odkaz: ExterniOdkaz
-            externi_zdroj = externi_odkaz.externi_zdroj
+            externi_zdroj: ExterniZdroj = externi_odkaz.externi_zdroj
             if externi_zdroj.stav == EZ_STAV_POTVRZENY:
                 related_item = {
                     "relatedItemType": externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
@@ -1095,7 +1099,7 @@ class LokalitaSerializer(ModelSerializer):
                 if externi_zdroj.casopis_rocnik and not externi_zdroj.datum_rd:
                     related_item["issue"] = externi_zdroj.casopis_rocnik
                 elif not externi_zdroj.casopis_rocnik and externi_zdroj.datum_rd:
-                    related_item["issue"] = externi_zdroj.datum_rd
+                    related_item["issue"] = self.format_date(externi_zdroj.datum_rd)
                 if externi_zdroj.vydavatel and not externi_zdroj.organizace:
                     related_item["publisher"] = externi_zdroj.vydavatel
                 elif not externi_zdroj.vydavatel and externi_zdroj.organizace:
