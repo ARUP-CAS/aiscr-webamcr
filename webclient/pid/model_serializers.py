@@ -705,7 +705,7 @@ class DokumentSerializer(ModelSerializer):
         soubory_queryset = self._get_soubory_queryset()
         if soubory_queryset and soubory_queryset.exists():            
             result = list(set([soubor.mimetype for soubor in soubory_queryset.all()]))
-        if self.record.rada == DOKUMENT_RADA_DATA_3D:
+        if self.record.rada.pk == DOKUMENT_RADA_DATA_3D:
             if self.record.extra_data and self.record.extra_data.format:
                 result.append(self.record.extra_data.format.heslo_en)
         return result
@@ -884,7 +884,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return {"resourceType": "archaeological object", "resourceTypeGeneral": "PhysicalObject"}
     
     def _get_formats(self):
-        pass
+        return []
 
 
 class LokalitaSerializer(ModelSerializer):
@@ -1151,7 +1151,7 @@ class LokalitaSerializer(ModelSerializer):
         return {"resourceType": "archaeological site", "resourceTypeGeneral": "PhysicalObject"}
 
     def _get_formats(self):
-        pass
+        return []
     
     def serialize_publish(self):
         publish = super().serialize_publish()
