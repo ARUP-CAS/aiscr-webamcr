@@ -179,6 +179,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def datum_oznameni(self):
         return self.historie.historie_set.order_by("datum_zmeny").first().datum_zmeny
 
+    @property
+    def pristupnost(self):
+        return self.pristupnost_snapshot
+
     def __init__(self, *args, **kwargs):
         super(Projekt, self).__init__(*args, **kwargs)
         self.initial_dokumenty = []

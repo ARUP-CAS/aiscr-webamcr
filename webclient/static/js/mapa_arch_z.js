@@ -1153,16 +1153,16 @@ window.addEventListener("load", function(){
 });
 
 
-//nahrání geometrie dočasně uložené v session
+//nahrání geometrie dočasně uložené v localStorage
 function loadSession(){
     addLogText("arch_z_detail_map.loadSession")
     const currentUrl = window.location.href;
     const urlParams = new URLSearchParams(window.location.search);
     //global_map_can_grab_geom_from_map = true;
     let geom_session=localStorage.getItem("Geom-session")
-    if(geom_session != null){
+    if(geom_session != null){ //načtení geometrie editované a dočasně uložené v localStorage
         geom_session=JSON.parse(geom_session)
-        if(geom_session.url==currentUrl && geom_session.geometry !=null && geom_session.geometry !=''){
+        if(geom_session.url==currentUrl && geom_session.geometry !=null){
             global_blocked_by_query_geom=true;
             global_map_can_edit=true;
             map_show_edit(global_map_can_edit);
@@ -1179,7 +1179,18 @@ function loadSession(){
             localStorage.removeItem("Geom-session");
         }
     }
-
+    else if(typeof geom !== 'undefined' && geom.geometry !==''){ //načtení geometrie importované ze souboru
+        global_map_can_grab_geom_from_map = true;
+        global_blocked_by_query_geom=true;
+        drawnItems.clearLayers();
+        drawnItemsBuffer.clearLayers();
+        addPointQuery(null,  drawnItems,geom.label,geom.geometry,false, map_translations.currentlyEditedPian);
+        geomToText(geom.epsg);
+        save_edited_geometry_session()
+        let viewParam=map._getBoundsCenterZoom(drawnItems.getBounds());
+        if(map.getMaxZoom()==viewParam.zoom) map.setView(viewParam.center, zoom_jtsk)    ;                
+        else map.setView(viewParam.center, viewParam.zoom) ;  
+    } 
 }
 
 //zobrazení pianů akce a zoom na ně

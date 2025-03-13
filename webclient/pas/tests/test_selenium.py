@@ -9,11 +9,8 @@ from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
 from django.utils.translation import gettext as _
 from pas.models import SamostatnyNalez
-from selenium.common.exceptions import ElementNotSelectableException, ElementNotVisibleException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
 
 logger = logging.getLogger("tests")
 
@@ -135,15 +132,9 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             encoded_string = base64.b64encode(image_file.read()).decode()
 
         self.addFileToDropzone("#my-awesome-dropzone", "test_foto_1.jpg", encoded_string)
-        wait = WebDriverWait(
-            self.driver,
-            10,
-            poll_frequency=1,
-            ignored_exceptions=[ElementNotVisibleException, ElementNotSelectableException],
-        )
-        wait.until(EC.element_to_be_clickable((By.LINK_TEXT, _("core.templates.core.upload_file.dz.removeFile"))))
-
-        self.ElementClick(By.LINK_TEXT, _("core.templates.upload_file.submitButton.text"))
+        self.wait(1)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "buttonUploadSubmit")
 
         self.ElementClick(By.CSS_SELECTOR, "#pas-odeslat > .app-controls-button-text")
         self.wait(1)
