@@ -96,7 +96,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - UNKNOWN
    * - XlsxWriter
-     - 3.2.1
+     - 3.2.2
      - BSD License
      - https://github.com/jmcnamara/XlsxWriter
    * - alabaster
@@ -112,7 +112,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/django/asgiref/
    * - attrs
-     - 25.1.0
+     - 25.3.0
      - UNKNOWN
      - https://www.attrs.org/en/stable/changelog.html
    * - babel
@@ -348,7 +348,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/PyCQA/isort/releases
    * - kombu
-     - 5.4.2
+     - 5.5.0
      - BSD License
      - https://kombu.readthedocs.io
    * - libsass
@@ -404,7 +404,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.55
+     - 9.0.0
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -420,7 +420,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/tox-dev/platformdirs
    * - polars
-     - 1.21.0
+     - 1.24.0
      - MIT License
      - https://www.pola.rs/
    * - polib
