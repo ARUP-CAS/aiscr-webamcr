@@ -530,7 +530,7 @@ class DokumentSerializer(ModelSerializer):
     def _serialize_geolocations(self):
         geo_locations: List[frozenset] = []
         try:
-            if self.record.extra_data.geom and self.record.rada == DOKUMENT_RADA_DATA_3D:
+            if self.record.extra_data.geom and self.record.rada.pk == DOKUMENT_RADA_DATA_3D:
                 geo_locations.append(serialize_geom(self.record.extra_data.geom, verejne=True))
         except ObjectDoesNotExist:
             pass
