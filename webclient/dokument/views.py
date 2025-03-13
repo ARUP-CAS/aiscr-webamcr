@@ -1604,14 +1604,6 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ARCHIVOVAN)
         dokument.active_transaction = fedora_transaction
-        for item in dokument.casti.all():
-            item: DokumentCast
-            if (
-                item.archeologicky_zaznam
-                and item.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-                and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-            ):
-                item.archeologicky_zaznam.lokalita.igsn_update()
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
@@ -1629,6 +1621,14 @@ def archivovat(request, ident_cely):
         dokument.set_archivovany(request.user, old_ident)
         dokument.doi_publish()
         dokument.set_doi()
+        for item in dokument.casti.all():
+            item: DokumentCast
+            if (
+                item.archeologicky_zaznam
+                and item.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            ):
+                item.archeologicky_zaznam.lokalita.igsn_update()
         if dokument.rada == Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D):
             Mailer.send_ek01(document=dokument)
         dokument.close_active_transaction_when_finished = True
@@ -1989,6 +1989,8 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
             and zaznam.lokalita.igsn
         ):
             zaznam.lokalita.igsn_update()
+        if dokument_cast.dokument and dokument_cast.dokument.stav == D_STAV_ARCHIVOVANY:
+            dokument_cast.dokument.doi_update()
         resp = dokument_cast.delete()
         logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
         if remove_orphan:

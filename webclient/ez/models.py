@@ -110,13 +110,6 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         """
         from arch_z.models import Akce, ArcheologickyZaznam
 
-        for akce in self.externi_odkazy_zdroje.all():
-            akce: Akce
-            if (
-                akce.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-                and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-            ):
-                akce.archeologicky_zaznam.lokalita.igsn_update()
         self.stav = EZ_STAV_ODESLANY
         historie_poznamka = self.check_set_permanent_ident()
         Historie(
@@ -125,6 +118,13 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             vazba=self.historie,
             poznamka=historie_poznamka,
         ).save()
+        for akce in self.externi_odkazy_zdroje.all():
+            akce: Akce
+            if (
+                akce.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            ):
+                akce.archeologicky_zaznam.lokalita.igsn_update()
         self.close_active_transaction_when_finished = True
         self.save()
 
