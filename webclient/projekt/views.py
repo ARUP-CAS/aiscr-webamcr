@@ -83,7 +83,6 @@ from core.utils import (
     get_project_pas_from_envelope,
     get_project_pian_from_envelope,
     get_projects_from_envelope,
-    get_projekt_stav_label,
 )
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
@@ -206,16 +205,17 @@ def post_ajax_get_projects_limit(request):
     Funkce pohledu pro získaní heatmapy projektu.
     """
     body = json.loads(request.body.decode("utf-8"))
+    vrstvy_map = {"p1": [1], "p2": [2], "p3": [3], "p46": [4, 5, 6], "p78": [7, 8]}
+    aktivni_p = []
+    for key, hodnoty in vrstvy_map.items():
+        if body.get(key):
+            aktivni_p.extend(hodnoty)
     num = get_num_projects_from_envelope(
         body["southEast"]["lng"],
         body["northWest"]["lat"],
         body["northWest"]["lng"],
         body["southEast"]["lat"],
-        body["p1"],
-        body["p2"],
-        body["p3"],
-        body["p46"],
-        body["p78"],
+        aktivni_p,
         request,
     )
     logger.debug("projekt.views.post_ajax_get_projects_limit.num", extra={"num": num})
@@ -225,25 +225,11 @@ def post_ajax_get_projects_limit(request):
             body["northWest"]["lat"],
             body["northWest"]["lng"],
             body["southEast"]["lat"],
-            body["p1"],
-            body["p2"],
-            body["p3"],
-            body["p46"],
-            body["p78"],
+            aktivni_p,
             request,
         )
-        back = []
-        for pian in pians:
-            back.append(
-                {
-                    "id": pian.id,
-                    "ident_cely": pian.ident_cely,
-                    "geom": pian.geom.wkt.replace(", ", ","),
-                    "stav": get_projekt_stav_label(pian.stav),
-                }
-            )
         if len(pians) > 0:
-            return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+            return JsonResponse({"points": list(pians), "algorithm": "detail"}, status=200)
         else:
             return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
     else:
@@ -254,19 +240,8 @@ def post_ajax_get_projects_limit(request):
             body["southEast"]["lat"],
             body["zoom"],
         )
-        back = []
-        cid = 0
-        for heat in heats:
-            cid += 1
-            back.append(
-                {
-                    "id": str(cid),
-                    "pocet": heat["count"],
-                    "geom": heat["geometry"].replace(", ", ","),
-                }
-            )
         if len(heats) > 0:
-            return JsonResponse({"heat": back, "algorithm": "heat"}, status=200)
+            return JsonResponse({"heat": list(heats), "algorithm": "heat"}, status=200)
         else:
             return JsonResponse({"heat": [], "algorithm": "heat"}, status=200)
 

@@ -19,7 +19,7 @@ from core.message_constants import (
 from dj.models import DokumentacniJednotka
 from django.apps import apps
 from django.conf import ENVIRONMENT_VARIABLE, settings
-from django.contrib.gis.db.models.functions import PointOnSurface
+from django.contrib.gis.db.models.functions import AsGeoJSON, PointOnSurface
 from django.core.cache import caches
 from django.db import connection, transaction
 from django.urls import reverse
@@ -424,31 +424,6 @@ def get_dj_pians_from_envelope(left, bottom, right, top, ident_cely):
         return None
 
 
-def get_projekt_stav_label(stav):
-    from core.constants import (
-        PROJEKT_STAV_ARCHIVOVANY,
-        PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
-        PROJEKT_STAV_PRIHLASENY,
-        PROJEKT_STAV_UKONCENY_V_TERENU,
-        PROJEKT_STAV_ZAHAJENY_V_TERENU,
-        PROJEKT_STAV_ZAPSANY,
-        PROJEKT_STAV_ZRUSENY,
-    )
-
-    if stav == PROJEKT_STAV_ZAPSANY:
-        return "P1"
-    elif stav == PROJEKT_STAV_PRIHLASENY:
-        return "P2"
-    elif stav == PROJEKT_STAV_ZAHAJENY_V_TERENU:
-        return "P3"
-    elif PROJEKT_STAV_UKONCENY_V_TERENU <= stav <= PROJEKT_STAV_ARCHIVOVANY:
-        return "P4-P6"
-    elif PROJEKT_STAV_NAVRZEN_KE_ZRUSENI <= stav <= PROJEKT_STAV_ZRUSENY:
-        return "P7-P8"
-    else:
-        return "P0"
-
-
 def get_project_geom(ident_cely):
     """
     Funkce pro získaní geometrie projekt.
@@ -467,7 +442,7 @@ def get_project_geom(ident_cely):
         return None
 
 
-def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78, request):
+def get_num_projects_from_envelope(left, bottom, right, top, stavy, request):
     """
     Funkce pro získaní počtu projektů ze čtverce.
     Bez pristupnosti
@@ -479,20 +454,6 @@ def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p7
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
-    stavy = []
-    if p1:
-        stavy.append(1)
-    if p2:
-        stavy.append(2)
-    if p3:
-        stavy.append(3)
-    if p46:
-        stavy.append(4)
-        stavy.append(5)
-        stavy.append(6)
-    if p78:
-        stavy.append(7)
-        stavy.append(8)
     queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy))
 
     perm_object = ProjektPermissionFilterMixin()
@@ -509,7 +470,7 @@ def get_num_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p7
         return None
 
 
-def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78, request):
+def get_projects_from_envelope(left, bottom, right, top, stavy, request):
     """
     Funkce pro získaní projektů ze čtverce.
     Bez pristupnosti
@@ -521,20 +482,6 @@ def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78, r
 
     c1 = Q(geom__isnull=False)
     c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
-    stavy = []
-    if p1:
-        stavy.append(1)
-    if p2:
-        stavy.append(2)
-    if p3:
-        stavy.append(3)
-    if p46:
-        stavy.append(4)
-        stavy.append(5)
-        stavy.append(6)
-    if p78:
-        stavy.append(7)
-        stavy.append(8)
     queryset = Projekt.objects.filter(c1).filter(c2).filter(Q(stav__in=stavy))
 
     perm_object = ProjektPermissionFilterMixin()
@@ -542,7 +489,11 @@ def get_projects_from_envelope(left, bottom, right, top, p1, p2, p3, p46, p78, r
     perm_object.typ_zmeny_lookup = ZAPSANI_PROJ
 
     try:
-        return perm_object.check_filter_permission(queryset).only("id", "ident_cely", "geom", "stav")
+        return (
+            perm_object.check_filter_permission(queryset)
+            .annotate(geom_geojson=AsGeoJSON("geom"))
+            .values("id", "ident_cely", "geom_geojson", "stav")
+        )
     except IndexError:
         logger.debug(
             "core.utils.get_projects_from_envelope.no_points",
@@ -838,9 +789,9 @@ def get_heatmap_project(left, bottom, right, top, zoom):
     """
     Funkce pro získaní heat mapy projektů ze čtverce.
     """
-    query = "select count*30 as count, ST_AsText(st_centroid) as geometry from amcr_heat_projekt_l2"
+    query = "select count*30 as pocet, ST_AsGeoJSON(st_centroid) as geom_geojson from amcr_heat_projekt_l2"
     query_zoom = (
-        "select count*30 as count, ST_AsText(st_centroid) as geometry from amcr_heat_projekt_lx2 "
+        "select count*30 as pocet, ST_AsGeoJSON(st_centroid) as geom_geojson from amcr_heat_projekt_lx2 "
         "where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
     )
     try:
