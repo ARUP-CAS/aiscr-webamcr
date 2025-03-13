@@ -1426,7 +1426,7 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
             p.actionChoices.stahnout_metadata, user, archeologicky_zaznam.ident_cely
         ),
         "vypis": check_permissions(
-            p.actionChoices.vypis_lokalita if app == "lokalita" else p.actionChoices.vypis_arch_z,
+            p.actionChoices.vypis_lokalita if app == "lokalita" else p.actionChoices.vypis_akce,
             user,
             archeologicky_zaznam.ident_cely,
         ),
