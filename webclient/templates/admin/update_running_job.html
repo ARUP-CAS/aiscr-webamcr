@@ -45,6 +45,9 @@
         <input type="submit" id="stopRequests" class="default"
                value="{% trans "core.templates.admin.fedora_management.stop_request" %}">
       </div>
+      <p id="processFinishedParagraph" style="display: none">
+        <strong>{% trans "core.templates.admin.fedora_management.finished" %}</strong>
+      </p>
       <div id="progressBarBox" style="margin-bottom: 1rem">
         <div id="progressBar"></div>
       </div>
@@ -107,7 +110,11 @@
       async function process() {
         let result;         
         do {
-            result = await sendRequest(requestUrl); 
+            result = await sendRequest(requestUrl);
+            if (result === 1) {
+                document.getElementById("stopRequests").style.display = "none";
+                document.getElementById("processFinishedParagraph").style.display = null;
+            }
         } while (result > 1 && !stopRequests );        
       }
       

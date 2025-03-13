@@ -268,7 +268,7 @@ class ContinuePidProcessing(AdminRecordProcessingView):
                 else:
                     result["result"] = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
             elif performed_action == "update":
-                if record.igsn and record.stav != SN_ARCHIVOVANY:
+                if record.igsn:
                     result["result"] = self._perform_client_action(record, "igsn", record.igsn_update)
                     result["detail"] = record.igsn_url
                 else:
