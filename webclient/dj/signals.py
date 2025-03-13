@@ -56,18 +56,18 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
                     "dj.signals.save_dokumentacni_jednotka.not_created",
                     extra={"err": err, "transaction": getattr(fedora_transaction, "uid", None)},
                 )
-    elif instance.pian != instance.initial_pian:
+    elif instance.pian_id != instance.initial_pian_id:
         logger.debug(
             "dj.signals.save_dokumentacni_jednotka.update_pian",
             extra={
-                "pian_db": instance.initial_pian.ident_cely if instance.initial_pian else "None",
+                "pian_db": instance.initial_pian_id if instance.initial_pian_id else "None",
                 "pian": instance.pian.ident_cely if instance.pian else "None",
                 "transaction": fedora_transaction.uid,
             },
         )
         if instance.pian is not None:
             instance.pian.save_metadata(fedora_transaction)
-        if instance.initial_pian is not None:
+        if instance.initial_pian_id is not None:
             try:
                 instance.initial_pian.save_metadata(fedora_transaction)
             except ObjectDoesNotExist:
@@ -87,6 +87,7 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
                     initial_pian.active_transaction = fedora_transaction
                     initial_pian.skip_container_check = True
                     initial_pian.delete()
+                    instance.initial_pian_id = None
         except ValueError as err:
             logger.debug(
                 "dj.signals.save_dokumentacni_jednotka.deleted",

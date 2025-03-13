@@ -188,11 +188,11 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
         instance.dokument.save_metadata(fedora_transaction)
         if (
             created
-            or instance.initial_projekt != instance.projekt
-            or instance.initial_archeologicky_zaznam != instance.archeologicky_zaznam
+            or instance.initial_projekt_id != instance.projekt_id
+            or instance.initial_archeologicky_zaznam_id != instance.archeologicky_zaznam_id
         ):
             extra["transaction"] = str(fedora_transaction.uid)
-            if instance.archeologicky_zaznam is not None:
+            if instance.archeologicky_zaznam_id is not None:
                 instance.archeologicky_zaznam.save_metadata(fedora_transaction)
                 extra.update(
                     {
@@ -200,18 +200,17 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
                         "record_pk": instance.archeologicky_zaznam.pk,
                     }
                 )
-            if instance.initial_archeologicky_zaznam is not None:
+            if instance.initial_archeologicky_zaznam_id is not None:
                 instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction)
                 extra.update(
                     {
-                        "initial_archeologicky_zaznam": instance.initial_archeologicky_zaznam.ident_cely,
-                        "initial_record_pk": instance.initial_archeologicky_zaznam.pk,
+                        "initial_archeologicky_zaznam": instance.initial_archeologicky_zaznam_id,
                     }
                 )
             if instance.projekt is not None:
                 instance.projekt.save_metadata(fedora_transaction)
                 extra.update({"projekt": instance.projekt.ident_cely, "record_pk": instance.projekt.pk})
-            if instance.initial_projekt is not None:
+            if instance.initial_projekt_id is not None:
                 instance.initial_projekt.save_metadata(fedora_transaction)
                 extra.update(
                     {
@@ -237,9 +236,9 @@ def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs)
     invalidate_model(Historie)
 
     def save_metadata(close_transaction=False):
-        if instance.initial_archeologicky_zaznam is not None and instance.suppress_signal_arch_z is False:
+        if instance.initial_archeologicky_zaznam_id is not None and instance.suppress_signal_arch_z is False:
             instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
-        if instance.initial_projekt is not None:
+        if instance.initial_projekt_id is not None:
             instance.initial_projekt.save_metadata(fedora_transaction, skip_container_check=True)
         if not instance.suppress_dokument_signal:
             instance.dokument.save_metadata(fedora_transaction, skip_container_check=True)

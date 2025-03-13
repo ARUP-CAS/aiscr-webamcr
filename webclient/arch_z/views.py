@@ -1537,6 +1537,13 @@ class AkceListView(SearchListView):
             "archeologicky_zaznam__casti_dokumentu",
             "archeologicky_zaznam__casti_dokumentu__dokument",
         )
+        qs = qs.defer(
+            "archeologicky_zaznam__hlavni_katastr__definicni_bod",
+            "archeologicky_zaznam__hlavni_katastr__hranice",
+            "archeologicky_zaznam__hlavni_katastr__okres__definicni_bod",
+            "archeologicky_zaznam__hlavni_katastr__okres__hranice",
+        )
+
         qs.cache()
         return self.check_filter_permission(qs)
 
