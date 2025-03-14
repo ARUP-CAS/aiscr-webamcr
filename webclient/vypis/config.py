@@ -472,7 +472,7 @@ AKCE_CONFIG = {
         "popis_akce": {
             "section_name": SimpleSectionTemplateName(_("vypis.akce.popis_akce.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "projekt": ForeignField(_("vypis.akce.projekt.label"), "projekt", "akce"),
+            "projekt": ForeignField(_("vypis.akce.projekt.label"), "projekt__get_ident_cely_link", "akce"),
             "hlavni_typ": ForeignField(_("vypis.akce.hlavni_typ.label"), "hlavni_typ", "akce"),
             "vedlejsi_typ": ForeignField(_("vypis.akce.vedlejsi_typ.label"), "vedlejsi_typ", "akce"),
             "ostatni_vedouci": ForeignManyToManyField(_("vypis.akce.ostatni_vedouci.label"), "akcevedouci_set", "akce"),
@@ -511,9 +511,14 @@ AKCE_CONFIG = {
         "ext_zdroje": {
             "section_name": SimpleSectionTemplateName(_("vypis.akce.ext_zdroje.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "dokumenty": RepeatableField(
+            "ext_zdroje": RepeatableField(
                 _("vypis.akce.ext_zdroje.label"),
-                ["externi_zdroj__ident_cely", "paginace"],
+                [
+                    "externi_zdroj__ident_cely",
+                    "externi_zdroj__autori_snapshot",
+                    "externi_zdroj__rok_vydani_vzniku",
+                    "paginace",
+                ],
                 "ext_odkaz",
                 "vypis/akce/ext_odkazy.html",
                 "archeologicky_zaznam",
@@ -524,9 +529,9 @@ AKCE_CONFIG = {
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
             "dokumenty": RepeatableField(
                 _("vypis.akce.dokumenty.label"),
-                ["dokument__ident_cely"],
+                ["dokument__ident_cely", "dokument__autori_snapshot", "dokument__rok_vzniku"],
                 "dokument_casti",
-                "vypis/souvisejici_zaznam.html",
+                "vypis/souvisejici_zaznam_dok.html",
                 "archeologicky_zaznam",
             ),
         },
@@ -576,7 +581,9 @@ LOKALITA_CONFIG = {
                 "archeologicky_zaznam",
             ),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "typ_zjisteni": Field(_("vypis.lokalita.dokumentacni_jednotka.typ_zjisteni.label"), "negativni_jednotka"),
+            "typ_zjisteni": ZjisteniField(
+                _("vypis.lokalita.dokumentacni_jednotka.typ_zjisteni.label"), "negativni_jednotka"
+            ),
             "pian": SubSectionField(PIAN_CONFIG),
             "komponenty": SubSectionField(KOMPONENTY_DJ_CONFIG),
         },
@@ -593,7 +600,7 @@ LOKALITA_CONFIG = {
         "ext_zdroje": {
             "section_name": SimpleSectionTemplateName(_("vypis.lokalita.ext_zdroje.section_name")),
             "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
-            "dokumenty": RepeatableField(
+            "ext_zdroje": RepeatableField(
                 _("vypis.lokalita.ext_zdroje.label"),
                 [
                     "externi_zdroj__ident_cely",
@@ -634,7 +641,7 @@ PAS_CONFIG = {
         "sub_header": {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/sub_header.html"),
-            "predano": Field(_("vypis.pas.predano.label"), "predano"),
+            "predano": Field(_("vypis.pas.predano.label"), "get_predano_display"),
             "predano_organizace": ForeignField(
                 _("vypis.pas.predano_organizace.label"), "get_nazev", "predano_organizace"
             ),
@@ -716,6 +723,7 @@ MODEL_CONFIG = {
             "section_name": SimpleSectionTemplateName(None),
             "template": SimpleSectionTemplateName("vypis/model/under_header.html"),
             "doi": Field(_("vypis.model3d.doi.label"), "doi"),
+            "organizace": ForeignField(_("vypis.model3d.organizace.label"), "get_nazev", "organizace"),
             "obdobi": Model3dKomponentaField(_("vypis.model3d.obdobi.label"), "obdobi"),
             "presna_datace": Model3dKomponentaField(_("vypis.model3d.presna_datace.label"), "presna_datace"),
             "areal": Model3dKomponentaField(_("vypis.model3d.areal.label"), "areal"),
@@ -826,7 +834,7 @@ EZ_CONFIG = {
             "datum_rd": Field(_("vypis.ez.popis_ez.datum_rd.label"), "datum_rd"),
             "edice_rada": Field(_("vypis.ez.popis_ez.edice_rada.label"), "edice_rada"),
             "typ_dokumentu": Field(_("vypis.ez.popis_ez.typ_dokumentu.label"), "typ_dokumentu"),
-            "organizace": ForeignField(_("vypis.ez.popis_ez.organizace.label"), "get_nazev", "organizace"),
+            "organizace": Field(_("vypis.ez.popis_ez.organizace.label"), "organizace"),
             "misto": Field(_("vypis.ez.popis_ez.misto.label"), "misto"),
             "vydavatel": Field(_("vypis.ez.popis_ez.vydavatel.label"), "vydavatel"),
             "paginace_titulu": Field(_("vypis.ez.popis_ez.paginace_titulu.label"), "paginace_titulu"),
@@ -852,7 +860,7 @@ EZ_CONFIG = {
                 _("vypis.ez.ext_odkazy.label"),
                 ["archeologicky_zaznam__ident_cely", "paginace"],
                 "ext_odkaz",
-                "vypis/akce/ext_odkazy.html",
+                "vypis/ez/ext_odkazy.html",
                 "externi_zdroj",
             ),
         },

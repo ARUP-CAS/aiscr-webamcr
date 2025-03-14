@@ -513,8 +513,8 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def delete_history_records(self, request, object_id, *args, **kwargs):
         user_account_history, user_account_other_records = self.get_histore_related_records(object_id)
+        obj: User = self.get_object(request, object_id)
         if request.method == "GET":
-            obj = self.get_object(request, object_id)
             context = {
                 **self.admin_site.each_context(request),
                 "opts": self.model._meta,
@@ -527,15 +527,29 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             if user_account_history is not None and user_account_other_records is not None:
                 if user_account_other_records.exists():
                     self.message_user(
-                        request, "uzivatel.admin.CustomUserAdmin.delete_history_records.cannot_delete", messages.ERROR
+                        request,
+                        _("uzivatel.admin.CustomUserAdmin.delete_history_records.cannot_delete"),
+                        messages.ERROR,
                     )
                 else:
+                    obj.active_transaction = FedoraTransaction()
                     user_account_history.delete()
+                    obj.close_active_transaction_when_finished = True
+                    obj.save()
                     self.message_user(
-                        request, "uzivatel.admin.CustomUserAdmin.delete_history_records.success", messages.SUCCESS
+                        request, _("uzivatel.admin.CustomUserAdmin.delete_history_records.success"), messages.SUCCESS
                     )
             change_url = reverse("admin:uzivatel_user_change", args=[object_id])
             return HttpResponseRedirect(change_url)
+
+    def delete_model(self, request, obj):
+        with transaction.atomic():
+            pes_set = obj.pes_set.all()
+            for item in pes_set:
+                item: Pes
+                item.suppress_signal = True
+                item.delete()
+        super().delete_model(request, obj)
 
 
 class CustomGroupAdmin(admin.ModelAdmin):

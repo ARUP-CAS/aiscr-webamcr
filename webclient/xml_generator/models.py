@@ -58,7 +58,7 @@ class BaseAmcrModel(models.Model):
     @property
     def get_ident_cely_link(self):
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
-            return f"<a href='{self.get_absolute_url()}'>{self.ident_cely}</a>"
+            return f"<a href='{self.get_absolute_url()}' target='_blank'>{self.ident_cely}</a>"
 
 
 class ModelWithMetadata(BaseAmcrModel):
