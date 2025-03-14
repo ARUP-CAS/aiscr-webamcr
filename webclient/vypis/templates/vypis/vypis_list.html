@@ -37,6 +37,10 @@
              aria-valuemin="0" aria-valuemax="100"></div>
     </div>
 </div>
+<div id="error_div" class="record d-none">
+    <div class="main-header">
+    </div>
+</div>
 {% endblock %}
 
 {% block script %}
@@ -75,6 +79,28 @@
                         current_done += 1;
                         updateProgressBar(current_done / identy_num * 100);
 
+                        if (current_done === identy_list.length) {
+                            for (let j = 0; j < responses.length; j++) {
+                                $('.vypisy-content').append(responses[j]);
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        current_done += 1;
+                        updateProgressBar(current_done / identy_num * 100);
+                        var $container = $('#error_div').clone();
+                        if (xhr.status === 404) {
+                            var status_text = '{% trans "vypis.templates.vypis_list.error.404" %}'
+                        } 
+                        else if (xhr.status === 403) {
+                            var status_text = '{% trans "vypis.templates.vypis_list.error.403" %}'
+                        }
+                        else {
+                            var status_text = '{% trans "vypis.templates.vypis_list.error.500" %}'
+                        };
+                        $container.find('.main-header').text(identy_list[index] + " - " + status_text);
+                        $container.removeClass('d-none');
+                        responses[index] = $container;
                         if (current_done === identy_list.length) {
                             for (let j = 0; j < responses.length; j++) {
                                 $('.vypisy-content').append(responses[j]);
