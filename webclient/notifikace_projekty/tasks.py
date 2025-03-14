@@ -46,8 +46,9 @@ def check_hlidaci_pes(projekt_id):
         Q(pk=projekt.hlavni_katastr.id) | Q(pk__in=projekt.katastry.values_list("id"))
     )
     projekt_notify_type = get_project_type_notification(projekt.typ_projektu_id)
-    users_with_notification = User.objects.filter(notification_types__ident_cely=projekt_notify_type)
+    users_with_notification = User.objects.filter(notification_types=projekt_notify_type)
     if users_with_notification.count() == 0:
+        logger.debug("cron.Notifications.collect_watchdogs.end.noUsers")
         return
     if notification_type.zasilat_neaktivnim:
         users_to_notify |= Pes.objects.filter(

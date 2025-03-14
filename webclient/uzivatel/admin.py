@@ -50,7 +50,10 @@ class UserNotificationTypeInlineForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(UserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
         self.fields["usernotificationtype"].queryset = UserNotificationType.objects.filter(
-            Q(ident_cely__icontains="S-E-") | Q(ident_cely="E-U-04")
+            Q(ident_cely__icontains="S-E-A")
+            | Q(ident_cely__icontains="S-E-N")
+            | Q(ident_cely__icontains="S-E-K")
+            | Q(ident_cely="E-U-04")
         )
 
 
@@ -60,9 +63,9 @@ class UserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
     def __init__(self, *args, **kwargs):
         super(UserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
         if not self.instance.pk and not self.data:
-            notification_ids = UserNotificationType.objects.filter(Q(ident_cely__icontains="S-E-")).values_list(
-                "id", flat=True
-            )
+            notification_ids = UserNotificationType.objects.filter(
+                Q(ident_cely__icontains="S-E-A") | Q(ident_cely__icontains="S-E-N") | Q(ident_cely__icontains="S-E-K")
+            ).values_list("id", flat=True)
             self.initial = []
             for id in notification_ids:
                 self.initial.append(
@@ -87,14 +90,19 @@ class UserNotificationTypeInline(admin.TabularInline):
         logger.debug(self.model._default_manager)
         queryset = super(UserNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(
-            Q(usernotificationtype__ident_cely__icontains="S-E-") | Q(usernotificationtype__ident_cely="E-U-04")
+            Q(usernotificationtype__ident_cely__icontains="S-E-A")
+            | Q(usernotificationtype__ident_cely__icontains="S-E-N")
+            | Q(usernotificationtype__ident_cely__icontains="S-E-K")
+            | Q(usernotificationtype__ident_cely="E-U-04")
         )
         return queryset
 
     def get_extra(self, request, obj=None, **kwargs):
         extra = 1  # default 0
         if not obj:  # new create only
-            extra = UserNotificationType.objects.filter(Q(ident_cely__icontains="S-E-")).count()
+            extra = UserNotificationType.objects.filter(
+                Q(ident_cely__icontains="S-E-A") | Q(ident_cely__icontains="S-E-N") | Q(ident_cely__icontains="S-E-K")
+            ).count()
         return extra
 
     def __init__(self, parent_model, admin_site):
@@ -504,8 +512,8 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def delete_history_records(self, request, object_id, *args, **kwargs):
         user_account_history, user_account_other_records = self.get_histore_related_records(object_id)
+        obj: User = self.get_object(request, object_id)
         if request.method == "GET":
-            obj = self.get_object(request, object_id)
             context = {
                 **self.admin_site.each_context(request),
                 "opts": self.model._meta,
@@ -518,15 +526,29 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             if user_account_history is not None and user_account_other_records is not None:
                 if user_account_other_records.exists():
                     self.message_user(
-                        request, "uzivatel.admin.CustomUserAdmin.delete_history_records.cannot_delete", messages.ERROR
+                        request,
+                        _("uzivatel.admin.CustomUserAdmin.delete_history_records.cannot_delete"),
+                        messages.ERROR,
                     )
                 else:
+                    obj.active_transaction = FedoraTransaction()
                     user_account_history.delete()
+                    obj.close_active_transaction_when_finished = True
+                    obj.save()
                     self.message_user(
-                        request, "uzivatel.admin.CustomUserAdmin.delete_history_records.success", messages.SUCCESS
+                        request, _("uzivatel.admin.CustomUserAdmin.delete_history_records.success"), messages.SUCCESS
                     )
             change_url = reverse("admin:uzivatel_user_change", args=[object_id])
             return HttpResponseRedirect(change_url)
+
+    def delete_model(self, request, obj):
+        with transaction.atomic():
+            pes_set = obj.pes_set.all()
+            for item in pes_set:
+                item: Pes
+                item.suppress_signal = True
+                item.delete()
+        super().delete_model(request, obj)
 
 
 class CustomGroupAdmin(admin.ModelAdmin):

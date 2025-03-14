@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from core.message_constants import TRANSLATION_FILE_TOOSMALL, TRANSLATION_FILE_WRONG_FORMAT
 from core.models import OdstavkaSystemu
 from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Div, Layout
 from django import forms
 from django.conf import settings
 from django.utils import formats
@@ -79,10 +80,21 @@ class CheckStavNotChangedForm(forms.Form):
 
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
-    def __init__(self, db_stav=None, *args, **kwargs):
+    def __init__(self, db_stav=None, require_confirmation=False, *args, **kwargs):
         self.db_stav = db_stav
         super(CheckStavNotChangedForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
+        if require_confirmation:
+            self.fields["confirm"] = forms.BooleanField(
+                required=True, label=_("core.forms.CheckStavNotChangedForm.confirm")
+            )
+            self.helper.layout = Layout(
+                Div(
+                    Div("confirm", css_class="col-sm-12"),
+                    Div("old_stav", css_class="col-sm-12"),
+                    css_class="app-card-form",
+                ),
+            )
         self.helper.form_tag = False
 
     def clean(self):

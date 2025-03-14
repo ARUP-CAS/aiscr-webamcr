@@ -42,11 +42,12 @@ class AdminRecordProcessingView(LoginRequiredMixin, View):
                         "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".not_found",
                         extra={"ident_cely": ident_cely, "error": err},
                     )
+                if record:
+                    result = self.process_record(record, result, **kwargs)
+                else:
                     result["result"] = _(
                         "fedora_management.admin.YourCustomAdminSite.update_metadata_file_upload.record_not_found"
                     )
-                if record:
-                    result = self.process_record(record, result, **kwargs)
             return JsonResponse(result)
 
 

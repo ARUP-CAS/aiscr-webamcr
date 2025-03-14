@@ -98,14 +98,16 @@ class OrcidAutocompleteView(ApiView):
         if response.status_code == 200:
             data = response.json()
 
-            for result in data.get("expanded-result", []):
-                orcid_id = result.get("orcid-id", "")
-                if result.get("family-names") and result.get("given-names"):
-                    full_nane = f"{result['family-names']}, {result['given-names']} ({orcid_id})"
-                else:
-                    full_nane = orcid_id
-                result_list.append([orcid_id, full_nane])
-                cls._save_value_to_cache(orcid_id, full_nane)
+            expanded_result = data.get("expanded-result", None)
+            if expanded_result:
+                for result in expanded_result:
+                    orcid_id = result.get("orcid-id", "")
+                    if result.get("family-names") and result.get("given-names"):
+                        full_nane = f"{result['family-names']}, {result['given-names']} ({orcid_id})"
+                    else:
+                        full_nane = orcid_id
+                    result_list.append([orcid_id, full_nane])
+                    cls._save_value_to_cache(orcid_id, full_nane)
         return result_list
 
 
@@ -139,6 +141,8 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def api_call(cls, q, use_cache=False):
+        if not q:
+            return []
         if q.startswith("https://www.wikidata.org/entity/"):
             q = q.replace("https://www.wikidata.org/entity/", "")
         if cls.ID_REGEX.match(q):
@@ -153,12 +157,15 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         else:
             q = unicodedata.normalize("NFKD", q)
             query = f"""
-                SELECT ?item ?itemLabel WHERE {{
-                  ?item wdt:P31 wd:Q5.
-                  ?item ?label "{q}"
-                  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,cs". }}
+                SELECT ?item ?itemLabel
+                WHERE {{
+                  {{ ?item rdfs:label "{q}"@en }}
+                  UNION
+                  {{ ?item rdfs:label "{q}"@cs }}
+                  SERVICE wikibase:label {{
+                    bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,cs"
+                  }}
                 }}
-            LIMIT 10
             """
 
         # Set up the SPARQL wrapper
@@ -261,7 +268,7 @@ class ContinuePidProcessing(AdminRecordProcessingView):
                 else:
                     result["result"] = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
             elif performed_action == "update":
-                if record.igsn and record.stav != SN_ARCHIVOVANY:
+                if record.igsn:
                     result["result"] = self._perform_client_action(record, "igsn", record.igsn_update)
                     result["detail"] = record.igsn_url
                 else:

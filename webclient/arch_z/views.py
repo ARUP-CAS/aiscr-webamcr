@@ -759,27 +759,25 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         fedora_transaction = az.create_transaction(request.user)
-        for item in az.casti_dokumentu.all():
-            item: DokumentCast
-            if item.dokument.stav == D_STAV_ARCHIVOVANY:
-                item.dokument.doi_update()
+        az.set_archivovany(request.user)
+
         try:
-            if not az.lokalita.igsn:
-                az.lokalita.igsn_publish()
-                az.lokalita.set_igsn()
-                az.lokalita.save()
-            else:
-                az.lokalita.igsn_update()
+            az.lokalita.igsn_publish()
+            az.lokalita.set_igsn()
+            az.lokalita.save()
         except ObjectDoesNotExist:
             pass
 
-        az.set_archivovany(request.user)
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
                 archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY
             )
             if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
                 request.session["arch_projekt_link"] = True
+        for item in az.casti_dokumentu.all():
+            item: DokumentCast
+            if item.dokument.stav == D_STAV_ARCHIVOVANY:
+                item.dokument.doi_update()
         fedora_transaction.success_message = get_message(az, "USPESNE_ARCHIVOVANA")
         Mailer.send_ea02(arch_z=az)
         az.close_active_transaction_when_finished = True
@@ -795,18 +793,18 @@ def archivovat(request, ident_cely):
                 {"redirect": az.get_absolute_url()},
                 status=403,
             )
-    form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
     try:
         if az.lokalita.igsn_exists:
-            doi_exists_warning = _("arch_z.views.archivovat.doi_exists_warning")
+            doi_confirmation = az.lokalita and az.lokalita.igsn_exists and not az.lokalita.igsn
         else:
-            doi_exists_warning = None
+            doi_confirmation = False
     except ObjectDoesNotExist:
-        doi_exists_warning = None
+        doi_confirmation = False
+    form_check = CheckStavNotChangedForm(require_confirmation=doi_confirmation, initial={"old_stav": az.stav})
     context = {
         "object": az,
         "title": _("arch_z.views.archivovat.title.text"),
-        "text": doi_exists_warning,
+        "pid_confirmation": doi_confirmation,
         "id_tag": "archivovat-akci-form",
         "button": _("arch_z.views.archivovat.submitButton.text"),
         "form_check": form_check,

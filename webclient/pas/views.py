@@ -600,21 +600,22 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        sn.igsn_publish()
-        sn.set_igsn()
         sn.create_transaction(request.user, SAMOSTATNY_NALEZ_ARCHIVOVAN)
         sn.set_archivovany(request.user)
+        sn.igsn_publish()
+        sn.set_igsn()
         sn.close_active_transaction_when_finished = True
         sn.save()
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
         # TODO nejake kontroly? warnings = sn.check_pred_archivaci()
-        form_check = CheckStavNotChangedForm(initial={"old_stav": sn.stav})
+        igsn_confirmation = sn.igsn_exists and sn.igsn is None
+        form_check = CheckStavNotChangedForm(require_confirmation=igsn_confirmation, initial={"old_stav": sn.stav})
         context = {
             "object": sn,
             "title": _("pas.views.archivovat.title.text"),
             "id_tag": "archivovat-pas-form",
-            "text": _("dokument.views.archivovat.doi_exists_warning") if sn.igsn_exists else None,
+            "pid_confirmation": igsn_confirmation,
             "button": _("pas.views.archivovat.submitButton.text"),
             "form_check": form_check,
         }

@@ -1294,9 +1294,12 @@ class FedoraRepositoryConnector:
     def remove_GPS_data_from_existing_files(cls, uploaded_file: str) -> None:
         import pandas as pd
         from core.models import Soubor
+        from heslar.hesla_dynamicka import ADMIN_USER
+        from uzivatel.models import User
         from xml_generator.models import ModelWithMetadata
 
         sheet = pd.read_csv(uploaded_file, sep=",")
+        adminUser = User.objects.get(pk=ADMIN_USER)
         c = len(sheet)
         for index, row in sheet.iterrows():
             if index % max(c // 100, 1) == 0:
@@ -1318,8 +1321,8 @@ class FedoraRepositoryConnector:
                         )
                         record.size_mb = rep_bin_file.size_mb
                         record.sha_512 = rep_bin_file.sha_512
+                        record.zaznamenej_nahrani_nove_verze(adminUser, record.nazev)
                         record.save()
-
                 fedora_transaction.mark_transaction_as_closed()
 
             except Exception as err:

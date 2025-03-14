@@ -31,6 +31,7 @@ from core.constants import (
     RUSENI_PROJ,
     RUSENI_STARE_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
+    SN_ARCHIVOVANY,
     UKONCENI_V_TERENU_PROJ,
     UZAVRENI_PROJ,
     VRACENI_NAVRHU_ZRUSENI,
@@ -91,7 +92,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
-from django.db.models import OuterRef, Q, Subquery
+from django.db.models import Q
 from django.db.models.functions import Length
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -414,13 +415,14 @@ def create(request):
                         oznamovatel.active_transaction = fedora_transaction
                         oznamovatel.projekt = projekt
                         oznamovatel.save()
-                    send_mail = form_oznamovatel.cleaned_data["send_mail"]
-                    if send_mail:
-                        if projekt.should_generate_confirmation_document:
-                            rep_bin_file = projekt.create_confirmation_document(fedora_transaction, user=request.user)
-                        else:
-                            rep_bin_file = True
-                        projekt.send_ep01(rep_bin_file)
+                        if form_oznamovatel.cleaned_data["send_mail"]:
+                            if projekt.should_generate_confirmation_document:
+                                rep_bin_file = projekt.create_confirmation_document(
+                                    fedora_transaction, user=request.user
+                                )
+                            else:
+                                rep_bin_file = True
+                            projekt.send_ep01(rep_bin_file)
 
                     projekt.close_active_transaction_when_finished = True
                     projekt.save()
@@ -596,21 +598,12 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
             return Q()
 
     def add_accessibility_lookup(self, permission, qs):
-        accessibility_key = self.permission_model_lookup + "pristupnost_filter__in"
+        accessibility_key = "pristupnost_snapshot__in"
         accessibilities = Heslar.objects.filter(
             nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id)
         )
         query_filter = {accessibility_key: accessibilities}
-        pristupnost = (
-            SamostatnyNalez.objects.filter(projekt=OuterRef("pk"))
-            .distinct()
-            .order_by("pristupnost__razeni")
-            .values("pristupnost")
-        )
-        qs_new = qs.annotate(pristupnost_filter=Subquery(pristupnost[:1]))
-        return qs_new.filter(
-            Q(**query_filter) | Q(pristupnost_filter__isnull=True) | self.add_ownership_lookup(permission.accessibility)
-        )
+        return qs.filter(Q(**query_filter) | self.add_ownership_lookup(permission.accessibility))
 
 
 class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
@@ -1003,11 +996,15 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
+        projekt.set_archivovany(request.user)
         for item in projekt.casti_dokumentu.all():
             item: DokumentCast
             if item.dokument.stav == D_STAV_ARCHIVOVANY:
                 item.dokument.doi_update()
-        projekt.set_archivovany(request.user)
+        for item in projekt.samostatne_nalezy.all():
+            item: SamostatnyNalez
+            if item.stav == SN_ARCHIVOVANY:
+                item.igsn_update()
         projekt.close_active_transaction_when_finished = True
         projekt.save()
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})

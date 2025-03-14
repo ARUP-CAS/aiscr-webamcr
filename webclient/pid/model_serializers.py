@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List
 
 from arch_z.models import AkceVedouci, ArcheologickyZaznam, ExterniOdkaz
@@ -14,6 +14,7 @@ from core.constants import (
     ODESLANI_DOK,
     ODESLANI_SN,
     POTVRZENI_SN,
+    PROJEKT_STAV_ARCHIVOVANY,
     VRACENI_AZ,
     VRACENI_DOK,
     VRACENI_SN,
@@ -27,6 +28,7 @@ from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from dokument.models import Dokument, DokumentCast
+from ez.models import ExterniZdroj
 from heslar.hesla_dynamicka import (
     DOKUMENT_RADA_DATA_3D,
     JAZYK_NERELEVANTNI,
@@ -100,10 +102,11 @@ class ModelSerializer(ABC):
                 "name": "Archaeological Information System of the Czech Republic",
                 "nameType": "Organizational",
                 "contributorType": "HostingInstitution",
+                "lang": "en",
                 "nameIdentifiers": [
                     {
-                        "affiliationIdentifier": "https://ror.org/01a7rqj69",
-                        "affiliationIdentifierScheme": "ROR",
+                        "nameIdentifier": "https://ror.org/01a7rqj69",
+                        "nameIdentifierScheme": "ROR",
                         "schemeUri": "https://ror.org/",
                     }
                 ],
@@ -133,6 +136,9 @@ class ModelSerializer(ABC):
                 "relationType": "HasMetadata",
                 "relatedIdentifier": f"{settings.DIGI_LINKS['OAPI_link']}{self.get_ident_cely()}",
                 "relatedIdentifierType": "URL",
+                "relatedMetadataScheme": "OAI-PMH",
+                "schemeUri": "http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd",
+                "schemeType": "XSD",
             }
         ]
         return result
@@ -149,6 +155,8 @@ class ModelSerializer(ABC):
                     "valueUri": "http://dd.eionet.europa.eu/vocabulary/eurostat/fos07/FOS601",
                     "schemeUri": "http://dd.eionet.europa.eu/vocabulary/eurostat/fos07/",
                     "subjectScheme": "Field of science and technology classification (FOS 2007)",
+                    "lang": "en",
+                    "classificationCode": "FOS601",
                 }.items()
             )
         ]
@@ -158,6 +166,10 @@ class ModelSerializer(ABC):
     def _serialize_types(self):
         pass
 
+    @abstractmethod
+    def _get_formats(self):
+        pass
+    
     def serialize_delete(self):
         return {
             "data": {
@@ -180,7 +192,7 @@ class ModelSerializer(ABC):
         return {"data": {"type": "dois", "attributes": {"event": "hide"}}}
 
     def serialize_publish(self):
-        return {
+        data = {
             "data": {
                 "type": "dois",
                 "attributes": {
@@ -210,7 +222,7 @@ class ModelSerializer(ABC):
                     "subjects": self._serialize_subjects(),
                     "contributors": self._serialize_contributors(),
                     "dates": self._serialize_dates(),
-                    "language": self._get_language() or " ",
+                    "language": self._get_language() or "",
                     "types": self._serialize_types(),
                     "relatedIdentifiers": self._serialize_related_identifiers(),
                     "sizes": [
@@ -221,12 +233,8 @@ class ModelSerializer(ABC):
                     and self._get_soubory_queryset()
                     and self._get_soubory_queryset().exists()
                     else [],
-                    "formats": list(set([soubor.mimetype for soubor in self._get_soubory_queryset().all()]))
-                    if isinstance(self.record, Dokument)
-                    and self._get_soubory_queryset()
-                    and self._get_soubory_queryset().exists()
-                    else [],
-                    "version": datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    "formats": self._get_formats(),                    
+                    "version": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z"),
                     "rightsList": self._serialize_rightslist(),
                     "descriptions": self._serialize_descriptions(),
                     "geoLocations": self._serialize_geolocations(),
@@ -234,6 +242,7 @@ class ModelSerializer(ABC):
                 },
             }
         }
+        return data
 
     def serialize_update(self):
         result = self.serialize_publish()
@@ -247,6 +256,13 @@ class PartialSerializer(ABC):
 
     def serialize_publish(self):
         pass
+
+
+def convert_geo_location_to_dict(item) -> Dict:
+    item = dict(item)
+    if "geoLocationPoint" in item:
+        item["geoLocationPoint"] = dict(item["geoLocationPoint"])
+    return item
 
 
 def serialize_ez_creator(autor: Osoba) -> Dict[str, str]:
@@ -283,13 +299,13 @@ def serialize_geom(geom=None, katastr: RuianKatastr | None = None, verejne: bool
     return frozenset(serialized_geom.items())
 
 
-def serialize_organizace(organizace: Organizace):
-    serialized_organizace = {"name": organizace.nazev}
+def serialize_affiliation(organizace: Organizace):
+    serialized_affiliation = {"name": organizace.nazev}
     if organizace.ror:
-        serialized_organizace["affiliationIdentifier"] = organizace.ror
-        serialized_organizace["affiliationIdentifierScheme"] = "ROR"
-        serialized_organizace["schemeUri"] = "https://ror.org/"
-    return serialized_organizace
+        serialized_affiliation["affiliationIdentifier"] = organizace.ror
+        serialized_affiliation["affiliationIdentifierScheme"] = "ROR"
+        serialized_affiliation["schemeUri"] = "https://ror.org/"
+    return serialized_affiliation
 
 
 def serialize_organizace_contributor(organizace: Organizace, contributor_type: str):
@@ -297,10 +313,11 @@ def serialize_organizace_contributor(organizace: Organizace, contributor_type: s
         "name": organizace.nazev,
         "nameType": "Organizational",
         "contributorType": contributor_type,
+        "lang": "cs",
         "nameIdentifiers": [
             {
-                "affiliationIdentifier": organizace.ror,
-                "affiliationIdentifierScheme": "ROR",
+                "nameIdentifier": organizace.ror,
+                "nameIdentifierScheme": "ROR",
                 "schemeUri": "https://ror.org/",
             }
         ]
@@ -334,19 +351,19 @@ def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contribu
     serialized_record = {
         "name": osoba.vypis_cely if osoba.pk != OSOBA_ANONYM else ":unkn",
         "nameType": "Personal",
-        "givenName": osoba.jmeno if osoba.pk != OSOBA_ANONYM else " ",
-        "familyName": osoba.prijmeni if osoba.pk != OSOBA_ANONYM else " ",
-        "affiliation": [serialize_organizace(organizace)]
+        "givenName": osoba.jmeno if osoba.pk != OSOBA_ANONYM else "",
+        "familyName": osoba.prijmeni if osoba.pk != OSOBA_ANONYM else "",
+        "affiliation": [serialize_affiliation(organizace)]
         if organizace and organizace.pk not in ORGANIZACE_OBECNE
         else [],
-        "nameIdentifiers": serialize_osoba_identifiers(osoba),
+        "nameIdentifiers": serialize_osoba_identifiers(osoba) if osoba.pk != OSOBA_ANONYM else [],
     }
     if contributor_type:
         serialized_record["contributorType"] = contributor_type
     return serialized_record
 
 
-def serialize_subject(serialized_record, subject_attr="heslo_en"):
+def serialize_subject(serialized_record, subject_attr="heslo_en", lang="en"):
     if serialized_record is None:
         return frozenset()
     output = {
@@ -354,6 +371,8 @@ def serialize_subject(serialized_record, subject_attr="heslo_en"):
         "valueUri": f"{settings.DIGI_LINKS['OAPI_link']}{serialized_record.ident_cely}",
         "schemeUri": settings.DIGI_LINKS["OAPI_link"],
         "subjectScheme": "AMCR",
+        "lang": lang,
+        "classificationCode": serialized_record.ident_cely,
     }
     return frozenset(output.items())
 
@@ -369,14 +388,17 @@ def serialize_subjects_komponenty(komp: Komponenta):
     return result
 
 
-def serialize_dates_coverage(datace: Heslar):
-    result = frozenset(
-        {
-            "date": f"{datace.datace_obdobi.rok_od_min}/{datace.datace_obdobi.rok_do_max}",
-            "dateInformation": datace.heslo_en,
-            "dateType": "Coverage",
-        }.items()
-    )
+def serialize_dates_coverage(datace: Heslar) -> frozenset:
+    try:
+        result = frozenset(
+            {
+                "date": f"{datace.datace_obdobi.rok_od_min}/{datace.datace_obdobi.rok_do_max}",
+                "dateInformation": datace.heslo_en,
+                "dateType": "Coverage",
+            }.items()
+        )
+    except ObjectDoesNotExist:
+        result = []
     return result
 
 
@@ -439,7 +461,7 @@ class DokumentSerializer(ModelSerializer):
                         contributors += [serialize_osoba(vedouci, contributor_type="ProjectLeader")]
             except ObjectDoesNotExist:
                 pass
-            if cast.archeologicky_zaznam:
+            if cast.archeologicky_zaznam and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY:
                 try:
                     if cast.archeologicky_zaznam.akce.hlavni_vedouci:
                         contributors += [
@@ -456,7 +478,7 @@ class DokumentSerializer(ModelSerializer):
                         ]
                 except ObjectDoesNotExist:
                     pass
-            if cast.projekt and cast.projekt.vedouci_projektu:
+            if cast.projekt and cast.projekt.stav == PROJEKT_STAV_ARCHIVOVANY and cast.projekt.vedouci_projektu:
                 contributors += [
                     serialize_osoba(cast.projekt.vedouci_projektu, cast.projekt.organizace, "ProjectLeader")
                 ]
@@ -489,7 +511,7 @@ class DokumentSerializer(ModelSerializer):
                 for komp in cast.komponenty.komponenty.all():
                     komp: Komponenta
                     dates += [serialize_dates_coverage(komp.obdobi)]
-            if cast.archeologicky_zaznam:
+            if cast.archeologicky_zaznam and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY:
                 for dj in cast.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
                     dj: DokumentacniJednotka
                     for komp in dj.komponenty.komponenty.all():
@@ -507,15 +529,9 @@ class DokumentSerializer(ModelSerializer):
         return descriptions
 
     def _serialize_geolocations(self):
-        def convert_geo_location_to_dict(item):
-            item = dict(item)
-            if "geoLocationPoint" in item:
-                item["geoLocationPoint"] = dict(item["geoLocationPoint"])
-            return item
-
         geo_locations: List[frozenset] = []
         try:
-            if self.record.extra_data.geom and self.record.rada == DOKUMENT_RADA_DATA_3D:
+            if self.record.extra_data.geom and self.record.rada.pk == DOKUMENT_RADA_DATA_3D:
                 geo_locations.append(serialize_geom(self.record.extra_data.geom, verejne=True))
         except ObjectDoesNotExist:
             pass
@@ -528,8 +544,8 @@ class DokumentSerializer(ModelSerializer):
                     )
             except ObjectDoesNotExist:
                 pass
-            if cast.projekt and cast.projekt.hlavni_katastr:
-                verejne = cast.projekt.pristupnost.pk == PRISTUPNOST_ANONYM_ID
+            if cast.projekt and cast.projekt.stav == PROJEKT_STAV_ARCHIVOVANY and cast.projekt.hlavni_katastr:
+                verejne = cast.projekt.pristupnost_snapshot.pk == PRISTUPNOST_ANONYM_ID
                 geo_locations.append(
                     serialize_geom(cast.projekt.hlavni_katastr.definicni_bod, cast.projekt.hlavni_katastr, verejne)
                 )
@@ -588,7 +604,7 @@ class DokumentSerializer(ModelSerializer):
                             "relatedIdentifierType": "URL",
                         }
                     ]
-                elif cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
+                elif cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA and cast.archeologicky_zaznam.lokalita.igsn:
                     related_identifiers += [
                         {
                             "relationType": "Documents",
@@ -597,7 +613,16 @@ class DokumentSerializer(ModelSerializer):
                             "relatedIdentifierType": "IGSN",
                         }
                     ]
-            elif cast.projekt:
+                elif cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA and not cast.archeologicky_zaznam.lokalita.igsn:
+                    related_identifiers += [
+                        {
+                            "relationType": "Documents",
+                            "relatedIdentifier": f"{settings.DIGI_LINKS['Digi_archiv_link']}{cast.archeologicky_zaznam.ident_cely}",
+                            "resourceTypeGeneral": "PhysicalObject",
+                            "relatedIdentifierType": "URL",
+                        }
+                    ]
+            elif cast.projekt and cast.projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
                 related_identifiers += [
                     {
                         "relationType": "Documents",
@@ -611,7 +636,10 @@ class DokumentSerializer(ModelSerializer):
     def _serialize_rightslist(self):
         result = []
         if self.record.licence:
-            serialized_rights = {"rights": self.record.licence.heslo_en}
+            serialized_rights = {
+                "rights": self.record.licence.heslo_en,
+                "lang": "en",
+            }
             spdx_query = self.record.licence.heslar_odkaz.filter(zdroj="SPDX").first()
             if spdx_query:
                 serialized_rights["rightsUri"] = spdx_query.uri
@@ -624,7 +652,7 @@ class DokumentSerializer(ModelSerializer):
     def _serialize_subjects(self):
         serialized_subjects = super()._serialize_subjects()
         serialized_subjects += [serialize_subject(posudek) for posudek in self.record.posudky.all()]
-        serialized_subjects += [serialize_subject(osoba, "vypis_cely") for osoba in self.record.osoby.all()]
+        serialized_subjects += [serialize_subject(osoba, "vypis_cely", "") for osoba in self.record.osoby.all()]
         if self.record.has_extra_data():
             serialized_subjects += [serialize_subject(self.record.extra_data.udalost_typ)]
         for cast in self.record.casti.all():
@@ -665,13 +693,22 @@ class DokumentSerializer(ModelSerializer):
         )
         serialized_types = {}
         if resource_type_query.exists():
-            serialized_types["resourceType"] = resource_type_query.first().heslo_en
+            serialized_types["resourceType"] = resource_type_query.first().heslo.heslo_en
             serialized_types["resourceTypeGeneral"] = resource_type_query.first().kod
         else:
             serialized_types["resourceType"] = "Dataset"
             serialized_types["resourceTypeGeneral"] = "Dataset"
         return serialized_types
 
+    def _get_formats(self):
+        result = []
+        soubory_queryset = self._get_soubory_queryset()
+        if soubory_queryset and soubory_queryset.exists():            
+            result = list(set([soubor.mimetype for soubor in soubory_queryset.all()]))
+        if self.record.rada.pk == DOKUMENT_RADA_DATA_3D:
+            if self.record.extra_data and self.record.extra_data.format:
+                result.append(self.record.extra_data.format.heslo_en)
+        return result
 
 class SamostatnyNalezSerializer(ModelSerializer):
     def __init__(self, record: SamostatnyNalez):
@@ -752,8 +789,11 @@ class SamostatnyNalezSerializer(ModelSerializer):
                 dates += [{"date": self.format_date_time(date.datum_zmeny), "dateType": "Issued"}]
             elif date.typ_zmeny == VRACENI_SN:
                 dates += [{"date": self.format_date_time(date.datum_zmeny), "dateType": "Withdrawn"}]
-        if self.record.obdobi.heslar_datace.exists():
-            dates += [serialize_dates_coverage(self.record.obdobi)]
+        try:
+            if self.record.obdobi.datace_obdobi:
+                dates += [dict(serialize_dates_coverage(self.record.obdobi))]
+        except ObjectDoesNotExist:
+            pass
         return dates
 
     def _serialize_descriptions(self):
@@ -779,10 +819,14 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return descriptions
 
     def _serialize_geolocations(self):
-        geo_locations: List[frozenset] = []
+        geo_locations: List[Dict] = []
         if self.record.katastr:
             verejne = self.record.pristupnost.pk == PRISTUPNOST_ANONYM_ID
-            geo_locations.append(serialize_geom(self.record.katastr.definicni_bod, self.record.katastr, verejne))
+            geo_locations.append(
+                convert_geo_location_to_dict(
+                    serialize_geom(self.record.katastr.definicni_bod, self.record.katastr, verejne)
+                )
+            )
         return geo_locations
 
     def _serialize_related_identifiers(self):
@@ -815,6 +859,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
                 "schemeUri": "https://spdx.org/licenses",
                 "rightsIdentifier": "CC-BY-NC-4.0",
                 "rightsIdentifierScheme": "SPDX",
+                "lang": "en",
             }
         ]
 
@@ -832,10 +877,14 @@ class SamostatnyNalezSerializer(ModelSerializer):
             serialized_subjects += [
                 serialize_subject(self.record.specifikace),
             ]
+        serialized_subjects = [dict(item) for item in serialized_subjects]
         return serialized_subjects
 
     def _serialize_types(self):
         return {"resourceType": "archaeological object", "resourceTypeGeneral": "PhysicalObject"}
+    
+    def _get_formats(self):
+        return []
 
 
 class LokalitaSerializer(ModelSerializer):
@@ -861,9 +910,9 @@ class LokalitaSerializer(ModelSerializer):
     def _get_soubory_queryset(self):
         return None
 
-    def _serialize_dates(self):
-        dates = []
-        for date in self.record.historie.historie_set.all():
+    def _serialize_dates(self) -> List[Dict]:
+        dates: List[Dict] = []
+        for date in self.record.archeologicky_zaznam.historie.historie_set.all():
             date: Historie
             if date.typ_zmeny == ZAPSANI_AZ:
                 dates += [{"date": self.format_date_time(date.datum_zmeny), "dateType": "Created"}]
@@ -875,12 +924,13 @@ class LokalitaSerializer(ModelSerializer):
                 dates += [{"date": self.format_date_time(date.datum_zmeny), "dateType": "Issued"}]
             elif date.typ_zmeny == VRACENI_AZ:
                 dates += [{"date": self.format_date_time(date.datum_zmeny), "dateType": "Withdrawn"}]
+        dates: List[frozenset] = [frozenset(d.items()) for d in dates]
         for dj in self.record.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
             dj: DokumentacniJednotka
             for komp in dj.komponenty.komponenty.all():
                 komp: Komponenta
                 dates += [serialize_dates_coverage(komp.obdobi)]
-        dates = [dict(item) for item in set(dates) if item]
+        dates: List[Dict] = [dict(item) for item in set(dates) if item]
         return dates
 
     def _serialize_descriptions(self):
@@ -909,7 +959,7 @@ class LokalitaSerializer(ModelSerializer):
                     "descriptionType": "Abstract",
                 }
             )
-        if self.record.poznamka:
+        if self.record.poznamka and self.record.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID:
             descriptions.append({"lang": "cs", "description": self.record.poznamka, "descriptionType": "TechnicalInfo"})
         return descriptions
 
@@ -931,7 +981,7 @@ class LokalitaSerializer(ModelSerializer):
         for katastr in self.record.archeologicky_zaznam.katastry.all():
             katastr: RuianKatastr
             geo_locations.append(serialize_geom(katastr.definicni_bod, katastr, verejne))
-        result = [dict(item) for item in list(set(geo_locations))]
+        result = [convert_geo_location_to_dict(item) for item in list(set(geo_locations))]
         return result
 
     def _get_publication_year(self):
@@ -950,6 +1000,7 @@ class LokalitaSerializer(ModelSerializer):
                 "schemeUri": "https://spdx.org/licenses",
                 "rightsIdentifier": "CC-BY-NC-4.0",
                 "rightsIdentifierScheme": "SPDX",
+                "lang": "en",
             }
         ]
 
@@ -973,12 +1024,13 @@ class LokalitaSerializer(ModelSerializer):
     def _serialize_creators(self):
         result = [
             {
-                "name": "AIS CR",
+                "name": "Archaeological Information System of the Czech Republic",
                 "nameType": "Organizational",
+                "lang": "en",
                 "nameIdentifiers": [
                     {
-                        "affiliationIdentifier": "https://ror.org/01a7rqj69",
-                        "affiliationIdentifierScheme": "ROR",
+                        "nameIdentifier": "https://ror.org/01a7rqj69",
+                        "nameIdentifierScheme": "ROR",
                         "schemeUri": "https://ror.org/",
                     }
                 ],
@@ -1002,6 +1054,7 @@ class LokalitaSerializer(ModelSerializer):
                         "relatedIdentifier": cast.dokument.doi,
                         "resourceTypeGeneral": cast.dokument.typ_dokumentu.heslar_odkaz.filter(zdroj="DataCite")
                         .filter(nazev_kodu="resourceTypeGeneral")
+                        .first()
                         .kod,
                         "relatedIdentifierType": "DOI",
                     }
@@ -1015,6 +1068,7 @@ class LokalitaSerializer(ModelSerializer):
                         "relatedIdentifier": externi_odkaz.externi_zdroj.doi,
                         "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
                         .filter(nazev_kodu="resourceTypeGeneral")
+                        .first()
                         .kod,
                         "relatedIdentifierType": "DOI",
                     }
@@ -1026,6 +1080,7 @@ class LokalitaSerializer(ModelSerializer):
                         "relatedIdentifier": f"{settings.DIGI_LINKS['Digi_archiv_link']}{externi_odkaz.externi_zdroj.ident_cely}",
                         "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
                         .filter(nazev_kodu="resourceTypeGeneral")
+                        .first()
                         .kod,
                         "relatedIdentifierType": "URL",
                     }
@@ -1036,11 +1091,12 @@ class LokalitaSerializer(ModelSerializer):
         related_items = []
         for externi_odkaz in self._get_externi_odkaz_query():
             externi_odkaz: ExterniOdkaz
-            externi_zdroj = externi_odkaz.externi_zdroj
+            externi_zdroj: ExterniZdroj = externi_odkaz.externi_zdroj
             if externi_zdroj.stav == EZ_STAV_POTVRZENY:
                 related_item = {
                     "relatedItemType": externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
                     .filter(nazev_kodu="resourceTypeGeneral")
+                    .first()
                     .kod,
                     "relationType": "IsPublishedIn",
                 }
@@ -1051,13 +1107,13 @@ class LokalitaSerializer(ModelSerializer):
                     }
                 else:
                     related_item["relatedItemIdentifier"] = {
-                        "relatedItemIdentifier": externi_zdroj.ident_cely,
+                        "relatedItemIdentifier": f"{settings.DIGI_LINKS['Digi_archiv_link']}{externi_zdroj.ident_cely}",
                         "relatedItemIdentifierType": "URL",
                     }
                 related_item["creators"] = [
                     serialize_ez_creator(ea.autor) for ea in externi_zdroj.externizdrojautor_set.all()
                 ]
-                related_item["titles"] = [externi_zdroj.nazev]
+                related_item["titles"] = [{"title": externi_zdroj.nazev}]
                 if externi_zdroj.sbornik_nazev and not externi_zdroj.casopis_denik_nazev:
                     related_item["volume"] = externi_zdroj.sbornik_nazev
                 elif externi_zdroj.casopis_denik_nazev and not externi_zdroj.sbornik_nazev:
@@ -1065,7 +1121,7 @@ class LokalitaSerializer(ModelSerializer):
                 if externi_zdroj.casopis_rocnik and not externi_zdroj.datum_rd:
                     related_item["issue"] = externi_zdroj.casopis_rocnik
                 elif not externi_zdroj.casopis_rocnik and externi_zdroj.datum_rd:
-                    related_item["issue"] = externi_zdroj.datum_rd
+                    related_item["issue"] = self.format_date(externi_zdroj.datum_rd)
                 if externi_zdroj.vydavatel and not externi_zdroj.organizace:
                     related_item["publisher"] = externi_zdroj.vydavatel
                 elif not externi_zdroj.vydavatel and externi_zdroj.organizace:
@@ -1094,6 +1150,9 @@ class LokalitaSerializer(ModelSerializer):
     def _serialize_types(self):
         return {"resourceType": "archaeological site", "resourceTypeGeneral": "PhysicalObject"}
 
+    def _get_formats(self):
+        return []
+    
     def serialize_publish(self):
         publish = super().serialize_publish()
         publish["data"]["attributes"]["relatedItems"] = self._serialize_related_items()
@@ -1101,5 +1160,6 @@ class LokalitaSerializer(ModelSerializer):
 
     def serialize_update(self):
         result = super().serialize_publish()
-        result["data"]["attributes"].pop("event")["relatedItems"] = self._serialize_related_items()
+        result["data"]["attributes"].pop("event")
+        result["data"]["attributes"]["relatedItems"] = self._serialize_related_items()
         return result

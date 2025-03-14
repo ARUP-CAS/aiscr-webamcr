@@ -461,11 +461,20 @@ def update_all_redis_snapshots(rewrite_existing=False):
                     to_attr="ordered_autors",
                 )
             )
-        for item in query:
+        i = 0
+        change_items = 0
+        for item in query.iterator(chunk_size=1000):
             if rewrite_existing or not r.exists(item.redis_snapshot_id):
                 key, value = item.generate_redis_snapshot()
                 if key and value:
                     pipe.hset(key, mapping=value)
+                    change_items = change_items + 1
+                    if (change_items % 1000) == 0:
+                        pipe.execute()
+
+            i = i + 1
+            if (i % 1000) == 0:
+                print(f"\r{i}", end="")
         pipe.execute()
         logger.debug("cron.tasks.update_all_redis_snapshots.class_end", extra={"class_name": current_class.__name__})
     logger.debug("cron.tasks.update_all_redis_snapshots.end")

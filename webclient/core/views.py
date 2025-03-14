@@ -341,36 +341,51 @@ class DownloadThumbnailLarge(DownloadFile):
     thumb_large = True
 
 
-@login_required
-@require_http_methods(["GET"])
-def update_file(request, typ_vazby, ident_cely, file_id):
+class UpdateFileView(LoginRequiredMixin, TemplateView):
     """
-    Funkce pohledu pro zobrazení stránky pro nahrazení souboru.
+    Třída pohledu pro zobrazení stránky pro nahrazení souboru.
     """
-    if url_has_allowed_host_and_scheme(request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS):
-        safe_redirect = request.GET.get("next", "core:home")
-    else:
-        safe_redirect = "/"
-    try:
-        check_soubor_vazba(typ_vazby, ident_cely, file_id)
-    except ZaznamSouborNotmatching as e:
-        logger.debug(e)
-        messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_SOUBOR_VAZBA)
+
+    template_name = "core/upload_file.html"
+
+    def get(self, request, *args, **kwargs):
+        typ_vazby = self.kwargs.get("typ_vazby")
+        ident_cely = self.kwargs.get("ident_cely")
+        file_id = self.kwargs.get("file_id")
+
+        # Získání bezpečné URL pro přesměrování
+        next_url = request.GET.get("next", "core:home")
+        if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+            safe_redirect = next_url
+        else:
+            safe_redirect = "/"
+
+        # Ověření vazby souboru
+        try:
+            check_soubor_vazba(typ_vazby, ident_cely, file_id)
+        except ZaznamSouborNotmatching as e:
+            logger.debug(e)
+            messages.error(request, SPATNY_ZAZNAM_SOUBOR_VAZBA)
+            return redirect(safe_redirect)
+
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        next_url = request.GET.get("next", "core:home")
+        if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+            safe_redirect = next_url
+        else:
+            safe_redirect = "/"
         return redirect(safe_redirect)
 
-    ident_cely = ""
-    back_url = safe_redirect
-    return render(
-        request,
-        "core/upload_file.html",
-        {
-            "ident_cely": ident_cely,
-            "back_url": back_url,
-            "file_id": file_id,
-            "typ_vazby": typ_vazby,
-            "info_tooltip": _("core.upload_file_replace.tooltip"),
-        },
-    )
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["ident_cely"] = ""
+        context["back_url"] = self.request.GET.get("next", "/")
+        context["file_id"] = self.kwargs.get("file_id")
+        context["typ_vazby"] = self.kwargs.get("typ_vazby")
+        context["info_tooltip"] = _("core.upload_file_replace.tooltip")
+        return context
 
 
 class Uploadfileview(LoginRequiredMixin, TemplateView):

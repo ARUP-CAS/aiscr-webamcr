@@ -1043,9 +1043,19 @@ class DokumentCastOdpojitView(TransakceView):
         cast = self.get_zaznam()
         cast.create_transaction(request.user, self.success_message)
         cast.close_active_transaction_when_finished = True
+        archeologicky_zaznam = cast.archeologicky_zaznam
         cast.archeologicky_zaznam = None
         cast.projekt = None
         cast.save()
+        if (
+            archeologicky_zaznam
+            and archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+            and archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            and archeologicky_zaznam.lokalita.igsn
+        ):
+            archeologicky_zaznam.lokalita.igsn_update()
+        if cast.dokument.stav == D_STAV_ARCHIVOVANY and cast.dokument.doi:
+            cast.dokument.doi_update()
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
 
@@ -1592,16 +1602,6 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ARCHIVOVAN)
         dokument.active_transaction = fedora_transaction
-        dokument.doi_publish()
-        dokument.set_doi()
-        for item in dokument.casti.all():
-            item: DokumentCast
-            if (
-                item.archeologicky_zaznam
-                and item.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-                and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-            ):
-                item.archeologicky_zaznam.lokalita.igsn_update()
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
@@ -1617,6 +1617,16 @@ def archivovat(request, ident_cely):
                 dokument.save()
                 logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": dokument.ident_cely})
         dokument.set_archivovany(request.user, old_ident)
+        dokument.doi_publish()
+        dokument.set_doi()
+        for item in dokument.casti.all():
+            item: DokumentCast
+            if (
+                item.archeologicky_zaznam
+                and item.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            ):
+                item.archeologicky_zaznam.lokalita.igsn_update()
         if dokument.rada == Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D):
             Mailer.send_ek01(document=dokument)
         dokument.close_active_transaction_when_finished = True
@@ -1629,11 +1639,12 @@ def archivovat(request, ident_cely):
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
-    form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})
+    doi_confirmation = dokument.doi_exists and dokument.doi is None
+    form_check = CheckStavNotChangedForm(require_confirmation=doi_confirmation, initial={"old_stav": dokument.stav})
     context = {
         "object": dokument,
         "title": _("dokument.views.archivovat.title"),
-        "text": _("dokument.views.archivovat.doi_exists_warning") if dokument.doi_exists else None,
+        "pid_confirmation": doi_confirmation,
         "id_tag": "archivovat-dokument-form",
         "button": _("dokument.views.archivovat.submitButton.text"),
         "form_check": form_check,
@@ -1969,6 +1980,15 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
         fedora_transaction.main_record = zaznam
         dokument_cast = dokument_cast_query.first()
         dokument_cast.active_transaction = fedora_transaction
+        if (
+            isinstance(zaznam, ArcheologickyZaznam)
+            and zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+            and zaznam.stav == AZ_STAV_ARCHIVOVANY
+            and zaznam.lokalita.igsn
+        ):
+            zaznam.lokalita.igsn_update()
+        if dokument_cast.dokument and dokument_cast.dokument.stav == D_STAV_ARCHIVOVANY:
+            dokument_cast.dokument.doi_update()
         resp = dokument_cast.delete()
         logger.debug("dokument.views.odpojit.deleted", extra={"value": resp})
         if remove_orphan:
