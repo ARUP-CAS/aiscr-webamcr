@@ -492,6 +492,7 @@ class ExterniOdkazOdpojitView(TransakceView):
         if (
             eo.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
             and eo.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            and eo.archeologicky_zaznam.lokalita.igsn
         ):
             eo.archeologicky_zaznam.lokalita.igsn_update()
         eo.close_active_transaction_when_finished = True

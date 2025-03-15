@@ -776,7 +776,7 @@ def archivovat(request, ident_cely):
                 request.session["arch_projekt_link"] = True
         for item in az.casti_dokumentu.all():
             item: DokumentCast
-            if item.dokument.stav == D_STAV_ARCHIVOVANY:
+            if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
                 item.dokument.doi_update()
         fedora_transaction.success_message = get_message(az, "USPESNE_ARCHIVOVANA")
         Mailer.send_ea02(arch_z=az)
