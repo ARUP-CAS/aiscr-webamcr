@@ -101,7 +101,7 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
                 args=[self.ident_cely[:-5], self.komponenta_vazby.dokumentacni_jednotka.ident_cely, self.ident_cely],
             )
         else:
-            return reverse("dokument:detail-model-3D", args=[self.ident_cely[:-5]])
+            return self.komponenta_vazby.casti_dokumentu.dokument.get_absolute_url()
 
     def get_permission_object(self):
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:

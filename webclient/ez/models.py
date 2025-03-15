@@ -108,8 +108,6 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         """
         Metóda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
         """
-        from arch_z.models import Akce, ArcheologickyZaznam
-
         self.stav = EZ_STAV_ODESLANY
         historie_poznamka = self.check_set_permanent_ident()
         Historie(
@@ -118,13 +116,6 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             vazba=self.historie,
             poznamka=historie_poznamka,
         ).save()
-        for akce in self.externi_odkazy_zdroje.all():
-            akce: Akce
-            if (
-                akce.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-                and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-            ):
-                akce.archeologicky_zaznam.lokalita.igsn_update()
         self.close_active_transaction_when_finished = True
         self.save()
 
@@ -154,6 +145,17 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             vazba=self.historie,
             poznamka=historie_poznamka,
         ).save()
+
+        from arch_z.models import Akce, ArcheologickyZaznam
+
+        for akce in self.externi_odkazy_zdroje.all():
+            akce: Akce
+            if (
+                akce.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            ):
+                akce.archeologicky_zaznam.lokalita.igsn_update()
+
         self.close_active_transaction_when_finished = True
         self.save()
 

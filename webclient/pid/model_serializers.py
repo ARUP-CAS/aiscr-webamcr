@@ -169,7 +169,7 @@ class ModelSerializer(ABC):
     @abstractmethod
     def _get_formats(self):
         pass
-    
+
     def serialize_delete(self):
         return {
             "data": {
@@ -233,7 +233,7 @@ class ModelSerializer(ABC):
                     and self._get_soubory_queryset()
                     and self._get_soubory_queryset().exists()
                     else [],
-                    "formats": self._get_formats(),                    
+                    "formats": self._get_formats(),
                     "version": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z"),
                     "rightsList": self._serialize_rightslist(),
                     "descriptions": self._serialize_descriptions(),
@@ -388,7 +388,7 @@ def serialize_subjects_komponenty(komp: Komponenta):
     return result
 
 
-def serialize_dates_coverage(datace: Heslar) -> frozenset:
+def serialize_dates_coverage(datace: Heslar) -> frozenset | None:
     try:
         result = frozenset(
             {
@@ -398,7 +398,7 @@ def serialize_dates_coverage(datace: Heslar) -> frozenset:
             }.items()
         )
     except ObjectDoesNotExist:
-        result = []
+        result = None
     return result
 
 
@@ -510,13 +510,17 @@ class DokumentSerializer(ModelSerializer):
             if cast.komponenty:
                 for komp in cast.komponenty.komponenty.all():
                     komp: Komponenta
-                    dates += [serialize_dates_coverage(komp.obdobi)]
+                    serialized_date_coverage = serialize_dates_coverage(komp.obdobi)
+                    if serialized_date_coverage:
+                        dates += [serialized_date_coverage]
             if cast.archeologicky_zaznam and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY:
                 for dj in cast.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
                     dj: DokumentacniJednotka
                     for komp in dj.komponenty.komponenty.all():
                         komp: Komponenta
-                        dates += [serialize_dates_coverage(komp.obdobi)]
+                        serialized_date_coverage = serialize_dates_coverage(komp.obdobi)
+                        if serialized_date_coverage:
+                            dates += [serialized_date_coverage]
         dates = [dict(item) for item in set(dates) if item]
         return dates
 
@@ -604,7 +608,10 @@ class DokumentSerializer(ModelSerializer):
                             "relatedIdentifierType": "URL",
                         }
                     ]
-                elif cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA and cast.archeologicky_zaznam.lokalita.igsn:
+                elif (
+                    cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                    and cast.archeologicky_zaznam.lokalita.igsn
+                ):
                     related_identifiers += [
                         {
                             "relationType": "Documents",
@@ -613,7 +620,10 @@ class DokumentSerializer(ModelSerializer):
                             "relatedIdentifierType": "IGSN",
                         }
                     ]
-                elif cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA and not cast.archeologicky_zaznam.lokalita.igsn:
+                elif (
+                    cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                    and not cast.archeologicky_zaznam.lokalita.igsn
+                ):
                     related_identifiers += [
                         {
                             "relationType": "Documents",
@@ -703,12 +713,13 @@ class DokumentSerializer(ModelSerializer):
     def _get_formats(self):
         result = []
         soubory_queryset = self._get_soubory_queryset()
-        if soubory_queryset and soubory_queryset.exists():            
+        if soubory_queryset and soubory_queryset.exists():
             result = list(set([soubor.mimetype for soubor in soubory_queryset.all()]))
         if self.record.rada.pk == DOKUMENT_RADA_DATA_3D:
             if self.record.extra_data and self.record.extra_data.format:
                 result.append(self.record.extra_data.format.heslo_en)
         return result
+
 
 class SamostatnyNalezSerializer(ModelSerializer):
     def __init__(self, record: SamostatnyNalez):
@@ -791,7 +802,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
                 dates += [{"date": self.format_date_time(date.datum_zmeny), "dateType": "Withdrawn"}]
         try:
             if self.record.obdobi.datace_obdobi:
-                dates += [dict(serialize_dates_coverage(self.record.obdobi))]
+                serialized_date_coverage = serialize_dates_coverage(self.record.obdobi)
+                if serialized_date_coverage:
+                    dates += [dict(serialized_date_coverage)]
         except ObjectDoesNotExist:
             pass
         return dates
@@ -882,7 +895,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_types(self):
         return {"resourceType": "archaeological object", "resourceTypeGeneral": "PhysicalObject"}
-    
+
     def _get_formats(self):
         return []
 
@@ -929,7 +942,9 @@ class LokalitaSerializer(ModelSerializer):
             dj: DokumentacniJednotka
             for komp in dj.komponenty.komponenty.all():
                 komp: Komponenta
-                dates += [serialize_dates_coverage(komp.obdobi)]
+                serialized_dates_coverage = serialize_dates_coverage(komp.obdobi)
+                if serialized_dates_coverage:
+                    dates += [serialized_dates_coverage]
         dates: List[Dict] = [dict(item) for item in set(dates) if item]
         return dates
 
@@ -1152,7 +1167,7 @@ class LokalitaSerializer(ModelSerializer):
 
     def _get_formats(self):
         return []
-    
+
     def serialize_publish(self):
         publish = super().serialize_publish()
         publish["data"]["attributes"]["relatedItems"] = self._serialize_related_items()
