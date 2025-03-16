@@ -109,6 +109,15 @@ class DocumentCreator(ABC):
         self.texts = {}
         self._generate_text()
 
+    @classmethod
+    def format_date(cls, date_obj: datetime.datetime | None) -> str:
+        if date_obj is None:
+            return ""
+        if os.name == "nt":
+            return date_obj.strftime("%#d. %#m. %Y")
+        else:
+            return date_obj.strftime("%-d. %-m. %Y")
+
     def _create_style_dict(self):
         self.styles.add(
             ParagraphStyle(
@@ -199,12 +208,10 @@ class DocumentCreator(ABC):
     def _create_header_tab_dates(self):
         self.texts["header_tab_1_1"] = "<strong>Oznámení ze dne</strong>"
         self.texts["header_tab_1_2"] = "<strong>Evidenční číslo</strong>"
-        self.texts["header_tab_1_3"] = f"<strong>V {DOK_VE_MESTE[self.dok_index]} dne</strong>"
-        self.texts["header_tab_2_1"] = (
-            self.projekt.datum_oznameni.strftime("%d. %m. %Y") if self.projekt.datum_oznameni else ""
-        )
+        self.texts["header_tab_1_3"] = f"<strong>{DOK_VE_MESTE[self.dok_index]} dne</strong>"
+        self.texts["header_tab_2_1"] = self.format_date(self.projekt.datum_oznameni)
         self.texts["header_tab_2_2"] = self.projekt.ident_cely
-        self.texts["header_tab_2_3"] = datetime.datetime.now().strftime("%d. %m. %Y")
+        self.texts["header_tab_2_3"] = self.format_date(datetime.datetime.now())
 
     def _create_header_tab_dates_doc(self) -> Table:
         tbl_data = [
@@ -224,15 +231,13 @@ class DocumentCreator(ABC):
 
     def _create_data_document_part(self):
         self.texts["data_part_1"] = f"<strong>Podnět oznámení</strong>: {self.projekt.podnet}"
-        self.texts[
-            "data_part_2"
-        ] = f"<strong>Katastrální území</strong>: {self.projekt.hlavni_katastr} ({self.projekt.hlavni_katastr.okres})"
+        self.texts["data_part_2"] = f"<strong>Katastrální území</strong>: {self.projekt.hlavni_katastr}"
         self.texts["data_part_3"] = f"<strong>Lokalizace</strong>: {self.projekt.lokalizace}"
         self.texts["data_part_4"] = f"<strong>Parcelní číslo</strong>: {self.projekt.parcelni_cislo}"
         self.texts["data_part_5"] = f"<strong>Označení stavby</strong>: {self.projekt.oznaceni_stavby}"
         self.texts[
             "data_part_6"
-        ] = f"<strong>Plánované zahájení</strong>: {self.projekt.planovane_zahajeni.lower.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.planovane_zahajeni else ''} - {self.projekt.planovane_zahajeni.upper.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.planovane_zahajeni else ''}"
+        ] = f"<strong>Plánované zahájení</strong>: {self.format_date(self.projekt.planovane_zahajeni.lower) if self.projekt.planovane_zahajeni else ''} - {self.format_date(self.projekt.planovane_zahajeni.upper) if self.projekt.planovane_zahajeni else ''}"
 
     def _create_signature(self):
         self.texts["doc_sign_1"] = "S pozdravem"
@@ -305,9 +310,9 @@ class OznameniPDFCreator(DocumentCreator):
             "doc_par_1"
         ] = f"""
         Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v. v. i., obdržel dne 
-        {self.projekt.datum_oznameni.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.datum_oznameni else ''} 
-        Vaše oznámení o zahájení stavebního (či jiného) záměru na území s archeologickými nálezy 
-        {self.projekt.podnet} v k. ú. {self.projekt.hlavni_katastr} ({self.projekt.hlavni_katastr.okres}), který 
+        {self.format_date(self.projekt.datum_oznameni)} 
+        Vaše oznámení o&nbsp;zahájení stavebního (či jiného) záměru na území s&nbsp;archeologickými nálezy 
+        {self.projekt.podnet} v k. ú. {self.projekt.hlavni_katastr}, který 
         eviduje pod evidenčním číslem {self.projekt.ident_cely}. Archeologický ústav AV ČR, 
         {DOK_MESTO[self.dok_index]}, v. v. i. sděluje, že tímto krokem byla splněna zákonná oznamovací povinnost 
         dle ustanovení § 22 odst. 2 zákona č. 20/1987 Sb., o státní památkové péči, ve znění pozdějších předpisů.
@@ -329,8 +334,6 @@ class OznameniPDFCreator(DocumentCreator):
         doklad pro dodatečné stavební povolení.</strong>
         """
 
-        self._create_signature()
-
         self.texts["notes_heading"] = "<strong>Poučení</strong>"
         self.texts["notes"] = ListFlowable(
             [
@@ -348,36 +351,37 @@ class OznameniPDFCreator(DocumentCreator):
                             ústavem AV ČR nebo oprávněnou organizací. Stavebník má právo uzavřít dohodu s kteroukoliv 
                             organizací, oprávněnou provádět archeologické výzkumy na dotčeném území. Seznam všech 
                             oprávněných organizací s územním rozsahem jejich působnosti naleznete na internetových 
-                            stránkách Mapa archeologických organizací (https://oao.aiscr.cz/).
+                            stránkách Mapa archeologických organizací 
+                            (<a href="https://oao.aiscr.cz/">https://oao.aiscr.cz/</a>).
                             """,
                     self.body_style,
                 ),
+                Paragraph(
+                    f"""
+                        <strong>V případě nedohody určí podmínky výzkumu příslušný krajský úřad na základě 
+                        § 22 odst. 1 zákona č. 20/1987 Sb., o státní památkové péči, v platném znění.</strong>
+                        """,
+                    self.body_style,
+                ),
+                Paragraph(
+                    f"""
+                        Za standardních okolností je záchranný archeologický výzkum prováděn formou dohledu 
+                        zemních prací, případně formou plošného terénního výzkumu předstihově nebo souběžně 
+                        se stavební činností. Konkrétní podmínky a metodika provedení záchranného archeologického 
+                        výzkumu jsou blíže specifikovány v příslušné dohodě, uzavřené mezi stavebníkem 
+                        a Archeologickým ústavem AV ČR nebo oprávněnou organizací dle § 22 odst. 1 
+                        zákona č. 20/1987 Sb., o státní památkové péči, v platném znění.
+                        """,
+                    self.body_style,
+                ),
+                Paragraph(
+                    f"""
+                        Úhrada nákladů záchranného archeologického výzkumu se řídí ustanovením § 22 odst. 
+                        2 zákona č. 20/1987 Sb., o státní památkové péči, v platném znění.
+                        """,
+                    self.body_style,
+                ),
                 [
-                    Paragraph(
-                        f"""
-                            <strong>V případě nedohody určí podmínky výzkumu příslušný krajský úřad na základě 
-                            § 22 odst. 1 zákona č. 20/1987 Sb., o státní památkové péči, v platném znění.</strong>
-                            """,
-                        self.body_style,
-                    ),
-                    Paragraph(
-                        f"""
-                            Za standardních okolností je záchranný archeologický výzkum prováděn formou dohledu 
-                            zemních prací, případně formou plošného terénního výzkumu předstihově nebo souběžně 
-                            se stavební činností. Konkrétní podmínky a metodika provedení záchranného archeologického 
-                            výzkumu jsou blíže specifikovány v příslušné dohodě, uzavřené mezi stavebníkem 
-                            a Archeologickým ústavem AV ČR nebo oprávněnou organizací dle § 22 odst. 1 
-                            zákona č. 20/1987 Sb., o státní památkové péči, v platném znění.
-                            """,
-                        self.body_style,
-                    ),
-                    Paragraph(
-                        f"""
-                            Úhrada nákladů záchranného archeologického výzkumu se řídí ustanovením § 22 odst. 
-                            2 zákona č. 20/1987 Sb., o státní památkové péči, v platném znění.
-                            """,
-                        self.body_style,
-                    ),
                     Paragraph(
                         f"""
                             <strong>Bez ohledu na to, zda v souvislosti se stavební nebo jinou činností proběhl 
@@ -430,6 +434,8 @@ class OznameniPDFCreator(DocumentCreator):
             bulletType="1",
             bulletFormat="%s.",
         )
+
+        self._create_signature()
 
         self.texts["doc_attachment_heading_main_1"] = "PŘÍLOHA – INFORMACE O ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ"
 
@@ -484,7 +490,7 @@ class OznameniPDFCreator(DocumentCreator):
                (člověku), na základě kterých lze konkrétní fyzickou osobu přímo či nepřímo identifikovat. Mezi osobní údaje
                tak patří široká škála informací, jako je například jméno, pohlaví, věk a datum narození, osobní stav,
                fotografie (resp. jakékoliv zobrazení podoby), rodné číslo, místo trvalého pobytu, telefonní číslo, e-mail,
-               údaje o zdravotní pojišťovně, státní občanství, údaje o zdravotním stavu (fyzickém i psychickém),
+               údaje o zdravotní pojišťovně, státní občanství, údaje o&nbsp;zdravotním stavu (fyzickém i psychickém),
                ale také otisk prstu, podpis nebo IP adresa.
                """
 
@@ -623,24 +629,27 @@ class OznameniPDFCreator(DocumentCreator):
         header.append(tbl)
 
         doc = [
+            Paragraph("", body_style),
             Paragraph(self.texts.get("doc_vec"), styles["amVec"]),
+            Paragraph("", body_style),
             Paragraph(self.texts.get("data_part_1"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_2"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_3"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_4"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_5"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_6"), styles["amBodyTextSmallerSpaceAfter"]),
+            Paragraph("", body_style),
             Paragraph(self.texts.get("doc_par_1"), body_style),
             Paragraph(self.texts.get("doc_par_2"), body_style),
             Paragraph(self.texts.get("doc_par_3"), styles["amBodyTextCenter"]),
         ]
 
-        signature = self._create_signature_doc()
-
         notes = [
             Paragraph(self.texts.get("notes_heading"), body_style),
             self.texts.get("notes", body_style),
         ]
+
+        signature = self._create_signature_doc()
 
         attachment = [
             PageBreak(),
@@ -670,7 +679,7 @@ class OznameniPDFCreator(DocumentCreator):
             Paragraph(self.texts.get("doc_attachment_par_8_4"), body_style),
         ]
 
-        document_content = header + doc + signature + notes + attachment
+        document_content = header + doc + notes + signature + attachment
         return self._generate_repository_file(my_doc, document_content, pdf_buffer)
 
 
@@ -687,7 +696,7 @@ class ZruseniPDFCreator(DocumentCreator):
             "doc_par_1"
         ] = f"""
         Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v. v. i., obdržel dne 
-        {self.projekt.datum_oznameni.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.datum_oznameni else ''} 
+        {self.format_date(self.projekt.datum_oznameni)} 
         Vaše oznámení o zahájení stavebního (či jiného) záměru na území s archeologickými nálezy 
         {self.projekt.podnet} v k. ú. {self.projekt.hlavni_katastr} ({self.projekt.hlavni_katastr.okres}), který 
         eviduje pod evidenčním číslem {self.projekt.ident_cely}. 
@@ -775,6 +784,7 @@ class ZruseniPDFCreator(DocumentCreator):
         header: List[Paragraph] = self._create_header_oznamovatel_doc()
         tbl = self._create_header_tab_dates_doc()
         header: List[Paragraph, Table]
+        header.append(Paragraph("", body_style))
         header.append(tbl)
 
         doc = [
