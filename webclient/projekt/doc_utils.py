@@ -246,6 +246,7 @@ class DocumentCreator(ABC):
 
     def _create_signature_doc(self):
         return [
+            Paragraph("", self.body_style),
             Paragraph(self.texts.get("doc_sign_1"), self.styles.get("amSignature")),
             Paragraph(self.texts.get("doc_sign_2"), self.styles.get("amSignature")),
             Paragraph(self.texts.get("doc_sign_3"), self.styles.get("amSignature")),
