@@ -605,7 +605,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
         """
         Metóda pro získaní absolut url.
         """
-        if "3D" in self.ident_cely:
+        if "3D" in self.dokument.ident_cely:
             return self.dokument.get_absolute_url()
         return reverse(
             "dokument:detail-cast",
