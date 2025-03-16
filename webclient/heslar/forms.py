@@ -88,12 +88,14 @@ class OsobaAdminForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
             label=_("heslar.forms.OsobaAdminForm.orcid.label"),
             instance=self.instance,
             initial_value=args[0].get("orcid") if args else None,
+            help_text=_("heslar.forms.OsobaAdminForm.orcid.tooltip"),
         )
         self.fields["wikidata"] = WikiDataAutocompleteField(
             widget=AutocompleteListSelect2(url="pid:wikidata-autocomplete"),
             label=_("heslar.forms.OsobaAdminForm.wikidata.label"),
             instance=self.instance,
             initial_value=args[0].get("wikidata") if args else None,
+            help_text=_("heslar.forms.OsobaAdminForm.wikidata.tooltip"),
         )
 
 
