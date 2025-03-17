@@ -200,7 +200,7 @@ MIDDLEWARE = [
     "core.middleware.PermissionMiddleware",
     "core.middleware.ErrorMiddleware",
     "core.middleware.StatusMessageMiddleware",
-    "core.middleware.LogMiddleware",
+    "core.log_middleware.LogMiddleware",
 ]
 
 CRON_CLASSES = [

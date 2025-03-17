@@ -213,18 +213,16 @@ class ForeignField(Field):
     def get_value(self, instance, user=None):
         accessors = self.accessor.split("__")
         new_instance = ""
-        logger.debug(f"Accessors: {accessors}")
-        logger.debug(f"fkey: {self.foreign_key}")
         try:
             if getattr(instance, self.foreign_key):
                 new_instance = getattr(instance, self.foreign_key)
                 for key in accessors:
-                    logger.debug(f"Key: {key}")
                     if getattr(new_instance, key, False) or getattr(new_instance, key) == 0:
                         new_instance = getattr(new_instance, key)
                         logger.debug(f"New instance: {new_instance}")
                     else:
                         new_instance = ""
+                        break
         except Dokument.extra_data.RelatedObjectDoesNotExist:
             new_instance = ""
         return mark_safe(new_instance)
@@ -278,7 +276,7 @@ class ForeignManyToManyField(ForeignField):
     def get_value(self, instance, user=None):
         if getattr(instance, self.foreign_key, False):
             related_manager = getattr(getattr(instance, self.foreign_key), self.accessor)
-            return "; ".join([str(v) for v in related_manager.all()])
+            return "; ".join([v.vypis_name() for v in related_manager.all()])
         return None
 
 
@@ -371,17 +369,18 @@ class VbRepeatableField(RepeatableField):
         related_manager = self.get_related_manager(instance)
         data = {
             "template_name": self.template_name,
+            "label": self.label,
         }
         if related_manager.count() > 0:
             data["zaznamy"] = []
             for v in related_manager.all():
-                acc3_1 = getattr(v, "geom").srid
                 acc3_2 = get_wkt(getattr(v, "geom"))
+                acc3_3 = get_gml(getattr(v, "geom"))
                 item = {}
                 item[self.accessor[0]] = getattr(v, self.accessor[0])
                 item[self.accessor[1]] = getattr(v, self.accessor[1])
-                item[self.accessor[2]] = get_gml(getattr(v, "geom"))
-                item[self.accessor[3]] = f"EPSG:{acc3_1}, {acc3_2}"
+                item[self.accessor[2]] = f"GML (EPSG:5514): {acc3_3}"
+                item[self.accessor[3]] = f"WKT (EPSG:5514): {acc3_2}"
                 data["zaznamy"].append(item)
             return data
         return None
@@ -482,7 +481,7 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
     def get_name(self, instance):
         new_name = f"{self.name} {getattr(instance, self.accessor[0])}"
         if getattr(instance, self.accessor[-1]):
-            return f"{new_name} <div class='mime-type'>({getattr(instance, self.accessor[-1])})</div>"
+            return f"{new_name}<div class='mime-type' style='white-space: pre;'> ({getattr(instance, self.accessor[-1])})</div>"
         return new_name
 
 

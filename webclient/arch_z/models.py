@@ -643,6 +643,12 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
         """
         return f"{self.vedouci.vypis_cely} ({self.organizace})"
 
+    def vypis_name(self):
+        """
+        Metóda vráti jako str reprezentaci modelu vedouci pro vypis.
+        """
+        return f"{self.vedouci.vypis_cely} ({self.organizace.get_nazev()})"
+
 
 class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
     """
