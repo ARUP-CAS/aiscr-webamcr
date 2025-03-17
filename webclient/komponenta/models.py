@@ -96,12 +96,36 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
     def get_absolute_url(self):
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
-            return reverse(
-                "arch_z:update-komponenta",
-                args=[self.ident_cely[:-5], self.komponenta_vazby.dokumentacni_jednotka.ident_cely, self.ident_cely],
-            )
+            from arch_z.models import ArcheologickyZaznam
+
+            if (
+                self.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.typ_zaznamu
+                == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
+            ):
+                return reverse(
+                    "arch_z:update-komponenta",
+                    args=[
+                        self.ident_cely[:-5],
+                        self.komponenta_vazby.dokumentacni_jednotka.ident_cely,
+                        self.ident_cely,
+                    ],
+                )
+            else:
+                return reverse(
+                    "lokalita:update-komponenta",
+                    args=[
+                        self.ident_cely[:-5],
+                        self.komponenta_vazby.dokumentacni_jednotka.ident_cely,
+                        self.ident_cely,
+                    ],
+                )
         else:
-            return self.komponenta_vazby.casti_dokumentu.dokument.get_absolute_url()
+            if "3D" in self.komponenta_vazby.casti_dokumentu.dokument.ident_cely:
+                return self.komponenta_vazby.casti_dokumentu.dokument.get_absolute_url()
+            return reverse(
+                "dokument:detail-komponenta",
+                args=[self.komponenta_vazby.casti_dokumentu.dokument.ident_cely, self.ident_cely],
+            )
 
     def get_permission_object(self):
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
