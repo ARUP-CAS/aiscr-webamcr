@@ -52,10 +52,8 @@ from core.utils import (
     get_heatmap_pas,
     get_heatmap_pian,
     get_message,
-    get_multi_transform_towgs84,
     get_pas_from_envelope,
     get_pian_from_envelope,
-    get_transform_towgs84,
     replace_last,
 )
 from django.conf import settings
@@ -878,40 +876,6 @@ def prolong_session(request):
         {"session_time": session_time},
         status=200,
     )
-
-
-@login_required
-@require_http_methods(["POST"])
-def tr_wgs84(request):
-    """
-    Funkce pohledu pro transformaci souradnic na wsg84.
-    """
-    body = json.loads(request.body.decode("utf-8"))
-    [c_x2, c_x1] = get_transform_towgs84(body["c_x1"], body["c_x2"])
-    if c_x1 is not None:
-        return JsonResponse(
-            {"x1": c_x1, "x2": c_x2},
-            status=200,
-        )
-    else:
-        return JsonResponse({"x1": "", "x2": ""}, status=200)
-
-
-@login_required
-@require_http_methods(["POST"])
-def tr_mwgs84(request):
-    """
-    Funkce pohledu pro transformaci na wsg84.
-    """
-    body = json.loads(request.body.decode("utf-8"))["points"]
-    points = get_multi_transform_towgs84(body)
-    if points is not None:
-        return JsonResponse(
-            {"points": points},
-            status=200,
-        )
-    else:
-        return JsonResponse({"points": None}, status=200)
 
 
 class ExportMixinDate(ExportMixin):

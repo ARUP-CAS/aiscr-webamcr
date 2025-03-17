@@ -36,16 +36,6 @@ urlpatterns = [
     path("id/<str:ident_cely>", views.redirect_ident_view, name="redirect_ident"),
     path("session/prodlouzit/", views.prolong_session, name="prolong_session"),
     path(
-        "transformace-single-wgs84",
-        views.tr_wgs84,
-        name="tr_wgs84",
-    ),
-    path(
-        "transformace-multi-wgs84",
-        views.tr_mwgs84,
-        name="tr_mwgs84",
-    ),
-    path(
         "metadata/stahnout/<str:model_name>/<str:ident_cely>",
         views.StahnoutMetadataIdentCelyView.as_view(),
         name="stahnout_metadata",
