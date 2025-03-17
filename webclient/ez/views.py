@@ -486,6 +486,7 @@ class ExterniOdkazOdpojitView(TransakceView):
     def post(self, request, *args, **kwargs):
         self.init_translation()
         ez = self.get_zaznam()
+        lokalita_update = None
         self.active_transaction = ez.create_transaction(request.user, self.success_message)
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.active_transaction = self.active_transaction
@@ -494,9 +495,11 @@ class ExterniOdkazOdpojitView(TransakceView):
             and eo.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
             and eo.archeologicky_zaznam.lokalita.igsn
         ):
-            eo.archeologicky_zaznam.lokalita.igsn_update()
+            lokalita_update = eo.archeologicky_zaznam.lokalita
         eo.close_active_transaction_when_finished = True
         eo.delete()
+        if lokalita_update:
+            lokalita_update.igsn_update()
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
 
@@ -668,6 +671,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         az = self.get_zaznam()
+        lokalita_update = None
         self.active_transaction = az.create_transaction(request.user, get_message(az, "EO_USPESNE_ODPOJEN"))
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.active_transaction = self.active_transaction
@@ -676,9 +680,11 @@ class ExterniOdkazOdpojitAZView(TransakceView):
             and eo.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
             and eo.archeologicky_zaznam.lokalita.igsn
         ):
-            eo.archeologicky_zaznam.lokalita.igsn_update()
+            lokalita_update = eo.archeologicky_zaznam.lokalita
         eo.close_active_transaction_when_finished = True
         eo.delete()
+        if lokalita_update:
+            lokalita_update.igsn_update()
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 
