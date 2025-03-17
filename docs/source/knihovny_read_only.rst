@@ -316,7 +316,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.17.0
+     - 3.18.0
      - The Unlicense (Unlicense)
      - https://github.com/tox-dev/py-filelock
    * - funcy
