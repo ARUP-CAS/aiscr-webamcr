@@ -153,6 +153,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             if (
                 akce.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
                 and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+                and akce.archeologicky_zaznam.lokalita.igsn
             ):
                 akce.archeologicky_zaznam.lokalita.igsn_update()
 

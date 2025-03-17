@@ -1008,11 +1008,11 @@ def archivovat(request, ident_cely):
         projekt.set_archivovany(request.user)
         for item in projekt.casti_dokumentu.all():
             item: DokumentCast
-            if item.dokument.stav == D_STAV_ARCHIVOVANY:
+            if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
                 item.dokument.doi_update()
         for item in projekt.samostatne_nalezy.all():
             item: SamostatnyNalez
-            if item.stav == SN_ARCHIVOVANY:
+            if item.igsn and item.stav == SN_ARCHIVOVANY:
                 item.igsn_update()
         projekt.close_active_transaction_when_finished = True
         projekt.save()
