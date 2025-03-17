@@ -1076,30 +1076,31 @@ class LokalitaSerializer(ModelSerializer):
                 ]
         for externi_odkaz in self._get_externi_odkaz_query():
             externi_odkaz: ExterniOdkaz
-            if externi_odkaz.externi_zdroj.doi:
-                related_identifiers += [
-                    {
-                        "relationType": "IsPublishedIn",
-                        "relatedIdentifier": externi_odkaz.externi_zdroj.doi,
-                        "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
-                        .filter(nazev_kodu="resourceTypeGeneral")
-                        .first()
-                        .kod,
-                        "relatedIdentifierType": "DOI",
-                    }
-                ]
-            else:
-                related_identifiers += [
-                    {
-                        "relationType": "IsPublishedIn",
-                        "relatedIdentifier": f"{settings.DIGI_LINKS['Digi_archiv_link']}{externi_odkaz.externi_zdroj.ident_cely}",
-                        "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
-                        .filter(nazev_kodu="resourceTypeGeneral")
-                        .first()
-                        .kod,
-                        "relatedIdentifierType": "URL",
-                    }
-                ]
+            if externi_odkaz.externi_zdroj.stav == EZ_STAV_POTVRZENY:
+                if externi_odkaz.externi_zdroj.doi:
+                    related_identifiers += [
+                        {
+                            "relationType": "IsPublishedIn",
+                            "relatedIdentifier": externi_odkaz.externi_zdroj.doi,
+                            "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
+                            .filter(nazev_kodu="resourceTypeGeneral")
+                            .first()
+                            .kod,
+                            "relatedIdentifierType": "DOI",
+                        }
+                    ]
+                else:
+                    related_identifiers += [
+                        {
+                            "relationType": "IsPublishedIn",
+                            "relatedIdentifier": f"{settings.DIGI_LINKS['Digi_archiv_link']}{externi_odkaz.externi_zdroj.ident_cely}",
+                            "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
+                            .filter(nazev_kodu="resourceTypeGeneral")
+                            .first()
+                            .kod,
+                            "relatedIdentifierType": "URL",
+                        }
+                    ]
         return related_identifiers
 
     def _serialize_related_items(self):
