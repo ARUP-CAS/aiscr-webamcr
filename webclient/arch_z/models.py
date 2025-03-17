@@ -29,6 +29,7 @@ from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 from ez.models import ExterniZdroj
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_DATUM_SPECIFIKACE, HESLAR_LOKALITA_TYP, HESLAR_PRISTUPNOST
+from heslar.hesla_dynamicka import TYP_DOKUMENTU_NALEZOVA_ZPRAVA
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
@@ -179,8 +180,6 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
             Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
         """
-        from heslar.hesla_dynamicka import TYP_DOKUMENTU_NALEZOVA_ZPRAVA
-
         result = []
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             required_fields = [
