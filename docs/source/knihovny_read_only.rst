@@ -372,7 +372,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.2.3
+     - 2.2.4
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -468,7 +468,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/eliben/pycparser
    * - pycryptodomex
-     - 3.21.0
+     - 3.22.0
      - BSD License; Public Domain
      - https://www.pycryptodome.org
    * - pyparsing
