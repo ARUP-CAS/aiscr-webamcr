@@ -1627,6 +1627,7 @@ def archivovat(request, ident_cely):
                 item.archeologicky_zaznam
                 and item.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
                 and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+                and item.archeologicky_zaznam.lokalita.igsn
             ):
                 item.archeologicky_zaznam.lokalita.igsn_update()
         if dokument.rada == Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D):
@@ -1989,7 +1990,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
             and zaznam.lokalita.igsn
         ):
             zaznam.lokalita.igsn_update()
-        if dokument_cast.dokument and dokument_cast.dokument.stav == D_STAV_ARCHIVOVANY:
+        if dokument_cast.dokument and dokument_cast.dokument.doi and dokument_cast.dokument.stav == D_STAV_ARCHIVOVANY:
             dokument_cast.dokument.doi_update()
         resp = dokument_cast.delete()
         logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
