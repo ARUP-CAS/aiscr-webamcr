@@ -22,6 +22,7 @@ from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
+from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR, PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import User
@@ -90,8 +91,6 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     @property
     def pristupnost_pom(self):
-        from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID
-
         try:
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
             pristupnosti_ids = set()
@@ -112,8 +111,6 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         return self.pristupnost_pom
 
     def evaluate_pristupnost_change(self, added_pristupnost_id=None, skip_zaznam_id=None):
-        from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID
-
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         pristupnosti_ids = set()
         for dok_jednotka in dok_jednotky:
@@ -289,8 +286,6 @@ def vytvor_pian(katastr, fedora_transaction):
     """
     Funkce pro vytvoření pianu v DB podle katastru.
     """
-    from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR
-
     zm10s = Kladyzm.objects.filter(kategorie=KLADYZM10).filter(the_geom__contains=katastr.definicni_bod)
     zm50s = Kladyzm.objects.filter(kategorie=KLADYZM50).filter(the_geom__contains=katastr.definicni_bod)
     if len(zm10s) == 0:

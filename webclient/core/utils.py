@@ -28,6 +28,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
+from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 from heslar.models import RuianKatastr
 from pian.models import Pian
 from rosetta.conf import settings as rosetta_settings
@@ -267,8 +268,6 @@ def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
     """
     Funkce pro update katastru u akce a lokalit.
     """
-    from heslar.hesla_dynamicka import TYP_DJ_KATASTR
-
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     if dj.typ.id == TYP_DJ_KATASTR:
         pass
@@ -296,8 +295,6 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     """
     Funkce pro bodu, geomu a presnosti z akce.
     """
-    from heslar.hesla_dynamicka import TYP_DJ_KATASTR
-
     logger.debug("core.utils.get_pians_from_akce.start", extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely})
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng,ST_AsText(ST_Envelope(hranice)) as bbox "
