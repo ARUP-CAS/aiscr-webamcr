@@ -379,8 +379,8 @@ class VbRepeatableField(RepeatableField):
                 item = {}
                 item[self.accessor[0]] = getattr(v, self.accessor[0])
                 item[self.accessor[1]] = getattr(v, self.accessor[1])
-                item[self.accessor[2]] = f"GML (EPSG:5514):{acc3_3}"
-                item[self.accessor[3]] = f"WKT (EPSG:5514):{acc3_2}"
+                item[self.accessor[2]] = f"GML (EPSG:5514): {acc3_3}"
+                item[self.accessor[3]] = f"WKT (EPSG:5514): {acc3_2}"
                 data["zaznamy"].append(item)
             return data
         return None

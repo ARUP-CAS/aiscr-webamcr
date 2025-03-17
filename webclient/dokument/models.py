@@ -605,6 +605,8 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
         """
         Metóda pro získaní absolut url.
         """
+        if "3D" in self.dokument.ident_cely:
+            return self.dokument.get_absolute_url()
         return reverse(
             "dokument:detail-cast",
             kwargs={
@@ -618,13 +620,26 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.initial_projekt = self.projekt
-        self.initial_archeologicky_zaznam = self.archeologicky_zaznam
+        self.initial_projekt_id = self.projekt_id
+        self.initial_archeologicky_zaznam_id = self.archeologicky_zaznam_id
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
         self.suppress_signal = False
         self.suppress_dokument_signal = False
         self.suppress_signal_arch_z = False
+
+    @property
+    def initial_archeologicky_zaznam(self) -> ArcheologickyZaznam | None:
+        """Vrátí objekt dokument na základě initial_archeologicky_zaznam_id (lazy-load)."""
+        if self.initial_archeologicky_zaznam_id is not None:
+            return ArcheologickyZaznam.objects.get(pk=self.initial_archeologicky_zaznam_id)
+        return None
+
+    @property
+    def initial_projekt(self) -> Projekt | None:
+        if self.initial_projekt_id is not None:
+            return Projekt.objects.get(pk=self.initial_projekt_id)
+        return None
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None):
         from core.repository_connector import FedoraTransaction

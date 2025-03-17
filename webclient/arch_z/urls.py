@@ -68,11 +68,6 @@ urlpatterns = [
         name="smazat_akce_vedouci",
     ),
     path(
-        "mapa-pian",
-        views.post_ajax_get_pians_limit,
-        name="post_ajax_get_pians_limit",
-    ),
-    path(
         "mapa-dalsi-katastry",
         views.GetAkceOtherKatastrView.as_view(),
         name="post_ajax_get_akce_other_katastr",

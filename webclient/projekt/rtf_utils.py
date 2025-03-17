@@ -1,6 +1,5 @@
 import datetime
 import io
-import os
 import sys
 
 from historie.models import Historie
@@ -49,15 +48,6 @@ class ExpertniListCreator(DocumentCreator):
             return " ".join(akce_list)
         else:
             return ""
-
-    @classmethod
-    def _format_date(cls, date_obj):
-        if date_obj is None:
-            return ""
-        if os.name == "nt":
-            return date_obj.strftime("%#d. %#m. %Y")
-        else:
-            return date_obj.strftime("%-d. %-m. %Y")
 
     def _get_vysledek_text(self):
         if self.popup_parametry["vysledek"] == "pozitivni":
@@ -182,11 +172,11 @@ class ExpertniListCreator(DocumentCreator):
                 else "",
             ),
             (
-                ["Datum výzkumu:", f"{self._format_date(self.projekt.datum_zahajeni)}"]
+                ["Datum výzkumu:", f"{self.format_date(self.projekt.datum_zahajeni)}"]
                 if self.projekt.datum_zahajeni == self.projekt.datum_ukonceni
                 else [
                     "Datum výzkumu:",
-                    f"{self._format_date(self.projekt.datum_zahajeni)} - {self._format_date(self.projekt.datum_ukonceni)}",
+                    f"{self.format_date(self.projekt.datum_zahajeni)} - {self.format_date(self.projekt.datum_ukonceni)}",
                 ]
             ),
             ("Typ výzkumu:", self._get_typ_vyzkumu_text()),

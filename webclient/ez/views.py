@@ -489,6 +489,12 @@ class ExterniOdkazOdpojitView(TransakceView):
         self.active_transaction = ez.create_transaction(request.user, self.success_message)
         eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
         eo.active_transaction = self.active_transaction
+        if (
+            eo.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+            and eo.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            and eo.archeologicky_zaznam.lokalita.igsn
+        ):
+            eo.archeologicky_zaznam.lokalita.igsn_update()
         eo.close_active_transaction_when_finished = True
         eo.delete()
         return JsonResponse({"redirect": ez.get_absolute_url()})

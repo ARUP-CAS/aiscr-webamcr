@@ -432,10 +432,6 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
         self.initial_stav = self.stav
         try:
-            self.initial_projekt = self.akce.projekt
-        except (ObjectDoesNotExist, AttributeError):
-            self.initial_projekt = None
-        try:
             self.initial_casti_dokumentu = self.casti_dokumentu.all().values_list("id", flat=True)
         except ValueError:
             self.initial_casti_dokumentu = []
@@ -566,10 +562,18 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.initial_projekt = self.projekt
+        self.initial_projekt_id = self.projekt_id
         self.suppress_signal = False
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
+
+    @property
+    def initial_projekt(self):
+        from projekt.models import Projekt
+
+        if self.initial_projekt_id is not None:
+            return Projekt.objects.get(pk=self.initial_projekt_id)
+        return None
 
     def get_absolute_url(self):
         """
