@@ -10,12 +10,10 @@ def insert_customadminsettings_heslar_group(apps, schema_editor):
         item_id='heslar_group',
         value='''{
     "KULTURNI_PAMATKY" : [
-        "KULTURNI_PAMATKA_OP",
         "KULTURNI_PAMATKA_KP",
         "KULTURNI_PAMATKA_NKP",
         "KULTURNI_PAMATKA_PZ",
-        "KULTURNI_PAMATKA_PR",
-        "KULTURNI_PAMATKA_UN"
+        "KULTURNI_PAMATKA_PR"
     ],
     
     "ALLOWED_DOKUMENT_TYPES" : [
