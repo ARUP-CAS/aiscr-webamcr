@@ -42,7 +42,7 @@ django-cacheops==7.1
 django-model-utils==5.0.0
 pandas==2.2.3
 tablib[all]==3.8.0
-polars==1.24.0
+polars==1.25.2
 XlsxWriter==3.2.2
 pre-commit==4.1.0
 isort==6.0.1
