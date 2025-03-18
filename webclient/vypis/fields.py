@@ -1,4 +1,3 @@
-import logging
 from datetime import date
 
 from adb.models import VyskovyBod
@@ -19,8 +18,6 @@ from neidentakce.models import NeidentAkce
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from projekt.views import get_show_oznamovatel
-
-logger = logging.getLogger(__name__)
 
 
 def get_model(name):
@@ -54,8 +51,7 @@ def get_gml(geom):
             cursor.execute("SELECT ST_AsGML(%s)", [geom.wkt])
             row = cursor.fetchone()
         return row[0]
-    except Exception as e:
-        logger.error(f"Error executing SQL: {e}")
+    except Exception:
         return None
 
 
@@ -101,7 +97,6 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
         if getattr(instance, self.foreign_key):
             pian = getattr(instance, self.foreign_key)
             stav = getattr(pian, self.accessor[1])()
-            logger.debug(f"ident: {getattr(pian, self.accessor[0])}")
             return f"{self.name} {getattr(pian, self.accessor[0])} ({stav}) - {getattr(pian, self.accessor[2])} ({getattr(pian, self.accessor[3])})"
         else:
             return None
@@ -219,7 +214,6 @@ class ForeignField(Field):
                 for key in accessors:
                     if getattr(new_instance, key, False) or getattr(new_instance, key) == 0:
                         new_instance = getattr(new_instance, key)
-                        logger.debug(f"New instance: {new_instance}")
                     else:
                         new_instance = ""
                         break
@@ -399,7 +393,6 @@ class HistorieRepeatableField(RepeatableField):
             data[self.foreign_key] = []
             for v in related_manager.all():
                 item = {}
-                logger.debug(v)
                 for accessor in self.accessor:
                     if accessor == "uzivatel_protected":
                         item[accessor] = v.uzivatel_protected(
@@ -533,15 +526,12 @@ class NeidentAkceSubSectionField(SubSectionField):
     def get_instance(self, instance):
         try:
             neident_akce = NeidentAkce.objects.get(dokument_cast=instance)
-            logger.debug(f"Neident akce: {neident_akce}")
             return neident_akce
-        except Exception as e:
-            logger.error(f"Error getting neident akce: {e}")
+        except Exception:
             return None
 
 
 def get_historie_config(label_key):
-    logger.debug(f"Getting historie config for {label_key}")
     return {
         "section_name": SimpleSectionTemplateName(label_key),
         "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
@@ -560,5 +550,4 @@ class HistorieSubSectionField(SubSectionField):
         self.foreign_key = foreign_key
 
     def get_config(self):
-        logger.debug(f"historie config {get_historie_config(self.label_key)}")
         return get_historie_config(self.label_key)
