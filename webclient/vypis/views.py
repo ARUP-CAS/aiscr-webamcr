@@ -16,14 +16,17 @@ def add_section_data(instance, section, fields, sections_data, iterator=False, u
     if fields["section_name"].get_permission(instance, user) is False:
         return None
     if isinstance(fields["section_name"], RepeatableSectionNameWithAccessor) and not iterator:
-        logger.debug(f"Processing repeatable section {section}")
+        logger.debug("vypis.views.add_section_data", extra={"message": f"Processing repeatable section {section}"})
         sections = fields["section_name"].get_sections(instance)
         if not sections:
             return None
         else:
             for section_instance in sections:
                 try:
-                    logger.debug(f"Adding section {section} for {section_instance.ident_cely}")
+                    logger.debug(
+                        "vypis.views.add_section_data",
+                        extra={"message": f"Adding section {section} for {section_instance.ident_cely}"},
+                    )
                     add_section_data(
                         section_instance,
                         f"{section}_{section_instance.ident_cely}",
@@ -48,7 +51,7 @@ def add_section_data(instance, section, fields, sections_data, iterator=False, u
     sections_data[section] = {}
     for label, field in fields.items():
         if isinstance(field, SubSectionField):
-            logger.debug(f"Processing sub section {label}")
+            logger.debug("vypis.views.add_section_data", extra={"message": f"Processing sub section {label}"})
             if not field.get_instance(instance):
                 continue
             add_section_data(
@@ -65,7 +68,7 @@ def add_section_data(instance, section, fields, sections_data, iterator=False, u
         elif field.get_value(instance, user):
             sections_data[section][label] = {"label": field.get_label(), "value": field.get_value(instance, user)}
     if not any(k not in ["section_name", "template"] for k in sections_data[section].keys()) and not iterator:
-        logger.debug(f"Deleting empty section {section}")
+        logger.debug("vypis.views.add_section_data", extra={"message": f"Deleting empty section {section}"})
         del sections_data[section]
 
 
@@ -99,7 +102,7 @@ class VypisView(LoginRequiredMixin, TemplateView):
         sections = config["sections"]
         sections_data = {}
         for section, fields in sections.items():
-            logger.debug(f"Processing section {section}")
+            logger.debug("vypis.views.vypisView", extra={"message": f"Processing section {section}"})
             add_section_data(instance, section, fields, sections_data, False, self.request.user)
 
         context.update(
