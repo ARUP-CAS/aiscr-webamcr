@@ -969,7 +969,7 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
-        projekt.set_archivovany(request.user)        
+        projekt.set_archivovany(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()
         for item in projekt.casti_dokumentu.all():
@@ -1098,7 +1098,7 @@ def zrusit(request, ident_cely):
             duvod = form.cleaned_data["reason_text"]
             projekt.create_transaction(request.user, PROJEKT_USPESNE_ZRUSEN)
             projekt.set_zruseny(request.user, duvod)
-            if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
+            if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
                 rep_bin_file = projekt.create_cancel_confirmation_document(request.user)
             else:
                 rep_bin_file = None
