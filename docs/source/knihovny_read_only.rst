@@ -420,7 +420,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/tox-dev/platformdirs
    * - polars
-     - 1.24.0
+     - 1.25.2
      - MIT License
      - https://www.pola.rs/
    * - polib
