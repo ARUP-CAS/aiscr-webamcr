@@ -416,7 +416,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - CMU License (MIT-CMU)
      - https://python-pillow.github.io
    * - platformdirs
-     - 4.3.6
+     - 4.3.7
      - MIT License
      - https://github.com/tox-dev/platformdirs
    * - polars
