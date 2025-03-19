@@ -137,8 +137,8 @@ class AkceProjektoveAkce(AkceTestClass):
 
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
-        self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+        # self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
+        # self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_negativni_jednotka .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
         with WaitForPageLoad(self.driver):
