@@ -294,6 +294,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-202010474-N00002")
         self.ElementClick(By.CSS_SELECTOR, "#pas-archivovat > .app-controls-button-text")
         self.wait(1)
+        self.ElementClick(By.CSS_SELECTOR, ".custom-control-label")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 
