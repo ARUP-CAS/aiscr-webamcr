@@ -1098,10 +1098,10 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                                 if key and value:
                                     r.hset(key, mapping=value)
                                     results[index] = value
-                            except Exception:
+                            except Exception as err:
                                 logger.error(
                                     "core.views.SearchListView.snapshot.error",
-                                    extra={"ident_cely": ident_cely},
+                                    extra={"ident_cely": ident_cely, "error": err},
                                 )
                     data.extend(results)
                     base_index = i + 1
