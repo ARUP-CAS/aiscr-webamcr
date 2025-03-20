@@ -384,5 +384,12 @@ class ModelWithMetadata(BaseAmcrModel):
             },
         )
 
+    @classmethod
+    def get_by_ident_cely(cls, ident_cely):
+        try:
+            return cls.objects.get(ident_cely=ident_cely)
+        except Exception:
+            return None
+
     class Meta:
         abstract = True
