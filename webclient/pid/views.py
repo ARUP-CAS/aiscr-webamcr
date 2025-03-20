@@ -280,5 +280,4 @@ class ContinuePidProcessing(AdminRecordProcessingView):
         else:
             result["result"] = _("core.admin.FedoraCustomAdminSite.cannot_load_record")
         fedora_transaction.mark_transaction_as_closed()
-        invalidate_all()
         return result
