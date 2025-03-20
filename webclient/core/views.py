@@ -941,7 +941,6 @@ class PermissionFilterMixin:
                 qs = new_qs | qs.filter(**filterdoc)
             else:
                 qs = new_qs
-        qs.cache()
         return qs
 
     def filter_by_permission(self, qs, permission):
@@ -1187,6 +1186,11 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["idents"] = context["table"].get_all_idents()
         context["vypis_app"] = self.vypis_app
         return context
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs.cache()
+        return qs
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):

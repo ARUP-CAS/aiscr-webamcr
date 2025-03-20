@@ -689,8 +689,6 @@ class AkceFilter(ArchZaznamFilter):
             if "typ_zmeny" in historie:
                 queryset_history &= Q(archeologicky_zaznam__historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             queryset = queryset.filter(queryset_history)
-        queryset.cache()
-        logger.debug("arch_z.filters.AkceFilter.filter_queryset.end", extra={"query": str(queryset.query)})
         return queryset
 
     class Meta:

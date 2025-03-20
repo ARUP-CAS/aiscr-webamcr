@@ -33,7 +33,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from historie.models import Historie
 from oznameni.models import Oznamovatel
-from pas.models import SamostatnyNalez, UzivatelSpoluprace
+from pas.models import SamostatnyNalez
 from projekt.doc_utils import ZruseniPDFCreator
 
 from .mlstripper import MLStripper
@@ -989,8 +989,6 @@ class Mailer:
     @staticmethod
     def get_en01_data() -> Dict:
         invalidate_model(SamostatnyNalez)
-        invalidate_model(Historie)
-        invalidate_model(UzivatelSpoluprace)
         now = timezone.now()
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
         previous_midnight = midnight + timedelta(days=-1)

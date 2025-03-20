@@ -1,6 +1,5 @@
 import logging
 
-from cacheops import invalidate_model
 from core.ident_cely import get_uzivatel_ident
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from django.contrib.auth import user_logged_in
@@ -77,8 +76,6 @@ def create_ident_cely(sender, instance: User, **kwargs):
 
 @receiver(post_save, sender=User, weak=False)
 def user_post_save_method(sender, instance: User, created: bool, **kwargs):
-    invalidate_model(User)
-    invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
     logger.debug(
         "uzivatel.signals.user_post_save_method.start",

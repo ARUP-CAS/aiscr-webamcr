@@ -431,10 +431,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     def __init__(self, *args, **kwargs):
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
         self.initial_stav = self.stav
+
+    @property
+    def initial_casti_dokumentu(self):
         try:
-            self.initial_casti_dokumentu = self.casti_dokumentu.all().values_list("id", flat=True)
+            return self.casti_dokumentu.all().values_list("id", flat=True)
         except ValueError:
-            self.initial_casti_dokumentu = []
+            return []
 
     @property
     def initial_pristupnost(self):

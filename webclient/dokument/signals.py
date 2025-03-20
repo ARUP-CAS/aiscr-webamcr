@@ -1,6 +1,6 @@
 import logging
 
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import Akce
 from cacheops import invalidate_model
 from core.constants import DOKUMENT_CAST_RELATION_TYPE, DOKUMENT_RELATION_TYPE
 from core.models import SouborVazby
@@ -10,7 +10,7 @@ from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from dokument.models import Dokument, DokumentCast, Let, Tvar
-from historie.models import Historie, HistorieVazby
+from historie.models import HistorieVazby
 from komponenta.models import Komponenta, KomponentaVazby
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
@@ -25,8 +25,6 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
     """
     invalidate_model(Dokument)
     invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
     if not instance.suppress_signal:
         logger.debug(
@@ -63,8 +61,6 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
     logger.debug("dokument.signals.create_dokument_cast_vazby.start", extra={"record_pk": instance.pk})
     invalidate_model(Dokument)
     invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
     if instance.pk is None:
         logger.debug("Creating child komponenty for dokument cast" + str(instance))
         k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
@@ -85,8 +81,6 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
     )
     invalidate_model(Dokument)
     invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
 
@@ -232,8 +226,6 @@ def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs)
     fedora_transaction: FedoraTransaction = instance.active_transaction
     invalidate_model(Dokument)
     invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
 
     def save_metadata(close_transaction=False):
         if instance.initial_archeologicky_zaznam_id is not None and instance.suppress_signal_arch_z is False:

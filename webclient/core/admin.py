@@ -9,7 +9,6 @@ import string
 
 import pandas as pd
 from bs4 import BeautifulSoup
-from cacheops import invalidate_model
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth.models import Group
@@ -241,7 +240,6 @@ class PermissionAdmin(admin.ModelAdmin):
                 "opts": opts,
             }
         )
-        invalidate_model(Permissions)
         return TemplateResponse(
             request,
             "core/permission_import_form.html",

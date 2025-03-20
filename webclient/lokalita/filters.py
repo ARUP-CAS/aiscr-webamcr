@@ -80,7 +80,7 @@ class LokalitaFilter(ArchZaznamFilter):
             if "typ_zmeny" in historie:
                 queryset_history &= Q(archeologicky_zaznam__historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             queryset = queryset.filter(queryset_history)
-        logger.debug("lokalita.filters.LokalitaFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+
         return queryset
 
     def filter_popisne_udaje(self, queryset, name, value):

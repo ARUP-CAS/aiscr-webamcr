@@ -288,7 +288,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
             if "typ_zmeny" in historie:
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             queryset = queryset.filter(queryset_history)
-        logger.debug("pas.filters.SamostatnyNalezFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+
         return queryset
 
     def filter_obdobi(self, queryset, name, value):
@@ -419,10 +419,6 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
             if "typ_zmeny" in historie:
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             queryset = queryset.filter(queryset_history)
-        queryset.cache()
-        logger.debug(
-            "pas.filters.UzivatelSpolupraceFilterFormHelper.filter_queryset.end", extra={"query": str(queryset.query)}
-        )
         return queryset
 
 
