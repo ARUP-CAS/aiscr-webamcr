@@ -312,7 +312,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
             if "typ_zmeny" in historie:
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
             queryset = queryset.filter(queryset_history)
-        logger.debug("dokument.filters.AkceFilter.filter_queryset.end", extra={"query": str(queryset.query)})
+
         return queryset
 
     def filter_popisne_udaje(self, queryset, name, value):

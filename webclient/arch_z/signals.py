@@ -12,10 +12,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_delete, pre_save
 from django.dispatch import receiver
-from historie.models import Historie, HistorieVazby
-from komponenta.models import Komponenta, KomponentaVazby
-from nalez.models import NalezObjekt, NalezPredmet
-from pian.models import Pian
+from historie.models import HistorieVazby
+from komponenta.models import KomponentaVazby
 from projekt.models import Projekt
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
@@ -24,14 +22,6 @@ logger = logging.getLogger(__name__)
 
 def invalidate_arch_z_related_models():
     invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
-    invalidate_model(Adb)
-    invalidate_model(Pian)
-    invalidate_model(NalezPredmet)
-    invalidate_model(NalezObjekt)
-    invalidate_model(DokumentacniJednotka)
-    invalidate_model(Komponenta)
     invalidate_model(Projekt)
 
 

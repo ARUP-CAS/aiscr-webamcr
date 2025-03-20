@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import pytz
 import simplejson as json
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import Akce
 from cacheops import invalidate_model
 from core.constants import (
     ARCHIVACE_PROJ,
@@ -499,9 +499,6 @@ def edit(request, ident_cely):
             form.save_m2m()
             invalidate_model(Projekt)
             invalidate_model(Akce)
-            invalidate_model(ArcheologickyZaznam)
-            invalidate_model(SamostatnyNalez)
-            invalidate_model(Historie)
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
             logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"form_errors": form.errors})

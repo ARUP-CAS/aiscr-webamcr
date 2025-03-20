@@ -1544,7 +1544,6 @@ class AkceListView(SearchListView):
             "archeologicky_zaznam__hlavni_katastr__okres__hranice",
         )
 
-        qs.cache()
         return self.check_filter_permission(qs)
 
 
@@ -1612,7 +1611,6 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             poznamka=f"{old_ident} -> {az.ident_cely}",
             vazba=az.historie,
         ).save()
-        invalidate_model(ArcheologickyZaznam)
         az.close_active_transaction_when_finished = True
         az.save()
         logger.debug("arch_z.views.ProjektAkceChange.post", extra={"az_ident_cely": str(az.ident_cely)})
@@ -1692,7 +1690,6 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             ).save()
             logger.debug("arch_z.views.SamostatnaAkceChange.post.valid", extra={"az_ident_cely": str(az.ident_cely)})
             az.close_active_transaction_when_finished = True
-            invalidate_model(ArcheologickyZaznam)
             az.save()
         else:
             logger.debug(
