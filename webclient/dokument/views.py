@@ -117,9 +117,8 @@ from heslar.hesla_dynamicka import (
 )
 from heslar.models import Heslar, HeslarHierarchie
 from heslar.views import heslar_12, heslar_list
-from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
-from komponenta.models import Komponenta, KomponentaAktivita, KomponentaVazby
+from komponenta.models import Komponenta, KomponentaVazby
 from nalez.forms import NalezFormSetHelper, create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
 from neidentakce.forms import NeidentAkceForm
@@ -1192,8 +1191,7 @@ def edit(request, ident_cely):
             form_d.save_m2m()
             invalidate_model(Dokument)
             invalidate_model(Akce)
-            invalidate_model(ArcheologickyZaznam)
-            invalidate_model(Historie)
+
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
         else:
             logger.debug(
@@ -1301,8 +1299,6 @@ def edit_model_3D(request, ident_cely):
             komponenta.active_transaction = fedora_transaction
             komponenta.save()
             form_komponenta.save_m2m()
-            invalidate_model(KomponentaAktivita)
-            invalidate_model(Historie)
             dokument_from_form.close_active_transaction_when_finished = True
             dokument_from_form.save()
             return redirect("dokument:detail-model-3D", ident_cely=dokument.ident_cely)
@@ -1620,7 +1616,7 @@ def archivovat(request, ident_cely):
                 logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": dokument.ident_cely})
         dokument.set_archivovany(request.user, old_ident)
         dokument.doi_publish()
-        dokument.set_doi()        
+        dokument.set_doi()
         if dokument.rada == Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D):
             Mailer.send_ek01(document=dokument)
         dokument.close_active_transaction_when_finished = True

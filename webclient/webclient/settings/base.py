@@ -77,23 +77,15 @@ REDIS_PORT = get_secret("REDIS_PORT", 6379)
 CACHEOPS_REDIS = f"redis://{get_redis_pass()}{REDIS_HOST}:{REDIS_PORT}/2"
 
 CACHEOPS = {
-    "adb.Adb": {"ops": ("fetch",), "timeout": 60 * 10},
-    "arch_z.Akce": {"ops": ("fetch",), "timeout": 60 * 10},
-    "arch_z.ArcheologickyZaznam": {"ops": ("fetch",), "timeout": 60 * 10},
-    "projekt.Projekt": {"ops": ("fetch",), "timeout": 60 * 10},
-    "ez.ExterniZdroj": {"ops": ("fetch",), "timeout": 60 * 10},
-    "dokument.Dokument": {"ops": ("fetch",), "timeout": 60 * 10},
-    "dokument.DokumentExtraData": {"ops": ("fetch",), "timeout": 60 * 10},
-    "historie.Historie": {"ops": ("fetch",), "timeout": 60 * 10},
-    "pas.SamostatnyNalez": {"ops": ("fetch",), "timeout": 60 * 10},
-    "pas.UzivatelSpoluprace": {"ops": ("fetch",), "timeout": 60 * 10},
-    "core.Permissions": {"ops": ("fetch",), "timeout": 60 * 60},
-    "komponenta.Komponenta": {"ops": ("fetch",), "timeout": 60 * 10},
-    "pian.Pian": {"ops": ("fetch",), "timeout": 60 * 10},
-    "nalez.*": {"ops": ("fetch",), "timeout": 60 * 10},
-    "lokalita.Lokalita": {"ops": ("fetch",), "timeout": 60 * 10},
-    "dj.DokumentacniJednotka": {"ops": ("fetch",), "timeout": 60 * 10},
-    "uzivatel.User": {"ops": ("fetch",), "timeout": 60},
+    "lokalita.Lokalita": {"ops": (), "timeout": 60 * 10},
+    "projekt.Projekt": {"ops": (), "timeout": 60 * 10},
+    "arch_z.Akce": {
+        "ops": (),
+        "timeout": 60 * 10,
+    },
+    "pas.SamostatnyNalez": {"ops": (), "timeout": 60 * 10},
+    "dokument.Dokument": {"ops": (), "timeout": 60 * 10},
+    "ez.ExterniZdroj": {"ops": (), "timeout": 60 * 10},
 }
 
 SECRET_KEY = get_secret("SECRET_KEY")

@@ -1,7 +1,6 @@
 import logging
 from typing import Union
 
-from cacheops import invalidate_model
 from core.constants import (
     ROLE_ADMIN_ID,
     ROLE_ARCHEOLOG_ID,
@@ -322,8 +321,6 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         user = request.user
         obj.created_from_admin_panel = True
         obj.active_transaction = fedora_transaction
-        invalidate_model(User)
-        invalidate_model(Historie)
         logger.debug(
             "uzivatel.admin.save_model.start",
             extra={
