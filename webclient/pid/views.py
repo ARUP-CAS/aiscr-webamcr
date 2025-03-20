@@ -4,7 +4,7 @@ import unicodedata
 
 import requests
 from arch_z.models import ArcheologickyZaznam
-from cacheops import invalidate_all
+from cacheops import invalidate_model
 from core.connectors import RedisConnector
 from core.constants import AZ_STAV_ARCHIVOVANY, D_STAV_ARCHIVOVANY, SN_ARCHIVOVANY
 from core.repository_connector import FedoraTransaction
@@ -191,6 +191,7 @@ class ContinuePidProcessing(AdminRecordProcessingView):
         if set_callable_method:
             set_callable_method()
             record.save()
+            invalidate_model(record)
         return result.get("data", {}).get("id")
 
     def process_record(self, record, result, **kwargs):
@@ -226,26 +227,28 @@ class ContinuePidProcessing(AdminRecordProcessingView):
             if performed_action == "post_publish":
                 if not record.lokalita.igsn and record.stav == AZ_STAV_ARCHIVOVANY:
                     result["result"] = self._perform_client_action(
-                        record, "igsn", record.lokalita.igsn_publish, record.lokalita.set_igsn
+                        record.lokalita, "igsn", record.lokalita.igsn_publish, record.lokalita.set_igsn
                     )
                     result["detail"] = record.lokalita.igsn_url
                 else:
                     result["result"] = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
             elif performed_action == "put_publish":
                 if record.lokalita.igsn and record.stav == AZ_STAV_ARCHIVOVANY:
-                    result["result"] = self._perform_client_action(record, "igsn", record.lokalita.igsn_publish)
+                    result["result"] = self._perform_client_action(
+                        record.lokalita, "igsn", record.lokalita.igsn_publish
+                    )
                     result["detail"] = record.lokalita.igsn_url
                 else:
                     result["result"] = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
             elif performed_action == "hide":
                 if record.lokalita.igsn and record.stav != AZ_STAV_ARCHIVOVANY:
-                    result["result"] = self._perform_client_action(record, "igsn", record.lokalita.igsn_hide)
+                    result["result"] = self._perform_client_action(record.lokalita, "igsn", record.lokalita.igsn_hide)
                     result["detail"] = record.lokalita.igsn_url
                 else:
                     result["result"] = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
             elif performed_action == "update":
                 if record.lokalita.igsn:
-                    result["result"] = self._perform_client_action(record, "igsn", record.lokalita.igsn_update)
+                    result["result"] = self._perform_client_action(record.lokalita, "igsn", record.lokalita.igsn_update)
                     result["detail"] = record.lokalita.igsn_url
                 else:
                     result["result"] = _("core.admin.FedoraCustomAdminSite.post_publish.cannot_be_done")
@@ -277,5 +280,4 @@ class ContinuePidProcessing(AdminRecordProcessingView):
         else:
             result["result"] = _("core.admin.FedoraCustomAdminSite.cannot_load_record")
         fedora_transaction.mark_transaction_as_closed()
-        invalidate_all()
         return result
