@@ -524,3 +524,10 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         table = UzivatelSpolupraceTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
         return self.redis_snapshot_id, data
+
+    @classmethod
+    def get_by_ident_cely(cls, pk):
+        try:
+            return cls.objects.get(pk=pk)
+        except Exception:
+            return None
