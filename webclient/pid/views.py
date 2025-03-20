@@ -4,7 +4,6 @@ import unicodedata
 
 import requests
 from arch_z.models import ArcheologickyZaznam
-from cacheops import invalidate_model
 from core.connectors import RedisConnector
 from core.constants import AZ_STAV_ARCHIVOVANY, D_STAV_ARCHIVOVANY, SN_ARCHIVOVANY
 from core.repository_connector import FedoraTransaction
@@ -191,7 +190,6 @@ class ContinuePidProcessing(AdminRecordProcessingView):
         if set_callable_method:
             set_callable_method()
             record.save()
-            invalidate_model(record)
         return result.get("data", {}).get("id")
 
     def process_record(self, record, result, **kwargs):
