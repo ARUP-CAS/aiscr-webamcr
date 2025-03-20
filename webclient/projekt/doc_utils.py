@@ -644,9 +644,7 @@ class OznameniPDFCreator(DocumentCreator):
             Paragraph(self.texts.get("doc_par_1"), body_style),
             Paragraph(self.texts.get("doc_par_2"), body_style),
             Paragraph(self.texts.get("doc_par_3"), styles["amBodyTextCenter"]),
-        ]
-
-        notes = [
+            Paragraph("", body_style),
             Paragraph(self.texts.get("notes_heading"), body_style),
             self.texts.get("notes", body_style),
         ]
@@ -681,7 +679,7 @@ class OznameniPDFCreator(DocumentCreator):
             Paragraph(self.texts.get("doc_attachment_par_8_4"), body_style),
         ]
 
-        document_content = header + doc + notes + signature + attachment
+        document_content = header + doc + signature + attachment
         return self._generate_repository_file(my_doc, document_content, pdf_buffer)
 
 
@@ -790,16 +788,20 @@ class ZruseniPDFCreator(DocumentCreator):
         header.append(tbl)
 
         doc = [
+            Paragraph("", body_style),
             Paragraph(self.texts.get("doc_vec"), styles["amVec"]),
+            Paragraph("", body_style),
             Paragraph(self.texts.get("data_part_1"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_2"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_3"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_4"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_5"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_6"), styles["amBodyTextSmallerSpaceAfter"]),
+            Paragraph("", body_style),
             Paragraph(self.texts.get("doc_par_1"), body_style),
             Paragraph(self.texts.get("doc_par_2"), body_style),
             Paragraph(self.texts.get("doc_par_3"), body_style),
+            Paragraph("", body_style),
             Paragraph(self.texts.get("notes_heading"), body_style),
             self.texts.get("notes", body_style),
         ]

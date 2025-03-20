@@ -574,7 +574,7 @@ class Mailer:
                 {
                     "title": subject,
                     "project": project,
-                    "organizace_zapsani": project.historie.historie_set.last().uzivatel.organizace,
+                    "organizace_zapsani": project.historie.historie_set.last().uzivatel.organizace.get_nazev(),
                 },
             )
             cls.__send(

@@ -1076,6 +1076,14 @@ class DokumentCastSmazatView(TransakceView):
         cast = self.get_zaznam()
         cast.create_transaction(request.user, self.success_message)
         dokument = cast.dokument
+        lokalita_update = None
+        if (
+            isinstance(cast.archeologicky_zaznam, ArcheologickyZaznam)
+            and cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+            and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            and cast.archeologicky_zaznam.lokalita.igsn
+        ):
+            lokalita_update = cast.archeologicky_zaznam.lokalita
         if cast.komponenty:
             komps = cast.komponenty
             cast.komponenty = None
@@ -1094,6 +1102,8 @@ class DokumentCastSmazatView(TransakceView):
             )
         cast.close_active_transaction_when_finished = True
         cast.delete()
+        if lokalita_update:
+            lokalita_update.igsn_update()
         return JsonResponse({"redirect": dokument.get_absolute_url()})
 
 
