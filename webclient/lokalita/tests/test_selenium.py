@@ -235,6 +235,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-N1000003")
         self.ElementClick(By.CSS_SELECTOR, "#lokalita-archivovat > .material-icons")
         self.wait(1)
+        self.ElementClick(By.CSS_SELECTOR, ".custom-control-label")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 
