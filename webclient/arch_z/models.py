@@ -625,6 +625,13 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
             )
             return None, None
 
+    @classmethod
+    def get_by_ident_cely(cls, ident_cely):
+        try:
+            return cls.objects.get(archeologicky_zaznam__ident_cely=ident_cely)
+        except Exception:
+            return None
+
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     """

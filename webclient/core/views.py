@@ -1087,16 +1087,22 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                     results = pipe.execute()
                     for index, result in enumerate(results):
                         if not result:
-                            ident_cely = ident_cely_list[base_index + index].split("_")[-1]
-                            logger.error(
-                                "core.views.SearchListView.snapshot.error",
-                                extra={"ident_cely": ident_cely},
-                            )
-                            item = self.model.objects.get(ident_cely=ident_cely)
-                            key, value = item.generate_redis_snapshot()
-                            if key and value:
-                                r.hset(key, mapping=value)
-                                results[index] = value
+                            try:
+                                ident_cely = ident_cely_list[base_index + index].split("_")[-1]
+                                logger.warning(
+                                    "core.views.SearchListView.snapshot.create.warning",
+                                    extra={"ident_cely": ident_cely},
+                                )
+                                item = self.model.get_by_ident_cely(ident_cely)
+                                key, value = item.generate_redis_snapshot()
+                                if key and value:
+                                    r.hset(key, mapping=value)
+                                    results[index] = value
+                            except Exception as err:
+                                logger.error(
+                                    "core.views.SearchListView.snapshot.error",
+                                    extra={"ident_cely": ident_cely, "error": err},
+                                )
                     data.extend(results)
                     base_index = i + 1
 
