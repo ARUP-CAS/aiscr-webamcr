@@ -183,6 +183,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def pristupnost(self):
         return self.pristupnost_snapshot
 
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            self.set_pristupnost()
+        super().save(*args, **kwargs)
+
     def __init__(self, *args, **kwargs):
         super(Projekt, self).__init__(*args, **kwargs)
         self.initial_dokumenty = []
@@ -691,6 +696,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
 
     def set_pristupnost(self, fixes: Union[Dict, None] = None):
+        if self.pk is None:
+            self.pristupnost_snapshot = Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
+            return
         pristupnosti_ids = set()
         if self.typ_projektu.pk == TYP_PROJEKTU_PRUZKUM_ID:
             samostatne_nalezy = self.samostatne_nalezy.all()
