@@ -535,16 +535,19 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         return self._get_doi_client().check_record_exists()
 
     def doi_delete(self):
-        return self._get_doi_client().delete_record()
+        if self.doi:
+            return self._get_doi_client().delete_record()
 
     def doi_hide(self):
-        return self._get_doi_client().hide_record()
+        if self.doi:
+            return self._get_doi_client().hide_record()
 
     def doi_publish(self):
         return self._get_doi_client().publish_record()
 
     def doi_update(self):
-        return self._get_doi_client().update_record()
+        if self.doi:
+            return self._get_doi_client().update_record()
 
     @property
     def doi_url(self):

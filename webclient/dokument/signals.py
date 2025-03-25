@@ -128,8 +128,8 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
     logger.debug(
         "dokument.signals.dokument_delete_repository_container.start", extra={"ident_cely": instance.ident_cely}
     )
-    instance.doi_delete()
     fedora_transaction = instance.active_transaction
+    instance.doi_delete()
     for k in Komponenta.objects.filter(ident_cely__startswith=instance.ident_cely):
         logger.debug(
             "dokument.signals.dokument_delete_repository_container.deleting",
