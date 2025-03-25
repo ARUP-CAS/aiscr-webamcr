@@ -82,29 +82,41 @@ class DigitalObjectIdentifierClient:
 
     def delete_record(self):
         logger.debug(
-            "doi.client.DigitalObjectIdentifierClient.check_record_exists.delete_record",
+            "doi.client.DigitalObjectIdentifierClient.delete_record.start",
             extra={"ident_cely": self.serializer.get_ident_cely()},
         )
         if not isinstance(self.record, Lokalita) and not hasattr(self.record, "active_transaction"):
             raise DoiNoTransactionError
-        response = requests.put(
-            self.get_record_url(), headers=self.headers, json=self.serializer.serialize_delete(), auth=self.auth
-        )
-        self._check_response_status(response)
-        return response.json()
+        if self.check_record_exists():
+            response = requests.put(
+                self.get_record_url(), headers=self.headers, json=self.serializer.serialize_delete(), auth=self.auth
+            )
+            self._check_response_status(response)
+            return response.json()
+        else:
+            logger.info(
+                "doi.client.DigitalObjectIdentifierClient.delete_record.does_not_exist",
+                extra={"ident_cely": self.serializer.get_ident_cely()},
+            )
 
     def hide_record(self):
         logger.debug(
-            "doi.client.DigitalObjectIdentifierClient.check_record_exists.hide_record",
+            "doi.client.DigitalObjectIdentifierClient.hide_record.start",
             extra={"ident_cely": self.serializer.get_ident_cely()},
         )
         if not isinstance(self.record, Lokalita) and not hasattr(self.record, "active_transaction"):
             raise DoiNoTransactionError
-        response = requests.put(
-            self.get_record_url(), headers=self.headers, json=self.serializer.serialize_hide(), auth=self.auth
-        )
-        self._check_response_status(response)
-        return response.json()
+        if self.check_record_exists():
+            response = requests.put(
+                self.get_record_url(), headers=self.headers, json=self.serializer.serialize_hide(), auth=self.auth
+            )
+            self._check_response_status(response)
+            return response.json()
+        else:
+            logger.info(
+                "doi.client.DigitalObjectIdentifierClient.hide_record.does_not_exist",
+                extra={"ident_cely": self.serializer.get_ident_cely()},
+            )
 
     def publish_record(self):
         logger.debug(
@@ -126,11 +138,17 @@ class DigitalObjectIdentifierClient:
 
     def update_record(self):
         logger.debug(
-            "doi.client.DigitalObjectIdentifierClient.check_record_exists.update_record",
+            "doi.client.DigitalObjectIdentifierClient.update_record.start",
             extra={"ident_cely": self.serializer.get_ident_cely()},
         )
-        response = requests.put(
-            self.get_record_url(), headers=self.headers, json=self.serializer.serialize_update(), auth=self.auth
-        )
-        self._check_response_status(response)
-        return response.json()
+        if self.check_record_exists():
+            response = requests.put(
+                self.get_record_url(), headers=self.headers, json=self.serializer.serialize_update(), auth=self.auth
+            )
+            self._check_response_status(response)
+            return response.json()
+        else:
+            logger.info(
+                "doi.client.DigitalObjectIdentifierClient.update_record.does_not_exist",
+                extra={"ident_cely": self.serializer.get_ident_cely()},
+            )

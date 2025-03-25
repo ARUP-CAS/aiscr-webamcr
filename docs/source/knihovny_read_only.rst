@@ -472,7 +472,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License; Public Domain
      - https://www.pycryptodome.org
    * - pyparsing
-     - 3.2.1
+     - 3.2.2
      - MIT License
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
