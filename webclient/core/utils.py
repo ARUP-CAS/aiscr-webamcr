@@ -66,39 +66,84 @@ def validate_and_split_geometry(geom):
     """
     Funkce pro validaci řetězce s WKT geometrií.
     """
+
+    valid_bbox = "5, 40, 25, 60"
+    if geom.iloc[1] == 5514:
+        valid_bbox = "-905000, -1230000, -400000, -930000"
     new_rows = []
     if not isinstance(geom.iloc[2], str) or geom.iloc[2] == "":
         geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
         new_rows.append(geom)
         return new_rows
-    query = """
-        WITH geom_to_insert AS
-          (SELECT ST_GeomFromText(%s) AS geom),
-             geometries AS
-          (SELECT (ST_Dump(geom)).geom AS POLYGON
-           FROM geom_to_insert),
-             ring AS
-          (SELECT ST_IsValid(POLYGON) AS is_valid,
-                  ST_IsSimple(POLYGON) AS is_simple,
-                  ST_IsValidReason(POLYGON) AS invalid_reason,
-                  ST_AsText((ST_DumpRings(POLYGON)).geom) AS rings,
-                  ST_GeometryType(POLYGON)
-           FROM geometries
-           WHERE ST_GeometryType(POLYGON) = 'ST_Polygon'),
-             other AS
-          (SELECT ST_IsValid(POLYGON) AS is_valid,
-                  ST_IsSimple(POLYGON) AS is_simple,
-                  ST_IsValidReason(POLYGON) AS invalid_reason,
-                  ST_AsText(POLYGON) AS rings,
-                  ST_GeometryType(POLYGON)
-           FROM geometries
-           WHERE ST_GeometryType(POLYGON) != 'ST_Polygon')
-        SELECT *
-        FROM ring
-        UNION ALL
-        SELECT *
-        FROM other
+    query = (
+        """
+      WITH bbox AS (
+    SELECT ST_MakeEnvelope("""
+        + valid_bbox
+        + """) AS geom
+),
+geom_to_insert AS (
+    SELECT ST_GeomFromText(%s) AS geom
+),
+geometries AS (
+    SELECT (ST_Dump(geom)).geom AS geom
+    FROM geom_to_insert
+),
+analyzed AS (
+    SELECT
+        g.geom,
+        ST_GeometryType(g.geom) AS geom_type,
+        ST_CoordDim(g.geom) AS coord_dim,
+        CASE
+            WHEN ST_GeometryType(g.geom) NOT IN (
+                'ST_Point', 'ST_LineString', 'ST_Polygon',
+                'ST_MultiPoint', 'ST_MultiLineString', 'ST_MultiPolygon'
+            ) THEN false
+            WHEN ST_CoordDim(g.geom) != 2 THEN false
+            WHEN NOT ST_Within(g.geom, b.geom) THEN false
+            ELSE ST_IsValid(g.geom)
+        END AS is_valid,
+        ST_IsSimple(g.geom) AS is_simple,
+        CASE
+            WHEN ST_GeometryType(g.geom) NOT IN (
+                'ST_Point', 'ST_LineString', 'ST_Polygon',
+                'ST_MultiPoint', 'ST_MultiLineString', 'ST_MultiPolygon'
+            ) THEN '"""
+        + _("pian.views.importovatPianView.check.wrongGeometry")
+        + """'
+            WHEN ST_CoordDim(g.geom) != 2 THEN '"""
+        + _("pian.views.importovatPianView.check.dimension")
+        + """'
+            WHEN NOT ST_Within(g.geom, b.geom) THEN '"""
+        + _("pian.views.importovatPianView.check.BBox")
+        + """'
+            ELSE '"""
+        + _("pian.views.importovatPianView.check.wrongGeometry")
+        + """'
+        END AS invalid_reason
+    FROM geometries g, bbox b
+),
+ring AS (
+    SELECT
+        is_valid, is_simple, invalid_reason,
+        ST_AsText((ST_DumpRings(geom)).geom) AS rings,
+        geom_type
+    FROM analyzed
+    WHERE geom_type = 'ST_Polygon'
+),
+other AS (
+    SELECT
+        is_valid, is_simple, invalid_reason,
+        ST_AsText(geom) AS rings,
+        geom_type
+    FROM analyzed
+    WHERE geom_type != 'ST_Polygon'
+)
+SELECT * FROM ring
+UNION ALL
+SELECT * FROM other;
     """
+    )
     cursor = connection.cursor()
     sid = transaction.savepoint()
     try:
@@ -117,7 +162,7 @@ def validate_and_split_geometry(geom):
         if len(rows) > 1:
             new_geom.iloc[0] = f"{geom.iloc[0]}_{index + 1}"
         if row[0] is False or row[1] is False:
-            new_geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
+            new_geom["result"] = row[2]
             new_rows.append(new_geom)
             return new_rows
         new_geom["result"] = True
