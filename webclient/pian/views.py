@@ -2,17 +2,14 @@ import logging
 
 import pandas as pd
 from arch_z.models import ArcheologickyZaznam
-from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN, PIAN_POTVRZEN, ZAPSANI_AZ, ZAPSANI_PIAN
-from core.exceptions import MaximalIdentNumberError, NeznamaGeometrieError
+from core.constants import PIAN_NEPOTVRZEN, PIAN_POTVRZEN, ZAPSANI_AZ, ZAPSANI_PIAN
+from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_temporary_pian_ident
 from core.message_constants import (
     MAXIMUM_IDENT_DOSAZEN,
-    PIAN_NEVALIDNI_GEOMETRIE,
     PIAN_USPESNE_ODPOJEN,
     PIAN_USPESNE_POTVRZEN,
     PIAN_USPESNE_SMAZAN,
-    PIAN_VALIDACE_VYPNUTA,
-    VALIDATION_EMPTY,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_VYTVOREN,
@@ -22,7 +19,6 @@ from core.repository_connector import FedoraRepositoryConnector, FedoraTransacti
 from core.utils import (
     file_validate_epsg,
     get_dj_akce_for_pian,
-    get_validation_messages,
     update_all_katastr_within_akce_or_lokalita,
     validate_and_split_geometry,
 )
@@ -32,11 +28,8 @@ from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.gis.db.models.functions import Centroid
-from django.contrib.gis.geos import LineString, Point, Polygon
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db import connection
 from django.db.models import FilteredRelation, OuterRef, Q, Subquery
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -45,11 +38,10 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
 from heslar.hesla import HESLAR_PRISTUPNOST
-from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
 from heslar.models import Heslar
 from historie.models import Historie
 from pian.forms import PianCreateForm
-from pian.models import Kladyzm, Pian
+from pian.models import Pian
 
 logger = logging.getLogger(__name__)
 
@@ -69,44 +61,7 @@ def detail(request, ident_cely):
         data=request.POST,
         instance=pian,
     )
-    c = connection.cursor()
-    validation_results = ""
-    validation_geom = ""
-    logger.debug("pian.views.detail.start")
-    try:
-        dict1 = dict(request.POST)
-        logger.debug("pian.views.detail", extra={"post": dict1.items()})
-        for key in dict1.keys():
-            if key == "geom":
-                validation_geom = dict1.get(key)[0]
-                c.execute("BEGIN")
-                c.callproc("validateGeom", [validation_geom])
-                validation_results = c.fetchone()[0]
-                logger.debug(
-                    "pian.views.detail",
-                    extra={"validation_results": validation_results, "validation_geom": validation_geom, "key": key},
-                )
-                c.execute("COMMIT")
-    except Exception as e:
-        logger.debug(e)
-        validation_results = PIAN_VALIDACE_VYPNUTA
-    finally:
-        c.close()
-    if validation_geom == "undefined":
-        messages.add_message(
-            request,
-            messages.ERROR,
-            PIAN_NEVALIDNI_GEOMETRIE + " " + get_validation_messages(VALIDATION_EMPTY),
-        )
-    elif validation_results == PIAN_VALIDACE_VYPNUTA:
-        messages.add_message(request, messages.ERROR, PIAN_VALIDACE_VYPNUTA)
-    elif validation_results != "valid":
-        messages.add_message(
-            request,
-            messages.ERROR,
-            PIAN_NEVALIDNI_GEOMETRIE + " " + get_validation_messages(validation_results),
-        )
-    elif form.is_valid():
+    if form.is_valid():
         logger.debug("pian.views.detail.form.valid", extra={"pian_ident_cely": pian.ident_cely})
         pian = form.save(commit=False)
         fedora_transaction = pian.create_transaction(request.user)
@@ -117,12 +72,10 @@ def detail(request, ident_cely):
         pian.close_active_transaction_when_finished = True
         pian.save()
         logger.debug("pian.views.detail.form.finished", extra={"transaction": fedora_transaction.uid})
+        response = redirect(dj.get_absolute_url())
     else:
         logger.debug("pian.views.detail.form.not_valid", extra={"form_errors": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-
-    response = redirect(dj.get_absolute_url())
-    if validation_results != "valid" and validation_results != PIAN_VALIDACE_VYPNUTA:
         response = redirect(dj.get_absolute_url() + "/pian/edit/" + str(ident_cely))
     response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000, secure=True, samesite="Strict")
     response.set_cookie(
@@ -272,87 +225,40 @@ def create(request, dj_ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     form = PianCreateForm(data=request.POST)
     logger.debug("pian.views.create.form_data", extra={"form_data": form.data, "post_data": request.POST})
-    c = connection.cursor()
-    try:
-        c.execute("BEGIN")
-        c.callproc("validateGeom", [str(form.data["geom"])])
-        validation_results = c.fetchone()[0]
-        c.execute("COMMIT")
-        logger.debug(
-            "pian.views.create.commit", extra={"validation_results": validation_results, "geom": str(form.data["geom"])}
-        )
-    except Exception as ex:
-        logger.warning("pian.views.create.validation_exception", extra={"exception": ex})
-        validation_results = PIAN_VALIDACE_VYPNUTA
-    finally:
-        c.close()
-    if validation_results == PIAN_VALIDACE_VYPNUTA:
-        messages.add_message(request, messages.ERROR, PIAN_VALIDACE_VYPNUTA)
-    elif validation_results != "valid":
-        messages.add_message(
-            request,
-            messages.ERROR,
-            PIAN_NEVALIDNI_GEOMETRIE + " " + get_validation_messages(validation_results),
-        )
-        logger.debug("pian.views.create", extra={"error_message": PIAN_NEVALIDNI_GEOMETRIE})
-        response = redirect(dj.get_absolute_url() + "/pian/zapsat")
-        return response
-    elif form.is_valid():
+    if form.is_valid():
         logger.debug("pian.views.create.form_valid")
         pian = form.save(commit=False)
-        # Assign base map references
-        if type(pian.geom) == Point:
-            pian.typ = Heslar.objects.get(id=GEOMETRY_BOD)
-            point = pian.geom
-        elif type(pian.geom) == LineString:
-            pian.typ = Heslar.objects.get(id=GEOMETRY_LINIE)
-            point = pian.geom.interpolate(0.5)
-        elif type(pian.geom) == Polygon:
-            pian.typ = Heslar.objects.get(id=GEOMETRY_PLOCHA)
-            point = Centroid(pian.geom)
+        try:
+            pian.ident_cely = get_temporary_pian_ident(pian.zm50)
+        except MaximalIdentNumberError as e:
+            logger.warning("pian.views.create.error", extra={"message": messages.ERROR, "exception": e.message})
+            messages.add_message(request, messages.ERROR, e.message)
         else:
-            raise NeznamaGeometrieError()
-        logger.debug("pian.views.create.geom", extra={"geom": str(form.data["geom"])})
-        zm10s = Kladyzm.objects.filter(kategorie=KLADYZM10).filter(the_geom__contains=point)
-        zm50s = Kladyzm.objects.filter(kategorie=KLADYZM50).filter(the_geom__contains=point)
-        if zm10s.count() == 1 and zm50s.count() == 1:
-            pian.zm10 = zm10s[0]
-            pian.zm50 = zm50s[0]
-            try:
-                pian.ident_cely = get_temporary_pian_ident(zm50s[0])
-            except MaximalIdentNumberError as e:
-                logger.warning("pian.views.create.error", extra={"message": messages.ERROR, "exception": e.message})
-                messages.add_message(request, messages.ERROR, e.message)
+            fedora_transaction: FedoraTransaction = pian.create_transaction(request.user)
+            if FedoraRepositoryConnector.check_container_deleted_or_not_exists(pian.ident_cely, "pian"):
+                pian.save()
+                pian.set_vymezeny(request.user)
+                dj.active_transaction = fedora_transaction
+                dj.pian = pian
+                dj.save()
+                update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
+                pian.close_active_transaction_when_finished = True
+                pian.save()
+                logger.debug(
+                    "pian.views.create.finished",
+                    extra={"info": ZAZNAM_USPESNE_VYTVOREN, "dj_pk": dj.pk, "transaction": fedora_transaction.uid},
+                )
             else:
-                fedora_transaction: FedoraTransaction = pian.create_transaction(request.user)
-                if FedoraRepositoryConnector.check_container_deleted_or_not_exists(pian.ident_cely, "pian"):
-                    pian.save()
-                    pian.set_vymezeny(request.user)
-                    dj.active_transaction = fedora_transaction
-                    dj.pian = pian
-                    dj.save()
-                    update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
-                    pian.close_active_transaction_when_finished = True
-                    pian.save()
-                    logger.debug(
-                        "pian.views.create.finished",
-                        extra={"info": ZAZNAM_USPESNE_VYTVOREN, "dj_pk": dj.pk, "transaction": fedora_transaction.uid},
-                    )
-                else:
-                    logger.info(
-                        "pian.views.create.check_container_deleted_or_not_exists.incorrect",
-                        extra={"ident_cely": pian.ident_cely},
-                    )
-                    fedora_transaction.rollback_transaction()
-        else:
-            logger.info("pian.views.create.assignment_error", extra={"zm10s": zm10s, "zm50s": zm50s})
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-        redirect(dj.get_absolute_url())
+                logger.info(
+                    "pian.views.create.check_container_deleted_or_not_exists.incorrect",
+                    extra={"ident_cely": pian.ident_cely},
+                )
+                fedora_transaction.rollback_transaction()
+        response = redirect(dj.get_absolute_url())
     else:
         logger.info("pian.views.create.not_valid", extra={"errors": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-
-    response = redirect(dj.get_absolute_url())
+        response = redirect(dj.get_absolute_url() + "/pian/zapsat")
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict")
     response.set_cookie(
         "set-active",
