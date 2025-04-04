@@ -85,7 +85,7 @@ class PianCreateForm(forms.ModelForm):
             point = geom
         elif type(geom) == LineString:
             self.instance.typ = Heslar.objects.get(id=GEOMETRY_LINIE)
-            point = geom.interpolate(0.5)
+            point = geom.interpolate_normalized(0.5)
         elif type(geom) == Polygon:
             self.instance.typ = Heslar.objects.get(id=GEOMETRY_PLOCHA)
             point = Centroid(geom)
