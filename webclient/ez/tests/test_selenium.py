@@ -372,3 +372,38 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         count_new = ExterniZdroj.objects.count()
         self.assertEqual(count_old + 1, count_new)
         logger.info("AkceExterniZdroj.test_131_zapsani_externího_zdroje_p_010.end")
+
+    def test_136_test_Fedory_externi_zdroj_p_001(self):
+        # Scenar_136 Test Fedory pro externího zdroje
+        # vytvoření
+        logger.info("AkceExterniZdroj.test_136_test_Fedory_externi_zdroj_p_001.start")
+        from datetime import datetime, timezone
+
+        time = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        self.login("archeolog")
+        count_old = ExterniZdroj.objects.count()
+        self.zapsat_zaznam()
+        count_new = ExterniZdroj.objects.count()
+        self.assertEqual(count_old + 1, count_new)
+        self.check_fedora_change(time, "ez/tests/resources/fedora_create")
+
+        self.logout()
+
+        # změna ident_cely EZ
+        self.login("archivar")
+        self.createFedoraRecord("X-BIB-1408662")
+        time = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        dbID = ExterniZdroj.objects.filter(ident_cely="X-BIB-1408662").first().id
+        self.assertEqual(ExterniZdroj.objects.filter(id=dbID).first().stav, EZ_STAV_ODESLANY)
+        self.goToAddress("/id/X-BIB-1408662")
+        self.ElementClick(By.ID, "ez-potvrdit")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(ExterniZdroj.objects.filter(id=dbID).first().stav, EZ_STAV_POTVRZENY)
+
+        self.check_fedora_change(time, "ez/tests/resources/fedora_pozvrzeni")
+        self.check_fedora_delete(["record/X-BIB-1408662"])
+
+        # update EZ
+
+        logger.info("AkceExterniZdroj.test_136_test_Fedory_externi_zdroj_p_001.end")

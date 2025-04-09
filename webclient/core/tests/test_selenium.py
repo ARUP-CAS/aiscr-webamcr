@@ -3,9 +3,12 @@ import logging
 import os
 import os.path
 import time
+import xml.etree.ElementTree as ET
+from collections import Counter
 from datetime import datetime
 from typing import Optional
 from unittest.util import safe_repr
+from urllib.parse import urlparse
 
 import pandas
 import psycopg2
@@ -19,6 +22,7 @@ from django.conf import settings
 from django.db import connection
 from django.http import Http404
 from django.test import LiveServerTestCase
+from rdflib import Graph, Literal, URIRef
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from uzivatel.models import User
@@ -128,6 +132,40 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                         members.append(result)
         return members
 
+    def save_container_content(self, container_path, path):
+        headers = {}
+        response = requests.get(container_path, auth=self.auth, headers=headers)
+        members = []
+        extensions = {"text/turtle": "turtle", "application/xml": "xml"}
+        filename = str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__")
+        extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
+        if response.status_code == 200:
+            f = open(f"{path}/{filename}.{extension}", "wb")
+            f.write(response.content)
+            f.close()
+        return members
+
+    def check_container_content(self, container_path, path):
+        headers = {}
+        response = requests.get(container_path, auth=self.auth, headers=headers)
+        members = []
+        extensions = {"text/turtle": "turtle", "application/xml": "xml"}
+        filename = str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__")
+        extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
+        if response.status_code == 200:
+            f = open(f"{path}/{filename}.{extension}", "rb")
+            sample_file = f.read()
+            f.close()
+        if extension == "turtle":
+            assert self.porovnej_rdf_obsah(
+                response.content, sample_file, ignorovat_predikaty=["fedora:created", "fedora:lastModified"]
+            )
+        else:
+            assert self.porovnej_xml_bez_ignorovanych(
+                sample_file, response.content, ignorovane_tagy=["amcr:datum_zmeny"]
+            )
+        return members
+
     api_url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
     auth = requests.auth.HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
 
@@ -169,8 +207,57 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                     data = json.load(file)
                 if data["deleted"] is True and name in data["id"]:
                     matches = data["id"][data["id"].find("/") + 1 :]
-                    logger.error(f"delete {url}{matches}")
+                    # logger.error(f"delete {url}{matches}")
                     self.purge_container(f"{url}{matches}")
+
+    def save_fedora_change(self, time, path):
+        headers = {}
+        response = requests.get(
+            f"{self.api_url}fcr:search?condition=fedora_id={self.api_url}{settings.FEDORA_SERVER_NAME}/*&condition=modified>{time}&offset=0&max_results=100&format=json",
+            auth=self.auth,
+            headers=headers,
+        )
+        import json
+
+        if response.status_code == 200:
+            os.makedirs(path, exist_ok=True)
+            f = open(f"{path}/index.json", "wb")
+            f.write(response.content)
+            f.close()
+            res = json.loads(response.text)
+            for n in res["items"]:
+                self.save_container_content(n["fedora_id"], path)
+
+    def check_fedora_change(self, time, path):
+        headers = {}
+        response = requests.get(
+            f"{self.api_url}fcr:search?condition=fedora_id={self.api_url}{settings.FEDORA_SERVER_NAME}/*&condition=modified>{time}&offset=0&max_results=100&format=json",
+            auth=self.auth,
+            headers=headers,
+        )
+        import json
+
+        if response.status_code == 200:
+            os.makedirs(path, exist_ok=True)
+            f = open(f"{path}/index.json", "rb")
+            json_vzor = f.read()
+            f.close()
+
+            assert self.porovnej_json_rovnost(
+                vzor_json_text=json_vzor, vystup_json_text=response.content, klice_k_ignoraci=["created", "modified"]
+            )
+
+            res = json.loads(response.text)
+            for n in res["items"]:
+                self.check_container_content(n["fedora_id"], path)
+
+    def check_fedora_delete(self, records):
+        headers = {}
+        for item in records:
+            response = requests.get(
+                f"{self.api_url}{settings.FEDORA_SERVER_NAME}/{item}", auth=self.auth, headers=headers
+            )
+            self.assertEqual(response.status_code, 410)
 
     def wipe_Fedora(self):
         self.wipe_Fedora_dir(f"{self.api_url}{settings.FEDORA_SERVER_NAME}/model", 0)
@@ -397,6 +484,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             self.ElementClick(By.CSS_SELECTOR, ".btn")
         self.driver.set_window_rect(0, 0, 1360, 1020)
 
+    def logout(self):
+        self.ElementClick(By.ID, "buttonLogout")
+
     def goToAddress(self, rel_address="/"):
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}{rel_address}")
@@ -452,6 +542,211 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                     "BaseSeleniumTestClass.fedora_error.not_found",
                     extra={"ident_cely": ident_cely, "err": err},
                 )
+
+    def odstran_elementy(self, root, ignorovane_tagy):
+        """Rekurzivně odstraní ignorované tagy z XML stromu."""
+        for elem in list(root):
+            if elem.tag in ignorovane_tagy:
+                root.remove(elem)
+            else:
+                self.odstran_elementy(elem, ignorovane_tagy)
+
+    def xml_to_string_bez_ignorovanych_z_textu(self, xml_text, ignorovane_tagy):
+        """
+        Načte XML z textového vstupu, odstraní ignorované tagy a vrátí serializovanou podobu.
+        """
+        root = ET.fromstring(xml_text)
+        ignorovane_tagy_trans = []
+        for item in ignorovane_tagy:
+            ignorovane_tagy_trans.append(item.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.1/}"))
+        self.odstran_elementy(root, ignorovane_tagy_trans)
+        return ET.tostring(root, encoding="utf-8")
+
+    def porovnej_xml_bez_ignorovanych(self, vzorovy_soubor, vystupni_soubor, ignorovane_tagy):
+        """Porovná dva XML soubory po odstranění ignorovaných tagů."""
+        vzor = self.xml_to_string_bez_ignorovanych_z_textu(vzorovy_soubor, ignorovane_tagy)
+        vystup = self.xml_to_string_bez_ignorovanych_z_textu(vystupni_soubor, ignorovane_tagy)
+        return vzor == vystup
+
+    def nahrad_base_uri_auto(self, graf, nova_base_uri="info:test-base/"):
+        """
+        Najde nejběžnější základní URI (hostname + prefix) v grafu a nahradí ho za `nova_base_uri`.
+        """
+        uri_counter = {}
+
+        # Detekuj nejčastější base z URI
+        for s, p, o in graf:
+            for term in [s, o]:
+                if isinstance(term, URIRef) and settings.FEDORA_SERVER_NAME in str(term):
+                    parsed = urlparse(str(term))
+                    if parsed.scheme and parsed.netloc:
+                        base = f"{parsed.scheme}://{parsed.netloc}/"
+                        uri_counter[base] = uri_counter.get(base, 0) + 1
+
+        if not uri_counter:
+            return  # žádné URI k nahrazení
+
+        # Nejčastější base URI (např. http://192.168.1.27:8080/)
+        puvodni_base = max(uri_counter, key=uri_counter.get)
+
+        # Nahraď v grafech
+        """nove_triples = []
+        for s, p, o in list(graf):
+            novy_s = URIRef(str(s).replace(puvodni_base, nova_base_uri)) if isinstance(s, URIRef) and str(s).startswith(puvodni_base) else s
+            novy_o = URIRef(str(o).replace(puvodni_base, nova_base_uri)) if isinstance(o, URIRef) and str(o).startswith(puvodni_base) else o
+            nove_triples.append((novy_s, p, novy_o))
+            graf.remove((s, p, o))
+        for t in nove_triples:
+            graf.add(t)"""
+
+        nove_triples = []
+        for s, p, o in list(graf):
+            novy_s = (
+                URIRef(str(s).replace(puvodni_base, nova_base_uri))
+                if isinstance(s, URIRef) and str(s).startswith(puvodni_base)
+                else s
+            )
+            novy_o = o
+            if isinstance(o, URIRef) and str(o).startswith(puvodni_base):
+                novy_o = URIRef(str(o).replace(puvodni_base, nova_base_uri))
+            elif isinstance(o, Literal) and str(o).startswith(puvodni_base):
+                novy_o = Literal(str(o).replace(puvodni_base, nova_base_uri), datatype=o.datatype, lang=o.language)
+
+            nove_triples.append((novy_s, p, novy_o))
+            graf.remove((s, p, o))
+        for t in nove_triples:
+            graf.add(t)
+
+    def rdf_graf_z_textu(self, data, format="turtle"):
+        g = Graph()
+        g.parse(data=data, format=format)
+        return g
+
+    def odstran_predikaty(self, graf, predikaty_k_ignoru):
+        """Odstraní trojice podle predikátů (může být prefixed nebo plné URI)."""
+        for pred in predikaty_k_ignoru:
+            # Pokud je to string s dvojtečkou, pokusíme se ho expandovat jako CURIE (prefix:name)
+            if ":" in pred and not pred.startswith("http"):
+                pred_uri = graf.namespace_manager.expand_curie(pred)
+            else:
+                pred_uri = URIRef(pred)
+
+            for s, p, o in list(graf.triples((None, pred_uri, None))):
+                graf.remove((s, p, o))
+
+    def porovnej_rdf_obsah(self, aktualni_rdf, ocekavany_rdf, ignorovat_predikaty=None):
+        g1 = Graph()
+        g1.parse(data=aktualni_rdf, format="turtle")
+
+        g2 = Graph()
+        g2.parse(data=ocekavany_rdf, format="turtle")
+
+        if ignorovat_predikaty:
+            self.odstran_predikaty(g1, ignorovat_predikaty)
+            self.odstran_predikaty(g2, ignorovat_predikaty)
+
+        self.nahrad_base_uri_auto(g1)
+        self.nahrad_base_uri_auto(g2)
+
+        return g1.isomorphic(g2)
+
+    def najdi_base_uri(self, vsechny_retezce):
+        """
+        Najde nejčastější base URI ve všech string hodnotách (např. http://.../rest/)
+        """
+        prefixy = []
+        for s in vsechny_retezce:
+            if s.startswith("http"):
+                # vezmeme např. až po /rest/
+                parts = s.split("/")
+                if len(parts) >= 4:
+                    prefix = "/".join(parts[:4]) + "/"  # např. http://192.168.1.27:8080/rest/
+                    prefixy.append(prefix)
+        if not prefixy:
+            return None
+        return Counter(prefixy).most_common(1)[0][0]
+
+    def sesbiraj_retezce(self, data):
+        """Rekurzivně sesbírá všechny stringy z JSON dat."""
+        hodnoty = []
+        if isinstance(data, dict):
+            for v in data.values():
+                hodnoty.extend(self.sesbiraj_retezce(v))
+        elif isinstance(data, list):
+            for item in data:
+                hodnoty.extend(self.sesbiraj_retezce(item))
+        elif isinstance(data, str) and settings.FEDORA_SERVER_NAME in data:
+            hodnoty.append(data)
+        return hodnoty
+
+    def nahrad_base_uri_v_json(self, data, puvodni_base, nova_base):
+        """Rekurzivně nahradí base URI ve všech stringových hodnotách JSON objektu."""
+        if isinstance(data, dict):
+            return {k: self.nahrad_base_uri_v_json(v, puvodni_base, nova_base) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [self.nahrad_base_uri_v_json(item, puvodni_base, nova_base) for item in data]
+        elif isinstance(data, str):
+            return data.replace(puvodni_base, nova_base)
+        else:
+            return data
+
+    def nahrad_base_uri_auto_json(self, data, nova_base="info:test-base/"):
+        """
+        Najde a nahradí nejčastější base URI v JSON string hodnotách.
+        """
+        vsechny_str = self.sesbiraj_retezce(data)
+        puvodni_base = self.najdi_base_uri(vsechny_str)
+        if puvodni_base:
+            return self.nahrad_base_uri_v_json(data, puvodni_base, nova_base)
+        return data  # žádná změna
+
+    def odstran_klice(self, data, klice_k_ignoraci):
+        """
+        Rekurzivně odstraní z JSON objektu všechny klíče uvedené v seznamu.
+        """
+        if isinstance(data, dict):
+            return {k: self.odstran_klice(v, klice_k_ignoraci) for k, v in data.items() if k not in klice_k_ignoraci}
+        elif isinstance(data, list):
+            return [self.odstran_klice(item, klice_k_ignoraci) for item in data]
+        else:
+            return data
+
+    def normalizuj_json(self, data):
+        """
+        Rekurzivně seřadí seznamy (pokud to jde) a klíče ve slovnících.
+        """
+        if isinstance(data, dict):
+            return {k: self.normalizuj_json(v) for k, v in sorted(data.items())}
+        elif isinstance(data, list):
+            normalizovane = [self.normalizuj_json(i) for i in data]
+            try:
+                return sorted(normalizovane, key=lambda x: json.dumps(x, sort_keys=True))
+            except TypeError:
+                # nelze seřadit (např. kombinace typů), ponecháme původní pořadí
+                return normalizovane
+        else:
+            return data
+
+    def porovnej_json_rovnost(self, vzor_json_text, vystup_json_text, klice_k_ignoraci=None):
+        json_vzor = json.loads(vzor_json_text)
+        json_vystup = json.loads(vystup_json_text)
+
+        if klice_k_ignoraci:
+            json_vzor = self.odstran_klice(json_vzor, klice_k_ignoraci)
+            json_vystup = self.odstran_klice(json_vystup, klice_k_ignoraci)
+
+        json_vzor = self.nahrad_base_uri_auto_json(json_vzor)
+        json_vystup = self.nahrad_base_uri_auto_json(json_vystup)
+
+        json_vzor = self.normalizuj_json(json_vzor)
+        json_vystup = self.normalizuj_json(json_vystup)
+        res = json_vzor == json_vystup
+        if res is False:
+            logger.error(
+                "BaseSeleniumTestClass.fedora_error.porovnej_json_rovnost",
+                extra={"data": json_vystup},
+            )
+        return json_vzor == json_vystup
 
 
 class CoreSeleniumTest(BaseSeleniumTestClass):

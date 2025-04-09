@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.1/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.1/ https://api.aiscr.cz/schema/amcr/2.1/amcr.xsd">
+  <amcr:ext_zdroj>
+    <amcr:ident_cely>BIB-0000027</amcr:ident_cely>
+    <amcr:stav>3</amcr:stav>
+    <amcr:typ xml:lang="cs" id="HES-001117">kniha</amcr:typ>
+    <amcr:autor id="OS-001516" poradi="1">Bubeník, Josef</amcr:autor>
+    <amcr:nazev>Slovanské osídlení středního Poohří</amcr:nazev>
+    <amcr:rok_vydani_vzniku>1988</amcr:rok_vydani_vzniku>
+    <amcr:misto>Praha</amcr:misto>
+    <amcr:historie>
+      <amcr:id>hist-972540</amcr:id>
+      <amcr:datum_zmeny>2022-10-20T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000203">U-000203</amcr:uzivatel>
+      <amcr:typ_zmeny>EZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803169</amcr:id>
+      <amcr:datum_zmeny>2025-04-07T07:54:19.164075+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:poznamka>X-BIB-1408662 -&gt; BIB-0000027</amcr:poznamka>
+      <amcr:typ_zmeny>EZ23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-684</amcr:id>
+      <amcr:archeologicky_zaznam id="C-9120749A">C-9120749A</amcr:archeologicky_zaznam>
+      <amcr:paginace>150</amcr:paginace>
+    </amcr:ext_odkaz>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-685</amcr:id>
+      <amcr:archeologicky_zaznam id="C-9120419A">C-9120419A</amcr:archeologicky_zaznam>
+      <amcr:paginace>135-136</amcr:paginace>
+    </amcr:ext_odkaz>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-694</amcr:id>
+      <amcr:archeologicky_zaznam id="C-9133040A">C-9133040A</amcr:archeologicky_zaznam>
+      <amcr:paginace>219</amcr:paginace>
+    </amcr:ext_odkaz>
+  </amcr:ext_zdroj>
+</amcr:amcr>

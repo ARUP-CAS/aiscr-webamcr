@@ -292,7 +292,7 @@
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-projekt" href="{% url 'projekt:edit' projekt.ident_cely %}" rel="tooltip" data-placement="top" data-offset="0px, 1px" title="{% trans 'projekt.templates.detail.upravit.button.text' %}">
-              <span class="material-icons">edit</span>
+              <span id="edit-btn" class="material-icons">edit</span>
             </a>
           </div>
         </div>
@@ -524,7 +524,7 @@
           <div class="app-fx app-right">
             <div class="btn-group" role="group">
               <a class="btn app-entity-projekt" href="{% url 'oznameni_edit' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'projekt.templates.detail.oznamovatel.upravit' %}">
-                <span class="material-icons">edit</span>
+                <span id="edit-btn2" class="material-icons">edit</span>
               </a>
             </div>
           </div>

@@ -1,0 +1,16 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix fedora: <http://fedora.info/definitions/v4/repository#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+
+<http://192.168.1.27:8080/rest/AMCR-selenium-test/model/archeologicky_zaznam/member/C-9120419A>
+        <http://www.openarchives.org/ore/terms/proxyFor>  <http://192.168.1.27:8080/rest/AMCR-selenium-test/record/C-9120419A> ;
+        fedora:created         "2025-04-07T07:54:18.750788Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-04-07T07:54:18.750788Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:createdBy       "AMCR" ;
+        fedora:lastModifiedBy  "AMCR" ;
+        rdf:type               ldp:BasicContainer ;
+        rdf:type               ldp:Resource ;
+        rdf:type               fedora:Resource ;
+        rdf:type               ldp:RDFSource ;
+        rdf:type               ldp:Container ;
+        rdf:type               fedora:Container .
