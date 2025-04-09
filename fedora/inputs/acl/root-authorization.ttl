@@ -14,10 +14,10 @@
    acl:accessTo <info:fedora> ;
    acl:default <info:fedora> .
 
-<#authz_amcr_tx_write> a acl:Authorization ;
-    rdfs:label "Transaction Authorization" ;
-    rdfs:comment "Define users authorized for transaction" ;
-    acl:agent "AMCR" ;
-    acl:mode acl:Read, acl:Write ;
-    acl:accessTo <info:fedora/fcr:tx> ;
-    acl:default <info:fedora/fcr:tx> .
+<info:fedora/fcr:tx#authz_amcr_tx_write> a acl:Authorization ;
+   rdfs:label "Transaction Authorization" ;
+   rdfs:comment "Define users authorized for transaction" ;
+   acl:agent "AMCR" ;
+   acl:mode acl:Read, acl:Write ;
+   acl:accessTo <info:fedora/fcr:tx> ;
+   acl:default <info:fedora/fcr:tx> .
