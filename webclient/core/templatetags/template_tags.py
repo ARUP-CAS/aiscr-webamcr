@@ -155,3 +155,8 @@ def get_settings(item_group, item_id):
 def message_top(forloop_counter):
     # 65px is the height of the message incl. margin
     return forloop_counter * 65 + 15
+
+
+@register.simple_tag
+def get_test_env():
+    return settings.TEST_ENV
