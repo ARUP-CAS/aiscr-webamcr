@@ -1,6 +1,7 @@
 import logging
 from datetime import date, datetime, timedelta
 
+import pytz
 from core.constants import (
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
@@ -86,7 +87,8 @@ def auto_logout_client(request):
     if last_maintenance is not None and last_maintenance is not False:
         if (
             last_maintenance.datum_odstavky == date.today()
-            and last_maintenance.cas_odstavky < (datetime.now() + timedelta(hours=1)).time()
+            and last_maintenance.cas_odstavky
+            < (datetime.now(pytz.timezone("Europe/Prague")) + timedelta(hours=1)).time()
         ):
             maintenance_logout = True
 
