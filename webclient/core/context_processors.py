@@ -91,6 +91,7 @@ def auto_logout_client(request):
             < (datetime.now(pytz.timezone("Europe/Prague")) + timedelta(hours=1)).time()
         ):
             maintenance_logout = True
+            odstavka_cas = last_maintenance.cas_odstavky
 
     if "SESSION_TIME" in options:
         ctx["seconds_until_session_end"] = seconds_until_session_end(request, options["SESSION_TIME"], current_time)
@@ -108,19 +109,15 @@ def auto_logout_client(request):
             ctx["extra_param"] = mark_safe(_("core.context_processors.autologout.expired.text"))
         ctx["logout_warning_text"] = mark_safe("AUTOLOGOUT_EXPIRATION_WARNING")
     else:
-        cache_name = str(request.user.id) + "_maintenanteLogoutTime"
-        logout_time = cache.get_or_set(
-            cache_name,
-            datetime.now() + timedelta(seconds=options["MAINTENANCE_LOGOUT_TIME"]),
-            900,
+        logger.debug("core.context_processors.auto_logout_client")
+        until_logout = datetime.combine(date.today(), odstavka_cas, pytz.timezone("Europe/Prague")) - datetime.now(
+            pytz.timezone("Europe/Prague")
         )
-        logger.debug("core.context_processors.auto_logout_client", extra={"logout_time": logout_time})
-        until_logout = logout_time - datetime.now()
-        ctx["seconds_until_idle_end"] = int(until_logout.total_seconds())
-        ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5
+        ctx["seconds_until_idle_end"] = int(until_logout.total_seconds()) - 60
+        ctx["IDLE_WARNING_TIME"] = False
         ctx["redirect_to_login_immediately"] = "logoutFunction"
         ctx["extra_param"] = mark_safe({"logout_type": "maintenance"})
-        ctx["logout_warning_text"] = mark_safe("MAINTENANCE_LOGOUT_WARNING")
+        # ctx["logout_warning_text"] = mark_safe("MAINTENANCE_LOGOUT_WARNING")
         ctx["maintenance"] = mark_safe("true")
 
     return ctx
