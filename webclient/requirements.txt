@@ -44,7 +44,7 @@ pandas==2.2.3
 tablib[all]==3.8.0
 polars==1.25.2
 XlsxWriter==3.2.2
-pre-commit==4.1.0
+pre-commit==4.2.0
 isort==6.0.1
 coverage==7.7.0
 django-debug-toolbar==5.0.1
