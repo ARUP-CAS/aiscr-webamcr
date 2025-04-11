@@ -348,7 +348,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/PyCQA/isort/releases
    * - kombu
-     - 5.5.1
+     - 5.5.2
      - BSD License
      - https://kombu.readthedocs.io
    * - libsass
@@ -516,7 +516,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - http://opensource.perlig.de/rcssmin/
    * - rdflib
-     - 7.1.3
+     - 7.1.4
      - BSD License
      - https://github.com/RDFLib/rdflib
    * - redis
@@ -624,11 +624,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-trio/trio-websocket
    * - typing_extensions
-     - 4.12.2
-     - Python Software Foundation License
+     - 4.13.2
+     - UNKNOWN
      - https://github.com/python/typing_extensions
    * - tzdata
-     - 2025.1
+     - 2025.2
      - Apache Software License
      - https://github.com/python/tzdata
    * - uWSGI
@@ -636,15 +636,15 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU General Public License v2 or later (GPLv2+)
      - https://uwsgi-docs.readthedocs.io/en/latest/
    * - urllib3
-     - 2.3.0
-     - MIT License
+     - 2.4.0
+     - UNKNOWN
      - https://github.com/urllib3/urllib3/blob/main/CHANGES.rst
    * - vine
      - 5.1.0
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.29.3
+     - 20.30.0
      - MIT License
      - https://github.com/pypa/virtualenv
    * - websocket-client
@@ -826,7 +826,7 @@ Docker image
      - Apache License 2
      - https://github.com/google/cadvisor
    * - Fedora
-     - 6.4.0
+     - 6.5.1
      - Apache-2.0 License
      - https://github.com/fcrepo/fcrepo
    * - ghcr.io/osgeo/gdal:ubuntu-small
