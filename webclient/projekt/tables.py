@@ -60,6 +60,8 @@ class ProjektTable(SearchTable):
     )
     columns_to_hide = (
         "uzivatelske_oznaceni",
+        "hlavni_katastr__okres",
+        "hlavni_katastr__okres__kraj",
         "katastry",
         "termin_odevzdani_nz",
         "lokalizace",
@@ -76,6 +78,8 @@ class ProjektTable(SearchTable):
             "stav",
             "typ_projektu",
             "hlavni_katastr",
+            "hlavni_katastr__okres",
+            "hlavni_katastr__okres__kraj",
             "katastry",
             "lokalizace",
             "parcelni_cislo",
@@ -102,6 +106,8 @@ class ProjektTable(SearchTable):
             "stav",
             "typ_projektu",
             "hlavni_katastr",
+            "hlavni_katastr__okres",
+            "hlavni_katastr__okres__kraj",
             "katastry",
             "lokalizace",
             "parcelni_cislo",
