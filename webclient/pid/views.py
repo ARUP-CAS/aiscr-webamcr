@@ -186,14 +186,17 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
 class ContinuePidProcessing(AdminRecordProcessingView):
     @staticmethod
     def _perform_client_action(record, attribute_name, publish_callable_method, set_callable_method=None):
-        result = publish_callable_method()
-        if set_callable_method:
-            set_callable_method()
-            record.save()
-            if isinstance(record, ArcheologickyZaznam):
-                record.lokalita.active_transaction = record.active_transaction
-                record.lokalita.save()
-        return result.get("data", {}).get("id")
+        try:
+            result = publish_callable_method()
+            if set_callable_method:
+                set_callable_method()
+                record.save()
+                if isinstance(record, ArcheologickyZaznam):
+                    record.lokalita.active_transaction = record.active_transaction
+                    record.lokalita.save()
+            return result.get("data", {}).get("id")
+        except Exception as e:
+            return f"{_('core.admin.FedoraCustomAdminSite.unexpected_error')}: {e}"
 
     def process_record(self, record, result, **kwargs):
         fedora_transaction = FedoraTransaction()
