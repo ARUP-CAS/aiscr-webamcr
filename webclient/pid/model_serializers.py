@@ -1,3 +1,4 @@
+import re
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Dict, List
@@ -1142,7 +1143,8 @@ class LokalitaSerializer(ModelSerializer):
                     related_item["publisher"] = externi_zdroj.vydavatel
                 elif not externi_zdroj.vydavatel and externi_zdroj.organizace:
                     related_item["publisher"] = externi_zdroj.organizace
-                related_item["publicationYear"] = externi_zdroj.rok_vydani_vzniku
+                if re.fullmatch(r"\d{4}", externi_zdroj.rok_vydani_vzniku):
+                    related_item["publicationYear"] = externi_zdroj.rok_vydani_vzniku
                 if externi_zdroj.edice_rada:
                     related_item["edition"] = externi_zdroj.edice_rada
                 related_item["contributors"] = [

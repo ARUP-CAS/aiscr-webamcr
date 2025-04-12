@@ -348,7 +348,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/PyCQA/isort/releases
    * - kombu
-     - 5.5.0
+     - 5.5.1
      - BSD License
      - https://kombu.readthedocs.io
    * - libsass
@@ -472,7 +472,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License; Public Domain
      - https://www.pycryptodome.org
    * - pyparsing
-     - 3.2.2
+     - 3.2.3
      - MIT License
      - https://github.com/pyparsing/pyparsing/
    * - pypdf

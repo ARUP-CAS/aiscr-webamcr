@@ -38,6 +38,16 @@ class AkceTable(SearchTable):
         default="",
         accessor="archeologicky_zaznam__hlavni_katastr",
     )
+    okres = tables.Column(
+        verbose_name=_("arch_z.tables.AkceTable.okres.label"),
+        default="",
+        accessor="archeologicky_zaznam__hlavni_katastr__okres",
+    )
+    kraj = tables.Column(
+        verbose_name=_("arch_z.tables.AkceTable.kraj.label"),
+        default="",
+        accessor="archeologicky_zaznam__hlavni_katastr__okres__kraj",
+    )
     katastry = tables.ManyToManyColumn(
         verbose_name=_("arch_z.tables.AkceTable.katastry.label"),
         default="",
@@ -131,6 +141,8 @@ class AkceTable(SearchTable):
     columns_to_hide = (
         "pristupnost",
         "uzivatelske_oznaceni",
+        "okres",
+        "kraj",
         "katastry",
         "specifikace_data",
         "organizace_vedouci",
@@ -166,6 +178,8 @@ class AkceTable(SearchTable):
             "pristupnost",
             "uzivatelske_oznaceni",
             "hlavni_katastr",
+            "okres",
+            "kraj",
             "katastry",
             "specifikace_data",
             "datum_zahajeni",
