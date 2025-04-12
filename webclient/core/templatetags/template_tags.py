@@ -160,3 +160,8 @@ def message_top(forloop_counter):
 @register.simple_tag
 def get_datetime_now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+@register.simple_tag
+def get_test_env():
+    return settings.TEST_ENV

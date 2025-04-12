@@ -229,9 +229,6 @@ HLIDACI_PES_USPESNE_SMAZAN: Final = _("core.message_constants.notifikaceProjekty
 HLIDACI_PES_NEUSPESNE_VYTVOREN: Final = _("core.message_constants.notifikaceProjektyNeUspesneVytvoren.text")
 HLIDACI_PES_NEUSPESNE_SMAZAN: Final = _("core.message_constants.notifikaceProjektyNeUspesneSmazan.text")
 
-# testovaci prostredi
-NEPRODUKCNI_PROSTREDI_INFO: Final = _("core.message_constants.neprodukcniTestovaciProstredi.text")
-
 # rosseta
 TRANSLATION_UPLOAD_SUCCESS: Final = _("core.message_constants.translationUploadSucces.text")
 TRANSLATION_DELETE_CANNOT_MAIN: Final = _("core.message_constants.translationDeleteCannotMain.text")
