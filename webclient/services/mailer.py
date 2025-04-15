@@ -46,6 +46,7 @@ NOTIFICATION_GROUPS = {
     "S-E-N-02": ("E-N-02",),
     "S-E-N-05": ("E-N-05",),
     "S-E-K-01": ("E-K-01",),
+    "zpravodaj": ("zpravodaj",),
 }
 
 ALWAYS_ACTIVE = [
