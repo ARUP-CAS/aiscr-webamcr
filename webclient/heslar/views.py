@@ -101,7 +101,7 @@ def zjisti_vychozi_hodnotu(request):
     Funkce pohledu pro zjištení výchozí hodnoty z heslaře.
     """
     try:
-        nadrazene = int(request.GET.get("nadrazene") or 0)
+        nadrazene = int(request.GET.get("nadrazene"))
     except ValueError:
         nadrazene = 0
     vychozi_hodnota = HeslarHierarchie.objects.filter(heslo_nadrazene=nadrazene, typ="výchozí hodnota")
