@@ -36,7 +36,7 @@ def validate_uzivatel_email(email):
     if user[0].hlavni_role not in Group.objects.filter(id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)):
         logger.debug(
             "validate_uzivatel_email.ValidationError",
-            extra={"email": email, "hlavni_role": user[0].hlavni_role},
+            extra={"email": email, "info": user[0].hlavni_role},
         )
         raise ValidationError(
             _("pas.forms.te_uzivatel_email.error.wrongGroup.part1")

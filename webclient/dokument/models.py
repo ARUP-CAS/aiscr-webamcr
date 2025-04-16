@@ -933,7 +933,7 @@ def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
     """
     logger.debug(
         "dokument.models.get_dokument_soubor_name.start",
-        extra={"ident_cely": dokument.ident_cely, "add_to_index": add_to_index},
+        extra={"ident_cely": dokument.ident_cely, "index": add_to_index},
     )
     files = dokument.soubory.soubory.all().filter(nazev__icontains=dokument.ident_cely.replace("-", ""))
     logger.debug("dokument.models.get_dokument_soubor_name", extra={"file": files})
@@ -955,9 +955,7 @@ def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
                     + os.path.splitext(filename)[1]
                 )
             else:
-                logger.warning(
-                    "dokument.models.get_dokument_soubor_name.cannot_be_loaded", extra={"last_char": last_char}
-                )
+                logger.warning("dokument.models.get_dokument_soubor_name.cannot_be_loaded", extra={"value": last_char})
                 return False
 
         else:

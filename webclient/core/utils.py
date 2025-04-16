@@ -295,7 +295,7 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     """
     Funkce pro bodu, geomu a presnosti z akce.
     """
-    logger.debug("core.utils.get_pians_from_akce.start", extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely})
+    logger.debug("core.utils.get_pians_from_akce.start", extra={"katastr": katastr, "ident_cely": akce_ident_cely})
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng,ST_AsText(ST_Envelope(hranice)) as bbox "
         " from public.ruian_katastr where "
@@ -354,7 +354,7 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     except IndexError as err:
         logger.error(
             "core.utils.get_pians_from_akce.error",
-            extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely, "error": err, "bod": bod},
+            extra={"katastr": katastr, "ident_cely": akce_ident_cely, "error": err, "value": bod},
         )
         raise CannotFindCadasterCentre()
 
@@ -1050,7 +1050,7 @@ def get_multi_transform_towgs84(jtsk_points):
         for line in r.text.split("\n"):
             if len(line) > 5:
                 p = line.split("\t")[1].split(" ")
-                logger.debug("core.utils.get_multi_transform_towgs84.finished", extra={"p": p})
+                logger.debug("core.utils.get_multi_transform_towgs84.finished", extra={"data": p})
                 points.append([p[0], p[1]])
 
         return points

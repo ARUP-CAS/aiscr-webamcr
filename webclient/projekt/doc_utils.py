@@ -45,7 +45,7 @@ try:
     )
 except Exception:
     # This will be triggered during collectstatic
-    logger_s.error("doc_utils.font.error", extra={"path": path})
+    logger_s.error("doc_utils.font.error", extra={"info": path})
 
 Title = "Hello world"
 pageinfo = "platypus example"

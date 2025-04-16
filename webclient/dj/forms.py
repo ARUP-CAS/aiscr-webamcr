@@ -44,7 +44,7 @@ class CreateDJForm(forms.ModelForm):
         """
         logger.debug(
             "dj.forms.CreateDJForm.__init__.cannot_get_typ_akce",
-            extra={"jednotky": jednotky, "instance": instance, "typ_arch_z": typ_arch_z, "typ_akce": typ_akce},
+            extra={"dj": jednotky, "instance": instance, "typ_arch_z": typ_arch_z, "typ_akce": typ_akce},
         )
         queryset = Heslar.objects.filter(nazev_heslare=HESLAR_DJ_TYP)
         if typ_arch_z == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:

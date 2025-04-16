@@ -19,7 +19,7 @@ def remove_orphans(files_in_database):
         for name in files:
             file_path = os.path.join(path, name)
             if file_path not in files_in_database:
-                logger_s.info("delete_orphan_file.remove_orphans.deleted_file", extra={"file_path": file_path})
+                logger_s.info("delete_orphan_file.remove_orphans.deleted_file", extra={"file": file_path})
                 print(f"Deleted file: {file_path}")
                 os.remove(file_path)
 

@@ -621,7 +621,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 extra={
                     "ident_cely": self.ident_cely,
                     "pk": soubor.pk,
-                    "filename": filename,
+                    "file": filename,
                     "transaction": fedora_transaction.uid,
                 },
             )
@@ -633,7 +633,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             logger.debug(
                 "projekt.models.create_confirmation_document.duplicat_exists",
-                extra={"ident_cely": self.ident_cely, "filename": filename, "transaction": fedora_transaction.uid},
+                extra={"ident_cely": self.ident_cely, "file": filename, "transaction": fedora_transaction.uid},
             )
         return rep_bin_file
 
@@ -662,7 +662,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             "projekt.models.create_confirmation_document.start",
             extra={
                 "projekt": self.ident_cely,
-                "additional": additional,
+                "data": additional,
                 "ident_cely": user,
                 "transaction": fedora_transaction.uid,
             },

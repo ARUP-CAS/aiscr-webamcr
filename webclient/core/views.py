@@ -730,7 +730,7 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
         else:
             logger.warning(
                 "core.views.get_finds_soubor_name.cannot_upload",
-                extra={"file": filename, "list_last_char": list_last_char},
+                extra={"file": filename, "value": list_last_char},
             )
             return False
 
@@ -766,7 +766,7 @@ def check_stav_changed(request, zaznam):
                         "core.views.check_stav_changed.state_changed.error",
                         extra={
                             "value": SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
-                            "form_check_errors": str(form_check.errors),
+                            "form_error": str(form_check.errors),
                         },
                     )
                 elif isinstance(zaznam, ArcheologickyZaznam):
@@ -779,20 +779,20 @@ def check_stav_changed(request, zaznam):
                         "core.views.check_stav_changed.state_changed.error",
                         extra={
                             "value": get_message(zaznam, "NEKDO_ZMENIL_STAV"),
-                            "form_check_errors": str(form_check.errors),
+                            "form_error": str(form_check.errors),
                         },
                     )
                 elif isinstance(zaznam, Dokument):
                     messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
                     logger.debug(
                         "core.views.check_stav_changed.state_changed.error",
-                        extra={"value": DOKUMENT_NEKDO_ZMENIL_STAV, "form_check_errors": str(form_check.errors)},
+                        extra={"value": DOKUMENT_NEKDO_ZMENIL_STAV, "form_error": str(form_check.errors)},
                     )
                 elif isinstance(zaznam, Projekt):
                     messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
                     logger.debug(
                         "core.views.check_stav_changed.state_changed.error",
-                        extra={"value": PROJEKT_NEKDO_ZMENIL_STAV, "form_check_errors": str(form_check.errors)},
+                        extra={"value": PROJEKT_NEKDO_ZMENIL_STAV, "form_error": str(form_check.errors)},
                     )
                 return True
 

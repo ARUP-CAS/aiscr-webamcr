@@ -282,8 +282,8 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
                 logger.debug(
                     "adb.forms.create_vyskovy_bod_form.has_initial_values",
                     extra={
-                        "cleaned_data": cleaned_data,
-                        "niveleta": niveleta,
+                        "data": cleaned_data,
+                        "Z": niveleta,
                         "option": has_initial_values,
                     },
                 )

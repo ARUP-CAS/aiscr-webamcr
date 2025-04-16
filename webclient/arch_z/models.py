@@ -319,7 +319,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 logger.debug("arch_z.models.get_akce_ident.missing", extra={"data": missing[0]})
                 logger.debug(missing[0])
                 if missing[0] >= MAXIMUM:
-                    logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
+                    logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"count": MAXIMUM})
                     raise MaximalIdentNumberError(MAXIMUM)
                 sequence.sekvence = missing[0]
         sequence.save(using="urgent")

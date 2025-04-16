@@ -169,7 +169,7 @@ class ModelSerializer(ABC):
     @abstractmethod
     def _get_formats(self):
         pass
-    
+
     def serialize_delete(self):
         return {
             "data": {
@@ -233,12 +233,12 @@ class ModelSerializer(ABC):
                     and self._get_soubory_queryset()
                     and self._get_soubory_queryset().exists()
                     else [],
-                    "formats": self._get_formats(),                    
+                    "formats": self._get_formats(),
                     "version": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z"),
                     "rightsList": self._serialize_rightslist(),
                     "descriptions": self._serialize_descriptions(),
                     "geoLocations": self._serialize_geolocations(),
-                    "url": f"{settings.DIGI_LINKS['Digi_archiv_link']}{self.get_ident_cely()}",
+                    "info": f"{settings.DIGI_LINKS['Digi_archiv_link']}{self.get_ident_cely()}",
                 },
             }
         }
@@ -604,7 +604,10 @@ class DokumentSerializer(ModelSerializer):
                             "relatedIdentifierType": "URL",
                         }
                     ]
-                elif cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA and cast.archeologicky_zaznam.lokalita.igsn:
+                elif (
+                    cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                    and cast.archeologicky_zaznam.lokalita.igsn
+                ):
                     related_identifiers += [
                         {
                             "relationType": "Documents",
@@ -613,7 +616,10 @@ class DokumentSerializer(ModelSerializer):
                             "relatedIdentifierType": "IGSN",
                         }
                     ]
-                elif cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA and not cast.archeologicky_zaznam.lokalita.igsn:
+                elif (
+                    cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                    and not cast.archeologicky_zaznam.lokalita.igsn
+                ):
                     related_identifiers += [
                         {
                             "relationType": "Documents",
@@ -703,12 +709,13 @@ class DokumentSerializer(ModelSerializer):
     def _get_formats(self):
         result = []
         soubory_queryset = self._get_soubory_queryset()
-        if soubory_queryset and soubory_queryset.exists():            
+        if soubory_queryset and soubory_queryset.exists():
             result = list(set([soubor.mimetype for soubor in soubory_queryset.all()]))
         if self.record.rada.pk == DOKUMENT_RADA_DATA_3D:
             if self.record.extra_data and self.record.extra_data.format:
                 result.append(self.record.extra_data.format.heslo_en)
         return result
+
 
 class SamostatnyNalezSerializer(ModelSerializer):
     def __init__(self, record: SamostatnyNalez):
@@ -882,7 +889,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_types(self):
         return {"resourceType": "archaeological object", "resourceTypeGeneral": "PhysicalObject"}
-    
+
     def _get_formats(self):
         return []
 
@@ -1152,7 +1159,7 @@ class LokalitaSerializer(ModelSerializer):
 
     def _get_formats(self):
         return []
-    
+
     def serialize_publish(self):
         publish = super().serialize_publish()
         publish["data"]["attributes"]["relatedItems"] = self._serialize_related_items()

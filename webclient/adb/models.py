@@ -146,7 +146,7 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
     else:
         logger.error(
             "adb.models.get_vyskovy_bod.maximal_number_reached",
-            extra={"max": str(MAXIMAL_VYSKOVY_BOD)},
+            extra={"count": MAXIMAL_VYSKOVY_BOD},
         )
         raise MaximalIdentNumberError(max_count)
 

@@ -302,7 +302,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 "BaseSeleniumTestClass.ElementClick.elementNotFound",
                 extra={
                     "filed": by,
-                    "content": value,
+                    "value": value,
                 },
             )
             raise Exception("ElementClickError")
@@ -312,7 +312,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 "BaseSeleniumTestClass.ElementClick.elementNotFound",
                 extra={
                     "filed": by,
-                    "content": value,
+                    "value": value,
                 },
             )
             raise Exception("ElementIsNotClickableError")
@@ -329,7 +329,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 "BaseSeleniumTestClass.ElementClick.elementNotFound",
                 extra={
                     "filed": by,
-                    "content": value,
+                    "value": value,
                 },
             )
             raise Exception("ElementClickError")
@@ -369,7 +369,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             field_type = value["field_type"]
             logger.info(
                 "BaseSeleniumTestClass._fill_form_fields.start",
-                extra={"filed": item, "content": value, "field_type": field_type},
+                extra={"filed": item, "value": value, "field_type": field_type},
             )
             if field_type == "text_field":
                 self._fill_text_field(value.get("field_id"), value.get("value"))

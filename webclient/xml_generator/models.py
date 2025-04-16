@@ -19,7 +19,7 @@ def check_if_task_queued(class_name, pk, task_name):
     except Exception as e:
         logger.warning(
             "xml_generator.models.ModelWithMetadata.check_if_task_queued.Celery_warning",
-            extra={"Exception": e, "app": app},
+            extra={"exception": e, "app": app},
         )
         return False
     for queue in queues:

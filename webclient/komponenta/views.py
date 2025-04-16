@@ -230,7 +230,7 @@ def zapsat(request, typ_vazby, dj_ident_cely):
                 args=[cast.dokument.ident_cely, komponenta.ident_cely],
             )
     else:
-        logger.debug("komponenta.views.zapsat.form_not_valid", extra={"formset_errors": form.errors})
+        logger.debug("komponenta.views.zapsat.form_not_valid", extra={"form_error": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         if dj:
             url = reverse(

@@ -629,7 +629,7 @@ def edit(request, ident_cely):
         else:
             logger.warning(
                 "arch_z.views.edit.form_az_valid",
-                extra={"az_error": str(form_az.errors), "akce_error": str(form_akce.errors)},
+                extra={"az_error": str(form_az.errors), "error": str(form_akce.errors)},
             )
     else:
         form_az = CreateArchZForm(instance=zaznam)
@@ -1017,7 +1017,7 @@ def zapsat(request, projekt_ident_cely=None):
                         extra={"ident_cely": az.ident_cely},
                     )
         else:
-            logger.debug("arch_z.views.zapsat.not_valid", extra={"az_errors": form_az, "akce_errors": form_akce.errors})
+            logger.debug("arch_z.views.zapsat.not_valid", extra={"az_error": form_az, "error": form_akce.errors})
 
     else:
         ostatni_vedouci_objekt_formset = inlineformset_factory(
@@ -1286,7 +1286,7 @@ def post_akce2kat(request):
     try:
         kod = katastr_name[katastr_name.find(";") + 1 : katastr_name.find(")")].strip()
     except (ValueError, IndexError) as e:
-        logger.error("arch_z.views.post_akce2kat.katastr_name_error", extra={"katastr_name": katastr_name, "error": e})
+        logger.error("arch_z.views.post_akce2kat.katastr_name_error", extra={"katastr": katastr_name, "error": e})
         return JsonResponse(
             {
                 "pians": [],
@@ -1689,7 +1689,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         invalidate_model(ArcheologickyZaznam)
         az.close_active_transaction_when_finished = True
         az.save()
-        logger.debug("arch_z.views.ProjektAkceChange.post", extra={"az_ident_cely": str(az.ident_cely)})
+        logger.debug("arch_z.views.ProjektAkceChange.post", extra={"ident_cely": str(az.ident_cely)})
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 
@@ -1764,14 +1764,14 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
                 poznamka=f"{old_ident} -> {az.ident_cely}",
                 vazba=az.historie,
             ).save()
-            logger.debug("arch_z.views.SamostatnaAkceChange.post.valid", extra={"az_ident_cely": str(az.ident_cely)})
+            logger.debug("arch_z.views.SamostatnaAkceChange.post.valid", extra={"ident_cely": str(az.ident_cely)})
             az.close_active_transaction_when_finished = True
             invalidate_model(ArcheologickyZaznam)
             az.save()
         else:
             logger.debug(
                 "arch_z.views.SamostatnaAkceChange.post.not_valid",
-                extra={"error": form.errors, "form_non_field_errors": form.non_field_errors},
+                extra={"error": form.errors, "form_error": form.non_field_errors},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 

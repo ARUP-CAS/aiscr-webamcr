@@ -320,7 +320,7 @@ def create(request, dj_ident_cely):
             try:
                 pian.ident_cely = get_temporary_pian_ident(zm50s[0])
             except MaximalIdentNumberError as e:
-                logger.warning("pian.views.create.error", extra={"message": messages.ERROR, "exception": e.message})
+                logger.warning("pian.views.create.error", extra={"info": messages.ERROR, "exception": e.message})
                 messages.add_message(request, messages.ERROR, e.message)
             else:
                 fedora_transaction: FedoraTransaction = pian.create_transaction(request.user)

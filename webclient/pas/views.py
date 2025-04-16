@@ -797,7 +797,7 @@ def zadost(request):
                 messages.add_message(request, messages.SUCCESS, ZADOST_O_SPOLUPRACI_VYTVORENA)
                 logger.debug(
                     "pas.views.zadost.post.success",
-                    extra={"hv_id": hv.pk, "s_id": s.pk, "pk": hist.pk},
+                    extra={"hv_pk": hv.pk, "s_pk": s.pk, "pk": hist.pk},
                 )
 
                 Mailer.send_en05(

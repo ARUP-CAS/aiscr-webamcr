@@ -129,6 +129,1075 @@ Nastavení Elasticsearch je součástí docker-compose.yml souborů.
    poskytuje nástroje pro sledování výkonu a zdraví Elasticsearch
    clusteru. Cílem nastavení je snížit zatížení systému.
 
+- v elasticu je potřeba vytvořit amcr_template v Index Management
+  - Templates. Pomocí této template se poté automaticky vytváří 
+  nové indexy pomocí politiky, která zajištuje rotaci indexů a 
+  jejich případné mazání.
+
+  Zde je vzor amcr_template
+
+::
+
+   {
+   "template": {
+      "settings": {
+         "index": {
+         "lifecycle": {
+            "name": "politika",
+            "rollover_alias": "amcr"
+         },
+         "number_of_replicas": "0",
+         "routing": {
+            "allocation": {
+               "include": {
+               "_tier_preference": "data_content"
+               }
+            }
+         }
+         }
+      },
+      "mappings": {
+         "dynamic": "false",
+         "dynamic_templates": [],
+         "properties": {
+         "@timestamp": {
+            "type": "date"
+         },
+         "@version": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "X": {
+            "type": "float",
+            "ignore_malformed": false,
+            "coerce": true
+         },
+         "Y": {
+            "type": "float"
+         },
+         "Z": {
+            "type": "float"
+         },
+         "adb_ident_cely": {
+            "type": "keyword"
+         },
+         "address": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "app": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "attachment": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "az_error": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "bottom": {
+            "type": "float"
+         },
+         "change": {
+            "type": "boolean"
+         },
+         "class_name": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "close_transaction": {
+            "type": "boolean"
+         },
+         "columns": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "constant": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "count": {
+            "type": "long",
+            "ignore_malformed": false,
+            "coerce": true
+         },
+         "created": {
+            "type": "boolean"
+         },
+         "data": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "dj": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "element": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "email": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "error": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "exception": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "field_type": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "file": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "filed": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "form_error": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "format": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "geom": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "geom_sjtsk": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "geom_system": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "group": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "heslar": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "historie": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "host": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "hp_pk": {
+            "type": "long"
+         },
+         "hv_pk": {
+            "type": "long"
+         },
+         "ident_cely": {
+            "type": "keyword"
+         },
+         "ident_cely_old": {
+            "type": "keyword"
+         },
+         "index": {
+            "type": "long"
+         },
+         "info": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "initial": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "initial_record_pk": {
+            "type": "long"
+         },
+         "instance": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "ip": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "katastr": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "key": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "komponenta": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "large": {
+            "type": "boolean"
+         },
+         "left": {
+            "type": "float"
+         },
+         "level": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "limit": {
+            "type": "long"
+         },
+         "lineno": {
+            "type": "long"
+         },
+         "list": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "logger_name": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "logout_time": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "message": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "method": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "mime_type": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "name": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "new": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "next_url": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "notification_type": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "number": {
+            "type": "long",
+            "ignore_malformed": false,
+            "coerce": true
+         },
+         "old": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "option": {
+            "type": "boolean"
+         },
+         "path": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "pian": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "pk": {
+            "type": "long"
+         },
+         "process": {
+            "type": "long"
+         },
+         "project_ident_cely": {
+            "type": "keyword"
+         },
+         "projekt": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "query": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "queue": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "record": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "text"
+               }
+            }
+         },
+         "redis": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "request": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "request_type": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "request_url": {
+            "type": "text"
+         },
+         "response": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "result": {
+            "type": "boolean"
+         },
+         "right": {
+            "type": "float"
+         },
+         "s_pk": {
+            "type": "long"
+         },
+         "signal": {
+            "type": "boolean"
+         },
+         "soubor": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
+         "source_url": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "stack_trace": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "status_code": {
+            "type": "long"
+         },
+         "stav": {
+            "type": "long"
+         },
+         "stav_old": {
+            "type": "text"
+         },
+         "subject": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "text": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "thread_name": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "thumb_large": {
+            "type": "boolean"
+         },
+         "thumb_small": {
+            "type": "boolean"
+         },
+         "to": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "top": {
+            "type": "float"
+         },
+         "traceback": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "transaction": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "typ_akce": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "typ_arch_z": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "typ_vazby": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "type": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "update": {
+            "type": "boolean"
+         },
+         "url": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "user_active": {
+            "type": "boolean"
+         },
+         "user_id": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "uuid": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "valid": {
+            "type": "boolean"
+         },
+         "validation_results": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "value": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "warning": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         },
+         "zasilat_neaktivnim": {
+            "type": "boolean"
+         },
+         "zaznam": {
+            "type": "text",
+            "fields": {
+               "keyword": {
+               "type": "keyword",
+               "ignore_above": 256
+               }
+            }
+         }
+         }
+      },
+      "aliases": {}
+   }
+   }
+
+Použité názvy atributů parametru extra v Django log
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Toto je seznam doporučených jmen atributá extra při logování v Django. Je možné použít 
+jakékoliv jiné, ale obsah těchto proměnných je indexován a je možné 
+hodnoty dále vyhledávat nebo podle nich třídit výsledky.
+
++--------------------+---------+
+| Jméno              | typ     |
++====================+=========+
+| adb_ident_cely     | Keyword |
++--------------------+---------+
+| address            | Text    |
++--------------------+---------+
+| app                | Text    |
++--------------------+---------+
+| attachment         | Text    |
++--------------------+---------+
+| az_error           | Text    |
++--------------------+---------+
+| bottom             | Float   |
++--------------------+---------+
+| class_name         | Text    |
++--------------------+---------+
+| close_transaction  | Boolean |
++--------------------+---------+
+| columns            | Text    |
++--------------------+---------+
+| constant           | Text    |
++--------------------+---------+
+| count              | Long    |
++--------------------+---------+
+| created            | Boolean |
++--------------------+---------+
+| data               | Text    |
++--------------------+---------+
+| dj                 | Text    |
++--------------------+---------+
+| element            | Text    |
++--------------------+---------+
+| email              | Text    |
++--------------------+---------+
+| error              | Text    |
++--------------------+---------+
+| exception          | Text    |
++--------------------+---------+
+| field_type         | Text    |
++--------------------+---------+
+| file               | Text    |
++--------------------+---------+
+| filed              | Text    |
++--------------------+---------+
+| form_error         | Text    |
++--------------------+---------+
+| format             | Text    |
++--------------------+---------+
+| geom               | Text    |
++--------------------+---------+
+| geom_sjtsk         | Text    |
++--------------------+---------+
+| geom_system        | Text    |
++--------------------+---------+
+| group              | Text    |
++--------------------+---------+
+| heslar             | Text    |
++--------------------+---------+
+| historie           | Text    |
++--------------------+---------+
+| hp_pk              | Long    |
++--------------------+---------+
+| change             | Boolean |
++--------------------+---------+
+| ident_cely         | Keyword |
++--------------------+---------+
+| ident_cely_old     | Keyword |
++--------------------+---------+
+| index              | Long    |
++--------------------+---------+
+| info               | Text    |
++--------------------+---------+
+| initial            | Text    |
++--------------------+---------+
+| initial_record_pk  | Long    |
++--------------------+---------+
+| instance           | Text    |
++--------------------+---------+
+| ip                 | Text    |
++--------------------+---------+
+| katastr            | Text    |
++--------------------+---------+
+| key                | Text    |
++--------------------+---------+
+| komponenta         | Text    |
++--------------------+---------+
+| large              | Boolean |
++--------------------+---------+
+| left               | Float   |
++--------------------+---------+
+| limit              | Long    |
++--------------------+---------+
+| list               | Text    |
++--------------------+---------+
+| logout_time        | Text    |
++--------------------+---------+
+| method             | Text    |
++--------------------+---------+
+| mime_type          | Text    |
++--------------------+---------+
+| new                | Text    |
++--------------------+---------+
+| next_url           | Text    |
++--------------------+---------+
+| notification_type  | Text    |
++--------------------+---------+
+| number             | Long    |
++--------------------+---------+
+| old                | Text    |
++--------------------+---------+
+| option             | Boolean |
++--------------------+---------+
+| pian               | Text    |
++--------------------+---------+
+| pk                 | Long    |
++--------------------+---------+
+| process            | Long    |
++--------------------+---------+
+| project_ident_cely | Keyword |
++--------------------+---------+
+| projekt            | Text    |
++--------------------+---------+
+| query              | Text    |
++--------------------+---------+
+| queue              | Text    |
++--------------------+---------+
+| record             | Text    |
++--------------------+---------+
+| redis              | Text    |
++--------------------+---------+
+| request            | Text    |
++--------------------+---------+
+| request_type       | Text    |
++--------------------+---------+
+| request_url        | Text    |
++--------------------+---------+
+| response           | Text    |
++--------------------+---------+
+| result             | Boolean |
++--------------------+---------+
+| right              | Float   |
++--------------------+---------+
+| s_pk               | Long    |
++--------------------+---------+
+| signal             | Boolean |
++--------------------+---------+
+| soubor             | Text    |
++--------------------+---------+
+| source_url         | Text    |
++--------------------+---------+
+| status_code        | Long    |
++--------------------+---------+
+| stav               | Long    |
++--------------------+---------+
+| stav_old           | Text    |
++--------------------+---------+
+| subject            | Text    |
++--------------------+---------+
+| text               | Text    |
++--------------------+---------+
+| thread_name        | Text    |
++--------------------+---------+
+| thumb_large        | Boolean |
++--------------------+---------+
+| thumb_small        | Boolean |
++--------------------+---------+
+| to                 | Text    |
++--------------------+---------+
+| top                | Float   |
++--------------------+---------+
+| traceback          | Text    |
++--------------------+---------+
+| transaction        | Text    |
++--------------------+---------+
+| typ_akce           | Text    |
++--------------------+---------+
+| typ_arch_z         | Text    |
++--------------------+---------+
+| typ_vazby          | Text    |
++--------------------+---------+
+| update             | Boolean |
++--------------------+---------+
+| user_active        | Boolean |
++--------------------+---------+
+| uuid               | Text    |
++--------------------+---------+
+| valid              | Boolean |
++--------------------+---------+
+| validation_results | Text    |
++--------------------+---------+
+| value              | Text    |
++--------------------+---------+
+| warning            | Text    |
++--------------------+---------+
+| X                  | Float   |
++--------------------+---------+
+| Y                  | Float   |
++--------------------+---------+
+| Z                  | Float   |
++--------------------+---------+
+| zasilat_neaktivnim | Boolean |
++--------------------+---------+
+| zaznam             | Text    |
++--------------------+---------+
+
+
+
+Seznam vyhrazených jmen
+~~~~~~~~~~~~~~~~~~~~~~~
+Tyto jména používá Django a neměli by se používat jako atributy
+extra při logování.
+
++-------------+------+
+| Jméno       | typ  |
++=============+======+
+| @timestamp  | Date |
++-------------+------+
+| @version    | Text |
++-------------+------+
+| host        | Text |
++-------------+------+
+| level       | Text |
++-------------+------+
+| lineno      | Long |
++-------------+------+
+| logger_name | Text |
++-------------+------+
+| message     | Text |
++-------------+------+
+| name        | Text |
++-------------+------+
+| path        | Text |
++-------------+------+
+| stack_trace | Text |
++-------------+------+
+| type        | Text |
++-------------+------+
+| url         | Text |
++-------------+------+
+| user_id     | Text |
++-------------+------+
+
+
 .. _kibana-1:
 
 Kibana

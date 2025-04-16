@@ -183,7 +183,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                 fail_silently=False,
             )
         except ConnectionRefusedError:
-            logger.error("user.email_user.error", extra={"user_id": self.pk, "email": self.email})
+            logger.error("user.email_user.error", extra={"pk": self.pk, "email": self.email})
 
     def name_and_id(self):
         return self.last_name + ", " + self.first_name + " (" + self.ident_cely + ")"

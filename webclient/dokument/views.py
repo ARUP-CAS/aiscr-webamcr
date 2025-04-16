@@ -160,13 +160,11 @@ def detail_model_3D(request, ident_cely):
     )
     casti = dokument.casti.all()
     if casti.count() != 1:
-        logger.warning("dokument.views.detail_model_3D.casti_count_error", extra={"casti_count": casti.count()})
+        logger.warning("dokument.views.detail_model_3D.casti_count_error", extra={"count": casti.count()})
         raise UnexpectedDataRelations()
     komponenty = casti[0].komponenty.komponenty.all()
     if komponenty.count() != 1:
-        logger.warning(
-            "dokument.views.detail_model_3D.komponenty_count_error", extra={"casti_count": komponenty.count()}
-        )
+        logger.warning("dokument.views.detail_model_3D.komponenty_count_error", extra={"count": komponenty.count()})
         raise UnexpectedDataRelations()
     show = get_detail_template_shows(dokument, request.user)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
@@ -751,7 +749,7 @@ class TvarEditView(LoginRequiredMixin, View):
         else:
             logger.debug(
                 "dokument.views.TvarEditView.form_not_valid",
-                extra={"formset_errors": formset.errors, "formset_nonform_errors": formset.non_form_errors()},
+                extra={"form_error": formset.errors, "error": formset.non_form_errors()},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         return redirect(dokument.get_absolute_url())
@@ -907,7 +905,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     def dispatch(self, request, *args, **kwargs):
         zaznam = self.get_zaznam().dokument
         if zaznam.stav not in self.allowed_states:
-            logger.debug("dokument.views.TransakceView.dispatch", extra={"action": self.action})
+            logger.debug("dokument.views.TransakceView.dispatch", extra={"value": self.action})
             messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
             return JsonResponse(
                 {"redirect": zaznam.get_absolute_url()},
@@ -1196,7 +1194,7 @@ def edit(request, ident_cely):
         else:
             logger.debug(
                 "dokument.views.edit.forms_not_valid",
-                extra={"error": form_d.errors, "form_extra_errors": form_extra.errors},
+                extra={"error": form_d.errors, "form_error": form_extra.errors},
             )
     else:
         form_d = EditDokumentForm(
@@ -1275,7 +1273,7 @@ def edit_model_3D(request, ident_cely):
             geom = Point(x1, x2)
             geom_sjtsk = Point(*convertToJTSK(x1, x2))
         except Exception:
-            logger.debug("dokument.views.edit_model_3D.coord_error", extra={"x1": x1, "x2": x2})
+            logger.debug("dokument.views.edit_model_3D.coord_error", extra={"X": x1, "Y": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             # save autors with order
             fedora_transaction = dokument.create_transaction(request.user)
@@ -1309,8 +1307,8 @@ def edit_model_3D(request, ident_cely):
                 "dokument.views.edit_model_3D.forms_not_valid",
                 extra={
                     "error": form_d.errors,
-                    "form_extra_errors": form_extra.errors,
-                    "form_komponenta": form_komponenta.errors,
+                    "form_error": form_extra.errors,
+                    "komponenta": form_komponenta.errors,
                 },
             )
     else:
@@ -1430,7 +1428,7 @@ def create_model_3D(request):
             geom = Point(x1, x2)
             geom_sjtsk = Point(*convertToJTSK(x1, x2))
         except Exception:
-            logger.debug("dokument.views.create_model_3D.coord_error", extra={"x1": x1, "x2": x2})
+            logger.debug("dokument.views.create_model_3D.coord_error", extra={"X": x1, "Y": x2})
 
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             logger.debug("dokument.views.create_model_3D.forms_valid")
@@ -1494,8 +1492,8 @@ def create_model_3D(request):
                 "dokument.views.create_model_3D.forms_not_valid",
                 extra={
                     "error": form_d.errors,
-                    "form_extra_errors": form_extra.errors,
-                    "form_komponenta": form_komponenta.errors,
+                    "form_error": form_extra.errors,
+                    "komponenta": form_komponenta.errors,
                 },
             )
             if "geom" in form_extra.errors:
@@ -1917,7 +1915,7 @@ def zapsat(request, zaznam=None):
                         extra={"ident_cely": dokument.ident_cely},
                     )
         else:
-            logger.debug("dokument.views.zapsat.not_valid", extra={"erros": form_d.errors})
+            logger.debug("dokument.views.zapsat.not_valid", extra={"error": form_d.errors})
 
     else:
         form_d = EditDokumentForm(
@@ -1960,7 +1958,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
     remove_orphan = False
     orphan_dokument = None
     if len(relace_dokumentu) == 0:
-        logger.debug("dokument.views.odpojit.no_relace", extra={"ident_doku": ident_doku})
+        logger.debug("dokument.views.odpojit.no_relace", extra={"ident_cely": ident_doku})
         messages.add_message(request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE)
         return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=404)
     if len(relace_dokumentu) == 1:
@@ -1973,7 +1971,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
         else:
             dokument_cast_query = relace_dokumentu.filter(projekt__ident_cely=ident_zaznamu)
         if len(dokument_cast_query) == 0:
-            logger.debug("dokument.views.odpojit.no_relace", extra={"ident_doku": ident_doku})
+            logger.debug("dokument.views.odpojit.no_relace", extra={"ident_cely": ident_doku})
             messages.add_message(request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM)
             return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=404)
         fedora_transaction = FedoraTransaction(zaznam, request.user, DOKUMENT_USPESNE_ODPOJEN)

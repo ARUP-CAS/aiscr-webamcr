@@ -975,7 +975,7 @@ class Permissions(models.Model):
                 if not int(self.permission_object.stav) == int(subed_status):
                     logger.debug(
                         "core.model.Permissions.check_status.status_nok",
-                        extra={"object": self.permission_object.stav, "value": subed_status},
+                        extra={"stav": self.permission_object.stav, "value": subed_status},
                     )
                     return False
         return True

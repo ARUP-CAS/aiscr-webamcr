@@ -327,7 +327,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     def dispatch(self, request, *args, **kwargs):
         zaznam = self.get_zaznam()
         if zaznam.stav not in self.allowed_states:
-            logger.debug("ez.views.TransakceView.dispatch.start", extra={"action": self.action})
+            logger.debug("ez.views.TransakceView.dispatch.start", extra={"value": self.action})
             messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
             return JsonResponse(
                 {"redirect": zaznam.get_absolute_url()},

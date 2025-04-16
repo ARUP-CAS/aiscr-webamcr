@@ -327,7 +327,7 @@ class Mailer:
         else:
             logger.info(
                 "services.mailer._send_notification_for_project.no_uzivatel",
-                extra={"ident_cely": project.ident_cely, "project_history": project_history},
+                extra={"ident_cely": project.ident_cely, "historie": project_history},
             )
 
     @classmethod
@@ -499,7 +499,7 @@ class Mailer:
         )
         logger.debug(
             "services.mailer._send_ep01",
-            extra={"subject": subject, "path": notification_type.cesta_sablony, "ident_cely": project.ident_cely},
+            extra={"subject": subject, "data": notification_type.cesta_sablony, "ident_cely": project.ident_cely},
         )
         if isinstance(rep_bin_file, RepositoryBinaryFile):
             project_file = rep_bin_file
@@ -513,7 +513,7 @@ class Mailer:
                 project_file = project_files[0]
                 logger.debug(
                     "services.mailer._send_ep01.attachment_added",
-                    extra={"nazev": project_file.nazev, "ident_cely": project.ident_cely},
+                    extra={"file": project_file.nazev, "ident_cely": project.ident_cely},
                 )
             else:
                 project_file = None
@@ -721,13 +721,13 @@ class Mailer:
         project_files = list(sorted(project_files, key=lambda x: x.vytvoreno.datum_zmeny))
         logger.debug(
             "services.mailer.get_ep06_attachments.query",
-            extra={"project_files": project_files, "ident_cely": project.ident_cely},
+            extra={"file": project_files, "ident_cely": project.ident_cely},
         )
         if len(project_files) > 0:
             project_file = project_files[0]
             logger.debug(
                 "services.mailer.get_ep06_attachments.attachment_found",
-                extra={"nazev": project_file.nazev, "ident_cely": project.ident_cely},
+                extra={"file": project_file.nazev, "ident_cely": project.ident_cely},
             )
             repository_coonector = FedoraRepositoryConnector(project)
             attachment = repository_coonector.get_binary_file(project_file.repository_uuid)

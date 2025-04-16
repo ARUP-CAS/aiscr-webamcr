@@ -47,7 +47,7 @@ def create_arch_z_vazby(sender, instance, **kwargs):
         hv = HistorieVazby(typ_vazby=ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE)
         hv.save()
         instance.historie = hv
-        logger.debug("arch_z.signals.create_arch_z_vazby.created_vazby", extra={"hv_pk": hv.pk})
+        logger.debug("arch_z.signals.create_arch_z_vazby.created_vazby", extra={"pk": hv.pk})
     logger.debug("arch_z.signals.create_arch_z_vazby.end", extra={"pk": instance.pk})
 
 
