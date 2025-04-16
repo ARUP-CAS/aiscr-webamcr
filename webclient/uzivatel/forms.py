@@ -20,7 +20,7 @@ from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Invisible
 from django_registration.backends.activation.forms import ActivationForm
 from django_registration.forms import RegistrationForm
-from pid.fields import OrcidAutocompleteField, WikiDataAutocompleteField
+from pid.fields import OrcidAutocompleteField
 from pid.forms import FormWithOrcid, FormWithWikidata
 from services.mailer import Mailer
 
@@ -258,7 +258,10 @@ class NotificationsForm(forms.ModelForm):
 
     notification_types = forms.ModelMultipleChoiceField(
         queryset=UserNotificationType.objects.filter(
-            Q(ident_cely__icontains="S-E-A") | Q(ident_cely__icontains="S-E-N") | Q(ident_cely__icontains="S-E-K")
+            Q(ident_cely__icontains="S-E-A")
+            | Q(ident_cely__icontains="S-E-N")
+            | Q(ident_cely__icontains="S-E-K")
+            | Q(ident_cely__icontains="zpravodaj")
         ),
         widget=forms.CheckboxSelectMultiple,
         required=False,
@@ -420,8 +423,8 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
         fields = (
             "jmeno",
             "prijmeni",
-            "orcid",
-            "wikidata"
+            # "orcid",
+            # "wikidata"
             # "rok_narozeni",
             # "rok_umrti",
             # "rodne_prijmeni",
@@ -429,8 +432,8 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
         widgets = {
             "jmeno": forms.TextInput(),
             "prijmeni": forms.TextInput(),
-            "orcid": forms.TextInput(),
-            "wikidata": forms.TextInput(),
+            # "orcid": forms.TextInput(),
+            # "wikidata": forms.TextInput(),
             # "rodne_prijmeni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
         labels = {
@@ -453,28 +456,28 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
         }
 
     def __init__(self, *args, **kwargs):
-        create = kwargs.pop("create", False)
+        kwargs.pop("create", False)
         super(OsobaForm, self).__init__(*args, **kwargs)
-        if create:
-            self.fields["orcid"] = OrcidAutocompleteField(
-                widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
-                label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
-                help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
-                required=False,
-            )
-            self.fields["wikidata"] = WikiDataAutocompleteField(
-                widget=AutocompleteListSelect2(url="pid:wikidata-autocomplete"),
-                label=_("heslar.forms.OsobaAdminForm.wikidata.label"),
-                instance=self.instance,
-                required=False,
-            )
+        # if create:
+        # self.fields["orcid"] = OrcidAutocompleteField(
+        #     widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
+        #     label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),
+        #     help_text=_("uzivatel.forms.AuthUserChangeForm.orcid.tooltip"),
+        #     required=False,
+        # )
+        # self.fields["wikidata"] = WikiDataAutocompleteField(
+        #     widget=AutocompleteListSelect2(url="pid:wikidata-autocomplete"),
+        #     label=_("heslar.forms.OsobaAdminForm.wikidata.label"),
+        #     instance=self.instance,
+        #     required=False,
+        # )
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
                 Div("jmeno", css_class="col-sm-6"),
                 Div("prijmeni", css_class="col-sm-6"),
-                Div("orcid", css_class="col-sm-6"),
-                Div("wikidata", css_class="col-sm-6"),
+                # Div("orcid", css_class="col-sm-6"),
+                # Div("wikidata", css_class="col-sm-6"),
                 # Div("rok_narozeni", css_class="col-sm-6"),
                 # Div("rok_umrti", css_class="col-sm-6"),
                 # Div("rodne_prijmeni", css_class="col-sm-12"),

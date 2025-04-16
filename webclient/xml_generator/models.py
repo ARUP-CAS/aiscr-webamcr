@@ -58,7 +58,7 @@ class BaseAmcrModel(models.Model):
     @property
     def get_ident_cely_link(self):
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
-            return f"<a href='{self.get_absolute_url()}'>{self.ident_cely}</a>"
+            return f"<a href='{self.get_absolute_url()}' target='_blank'>{self.ident_cely}</a>"
 
 
 class ModelWithMetadata(BaseAmcrModel):
@@ -72,8 +72,6 @@ class ModelWithMetadata(BaseAmcrModel):
         self.deletion_record_saved = False
         self.skip_container_check = False
         super(ModelWithMetadata, self).__init__(*args, **kwargs)
-        if not hasattr(self, "soubory"):
-            self.soubory = None
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None):
         from core.repository_connector import FedoraTransaction
@@ -212,13 +210,13 @@ class ModelWithMetadata(BaseAmcrModel):
             from pas.models import SamostatnyNalez
 
             if isinstance(self, Dokument):
-                if self.soubory.pk is not None:
+                if hasattr(self, "soubory") and self.soubory.pk is not None:
                     for item in self.soubory.soubory.all():
                         item.suppress_signal = True
                         item.delete()
                     self.soubory.delete()
             elif isinstance(self, SamostatnyNalez):
-                if self.soubory.pk is not None:
+                if hasattr(self, "soubory") and self.soubory.pk is not None:
                     for item in self.soubory.soubory.all():
                         item.suppress_signal = True
                         item.delete()
@@ -385,6 +383,13 @@ class ModelWithMetadata(BaseAmcrModel):
                 "ident_cely": new_ident_cely,
             },
         )
+
+    @classmethod
+    def get_by_ident_cely(cls, ident_cely):
+        try:
+            return cls.objects.get(ident_cely=ident_cely)
+        except Exception:
+            return None
 
     class Meta:
         abstract = True

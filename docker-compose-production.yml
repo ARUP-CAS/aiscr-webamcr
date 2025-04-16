@@ -240,6 +240,9 @@ services:
       - "/var/lib/docker/:/var/lib/docker"
       - "/dev/disk/:/dev/disk"
     privileged: true
+    command:
+      - "--housekeeping_interval=15s"
+      - "--docker_only=true"
     ports:
       - "8088:8080"
     restart: always

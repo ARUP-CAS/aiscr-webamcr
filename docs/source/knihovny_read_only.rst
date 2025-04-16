@@ -96,7 +96,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - UNKNOWN
    * - XlsxWriter
-     - 3.2.1
+     - 3.2.2
      - BSD License
      - https://github.com/jmcnamara/XlsxWriter
    * - alabaster
@@ -112,7 +112,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/django/asgiref/
    * - attrs
-     - 25.1.0
+     - 25.3.0
      - UNKNOWN
      - https://www.attrs.org/en/stable/changelog.html
    * - babel
@@ -176,7 +176,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.6.12
+     - 7.7.0
      - Apache Software License
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
@@ -316,7 +316,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.17.0
+     - 3.18.0
      - The Unlicense (Unlicense)
      - https://github.com/tox-dev/py-filelock
    * - funcy
@@ -328,7 +328,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.6.8
+     - 2.6.9
      - MIT License
      - https://github.com/pre-commit/identify
    * - idna
@@ -348,7 +348,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/PyCQA/isort/releases
    * - kombu
-     - 5.4.2
+     - 5.5.1
      - BSD License
      - https://kombu.readthedocs.io
    * - libsass
@@ -372,7 +372,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.2.3
+     - 2.2.4
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -404,7 +404,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 8.13.55
+     - 9.0.1
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -416,11 +416,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - CMU License (MIT-CMU)
      - https://python-pillow.github.io
    * - platformdirs
-     - 4.3.6
+     - 4.3.7
      - MIT License
      - https://github.com/tox-dev/platformdirs
    * - polars
-     - 1.21.0
+     - 1.25.2
      - MIT License
      - https://www.pola.rs/
    * - polib
@@ -468,15 +468,15 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/eliben/pycparser
    * - pycryptodomex
-     - 3.21.0
+     - 3.22.0
      - BSD License; Public Domain
      - https://www.pycryptodome.org
    * - pyparsing
-     - 3.2.1
+     - 3.2.3
      - MIT License
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 5.3.1
+     - 5.4.0
      - BSD License
      - https://github.com/py-pdf/pypdf
    * - pyppmd

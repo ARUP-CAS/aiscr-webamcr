@@ -49,11 +49,7 @@ from core.utils import (
     CannotFindCadasterCentre,
     get_all_pians_with_akce,
     get_dj_pians_centroid,
-    get_dj_pians_from_envelope,
-    get_heatmap_pian,
-    get_heatmap_pian_density,
     get_message,
-    get_num_pians_from_envelope,
     get_pians_from_akce,
 )
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
@@ -774,14 +770,14 @@ def archivovat(request, ident_cely):
             )
             if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
                 request.session["arch_projekt_link"] = True
-        for item in az.casti_dokumentu.all():
-            item: DokumentCast
-            if item.dokument.stav == D_STAV_ARCHIVOVANY:
-                item.dokument.doi_update()
         fedora_transaction.success_message = get_message(az, "USPESNE_ARCHIVOVANA")
         Mailer.send_ea02(arch_z=az)
         az.close_active_transaction_when_finished = True
         az.save()
+        for item in az.casti_dokumentu.all():
+            item: DokumentCast
+            if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
+                item.dokument.doi_update()
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_archivaci()
@@ -1193,89 +1189,6 @@ def post_ajax_get_pians(request):
 
 @login_required
 @require_http_methods(["POST"])
-def post_ajax_get_pians_limit(request):
-    """
-    Funkce pohledu pro získaní pianu pro zobrazení heat mapy.
-    """
-    body = json.loads(request.body.decode("utf-8"))
-    num = get_num_pians_from_envelope(
-        body["southEast"]["lng"],
-        body["northWest"]["lat"],
-        body["northWest"]["lng"],
-        body["southEast"]["lat"],
-    )
-    clusters = num >= 500
-    logger.debug("arch_z.views.post_ajax_get_pians_limit.pocet_geometrii", extra={"number": num})
-    if num < 5000:
-        pians = get_dj_pians_from_envelope(
-            body["southEast"]["lng"],
-            body["northWest"]["lat"],
-            body["northWest"]["lng"],
-            body["southEast"]["lat"],
-            body["dj_ident_cely"],
-        )
-        back = []
-        for pian in pians:
-            back.append(
-                {
-                    "id": pian.id,
-                    "ident_cely": pian.ident_cely,
-                    "geom": pian.geometry.replace(", ", ",") if not clusters else pian.centroid.replace(", ", ","),
-                    "dj": pian.dj,
-                    "presnost": pian.presnost.zkratka,
-                }
-            )
-        if len(pians) > 0:
-            return JsonResponse(
-                {
-                    "points": back,
-                    "algorithm": "detail",
-                    "count": num,
-                    "clusters": clusters,
-                },
-                status=200,
-            )
-        else:
-            return JsonResponse(
-                {"points": [], "algorithm": "detail", "count": 0, "clusters": clusters},
-                status=200,
-            )
-    else:
-        density = get_heatmap_pian_density(
-            body["southEast"]["lng"],
-            body["northWest"]["lat"],
-            body["northWest"]["lng"],
-            body["southEast"]["lat"],
-            body["zoom"],
-        )
-
-        heats = get_heatmap_pian(
-            body["southEast"]["lng"],
-            body["northWest"]["lat"],
-            body["northWest"]["lng"],
-            body["southEast"]["lat"],
-            body["zoom"],
-        )
-        back = []
-        cid = 0
-        for heat in heats:
-            cid += 1
-            back.append(
-                {
-                    "id": str(cid),
-                    "pocet": heat["count"],
-                    "density": heat["count"] / density,
-                    "geom": heat["geometry"].replace(", ", ","),
-                }
-            )
-        if len(heat) > 0:
-            return JsonResponse({"heat": back, "algorithm": "heat"}, status=200)
-        else:
-            return JsonResponse({"heat": [], "algorithm": "heat"}, status=200)
-
-
-@login_required
-@require_http_methods(["POST"])
 def post_akce2kat(request):
     """
     Funkce pohledu pro získaní souradnic katastru akce.
@@ -1423,7 +1336,7 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
             p.actionChoices.stahnout_metadata, user, archeologicky_zaznam.ident_cely
         ),
         "vypis": check_permissions(
-            p.actionChoices.vypis_lokalita if app == "lokalita" else p.actionChoices.vypis_arch_z,
+            p.actionChoices.vypis_lokalita if app == "lokalita" else p.actionChoices.vypis_akce,
             user,
             archeologicky_zaznam.ident_cely,
         ),
@@ -1618,7 +1531,13 @@ class AkceListView(SearchListView):
             "archeologicky_zaznam__casti_dokumentu",
             "archeologicky_zaznam__casti_dokumentu__dokument",
         )
-        qs.cache()
+        qs = qs.defer(
+            "archeologicky_zaznam__hlavni_katastr__definicni_bod",
+            "archeologicky_zaznam__hlavni_katastr__hranice",
+            "archeologicky_zaznam__hlavni_katastr__okres__definicni_bod",
+            "archeologicky_zaznam__hlavni_katastr__okres__hranice",
+        )
+
         return self.check_filter_permission(qs)
 
 
@@ -1686,7 +1605,6 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             poznamka=f"{old_ident} -> {az.ident_cely}",
             vazba=az.historie,
         ).save()
-        invalidate_model(ArcheologickyZaznam)
         az.close_active_transaction_when_finished = True
         az.save()
         logger.debug("arch_z.views.ProjektAkceChange.post", extra={"ident_cely": str(az.ident_cely)})
@@ -1766,7 +1684,6 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             ).save()
             logger.debug("arch_z.views.SamostatnaAkceChange.post.valid", extra={"ident_cely": str(az.ident_cely)})
             az.close_active_transaction_when_finished = True
-            invalidate_model(ArcheologickyZaznam)
             az.save()
         else:
             logger.debug(

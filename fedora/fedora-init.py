@@ -17,7 +17,7 @@ def get_password():
 PASSWORD = get_password()
 
 
-API_URL = "http://localhost:8080/rest/"
+API_URL = "http://localhost:8080/rest"
 # FEDORA_SERVER_NAME = "AMCR-selenium-test"
 # FEDORA_SERVER_NAME = "AMCR"
 AUTH = requests.auth.HTTPBasicAuth("fedoraAdmin", PASSWORD)
@@ -25,7 +25,7 @@ AUTH = requests.auth.HTTPBasicAuth("fedoraAdmin", PASSWORD)
 
 def create_new_transaction():
     print("create_new_transaction")
-    response = requests.post(API_URL + "fcr:tx", auth=AUTH, timeout=10)
+    response = requests.post(API_URL + "/fcr:tx", auth=AUTH, timeout=10)
     print(response)
     return response.headers["link"].split(";")[0][1:-1]
 
@@ -42,7 +42,7 @@ def create_container(Atomic_ID, name, path=""):
         "Atomic-ID": Atomic_ID,
         "Slug": name,
     }
-    response = requests.post(API_URL + path, auth=AUTH, headers=headers, timeout=10)
+    response = requests.post(f"{API_URL}/{path}", auth=AUTH, headers=headers, timeout=10)
     print(response)
     print(response.headers["link"].split(";")[0][1:-1])
     return response.headers["link"].split(";")[0][1:-1]
@@ -70,7 +70,7 @@ def upload_file(Atomic_ID, file, type, path):
         "Content-Type": type,
         "filename": f'"{os.path.basename(file)}"',
     }
-    response = requests.put(API_URL + path, auth=AUTH, headers=headers, data=data, timeout=10)
+    response = requests.put(f"{API_URL}/{path}", auth=AUTH, headers=headers, data=data, timeout=10)
     print(response)
 
 
@@ -120,14 +120,14 @@ def purge_container(container_path):
 
 
 def wipe_Fedora():
-    code, mem = get_container_content(f"{API_URL}{FEDORA_SERVER_NAME}/model")
+    code, mem = get_container_content(f"{API_URL}/{FEDORA_SERVER_NAME}/model")
     for item in mem:
         items = get_container_content(item + "/member")
         for i in items:
             delete_container(i)
             purge_container(i)
 
-    code, mem = get_container_content(f"{API_URL}{FEDORA_SERVER_NAME}/record")
+    code, mem = get_container_content(f"{API_URL}/{FEDORA_SERVER_NAME}/record")
     for item in mem:
         delete_container(item)
         purge_container(item)
@@ -136,7 +136,7 @@ def wipe_Fedora():
 def generate_base_struct():
     path = os.path.dirname(__file__)
     transaction_id = create_new_transaction()
-
+    createFedoraWebacAcl(API_URL, transaction_id, os.path.join(path, "inputs/acl/root-authorization.ttl"))
     c_path = create_container(transaction_id, f"{FEDORA_SERVER_NAME}")
     createFedoraWebacAcl(c_path, transaction_id, os.path.join(path, "inputs/acl/repo.ttl"))
     upload_file(
@@ -219,9 +219,12 @@ def generate_base_struct():
 def inicialize_base_directory():
     for attempt in range(MAX_RETRIES + 1):  # Pokusíme se max_retries + 1 krát (včetně prvního pokusu)
         try:
-            stat, res = get_container_content(f"{API_URL}{FEDORA_SERVER_NAME}")
+            stat, res = get_container_content(f"{API_URL}/{FEDORA_SERVER_NAME}")
             # Pokud server odpoví status kódem 200, je vše v pořádku
-            if stat == 200:
+            print(f"stat {stat}")
+            if stat == 503:
+                time.sleep(RETRY_DELAY)
+            elif stat == 200:
                 print("fedora-init.py: Základní struktura existuje")
 
                 break
@@ -231,7 +234,7 @@ def inicialize_base_directory():
                 break
         except requests.exceptions.RequestException as e:
             # Pokud dojde k výjimce, vypíše chybu a počká 2 sekundy před dalším pokusem
-            print(f"fedora-init.py: Chyba při pokusu o spojení s Fedorou na adrese {API_URL}{FEDORA_SERVER_NAME}: {e}")
+            print(f"fedora-init.py: Chyba při pokusu o spojení s Fedorou na adrese {API_URL}/{FEDORA_SERVER_NAME}: {e}")
             if attempt < MAX_RETRIES:
                 print(f"fedora-init.py: Opakuji pokus {attempt + 1} za {RETRY_DELAY} sekund...")
                 time.sleep(RETRY_DELAY)
@@ -243,6 +246,7 @@ FEDORA_SERVER_NAME = "AMCR"
 
 MAX_RETRIES = 10  # Maximální počet pokusů
 RETRY_DELAY = 5  # Pauza mezi pokusy v sekundách
+time.sleep(10)
 inicialize_base_directory()
 
 FEDORA_SERVER_NAME = "AMCR-selenium-test"

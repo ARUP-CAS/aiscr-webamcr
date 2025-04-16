@@ -862,7 +862,7 @@ class Permissions(models.Model):
         )
         vypis_dokument = "vypis_dokument", _("core.models.permissions.actionChoices.vypis_dokument")
         vypis_projekt = "vypis_projekt", _("core.models.permissions.actionChoices.vypis_projekt")
-        vypis_arch_z = "vypis_arch_z", _("core.models.permissions.actionChoices.vypis_arch_z")
+        vypis_akce = "vypis_akce", _("core.models.permissions.actionChoices.vypis_akce")
         vypis_lokalita = "vypis_lokalita", _("core.models.permissions.actionChoices.vypis_lokalita")
         vypis_pas = "vypis_pas", _("core.models.permissions.actionChoices.vypis_pas")
         vypis_model3d = "vypis_model3d", _("core.models.permissions.actionChoices.vypis_model3d")

@@ -193,6 +193,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "buttonUploadSubmit")
 
         self.ElementClick(By.CSS_SELECTOR, "#dokument-archivovat > .app-controls-button-text")
+        self.ElementClick(By.CSS_SELECTOR, ".custom-control-label")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         # self.wait(self.wait_interval+10)
@@ -669,7 +670,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, ident)
 
         self.ElementClick(By.ID, "dokument-archivovat")
-
+        self.ElementClick(By.CSS_SELECTOR, ".custom-control-label")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 

@@ -35,7 +35,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
 from django.core.cache import cache
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import connection
 from django.db.models import FilteredRelation, OuterRef, Q, Subquery
 from django.http import HttpResponseBadRequest, JsonResponse
@@ -161,18 +161,18 @@ def odpojit(request, dj_ident_cely):
             pian.skip_container_check = True
             pian.active_transaction = fedora_transaction
             try:
+                pian.refresh_from_db()
                 pian.delete()
                 dj.initial_pian = None
                 logger.debug(
                     "pian.views.odpojit.smazan",
                     extra={"ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid},
                 )
-            except ValueError as err:
+            except (ValueError, ObjectDoesNotExist) as err:
                 logger.debug(
                     "pian.views.odpojit.error",
                     extra={"ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid, "error": err},
                 )
-
             fedora_transaction.success_message = PIAN_USPESNE_SMAZAN
         else:
             fedora_transaction.success_message = PIAN_USPESNE_ODPOJEN

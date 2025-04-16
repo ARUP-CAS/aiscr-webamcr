@@ -37,7 +37,6 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
     logger.debug("pas.signals.save_metadata_samostatny_nalez.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
     invalidate_model(Projekt)
-    invalidate_model(Historie)
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
 
@@ -65,7 +64,6 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
     logger.debug("pas.signals.dokument_delete_container_soubor_vazby.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
     invalidate_model(Projekt)
-    invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
     instance.igsn_delete()
 
@@ -94,7 +92,6 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
 @receiver(post_save, sender=UzivatelSpoluprace, weak=False)
 def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.save_uzivatel_spoluprce.start", extra={"pk": instance.pk})
-    invalidate_model(UzivatelSpoluprace)
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
 
@@ -113,7 +110,6 @@ def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
 def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, **kwargs):
     logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.start", extra={"pk": instance.pk})
     fedora_transaction = instance.active_transaction
-    invalidate_model(UzivatelSpoluprace)
 
     def save_metadata(close_transaction=False):
         Historie.save_record_deletion_record(record=instance)

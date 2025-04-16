@@ -157,12 +157,10 @@
         fields.set("id_kulturni_pamatka_cislo", "")
         fields.set("id_kulturni_pamatka_popis", "")
         var required = new Map()
-        required.set("{% get_value_from_heslar "kulturni_pamatky" "op" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
         required.set("{% get_value_from_heslar "kulturni_pamatky" "kp" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
         required.set("{% get_value_from_heslar "kulturni_pamatky" "nkp" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
         required.set("{% get_value_from_heslar "kulturni_pamatky" "pz" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
         required.set("{% get_value_from_heslar "kulturni_pamatky" "pr" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
-        required.set("{% get_value_from_heslar "kulturni_pamatky" "un" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
 
         changeFields(checked_field, fields,required,required);
         checked_field.addEventListener("change", changeFields.bind(event, checked_field, fields,required,required));

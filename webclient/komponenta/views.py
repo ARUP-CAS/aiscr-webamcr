@@ -41,7 +41,6 @@ from heslar.hesla import (
     HESLAR_PREDMET_SPECIFIKACE,
 )
 from heslar.views import heslar_12, heslar_list
-from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
 from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
@@ -75,9 +74,7 @@ def detail(request, typ_vazby, ident_cely):
         komponenta.save()
         form.save_m2m()
         invalidate_model(Akce)
-        invalidate_model(ArcheologickyZaznam)
         invalidate_model(Dokument)
-        invalidate_model(Historie)
         messages.add_message(request, messages.SUCCESS, KOMPONENTA_USPESNE_EDITOVANA)
     elif not form.is_valid():
         messages.add_message(request, messages.ERROR, KOMPONENTU_SE_NEPOVEDLO_EDITOVAT)

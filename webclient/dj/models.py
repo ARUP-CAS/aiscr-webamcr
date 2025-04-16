@@ -85,9 +85,16 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     def __init__(self, *args, **kwargs):
         super(DokumentacniJednotka, self).__init__(*args, **kwargs)
-        self.initial_pian = self.pian
+        self.initial_pian_id = self.pian_id
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
         self.suppress_signal = False
         self.suppress_signal_arch_z = False
         self.save_pian_metadata = False
+
+    @property
+    def initial_pian(self):
+        """Vrátí objekt Pian na základě initial_pian_id (lazy-load)."""
+        if self.initial_pian_id is not None:
+            return Pian.objects.get(pk=self.initial_pian_id)
+        return None

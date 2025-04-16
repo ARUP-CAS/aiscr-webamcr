@@ -3,7 +3,7 @@ import logging
 import traceback
 
 import requests
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import Akce
 from cacheops import invalidate_model
 from celery import shared_task
 from core.connectors import RedisConnector
@@ -39,7 +39,7 @@ from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pian.models import Pian
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Organizace, Osoba, User
+from uzivatel.models import Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -289,8 +289,8 @@ def change_document_accessibility():
     přístupný připojený archeologický záznam (tj. když mají připojené AZ C a D, bude mít dokument nejvýše C).
     """
     invalidate_model(Dokument)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Organizace)
+    invalidate_model(Akce)
+
     try:
         logger.debug("core.cron.change_document_accessibility.do.start")
         documents = (

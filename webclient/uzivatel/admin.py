@@ -1,7 +1,6 @@
 import logging
 from typing import Union
 
-from cacheops import invalidate_model
 from core.constants import (
     ROLE_ADMIN_ID,
     ROLE_ARCHEOLOG_ID,
@@ -54,6 +53,7 @@ class UserNotificationTypeInlineForm(forms.ModelForm):
             | Q(ident_cely__icontains="S-E-N")
             | Q(ident_cely__icontains="S-E-K")
             | Q(ident_cely="E-U-04")
+            | Q(ident_cely="zpravodaj")
         )
 
 
@@ -64,7 +64,10 @@ class UserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
         super(UserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
         if not self.instance.pk and not self.data:
             notification_ids = UserNotificationType.objects.filter(
-                Q(ident_cely__icontains="S-E-A") | Q(ident_cely__icontains="S-E-N") | Q(ident_cely__icontains="S-E-K")
+                Q(ident_cely__icontains="S-E-A")
+                | Q(ident_cely__icontains="S-E-N")
+                | Q(ident_cely__icontains="S-E-K")
+                | Q(ident_cely="zpravodaj")
             ).values_list("id", flat=True)
             self.initial = []
             for id in notification_ids:
@@ -94,6 +97,7 @@ class UserNotificationTypeInline(admin.TabularInline):
             | Q(usernotificationtype__ident_cely__icontains="S-E-N")
             | Q(usernotificationtype__ident_cely__icontains="S-E-K")
             | Q(usernotificationtype__ident_cely="E-U-04")
+            | Q(usernotificationtype__ident_cely="zpravodaj")
         )
         return queryset
 
@@ -101,7 +105,10 @@ class UserNotificationTypeInline(admin.TabularInline):
         extra = 1  # default 0
         if not obj:  # new create only
             extra = UserNotificationType.objects.filter(
-                Q(ident_cely__icontains="S-E-A") | Q(ident_cely__icontains="S-E-N") | Q(ident_cely__icontains="S-E-K")
+                Q(ident_cely__icontains="S-E-A")
+                | Q(ident_cely__icontains="S-E-N")
+                | Q(ident_cely__icontains="S-E-K")
+                | Q(ident_cely="zpravodaj")
             ).count()
         return extra
 
@@ -322,8 +329,6 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         user = request.user
         obj.created_from_admin_panel = True
         obj.active_transaction = fedora_transaction
-        invalidate_model(User)
-        invalidate_model(Historie)
         logger.debug(
             "uzivatel.admin.save_model.start",
             extra={

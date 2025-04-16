@@ -52,10 +52,8 @@ from core.utils import (
     get_heatmap_pas,
     get_heatmap_pian,
     get_message,
-    get_multi_transform_towgs84,
     get_pas_from_envelope,
     get_pian_from_envelope,
-    get_transform_towgs84,
     replace_last,
 )
 from django.conf import settings
@@ -875,40 +873,6 @@ def prolong_session(request):
     )
 
 
-@login_required
-@require_http_methods(["POST"])
-def tr_wgs84(request):
-    """
-    Funkce pohledu pro transformaci souradnic na wsg84.
-    """
-    body = json.loads(request.body.decode("utf-8"))
-    [c_x2, c_x1] = get_transform_towgs84(body["c_x1"], body["c_x2"])
-    if c_x1 is not None:
-        return JsonResponse(
-            {"x1": c_x1, "x2": c_x2},
-            status=200,
-        )
-    else:
-        return JsonResponse({"x1": "", "x2": ""}, status=200)
-
-
-@login_required
-@require_http_methods(["POST"])
-def tr_mwgs84(request):
-    """
-    Funkce pohledu pro transformaci na wsg84.
-    """
-    body = json.loads(request.body.decode("utf-8"))["points"]
-    points = get_multi_transform_towgs84(body)
-    if points is not None:
-        return JsonResponse(
-            {"points": points},
-            status=200,
-        )
-    else:
-        return JsonResponse({"points": None}, status=200)
-
-
 class ExportMixinDate(ExportMixin):
     """
     Mixin pro získaní názvu exportovaného souboru.
@@ -972,7 +936,6 @@ class PermissionFilterMixin:
                 qs = new_qs | qs.filter(**filterdoc)
             else:
                 qs = new_qs
-        qs.cache()
         return qs
 
     def filter_by_permission(self, qs, permission):
@@ -1119,16 +1082,22 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                     results = pipe.execute()
                     for index, result in enumerate(results):
                         if not result:
-                            ident_cely = ident_cely_list[base_index + index].split("_")[-1]
-                            logger.error(
-                                "core.views.SearchListView.snapshot.error",
-                                extra={"ident_cely": ident_cely},
-                            )
-                            item = self.model.objects.get(ident_cely=ident_cely)
-                            key, value = item.generate_redis_snapshot()
-                            if key and value:
-                                r.hset(key, mapping=value)
-                                results[index] = value
+                            try:
+                                ident_cely = ident_cely_list[base_index + index].split("_")[-1]
+                                logger.warning(
+                                    "core.views.SearchListView.snapshot.create.warning",
+                                    extra={"ident_cely": ident_cely},
+                                )
+                                item = self.model.get_by_ident_cely(ident_cely)
+                                key, value = item.generate_redis_snapshot()
+                                if key and value:
+                                    r.hset(key, mapping=value)
+                                    results[index] = value
+                            except Exception as err:
+                                logger.error(
+                                    "core.views.SearchListView.snapshot.error",
+                                    extra={"ident_cely": ident_cely, "error": err},
+                                )
                     data.extend(results)
                     base_index = i + 1
 
@@ -1217,6 +1186,11 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["idents"] = context["table"].get_all_idents()
         context["vypis_app"] = self.vypis_app
         return context
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs.cache()
+        return qs
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):

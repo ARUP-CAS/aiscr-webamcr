@@ -5,7 +5,7 @@ from core.constants import EXTERNI_ZDROJ_RELATION_TYPE
 from django.db import transaction
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
-from historie.models import Historie, HistorieVazby
+from historie.models import HistorieVazby
 
 from .models import ExterniZdroj
 
@@ -36,7 +36,6 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
 def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
     logger.debug("ez.signals.externi_zdroj_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(ExterniZdroj)
-    invalidate_model(Historie)
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
         if instance.close_active_transaction_when_finished:
@@ -57,7 +56,6 @@ def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **
     )
     fedora_transaction = instance.active_transaction
     invalidate_model(ExterniZdroj)
-    invalidate_model(Historie)
     instance.record_deletion(close_transaction=instance.close_active_transaction_when_finished)
     if instance.externi_odkazy_zdroje:
         for eo in instance.externi_odkazy_zdroje.all():

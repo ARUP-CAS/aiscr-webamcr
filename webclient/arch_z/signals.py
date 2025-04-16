@@ -12,10 +12,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_delete, pre_save
 from django.dispatch import receiver
-from historie.models import Historie, HistorieVazby
-from komponenta.models import Komponenta, KomponentaVazby
-from nalez.models import NalezObjekt, NalezPredmet
-from pian.models import Pian
+from historie.models import HistorieVazby
+from komponenta.models import KomponentaVazby
 from projekt.models import Projekt
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
@@ -24,14 +22,6 @@ logger = logging.getLogger(__name__)
 
 def invalidate_arch_z_related_models():
     invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
-    invalidate_model(Adb)
-    invalidate_model(Pian)
-    invalidate_model(NalezPredmet)
-    invalidate_model(NalezObjekt)
-    invalidate_model(DokumentacniJednotka)
-    invalidate_model(Komponenta)
     invalidate_model(Projekt)
 
 
@@ -97,8 +87,8 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
                     instance.akce
                     and instance.akce.projekt
                     and (
-                        instance.akce.initial_projekt is None
-                        or instance.akce.projekt.ident_cely != instance.initial_projekt.ident_cely
+                        instance.akce.initial_projekt_id is None
+                        or instance.akce.projekt.ident_cely != instance.akce.initial_projekt.ident_cely
                         or instance.initial_pristupnost != instance.pristupnost
                     )
                 ):
@@ -134,16 +124,16 @@ def update_akce_snapshot(sender, instance: Akce, **kwargs):
     invalidate_arch_z_related_models()
     if not instance.suppress_signal:
         fedora_transaction: Optional[FedoraTransaction, None] = instance.active_transaction
-        if (instance.projekt is not None and instance.initial_projekt is None) or (
+        if (instance.projekt is not None and instance.initial_projekt_id is None) or (
             instance.projekt is not None
             and instance.archeologicky_zaznam.initial_pristupnost != instance.archeologicky_zaznam.pristupnost
         ):
             instance.projekt.save_metadata(fedora_transaction)
-        if instance.projekt is None and instance.initial_projekt is not None:
+        if instance.projekt is None and instance.initial_projekt_id is not None:
             instance.initial_projekt.save_metadata(fedora_transaction)
         if (
             instance.projekt is not None
-            and instance.initial_projekt is not None
+            and instance.initial_projekt_id is not None
             and instance.projekt.ident_cely != instance.initial_projekt.ident_cely
         ):
             instance.projekt.save_metadata(fedora_transaction)

@@ -117,9 +117,8 @@ from heslar.hesla_dynamicka import (
 )
 from heslar.models import Heslar, HeslarHierarchie
 from heslar.views import heslar_12, heslar_list
-from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
-from komponenta.models import Komponenta, KomponentaAktivita, KomponentaVazby
+from komponenta.models import Komponenta, KomponentaVazby
 from nalez.forms import NalezFormSetHelper, create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
 from neidentakce.forms import NeidentAkceForm
@@ -1073,6 +1072,14 @@ class DokumentCastSmazatView(TransakceView):
         cast = self.get_zaznam()
         cast.create_transaction(request.user, self.success_message)
         dokument = cast.dokument
+        lokalita_update = None
+        if (
+            isinstance(cast.archeologicky_zaznam, ArcheologickyZaznam)
+            and cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+            and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            and cast.archeologicky_zaznam.lokalita.igsn
+        ):
+            lokalita_update = cast.archeologicky_zaznam.lokalita
         if cast.komponenty:
             komps = cast.komponenty
             cast.komponenty = None
@@ -1091,6 +1098,8 @@ class DokumentCastSmazatView(TransakceView):
             )
         cast.close_active_transaction_when_finished = True
         cast.delete()
+        if lokalita_update:
+            lokalita_update.igsn_update()
         return JsonResponse({"redirect": dokument.get_absolute_url()})
 
 
@@ -1188,8 +1197,7 @@ def edit(request, ident_cely):
             form_d.save_m2m()
             invalidate_model(Dokument)
             invalidate_model(Akce)
-            invalidate_model(ArcheologickyZaznam)
-            invalidate_model(Historie)
+
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
         else:
             logger.debug(
@@ -1297,8 +1305,6 @@ def edit_model_3D(request, ident_cely):
             komponenta.active_transaction = fedora_transaction
             komponenta.save()
             form_komponenta.save_m2m()
-            invalidate_model(KomponentaAktivita)
-            invalidate_model(Historie)
             dokument_from_form.close_active_transaction_when_finished = True
             dokument_from_form.save()
             return redirect("dokument:detail-model-3D", ident_cely=dokument.ident_cely)
@@ -1617,18 +1623,19 @@ def archivovat(request, ident_cely):
         dokument.set_archivovany(request.user, old_ident)
         dokument.doi_publish()
         dokument.set_doi()
+        if dokument.rada == Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D):
+            Mailer.send_ek01(document=dokument)
+        dokument.close_active_transaction_when_finished = True
+        dokument.save()
         for item in dokument.casti.all():
             item: DokumentCast
             if (
                 item.archeologicky_zaznam
                 and item.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
                 and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+                and item.archeologicky_zaznam.lokalita.igsn
             ):
                 item.archeologicky_zaznam.lokalita.igsn_update()
-        if dokument.rada == Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D):
-            Mailer.send_ek01(document=dokument)
-        dokument.close_active_transaction_when_finished = True
-        dokument.save()
         return JsonResponse({"redirect": get_detail_json_view(dokument.ident_cely)})
     else:
         warnings = dokument.check_pred_archivaci()
@@ -1957,6 +1964,8 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
     relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_doku)
     remove_orphan = False
     orphan_dokument = None
+    lokalita_update = None
+    dokument_update = None
     if len(relace_dokumentu) == 0:
         logger.debug("dokument.views.odpojit.no_relace", extra={"ident_cely": ident_doku})
         messages.add_message(request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE)
@@ -1984,9 +1993,9 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
             and zaznam.stav == AZ_STAV_ARCHIVOVANY
             and zaznam.lokalita.igsn
         ):
-            zaznam.lokalita.igsn_update()
-        if dokument_cast.dokument and dokument_cast.dokument.stav == D_STAV_ARCHIVOVANY:
-            dokument_cast.dokument.doi_update()
+            lokalita_update = zaznam.lokalita
+        if dokument_cast.dokument and dokument_cast.dokument.doi and dokument_cast.dokument.stav == D_STAV_ARCHIVOVANY:
+            dokument_update = dokument_cast.dokument
         resp = dokument_cast.delete()
         logger.debug("dokument.views.odpojit.deleted", extra={"value": resp})
         if remove_orphan:
@@ -1995,6 +2004,10 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
             orphan_dokument.delete()
             logger.debug("dokument.views.odpojit.deleted")
         fedora_transaction.mark_transaction_as_closed()
+        if lokalita_update:
+            lokalita_update.igsn_update()
+        if dokument_update:
+            dokument_update.doi_update()
         return JsonResponse({"redirect": zaznam.get_absolute_url()})
     else:
         warnings = []

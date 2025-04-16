@@ -210,7 +210,7 @@ Docker image
      - Apache License 2
      - https://github.com/google/cadvisor
    * - Fedora
-     - 6.4.0
+     - 6.5.1
      - Apache-2.0 License
      - https://github.com/fcrepo/fcrepo
    * - ghcr.io/osgeo/gdal:ubuntu-small

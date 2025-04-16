@@ -306,6 +306,10 @@
       };
 
       document.addEventListener('DOMContentLoaded', function (event) {
+        {#$('#create-nalezce-osoba').on('click', function () {#}
+        {#  $.fn.modal.Constructor.prototype._enforceFocus = function () {#}
+        {#  };#}
+        {#})#}
         var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'heslar:create_osoba' %}",
         formID: "create-osoba-form",

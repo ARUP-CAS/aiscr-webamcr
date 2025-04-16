@@ -227,7 +227,7 @@ services:
       - elasticsearch
 
   fcrepo:
-    image:  fcrepo/fcrepo:6.4.0
+    image:  fcrepo/fcrepo:6.5.1-tomcat9
     build:
       context: .
       dockerfile: ./fedora/Dockerfile

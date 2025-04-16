@@ -110,17 +110,27 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         return self._get_igsn_client().check_record_exists()
 
     def igsn_delete(self):
-        return self._get_igsn_client().delete_record()
+        if self.igsn:
+            return self._get_igsn_client().delete_record()
 
     def igsn_hide(self):
-        return self._get_igsn_client().hide_record()
+        if self.igsn:
+            return self._get_igsn_client().hide_record()
 
     def igsn_publish(self):
         return self._get_igsn_client().publish_record()
 
     def igsn_update(self):
-        return self._get_igsn_client().update_record()
+        if self.igsn:
+            return self._get_igsn_client().update_record()
 
     @property
     def igsn_url(self):
         return self._get_igsn_client().get_record_url()
+
+    @classmethod
+    def get_by_ident_cely(cls, ident_cely):
+        try:
+            return cls.objects.get(archeologicky_zaznam__ident_cely=ident_cely)
+        except Exception:
+            return None

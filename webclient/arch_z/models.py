@@ -433,14 +433,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     def __init__(self, *args, **kwargs):
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
         self.initial_stav = self.stav
+
+    @property
+    def initial_casti_dokumentu(self):
         try:
-            self.initial_projekt = self.akce.projekt
-        except (ObjectDoesNotExist, AttributeError):
-            self.initial_projekt = None
-        try:
-            self.initial_casti_dokumentu = self.casti_dokumentu.all().values_list("id", flat=True)
+            return self.casti_dokumentu.all().values_list("id", flat=True)
         except ValueError:
-            self.initial_casti_dokumentu = []
+            return []
 
     @property
     def initial_pristupnost(self):
@@ -568,10 +567,18 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.initial_projekt = self.projekt
+        self.initial_projekt_id = self.projekt_id
         self.suppress_signal = False
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
+
+    @property
+    def initial_projekt(self):
+        from projekt.models import Projekt
+
+        if self.initial_projekt_id is not None:
+            return Projekt.objects.get(pk=self.initial_projekt_id)
+        return None
 
     def get_absolute_url(self):
         """
@@ -620,6 +627,13 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
             )
             return None, None
 
+    @classmethod
+    def get_by_ident_cely(cls, ident_cely):
+        try:
+            return cls.objects.get(archeologicky_zaznam__ident_cely=ident_cely)
+        except Exception:
+            return None
+
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     """
@@ -640,6 +654,12 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
         Metóda vráti jako str reprezentaci modelu vedouci.
         """
         return f"{self.vedouci.vypis_cely} ({self.organizace})"
+
+    def vypis_name(self):
+        """
+        Metóda vráti jako str reprezentaci modelu vedouci pro vypis.
+        """
+        return f"{self.vedouci.vypis_cely} ({self.organizace.get_nazev()})"
 
 
 class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):

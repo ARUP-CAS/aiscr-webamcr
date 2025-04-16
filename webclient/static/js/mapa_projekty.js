@@ -13,6 +13,17 @@ var poi_sugest = L.layerGroup();
 var poi_correct = L.layerGroup();
 var poi_sn = L.featureGroup.subGroup(mcg)
 var poi_pian = L.featureGroup.subGroup(mcg)
+const vrstvy = {
+    1: { vrstva: poi_p1, oznaceni: 'P1' },
+    2: { vrstva: poi_p2, oznaceni: 'P2' },
+    3: { vrstva: poi_p3, oznaceni: 'P3' },
+    4: { vrstva: poi_p46, oznaceni: 'P4-P6' },
+    5: { vrstva: poi_p46, oznaceni: 'P4-P6' },
+    6: { vrstva: poi_p46, oznaceni: 'P4-P6' },
+    7: { vrstva: poi_p78, oznaceni: 'P7-P8' },
+    8: { vrstva: poi_p78, oznaceni: 'P7-P8' }
+  };
+
 map.addLayer(poi_sugest);
 map.addLayer(poi_correct);
 map.addLayer(poi_p1);
@@ -290,47 +301,33 @@ switchMap = function (overview = false) {
             poi_p78.clearLayers();
             heatPoints = []
             map.removeLayer(heatLayer);
-            let resAl = JSON.parse(this.responseText).algorithm
-            if (resAl == "detail") {
-                let resPoints = JSON.parse(this.responseText).points
+            let point_data = JSON.parse(this.responseText);            
+            if (point_data.algorithm == "detail") {
+                let resPoints = point_data.points
                 resPoints.forEach((i) => {
-                    let ge = i.geom.split("(")[1].split(")")[0];
-                    let stav=null;
-                    switch(i.stav){
-                        case 'P1': stav=poi_p1;break;
-                        case 'P2': stav=poi_p2;break;
-                        case 'P3': stav=poi_p3;break;
-                        case 'P4-P6': stav=poi_p46;break;
-                        case 'P7-P8': stav=poi_p78;break;
-                        default: stav=null
-                    }
+                    const coords = JSON.parse(i.geom_geojson).coordinates;
+                    const latlng = [coords[1], coords[0]];
+                    let stav = vrstvy[i.stav]?.vrstva || null;
+                    let oznaceni = vrstvy[i.stav]?.oznaceni || "";
                     if(i.ident_cely==PROJEKT_IDENT_CELY){
                         stav=poi_sugest;
                     }
                     if(stav!=null){
-                        L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1], ge.split(" ")[0]]), { icon: pinIconPurpleDf, zIndexOffset: 1000 })
-                        .bindTooltip(i.ident_cely+' ('+i.stav+')')
+                        L.marker(latlng, { icon: pinIconPurpleDf, zIndexOffset: 1000 })
+                        .bindTooltip(i.ident_cely+' ('+oznaceni+')')
                         .bindPopup('<a href="/projekt/detail/'+i.ident_cely+'" target="_blank">'+i.ident_cely+'</a>')
                         .addTo(stav)
                     }
                 })
             } else {
-                let resHeat = JSON.parse(this.responseText).heat
-                /*resHeat.forEach((i) => {
-                    geom = i.geom.split("(")[1].split(")")[0].split(" ");
-                    for (let j = 0; j < i.pocet; j++) {
-                        heatPoints.push([geom[1], geom[0]])//chyba je to geome
-                    }
-                })*/
+                let resHeat = point_data.heat
                 let maxHeat=0;
                 resHeat.forEach((i) => {
-                    geom = i.geom.split("(")[1].split(")")[0].split(" ");
+                    const coords = JSON.parse(i.geom_geojson).coordinates;
                     if(i.pocet>maxHeat){
                         maxHeat=i.pocet;
                     }
-                        //from: {"id": "1", "pocet": 32, "density": 0, "geom": "POINT(14.8 50.120000000000005)"}
-                        //to: {lat: 24.6408, lng:46.7728, count: 3}
-                    heatPoints.push({lat:parseFloat(geom[1]), lng:parseFloat(geom[0]), count:i.pocet});//chyba je to geome
+                    heatPoints.push({lat:coords[1], lng: coords[0], count:i.pocet});//chyba je to geome
                 })
                 heatLayer = new HeatmapOverlay( heatmapOptions); //= L.heatLayer(heatPoints, heatmapOptions);
                 //console.log({max:maxHeat,data:heatPoints})

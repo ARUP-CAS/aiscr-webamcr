@@ -1,6 +1,6 @@
 import logging
 
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import Akce
 from cacheops import invalidate_model
 from core.constants import DOKUMENT_CAST_RELATION_TYPE, DOKUMENT_RELATION_TYPE
 from core.models import SouborVazby
@@ -10,7 +10,7 @@ from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from dokument.models import Dokument, DokumentCast, Let, Tvar
-from historie.models import Historie, HistorieVazby
+from historie.models import HistorieVazby
 from komponenta.models import Komponenta, KomponentaVazby
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
 
@@ -25,8 +25,6 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
     """
     invalidate_model(Dokument)
     invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
     fedora_transaction = instance.active_transaction
     if not instance.suppress_signal:
         logger.debug(
@@ -63,8 +61,6 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
     logger.debug("dokument.signals.create_dokument_cast_vazby.start", extra={"pk": instance.pk})
     invalidate_model(Dokument)
     invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
     if instance.pk is None:
         logger.debug("Creating child komponenty for dokument cast" + str(instance))
         k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
@@ -85,8 +81,6 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
     )
     invalidate_model(Dokument)
     invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
 
@@ -134,8 +128,8 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
     logger.debug(
         "dokument.signals.dokument_delete_repository_container.start", extra={"ident_cely": instance.ident_cely}
     )
-    instance.doi_delete()
     fedora_transaction = instance.active_transaction
+    instance.doi_delete()
     for k in Komponenta.objects.filter(ident_cely__startswith=instance.ident_cely):
         logger.debug(
             "dokument.signals.dokument_delete_repository_container.deleting",
@@ -188,11 +182,11 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
         instance.dokument.save_metadata(fedora_transaction)
         if (
             created
-            or instance.initial_projekt != instance.projekt
-            or instance.initial_archeologicky_zaznam != instance.archeologicky_zaznam
+            or instance.initial_projekt_id != instance.projekt_id
+            or instance.initial_archeologicky_zaznam_id != instance.archeologicky_zaznam_id
         ):
             extra["transaction"] = str(fedora_transaction.uid)
-            if instance.archeologicky_zaznam is not None:
+            if instance.archeologicky_zaznam_id is not None:
                 instance.archeologicky_zaznam.save_metadata(fedora_transaction)
                 extra.update(
                     {
@@ -200,18 +194,17 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
                         "pk": instance.archeologicky_zaznam.pk,
                     }
                 )
-            if instance.initial_archeologicky_zaznam is not None:
+            if instance.initial_archeologicky_zaznam_id is not None:
                 instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction)
                 extra.update(
                     {
-                        "initial_ident_cely": instance.initial_archeologicky_zaznam.ident_cely,
-                        "initial_record_pk": instance.initial_archeologicky_zaznam.pk,
+                        "initial_ident_cely": instance.initial_archeologicky_zaznam_id,
                     }
                 )
             if instance.projekt is not None:
                 instance.projekt.save_metadata(fedora_transaction)
                 extra.update({"projekt": instance.projekt.ident_cely, "pk": instance.projekt.pk})
-            if instance.initial_projekt is not None:
+            if instance.initial_projekt_id is not None:
                 instance.initial_projekt.save_metadata(fedora_transaction)
                 extra.update(
                     {
@@ -233,13 +226,11 @@ def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs)
     fedora_transaction: FedoraTransaction = instance.active_transaction
     invalidate_model(Dokument)
     invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
-    invalidate_model(Historie)
 
     def save_metadata(close_transaction=False):
-        if instance.initial_archeologicky_zaznam is not None and instance.suppress_signal_arch_z is False:
+        if instance.initial_archeologicky_zaznam_id is not None and instance.suppress_signal_arch_z is False:
             instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
-        if instance.initial_projekt is not None:
+        if instance.initial_projekt_id is not None:
             instance.initial_projekt.save_metadata(fedora_transaction, skip_container_check=True)
         if not instance.suppress_dokument_signal:
             instance.dokument.save_metadata(fedora_transaction, skip_container_check=True)

@@ -1,8 +1,8 @@
-FROM fcrepo/fcrepo:6.4.0
+FROM fcrepo/fcrepo:6.5.1-tomcat9
 
 RUN apt-get update
 RUN apt-get install -y python3-pip
-RUN pip install requests
+RUN apt-get update && apt-get install -y python3-requests
 
 COPY ./fedora/inputs /opt/inputs
 COPY ./webclient/xml_generator/definitions/amcr.xsd /opt/inputs/amcr.xsd

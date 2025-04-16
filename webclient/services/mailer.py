@@ -33,7 +33,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from historie.models import Historie
 from oznameni.models import Oznamovatel
-from pas.models import SamostatnyNalez, UzivatelSpoluprace
+from pas.models import SamostatnyNalez
 from projekt.doc_utils import ZruseniPDFCreator
 
 from .mlstripper import MLStripper
@@ -46,6 +46,7 @@ NOTIFICATION_GROUPS = {
     "S-E-N-02": ("E-N-02",),
     "S-E-N-05": ("E-N-05",),
     "S-E-K-01": ("E-K-01",),
+    "zpravodaj": ("zpravodaj",),
 }
 
 ALWAYS_ACTIVE = [
@@ -571,6 +572,7 @@ class Mailer:
                 {
                     "title": subject,
                     "project": project,
+                    "organizace_zapsani": project.historie.historie_set.last().uzivatel.organizace.get_nazev(),
                 },
             )
             cls.__send(
@@ -723,18 +725,28 @@ class Mailer:
             "services.mailer.get_ep06_attachments.query",
             extra={"file": project_files, "ident_cely": project.ident_cely},
         )
+        attachment = None
         if len(project_files) > 0:
-            project_file = project_files[0]
+            project_file: Soubor = project_files[0]
             logger.debug(
                 "services.mailer.get_ep06_attachments.attachment_found",
                 extra={"file": project_file.nazev, "ident_cely": project.ident_cely},
             )
             repository_coonector = FedoraRepositoryConnector(project)
             attachment = repository_coonector.get_binary_file(project_file.repository_uuid)
-            return attachment
+            if not attachment:
+                logger.warning(
+                    "services.mailer.get_ep06_attachments.attachment_not_loaded_from_fedora",
+                    extra={
+                        "ident_cely": project.ident_cely,
+                        "repository_uuid": project_file.repository_uuid,
+                        "soubor_pk": project_file.pk,
+                    },
+                )
+        return attachment
 
     @classmethod
-    def _send_ep06(cls, project, notification_type, reason):
+    def _send_ep06(cls, project, notification_type, reason, rep_bin_file=None):
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         oznameni = Historie.objects.filter(
             vazba__projekt_historie__ident_cely=project.ident_cely, typ_zmeny=OZNAMENI_PROJ
@@ -760,22 +772,22 @@ class Mailer:
                 to=project.oznamovatel.email,
                 html_content=html,
                 notification_type=notification_type,
-                attachment=cls._get_ep06_attachment(project),
+                attachment=cls._get_ep06_attachment(project) if not rep_bin_file else rep_bin_file,
             )
 
     @classmethod
-    def send_ep06a(cls, project: "projekt.models.Projekt", reason):
+    def send_ep06a(cls, project: "projekt.models.Projekt", reason, rep_bin_file=None):
         IDENT_CELY = "E-P-06a"
         logger.debug("services.mailer.send_ep06a", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        cls._send_ep06(project, notification_type, reason)
+        cls._send_ep06(project, notification_type, reason, rep_bin_file)
 
     @classmethod
-    def send_ep06b(cls, project: "projekt.models.Projekt", reason):
+    def send_ep06b(cls, project: "projekt.models.Projekt", reason, rep_bin_file=None):
         IDENT_CELY = "E-P-06b"
         logger.debug("services.mailer.send_ep06b", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        cls._send_ep06(project, notification_type, reason)
+        cls._send_ep06(project, notification_type, reason, rep_bin_file)
 
     @classmethod
     def _send_en01_02(cls, projekt_ident_list, notification_type, send_to):
@@ -977,8 +989,6 @@ class Mailer:
     @staticmethod
     def get_en01_data() -> Dict:
         invalidate_model(SamostatnyNalez)
-        invalidate_model(Historie)
-        invalidate_model(UzivatelSpoluprace)
         now = timezone.now()
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
         previous_midnight = midnight + timedelta(days=-1)

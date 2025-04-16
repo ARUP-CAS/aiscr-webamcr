@@ -395,16 +395,19 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return self._get_igsn_client().check_record_exists()
 
     def igsn_delete(self):
-        return self._get_igsn_client().delete_record()
+        if self.igsn:
+            return self._get_igsn_client().delete_record()
 
     def igsn_hide(self):
-        return self._get_igsn_client().hide_record()
+        if self.igsn:
+            return self._get_igsn_client().hide_record()
 
     def igsn_publish(self):
         return self._get_igsn_client().publish_record()
 
     def igsn_update(self):
-        return self._get_igsn_client().update_record()
+        if self.igsn:
+            return self._get_igsn_client().update_record()
 
     @property
     def igsn_url(self):
@@ -524,3 +527,10 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         table = UzivatelSpolupraceTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
         return self.redis_snapshot_id, data
+
+    @classmethod
+    def get_by_ident_cely(cls, pk):
+        try:
+            return cls.objects.get(pk=pk)
+        except Exception:
+            return None

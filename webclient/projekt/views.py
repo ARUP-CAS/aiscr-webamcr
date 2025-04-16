@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import pytz
 import simplejson as json
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import Akce
 from cacheops import invalidate_model
 from core.constants import (
     ARCHIVACE_PROJ,
@@ -83,7 +83,6 @@ from core.utils import (
     get_project_pas_from_envelope,
     get_project_pian_from_envelope,
     get_projects_from_envelope,
-    get_projekt_stav_label,
 )
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
@@ -206,16 +205,17 @@ def post_ajax_get_projects_limit(request):
     Funkce pohledu pro získaní heatmapy projektu.
     """
     body = json.loads(request.body.decode("utf-8"))
+    vrstvy_map = {"p1": [1], "p2": [2], "p3": [3], "p46": [4, 5, 6], "p78": [7, 8]}
+    aktivni_p = []
+    for key, hodnoty in vrstvy_map.items():
+        if body.get(key):
+            aktivni_p.extend(hodnoty)
     num = get_num_projects_from_envelope(
         body["southEast"]["lng"],
         body["northWest"]["lat"],
         body["northWest"]["lng"],
         body["southEast"]["lat"],
-        body["p1"],
-        body["p2"],
-        body["p3"],
-        body["p46"],
-        body["p78"],
+        aktivni_p,
         request,
     )
     logger.debug("projekt.views.post_ajax_get_projects_limit.num", extra={"number": num})
@@ -225,29 +225,14 @@ def post_ajax_get_projects_limit(request):
             body["northWest"]["lat"],
             body["northWest"]["lng"],
             body["southEast"]["lat"],
-            body["p1"],
-            body["p2"],
-            body["p3"],
-            body["p46"],
-            body["p78"],
+            aktivni_p,
             request,
         )
-        back = []
-        for pian in pians:
-            back.append(
-                {
-                    "id": pian.id,
-                    "ident_cely": pian.ident_cely,
-                    "geom": pian.geom.wkt.replace(", ", ","),
-                    "stav": get_projekt_stav_label(pian.stav),
-                }
-            )
         if len(pians) > 0:
-            return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+            return JsonResponse({"points": list(pians), "algorithm": "detail"}, status=200)
         else:
             return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
     else:
-
         heats = get_heatmap_project(
             body["southEast"]["lng"],
             body["northWest"]["lat"],
@@ -255,20 +240,8 @@ def post_ajax_get_projects_limit(request):
             body["southEast"]["lat"],
             body["zoom"],
         )
-        back = []
-        cid = 0
-        for heat in heats:
-            cid += 1
-            back.append(
-                {
-                    "id": str(cid),
-                    "pocet": heat["count"],
-                    "density": 0,
-                    "geom": heat["geometry"].replace(", ", ","),
-                }
-            )
         if len(heats) > 0:
-            return JsonResponse({"heat": back, "algorithm": "heat"}, status=200)
+            return JsonResponse({"heat": list(heats), "algorithm": "heat"}, status=200)
         else:
             return JsonResponse({"heat": [], "algorithm": "heat"}, status=200)
 
@@ -526,9 +499,6 @@ def edit(request, ident_cely):
             form.save_m2m()
             invalidate_model(Projekt)
             invalidate_model(Akce)
-            invalidate_model(ArcheologickyZaznam)
-            invalidate_model(SamostatnyNalez)
-            invalidate_model(Historie)
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
             logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"error": form.errors})
@@ -997,16 +967,16 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
         projekt.set_archivovany(request.user)
+        projekt.close_active_transaction_when_finished = True
+        projekt.save()
         for item in projekt.casti_dokumentu.all():
             item: DokumentCast
-            if item.dokument.stav == D_STAV_ARCHIVOVANY:
+            if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
                 item.dokument.doi_update()
         for item in projekt.samostatne_nalezy.all():
             item: SamostatnyNalez
-            if item.stav == SN_ARCHIVOVANY:
+            if item.igsn and item.stav == SN_ARCHIVOVANY:
                 item.igsn_update()
-        projekt.close_active_transaction_when_finished = True
-        projekt.save()
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
     else:
         warnings = projekt.check_pred_archivaci()
@@ -1125,15 +1095,17 @@ def zrusit(request, ident_cely):
             duvod = form.cleaned_data["reason_text"]
             projekt.create_transaction(request.user, PROJEKT_USPESNE_ZRUSEN)
             projekt.set_zruseny(request.user, duvod)
-            if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
-                projekt.create_cancel_confirmation_document(request.user)
+            if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
+                rep_bin_file = projekt.create_cancel_confirmation_document(request.user)
+            else:
+                rep_bin_file = None
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             Mailer.send_ep04(project=projekt, reason=duvod)
             if projekt.ident_cely[0] == OBLAST_CECHY:
-                Mailer.send_ep06a(project=projekt, reason=duvod)
+                Mailer.send_ep06a(project=projekt, reason=duvod, rep_bin_file=rep_bin_file)
             else:
-                Mailer.send_ep06b(project=projekt, reason=duvod)
+                Mailer.send_ep06b(project=projekt, reason=duvod, rep_bin_file=rep_bin_file)
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         else:
             form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})

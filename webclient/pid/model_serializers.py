@@ -1,3 +1,4 @@
+import re
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Dict, List
@@ -388,7 +389,7 @@ def serialize_subjects_komponenty(komp: Komponenta):
     return result
 
 
-def serialize_dates_coverage(datace: Heslar) -> frozenset:
+def serialize_dates_coverage(datace: Heslar) -> frozenset | None:
     try:
         result = frozenset(
             {
@@ -398,7 +399,7 @@ def serialize_dates_coverage(datace: Heslar) -> frozenset:
             }.items()
         )
     except ObjectDoesNotExist:
-        result = []
+        result = None
     return result
 
 
@@ -510,13 +511,17 @@ class DokumentSerializer(ModelSerializer):
             if cast.komponenty:
                 for komp in cast.komponenty.komponenty.all():
                     komp: Komponenta
-                    dates += [serialize_dates_coverage(komp.obdobi)]
+                    serialized_date_coverage = serialize_dates_coverage(komp.obdobi)
+                    if serialized_date_coverage:
+                        dates += [serialized_date_coverage]
             if cast.archeologicky_zaznam and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY:
                 for dj in cast.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
                     dj: DokumentacniJednotka
                     for komp in dj.komponenty.komponenty.all():
                         komp: Komponenta
-                        dates += [serialize_dates_coverage(komp.obdobi)]
+                        serialized_date_coverage = serialize_dates_coverage(komp.obdobi)
+                        if serialized_date_coverage:
+                            dates += [serialized_date_coverage]
         dates = [dict(item) for item in set(dates) if item]
         return dates
 
@@ -798,7 +803,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
                 dates += [{"date": self.format_date_time(date.datum_zmeny), "dateType": "Withdrawn"}]
         try:
             if self.record.obdobi.datace_obdobi:
-                dates += [dict(serialize_dates_coverage(self.record.obdobi))]
+                serialized_date_coverage = serialize_dates_coverage(self.record.obdobi)
+                if serialized_date_coverage:
+                    dates += [dict(serialized_date_coverage)]
         except ObjectDoesNotExist:
             pass
         return dates
@@ -936,7 +943,9 @@ class LokalitaSerializer(ModelSerializer):
             dj: DokumentacniJednotka
             for komp in dj.komponenty.komponenty.all():
                 komp: Komponenta
-                dates += [serialize_dates_coverage(komp.obdobi)]
+                serialized_dates_coverage = serialize_dates_coverage(komp.obdobi)
+                if serialized_dates_coverage:
+                    dates += [serialized_dates_coverage]
         dates: List[Dict] = [dict(item) for item in set(dates) if item]
         return dates
 
@@ -1068,30 +1077,31 @@ class LokalitaSerializer(ModelSerializer):
                 ]
         for externi_odkaz in self._get_externi_odkaz_query():
             externi_odkaz: ExterniOdkaz
-            if externi_odkaz.externi_zdroj.doi:
-                related_identifiers += [
-                    {
-                        "relationType": "IsPublishedIn",
-                        "relatedIdentifier": externi_odkaz.externi_zdroj.doi,
-                        "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
-                        .filter(nazev_kodu="resourceTypeGeneral")
-                        .first()
-                        .kod,
-                        "relatedIdentifierType": "DOI",
-                    }
-                ]
-            else:
-                related_identifiers += [
-                    {
-                        "relationType": "IsPublishedIn",
-                        "relatedIdentifier": f"{settings.DIGI_LINKS['Digi_archiv_link']}{externi_odkaz.externi_zdroj.ident_cely}",
-                        "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
-                        .filter(nazev_kodu="resourceTypeGeneral")
-                        .first()
-                        .kod,
-                        "relatedIdentifierType": "URL",
-                    }
-                ]
+            if externi_odkaz.externi_zdroj.stav == EZ_STAV_POTVRZENY:
+                if externi_odkaz.externi_zdroj.doi:
+                    related_identifiers += [
+                        {
+                            "relationType": "IsPublishedIn",
+                            "relatedIdentifier": externi_odkaz.externi_zdroj.doi,
+                            "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
+                            .filter(nazev_kodu="resourceTypeGeneral")
+                            .first()
+                            .kod,
+                            "relatedIdentifierType": "DOI",
+                        }
+                    ]
+                else:
+                    related_identifiers += [
+                        {
+                            "relationType": "IsPublishedIn",
+                            "relatedIdentifier": f"{settings.DIGI_LINKS['Digi_archiv_link']}{externi_odkaz.externi_zdroj.ident_cely}",
+                            "resourceTypeGeneral": externi_odkaz.externi_zdroj.typ.heslar_odkaz.filter(zdroj="DataCite")
+                            .filter(nazev_kodu="resourceTypeGeneral")
+                            .first()
+                            .kod,
+                            "relatedIdentifierType": "URL",
+                        }
+                    ]
         return related_identifiers
 
     def _serialize_related_items(self):
@@ -1133,7 +1143,8 @@ class LokalitaSerializer(ModelSerializer):
                     related_item["publisher"] = externi_zdroj.vydavatel
                 elif not externi_zdroj.vydavatel and externi_zdroj.organizace:
                     related_item["publisher"] = externi_zdroj.organizace
-                related_item["publicationYear"] = externi_zdroj.rok_vydani_vzniku
+                if re.fullmatch(r"\d{4}", externi_zdroj.rok_vydani_vzniku):
+                    related_item["publicationYear"] = externi_zdroj.rok_vydani_vzniku
                 if externi_zdroj.edice_rada:
                     related_item["edition"] = externi_zdroj.edice_rada
                 related_item["contributors"] = [

@@ -229,9 +229,11 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         self.fields["presna_datace"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
         self.fields["projekt"] = ProjectModelChoiceField(
-            queryset=Projekt.objects.filter(typ_projektu=TYP_PROJEKTU_PRUZKUM_ID)
-            .filter(organizace__in=user.moje_spolupracujici_organizace())
-            .filter(stav__in=user.moje_stavy_pruzkumnych_projektu()),
+            queryset=Projekt.objects.filter(
+                typ_projektu=TYP_PROJEKTU_PRUZKUM_ID,
+                organizace__in=user.moje_spolupracujici_organizace(),
+                stav__in=user.moje_stavy_pruzkumnych_projektu(),
+            ).select_related("vedouci_projektu"),
             widget=forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),

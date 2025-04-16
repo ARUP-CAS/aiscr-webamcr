@@ -1,6 +1,6 @@
 import logging
 
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import Akce
 from cacheops import invalidate_model
 from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
 from core.models import SouborVazby
@@ -11,9 +11,8 @@ from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
 from dokument.models import Dokument
-from historie.models import Historie, HistorieVazby
+from historie.models import HistorieVazby
 from notifikace_projekty.tasks import check_hlidaci_pes
-from oznameni.models import Oznamovatel
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from xml_generator.models import UPDATE_REDIS_SNAPSHOT, check_if_task_queued
@@ -81,9 +80,7 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     fedora_transaction = instance.active_transaction
     invalidate_model(Projekt)
     invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
     invalidate_model(SamostatnyNalez)
-    invalidate_model(Historie)
     if not instance.suppress_signal:
 
         def save_metadata(close_transaction=False):
@@ -113,10 +110,7 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(Projekt)
     invalidate_model(Akce)
-    invalidate_model(ArcheologickyZaznam)
     invalidate_model(SamostatnyNalez)
-    invalidate_model(Historie)
-    invalidate_model(Oznamovatel)
     fedora_transaction = instance.active_transaction
     if getattr(instance, "suppress_signal", False) is not True:
         if instance.close_active_transaction_when_finished:

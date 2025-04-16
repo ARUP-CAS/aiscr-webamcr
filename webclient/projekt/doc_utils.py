@@ -109,6 +109,15 @@ class DocumentCreator(ABC):
         self.texts = {}
         self._generate_text()
 
+    @classmethod
+    def format_date(cls, date_obj: datetime.datetime | None) -> str:
+        if date_obj is None:
+            return ""
+        if os.name == "nt":
+            return date_obj.strftime("%#d. %#m. %Y")
+        else:
+            return date_obj.strftime("%-d. %-m. %Y")
+
     def _create_style_dict(self):
         self.styles.add(
             ParagraphStyle(
@@ -199,12 +208,10 @@ class DocumentCreator(ABC):
     def _create_header_tab_dates(self):
         self.texts["header_tab_1_1"] = "<strong>Oznámení ze dne</strong>"
         self.texts["header_tab_1_2"] = "<strong>Evidenční číslo</strong>"
-        self.texts["header_tab_1_3"] = f"<strong>V {DOK_VE_MESTE[self.dok_index]} dne</strong>"
-        self.texts["header_tab_2_1"] = (
-            self.projekt.datum_oznameni.strftime("%d. %m. %Y") if self.projekt.datum_oznameni else ""
-        )
+        self.texts["header_tab_1_3"] = f"<strong>{DOK_VE_MESTE[self.dok_index]} dne</strong>"
+        self.texts["header_tab_2_1"] = self.format_date(self.projekt.datum_oznameni)
         self.texts["header_tab_2_2"] = self.projekt.ident_cely
-        self.texts["header_tab_2_3"] = datetime.datetime.now().strftime("%d. %m. %Y")
+        self.texts["header_tab_2_3"] = self.format_date(datetime.datetime.now())
 
     def _create_header_tab_dates_doc(self) -> Table:
         tbl_data = [
@@ -224,23 +231,24 @@ class DocumentCreator(ABC):
 
     def _create_data_document_part(self):
         self.texts["data_part_1"] = f"<strong>Podnět oznámení</strong>: {self.projekt.podnet}"
-        self.texts[
-            "data_part_2"
-        ] = f"<strong>Katastrální území</strong>: {self.projekt.hlavni_katastr} ({self.projekt.hlavni_katastr.okres})"
+        self.texts["data_part_2"] = f"<strong>Katastrální území</strong>: {self.projekt.hlavni_katastr}"
         self.texts["data_part_3"] = f"<strong>Lokalizace</strong>: {self.projekt.lokalizace}"
         self.texts["data_part_4"] = f"<strong>Parcelní číslo</strong>: {self.projekt.parcelni_cislo}"
         self.texts["data_part_5"] = f"<strong>Označení stavby</strong>: {self.projekt.oznaceni_stavby}"
         self.texts[
             "data_part_6"
-        ] = f"<strong>Plánované zahájení</strong>: {self.projekt.planovane_zahajeni.lower.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.planovane_zahajeni else ''} - {self.projekt.planovane_zahajeni.upper.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.planovane_zahajeni else ''}"
+        ] = f"<strong>Plánované zahájení</strong>: {self.format_date(self.projekt.planovane_zahajeni.lower) if self.projekt.planovane_zahajeni else ''} - {self.format_date(self.projekt.planovane_zahajeni.upper) if self.projekt.planovane_zahajeni else ''}"
 
     def _create_signature(self):
         self.texts["doc_sign_1"] = "S pozdravem"
         self.texts["doc_sign_2"] = DOC_REDITEL[self.dok_index]
-        self.texts["doc_sign_3"] = f"ředitel<br/>Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v. v. i."
+        self.texts[
+            "doc_sign_3"
+        ] = f"ředitel<br/>Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i."
 
     def _create_signature_doc(self):
         return [
+            Paragraph("", self.body_style),
             Paragraph(self.texts.get("doc_sign_1"), self.styles.get("amSignature")),
             Paragraph(self.texts.get("doc_sign_2"), self.styles.get("amSignature")),
             Paragraph(self.texts.get("doc_sign_3"), self.styles.get("amSignature")),
@@ -296,93 +304,92 @@ class OznameniPDFCreator(DocumentCreator):
         self.texts[
             "doc_vec"
         ] = """
-        Věc: Potvrzení o splnění oznamovací povinnosti dle § 22, odst. 2 zák. č. 20/1987 Sb., o státní památkové péči,
-        v platném znění
+        Věc: Potvrzení o&nbsp;splnění oznamovací povinnosti dle §&nbsp;22, odst.&nbsp;2 zák.&nbsp;č.&nbsp;20/1987 Sb., o&nbsp;státní památkové péči,
+        v&nbsp;platném znění
         """
         self._create_data_document_part()
 
         self.texts[
             "doc_par_1"
         ] = f"""
-        Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v. v. i., obdržel dne 
-        {self.projekt.datum_oznameni.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.datum_oznameni else ''} 
-        Vaše oznámení o zahájení stavebního (či jiného) záměru na území s archeologickými nálezy 
-        {self.projekt.podnet} v k. ú. {self.projekt.hlavni_katastr} ({self.projekt.hlavni_katastr.okres}), který 
+        Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i., obdržel dne 
+        {self.format_date(self.projekt.datum_oznameni)} 
+        Vaše oznámení o&nbsp;zahájení stavebního (či jiného) záměru na území s&nbsp;archeologickými nálezy 
+        {self.projekt.podnet} v&nbsp;k.&nbsp;ú.&nbsp;{self.projekt.hlavni_katastr}, který 
         eviduje pod evidenčním číslem {self.projekt.ident_cely}. Archeologický ústav AV ČR, 
-        {DOK_MESTO[self.dok_index]}, v. v. i. sděluje, že tímto krokem byla splněna zákonná oznamovací povinnost 
-        dle ustanovení § 22 odst. 2 zákona č. 20/1987 Sb., o státní památkové péči, ve znění pozdějších předpisů.
+        {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i. sděluje, že tímto krokem byla splněna zákonná oznamovací povinnost 
+        dle ustanovení §&nbsp;22 odst.&nbsp;2 zákona č.&nbsp;20/1987 Sb., o&nbsp;státní památkové péči, ve znění pozdějších předpisů.
         """
 
         self.texts[
             "doc_par_2"
         ] = """
-        Oznamovatel je v návaznosti na oznámení povinen umožnit Archeologickému ústavu nebo oprávněné 
-        archeologické organizaci provést na dotčeném území záchranný archeologický výzkum. Informaci o konkrétní 
-        organizaci, která má zájem archeologický výzkum provést obdržíte automatickou zprávu. V případě, že záchranný 
-        archeologický výzkum nebude třeba provést, obdržíte automatickou zprávu o zrušení projektu.
+        Oznamovatel je v&nbsp;návaznosti na oznámení povinen umožnit Archeologickému ústavu nebo oprávněné 
+        archeologické organizaci provést na dotčeném území záchranný archeologický výzkum. Informaci o&nbsp;konkrétní 
+        organizaci, která má zájem archeologický výzkum provést obdržíte automatickou zprávu. V&nbsp;případě, že záchranný 
+        archeologický výzkum nebude třeba provést, obdržíte automatickou zprávu o&nbsp;zrušení projektu.
         """
 
         self.texts[
             "doc_par_3"
         ] = """
-        <strong>Toto potvrzení neslouží jako doklad o provedení záchranného archeologického výzkumu, ani jako 
+        <strong>Toto potvrzení neslouží jako doklad o&nbsp;provedení záchranného archeologického výzkumu, ani jako 
         doklad pro dodatečné stavební povolení.</strong>
         """
-
-        self._create_signature()
 
         self.texts["notes_heading"] = "<strong>Poučení</strong>"
         self.texts["notes"] = ListFlowable(
             [
                 Paragraph(
                     f"""
-                            V případě dotazů se můžete na Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v. v. i., obracet 
+                            V&nbsp;případě dotazů se můžete na Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i., obracet 
                             skrze emailovou adresu {DOK_EMAIL[self.dok_index]}.
                             """,
                     self.body_style,
                 ),
                 Paragraph(
                     f"""
-                            Výzkum je dle § 22 odst. 1 a odst. 2 zákona č. 20/1987 Sb., o státní památkové péči, 
-                            v platném znění, prováděn na základě dohody uzavřené mezi stavebníkem a Archeologickým 
-                            ústavem AV ČR nebo oprávněnou organizací. Stavebník má právo uzavřít dohodu s kteroukoliv 
+                            Výzkum je dle §&nbsp;22 odst.&nbsp;1 a&nbsp;odst.&nbsp;2 zákona č.&nbsp;20/1987 Sb., o&nbsp;státní památkové péči, 
+                            v&nbsp;platném znění, prováděn na základě dohody uzavřené mezi stavebníkem a&nbsp;Archeologickým 
+                            ústavem AV ČR nebo oprávněnou organizací. Stavebník má právo uzavřít dohodu s&nbsp;kteroukoliv 
                             organizací, oprávněnou provádět archeologické výzkumy na dotčeném území. Seznam všech 
-                            oprávněných organizací s územním rozsahem jejich působnosti naleznete na internetových 
-                            stránkách Mapa archeologických organizací (https://oao.aiscr.cz/).
+                            oprávněných organizací s&nbsp;územním rozsahem jejich působnosti naleznete na internetových 
+                            stránkách Mapa archeologických organizací 
+                            (<a href="https://oao.aiscr.cz/">https://oao.aiscr.cz/</a>).
                             """,
+                    self.body_style,
+                ),
+                Paragraph(
+                    f"""
+                        <strong>V&nbsp;případě nedohody určí podmínky výzkumu příslušný krajský úřad na základě 
+                        §&nbsp;22 odst.&nbsp;1 zákona č.&nbsp;20/1987 Sb., o&nbsp;státní památkové péči, v&nbsp;platném znění.</strong>
+                        """,
+                    self.body_style,
+                ),
+                Paragraph(
+                    f"""
+                        Za standardních okolností je záchranný archeologický výzkum prováděn formou dohledu 
+                        zemních prací, případně formou plošného terénního výzkumu předstihově nebo souběžně 
+                        se stavební činností. Konkrétní podmínky a&nbsp;metodika provedení záchranného archeologického 
+                        výzkumu jsou blíže specifikovány v&nbsp;příslušné dohodě, uzavřené mezi stavebníkem 
+                        a&nbsp;Archeologickým ústavem AV ČR nebo oprávněnou organizací dle §&nbsp;22 odst.&nbsp;1 
+                        zákona č.&nbsp;20/1987 Sb., o&nbsp;státní památkové péči, v&nbsp;platném znění.
+                        """,
+                    self.body_style,
+                ),
+                Paragraph(
+                    f"""
+                        Úhrada nákladů záchranného archeologického výzkumu se řídí ustanovením §&nbsp;22 odst.&nbsp;2 
+                        zákona č.&nbsp;20/1987 Sb., o&nbsp;státní památkové péči, v&nbsp;platném znění.
+                        """,
                     self.body_style,
                 ),
                 [
                     Paragraph(
                         f"""
-                            <strong>V případě nedohody určí podmínky výzkumu příslušný krajský úřad na základě 
-                            § 22 odst. 1 zákona č. 20/1987 Sb., o státní památkové péči, v platném znění.</strong>
-                            """,
-                        self.body_style,
-                    ),
-                    Paragraph(
-                        f"""
-                            Za standardních okolností je záchranný archeologický výzkum prováděn formou dohledu 
-                            zemních prací, případně formou plošného terénního výzkumu předstihově nebo souběžně 
-                            se stavební činností. Konkrétní podmínky a metodika provedení záchranného archeologického 
-                            výzkumu jsou blíže specifikovány v příslušné dohodě, uzavřené mezi stavebníkem 
-                            a Archeologickým ústavem AV ČR nebo oprávněnou organizací dle § 22 odst. 1 
-                            zákona č. 20/1987 Sb., o státní památkové péči, v platném znění.
-                            """,
-                        self.body_style,
-                    ),
-                    Paragraph(
-                        f"""
-                            Úhrada nákladů záchranného archeologického výzkumu se řídí ustanovením § 22 odst. 
-                            2 zákona č. 20/1987 Sb., o státní památkové péči, v platném znění.
-                            """,
-                        self.body_style,
-                    ),
-                    Paragraph(
-                        f"""
-                            <strong>Bez ohledu na to, zda v souvislosti se stavební nebo jinou činností proběhl 
+                            <strong>Bez ohledu na to, zda v&nbsp;souvislosti se stavební nebo jinou činností proběhl 
                             záchranný archeologický výzkum</strong>, Archeologický ústav AV ČR, 
-                            {DOK_EMAIL[self.dok_index]}, v. v. i., upozorňuje na:
+                            {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i. upozorňuje na:
                             """,
                         self.body_style,
                     ),
@@ -390,30 +397,30 @@ class OznameniPDFCreator(DocumentCreator):
                         [
                             Paragraph(
                                 """
-                                    Ustanovení § 266 zákona č. 283/2021 Sb., stavební zákon, v platném znění, 
+                                    Ustanovení §&nbsp;266 zákona č.&nbsp;283/2021 Sb., stavební zákon, v&nbsp;platném znění, 
                                     které stavebníkovi ukládá <strong>povinnost oznámit stavebnímu úřadu 
                                     nepředvídaný archeologický nebo paleontologický nález nebo nález kulturně 
                                     cenného předmětu, detailu stavby nebo chráněné části přírody.</strong> 
-                                    Stavebník je také povinen učinit opatření nezbytná k tomu, aby nález nebyl 
-                                    poškozen nebo zničen, práce v místě nálezu přerušit a zaznamenat do 
-                                    stavebního deníku čas a okolnosti nálezu, datum oznámení stavebnímu úřadu 
-                                    a popis provedených opatření. <strong>Tato povinnost se na stavebníka 
-                                    vztahuje bez ohledu na to, zda v souvislosti se stavební činností 
+                                    Stavebník je také povinen učinit opatření nezbytná k&nbsp;tomu, aby nález nebyl 
+                                    poškozen nebo zničen, práce v&nbsp;místě nálezu přerušit a&nbsp;zaznamenat do 
+                                    stavebního deníku čas a&nbsp;okolnosti nálezu, datum oznámení stavebnímu úřadu 
+                                    a&nbsp;popis provedených opatření. <strong>Tato povinnost se na stavebníka 
+                                    vztahuje bez ohledu na to, zda v&nbsp;souvislosti se stavební činností 
                                     proběhl záchranný archeologický výzkum.</strong>
                                     """,
                                 self.body_style,
                             ),
                             Paragraph(
                                 """
-                                    Ustanovení § 23 odst. 2 a 3 zákona č. 20/1987 Sb., o státní památkové péči, 
-                                    v platném znění, které ukládá <strong>povinnost učinit oznámení o archeologickém 
+                                    Ustanovení §&nbsp;23 odst.&nbsp;2 a&nbsp;3 zákona č.&nbsp;20/1987 Sb., o&nbsp;státní památkové péči, 
+                                    v&nbsp;platném znění, které ukládá <strong>povinnost učinit oznámení o&nbsp;archeologickém 
                                     nálezu</strong>, který nebyl učiněn při provádění archeologických výzkumů, 
-                                    a to Archeologickému ústavu nebo nejbližšímu muzeu buď přímo nebo 
-                                    prostřednictvím obce, v jejímž územním obvodu k archeologickému nálezu došlo. 
-                                    <strong>Oznámení o archeologickém nálezu je povinen učinit nálezce nebo osoba 
-                                    odpovědná za provádění prací</strong>, při nichž došlo k archeologickému nálezu, 
-                                    <strong>a to nejpozději druhého dne po archeologickém nálezu nebo potom, 
-                                    kdy se o archeologickém nálezu dověděl. Archeologický nález i naleziště 
+                                    a&nbsp;to Archeologickému ústavu nebo nejbližšímu muzeu buď přímo nebo 
+                                    prostřednictvím obce, v&nbsp;jejímž územním obvodu k&nbsp;archeologickému nálezu došlo. 
+                                    <strong>Oznámení o&nbsp;archeologickém nálezu je povinen učinit nálezce nebo osoba 
+                                    odpovědná za provádění prací</strong>, při nichž došlo k&nbsp;archeologickému nálezu, 
+                                    <strong>a&nbsp;to nejpozději druhého dne po archeologickém nálezu nebo potom, 
+                                    kdy se o&nbsp;archeologickém nálezu dověděl. Archeologický nález i&nbsp;naleziště 
                                     musí být ponechány beze změny až do prohlídky Archeologickým ústavem nebo muzeem, 
                                     nejméně však po dobu pěti pracovních dnů</strong> po učiněném oznámení. 
                                     <strong>Tato povinnost se vztahuje ke všem archeologickým nálezům učiněným 
@@ -431,6 +438,8 @@ class OznameniPDFCreator(DocumentCreator):
             bulletFormat="%s.",
         )
 
+        self._create_signature()
+
         self.texts["doc_attachment_heading_main_1"] = "PŘÍLOHA – INFORMACE O ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ"
 
         self.texts["doc_attachment_heading_main_2"] = "POUČENÍ O PRÁVECH V SOUVISLOSTI S OCHRANOU OSOBNÍCH ÚDAJŮ"
@@ -441,20 +450,20 @@ class OznameniPDFCreator(DocumentCreator):
             "doc_attachment_par_1"
         ] = """
                Prosím, věnujte pozornost následujícímu dokumentu, jehož prostřednictvím Vám poskytujeme informace
-               o zpracování Vašich osobních údajů a o právech souvisejících s Vaší povinností jako stavebníka dle
-               § 22 odst. 2 zákona č. 20/1987 Sb., o státní památkové péči (dále rovněž jen „zákon“), poskytnout informace
-               o záměru provádět stavební činnost na území s archeologickými nálezy nebo jinou činnost, kterou by m
-               ohlo být ohroženo provádění archeologických výzkumů, a to buď <strong>Archeologickému ústavu AV ČR, Praha,
-               v. v. i., IČ 67985912, se sídlem Letenská 4, 118 01 Praha 1,</strong> nebo <strong>Archeologickému ústavu
-               AV ČR, Brno, v. v. i., IČ 68081758, se sídlem Čechyňská 363/19, 602 00 Brno,</strong> jako oprávněným institucím
-               dle daného ustanovení zákona. Jakékoliv nakládání s osobními údaji se řídí platnými právními předpisy,
-               zejména zákonem o ochraně osobních údajů a nařízením Evropského parlamentu a Rady č. 2016/679
-               ze dne 27. 4. 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu
-               těchto údajů a o zrušení směrnice 95/46/ES (dále jen „obecné nařízení o ochraně osobních údajů“). V souladu
-               s ustanovením čl. 13 a následujícího obecného nařízení o ochraně osobních údajů Vám jako tzv. subjektům
-               údajů poskytujeme následující informace. Tento dokument je veřejný a slouží k Vašemu řádnému informování
-               o rozsahu, účelu, době zpracování osobních údajů a k poučení o Vašich právech v souvislosti
-               s jejich ochranou.
+               o&nbsp;zpracování Vašich osobních údajů a&nbsp;o&nbsp;právech souvisejících s&nbsp;Vaší povinností jako stavebníka dle
+               §&nbsp;22 odst.&nbsp;2 zákona č.&nbsp;20/1987 Sb., o&nbsp;státní památkové péči (dále rovněž jen „zákon“), poskytnout informace
+               o&nbsp;záměru provádět stavební činnost na území s&nbsp;archeologickými nálezy nebo jinou činnost, kterou by m
+               ohlo být ohroženo provádění archeologických výzkumů, a&nbsp;to buď <strong>Archeologickému ústavu AV ČR, Praha,
+               v.&nbsp;v.&nbsp;i., IČ 67985912, se sídlem Letenská 4, 118 01 Praha 1,</strong> nebo <strong>Archeologickému ústavu
+               AV ČR, Brno, v.&nbsp;v.&nbsp;i., IČ 68081758, se sídlem Čechyňská 363/19, 602 00 Brno,</strong> jako oprávněným institucím
+               dle daného ustanovení zákona. Jakékoliv nakládání s&nbsp;osobními údaji se řídí platnými právními předpisy,
+               zejména zákonem o&nbsp;ochraně osobních údajů a&nbsp;nařízením Evropského parlamentu a&nbsp;Rady č.&nbsp;2016/679
+               ze dne 27. 4. 2016 o&nbsp;ochraně fyzických osob v&nbsp;souvislosti se zpracováním osobních údajů a&nbsp;o&nbsp;volném pohybu
+               těchto údajů a&nbsp;o&nbsp;zrušení směrnice 95/46/ES (dále jen „obecné nařízení o&nbsp;ochraně osobních údajů“). V&nbsp;souladu
+               s&nbsp;ustanovením čl.&nbsp;13 a&nbsp;následujícího obecného nařízení o&nbsp;ochraně osobních údajů Vám jako tzv. subjektům
+               údajů poskytujeme následující informace. Tento dokument je veřejný a&nbsp;slouží k&nbsp;Vašemu řádnému informování
+               o&nbsp;rozsahu, účelu, době zpracování osobních údajů a&nbsp;k&nbsp;poučení o&nbsp;Vašich právech v&nbsp;souvislosti
+               s&nbsp;jejich ochranou.
                """
 
         self.texts[
@@ -466,8 +475,8 @@ class OznameniPDFCreator(DocumentCreator):
         self.texts[
             "doc_attachment_par_2"
         ] = """
-               Společnými správci osobních údajů jsou Archeologický ústav AV ČR, Praha, v. v. i., IČ:67985912,
-               se sídlem Letenská 4, 118 01 Praha 1, a Archeologický ústav AV ČR, Brno, v. v. i., IČ:68081758,
+               Společnými správci osobních údajů jsou Archeologický ústav AV ČR, Praha, v.&nbsp;v.&nbsp;i., IČ:67985912,
+               se sídlem Letenská 4, 118 01 Praha 1, a&nbsp;Archeologický ústav AV ČR, Brno, v.&nbsp;v.&nbsp;i., IČ:68081758,
                se sídlem Čechyňská 363/19, 602 00 Brno (dále jen <strong>„Správce“</strong> či <strong>„Archeologický ústav“</strong>).
                """
 
@@ -480,11 +489,11 @@ class OznameniPDFCreator(DocumentCreator):
         self.texts[
             "doc_attachment_par_3"
         ] = """
-               Osobními údaji jsou veškeré informace vztahující se k identifikované či identifikovatelné fyzické osobě
+               Osobními údaji jsou veškeré informace vztahující se k&nbsp;identifikované či identifikovatelné fyzické osobě
                (člověku), na základě kterých lze konkrétní fyzickou osobu přímo či nepřímo identifikovat. Mezi osobní údaje
-               tak patří široká škála informací, jako je například jméno, pohlaví, věk a datum narození, osobní stav,
+               tak patří široká škála informací, jako je například jméno, pohlaví, věk a&nbsp;datum narození, osobní stav,
                fotografie (resp. jakékoliv zobrazení podoby), rodné číslo, místo trvalého pobytu, telefonní číslo, e-mail,
-               údaje o zdravotní pojišťovně, státní občanství, údaje o zdravotním stavu (fyzickém i psychickém),
+               údaje o&nbsp;zdravotní pojišťovně, státní občanství, údaje o&nbsp;zdravotním stavu (fyzickém i&nbsp;psychickém),
                ale také otisk prstu, podpis nebo IP adresa.
                """
 
@@ -497,14 +506,14 @@ class OznameniPDFCreator(DocumentCreator):
         self.texts[
             "doc_attachment_par_4"
         ] = """
-               Vaše osobní údaje zpracováváme, jelikož nám to ukládá zákon, konkrétně § 22 odst. 2 zákona č. 20/1987 Sb.,
-               o státní památkové péči, který stanoví stavebníkovi, který má záměr provádět stavební činnost v území
-               s archeologickými nálezy, nebo jinou činnost, kterou by mohlo být ohroženo provádění archeologických
+               Vaše osobní údaje zpracováváme, jelikož nám to ukládá zákon, konkrétně §&nbsp;22 odst.&nbsp;2 zákona č.&nbsp;20/1987 Sb.,
+               o&nbsp;státní památkové péči, který stanoví stavebníkovi, který má záměr provádět stavební činnost v&nbsp;území
+               s&nbsp;archeologickými nálezy, nebo jinou činnost, kterou by mohlo být ohroženo provádění archeologických
                výzkumů, povinnost oznámit nejprve tento záměr Archeologickému ústavu. Odrazem této povinnosti stavebníka je
-               povinnost archeologického ústavu toto oznámení přijmout a zpracovat jej. Při zpracování oznámení stavebníka
+               povinnost archeologického ústavu toto oznámení přijmout a&nbsp;zpracovat jej. Při zpracování oznámení stavebníka
                dochází ze strany Archeologického ústavu ke zpracování osobních údajů stavebníka jako subjektu osobních údajů
-               dle čl. 6 odst. 1 písm. c), e) obecného nařízení o ochraně osobních údajů a Archeologický ústav je
-               v postavení Správce. Vaše osobní údaje v níže uvedeném rozsahu zpracováváme, pouze aby Vás
+               dle čl.&nbsp;6 odst.&nbsp;1 písm.&nbsp;c), e) obecného nařízení o&nbsp;ochraně osobních údajů a&nbsp;Archeologický ústav je
+               v&nbsp;postavení Správce. Vaše osobní údaje v&nbsp;níže uvedeném rozsahu zpracováváme, pouze aby Vás
                Archeologický ústav či jiná oprávněná organizace dle zákona mohly kontaktovat za účelem provedení
                záchranného archeologického průzkumu."""
 
@@ -517,8 +526,8 @@ class OznameniPDFCreator(DocumentCreator):
         self.texts[
             "doc_attachment_par_5"
         ] = """
-               Informujeme Vás, že Vaše osobní údaje jsou zpracovávány v rozsahu Vámi vyplněného formuláře, \n\
-               a to konkrétně v rozsahu:"""
+               Informujeme Vás, že Vaše osobní údaje jsou zpracovávány v&nbsp;rozsahu Vámi vyplněného formuláře,
+               a&nbsp;to konkrétně v&nbsp;rozsahu:"""
 
         self.texts["doc_attachment_par_5_bullets"] = ListFlowable(
             [
@@ -528,7 +537,7 @@ class OznameniPDFCreator(DocumentCreator):
                 Paragraph("telefonní číslo", self.styles.get("amBodyTextSmallerSpaceAfter")),
                 Paragraph("e-mail", self.styles.get("amBodyTextSmallerSpaceAfter")),
                 Paragraph(
-                    "údaje o nemovité věci (parcelní číslo a bližší specifikace předmětu oznámení).",
+                    "údaje o&nbsp;nemovité věci (parcelní číslo a&nbsp;bližší specifikace předmětu oznámení).",
                     self.styles.get("amBodyTextSmallerSpaceAfter"),
                 ),
             ],
@@ -544,8 +553,8 @@ class OznameniPDFCreator(DocumentCreator):
         self.texts[
             "doc_attachment_par_6"
         ] = """
-               Vaše osobní údaje budeme ukládat po dobu nezbytně nutnou maximálně však po dobu deseti let. Tyto lhůty \n\
-               vyplývají ze zákonných požadavků a z titulu ochrany zájmu subjektu údajů na prokázání \n\
+               Vaše osobní údaje budeme ukládat po dobu nezbytně nutnou maximálně však po dobu deseti let. Tyto lhůty
+               vyplývají ze zákonných požadavků a&nbsp;z&nbsp;titulu ochrany zájmu subjektu údajů na prokázání
                splnění své zákonné povinnosti.
                """
 
@@ -558,7 +567,7 @@ class OznameniPDFCreator(DocumentCreator):
         self.texts[
             "doc_attachment_par_7_part_1"
         ] = """
-               Osobní údaje subjektu údajů jsou zpracovávány automatizovaně v elektronické formě.
+               Osobní údaje subjektu údajů jsou zpracovávány automatizovaně v&nbsp;elektronické formě.
                Příjemci Vašich osobních údajů, resp. výsledků jejich zpracování jsou:
                """
 
@@ -572,7 +581,7 @@ class OznameniPDFCreator(DocumentCreator):
         self.texts[
             "doc_attachment_par_7_part_2"
         ] = """
-               Vaše osobní údaje nepředáváme a nemáme v úmyslu předat do třetí země nebo mezinárodní organizaci.
+               Vaše osobní údaje nepředáváme a&nbsp;nemáme v&nbsp;úmyslu předat do třetí země nebo mezinárodní organizaci.
                """
 
         self.texts[
@@ -584,32 +593,32 @@ class OznameniPDFCreator(DocumentCreator):
         self.texts[
             "doc_attachment_par_8_1"
         ] = """
-               Subjekt údajů má právo požádat Správce o poskytnutí informace o zpracování jeho osobních údajů.
+               Subjekt údajů má právo požádat Správce o&nbsp;poskytnutí informace o&nbsp;zpracování jeho osobních údajů.
                """
 
         self.texts[
             "doc_attachment_par_8_2"
         ] = """
-               Subjekt údajů má právo, aby Správce bez zbytečného odkladu opravil nepřesné osobní údaje, které se ho týkají. \n\
-               S přihlédnutím k účelům zpracování má subjekt údajů právo na doplnění neúplných osobních údajů, a to i \n\
-               poskytnutím dodatečného prohlášení.
-               Subjekt údajů má právo, aby Správce bez zbytečného odkladu vymazal osobní údaje, které se daného subjektu \n\
-               údajů týkají, a Správce má povinnost osobní údaje bez zbytečného odkladu vymazat, pokud je dán některý z důvodů \n\
-               stanovených obecným nařízením o ochraně osobních údajů.
+               Subjekt údajů má právo, aby Správce bez zbytečného odkladu opravil nepřesné osobní údaje, které se ho týkají.
+               S&nbsp;přihlédnutím k&nbsp;účelům zpracování má subjekt údajů právo na doplnění neúplných osobních údajů, a&nbsp;to
+               i&nbsp;poskytnutím dodatečného prohlášení.
+               Subjekt údajů má právo, aby Správce bez zbytečného odkladu vymazal osobní údaje, které se daného subjektu
+               údajů týkají, a&nbsp;Správce má povinnost osobní údaje bez zbytečného odkladu vymazat, pokud je dán některý z&nbsp;důvodů
+               stanovených obecným nařízením o&nbsp;ochraně osobních údajů.
                """
 
         self.texts[
             "doc_attachment_par_8_3"
         ] = """
-               Subjekt údajů má právo, aby Správce omezil zpracování osobních údajů, v případech stanovených obecným \n\
-               nařízením o ochraně osobních údajů.
+               Subjekt údajů má právo, aby Správce omezil zpracování osobních údajů, v&nbsp;případech stanovených obecným
+               nařízením o&nbsp;ochraně osobních údajů.
                """
 
         self.texts[
             "doc_attachment_par_8_4"
         ] = """
-               Pokud se subjekt údajů domnívá, že došlo k porušení právních předpisů v souvislosti s ochranou jeho osobních \n\
-               údajů, má právo podat stížnost u dozorového úřadu. Dozorovým úřadem je v České republice \n\
+               Pokud se subjekt údajů domnívá, že došlo k&nbsp;porušení právních předpisů v&nbsp;souvislosti s&nbsp;ochranou jeho osobních
+               údajů, má právo podat stížnost u&nbsp;dozorového úřadu. Dozorovým úřadem je v&nbsp;České republice
                Úřad pro ochranu osobních údajů.
                """
 
@@ -620,27 +629,29 @@ class OznameniPDFCreator(DocumentCreator):
         header: List[Paragraph] = self._create_header_oznamovatel_doc()
         tbl = self._create_header_tab_dates_doc()
         header: List[Paragraph, Table]
+        header.append(Paragraph("", body_style))
         header.append(tbl)
 
         doc = [
+            Paragraph("", body_style),
             Paragraph(self.texts.get("doc_vec"), styles["amVec"]),
+            Paragraph("", body_style),
             Paragraph(self.texts.get("data_part_1"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_2"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_3"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_4"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_5"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_6"), styles["amBodyTextSmallerSpaceAfter"]),
+            Paragraph("", body_style),
             Paragraph(self.texts.get("doc_par_1"), body_style),
             Paragraph(self.texts.get("doc_par_2"), body_style),
             Paragraph(self.texts.get("doc_par_3"), styles["amBodyTextCenter"]),
-        ]
-
-        signature = self._create_signature_doc()
-
-        notes = [
+            Paragraph("", body_style),
             Paragraph(self.texts.get("notes_heading"), body_style),
             self.texts.get("notes", body_style),
         ]
+
+        signature = self._create_signature_doc()
 
         attachment = [
             PageBreak(),
@@ -670,7 +681,7 @@ class OznameniPDFCreator(DocumentCreator):
             Paragraph(self.texts.get("doc_attachment_par_8_4"), body_style),
         ]
 
-        document_content = header + doc + signature + notes + attachment
+        document_content = header + doc + signature + attachment
         return self._generate_repository_file(my_doc, document_content, pdf_buffer)
 
 
@@ -680,23 +691,25 @@ class ZruseniPDFCreator(DocumentCreator):
     def _generate_text(self):
         self._create_header_oznamovatel()
         self._create_header_tab_dates()
-        self.texts["doc_vec"] = "Věc: Zrušení evidence záměru v informačním systému Archeologická mapa České republiky"
+        self.texts[
+            "doc_vec"
+        ] = "Věc: Zrušení evidence záměru v&nbsp;informačním systému Archeologická mapa České republiky"
         self._create_data_document_part()
 
         self.texts[
             "doc_par_1"
         ] = f"""
-        Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v. v. i., obdržel dne 
-        {self.projekt.datum_oznameni.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.datum_oznameni else ''} 
-        Vaše oznámení o zahájení stavebního (či jiného) záměru na území s archeologickými nálezy 
-        {self.projekt.podnet} v k. ú. {self.projekt.hlavni_katastr} ({self.projekt.hlavni_katastr.okres}), který 
+        Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i., obdržel dne 
+        {self.format_date(self.projekt.datum_oznameni)} 
+        Vaše oznámení o&nbsp;zahájení stavebního (či jiného) záměru na území s&nbsp;archeologickými nálezy 
+        {self.projekt.podnet} v&nbsp;k.&nbsp;ú.&nbsp;{self.projekt.hlavni_katastr}, který 
         eviduje pod evidenčním číslem {self.projekt.ident_cely}. 
         """
 
         self.texts[
             "doc_par_2"
         ] = f"""
-        Ve věci uvedeného záměru si Vám dovolujeme sdělit, že předmětný projekt byl zrušen z následujícího důvodu:
+        Ve věci uvedeného záměru si Vám dovolujeme sdělit, že předmětný projekt byl zrušen z&nbsp;následujícího důvodu:
         """
 
         self.texts["doc_par_3"] = f"<strong>{self.projekt.historie.historie_set.last().poznamka}</strong>"
@@ -706,24 +719,24 @@ class ZruseniPDFCreator(DocumentCreator):
             [
                 Paragraph(
                     f"""
-                    V případě dotazů se můžete na Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v. v. i., obracet 
+                    V&nbsp;případě dotazů se můžete na Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i., obracet 
                     skrze emailovou adresu {DOK_EMAIL[self.dok_index]}.
                     """,
                     self.body_style,
                 ),
                 Paragraph(
                     f"""
-                    Jelikož nedošlo k provedení záchranného archeologického výzkumu, nelze po Archeologickém ústavu či jiné 
-                    oprávněné organizaci, požadovat vydání potvrzení o jeho provedení pro potřeby správního řízení.
+                    Jelikož nedošlo k&nbsp;provedení záchranného archeologického výzkumu, nelze po Archeologickém ústavu či jiné 
+                    oprávněné organizaci, požadovat vydání potvrzení o&nbsp;jeho provedení pro potřeby správního řízení.
                     """,
                     self.body_style,
                 ),
                 [
                     Paragraph(
                         f"""
-                    <strong>Bez ohledu na to, zda v souvislosti se stavební nebo jinou činností proběhl záchranný 
+                    <strong>Bez ohledu na to, zda v&nbsp;souvislosti se stavební nebo jinou činností proběhl záchranný 
                     archeologický výzkum</strong>, Archeologický ústav AV ČR, 
-                    {DOK_MESTO[self.dok_index]}, v. v. i., upozorňuje na:
+                    {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i., upozorňuje na:
                     """,
                         self.body_style,
                     ),
@@ -731,26 +744,26 @@ class ZruseniPDFCreator(DocumentCreator):
                         [
                             Paragraph(
                                 """
-                                    Ustanovení § 266 zákona č. 283/2021 Sb., stavební zákon, v platném znění, které stavebníkovi ukládá 
+                                    Ustanovení §&nbsp;266 zákona č.&nbsp;283/2021 Sb., stavební zákon, v&nbsp;platném znění, které stavebníkovi ukládá 
                                     <strong>povinnost oznámit stavebnímu úřadu nepředvídaný archeologický nebo paleontologický nález nebo 
                                     nález kulturně cenného předmětu, detailu stavby nebo chráněné části přírody</strong>. Stavebník je 
-                                    také povinen učinit opatření nezbytná k tomu, aby nález nebyl poškozen nebo zničen, práce v místě 
-                                    nálezu přerušit a zaznamenat do stavebního deníku čas a okolnosti nálezu, datum oznámení stavebnímu 
-                                    úřadu a popis provedených opatření. <strong>Tato povinnost se na stavebníka vztahuje bez ohledu na 
-                                    to, zda v souvislosti se stavební činností proběhl záchranný archeologický výzkum.</strong>
+                                    také povinen učinit opatření nezbytná k&nbsp;tomu, aby nález nebyl poškozen nebo zničen, práce v&nbsp;místě 
+                                    nálezu přerušit a&nbsp;zaznamenat do stavebního deníku čas a&nbsp;okolnosti nálezu, datum oznámení stavebnímu 
+                                    úřadu a&nbsp;popis provedených opatření. <strong>Tato povinnost se na stavebníka vztahuje bez ohledu na 
+                                    to, zda v&nbsp;souvislosti se stavební činností proběhl záchranný archeologický výzkum.</strong>
                                     """,
                                 self.body_style,
                             ),
                             Paragraph(
                                 """
-                                Ustanovení § 23 odst. 2 a 3 zákona č. 20/1987 Sb., o státní památkové péči, v platném znění, které 
-                                ukládá <strong>povinnost učinit oznámení o archeologickém nálezu</strong>, který nebyl učiněn při 
-                                provádění archeologických výzkumů, a to Archeologickému ústavu nebo nejbližšímu muzeu buď přímo 
-                                nebo prostřednictvím obce, v jejímž územním obvodu k archeologickému nálezu došlo. 
-                                <strong>Oznámení o archeologickém nálezu je povinen učinit nálezce nebo osoba odpovědná za 
-                                provádění prací, při nichž došlo k archeologickému nálezu, a to nejpozději druhého dne po 
-                                archeologickém nálezu nebo potom, kdy se o archeologickém nálezu dověděl. Archeologický nález 
-                                i naleziště musí být ponechány beze změny až do prohlídky Archeologickým ústavem nebo muzeem, 
+                                Ustanovení §&nbsp;23 odst.&nbsp;2 a&nbsp;3 zákona č.&nbsp;20/1987 Sb., o&nbsp;státní památkové péči, v&nbsp;platném znění, které 
+                                ukládá <strong>povinnost učinit oznámení o&nbsp;archeologickém nálezu</strong>, který nebyl učiněn při 
+                                provádění archeologických výzkumů, a&nbsp;to Archeologickému ústavu nebo nejbližšímu muzeu buď přímo 
+                                nebo prostřednictvím obce, v&nbsp;jejímž územním obvodu k&nbsp;archeologickému nálezu došlo. 
+                                <strong>Oznámení o&nbsp;archeologickém nálezu je povinen učinit nálezce nebo osoba odpovědná za 
+                                provádění prací, při nichž došlo k&nbsp;archeologickému nálezu, a&nbsp;to nejpozději druhého dne po 
+                                archeologickém nálezu nebo potom, kdy se o&nbsp;archeologickém nálezu dověděl. Archeologický nález 
+                                i&nbsp;naleziště musí být ponechány beze změny až do prohlídky Archeologickým ústavem nebo muzeem, 
                                 nejméně však po dobu pěti pracovních dnů po učiněném oznámení. Tato povinnost se vztahuje ke všem 
                                 archeologickým nálezům učiněným mimo archeologický výzkum nebo stavební činnost.</strong>
                                 """,
@@ -775,19 +788,24 @@ class ZruseniPDFCreator(DocumentCreator):
         header: List[Paragraph] = self._create_header_oznamovatel_doc()
         tbl = self._create_header_tab_dates_doc()
         header: List[Paragraph, Table]
+        header.append(Paragraph("", body_style))
         header.append(tbl)
 
         doc = [
+            Paragraph("", body_style),
             Paragraph(self.texts.get("doc_vec"), styles["amVec"]),
+            Paragraph("", body_style),
             Paragraph(self.texts.get("data_part_1"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_2"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_3"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_4"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_5"), styles["amBodyTextSmallerSpaceAfter"]),
             Paragraph(self.texts.get("data_part_6"), styles["amBodyTextSmallerSpaceAfter"]),
+            Paragraph("", body_style),
             Paragraph(self.texts.get("doc_par_1"), body_style),
             Paragraph(self.texts.get("doc_par_2"), body_style),
             Paragraph(self.texts.get("doc_par_3"), body_style),
+            Paragraph("", body_style),
             Paragraph(self.texts.get("notes_heading"), body_style),
             self.texts.get("notes", body_style),
         ]
