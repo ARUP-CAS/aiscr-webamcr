@@ -103,10 +103,21 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         return results
 
     @classmethod
+    def _doi_item_exists(cls, doi: str) -> list:
+        url = f"https://doi.org/{doi}"
+        resp = requests.head(url, allow_redirects=True, timeout=5)
+        if resp.status_code < 400:
+            return [[doi, doi]]
+        else:
+            return []
+
+    @classmethod
     def api_call(cls, q, use_cache=False):
         results = cls._api_call_cross_ref_doi(q)
         if not results:
             results = cls._api_call_data_cite(q) + cls._api_call_cross_ref_title(q)
+        if not results:
+            results = cls._doi_item_exists(q)
         return results
 
 
