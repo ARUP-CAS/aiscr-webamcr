@@ -62,8 +62,6 @@ def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **
             eo.delete()
     if instance.historie and instance.historie.pk:
         instance.historie.delete()
-    if instance.soubory and instance.soubory.pk:
-        instance.soubory.delete()
     logger.debug(
         "ez.signals.delete_externi_zdroj_repository_container.end",
         extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)},
