@@ -169,7 +169,7 @@ class Mailer:
             "services.mailer._log_notification",
             extra={
                 "notification_type": notification_type,
-                "pk": user_object.pk,
+                "subject": str(user_object),
                 "address": receiver_address,
             },
         )
@@ -739,8 +739,8 @@ class Mailer:
                     "services.mailer.get_ep06_attachments.attachment_not_loaded_from_fedora",
                     extra={
                         "ident_cely": project.ident_cely,
-                        "repository_uuid": project_file.repository_uuid,
-                        "soubor_pk": project_file.pk,
+                        "uuid": project_file.repository_uuid,
+                        "pk": project_file.pk,
                     },
                 )
         return attachment

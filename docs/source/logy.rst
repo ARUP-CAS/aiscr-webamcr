@@ -263,6 +263,14 @@ Nastavení Elasticsearch je součástí docker-compose.yml souborů.
          "created": {
             "type": "boolean"
          },
+         "custom_message": {
+            "type": "text",
+            "fields": {
+               "Keyword": {
+               "type": "keyword"
+               }
+            }
+         },
          "data": {
             "type": "text",
             "fields": {
@@ -418,9 +426,6 @@ Nastavení Elasticsearch je součástí docker-compose.yml souborů.
                }
             }
          },
-         "hp_pk": {
-            "type": "long"
-         },
          "hv_pk": {
             "type": "long"
          },
@@ -534,14 +539,8 @@ Nastavení Elasticsearch je součástí docker-compose.yml souborů.
                }
             }
          },
-         "logout_time": {
-            "type": "text",
-            "fields": {
-               "keyword": {
-               "type": "keyword",
-               "ignore_above": 256
-               }
-            }
+         "maximum": {
+            "type": "long"
          },
          "message": {
             "type": "text",
@@ -948,10 +947,11 @@ Nastavení Elasticsearch je součástí docker-compose.yml souborů.
    }
    }
 
+
 Použité názvy atributů parametru extra v Django log
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Toto je seznam doporučených jmen atributá extra při logování v Django. Je možné použít 
-jakékoliv jiné, ale obsah těchto proměnných je indexován a je možné 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Toto je seznam doporučených jmen atributů extra při logování v Django. Je možné použít 
+jakékoliv jiné názvy, ale obsah vyjmenovaných proměnných je indexován a je možné 
 hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 
 +--------------------+---------+
