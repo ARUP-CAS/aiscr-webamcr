@@ -1062,7 +1062,10 @@ class Permissions(models.Model):
                 self.object = get_record_from_ident(self.ident)
                 self.permission_object = self.object.get_permission_object()
             except Exception as e:
-                logger.error(e)
+                logger.warning(
+                    "core.models.Permission.get_permission_object.object_error",
+                    extra={"error": e, "ident_cely": self.ident},
+                )
                 self.permission_object = "error"
 
     def permission_override(self):
