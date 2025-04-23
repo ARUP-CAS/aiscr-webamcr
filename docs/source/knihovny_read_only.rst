@@ -56,7 +56,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.1.7
+     - 5.2
      - BSD License
      - https://www.djangoproject.com/
    * - Jinja2
@@ -96,7 +96,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - UNKNOWN
    * - XlsxWriter
-     - 3.2.2
+     - 3.2.3
      - BSD License
      - https://github.com/jmcnamara/XlsxWriter
    * - alabaster
@@ -120,7 +120,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://babel.pocoo.org/
    * - beautifulsoup4
-     - 4.13.3
+     - 4.13.4
      - MIT License
      - https://www.crummy.com/software/BeautifulSoup/bs4/
    * - billiard
@@ -132,7 +132,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/psf/black
    * - celery
-     - 5.4.0
+     - 5.5.1
      - BSD License
      - https://docs.celeryq.dev/
    * - certifi
@@ -176,8 +176,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.7.0
-     - Apache Software License
+     - 7.8.0
+     - Apache-2.0
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
      - 2024.10
@@ -216,27 +216,23 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://django-autocomplete-light.rtfd.org
    * - django-cacheops
-     - 7.1
+     - 7.2
      - BSD License
      - http://github.com/Suor/django-cacheops
    * - django-celery-beat
-     - 2.7.0
+     - 2.8.0
      - BSD License
      - https://github.com/celery/django-celery-beat
-   * - django-celery-results
-     - 2.5.1
-     - BSD License
-     - https://github.com/celery/django-celery-results
    * - django-compressor
      - 4.5.1
      - MIT License
      - https://django-compressor.readthedocs.io/en/latest/
    * - django-crispy-forms
-     - 2.3
+     - 2.4
      - MIT License
      - https://github.com/django-crispy-forms/django-crispy-forms
    * - django-debug-toolbar
-     - 5.0.1
+     - 5.1.0
      - BSD License
      - https://github.com/django-commons/django-debug-toolbar
    * - django-debug-toolbar-template-profiler
@@ -244,8 +240,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/node13h/django-debug-toolbar-template-profiler
    * - django-extensions
-     - 3.2.3
-     - MIT License
+     - 4.1
+     - UNKNOWN
      - https://github.com/django-extensions/django-extensions
    * - django-filter
      - 25.1
@@ -264,7 +260,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/jazzband/django-model-utils
    * - django-object-actions
-     - 4.3.0
+     - 5.0.0
      - Apache Software License
      - https://github.com/crccheck/django-object-actions
    * - django-prometheus
@@ -272,15 +268,15 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://github.com/korfuri/django-prometheus
    * - django-recaptcha
-     - 4.0.0
+     - 4.1.0
      - BSD License
-     - https://github.com/torchbox/django-recaptcha
+     - https://github.com/django-recaptcha/django-recaptcha
    * - django-registration
-     - 5.1.0
+     - 5.2.1
      - BSD License
      - UNKNOWN
    * - django-rosetta
-     - 0.10.1
+     - 0.10.2
      - MIT License
      - https://github.com/mbi/django-rosetta
    * - django-tables2
@@ -299,8 +295,12 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.5.0
      - MIT License
      - https://github.com/jazzband/django-widget-tweaks
+   * - django_celery_results
+     - 2.6.0
+     - BSD License
+     - https://github.com/celery/django-celery-results
    * - djangorestframework
-     - 3.15.2
+     - 3.16.0
      - BSD License
      - https://www.django-rest-framework.org/
    * - djangorestframework-xml
@@ -328,8 +328,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.6.9
-     - MIT License
+     - 2.6.10
+     - MIT
      - https://github.com/pre-commit/identify
    * - idna
      - 3.10
@@ -348,7 +348,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/PyCQA/isort/releases
    * - kombu
-     - 5.5.2
+     - 5.5.3
      - BSD License
      - https://kombu.readthedocs.io
    * - libsass
@@ -356,23 +356,23 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://sass.github.io/libsass-python/
    * - lxml
-     - 5.3.1
+     - 5.3.2
      - BSD License
      - https://lxml.de/
    * - multivolumefile
      - 0.2.3
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://github.com/miurahr/multivolume
-   * - mypy-extensions
-     - 1.0.0
-     - MIT License
+   * - mypy_extensions
+     - 1.1.0
+     - UNKNOWN
      - https://github.com/python/mypy_extensions
    * - nodeenv
      - 1.9.1
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.2.4
+     - 2.2.5
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -388,7 +388,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; MIT License
      - https://github.com/python-trio/outcome
    * - packaging
-     - 24.2
+     - 25.0
      - Apache Software License; BSD License
      - https://github.com/pypa/packaging
    * - pandas
@@ -404,7 +404,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.1
+     - 9.0.3
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -412,15 +412,15 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/hMatoba/Piexif
    * - pillow
-     - 11.1.0
-     - CMU License (MIT-CMU)
+     - 11.2.1
+     - UNKNOWN
      - https://python-pillow.github.io
    * - platformdirs
      - 4.3.7
      - MIT License
      - https://github.com/tox-dev/platformdirs
    * - polars
-     - 1.25.2
+     - 1.27.1
      - MIT License
      - https://www.pola.rs/
    * - polib
@@ -428,7 +428,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/izimobil/polib/
    * - pre_commit
-     - 4.1.0
+     - 4.2.0
      - MIT License
      - https://github.com/pre-commit/pre-commit
    * - prometheus_client
@@ -436,9 +436,9 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/prometheus/client_python
    * - prompt_toolkit
-     - 3.0.50
+     - 3.0.51
      - BSD License
-     - https://github.com/prompt-toolkit/python-prompt-toolkit
+     - UNKNOWN
    * - psutil
      - 7.0.0
      - BSD License
@@ -500,7 +500,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://github.com/ahupp/python-magic
    * - pytz
-     - 2025.1
+     - 2025.2
      - MIT License
      - http://pythonhosted.org/pytz
    * - pyzstd
@@ -524,7 +524,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.3.1
+     - 4.4.0
      - BSD License
      - https://www.reportlab.com/
    * - requests
@@ -540,7 +540,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - CC0 1.0 Universal (CC0 1.0) Public Domain Dedication; Zero-Clause BSD (0BSD)
      - https://github.com/AA-Turner/roman-numerals/blob/master/CHANGES.rst
    * - selenium
-     - 4.29.0
+     - 4.31.0
      - Apache Software License
      - https://www.selenium.dev
    * - simplejson
@@ -564,7 +564,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 2.6
+     - 2.7
      - MIT License
      - https://github.com/facelessuser/soupsieve
    * - sphinxcontrib-applehelp
@@ -616,8 +616,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
-     - 0.29.0
-     - Apache Software License; MIT License
+     - 0.30.0
+     - UNKNOWN
      - https://github.com/python-trio/trio
    * - trio-websocket
      - 0.12.2
@@ -632,7 +632,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/python/tzdata
    * - uWSGI
-     - 2.0.28
+     - 2.0.29
      - GNU General Public License v2 or later (GPLv2+)
      - https://uwsgi-docs.readthedocs.io/en/latest/
    * - urllib3
