@@ -39,6 +39,40 @@ body {
   }
 }
 
+@media (max-width: 600px) {
+  .test-version {
+    display: none;
+  }
+
+  .test-version-mobile {
+    font-size: 12px;
+    background-color: #ffffff;
+    color: #ff0000;
+    display: block;
+
+    p {
+      margin-bottom: 0px !important;
+    }
+  }
+}
+
+@media (min-width: 600px) {
+  .test-version {
+    font-size: 15px;
+    background-color: #ffffff;
+    color: #ff0000;
+    display: block;
+
+    p {
+      margin-bottom: 0px !important;
+    }
+  }
+
+  .test-version-mobile {
+    display: none;
+  }
+}
+
 .maintenance {
   font-size: 20px;
   background-color: #322348;

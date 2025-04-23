@@ -107,6 +107,15 @@
   {% block sidebar %}{% endblock %}
   <div id="app-page-wrapper">
     {% block infobar%}
+    {% get_test_env as test_env %}
+    {% if test_env %}
+      <div class="test-version">
+        <p class="d-block px-3 py-2 text-center text-bold text-red old-bv">{% trans "base.testing_env.text" %}</p>
+      </div>
+      <div class="test-version-mobile">
+        <p class="d-block px-3 py-2 text-center text-bold text-red old-bv">{% trans "base.testing_env.text_mobile" %}</p>
+      </div>
+      {% endif %}
       {% get_maintenance as action %}
       {% if action %}
       <div class="maintenance">

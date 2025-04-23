@@ -24,6 +24,16 @@ class LokalitaTable(SearchTable):
         default="",
         accessor="archeologicky_zaznam__hlavni_katastr",
     )
+    okres = tables.Column(
+        verbose_name=_("lokalita.tables.lokalitaTable.okres.label"),
+        default="",
+        accessor="archeologicky_zaznam__hlavni_katastr__okres",
+    )
+    kraj = tables.Column(
+        verbose_name=_("lokalita.tables.lokalitaTable.kraj.label"),
+        default="",
+        accessor="archeologicky_zaznam__hlavni_katastr__okres__kraj",
+    )
     stav = tables.columns.Column(
         verbose_name=_("lokalita.tables.lokalitaTable.stav.label"), default="", accessor="archeologicky_zaznam__stav"
     )
@@ -56,7 +66,7 @@ class LokalitaTable(SearchTable):
         accessor="archeologicky_zaznam__pristupnost",
     )
 
-    columns_to_hide = ("igsn", "pristupnost", "uzivatelske_oznaceni", "dalsi_katastry")
+    columns_to_hide = ("igsn", "pristupnost", "uzivatelske_oznaceni", "dalsi_katastry", "okres", "kraj")
     app = "lokalita"
     first_columns = None
 
@@ -76,6 +86,8 @@ class LokalitaTable(SearchTable):
             "pristupnost",
             "uzivatelske_oznaceni",
             "katastr",
+            "okres",
+            "kraj",
             "dalsi_katastry",
             "nazev",
             "typ_lokality",

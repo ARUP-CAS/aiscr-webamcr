@@ -379,17 +379,16 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def remove_gps_data(cls, bytes_io: io.BytesIO) -> io.BytesIO:
         try:
             img = Image.open(bytes_io)
+            exif_data = img.info.get("exif")
+            if exif_data:
+                exif_dict = piexif.load(exif_data)
+            else:
+                bytes_io.seek(0)
+                return bytes_io
         except Exception as err:
             logger.warning("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"err": err})
             bytes_io.seek(0)
             return bytes_io
-        exif_data = img.getexif()
-        if not exif_data:
-            bytes_io.seek(0)
-            return bytes_io
-
-        exif_dict = piexif.load(img.info.get("exif"))
-
         # Odstranění GPS dat, pokud existují
         if "GPS" in exif_dict and exif_dict["GPS"] != {}:
             del exif_dict["GPS"]
@@ -1063,7 +1062,10 @@ class Permissions(models.Model):
                 self.object = get_record_from_ident(self.ident)
                 self.permission_object = self.object.get_permission_object()
             except Exception as e:
-                logger.error(e)
+                logger.warning(
+                    "core.models.Permission.get_permission_object.object_error",
+                    extra={"error": e, "ident_cely": self.ident},
+                )
                 self.permission_object = "error"
 
     def permission_override(self):

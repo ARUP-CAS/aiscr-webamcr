@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load template_filters %}
+{% load template_tags %}
 {% load i18n %}
 {% load compress %}
 {% load static %}
@@ -22,13 +23,13 @@
         </div>
         <div class="col-3 d-print-none align-self-center">
             <div class="float-right">
-                <button onclick="copy_html()">
-                    <span class="material-icons">content_copy</span>
-                </button>
                 <button onclick="window.print()">
                     <span class="material-icons">print</span>
                 </button>
             </div>
+        </div>
+        <div class="col-9">
+            <p>{% trans "vypis.templates.vypis_list.datum_sestaveni" %}: {% get_datetime_now %}</p>
         </div>
     </div>
     {% include "vypis/vypis_only.html" %}

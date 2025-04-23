@@ -60,7 +60,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     CACHE_PREFIX = "DOI"
 
     @classmethod
-    def api_call(cls, q, use_cache=False):
+    def _api_call_data_cite(cls, q):
         params = {
             "query": f"doi:*{q.upper()}*",
         }
@@ -73,6 +73,51 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
                 title = record.get("attributes").get("titles")[0].get("title") or record.get("id")
                 id = record.get("id")
                 results.append([id, f"{title} ({id})"])
+        return results
+
+    @classmethod
+    def _api_call_cross_ref_doi(cls, q):
+        base_url = f"https://api.crossref.org/works/{q}"
+        response = requests.get(base_url)
+        if response.status_code == 200:
+            response = response.json()
+            if response.get("message").get("title"):
+                title = response.get("message").get("title")[0]
+            else:
+                title = response.get("message").get("DOI")
+            id = response.get("message").get("DOI")
+            return [[id, f"{title} ({id})"]]
+
+    @classmethod
+    def _api_call_cross_ref_title(cls, q):
+        base_url = f"https://api.crossref.org/works"
+        params = {"query.title": q}
+        response = requests.get(base_url, params=params)
+        results = []
+        if response.status_code == 200:
+            response = response.json()
+            for record in response.get("message").get("items", []):
+                title = record.get("title")[0] if record.get("title") else record.get("id")
+                id = record.get("DOI")
+                results.append([id, f"{title} ({id})"])
+        return results
+
+    @classmethod
+    def _doi_item_exists(cls, doi: str) -> list:
+        url = f"https://doi.org/{doi}"
+        resp = requests.head(url, allow_redirects=True, timeout=5)
+        if resp.status_code < 400:
+            return [[doi, doi]]
+        else:
+            return []
+
+    @classmethod
+    def api_call(cls, q, use_cache=False):
+        results = cls._api_call_cross_ref_doi(q)
+        if not results:
+            results = cls._api_call_data_cite(q) + cls._api_call_cross_ref_title(q)
+        if not results:
+            results = cls._doi_item_exists(q)
         return results
 
 
@@ -186,14 +231,17 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
 class ContinuePidProcessing(AdminRecordProcessingView):
     @staticmethod
     def _perform_client_action(record, attribute_name, publish_callable_method, set_callable_method=None):
-        result = publish_callable_method()
-        if set_callable_method:
-            set_callable_method()
-            record.save()
-            if isinstance(record, ArcheologickyZaznam):
-                record.lokalita.active_transaction = record.active_transaction
-                record.lokalita.save()
-        return result.get("data", {}).get("id")
+        try:
+            result = publish_callable_method()
+            if set_callable_method:
+                set_callable_method()
+                record.save()
+                if isinstance(record, ArcheologickyZaznam):
+                    record.lokalita.active_transaction = record.active_transaction
+                    record.lokalita.save()
+            return result.get("data", {}).get("id")
+        except Exception as e:
+            return f"{_('core.admin.FedoraCustomAdminSite.unexpected_error')}: {e}"
 
     def process_record(self, record, result, **kwargs):
         fedora_transaction = FedoraTransaction()
