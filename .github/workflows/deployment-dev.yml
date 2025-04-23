@@ -1,4 +1,7 @@
 name: Deployment to DEV environment
+permissions:
+  contents: read
+  packages: read
 
 on:
   workflow_dispatch :

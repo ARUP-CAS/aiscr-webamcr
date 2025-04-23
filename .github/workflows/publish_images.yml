@@ -1,4 +1,5 @@
 name: Build and publish Docker images
+  
 on:
   workflow_call:
     inputs:
