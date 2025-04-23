@@ -110,8 +110,10 @@ jobs:
   docker_deploy:
     needs: new_version
     permissions:
-      actions: read
+      id-token: write
+      packages: write
       contents: read
+      attestations: write
     uses: ./.github/workflows/publish_images.yml
     with:
       tag: ${{ inputs.new_tag }}
