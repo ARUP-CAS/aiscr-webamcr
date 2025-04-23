@@ -11,6 +11,9 @@ on:
 jobs:
   update_files:
     name: Update citation and libraries list
+    permissions:
+      id-token: write
+      contents: write
     runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.set-sha.outputs.sha }}
@@ -82,6 +85,9 @@ jobs:
   new_version:
     name: Create new tag
     needs: update_files
+    permissions:
+      contents: write
+      deployments: write
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -103,6 +109,11 @@ jobs:
 
   docker_deploy:
     needs: new_version
+    permissions:
+      id-token: write
+      packages: write
+      contents: read
+      attestations: write
     uses: ./.github/workflows/publish_images.yml
     with:
       tag: ${{ inputs.new_tag }}
