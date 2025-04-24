@@ -19,6 +19,7 @@ from django.utils.translation import gettext as _
 from oznameni.tests.test_selenium import OznameniSeleniumTest
 from projekt.models import Projekt
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 
 logger = logging.getLogger("tests")
 
@@ -150,6 +151,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
             + (datetime.datetime.today() + datetime.timedelta(days=date_to)).strftime("%d.%m.%Y")
         )
         self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys(datum)
+        self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys(Keys.ESCAPE)
         self.ElementClick(By.ID, "id_oznamovatel")
         self.driver.find_element(By.ID, "id_oznamovatel").send_keys("test")
         self.driver.find_element(By.ID, "id_odpovedna_osoba").send_keys("test")
