@@ -116,8 +116,9 @@ def auto_logout_client(request):
         ctx["seconds_until_idle_end"] = int(until_logout.total_seconds()) - 60
         ctx["redirect_to_login_immediately"] = "logoutFunction"
         ctx["extra_param"] = mark_safe({"logout_type": "maintenance"})
-        if cache.get(request.user.id + "logout_warning", True):
-            cache.set(request.user.id + "logout_warning", False, 600)
+        user_cache = str(request.user.id) + "logout_warning"
+        if cache.get(user_cache, True):
+            cache.set(user_cache, False, 600)
             ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5
             ctx["logout_warning_text"] = mark_safe("MAINTENANCE_LOGOUT_WARNING")
         ctx["maintenance"] = mark_safe("true")

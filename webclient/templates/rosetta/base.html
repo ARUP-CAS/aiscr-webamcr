@@ -7,14 +7,11 @@
     <link rel="stylesheet" href="{% static "admin/css/base.css" %}" type="text/css"/>
     <link rel="stylesheet" href="{% static "admin/css/forms.css" %}" type="text/css"/>
     <link rel="stylesheet" href="{% static "admin/css/changelists.css" %}" type="text/css"/>
-    <style type="text/css" media="screen">
-        {% include 'rosetta/css/rosetta.css' %}
-    </style>
+    <link rel="stylesheet" href="{% static "admin/rosetta/css/rosetta.css" %}" type="text/css"/>
     <script src="{% static '/js/jquery-3.7.1.min.js' %}"></script>
     {% block extra_styles %}{% endblock %}
-    <script type="text/javascript">
-        {% include 'rosetta/js/rosetta.js' %}
-    </script>
+    {{ rosetta_settings_js|json_script:"rosetta-settings-js" }}
+        <script src="{% static "admin/rosetta/js/rosetta.js" %}"></script>
 </head>
 <body>
     <div id="container">
