@@ -75,7 +75,11 @@ from core.message_constants import (
 from core.models import Permissions
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.repository_connector import (
+    FedoraRepositoryConnector,
+    FedoraTransaction,
+    FedoraUpdatedByAnotherTransactionError,
+)
 from core.utils import (
     get_heatmap_project,
     get_num_projects_from_envelope,
@@ -1278,11 +1282,19 @@ def generovat_oznameni(request, ident_cely):
         messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
         return redirect(projekt.get_absolute_url())
     fedora_transaction = projekt.create_transaction(request.user)
-    rep_bin_file = projekt.create_confirmation_document(fedora_transaction, additional=True, user=request.user)
-    if request.POST.get("odeslat_oznamovateli", False):
-        projekt.send_ep01(rep_bin_file)
-    projekt.close_active_transaction_when_finished = True
-    projekt.save()
+    try:
+        rep_bin_file = projekt.create_confirmation_document(fedora_transaction, additional=True, user=request.user)
+        if request.POST.get("odeslat_oznamovateli", False):
+            projekt.send_ep01(rep_bin_file)
+        projekt.close_active_transaction_when_finished = True
+        projekt.save()
+    except FedoraUpdatedByAnotherTransactionError as err:
+        logger.debug("projekt.views.generovat_oznameni.failed_another_transaction", extra={"error": err})
+        help_translation = _("projekt.views.generovat_oznameni.failed_another_transaction")
+        messages.add_message(request, messages.ERROR, help_translation)
+    else:
+        help_translation = _("projekt.views.generovat_oznameni.success")
+        messages.add_message(request, messages.SUCCESS, help_translation)
     return redirect(projekt.get_absolute_url())
 
 
