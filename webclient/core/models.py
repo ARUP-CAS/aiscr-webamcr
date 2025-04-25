@@ -29,7 +29,6 @@ from heslar.hesla_dynamicka import (
 from historie.models import Historie, HistorieVazby
 from nalez.models import NalezObjekt, NalezPredmet
 from notifikace_projekty.models import Pes
-from pian.models import Pian
 from PIL import Image
 from uzivatel.models import User
 from xml_generator.models import ModelWithMetadata
@@ -576,56 +575,6 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
 
     def __str__(self) -> str:
         return "{}: {} {}".format(_("core.model.OdstavkaSystemu.text"), self.datum_odstavky, self.cas_odstavky)
-
-
-class GeomMigrationJobError(ExportModelOperationsMixin("geom_migration_job_error"), models.Model):
-    """
-    Model pro tabulku s chybami jobu geaom migracií.
-    """
-
-    pian = models.ForeignKey(Pian, on_delete=models.CASCADE)
-
-    class Meta:
-        abstract = True
-
-
-class GeomMigrationJobSJTSKError(ExportModelOperationsMixin("geom_migration_job_sjtsk_error"), GeomMigrationJobError):  # type: ignore pylance to ignore error
-    """
-    Model pro tabulku s chybami jobu geaom SJTSK migracií.
-    """
-
-    class Meta:
-        db_table = "amcr_geom_migrations_jobs_sjtsk_errors"
-        abstract = False
-
-
-class GeomMigrationJobWGS84Error(ExportModelOperationsMixin("geom_migration_job_wgs84_error"), GeomMigrationJobError):  # type: ignore pylance to ignore error
-    """
-    Model pro tabulku s chybami jobu geaom WGS84 migracií.
-    """
-
-    class Meta:
-        db_table = "amcr_geom_migrations_jobs_wgs84_errors"
-        abstract = False
-
-
-class GeomMigrationJob(ExportModelOperationsMixin("geom_migration_job"), models.Model):
-    """
-    Model pro tabulku jobu geaom migracií.
-    """
-
-    typ = models.TextField()
-    count_selected_wgs84 = models.IntegerField(default=0)
-    count_selected_sjtsk = models.IntegerField(default=0)
-    count_updated_wgs84 = models.IntegerField(default=0)
-    count_updated_sjtsk = models.IntegerField(default=0)
-    count_error_wgs84 = models.IntegerField(default=0)
-    count_error_sjtsk = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    detail = models.TextField(null=True)
-
-    class Meta:
-        db_table = "amcr_geom_migrations_jobs"
 
 
 class Permissions(models.Model):

@@ -89,16 +89,15 @@ def send_notifications_en():
 def pian_to_sjtsk():
 
     query_select = (
-        "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,ST_AsText(pian.geom_sjtsk) as geometry_sjtsk "
+        "select pian.id,ST_AsText(pian.geom) as geometry "
         " from public.pian pian "
         " where pian.geom is not null "
-        " and (pian.geom_sjtsk is null or geom_system in ('5514*','sjtsk*'))"
-        " and pian.id not in (select pian_id from public.amcr_geom_migrations_jobs_wgs84_errors)"
+        " and (pian.geom_sjtsk is null)"
         " order by pian.id"
     )
     query_update = (
         "update public.pian pian "
-        " set geom_sjtsk = ST_GeomFromText(%s), geom_sjtsk_updated_at=CURRENT_TIMESTAMP "
+        " set geom_sjtsk = ST_GeomFromText(%s)"
         " where pian.geom_sjtsk is null and pian.id=%s "
     )
     pians = Pian.objects.raw(query_select)
@@ -117,16 +116,15 @@ def pian_to_sjtsk():
 @shared_task
 def nalez_to_sjtsk():
     query_select = (
-        "select samostatny_nalez.id,samostatny_nalez.ident_cely,ST_AsText(samostatny_nalez.geom) as geometry,ST_AsText(samostatny_nalez.geom_sjtsk) as geometry_sjtsk "
+        "select samostatny_nalez.id, ST_AsText(samostatny_nalez.geom) as geometry "
         " from public.samostatny_nalez "
         " where samostatny_nalez.geom is not null "
-        " and (samostatny_nalez.geom_sjtsk is null or geom_system in ('5514*','sjtsk*'))"
-        " and samostatny_nalez.id not in (select pian_id from public.amcr_geom_migrations_jobs_wgs84_errors)"
+        " and (samostatny_nalez.geom_sjtsk is null)"
         " order by samostatny_nalez.id"
     )
     query_update = (
         "update public.samostatny_nalez "
-        " set geom_sjtsk = ST_GeomFromText(%s), geom_sjtsk_updated_at=CURRENT_TIMESTAMP "
+        " set geom_sjtsk = ST_GeomFromText(%s) "
         " where samostatny_nalez.geom_sjtsk is null and samostatny_nalez.id=%s "
     )
     SNs = SamostatnyNalez.objects.raw(query_select)
