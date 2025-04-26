@@ -565,17 +565,15 @@ def pians_properties_check():
     """
     from django.contrib.gis.db.models.functions import Centroid
     from django.contrib.gis.geos import GeometryCollection, LineString, MultiPolygon, Point, Polygon
-    from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR
+    from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
     from pian.models import get_ZM_from_point
 
     geom_type = {}
     geom_type[str(Point)] = Heslar.objects.get(id=GEOMETRY_BOD)
     geom_type[str(LineString)] = Heslar.objects.get(id=GEOMETRY_LINIE)
     geom_type[str(Polygon)] = Heslar.objects.get(id=GEOMETRY_PLOCHA)
-    geom_type[str(MultiPolygon)] = Heslar.objects.get(id=GEOMETRY_LINIE)
-    geom_type[str(GeometryCollection)] = Heslar.objects.get(id=GEOMETRY_LINIE)
-    presnost_katastr = Heslar.objects.get(pk=PIAN_PRESNOST_KATASTR)
-    typ_katastr = Heslar.objects.get(pk=GEOMETRY_PLOCHA)
+    geom_type[str(MultiPolygon)] = Heslar.objects.get(id=GEOMETRY_PLOCHA)
+    geom_type[str(GeometryCollection)] = Heslar.objects.get(id=GEOMETRY_PLOCHA)
     query = Pian.objects.all()
     pocet = 0
     pocet_pians = query.count()
@@ -583,27 +581,23 @@ def pians_properties_check():
     for item in query.iterator(chunk_size=1000):
         save = False
         geom = item.geom
-        if item.presnost.pk == presnost_katastr.pk and item.typ.pk != typ_katastr.pk:
-            item.typ = presnost_katastr
+        if item.typ.pk != geom_type[str(type(geom))].pk:
+            item.typ = geom_type[str(type(geom))]
             save = True
+        if type(geom) == Point:
+            point = geom
+        elif type(geom) == LineString:
+            point = geom.interpolate_normalized(0.5)
         else:
-            if item.typ.pk != geom_type[str(type(geom))].pk:
-                item.typ = geom_type[str(type(geom))]
+            point = Centroid(geom)
+        zm10, zm50 = get_ZM_from_point(point)
+        if zm10 is not None and zm50 is not None:
+            if item.zm10.pk != zm10.pk:
+                item.zm10 = zm10
                 save = True
-            if type(geom) == Point:
-                point = geom
-            elif type(geom) == LineString:
-                point = geom.interpolate_normalized(0.5)
-            elif type(geom) == Polygon:
-                point = Centroid(geom)
-            zm10, zm50 = get_ZM_from_point(point)
-            if zm10 is not None and zm50 is not None:
-                if item.zm10.pk != zm10.pk:
-                    item.zm10 = zm10
-                    save = True
-                if item.zm50.pk != zm50.pk:
-                    item.zm50 = zm50
-                    save = True
+            if item.zm50.pk != zm50.pk:
+                item.zm50 = zm50
+                save = True
         if save is True:
             pocet = pocet + 1
             print(f"\r{pocet} {index}/{pocet_pians}", end="")
