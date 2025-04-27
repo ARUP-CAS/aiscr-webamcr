@@ -112,6 +112,8 @@ class SamostatnyNalezTable(SearchTable):
             "pristupnost",
             "evidencni_cislo",
             "katastr",
+            "okres",
+            "kraj",
             "lokalizace",
             "datum_nalezu",
             "nalezce",
