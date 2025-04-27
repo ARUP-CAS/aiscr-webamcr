@@ -1287,14 +1287,11 @@ def generovat_oznameni(request, ident_cely):
         if request.POST.get("odeslat_oznamovateli", False):
             projekt.send_ep01(rep_bin_file)
         projekt.close_active_transaction_when_finished = True
+        fedora_transaction.success_message = _("projekt.views.generovat_oznameni.success")
         projekt.save()
     except FedoraUpdatedByAnotherTransactionError as err:
         logger.debug("projekt.views.generovat_oznameni.failed_another_transaction", extra={"error": err})
-        help_translation = _("projekt.views.generovat_oznameni.failed_another_transaction")
-        messages.add_message(request, messages.ERROR, help_translation)
-    else:
-        help_translation = _("projekt.views.generovat_oznameni.success")
-        messages.add_message(request, messages.SUCCESS, help_translation)
+        fedora_transaction.error_message = _("projekt.views.generovat_oznameni.error")
     return redirect(projekt.get_absolute_url())
 
 
