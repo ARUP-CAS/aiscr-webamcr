@@ -1,6 +1,7 @@
 # flake8: noqa: E201, E202
 import re
 import unicodedata
+from urllib.parse import quote_plus
 
 import requests
 from arch_z.models import ArcheologickyZaznam
@@ -87,6 +88,20 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
                 title = response.get("message").get("DOI")
             id = response.get("message").get("DOI")
             return [[id, f"{title} ({id})"]]
+        else:
+            base_url = f"https://api.crossref.org/works?query.title={quote_plus(q)}&sort=relevance&rows=50"
+            response = requests.get(base_url)
+            results = []
+            if response.status_code == 200:
+                response = response.json()
+                for item in response.get("message", {}).get("items", []):
+                    if item.get("title"):
+                        title = item["title"][0]
+                    else:
+                        title = item.get("id")
+                    results.append([item.get("DOI"), f"{title} ({item.get('DOI')})"])
+                return results
+        return []
 
     @classmethod
     def _api_call_cross_ref_title(cls, q):
@@ -116,8 +131,8 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         results = cls._api_call_cross_ref_doi(q)
         if not results:
             results = cls._api_call_data_cite(q) + cls._api_call_cross_ref_title(q)
-        if not results:
-            results = cls._doi_item_exists(q)
+        if not any([i for i in results if i[0] == str(q)]):
+            results = cls._doi_item_exists(q) + results
         return results
 
 
