@@ -4,6 +4,7 @@
 {% load static %}
 
 {% block extrastyle %}
+{{block.super}}
   <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
   <style>
       #progressBarBox {
