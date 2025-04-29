@@ -136,7 +136,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://docs.celeryq.dev/
    * - certifi
-     - 2025.1.31
+     - 2025.4.26
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
@@ -324,7 +324,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://github.com/Suor/funcy
    * - h11
-     - 0.14.0
+     - 0.16.0
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
