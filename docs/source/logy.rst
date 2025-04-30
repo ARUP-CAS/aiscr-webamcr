@@ -139,823 +139,821 @@ Nastavení Elasticsearch je součástí docker-compose.yml souborů.
 ::
 
    {
-   "template": {
-      "settings": {
-         "index": {
+   "settings": {
+      "index": {
          "lifecycle": {
-            "name": "politika",
-            "rollover_alias": "amcr"
+         "name": "politika",
+         "rollover_alias": "amcr"
          },
          "number_of_replicas": "0",
          "routing": {
-            "allocation": {
-               "include": {
+         "allocation": {
+            "include": {
                "_tier_preference": "data_content"
-               }
             }
          }
          }
-      },
-      "mappings": {
-         "dynamic": "false",
-         "dynamic_templates": [],
-         "properties": {
+      }
+   },
+   "mappings": {
+      "dynamic": "false",
+      "dynamic_templates": [],
+      "properties": {
          "@timestamp": {
-            "type": "date"
+         "type": "date"
          },
          "@version": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "X": {
-            "type": "float",
-            "ignore_malformed": false,
-            "coerce": true
+         "type": "float",
+         "ignore_malformed": false,
+         "coerce": true
          },
          "Y": {
-            "type": "float"
+         "type": "float"
          },
          "Z": {
-            "type": "float"
+         "type": "float"
          },
          "adb_ident_cely": {
-            "type": "keyword"
+         "type": "keyword"
          },
          "address": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "app": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "attachment": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "az_error": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "bottom": {
-            "type": "float"
+         "type": "float"
          },
          "change": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "class_name": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "close_transaction": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "columns": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "constant": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "count": {
-            "type": "long",
-            "ignore_malformed": false,
-            "coerce": true
+         "type": "long",
+         "ignore_malformed": false,
+         "coerce": true
          },
          "created": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "custom_message": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "data": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "dj": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "element": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "email": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "error": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "exception": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "field_type": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "file": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "filed": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "form_error": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "format": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "geom": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "geom_sjtsk": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "geom_system": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "group": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "heslar": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "historie": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "host": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "hv_pk": {
-            "type": "long"
+         "type": "long"
          },
          "ident_cely": {
-            "type": "keyword"
+         "type": "keyword"
          },
          "ident_cely_old": {
-            "type": "keyword"
+         "type": "keyword"
          },
          "index": {
-            "type": "long"
+         "type": "long"
          },
          "info": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "initial": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "initial_record_pk": {
-            "type": "long"
+         "type": "long"
          },
          "instance": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "ip": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "katastr": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "key": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "komponenta": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "large": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "left": {
-            "type": "float"
+         "type": "float"
          },
          "level": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "limit": {
-            "type": "long"
+         "type": "long"
          },
          "lineno": {
-            "type": "long"
+         "type": "long"
          },
          "list": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "logger_name": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "maximum": {
-            "type": "long"
+         "type": "long"
          },
          "message": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "method": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "mime_type": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "name": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "new": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "next_url": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "notification_type": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "number": {
-            "type": "long",
-            "ignore_malformed": false,
-            "coerce": true
+         "type": "long",
+         "ignore_malformed": false,
+         "coerce": true
          },
          "old": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "option": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "path": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "pian": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "pk": {
-            "type": "long"
+         "type": "long"
          },
          "process": {
-            "type": "long"
+         "type": "long"
          },
          "project_ident_cely": {
-            "type": "keyword"
+         "type": "keyword"
          },
          "projekt": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "query": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "queue": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "record": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "text"
-               }
             }
+         }
          },
          "redis": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "request": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "request_type": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "request_url": {
-            "type": "text"
+         "type": "text"
          },
          "response": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "result": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "right": {
-            "type": "float"
+         "type": "float"
          },
          "s_pk": {
-            "type": "long"
+         "type": "long"
          },
          "signal": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "soubor": {
-            "type": "text",
-            "fields": {
-               "Keyword": {
+         "type": "text",
+         "fields": {
+            "Keyword": {
                "type": "keyword"
-               }
             }
+         }
          },
          "source_url": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "stack_trace": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "status_code": {
-            "type": "long"
+         "type": "long"
          },
          "stav": {
-            "type": "long"
+         "type": "long"
          },
          "stav_old": {
-            "type": "text"
+         "type": "text"
          },
          "subject": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "text": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "thread_name": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "thumb_large": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "thumb_small": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "to": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "top": {
-            "type": "float"
+         "type": "float"
          },
          "traceback": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "transaction": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "typ_akce": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "typ_arch_z": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "typ_vazby": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "type": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "update": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "url": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "user_active": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "user_id": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "uuid": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "valid": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "validation_results": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "value": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "warning": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
+         }
          },
          "zasilat_neaktivnim": {
-            "type": "boolean"
+         "type": "boolean"
          },
          "zaznam": {
-            "type": "text",
-            "fields": {
-               "keyword": {
+         "type": "text",
+         "fields": {
+            "keyword": {
                "type": "keyword",
                "ignore_above": 256
-               }
             }
          }
          }
-      },
-      "aliases": {}
-   }
+      }
+   },
+   "aliases": {}
    }
 
 
 Použité názvy atributů parametru extra v Django log
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Toto je seznam doporučených jmen atributů extra při logování v Django. Je možné použít 
+Zde je seznam doporučených jmen atributů extra při logování v Django. Je možné použít 
 jakékoliv jiné názvy, ale obsah vyjmenovaných proměnných je indexován a je možné 
 hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 
 +--------------------+---------+
-| Jméno              | typ     |
+| Jméno   proměnné   | typ     |
 +====================+=========+
 | adb_ident_cely     | Keyword |
 +--------------------+---------+
@@ -980,6 +978,8 @@ hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 | count              | Long    |
 +--------------------+---------+
 | created            | Boolean |
++--------------------+---------+
+| custom_message     | Text    |
 +--------------------+---------+
 | data               | Text    |
 +--------------------+---------+
@@ -1015,7 +1015,7 @@ hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 +--------------------+---------+
 | historie           | Text    |
 +--------------------+---------+
-| hp_pk              | Long    |
+| hv_pk              | Long    |
 +--------------------+---------+
 | change             | Boolean |
 +--------------------+---------+
@@ -1049,7 +1049,7 @@ hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 +--------------------+---------+
 | list               | Text    |
 +--------------------+---------+
-| logout_time        | Text    |
+| maximum            | Long    |
 +--------------------+---------+
 | method             | Text    |
 +--------------------+---------+
@@ -1071,8 +1071,6 @@ hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 +--------------------+---------+
 | pk                 | Long    |
 +--------------------+---------+
-| process            | Long    |
-+--------------------+---------+
 | project_ident_cely | Keyword |
 +--------------------+---------+
 | projekt            | Text    |
@@ -1084,8 +1082,6 @@ hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 | record             | Text    |
 +--------------------+---------+
 | redis              | Text    |
-+--------------------+---------+
-| request            | Text    |
 +--------------------+---------+
 | request_type       | Text    |
 +--------------------+---------+
@@ -1114,8 +1110,6 @@ hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 | subject            | Text    |
 +--------------------+---------+
 | text               | Text    |
-+--------------------+---------+
-| thread_name        | Text    |
 +--------------------+---------+
 | thumb_large        | Boolean |
 +--------------------+---------+
@@ -1160,8 +1154,6 @@ hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 | zaznam             | Text    |
 +--------------------+---------+
 
-
-
 Seznam vyhrazených jmen
 ~~~~~~~~~~~~~~~~~~~~~~~
 Tyto jména používá Django a neměli by se používat jako atributy
@@ -1195,6 +1187,12 @@ extra při logování.
 | url         | Text |
 +-------------+------+
 | user_id     | Text |
++-------------+------+
+| process     | Long |
++-------------+------+
+| request     | Text |
++-------------+------+
+| thread_name | Text |
 +-------------+------+
 
 

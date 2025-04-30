@@ -379,7 +379,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 bytes_io.seek(0)
                 return bytes_io
         except Exception as err:
-            logger.warning("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"err": err})
+            logger.warning("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"error": err})
             bytes_io.seek(0)
             return bytes_io
         # Odstranění GPS dat, pokud existují

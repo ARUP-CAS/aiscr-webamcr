@@ -327,7 +327,7 @@ def get_ZM_from_point(point):
     except DatabaseError as e:
         zm10s = Kladyzm.objects.none()
         zm50s = Kladyzm.objects.none()
-        logger.warning("pian.models.get_ZM_from_point.Kladyzm.warning", extra={"error": e, "point": str(point)})
+        logger.warning("pian.models.get_ZM_from_point.Kladyzm.warning", extra={"error": e, "geom": str(point)})
     if len(zm10s) == 1 and len(zm50s) == 1:
         return zm10s[0], zm50s[0]
     return None, None

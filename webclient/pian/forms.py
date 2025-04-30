@@ -65,7 +65,7 @@ class PianCreateForm(forms.ModelForm):
             validation_results = c.fetchone()[0]
             logger.debug(
                 "pian.forms.clean_geom.detail",
-                extra={"validation_results": validation_results, "validation_geom": validation_geom},
+                extra={"validation_results": validation_results, "geom": validation_geom},
             )
             c.execute("COMMIT")
         except Exception as e:
