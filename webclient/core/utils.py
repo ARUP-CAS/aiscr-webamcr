@@ -1121,5 +1121,4 @@ def get_set_maintenance_in_cache():
         else:
             cache.set("maintenance", False, 600)
             maintenance = False
-    logger.debug("maintenance %s", maintenance)
     return maintenance

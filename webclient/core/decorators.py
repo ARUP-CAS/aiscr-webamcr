@@ -39,10 +39,9 @@ def odstavka_in_progress(view_func):
     def wrapper(request, *args, **kwargs):
         maintenance = get_set_maintenance_in_cache()
         if maintenance:
-            odstavka = pytz.timezone("Europe/Prague").localize(
+            if pytz.timezone("Europe/Prague").localize(
                 datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
-            )
-            if odstavka <= datetime.now(pytz.timezone("Europe/Prague")):
+            ) <= datetime.now(pytz.timezone("Europe/Prague")):
                 try:
                     language = request.LANGUAGE_CODE
                 except Exception:

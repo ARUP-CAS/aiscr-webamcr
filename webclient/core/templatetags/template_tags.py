@@ -109,8 +109,7 @@ def querystring_multi(parser, token):
 # To get info about maintenance
 @register.simple_tag
 def get_maintenance():
-    maintenance = get_set_maintenance_in_cache()
-    if maintenance:
+    if get_set_maintenance_in_cache():
         return True
     return False
 
