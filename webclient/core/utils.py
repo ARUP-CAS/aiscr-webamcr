@@ -4,6 +4,7 @@ import mimetypes
 import os
 import tempfile
 import uuid
+from datetime import datetime
 
 import core.message_constants as mc
 import django
@@ -1100,3 +1101,24 @@ class SessionIdentifier:
     def get_cached_files(self):
         files = cache.get(f"{self.cache_key}_files", set())
         return files
+
+
+def get_set_maintenance_in_cache():
+    """
+    Funkce pro získání nastavení údržby z cache.
+    """
+    maintenance = cache.get("maintenance")
+    if maintenance is None:
+        from core.models import OdstavkaSystemu
+
+        odstavka = OdstavkaSystemu.objects.filter(
+            info_od__lte=datetime.today(),
+            status=True,
+        ).order_by("-datum_odstavky", "-cas_odstavky")
+        if odstavka.count() > 0:
+            maintenance = odstavka[0]
+            cache.set("maintenance", maintenance, 600)
+        else:
+            cache.set("maintenance", False, 600)
+            maintenance = False
+    return maintenance
