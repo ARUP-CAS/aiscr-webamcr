@@ -1492,6 +1492,8 @@ class AkceListView(SearchListView):
             "ident_cely": "archeologicky_zaznam__ident_cely",
             "pristupnost": "archeologicky_zaznam__pristupnost__razeni",
             "hlavni_katastr": "archeologicky_zaznam__hlavni_katastr__nazev",
+            "okres": "archeologicky_zaznam__hlavni_katastr__okres__nazev",
+            "kraj": "archeologicky_zaznam__hlavni_katastr__okres__kraj__nazev",
             "katastry": "archeologicky_zaznam__katastry__nazev",
             "stav": "archeologicky_zaznam__stav",
             "organizace": "organizace__nazev_zkraceny",
@@ -1513,6 +1515,7 @@ class AkceListView(SearchListView):
         qs = qs.select_related(
             "archeologicky_zaznam__hlavni_katastr",
             "archeologicky_zaznam__hlavni_katastr__okres",
+            "archeologicky_zaznam__hlavni_katastr__okres__kraj",
             "organizace",
             "hlavni_vedouci",
         ).prefetch_related(

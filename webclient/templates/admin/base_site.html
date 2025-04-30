@@ -1,0 +1,28 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n %}
+{% load template_tags %}
+{% load compress %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+{% compress css %}
+  <link type="text/x-scss" href="{% static 'scss/_app-test-version.scss' %}" rel="stylesheet" media="screen">
+{% endcompress %}
+{% endblock %}
+
+{% block header %}
+{% block test-version %}
+{% get_test_env as test_env %}
+{% if test_env %}
+    <div class="test-version">
+        <p class="d-block px-3 py-2 text-center text-bold text-red old-bv">{% trans "base.testing_env.text" %}</p>
+    </div>
+    <div class="test-version-mobile">
+        <p class="d-block px-3 py-2 text-center text-bold text-red old-bv">{% trans "base.testing_env.text_mobile" %}</p>
+    </div>
+{% endif %}
+{% endblock %}
+{{ block.super }}
+{% endblock %}

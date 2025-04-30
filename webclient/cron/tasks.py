@@ -88,16 +88,15 @@ def send_notifications_en():
 def pian_to_sjtsk():
 
     query_select = (
-        "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,ST_AsText(pian.geom_sjtsk) as geometry_sjtsk "
+        "select pian.id,ST_AsText(pian.geom) as geometry "
         " from public.pian pian "
         " where pian.geom is not null "
-        " and (pian.geom_sjtsk is null or geom_system in ('5514*','sjtsk*'))"
-        " and pian.id not in (select pian_id from public.amcr_geom_migrations_jobs_wgs84_errors)"
+        " and (pian.geom_sjtsk is null)"
         " order by pian.id"
     )
     query_update = (
         "update public.pian pian "
-        " set geom_sjtsk = ST_GeomFromText(%s), geom_sjtsk_updated_at=CURRENT_TIMESTAMP "
+        " set geom_sjtsk = ST_GeomFromText(%s)"
         " where pian.geom_sjtsk is null and pian.id=%s "
     )
     pians = Pian.objects.raw(query_select)
@@ -116,16 +115,15 @@ def pian_to_sjtsk():
 @shared_task
 def nalez_to_sjtsk():
     query_select = (
-        "select samostatny_nalez.id,samostatny_nalez.ident_cely,ST_AsText(samostatny_nalez.geom) as geometry,ST_AsText(samostatny_nalez.geom_sjtsk) as geometry_sjtsk "
+        "select samostatny_nalez.id, ST_AsText(samostatny_nalez.geom) as geometry "
         " from public.samostatny_nalez "
         " where samostatny_nalez.geom is not null "
-        " and (samostatny_nalez.geom_sjtsk is null or geom_system in ('5514*','sjtsk*'))"
-        " and samostatny_nalez.id not in (select pian_id from public.amcr_geom_migrations_jobs_wgs84_errors)"
+        " and (samostatny_nalez.geom_sjtsk is null)"
         " order by samostatny_nalez.id"
     )
     query_update = (
         "update public.samostatny_nalez "
-        " set geom_sjtsk = ST_GeomFromText(%s), geom_sjtsk_updated_at=CURRENT_TIMESTAMP "
+        " set geom_sjtsk = ST_GeomFromText(%s) "
         " where samostatny_nalez.geom_sjtsk is null and samostatny_nalez.id=%s "
     )
     SNs = SamostatnyNalez.objects.raw(query_select)
@@ -557,3 +555,56 @@ def set_pristupnost_snapshot():
                 projekt.suppress_signal = True
                 projekt.set_pristupnost()
             Projekt.objects.bulk_update(projekty, ["pristupnost_snapshot"])
+
+
+@shared_task
+def pians_properties_check():
+    """
+    Jednorázová oprava dat PIANů v rámci issue 2940
+    """
+    from django.contrib.gis.db.models.functions import Centroid
+    from django.contrib.gis.geos import GeometryCollection, LineString, MultiPolygon, Point, Polygon
+    from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
+    from pian.models import get_ZM_from_point
+
+    geom_type = {}
+    geom_type[str(Point)] = Heslar.objects.get(id=GEOMETRY_BOD)
+    geom_type[str(LineString)] = Heslar.objects.get(id=GEOMETRY_LINIE)
+    geom_type[str(Polygon)] = Heslar.objects.get(id=GEOMETRY_PLOCHA)
+    geom_type[str(MultiPolygon)] = Heslar.objects.get(id=GEOMETRY_PLOCHA)
+    geom_type[str(GeometryCollection)] = Heslar.objects.get(id=GEOMETRY_PLOCHA)
+    query = Pian.objects.all()
+    pocet = 0
+    pocet_pians = query.count()
+    index = 0
+    for item in query.iterator(chunk_size=1000):
+        save = False
+        geom = item.geom
+        if item.typ.pk != geom_type[str(type(geom))].pk:
+            item.typ = geom_type[str(type(geom))]
+            save = True
+        if type(geom) == Point:
+            point = geom
+        elif type(geom) == LineString:
+            point = geom.interpolate_normalized(0.5)
+        else:
+            point = Centroid(geom)
+        zm10, zm50 = get_ZM_from_point(point)
+        if zm10 is not None and zm50 is not None:
+            if item.zm10.pk != zm10.pk:
+                item.zm10 = zm10
+                save = True
+            if item.zm50.pk != zm50.pk:
+                item.zm50 = zm50
+                save = True
+        if save is True:
+            pocet = pocet + 1
+            print(f"\r{pocet} {index}/{pocet_pians}", end="")
+            fedora_transaction = FedoraTransaction()
+            item.active_transaction = fedora_transaction
+            item.update_all_azs = False
+            item.close_active_transaction_when_finished = True
+            item.save()
+        index = index + 1
+
+    print(f"pocet zmen {pocet}")

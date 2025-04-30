@@ -29,7 +29,6 @@ from heslar.hesla_dynamicka import (
 from historie.models import Historie, HistorieVazby
 from nalez.models import NalezObjekt, NalezPredmet
 from notifikace_projekty.models import Pes
-from pian.models import Pian
 from PIL import Image
 from uzivatel.models import User
 from xml_generator.models import ModelWithMetadata
@@ -373,17 +372,16 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def remove_gps_data(cls, bytes_io: io.BytesIO) -> io.BytesIO:
         try:
             img = Image.open(bytes_io)
+            exif_data = img.info.get("exif")
+            if exif_data:
+                exif_dict = piexif.load(exif_data)
+            else:
+                bytes_io.seek(0)
+                return bytes_io
         except Exception as err:
-            logger.warning("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"error": err})
+            logger.warning("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"err": err})
             bytes_io.seek(0)
             return bytes_io
-        exif_data = img.getexif()
-        if not exif_data:
-            bytes_io.seek(0)
-            return bytes_io
-
-        exif_dict = piexif.load(img.info.get("exif"))
-
         # Odstranění GPS dat, pokud existují
         if "GPS" in exif_dict and exif_dict["GPS"] != {}:
             del exif_dict["GPS"]
@@ -565,56 +563,6 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
 
     def __str__(self) -> str:
         return "{}: {} {}".format(_("core.model.OdstavkaSystemu.text"), self.datum_odstavky, self.cas_odstavky)
-
-
-class GeomMigrationJobError(ExportModelOperationsMixin("geom_migration_job_error"), models.Model):
-    """
-    Model pro tabulku s chybami jobu geaom migracií.
-    """
-
-    pian = models.ForeignKey(Pian, on_delete=models.CASCADE)
-
-    class Meta:
-        abstract = True
-
-
-class GeomMigrationJobSJTSKError(ExportModelOperationsMixin("geom_migration_job_sjtsk_error"), GeomMigrationJobError):  # type: ignore pylance to ignore error
-    """
-    Model pro tabulku s chybami jobu geaom SJTSK migracií.
-    """
-
-    class Meta:
-        db_table = "amcr_geom_migrations_jobs_sjtsk_errors"
-        abstract = False
-
-
-class GeomMigrationJobWGS84Error(ExportModelOperationsMixin("geom_migration_job_wgs84_error"), GeomMigrationJobError):  # type: ignore pylance to ignore error
-    """
-    Model pro tabulku s chybami jobu geaom WGS84 migracií.
-    """
-
-    class Meta:
-        db_table = "amcr_geom_migrations_jobs_wgs84_errors"
-        abstract = False
-
-
-class GeomMigrationJob(ExportModelOperationsMixin("geom_migration_job"), models.Model):
-    """
-    Model pro tabulku jobu geaom migracií.
-    """
-
-    typ = models.TextField()
-    count_selected_wgs84 = models.IntegerField(default=0)
-    count_selected_sjtsk = models.IntegerField(default=0)
-    count_updated_wgs84 = models.IntegerField(default=0)
-    count_updated_sjtsk = models.IntegerField(default=0)
-    count_error_wgs84 = models.IntegerField(default=0)
-    count_error_sjtsk = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    detail = models.TextField(null=True)
-
-    class Meta:
-        db_table = "amcr_geom_migrations_jobs"
 
 
 class Permissions(models.Model):
@@ -1058,7 +1006,10 @@ class Permissions(models.Model):
                 self.object = get_record_from_ident(self.ident)
                 self.permission_object = self.object.get_permission_object()
             except Exception as e:
-                logger.debug("core.model.Permissions.get_permission_object.error", extra={"error": e})
+                logger.warning(
+                    "core.models.Permission.get_permission_object.object_error",
+                    extra={"error": e, "ident_cely": self.ident},
+                )
                 self.permission_object = "error"
 
     def permission_override(self):

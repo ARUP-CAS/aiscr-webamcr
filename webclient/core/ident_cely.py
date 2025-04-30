@@ -257,7 +257,7 @@ def get_adb_ident(pian: Pian) -> str:
     MAXIMAL_ADBS: int = 999999
     point = None
     if type(pian.geom) == LineString:
-        point = pian.geom.interpolate(0.5)
+        point = pian.geom.interpolate_normalized(0.5)
     elif type(pian.geom) == Point:
         point = pian.geom
     elif type(pian.geom) == Polygon:

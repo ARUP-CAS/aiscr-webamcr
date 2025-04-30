@@ -1,5 +1,5 @@
 import logging
-from datetime import date, datetime, timedelta
+from datetime import datetime
 
 import pytz
 from core.constants import (
@@ -85,13 +85,16 @@ def auto_logout_client(request):
         else:
             cache.set("last_maintenance", False, 600)
     if last_maintenance is not None and last_maintenance is not False:
-        if (
-            last_maintenance.datum_odstavky == date.today()
-            and last_maintenance.cas_odstavky
-            < (datetime.now(pytz.timezone("Europe/Prague")) + timedelta(hours=1)).time()
-        ):
+        time_difference = int(
+            (
+                pytz.timezone("Europe/Prague").localize(
+                    datetime.combine(last_maintenance.datum_odstavky, last_maintenance.cas_odstavky)
+                )
+                - datetime.now(pytz.timezone("Europe/Prague"))
+            ).total_seconds()
+        )
+        if time_difference < 3601:
             maintenance_logout = True
-            odstavka_cas = last_maintenance.cas_odstavky
 
     if "SESSION_TIME" in options:
         ctx["seconds_until_session_end"] = seconds_until_session_end(request, options["SESSION_TIME"], current_time)
@@ -109,15 +112,13 @@ def auto_logout_client(request):
             ctx["extra_param"] = mark_safe(_("core.context_processors.autologout.expired.text"))
         ctx["logout_warning_text"] = mark_safe("AUTOLOGOUT_EXPIRATION_WARNING")
     else:
-        logger.debug("core.context_processors.auto_logout_client")
-        until_logout = datetime.combine(date.today(), odstavka_cas, pytz.timezone("Europe/Prague")) - datetime.now(
-            pytz.timezone("Europe/Prague")
-        )
-        ctx["seconds_until_idle_end"] = int(until_logout.total_seconds()) - 60
+        logger.debug("core.context_processors.auto_logout_client_maintenance_logout")
+        ctx["seconds_until_idle_end"] = time_difference - 60
         ctx["redirect_to_login_immediately"] = "logoutFunction"
         ctx["extra_param"] = mark_safe({"logout_type": "maintenance"})
-        if cache.get(request.user.id + "logout_warning", True):
-            cache.set(request.user.id + "logout_warning", False, 600)
+        user_cache = str(request.user.id) + "logout_warning"
+        if cache.get(user_cache, True) and time_difference < 665:
+            cache.set(user_cache, False, 3600)
             ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5
             ctx["logout_warning_text"] = mark_safe("MAINTENANCE_LOGOUT_WARNING")
         ctx["maintenance"] = mark_safe("true")

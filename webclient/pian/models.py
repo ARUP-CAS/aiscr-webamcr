@@ -15,7 +15,7 @@ from django.contrib import messages
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.db import DatabaseError, models
 from django.db.models import CheckConstraint, Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -286,16 +286,13 @@ def vytvor_pian(katastr, fedora_transaction):
     """
     Funkce pro vytvoření pianu v DB podle katastru.
     """
-    zm10s = Kladyzm.objects.filter(kategorie=KLADYZM10).filter(the_geom__contains=katastr.definicni_bod)
-    zm50s = Kladyzm.objects.filter(kategorie=KLADYZM50).filter(the_geom__contains=katastr.definicni_bod)
-    if len(zm10s) == 0:
+    zm10, zm50 = get_ZM_from_point(katastr.definicni_bod)
+    if zm10 is None:
         logger.error("dj.signals.create_dokumentacni_jednotka.zm10s.not_found")
         raise Exception("zm10s.not_found")
-    if len(zm50s) == 0:
+    if zm50 is None:
         logger.error("dj.signals.create_dokumentacni_jednotka.zm50s.not_found")
         raise Exception("zm50s.not_found")
-    zm10s = zm10s.first()
-    zm50s = zm50s.first()
     try:
         geom = katastr.hranice
         geom_jtsk, res = transform_geom_to_sjtsk(str(geom).split(";")[1])
@@ -303,8 +300,8 @@ def vytvor_pian(katastr, fedora_transaction):
         typ = Heslar.objects.get(pk=GEOMETRY_PLOCHA)
         pian = Pian(
             stav=PIAN_POTVRZEN,
-            zm10=zm10s,
-            zm50=zm50s,
+            zm10=zm10,
+            zm50=zm50,
             typ=typ,
             presnost=presnost,
             geom=geom,
@@ -321,3 +318,16 @@ def vytvor_pian(katastr, fedora_transaction):
     except ObjectDoesNotExist as err:
         logger.error("dj.signals.create_dokumentacni_jednotka.ObjectDoesNotExist", extra={"error": err})
         raise ObjectDoesNotExist()
+
+
+def get_ZM_from_point(point):
+    try:
+        zm10s = list(Kladyzm.objects.filter(kategorie=KLADYZM10).filter(the_geom__contains=point))
+        zm50s = list(Kladyzm.objects.filter(kategorie=KLADYZM50).filter(the_geom__contains=point))
+    except DatabaseError as e:
+        zm10s = Kladyzm.objects.none()
+        zm50s = Kladyzm.objects.none()
+        logger.warning("pian.models.get_ZM_from_point.Kladyzm.warning", extra={"error": e, "point": str(point)})
+    if len(zm10s) == 1 and len(zm50s) == 1:
+        return zm10s[0], zm50s[0]
+    return None, None

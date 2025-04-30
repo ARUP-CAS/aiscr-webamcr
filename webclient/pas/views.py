@@ -666,6 +666,8 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         field = field.replace("-", "")
         return {
             "katastr": "katastr__nazev",
+            "okres": "katastr__okres__nazev",
+            "kraj": "katastr__okres__kraj__nazev",
             "nalezce": "nalezce__vypis_cely",
             "predano_organizace": "predano_organizace__nazev_zkraceny",
             "obdobi": "obdobi__razeni",
