@@ -385,7 +385,9 @@ class UserActivationView(ActivationView):
         # User must by activated manually by an administrator of the system
         user.is_active = False
         user.save()
-        for notification in UserNotificationType.objects.filter(ident_cely__icontains="S-E-"):
+        for notification in UserNotificationType.objects.filter(
+            Q(ident_cely__icontains="S-E-") | Q(ident_cely="zpravodaj")
+        ):
             user.notification_types.add(notification)
         cutoff_time = timezone.now() - datetime.timedelta(minutes=10)
         if not NotificationsLog.objects.filter(
