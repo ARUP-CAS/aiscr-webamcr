@@ -132,7 +132,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/psf/black
    * - celery
-     - 5.5.1
+     - 5.5.2
      - BSD License
      - https://docs.celeryq.dev/
    * - certifi
@@ -356,7 +356,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://sass.github.io/libsass-python/
    * - lxml
-     - 5.3.2
+     - 5.4.0
      - BSD License
      - https://lxml.de/
    * - multivolumefile
@@ -404,7 +404,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.3
+     - 9.0.4
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -420,7 +420,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/tox-dev/platformdirs
    * - polars
-     - 1.27.1
+     - 1.28.1
      - MIT License
      - https://www.pola.rs/
    * - polib
@@ -460,7 +460,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://pyopenssl.org/
    * - pybcj
-     - 1.0.3
+     - 1.0.6
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://codeberg.org/miurahr/pybcj
    * - pycparser
