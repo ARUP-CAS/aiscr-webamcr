@@ -4,7 +4,7 @@
 <div class="app-header row">
   <div class="col-12 col-md-4 app-left mt-3">
     <a href="#" title="{% trans 'oznameni.templates.oznameni.header.img.mapa.title' %}">
-      <img src="{% static 'logo-am-colored-cs.png' %}" alt=""/>
+      <img src="{% static 'img/logo-am-colored-cs.png' %}" alt=""/>
     </a>
   </div>
   <div class="col-12 col-md-8 app-right">
@@ -12,23 +12,23 @@
       <div class="col mt-3">
         <a href="{{ ARU_PRAHA }}" title="{% trans 'oznameni.templates.oznameni.header.img.praha.title' %}"
            target="_blank" rel="noopener noreferrer">
-          <img src="{% static 'logo-arup-cs.png' %}" alt=""/>
+          <img src="{% static 'img/logo-arup-cs.png' %}" alt=""/>
         </a>
       </div>
       <div class="col mt-3">
         <a href="{{ ARU_BRNO }}" title="{% trans 'oznameni.templates.oznameni.header.img.brno.title' %}" target="_blank"
            rel="noopener noreferrer">
-          <img src="{% static 'logo-arub-cs.png' %}" alt=""/>
+          <img src="{% static 'img/logo-arub-cs.png' %}" alt=""/>
         </a>
       </div>
       <div class="col mt-3">
         <div class="nav-item app-flags">
           {% get_current_language as LANGUAGE_CODE %}
           <button id="czech" class="nav-link {% if "cs" in LANGUAGE_CODE  %}app-active{% endif %}" >
-            <img src="{% static 'flag-cs.svg' %}" alt="" class="app-flag" />
+            <img src="{% static 'img/flag-cs.svg' %}" alt="" class="app-flag" />
           </button>
           <button id="english" class="nav-link {% if "en" in LANGUAGE_CODE %}app-active{% endif %}">
-            <img src="{% static 'flag-en.svg' %}" alt="" class="app-flag" />
+            <img src="{% static 'img/flag-en.svg' %}" alt="" class="app-flag" />
           </button>
         </div>
       </div>
