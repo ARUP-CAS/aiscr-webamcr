@@ -1540,7 +1540,7 @@ class FedoraTransaction:
         except Exception as e:
             logger.warning(
                 "core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_warning",
-                extra={"exception": e, "app": app},
+                extra={"error": e, "app": app},
             )
             call_digiarchiv_update_task.apply_async()
         for queue in queues:

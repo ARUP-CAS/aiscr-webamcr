@@ -21,7 +21,7 @@ from reportlab.platypus import ListFlowable, PageBreak, Paragraph, SimpleDocTemp
 
 from webclient.settings.base import STATIC_ROOT
 
-logger_s = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 PAGESIZE = (210 * mm, 297 * mm)
 BASE_MARGIN = 20 * mm
@@ -45,7 +45,7 @@ try:
     )
 except Exception:
     # This will be triggered during collectstatic
-    logger_s.error("doc_utils.font.error", extra={"info": path})
+    logger.error("doc_utils.font.error", extra={"info": path})
 
 Title = "Hello world"
 pageinfo = "platypus example"

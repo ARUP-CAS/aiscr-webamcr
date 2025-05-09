@@ -151,7 +151,7 @@ SELECT * FROM other;
         transaction.savepoint_commit(sid)
     except Exception as e:
         transaction.savepoint_rollback(sid)
-        logger.debug("core.utils.file_validate_geometry.exception", extra={"exception": e})
+        logger.debug("core.utils.file_validate_geometry.exception", extra={"error": e})
         geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
         new_rows.append(geom)
         return new_rows
@@ -288,7 +288,7 @@ def get_all_pians_with_akce(ident_cely):
         return back
 
     except Exception as e:
-        logger.debug("core.utils.get_all_pians_with_akce.exception", extra={"exception": e})
+        logger.debug("core.utils.get_all_pians_with_akce.exception", extra={"error": e})
         return None
 
 
