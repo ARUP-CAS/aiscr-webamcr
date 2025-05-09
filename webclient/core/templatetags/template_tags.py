@@ -1,12 +1,11 @@
 import logging
-from datetime import date, datetime
+from datetime import datetime
 
 import core.message_constants as mc
-from core.models import OdstavkaSystemu
 from core.setting_models import CustomAdminSettings
+from core.utils import get_set_maintenance_in_cache
 from django import template
 from django.conf import settings
-from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.template import Node, TemplateSyntaxError
 from django.utils.html import escape
@@ -110,23 +109,8 @@ def querystring_multi(parser, token):
 # To get info about maintenance
 @register.simple_tag
 def get_maintenance():
-    last_maintenance = cache.get("last_maintenance")
-    if last_maintenance is None:
-        odstavka = OdstavkaSystemu.objects.filter(
-            info_od__lte=datetime.today(),
-            datum_odstavky__gte=datetime.today(),
-            status=True,
-        ).order_by("-datum_odstavky", "-cas_odstavky")
-        if odstavka:
-            last_maintenance = odstavka[0]
-            cache.set("last_maintenance", last_maintenance, 600)
-        else:
-            cache.set("last_maintenance", False, 600)
-    if last_maintenance is not None and last_maintenance is not False:
-        if last_maintenance.datum_odstavky != date.today():
-            return True
-        elif last_maintenance.cas_odstavky > datetime.now().time():
-            return True
+    if get_set_maintenance_in_cache():
+        return True
     return False
 
 
@@ -145,9 +129,7 @@ def get_settings(item_group, item_id):
     settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
     if settings_query.count() > 0:
         return settings_query.last().value
-    logger.error(
-        "core.template_tags.get_settings.missing_settings", extra={"item_group": item_group, "item_id": item_id}
-    )
+    logger.error("core.template_tags.get_settings.missing_settings", extra={"group": item_group, "pk": item_id})
     return ""
 
 

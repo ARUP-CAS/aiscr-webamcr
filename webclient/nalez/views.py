@@ -71,7 +71,7 @@ def smazat_nalez(request, typ_vazby, typ, ident_cely):
         else:
             response = reverse("core:home")
         if resp:
-            logger.debug("nalez.views.smazat_nalez.deleted", extra={"resp": resp})
+            logger.debug("nalez.views.smazat_nalez.deleted", extra={"value": resp})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             response = JsonResponse({"redirect": response})
         else:
@@ -128,7 +128,7 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
                     "nalez.views.edit_nalez.form_valid.save_metadata_dokument",
                     extra={
                         "ident_cely": navazany_objekt.ident_cely,
-                        "fedora_transaction": navazany_objekt.active_transaction.uid,
+                        "transaction": navazany_objekt.active_transaction.uid,
                     },
                 )
                 navazany_objekt.create_transaction(request.user)
@@ -136,7 +136,7 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
                     "nalez.views.edit_nalez.form_valid.save_metadata_dokument",
                     extra={
                         "ident_cely": navazany_objekt.ident_cely,
-                        "fedora_transaction": navazany_objekt.active_transaction.uid,
+                        "transaction": navazany_objekt.active_transaction.uid,
                     },
                 )
                 navazany_objekt.close_active_transaction_when_finished = True
@@ -145,7 +145,7 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
     else:
         logger.debug(
             "nalez.views.edit_nalez.form_not_valid",
-            extra={"formset_predmet_errors": formset_predmet.errors, "formset_objekt_errors": formset_objekt.errors},
+            extra={"form_error": formset_predmet.errors, "error": formset_objekt.errors},
         )
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         request.session["_old_nalez_post"] = request.POST

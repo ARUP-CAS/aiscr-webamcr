@@ -211,13 +211,13 @@ class UserRegistrationView(RegistrationView):
             super().send_activation_email(user)
             notification_type = UserNotificationType.objects.get(ident_cely="E-U-01")
             Mailer._log_notification(notification_type, user, user.email, "OK", None)
-            logger.debug("uzivatel.views.UserRegistrationView.send_activation_email.sent", extra={"user": user})
+            logger.debug("uzivatel.views.UserRegistrationView.send_activation_email.sent", extra={"pk": user})
         except SMTPException as err:
             messages.add_message(
                 self.request, messages.ERROR, _("uzivatel.views.UserRegistrationView.send_activation_email.error")
             )
             logger.error(
-                "uzivatel.views.UserRegistrationView.send_activation_email.error", extra={"user": user, "err": err}
+                "uzivatel.views.UserRegistrationView.send_activation_email.error", extra={"pk": user, "error": err}
             )
 
 
@@ -303,7 +303,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
     def post(self, request, *args, **kwargs):
         request_data = dict(request.POST)
-        logger.debug("uzivatel.views.UserAccountUpdateView.post.start", extra={"request_data": request_data})
+        logger.debug("uzivatel.views.UserAccountUpdateView.post.start")
         form = self.form_class(data=request.POST, instance=self.request.user)
         has_changed = (
             request.POST.get("telefon") != self.request.user.telefon
@@ -385,7 +385,9 @@ class UserActivationView(ActivationView):
         # User must by activated manually by an administrator of the system
         user.is_active = False
         user.save()
-        for notification in UserNotificationType.objects.filter(ident_cely__icontains="S-E-"):
+        for notification in UserNotificationType.objects.filter(
+            Q(ident_cely__icontains="S-E-") | Q(ident_cely="zpravodaj")
+        ):
             user.notification_types.add(notification)
         cutoff_time = timezone.now() - datetime.timedelta(minutes=10)
         if not NotificationsLog.objects.filter(

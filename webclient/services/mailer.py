@@ -112,11 +112,11 @@ class Mailer:
             "services.mailer._notification_should_be_sent",
             extra={
                 "notification_type": notification_type.ident_cely,
-                "user": user,
-                "notification_is_enabled": notification_is_enabled,
+                "ident_cely": user,
+                "option": notification_is_enabled,
                 "user_active": user.is_active,
                 "zasilat_neaktivnim": notification_type.zasilat_neaktivnim,
-                "check_result": result,
+                "value": result,
             },
         )
         return result
@@ -128,7 +128,7 @@ class Mailer:
         notification_log = user.notification_log_items.filter(notification_type=notification_type).first()
         logger.debug(
             "services.mailer._notification_was_sent",
-            extra={"notification_type": notification_type.ident_cely, "user": user},
+            extra={"notification_type": notification_type.ident_cely, "ident_cely": user},
         )
         if notification_log:
             return True
@@ -169,8 +169,8 @@ class Mailer:
             "services.mailer._log_notification",
             extra={
                 "notification_type": notification_type,
-                "user": user_object,
-                "receiver_address": receiver_address,
+                "subject": str(user_object),
+                "address": receiver_address,
             },
         )
 
@@ -193,11 +193,10 @@ class Mailer:
             logger.info(
                 "services.mailer.send.debug",
                 extra={
-                    "from_email": from_email,
+                    "email": from_email,
                     "to": to,
                     "subject": subject,
                     "attachment": getattr(attachment, "filename", None),
-                    "attachment_size_mb": getattr(attachment, "size_mb", None),
                 },
             )
             if attachment:
@@ -209,7 +208,7 @@ class Mailer:
             except Exception as e:
                 logger.warning(
                     "services.mailer.send.warning",
-                    extra={"from_email": from_email, "to": to, "subject": subject, "exception": e},
+                    extra={"email": from_email, "to": to, "subject": subject, "error": e},
                 )
                 status = "NOK"
                 exception = e
@@ -289,7 +288,7 @@ class Mailer:
         logger.debug("services.mailer.send_eu06", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         if groups[0] is not None:
-            logger.debug("services.mailer.send_eu06.groups", extra={"ident_cely": IDENT_CELY, "groups": groups})
+            logger.debug("services.mailer.send_eu06.groups", extra={"ident_cely": IDENT_CELY, "info": groups})
             roles = ", ".join([group.name for group in groups])
         else:
             roles = ""
@@ -329,14 +328,14 @@ class Mailer:
         else:
             logger.info(
                 "services.mailer._send_notification_for_project.no_uzivatel",
-                extra={"ident_cely": project.ident_cely, "project_history": project_history},
+                extra={"ident_cely": project.ident_cely, "historie": project_history},
             )
 
     @classmethod
     def _send_notification_for_projects(cls, projects, notification_type):
         logger.debug(
             "services.mailer._send_notification_for_projects",
-            extra={"notification_type": notification_type, "project_count": projects.count()},
+            extra={"notification_type": notification_type, "count": projects.count()},
         )
         for project in projects:
             Mailer._send_notification_for_project(project, notification_type)
@@ -501,7 +500,7 @@ class Mailer:
         )
         logger.debug(
             "services.mailer._send_ep01",
-            extra={"html": html, "cesta_sablony": notification_type.cesta_sablony, "ident_cely": project.ident_cely},
+            extra={"subject": subject, "data": notification_type.cesta_sablony, "ident_cely": project.ident_cely},
         )
         if isinstance(rep_bin_file, RepositoryBinaryFile):
             project_file = rep_bin_file
@@ -510,14 +509,12 @@ class Mailer:
                 nazev__startswith=f"oznameni_{project.ident_cely}", nazev__endswith=".pdf"
             )
             project_files = list(sorted(project_files, key=lambda x: x.vytvoreno.datum_zmeny))
-            logger.debug(
-                "services.mailer._send_ep01", extra={"project_files": project_files, "ident_cely": project.ident_cely}
-            )
+            logger.debug("services.mailer._send_ep01", extra={"file": project_files, "ident_cely": project.ident_cely})
             if len(project_files) > 0:
                 project_file = project_files[0]
                 logger.debug(
                     "services.mailer._send_ep01.attachment_added",
-                    extra={"nazev": project_file.nazev, "ident_cely": project.ident_cely},
+                    extra={"file": project_file.nazev, "ident_cely": project.ident_cely},
                 )
             else:
                 project_file = None
@@ -536,7 +533,7 @@ class Mailer:
                 else:
                     logger.error(
                         "services.mailer._send_ep01.cannot_read_attachment",
-                        extra={"ident_cely": project.ident_cely, "repository_uuid": project_file.repository_uuid},
+                        extra={"ident_cely": project.ident_cely, "uuid": project_file.repository_uuid},
                     )
             cls.__send(
                 subject=subject,
@@ -612,7 +609,7 @@ class Mailer:
                 )
         except Oznamovatel.DoesNotExist as err:
             logger.debug(
-                "services.mailer._send_ep03.no_oznammovatel", extra={"ident_cely": project.ident_cely, "err": err}
+                "services.mailer._send_ep03.no_oznammovatel", extra={"ident_cely": project.ident_cely, "error": err}
             )
 
     @classmethod
@@ -689,7 +686,9 @@ class Mailer:
     @classmethod
     def send_ep05(cls, project: "projekt.models.Projekt"):
         IDENT_CELY = "E-P-05"
-        logger.debug("services.mailer.send_ep05", extra={"ident_cely": IDENT_CELY, "project": project.ident_cely})
+        logger.debug(
+            "services.mailer.send_ep05", extra={"ident_cely": IDENT_CELY, "project_ident_cely": project.ident_cely}
+        )
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(
@@ -724,14 +723,14 @@ class Mailer:
         project_files = list(sorted(project_files, key=lambda x: x.vytvoreno.datum_zmeny))
         logger.debug(
             "services.mailer.get_ep06_attachments.query",
-            extra={"project_files": project_files, "ident_cely": project.ident_cely},
+            extra={"file": project_files, "ident_cely": project.ident_cely},
         )
         attachment = None
         if len(project_files) > 0:
             project_file: Soubor = project_files[0]
             logger.debug(
                 "services.mailer.get_ep06_attachments.attachment_found",
-                extra={"nazev": project_file.nazev, "ident_cely": project.ident_cely},
+                extra={"file": project_file.nazev, "ident_cely": project.ident_cely},
             )
             repository_coonector = FedoraRepositoryConnector(project)
             attachment = repository_coonector.get_binary_file(project_file.repository_uuid)
@@ -740,8 +739,8 @@ class Mailer:
                     "services.mailer.get_ep06_attachments.attachment_not_loaded_from_fedora",
                     extra={
                         "ident_cely": project.ident_cely,
-                        "repository_uuid": project_file.repository_uuid,
-                        "soubor_pk": project_file.pk,
+                        "uuid": project_file.repository_uuid,
+                        "pk": project_file.pk,
                     },
                 )
         return attachment

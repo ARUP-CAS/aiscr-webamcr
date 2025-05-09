@@ -159,13 +159,11 @@ def detail_model_3D(request, ident_cely):
     )
     casti = dokument.casti.all()
     if casti.count() != 1:
-        logger.warning("dokument.views.detail_model_3D.casti_count_error", extra={"casti_count": casti.count()})
+        logger.warning("dokument.views.detail_model_3D.casti_count_error", extra={"count": casti.count()})
         raise UnexpectedDataRelations()
     komponenty = casti[0].komponenty.komponenty.all()
     if komponenty.count() != 1:
-        logger.warning(
-            "dokument.views.detail_model_3D.komponenty_count_error", extra={"casti_count": komponenty.count()}
-        )
+        logger.warning("dokument.views.detail_model_3D.komponenty_count_error", extra={"count": komponenty.count()})
         raise UnexpectedDataRelations()
     show = get_detail_template_shows(dokument, request.user)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
@@ -641,7 +639,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("dokument.views.DokumentCastEditView.form_invalid", extra={"errors": form.errors})
+        logger.debug("dokument.views.DokumentCastEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
 
 
@@ -750,7 +748,7 @@ class TvarEditView(LoginRequiredMixin, View):
         else:
             logger.debug(
                 "dokument.views.TvarEditView.form_not_valid",
-                extra={"formset_errors": formset.errors, "formset_nonform_errors": formset.non_form_errors()},
+                extra={"form_error": formset.errors, "error": formset.non_form_errors()},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         return redirect(dokument.get_absolute_url())
@@ -862,7 +860,7 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
                 }
             )
         else:
-            logger.debug("dokument.views.VytvoritCastView.post.form_not_valid", extra={"form_errors": form.errors})
+            logger.debug("dokument.views.VytvoritCastView.post.form_not_valid", extra={"error": form.errors})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         return JsonResponse({"redirect": zaznam.get_absolute_url()})
 
@@ -906,7 +904,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     def dispatch(self, request, *args, **kwargs):
         zaznam = self.get_zaznam().dokument
         if zaznam.stav not in self.allowed_states:
-            logger.debug("dokument.views.TransakceView.dispatch", extra={"action": self.action})
+            logger.debug("dokument.views.TransakceView.dispatch", extra={"value": self.action})
             messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
             return JsonResponse(
                 {"redirect": zaznam.get_absolute_url()},
@@ -970,9 +968,7 @@ class DokumentCastPripojitAkciView(TransakceView):
             cast.close_active_transaction_when_finished = True
             cast.save()
         else:
-            logger.debug(
-                "dokument.views.DokumentCastPripojitAkciView.post.form_invalid", extra={"form_errors": form.errors}
-            )
+            logger.debug("dokument.views.DokumentCastPripojitAkciView.post.form_invalid", extra={"error": form.errors})
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
 
@@ -1008,7 +1004,7 @@ class DokumentCastPripojitProjektView(TransakceView):
             cast.save()
         else:
             logger.debug(
-                "dokument.views.DokumentCastPripojitProjektView.post.form_invalid", extra={"form_errors": form.errors}
+                "dokument.views.DokumentCastPripojitProjektView.post.form_invalid", extra={"error": form.errors}
             )
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
@@ -1098,7 +1094,7 @@ class DokumentCastSmazatView(TransakceView):
         except ObjectDoesNotExist:
             logger.debug(
                 "dokument.views.DokumentCastSmazatView.post.neident_akce_not_exists",
-                extra={"ident:cely": cast.ident_cely},
+                extra={"ident_cely": cast.ident_cely},
             )
         cast.close_active_transaction_when_finished = True
         cast.delete()
@@ -1206,7 +1202,7 @@ def edit(request, ident_cely):
         else:
             logger.debug(
                 "dokument.views.edit.forms_not_valid",
-                extra={"form_errors": form_d.errors, "form_extra_errors": form_extra.errors},
+                extra={"error": form_d.errors, "form_error": form_extra.errors},
             )
     else:
         form_d = EditDokumentForm(
@@ -1285,7 +1281,7 @@ def edit_model_3D(request, ident_cely):
             geom = Point(x1, x2)
             geom_sjtsk = Point(*convertToJTSK(x1, x2))
         except Exception:
-            logger.debug("dokument.views.edit_model_3D.coord_error", extra={"x1": x1, "x2": x2})
+            logger.debug("dokument.views.edit_model_3D.coord_error", extra={"X": x1, "Y": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             # save autors with order
             fedora_transaction = dokument.create_transaction(request.user)
@@ -1316,9 +1312,9 @@ def edit_model_3D(request, ident_cely):
             logger.debug(
                 "dokument.views.edit_model_3D.forms_not_valid",
                 extra={
-                    "form_errors": form_d.errors,
-                    "form_extra_errors": form_extra.errors,
-                    "form_komponenta": form_komponenta.errors,
+                    "error": form_d.errors,
+                    "form_error": form_extra.errors,
+                    "komponenta": form_komponenta.errors,
                 },
             )
     else:
@@ -1438,7 +1434,7 @@ def create_model_3D(request):
             geom = Point(x1, x2)
             geom_sjtsk = Point(*convertToJTSK(x1, x2))
         except Exception:
-            logger.debug("dokument.views.create_model_3D.coord_error", extra={"x1": x1, "x2": x2})
+            logger.debug("dokument.views.create_model_3D.coord_error", extra={"X": x1, "Y": x2})
 
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             logger.debug("dokument.views.create_model_3D.forms_valid")
@@ -1501,9 +1497,9 @@ def create_model_3D(request):
             logger.debug(
                 "dokument.views.create_model_3D.forms_not_valid",
                 extra={
-                    "form_errors": form_d.errors,
-                    "form_extra_errors": form_extra.errors,
-                    "form_komponenta": form_komponenta.errors,
+                    "error": form_d.errors,
+                    "form_error": form_extra.errors,
+                    "komponenta": form_komponenta.errors,
                 },
             )
             if "geom" in form_extra.errors:
@@ -1574,7 +1570,7 @@ def odeslat(request, ident_cely):
     else:
         warnings = dokument.check_pred_odeslanim()
         if warnings:
-            logger.debug("dokument.views.odeslat.warnings", extra={"warnings": warnings, "ident_cely": ident_cely})
+            logger.debug("dokument.views.odeslat.warnings", extra={"warning": warnings, "ident_cely": ident_cely})
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
@@ -1643,7 +1639,7 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": get_detail_json_view(dokument.ident_cely)})
     else:
         warnings = dokument.check_pred_archivaci()
-        logger.debug("dokument.views.archivovat.warnings", extra={"warnings": warnings})
+        logger.debug("dokument.views.archivovat.warnings", extra={"warning": warnings})
         if warnings:
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
@@ -1687,7 +1683,7 @@ def vratit(request, ident_cely):
             dokument.save()
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
         else:
-            logger.debug("dokument.views.vratit.not_valid", extra={"errors": form.errors})
+            logger.debug("dokument.views.vratit.not_valid", extra={"error": form.errors})
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     else:
         form = VratitForm(initial={"old_stav": dokument.stav})
@@ -1728,7 +1724,7 @@ def smazat(request, ident_cely):
             item.delete()
         resp1 = dokument.delete()
         if resp1:
-            logger.debug("dokument.views.smazat.deleted", extra={"resp1": resp1})
+            logger.debug("dokument.views.smazat.deleted", extra={"value": resp1})
             fedora_transaction.mark_transaction_as_closed()
             if "3D" in ident_cely:
                 return JsonResponse({"redirect": reverse("dokument:index-model-3D")})
@@ -1926,7 +1922,7 @@ def zapsat(request, zaznam=None):
                         extra={"ident_cely": dokument.ident_cely},
                     )
         else:
-            logger.debug("dokument.views.zapsat.not_valid", extra={"erros": form_d.errors})
+            logger.debug("dokument.views.zapsat.not_valid", extra={"error": form_d.errors})
 
     else:
         form_d = EditDokumentForm(
@@ -1971,7 +1967,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
     lokalita_update = None
     dokument_update = None
     if len(relace_dokumentu) == 0:
-        logger.debug("dokument.views.odpojit.no_relace", extra={"ident_doku": ident_doku})
+        logger.debug("dokument.views.odpojit.no_relace", extra={"ident_cely": ident_doku})
         messages.add_message(request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE)
         return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=404)
     if len(relace_dokumentu) == 1:
@@ -1984,7 +1980,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
         else:
             dokument_cast_query = relace_dokumentu.filter(projekt__ident_cely=ident_zaznamu)
         if len(dokument_cast_query) == 0:
-            logger.debug("dokument.views.odpojit.no_relace", extra={"ident_doku": ident_doku})
+            logger.debug("dokument.views.odpojit.no_relace", extra={"ident_cely": ident_doku})
             messages.add_message(request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM)
             return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=404)
         fedora_transaction = FedoraTransaction(zaznam, request.user, DOKUMENT_USPESNE_ODPOJEN)
@@ -2001,7 +1997,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
         if dokument_cast.dokument and dokument_cast.dokument.doi and dokument_cast.dokument.stav == D_STAV_ARCHIVOVANY:
             dokument_update = dokument_cast.dokument
         resp = dokument_cast.delete()
-        logger.debug("dokument.views.odpojit.deleted", extra={"resp": resp})
+        logger.debug("dokument.views.odpojit.deleted", extra={"value": resp})
         if remove_orphan:
             orphan_dokument.active_transaction = fedora_transaction
             orphan_dokument.record_deletion()
@@ -2087,7 +2083,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                 dokument.save()
                 logger.debug(
                     "dokument.views.pripojit.pripojit",
-                    extra={"debug_name": debug_name, "ident_zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
+                    extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
                 )
             else:
                 messages.add_message(request, messages.WARNING, DOKUMENT_JIZ_BYL_PRIPOJEN)

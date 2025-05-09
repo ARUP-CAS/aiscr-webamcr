@@ -87,7 +87,7 @@ def check_hlidaci_pes(projekt_id):
         )
     logger.debug(
         "cron.Notifications.collect_watchdogs.watchdog_list",
-        extra={"users_to_notify": users_to_notify.values_list("user")},
+        extra={"value": users_to_notify.values_list("user")},
     )
     logger.debug("cron.Notifications.collect_watchdogs.end")
     users_to_notify = users_to_notify.filter(

@@ -178,7 +178,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         if hasattr(record, "ident_cely") and vazba:
             historie_record = cls(uzivatel=uzivatel, poznamka=record.ident_cely, vazba=vazba, typ_zmeny="DEL")
             historie_record.save()
-            logger.debug("history.models.save_record_deletion_record.delete", extra={"iden_cely": record.ident_cely})
+            logger.debug("history.models.save_record_deletion_record.delete", extra={"ident_cely": record.ident_cely})
         logger.debug("history.models.save_record_deletion_record.end")
 
     def set_snapshots(self):

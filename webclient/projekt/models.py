@@ -203,9 +203,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         verbose_name = "projekty"
 
     def send_ep01(self, rep_bin_file=None):
-        logger.debug(
-            "projekt.models.Projekt.send_ep01", extra={"rep_bin_file": rep_bin_file, "ident_cely": self.ident_cely}
-        )
+        logger.debug("projekt.models.Projekt.send_ep01", extra={"file": rep_bin_file, "ident_cely": self.ident_cely})
         from services.mailer import Mailer
 
         if self.ident_cely[0] == OBLAST_CECHY:
@@ -242,8 +240,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         logger.debug(
             "projekt.models.Projekt.set_schvaleny.start",
             extra={
-                "old_ident_cely": old_ident,
-                "new_idet_cely": self.ident_cely,
+                "ident_cely_old": old_ident,
+                "ident_cely": self.ident_cely,
                 "transaction": self.active_transaction.uid,
             },
         )
@@ -258,8 +256,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         logger.debug(
             "projekt.models.Projekt.set_schvaleny.end",
             extra={
-                "old_ident_cely": old_ident,
-                "new_idet_cely": self.ident_cely,
+                "ident_cely_old": old_ident,
+                "ident_cely": self.ident_cely,
                 "transaction": self.active_transaction.uid,
             },
         )
@@ -333,7 +331,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 file_deleted_pk_list.append(file.pk)
             logger.debug(
                 "projekt.models.Projekt.set_archivovany.files_deleted",
-                extra={"deleted": len(file_deleted_pk_list), "deleted_list": file_deleted_pk_list},
+                extra={"count": len(file_deleted_pk_list), "list": file_deleted_pk_list},
             )
 
     def set_archivovany(self, user):
@@ -493,7 +491,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                         + a.archeologicky_zaznam.ident_cely
                     ] = akce_warnings
             else:
-                logger.error("projekt.models.check_pred_uzavrenim.check_akce_error", extra={"ident": self.ident_cely})
+                logger.error(
+                    "projekt.models.check_pred_uzavrenim.check_akce_error", extra={"ident_cely": self.ident_cely}
+                )
         result = {k: str(v) for (k, v) in result.items()}
         return result
 
@@ -572,7 +572,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 idents = [sub.lstrip("0") for sub in idents]
                 idents = [eval(i) for i in idents]
                 missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
-                logger.debug("dokuments.models.get_akce_ident.missing", extra={"missing": missing[0]})
+                logger.debug("dokuments.models.get_akce_ident.missing", extra={"data": missing[0]})
                 logger.debug(missing[0])
                 if missing[0] >= MAXIMUM:
                     logger.error("dokuments.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
@@ -588,8 +588,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 "projekt.models.projekt.set_permanent_ident_cely.update_repository",
                 extra={
                     "ident_cely_old": old_ident,
-                    "ident_cely_new": self.ident_cely,
-                    "fedora_transaction": self.active_transaction.uid,
+                    "ident_cely": self.ident_cely,
+                    "transaction": self.active_transaction.uid,
                 },
             )
             self.save_metadata()
@@ -599,7 +599,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             "projekt.models.projekt.set_permanent_ident_cely.end",
             extra={
                 "ident_cely_old": old_ident,
-                "ident_cely_new": self.ident_cely,
+                "ident_cely": self.ident_cely,
                 "transaction": getattr(self.active_transaction, "uid", None),
             },
         )
@@ -624,9 +624,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             logger.debug(
                 "projekt.models._save_document.created",
                 extra={
-                    "projekt_ident": self.ident_cely,
-                    "soubor": soubor.pk,
-                    "created_filename": filename,
+                    "ident_cely": self.ident_cely,
+                    "pk": soubor.pk,
+                    "file": filename,
                     "transaction": fedora_transaction.uid,
                 },
             )
@@ -638,7 +638,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             logger.debug(
                 "projekt.models.create_confirmation_document.duplicat_exists",
-                extra={"projekt_ident": self.ident_cely, "filename": filename, "transaction": fedora_transaction.uid},
+                extra={"ident_cely": self.ident_cely, "file": filename, "transaction": fedora_transaction.uid},
             )
         return rep_bin_file
 
@@ -649,8 +649,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         logger.debug(
             "projekt.models.create_cancel_confirmation_document.start",
             extra={
-                "projekt_ident": self.ident_cely,
-                "user": user,
+                "projekt": self.ident_cely,
+                "ident_cely": user,
                 "transaction": self.active_transaction.uid,
             },
         )
@@ -666,9 +666,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         logger.debug(
             "projekt.models.create_confirmation_document.start",
             extra={
-                "projekt_ident": self.ident_cely,
-                "additional": additional,
-                "user": user,
+                "projekt": self.ident_cely,
+                "data": additional,
+                "ident_cely": user,
                 "transaction": fedora_transaction.uid,
             },
         )

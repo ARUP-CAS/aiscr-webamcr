@@ -40,7 +40,7 @@ class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
             dokument_cast: DokumentCast = self.dokument_cast
             self.initial_dokument = dokument_cast.dokument
         except ValueError as err:
-            logger.error("neidentakce.models.NeidentAkce.__init__.no_dokument", extra={"err": err})
+            logger.error("neidentakce.models.NeidentAkce.__init__.no_dokument", extra={"error": err})
             self.initial_dokument = None
         self.suppress_signal = False
 

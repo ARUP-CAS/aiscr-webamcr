@@ -304,7 +304,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
         Metóda pro získani záznamu DJ z db podle ident_cely.
         """
         dj_ident_cely = self.kwargs["dj_ident_cely"]
-        logger.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", extra={"dj_ident_cely": dj_ident_cely})
+        logger.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", extra={"ident_cely": dj_ident_cely})
         objects = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return objects
 
@@ -341,7 +341,7 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
                 typ_akce = self.get_archeologicky_zaznam().akce.typ
         except Exception as err:
             logger.debug(
-                "arch_z.views.DokumentacniJednotkaCreateView.get_context_data.cannot_get_typ_akce", extra={"err": err}
+                "arch_z.views.DokumentacniJednotkaCreateView.get_context_data.cannot_get_typ_akce", extra={"error": err}
             )
         context["dj_form_create"] = CreateDJForm(
             jednotky=self.get_jednotky(),
@@ -430,7 +430,7 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
-        logger.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", extra={"dj_ident_cely": dj_ident_cely})
+        logger.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", extra={"ident_cely": dj_ident_cely})
         object = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return object
 
@@ -483,7 +483,7 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
                     if stat != "OK":
                         raise Exception("arch_z.views.PianCreateView.get.transormation_error")
             except Exception as err:
-                logger.error("arch_z.views.PianCreateView.get.import_pian.error", extra={"err": err})
+                logger.error("arch_z.views.PianCreateView.get.import_pian.error", extra={"error": err})
                 messages.add_message(
                     self.request,
                     messages.ERROR,
@@ -543,7 +543,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
                     if stat != "OK":
                         raise Exception("arch_z.views.PianUpdateView.transormation_error")
             except Exception as err:
-                logger.error("arch_z.views.PianUpdateView.get.import_pian.error", extra={"err": err})
+                logger.error("arch_z.views.PianUpdateView.get.import_pian.error", extra={"error": err})
                 messages.add_message(
                     self.request,
                     messages.ERROR,
@@ -625,7 +625,7 @@ def edit(request, ident_cely):
         else:
             logger.warning(
                 "arch_z.views.edit.form_az_valid",
-                extra={"form_az_errors": form_az.errors, "form_akce_errors": form_akce.errors},
+                extra={"az_error": str(form_az.errors), "error": str(form_akce.errors)},
             )
     else:
         form_az = CreateArchZForm(instance=zaznam)
@@ -710,7 +710,7 @@ def odeslat(request, ident_cely):
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_odeslanim()
-        logger.debug("arch_z.views.odeslat.warnings", extra={"ident_cely": ident_cely, "warnings": str(warnings)})
+        logger.debug("arch_z.views.odeslat.warnings", extra={"ident_cely": ident_cely, "warning": str(warnings)})
 
         if warnings:
             request.session["temp_data"] = warnings
@@ -781,7 +781,7 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_archivaci()
-        logger.debug("arch_z.views.archivovat", extra={"warnings": warnings})
+        logger.debug("arch_z.views.archivovat", extra={"warning": warnings})
         if warnings:
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, get_message(az, "NELZE_ARCHIVOVAT"))
@@ -848,7 +848,7 @@ def vratit(request, ident_cely):
                 #  Return also project from the states P6 or P5 to P4
                 projekt.active_transaction = fedora_trasnaction
                 projekt_stav = projekt.stav
-                logger.debug("arch_z.views.vratit.valid", extra={"ident": ident_cely, "stav": projekt.stav})
+                logger.debug("arch_z.views.vratit.valid", extra={"ident_cely": ident_cely, "stav": projekt.stav})
                 if projekt_stav == PROJEKT_STAV_UZAVRENY:
                     projekt.set_vracen(request.user, projekt_stav - 1, "Automatické vrácení projektu")
                     projekt.save()
@@ -866,7 +866,7 @@ def vratit(request, ident_cely):
             fedora_trasnaction.success_message = get_message(az, "USPESNE_VRACENA")
             return JsonResponse({"redirect": az.get_absolute_url()})
         else:
-            logger.debug("arch_z.views.vratit.not_valid", extra={"errors": form.errors})
+            logger.debug("arch_z.views.vratit.not_valid", extra={"error": form.errors})
     else:
         form = VratitForm(initial={"old_stav": az.stav})
     context = {
@@ -893,14 +893,14 @@ def zapsat(request, projekt_ident_cely=None):
         # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
         if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
             logger.debug(
-                "arch_z.views.zapsat.stav_error", extra={"projekt_ident_cely": projekt_ident_cely, "stav": projekt.stav}
+                "arch_z.views.zapsat.stav_error", extra={"ident_cely": projekt_ident_cely, "stav": projekt.stav}
             )
             raise PermissionDenied("Nelze pridat akci k projektu ve stavu " + str(projekt.stav))
         # Projektove akce nelze vytvorit pro projekt typu pruzkum
         if projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
             logger.debug(
                 "arch_z.views.zapsat.typ_projektu_error",
-                extra={"projekt_ident_cely": projekt_ident_cely, "stav": projekt.stav},
+                extra={"ident_cely": projekt_ident_cely, "stav": projekt.stav},
             )
             raise PermissionDenied(f"Nelze pridat akci k projektu typu {projekt.typ_projektu}")
         uzamknout_specifik = True
@@ -943,7 +943,7 @@ def zapsat(request, projekt_ident_cely=None):
             prefix="_osv",
         )
         if form_az.is_valid() and form_akce.is_valid() and ostatni_vedouci_objekt_formset.is_valid():
-            logger.debug("arch_z.views.zapsat.form_valid", extra={"projekt_ident_cely": projekt_ident_cely})
+            logger.debug("arch_z.views.zapsat.form_valid", extra={"ident_cely": projekt_ident_cely})
             az = form_az.save(commit=False)
             az: ArcheologickyZaznam
             fedora_transaction = az.create_transaction(request.user)
@@ -995,11 +995,11 @@ def zapsat(request, projekt_ident_cely=None):
                     else:
                         logger.debug(
                             "arch_z.views.zapsat.form_not_valid",
-                            extra={"errors": ostatni_vedouci_objekt_formset.errors},
+                            extra={"error": ostatni_vedouci_objekt_formset.errors},
                         )
                     akce.set_snapshots()
                     fedora_transaction.success_message = get_message(az, "USPESNE_ZAPSANA")
-                    logger.debug("arch_z.views.zapsat.success", extra={"akce": akce.pk, "projekt": projekt_ident_cely})
+                    logger.debug("arch_z.views.zapsat.success", extra={"pk": akce.pk, "ident_cely": projekt_ident_cely})
                     az.close_active_transaction_when_finished = True
                     az.save()
                     return redirect("arch_z:detail", az.ident_cely)
@@ -1013,9 +1013,7 @@ def zapsat(request, projekt_ident_cely=None):
                         extra={"ident_cely": az.ident_cely},
                     )
         else:
-            logger.debug(
-                "arch_z.views.zapsat.not_valid", extra={"form_az_errors": form_az, "form_akce_errors": form_akce.errors}
-            )
+            logger.debug("arch_z.views.zapsat.not_valid", extra={"az_error": form_az, "error": form_akce.errors})
 
     else:
         ostatni_vedouci_objekt_formset = inlineformset_factory(
@@ -1107,7 +1105,7 @@ def smazat(request, ident_cely):
                 "arch_z.views.smazat.success", extra={"ident_cely": ident_cely, "transaction": fedora_transaction}
             )
         except RestrictedError as err:
-            logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "err": err})
+            logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "error": err})
             fedora_transaction.error_message = ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY
             fedora_transaction.rollback_transaction()
             return JsonResponse(
@@ -1196,12 +1194,12 @@ def post_akce2kat(request):
     Funkce pohledu pro získaní souradnic katastru akce.
     """
     body = json.loads(request.body.decode("utf-8"))
-    logger.debug("arch_z.views.post_akce2kat.start", extra={"body": body})
+    logger.debug("arch_z.views.post_akce2kat.start", extra={"data": body})
     katastr_name = body["cadastre"]
     try:
         kod = katastr_name[katastr_name.find(";") + 1 : katastr_name.find(")")].strip()
     except (ValueError, IndexError) as e:
-        logger.error("arch_z.views.post_akce2kat.katastr_name_error", extra={"katastr_name": katastr_name, "error": e})
+        logger.error("arch_z.views.post_akce2kat.katastr_name_error", extra={"katastr": katastr_name, "error": e})
         return JsonResponse(
             {
                 "pians": [],
@@ -1223,7 +1221,7 @@ def post_akce2kat(request):
                 status=200,
             )
         except CannotFindCadasterCentre as err:
-            logger.error("arch_z.views.post_akce2kat.error", extra={"err": err})
+            logger.error("arch_z.views.post_akce2kat.error", extra={"error": err})
             return JsonResponse(
                 {
                     "pians": [],
@@ -1383,16 +1381,14 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
     """
     Funkce pohledu pro smazání dalšího vedoucího akce.
     """
-    logger.debug(
-        "arch_z.views.smazat_akce_vedoucí.start", extra={"ident_cely": ident_cely, "akce_vedouci_id": akce_vedouci_id}
-    )
+    logger.debug("arch_z.views.smazat_akce_vedoucí.start", extra={"ident_cely": ident_cely, "pk": akce_vedouci_id})
     zaznam: AkceVedouci = AkceVedouci.objects.get(id=akce_vedouci_id)
     az: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if request.method == "POST":
         if zaznam.akce.archeologicky_zaznam.ident_cely != ident_cely:
             logger.debug(
                 "arch_z.views.smazat_akce_vedoucí.error",
-                extra={"ident_cely": ident_cely, "akce_vedouci_id": akce_vedouci_id},
+                extra={"ident_cely": ident_cely, "pk": akce_vedouci_id},
             )
             messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
             return JsonResponse({"redirect": az.get_absolute_url()}, status=403)
@@ -1401,13 +1397,11 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
         az.save_metadata(fedora_transaction, close_transaction=True)
         logger.debug(
             "arch_z.views.smazat_akce_vedoucí.success",
-            extra={"ident_cely": ident_cely, "akce_vedouci_id": akce_vedouci_id},
+            extra={"ident_cely": ident_cely, "pk": akce_vedouci_id},
         )
         return JsonResponse({"redirect": reverse("arch_z:edit", kwargs={"ident_cely": ident_cely})})
     else:
-        logger.debug(
-            "arch_z.views.smazat_akce_vedoucí.get", extra={"ident_cely": ident_cely, "akce_vedouci_id": akce_vedouci_id}
-        )
+        logger.debug("arch_z.views.smazat_akce_vedoucí.get", extra={"ident_cely": ident_cely, "pk": akce_vedouci_id})
         context = {
             "object": zaznam,
             "title": _("arch_z.views.smazat_akce_vedoucí.title.text"),
@@ -1616,7 +1610,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         ).save()
         az.close_active_transaction_when_finished = True
         az.save()
-        logger.debug("arch_z.views.ProjektAkceChange.post", extra={"az_ident_cely": str(az.ident_cely)})
+        logger.debug("arch_z.views.ProjektAkceChange.post", extra={"ident_cely": str(az.ident_cely)})
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 
@@ -1691,13 +1685,13 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
                 poznamka=f"{old_ident} -> {az.ident_cely}",
                 vazba=az.historie,
             ).save()
-            logger.debug("arch_z.views.SamostatnaAkceChange.post.valid", extra={"az_ident_cely": str(az.ident_cely)})
+            logger.debug("arch_z.views.SamostatnaAkceChange.post.valid", extra={"ident_cely": str(az.ident_cely)})
             az.close_active_transaction_when_finished = True
             az.save()
         else:
             logger.debug(
                 "arch_z.views.SamostatnaAkceChange.post.not_valid",
-                extra={"errors": form.errors, "form_non_field_errors": form.non_field_errors},
+                extra={"error": form.errors, "form_error": form.non_field_errors},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
@@ -1891,7 +1885,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_pripojit_pian_id": show_pripojit_pian_id,
     }
     if has_adb and app != "lokalita":
-        logger.debug("arch_z.views.get_dj_form_detail", extra={"jednotka_ident_cely": jednotka.ident_cely})
+        logger.debug("arch_z.views.get_dj_form_detail", extra={"ident_cely": jednotka.ident_cely})
         dj_form_detail["adb_form"] = CreateADBForm(
             old_adb_post,
             instance=jednotka.adb,

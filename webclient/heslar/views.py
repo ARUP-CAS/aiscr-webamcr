@@ -54,10 +54,10 @@ def merge_heslare(first, second):
                 data.append((k["heslo"], tuple(druhy_kategorie)))
     except ProgrammingError as err:
         # This error will always be shown before
-        logger.debug("heslar.views.merge_heslare.error", extra={"err": err})
+        logger.debug("heslar.views.merge_heslare.error", extra={"error": err})
     except OperationalError as err:
         # This error will always be shown before
-        logger.debug("heslar.views.merge_heslare.error", extra={"err": err})
+        logger.debug("heslar.views.merge_heslare.error", extra={"error": err})
     return data
 
 
@@ -127,7 +127,7 @@ def zjisti_nadrazenou_hodnotu(request):
             podrazene = nadrazene.id
             i += 1
         except ObjectDoesNotExist as err:
-            logger.debug("heslar.views.zjisti_nadrazenou_hodnotu.does_not_exist", extra={"err": err})
+            logger.debug("heslar.views.zjisti_nadrazenou_hodnotu.does_not_exist", extra={"error": err})
             return JsonResponse(data={}, status=400)
     list = [{"id": nadrazene.id}]
     return JsonResponse(data=list, status=200, safe=False)

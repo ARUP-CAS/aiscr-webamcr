@@ -27,7 +27,7 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
     try:
         instance.set_snapshots()
     except ValueError as err:
-        logger.debug("ez.signals.create_ez_vazby.type_error", extra={"ident_cely": instance.ident_cely, "err": err})
+        logger.debug("ez.signals.create_ez_vazby.type_error", extra={"ident_cely": instance.ident_cely, "error": err})
     else:
         logger.debug("ez.signals.create_ez_vazby.end", extra={"ident_cely": instance.ident_cely})
 

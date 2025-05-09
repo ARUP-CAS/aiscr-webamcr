@@ -103,7 +103,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             if len(pristupnosti_ids) > 0:
                 return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
         except ValueError as err:
-            logger.debug("pian.models.Pian.pristupnost_pom.value_error", extra={"err": err})
+            logger.debug("pian.models.Pian.pristupnost_pom.value_error", extra={"error": err})
         return Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
 
     @property
@@ -316,7 +316,7 @@ def vytvor_pian(katastr, fedora_transaction):
         katastr.save()
         return pian
     except ObjectDoesNotExist as err:
-        logger.error("dj.signals.create_dokumentacni_jednotka.ObjectDoesNotExist", extra={"err": err})
+        logger.error("dj.signals.create_dokumentacni_jednotka.ObjectDoesNotExist", extra={"error": err})
         raise ObjectDoesNotExist()
 
 
@@ -327,7 +327,7 @@ def get_ZM_from_point(point):
     except DatabaseError as e:
         zm10s = Kladyzm.objects.none()
         zm50s = Kladyzm.objects.none()
-        logger.warning("pian.models.get_ZM_from_point.Kladyzm.warning", extra={"error": e, "point": str(point)})
+        logger.warning("pian.models.get_ZM_from_point.Kladyzm.warning", extra={"error": e, "geom": str(point)})
     if len(zm10s) == 1 and len(zm50s) == 1:
         return zm10s[0], zm50s[0]
     return None, None

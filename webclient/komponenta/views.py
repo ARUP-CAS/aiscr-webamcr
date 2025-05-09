@@ -78,7 +78,7 @@ def detail(request, typ_vazby, ident_cely):
         messages.add_message(request, messages.SUCCESS, KOMPONENTA_USPESNE_EDITOVANA)
     elif not form.is_valid():
         messages.add_message(request, messages.ERROR, KOMPONENTU_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("komponenta.views.detail.not_valid", extra={"errors": form.errors, "ident_cely": ident_cely})
+        logger.debug("komponenta.views.detail.not_valid", extra={"error": form.errors, "ident_cely": ident_cely})
 
     if "nalez_edit_nalez" in request.POST:
         druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
@@ -113,8 +113,8 @@ def detail(request, typ_vazby, ident_cely):
             logger.debug(
                 "komponenta.views.detail.form_not_valid_2",
                 extra={
-                    "formset_predmet_errors": formset_predmet.errors,
-                    "formset_objekt_errors": formset_objekt.errors,
+                    "form_error": formset_predmet.errors,
+                    "error": formset_objekt.errors,
                 },
             )
             messages.add_message(request, messages.ERROR, PREDMET_NEBO_OBJEKT_SE_NEPOVEDLO_EDITOVAT)
@@ -227,7 +227,7 @@ def zapsat(request, typ_vazby, dj_ident_cely):
                 args=[cast.dokument.ident_cely, komponenta.ident_cely],
             )
     else:
-        logger.debug("komponenta.views.zapsat.form_not_valid", extra={"formset_errors": form.errors})
+        logger.debug("komponenta.views.zapsat.form_not_valid", extra={"form_error": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         if dj:
             url = reverse(
@@ -273,7 +273,7 @@ def smazat(request, typ_vazby, ident_cely):
         resp = komponenta.delete()
 
         if resp:
-            logger.debug("komponenta.views.smazat.resp", extra={"resp": resp})
+            logger.debug("komponenta.views.smazat.resp", extra={"value": resp})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             if dj:
                 response = JsonResponse({"redirect": dj.get_absolute_url()})
