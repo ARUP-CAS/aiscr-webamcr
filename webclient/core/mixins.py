@@ -24,7 +24,7 @@ class ManyToManyRestrictedClassMixin:
                 except ObjectDoesNotExist as err:
                     logger.debug(
                         "core.mixins.ManyToManyRestrictedClassMixin.has_connections.ObjectDoesNotExist",
-                        extra={"err": err},
+                        extra={"error": err},
                     )
         attr_list = [attr for attr in attr_list if getattr(self, attr).all().count() > 0]
         return len(attr_list) > 0
@@ -35,6 +35,6 @@ class IPWhitelistMixin:
         ALLOWED_IPS = settings.ALLOWED_HOSTS + ["127.0.0.1", "10.0.0.2"]
         client_ip = request.META.get("REMOTE_ADDR", "")  # Get client IP
         if client_ip not in ALLOWED_IPS and "*" not in ALLOWED_IPS:  # Check if IP is allowed
-            logger.error("healthcheck.views.IPWhitelistMixin", extra={"client_ip": client_ip})
+            logger.error("healthcheck.views.IPWhitelistMixin", extra={"ip": client_ip})
             return HttpResponseForbidden("Access denied: Your IP is not allowed.")  # Deny access
         return super().dispatch(request, *args, **kwargs)  # Otherwise, proceed with the view

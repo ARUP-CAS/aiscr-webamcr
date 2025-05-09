@@ -19,14 +19,14 @@ def check_if_task_queued(class_name, pk, task_name):
     except Exception as e:
         logger.warning(
             "xml_generator.models.ModelWithMetadata.check_if_task_queued.Celery_warning",
-            extra={"Exception": e, "app": app},
+            extra={"exception": e, "app": app},
         )
         return False
     for queue in queues:
         if queue is None:
             logger.warning(
                 "xml_generator.models.ModelWithMetadata.check_if_task_queued.warning",
-                extra={"class_name": class_name, "pk": pk, "i": i, "queues": queues},
+                extra={"class_name": class_name, "pk": pk, "key": i, "queue": queues},
             )
             return False
         for queue_name, queue_tasks in queue.items():
@@ -99,8 +99,8 @@ class ModelWithMetadata(BaseAmcrModel):
                 "xml_generator.models.ModelWithMetadata.save_metadata.no_ident",
                 extra={
                     "ident_cely": self.ident_cely,
-                    "record_pk": self.pk,
-                    "record_class": self.__class__.__name__,
+                    "pk": self.pk,
+                    "class_name": self.__class__.__name__,
                     "transaction": fedora_transaction.uid,
                     "close_transaction": close_transaction,
                 },
@@ -110,8 +110,8 @@ class ModelWithMetadata(BaseAmcrModel):
             "xml_generator.models.ModelWithMetadata.save_metadata.start",
             extra={
                 "ident_cely": self.ident_cely,
-                "record_pk": self.pk,
-                "record_class": self.__class__.__name__,
+                "pk": self.pk,
+                "class_name": self.__class__.__name__,
                 "transaction": getattr(fedora_transaction, "uid", ""),
                 "close_transaction": close_transaction,
             },
@@ -140,7 +140,7 @@ class ModelWithMetadata(BaseAmcrModel):
             "xml_generator.models.ModelWithMetadata.save_metadata.end",
             extra={
                 "transaction": getattr(fedora_transaction, "uid", ""),
-                "transaction_mark_closed": self.close_active_transaction_when_finished,
+                "close_transaction": self.close_active_transaction_when_finished,
             },
         )
 
@@ -222,7 +222,7 @@ class ModelWithMetadata(BaseAmcrModel):
                         item.delete()
                     self.soubory.delete()
         except ObjectDoesNotExist as err:
-            logger.debug("xml_generator.models.ModelWithMetadata.record_deletion.end", extra={"err": err})
+            logger.debug("xml_generator.models.ModelWithMetadata.record_deletion.end", extra={"error": err})
         connector.record_deletion()
         if close_transaction is True:
             logger.debug(
@@ -241,8 +241,8 @@ class ModelWithMetadata(BaseAmcrModel):
             "xml_generator.models.ModelWithMetadata.record_ident_change.start",
             extra={
                 "transaction": fedora_transaction,
-                "old_ident_cely": old_ident_cely,
-                "new_ident_cely": new_ident_cely,
+                "ident_cely_old": old_ident_cely,
+                "ident_cely": new_ident_cely,
             },
         )
         from core.repository_connector import FedoraTransaction
@@ -265,9 +265,9 @@ class ModelWithMetadata(BaseAmcrModel):
             logger.debug(
                 "cron.record_ident_change.do.end",
                 extra={
-                    "record_pk": self.pk,
-                    "old_ident_cely": old_ident_cely,
-                    "new_ident_cely": new_ident_cely,
+                    "pk": self.pk,
+                    "ident_cely_old": old_ident_cely,
+                    "ident_cely": new_ident_cely,
                     "transaction": fedora_transaction.uid,
                 },
             )
@@ -288,14 +288,14 @@ class ModelWithMetadata(BaseAmcrModel):
                     except (ObjectDoesNotExist, AttributeError) as err:
                         logger.debug(
                             "xml_generator.models.ModelWithMetadata.record_ident_change.process_arch_z" ".no_pian",
-                            extra={"err": err},
+                            extra={"error": err},
                         )
                     try:
                         inner_item.adb.save_metadata(fedora_transaction)
                     except (ObjectDoesNotExist, AttributeError) as err:
                         logger.debug(
                             "xml_generator.models.ModelWithMetadata.record_ident_change.process_arch_z.no_adb",
-                            extra={"err": err},
+                            extra={"error": err},
                         )
                 for inner_item in record.casti_dokumentu.all():
                     inner_item: DokumentCast
@@ -379,8 +379,8 @@ class ModelWithMetadata(BaseAmcrModel):
             "xml_generator.models.ModelWithMetadata.record_ident_change.end",
             extra={
                 "transaction": fedora_transaction.uid,
-                "old_ident_cely": old_ident_cely,
-                "new_ident_cely": new_ident_cely,
+                "ident_cely_old": old_ident_cely,
+                "ident_cely": new_ident_cely,
             },
         )
 

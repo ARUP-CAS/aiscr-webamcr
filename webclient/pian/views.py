@@ -62,7 +62,7 @@ def detail(request, ident_cely):
         instance=pian,
     )
     if form.is_valid():
-        logger.debug("pian.views.detail.form.valid", extra={"pian_ident_cely": pian.ident_cely})
+        logger.debug("pian.views.detail.form.valid", extra={"ident_cely": pian.ident_cely})
         pian = form.save(commit=False)
         fedora_transaction = pian.create_transaction(request.user)
         pian.save()
@@ -74,7 +74,7 @@ def detail(request, ident_cely):
         logger.debug("pian.views.detail.form.finished", extra={"transaction": fedora_transaction.uid})
         response = redirect(dj.get_absolute_url())
     else:
-        logger.debug("pian.views.detail.form.not_valid", extra={"form_errors": form.errors})
+        logger.debug("pian.views.detail.form.not_valid", extra={"error": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         response = redirect(dj.get_absolute_url() + "/pian/edit/" + str(ident_cely))
     response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000, secure=True, samesite="Strict")
@@ -108,7 +108,7 @@ def odpojit(request, dj_ident_cely):
         update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
         logger.debug(
             "pian.views.odpojit.odpojen",
-            extra={"pian_ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid},
+            extra={"ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid},
         )
         if delete_pian:
             pian.skip_container_check = True
@@ -119,12 +119,12 @@ def odpojit(request, dj_ident_cely):
                 dj.initial_pian = None
                 logger.debug(
                     "pian.views.odpojit.smazan",
-                    extra={"pian_ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid},
+                    extra={"ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid},
                 )
             except (ValueError, ObjectDoesNotExist) as err:
                 logger.debug(
                     "pian.views.odpojit.error",
-                    extra={"pian_ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid, "err": err},
+                    extra={"ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid, "error": err},
                 )
             fedora_transaction.success_message = PIAN_USPESNE_SMAZAN
         else:
@@ -178,7 +178,7 @@ def potvrdit(request, dj_ident_cely):
         except MaximalIdentNumberError:
             fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
             logger.debug(
-                "pian.views.potvrdit", extra={"pian_ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid}
+                "pian.views.potvrdit", extra={"ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid}
             )
             fedora_transaction.rollback_transaction()
             return JsonResponse(
@@ -191,7 +191,7 @@ def potvrdit(request, dj_ident_cely):
             pian.save()
             logger.debug(
                 "pian.views.potvrdit.potvrzen",
-                extra={"pian_ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid},
+                extra={"ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid},
             )
             response = JsonResponse({"redirect": dj.get_absolute_url()})
             response.set_cookie(
@@ -224,14 +224,13 @@ def create(request, dj_ident_cely):
     logger.debug("pian.views.create.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     form = PianCreateForm(data=request.POST)
-    logger.debug("pian.views.create.form_data", extra={"form_data": form.data, "post_data": request.POST})
     if form.is_valid():
         logger.debug("pian.views.create.form_valid")
         pian = form.save(commit=False)
         try:
             pian.ident_cely = get_temporary_pian_ident(pian.zm50)
         except MaximalIdentNumberError as e:
-            logger.warning("pian.views.create.error", extra={"message": messages.ERROR, "exception": e.message})
+            logger.warning("pian.views.create.error", extra={"info": messages.ERROR, "exception": e.message})
             messages.add_message(request, messages.ERROR, e.message)
         else:
             fedora_transaction: FedoraTransaction = pian.create_transaction(request.user)
@@ -246,7 +245,7 @@ def create(request, dj_ident_cely):
                 pian.save()
                 logger.debug(
                     "pian.views.create.finished",
-                    extra={"info": ZAZNAM_USPESNE_VYTVOREN, "dj_pk": dj.pk, "transaction": fedora_transaction.uid},
+                    extra={"info": ZAZNAM_USPESNE_VYTVOREN, "pk": dj.pk, "transaction": fedora_transaction.uid},
                 )
             else:
                 logger.info(
@@ -256,7 +255,7 @@ def create(request, dj_ident_cely):
                 fedora_transaction.rollback_transaction()
         response = redirect(dj.get_absolute_url())
     else:
-        logger.info("pian.views.create.not_valid", extra={"errors": form.errors})
+        logger.info("pian.views.create.not_valid", extra={"error": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         response = redirect(dj.get_absolute_url() + "/pian/zapsat")
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict")
@@ -397,7 +396,7 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
         try:
             sheet = pd.read_csv(docfile, sep=",")
         except ValueError as err:
-            logger.debug("pian.views.ImportovatPianView.post.label_check.unreadable_or_empty", extra={"err": err})
+            logger.debug("pian.views.ImportovatPianView.post.label_check.unreadable_or_empty", extra={"error": err})
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
         if sheet.shape[1] == 0:
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
@@ -441,7 +440,8 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
                     new_sheet = pd.concat([new_sheet, pd.DataFrame(rows)], ignore_index=True)
         except KeyError as err:
             logger.debug(
-                "pian.views.ImportovatPianView.post.sheet_apply.key_error", extra={"columns": sheet.columns, "err": err}
+                "pian.views.ImportovatPianView.post.sheet_apply.key_error",
+                extra={"columns": sheet.columns, "error": err},
             )
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
         context = self.get_context_data()

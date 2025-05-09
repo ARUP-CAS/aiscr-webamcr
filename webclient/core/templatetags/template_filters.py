@@ -183,7 +183,5 @@ def get_value_from_heslar(nazev_heslare, hodnota):
     if (nazev_heslare, hodnota) in values:
         return values[(nazev_heslare, hodnota)]
     else:
-        logger.error(
-            "template_filters.get_value_from_heslar.error", extra={"nazev_heslare": nazev_heslare, "hodnota": hodnota}
-        )
+        logger.error("template_filters.get_value_from_heslar.error", extra={"heslar": nazev_heslare, "value": hodnota})
         return ""

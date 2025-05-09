@@ -129,9 +129,7 @@ def get_settings(item_group, item_id):
     settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
     if settings_query.count() > 0:
         return settings_query.last().value
-    logger.error(
-        "core.template_tags.get_settings.missing_settings", extra={"item_group": item_group, "item_id": item_id}
-    )
+    logger.error("core.template_tags.get_settings.missing_settings", extra={"group": item_group, "pk": item_id})
     return ""
 
 

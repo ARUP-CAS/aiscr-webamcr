@@ -60,9 +60,7 @@ def detail(request, typ_vazby, ident_cely):
             if pian_db is not None and not (
                 old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR
             ):
-                logger.debug(
-                    "dj.views.detail.added_pian_from_db", extra={"pian_db": pian_db, "ident_cely": dj.ident_cely}
-                )
+                logger.debug("dj.views.detail.added_pian_from_db", extra={"pian": pian_db, "ident_cely": dj.ident_cely})
                 dj.pian = pian_db
             dj.save()
         elif old_typ == TYP_DJ_KATASTR and form.cleaned_data["typ"].id != TYP_DJ_KATASTR:
@@ -117,8 +115,8 @@ def detail(request, typ_vazby, ident_cely):
             logger.debug(
                 "dj.views.detail.update_pian_metadata",
                 extra={
-                    "pian_db": pian_db.ident_cely if pian_db else "None",
-                    "instance_pian": dj.pian.ident_cely,
+                    "value": pian_db.ident_cely if pian_db else "None",
+                    "pian": dj.pian.ident_cely,
                     "ident_cely": dj.ident_cely,
                 },
             )
@@ -131,7 +129,7 @@ def detail(request, typ_vazby, ident_cely):
             if dj.typ != Heslar.objects.get(id=TYP_DJ_KATASTR):
                 pian_db.save()
     else:
-        logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors, "ident_cely": dj.ident_cely})
+        logger.warning("dj.views.detail.form_is_not_valid", extra={"error": form.errors, "ident_cely": dj.ident_cely})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     if "adb_detail" in request.POST:
@@ -154,7 +152,7 @@ def detail(request, typ_vazby, ident_cely):
         else:
             logger.debug(
                 "dj.views.detail.adb_detail.form_is_not_valid",
-                extra={"errors": form.errors, "ident_cely": ident_cely, "adb_ident_cely": ident_cely},
+                extra={"error": form.errors, "ident_cely": ident_cely, "adb_ident_cely": ident_cely},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
             request.session["_old_adb_post"] = request.POST
@@ -186,10 +184,7 @@ def detail(request, typ_vazby, ident_cely):
                 vyskovy_bod: VyskovyBod
                 vyskovy_bod.active_transaction = fedora_transaction
                 if isinstance(vyskovy_bod, VyskovyBod):
-                    logger.debug(
-                        "dj.views.detail.adb_zapsat_vyskove_body.save",
-                        extra={"vyskovy_bod": vyskovy_bod.__dict__, "vyskovy_bod_form": vyskovy_bod_form.__dict__},
-                    )
+                    logger.debug("dj.views.detail.adb_zapsat_vyskove_body.save")
                     vyskovy_bod.set_geom(
                         vyskovy_bod_form.cleaned_data.get("northing", 0),
                         vyskovy_bod_form.cleaned_data.get("easting", 0),
@@ -204,7 +199,7 @@ def detail(request, typ_vazby, ident_cely):
         else:
             logger.debug(
                 "dj.views.detail.adb_zapsat_vyskove_body.form_set_is_not_valid",
-                extra={"errors": formset.errors, "ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely},
+                extra={"error": str(formset.errors), "ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely},
             )
             messages.add_message(
                 request,
@@ -248,9 +243,9 @@ def zapsat(request, arch_z_ident_cely):
             dj.active_transaction = fedora_transaction
             dj.close_active_transaction_when_finished = True
             resp = dj.save()
-            logger.debug("dj.views.detail.zapsat.dj_resp", {"resp": resp})
+            logger.debug("dj.views.detail.zapsat.dj_resp", {"value": resp})
     else:
-        logger.debug("dj.views.detail.zapsat.form_not_valid", {"errors": form.errors})
+        logger.debug("dj.views.detail.zapsat.form_not_valid", {"error": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         redirect = az.get_redirect()
     return redirect
@@ -274,7 +269,7 @@ def smazat(request, ident_cely):
             update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction)
             if resp:
                 fedora_transaction.mark_transaction_as_closed()
-                logger.debug("dj.views.detail.smazat.deleted", extra={"resp": resp})
+                logger.debug("dj.views.detail.smazat.deleted", extra={"value": resp})
                 return JsonResponse({"redirect": dj.archeologicky_zaznam.get_absolute_url()})
             else:
                 fedora_transaction.rollback_transaction()
@@ -284,7 +279,7 @@ def smazat(request, ident_cely):
                     status=403,
                 )
         except RestrictedError as err:
-            logger.warning("dj.views.detail.smazat.not_deleted", extra={"ident_cely": ident_cely, "err": err})
+            logger.warning("dj.views.detail.smazat.not_deleted", extra={"ident_cely": ident_cely, "error": err})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
             return JsonResponse(
                 {"redirect": dj.archeologicky_zaznam.get_absolute_url()},
@@ -350,5 +345,5 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
                 zaznam.save()
             zaznam.refresh_from_db()
         else:
-            logger.debug("dj.views.ChangeKatastrView.post.form_not_valid", {"errors": form.errors})
+            logger.debug("dj.views.ChangeKatastrView.post.form_not_valid", {"error": form.errors})
         return JsonResponse({"redirect": zaznam.get_absolute_url()})
