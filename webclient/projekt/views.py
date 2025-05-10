@@ -119,7 +119,7 @@ from oznameni.forms import OznamovatelProjektCreateForm
 from pas.models import SamostatnyNalez
 from pas.views import PasPermissionFilterMixin
 from pian.views import PianPermissionFilterMixin
-from pid.client import DoiWriteError
+from pid.exceptions import DoiWriteError
 from projekt.filters import ProjektFilter
 from projekt.forms import (
     CreateProjektForm,

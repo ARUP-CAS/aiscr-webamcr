@@ -94,7 +94,7 @@ from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
 from pian.forms import PianCreateForm
 from pian.models import Pian
-from pid.client import DoiWriteError
+from pid.exceptions import DoiWriteError
 from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer

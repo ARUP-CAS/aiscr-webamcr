@@ -5,30 +5,13 @@ from django.utils.translation import gettext as _
 from dokument.models import Dokument
 from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez
+from pid.exceptions import DoiConnectionError, DoiNoTransactionError, DoiWriteError
 from pid.model_serializers import DokumentSerializer, LokalitaSerializer, SamostatnyNalezSerializer
 from requests.auth import HTTPBasicAuth
 
 from webclient.settings.base import DATACITE_URL, DOI_USER, DOI_USER_PASSWORD, IGSN_USER, IGSN_USER_PASSWORD
 
 logger = logging.getLogger(__name__)
-
-
-class DoiNoTransactionError(Exception):
-    pass
-
-
-class DoiWriteError(Exception):
-    def __init__(self, status_code=None, response_text=None, request_url=None):
-        message = f"Request to {request_url} failed with status {status_code} and response: {response_text}."
-        super().__init__(message)
-        super().__init__()
-        self.status_code = status_code
-        self.response_text = response_text
-        self.request_url = request_url
-
-
-class DoiConnectionError(DoiWriteError):
-    pass
 
 
 class DigitalObjectIdentifierClient:

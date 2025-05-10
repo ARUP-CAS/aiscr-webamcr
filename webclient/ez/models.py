@@ -13,7 +13,6 @@ from core.constants import (
     ZAPSANI_EXT_ZD,
 )
 from core.exceptions import MaximalIdentNumberError
-from core.repository_connector import FedoraError
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from django.urls import reverse
@@ -22,7 +21,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_EXTERNI_ZDROJ_TYP
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
-from pid.client import DoiWriteError
+from pid.exceptions import DoiWriteError
 from uzivatel.models import Osoba
 from xml_generator.models import ModelWithMetadata
 
@@ -139,6 +138,8 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         Metóda pro nastavení stavu potvrzená a uložení změny do historie pro externí zdroj.
         Pokud je ident dočasný nahrazení identem stálým.
         """
+        from core.repository_connector import FedoraError
+
         try:
             self.stav = EZ_STAV_POTVRZENY
             historie_poznamka = self.check_set_permanent_ident()

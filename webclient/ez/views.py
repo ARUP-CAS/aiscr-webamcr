@@ -52,7 +52,7 @@ from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
-from pid.client import DoiWriteError
+from pid.exceptions import DoiWriteError
 from uzivatel.models import Osoba, User
 
 from .filters import ExterniZdrojFilter
