@@ -13,20 +13,18 @@ from webclient.settings.base import DATACITE_URL, DOI_USER, DOI_USER_PASSWORD, I
 logger = logging.getLogger(__name__)
 
 
+class DoiNoTransactionError(Exception):
+    pass
+
+
 class DoiWriteError(Exception):
-    pass
-
-
-class DoiHasBeenAlreadyPublishedError(DoiWriteError):
-    pass
-
-
-class DoiHasNotBeenPublishedYetError(DoiWriteError):
-    pass
-
-
-class DoiNoTransactionError(DoiWriteError):
-    pass
+    def __init__(self, status_code=None, response_text=None, request_url=None):
+        message = f"Request to {request_url} failed with status {status_code} and response: {response_text}."
+        super().__init__(message)
+        super().__init__()
+        self.status_code = status_code
+        self.response_text = response_text
+        self.request_url = request_url
 
 
 class DoiConnectionError(DoiWriteError):
@@ -62,7 +60,7 @@ class DigitalObjectIdentifierClient:
                     "request_url": response.url,
                 },
             )
-            raise DoiWriteError
+            raise DoiWriteError(response.status_code, response.text, response.url)
 
     def get_record_url(self):
         return f"{DATACITE_URL.rstrip('/')}/{self.serializer._get_prefix()}/{self.serializer.get_ident_cely()}"
@@ -77,7 +75,7 @@ class DigitalObjectIdentifierClient:
                     "status_code": response.status_code,
                 },
             )
-            raise DoiConnectionError(response.text)
+            raise DoiConnectionError(response.status_code, response.text, response.url)
         return str(response.status_code).startswith("2")
 
     def delete_record(self):

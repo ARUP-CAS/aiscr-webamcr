@@ -44,7 +44,7 @@ from core.message_constants import (
 )
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.repository_connector import FedoraRepositoryConnector
+from core.repository_connector import FedoraError, FedoraRepositoryConnector
 from core.utils import (
     CannotFindCadasterCentre,
     get_all_pians_with_akce,
@@ -62,6 +62,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.db import transaction
 from django.db.models import Q, RestrictedError
 from django.forms import inlineformset_factory
 from django.http import Http404, HttpResponse, JsonResponse
@@ -93,6 +94,7 @@ from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
 from pian.forms import PianCreateForm
 from pian.models import Pian
+from pid.client import DoiWriteError
 from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer
@@ -754,30 +756,34 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        fedora_transaction = az.create_transaction(request.user)
-        az.set_archivovany(request.user)
-
+        fedora_transaction = az.create_transaction(request.user, get_message(az, "USPESNE_ARCHIVOVANA"))
         try:
-            az.lokalita.igsn_publish()
-            az.lokalita.set_igsn()
-            az.lokalita.save()
-        except ObjectDoesNotExist:
-            pass
+            az.set_archivovany(request.user)
 
-        if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-            all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
-                archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY
-            )
-            if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
-                request.session["arch_projekt_link"] = True
-        fedora_transaction.success_message = get_message(az, "USPESNE_ARCHIVOVANA")
-        Mailer.send_ea02(arch_z=az)
-        az.close_active_transaction_when_finished = True
-        az.save()
-        for item in az.casti_dokumentu.all():
-            item: DokumentCast
-            if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
-                item.dokument.doi_update()
+            try:
+                az.lokalita.igsn_publish()
+                az.lokalita.set_igsn()
+                az.lokalita.save()
+            except ObjectDoesNotExist:
+                pass
+
+            if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+                all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
+                    archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY
+                )
+                if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
+                    request.session["arch_projekt_link"] = True
+            Mailer.send_ea02(arch_z=az)
+            az.close_active_transaction_when_finished = True
+            az.save()
+            for item in az.casti_dokumentu.all():
+                item: DokumentCast
+                if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
+                    item.dokument.doi_update()
+        except (DoiWriteError, FedoraError) as err:
+            logger.info("arch_z.views.archivovat.post_error", extra={"error": err, "ident_cely": az.ident_cely})
+            transaction.set_rollback(True)
+            fedora_transaction.rollback_transaction()
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_archivaci()
@@ -835,35 +841,40 @@ def vratit(request, ident_cely):
         if form.is_valid():
             fedora_trasnaction = az.create_transaction(request.user)
             try:
-                if az.lokalita and az.stav == AZ_STAV_ARCHIVOVANY:
-                    az.lokalita.igsn_hide()
-            except ObjectDoesNotExist:
-                pass
-            duvod = form.cleaned_data["reason"]
-            projekt = None
-            if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-                projekt = az.akce.projekt
-            # BR-A-3
-            if az.stav == AZ_STAV_ODESLANY and projekt is not None:
-                #  Return also project from the states P6 or P5 to P4
-                projekt.active_transaction = fedora_trasnaction
-                projekt_stav = projekt.stav
-                logger.debug("arch_z.views.vratit.valid", extra={"ident_cely": ident_cely, "stav": projekt.stav})
-                if projekt_stav == PROJEKT_STAV_UZAVRENY:
-                    projekt.set_vracen(request.user, projekt_stav - 1, "Automatické vrácení projektu")
-                    projekt.save()
-                if projekt_stav == PROJEKT_STAV_ARCHIVOVANY:
-                    projekt.set_vracen(request.user, projekt_stav - 1, "Automatické vrácení projektu")
-                    projekt.save()
-                    projekt.set_vracen(request.user, projekt_stav - 2, "Automatické vrácení projektu")
-                    projekt.save()
-            before_save_state = az.stav
-            az.set_vraceny(request.user, az.stav - 1, duvod)
-            az.close_active_transaction_when_finished = True
-            az.save()
-            if before_save_state == AZ_STAV_ODESLANY:
-                Mailer.send_ev01(zaznam=az, reason=duvod)
-            fedora_trasnaction.success_message = get_message(az, "USPESNE_VRACENA")
+                try:
+                    if az.lokalita and az.stav == AZ_STAV_ARCHIVOVANY:
+                        az.lokalita.igsn_hide()
+                except ObjectDoesNotExist:
+                    pass
+                duvod = form.cleaned_data["reason"]
+                projekt = None
+                if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+                    projekt = az.akce.projekt
+                # BR-A-3
+                if az.stav == AZ_STAV_ODESLANY and projekt is not None:
+                    #  Return also project from the states P6 or P5 to P4
+                    projekt.active_transaction = fedora_trasnaction
+                    projekt_stav = projekt.stav
+                    logger.debug("arch_z.views.vratit.valid", extra={"ident_cely": ident_cely, "stav": projekt.stav})
+                    if projekt_stav == PROJEKT_STAV_UZAVRENY:
+                        projekt.set_vracen(request.user, projekt_stav - 1, "Automatické vrácení projektu")
+                        projekt.save()
+                    if projekt_stav == PROJEKT_STAV_ARCHIVOVANY:
+                        projekt.set_vracen(request.user, projekt_stav - 1, "Automatické vrácení projektu")
+                        projekt.save()
+                        projekt.set_vracen(request.user, projekt_stav - 2, "Automatické vrácení projektu")
+                        projekt.save()
+                before_save_state = az.stav
+                az.set_vraceny(request.user, az.stav - 1, duvod)
+                az.close_active_transaction_when_finished = True
+                az.save()
+                if before_save_state == AZ_STAV_ODESLANY:
+                    Mailer.send_ev01(zaznam=az, reason=duvod)
+                fedora_trasnaction.success_message = get_message(az, "USPESNE_VRACENA")
+            except (DoiWriteError, FedoraError) as err:
+                logger.info("arch_z.views.vratit.post_error", extra={"error": err, "ident_cely": az.ident_cely})
+                transaction.set_rollback(True)
+                fedora_trasnaction.rollback_transaction()
             return JsonResponse({"redirect": az.get_absolute_url()})
         else:
             logger.debug("arch_z.views.vratit.not_valid", extra={"error": form.errors})
@@ -1107,11 +1118,17 @@ def smazat(request, ident_cely):
         except RestrictedError as err:
             logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "error": err})
             fedora_transaction.error_message = ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY
+            transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             return JsonResponse(
                 {"redirect": az.get_absolute_url()},
                 status=403,
             )
+        except (DoiWriteError, FedoraError) as err:
+            logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "error": err})
+            transaction.set_rollback(True)
+            fedora_transaction.rollback_transaction()
+            return JsonResponse({"redirect": az.get_absolute_url()})
 
         if projekt:
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": projekt.ident_cely})})
