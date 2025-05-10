@@ -1058,7 +1058,7 @@ class DokumentCastOdpojitView(TransakceView):
             cast.close_active_transaction_when_finished = True
             cast.save()
         except (DoiWriteError, FedoraError) as err:
-            logger.info("dokument.views.DokumentCastOdpojitView.post.post_error", extra={"err": err})
+            logger.info("dokument.views.DokumentCastOdpojitView.post.post_error", extra={"error": err})
             transaction.set_rollback(True)
             fedora_transaction.rollback()
         return JsonResponse({"redirect": cast.get_absolute_url()})
@@ -1647,7 +1647,7 @@ def archivovat(request, ident_cely):
                     item.archeologicky_zaznam.lokalita.igsn_update()
             return JsonResponse({"redirect": get_detail_json_view(dokument.ident_cely)})
         except (DoiWriteError, FedoraError) as err:
-            logger.info("dokument.views.archivovat.post_error", extra={"err": err})
+            logger.info("dokument.views.archivovat.post_error", extra={"error": err})
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
@@ -1698,7 +1698,7 @@ def vratit(request, ident_cely):
                 dokument.save()
                 return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
             except (DoiWriteError, FedoraError) as err:
-                logger.info("dokument.views.vratit.post_error", extra={"err": err})
+                logger.info("dokument.views.vratit.post_error", extra={"error": err})
                 fedora_transaction.set_rollback(True)
                 fedora_transaction.rollback_transaction()
                 return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
