@@ -44,7 +44,7 @@ from core.message_constants import (
 )
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import get_cadastre_from_point, get_cadastre_from_point_with_geometry
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from django.contrib import messages
@@ -52,6 +52,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -70,6 +71,7 @@ from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
 from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, DeaktivovatSpolupraciForm, PotvrditNalezForm
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
+from pid.client import DoiWriteError
 from projekt.models import Projekt
 from services.mailer import Mailer
 from uzivatel.models import Organizace, User
@@ -441,13 +443,18 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            sn.create_transaction(request.user, SAMOSTATNY_NALEZ_VRACEN)
-            if sn.stav == SN_ARCHIVOVANY:
-                sn.igsn_hide()
-            sn.set_vracen(request.user, sn.stav - 1, duvod)
-            sn.close_active_transaction_when_finished = True
-            sn.save()
-            Mailer.send_en03_en04(samostatny_nalez=sn, reason=duvod)
+            fedora_transaction = sn.create_transaction(request.user, SAMOSTATNY_NALEZ_VRACEN)
+            try:
+                if sn.stav == SN_ARCHIVOVANY:
+                    sn.igsn_hide()
+                sn.set_vracen(request.user, sn.stav - 1, duvod)
+                sn.close_active_transaction_when_finished = True
+                sn.save()
+                Mailer.send_en03_en04(samostatny_nalez=sn, reason=duvod)
+            except (DoiWriteError, FedoraError) as err:
+                logger.info("pas.views.vratit.error", extra={"error": err})
+                transaction.set_rollback(True)
+                fedora_transaction.rollback_transaction()
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
         else:
             logger.info("pas.views.vratit.form_invalid", extra={"error": form.errors})
@@ -600,12 +607,17 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        sn.create_transaction(request.user, SAMOSTATNY_NALEZ_ARCHIVOVAN)
-        sn.set_archivovany(request.user)
-        sn.igsn_publish()
-        sn.set_igsn()
-        sn.close_active_transaction_when_finished = True
-        sn.save()
+        fedora_transaction = sn.create_transaction(request.user, SAMOSTATNY_NALEZ_ARCHIVOVAN)
+        try:
+            sn.set_archivovany(request.user)
+            sn.igsn_publish()
+            sn.set_igsn()
+            sn.close_active_transaction_when_finished = True
+            sn.save()
+        except (DoiWriteError, FedoraError) as err:
+            logger.info("pas.views.archivovat.error", extra={"error": err, "ident_cely": ident_cely})
+            transaction.set_rollback(True)
+            fedora_transaction.rollback_transaction()
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
         # TODO nejake kontroly? warnings = sn.check_pred_archivaci()
@@ -711,22 +723,28 @@ def smazat(request, ident_cely):
         )
     if request.method == "POST":
         nalez.deleted_by_user = request.user
-        nalez.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-        nalez.close_active_transaction_when_finished = True
-        nalez.record_deletion(nalez.active_transaction)
-        resp1 = nalez.delete()
-        if resp1:
-            logger.info(
-                "pas.views.smazat.deleted",
-                extra={"value": resp1},
-            )
-            return JsonResponse({"redirect": reverse("pas:index")})
-        else:
-            logger.warning("pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
-            return JsonResponse(
-                {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
-                status=403,
-            )
+        fedora_transaction = nalez.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+        try:
+            nalez.close_active_transaction_when_finished = True
+            nalez.record_deletion(nalez.active_transaction)
+            resp1 = nalez.delete()
+            if resp1:
+                logger.info(
+                    "pas.views.smazat.deleted",
+                    extra={"value": resp1},
+                )
+                return JsonResponse({"redirect": reverse("pas:index")})
+            else:
+                logger.warning("pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
+                return JsonResponse(
+                    {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+                    status=403,
+                )
+        except (DoiWriteError, FedoraError) as err:
+            logger.info("pas.views.smazat.error", extra={"error": err, "ident_cely": ident_cely})
+            transaction.set_rollback(True)
+            fedora_transaction.rollback_transaction()
+            return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": nalez.stav})
         context = {

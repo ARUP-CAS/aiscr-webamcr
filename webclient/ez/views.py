@@ -32,13 +32,14 @@ from core.message_constants import (
 )
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.repository_connector import FedoraRepositoryConnector
+from core.repository_connector import FedoraError, FedoraRepositoryConnector
 from core.utils import get_message
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import Prefetch, Q, RestrictedError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -51,6 +52,7 @@ from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
+from pid.client import DoiWriteError
 from uzivatel.models import Osoba, User
 
 from .filters import ExterniZdrojFilter
@@ -497,9 +499,14 @@ class ExterniOdkazOdpojitView(TransakceView):
         ):
             lokalita_update = eo.archeologicky_zaznam.lokalita
         eo.close_active_transaction_when_finished = True
-        eo.delete()
-        if lokalita_update:
-            lokalita_update.igsn_update()
+        try:
+            eo.delete()
+            if lokalita_update:
+                lokalita_update.igsn_update()
+        except (DoiWriteError, FedoraError) as err:
+            logger.info("ez.views.ExterniOdkazOdpojitView.error", extra={"error": err, "ident_cely": ez.ident_cely})
+            transaction.set_rollback(True)
+            self.active_transaction.rollback_transaction()
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
 
@@ -681,10 +688,15 @@ class ExterniOdkazOdpojitAZView(TransakceView):
             and eo.archeologicky_zaznam.lokalita.igsn
         ):
             lokalita_update = eo.archeologicky_zaznam.lokalita
-        eo.close_active_transaction_when_finished = True
-        eo.delete()
-        if lokalita_update:
-            lokalita_update.igsn_update()
+        try:
+            eo.close_active_transaction_when_finished = True
+            eo.delete()
+            if lokalita_update:
+                lokalita_update.igsn_update()
+        except (DoiWriteError, FedoraError) as err:
+            logger.info("ez.views.ExterniOdkazOdpojitAZView.error", extra={"error": err, "ident_cely": az.ident_cely})
+            transaction.set_rollback(True)
+            self.active_transaction.rollback_transaction()
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 

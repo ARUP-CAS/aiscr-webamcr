@@ -13,14 +13,16 @@ from core.constants import (
     ZAPSANI_EXT_ZD,
 )
 from core.exceptions import MaximalIdentNumberError
+from core.repository_connector import FedoraError
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.db import models, transaction
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_EXTERNI_ZDROJ_TYP
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
+from pid.client import DoiWriteError
 from uzivatel.models import Osoba
 from xml_generator.models import ModelWithMetadata
 
@@ -137,28 +139,35 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         Metóda pro nastavení stavu potvrzená a uložení změny do historie pro externí zdroj.
         Pokud je ident dočasný nahrazení identem stálým.
         """
-        self.stav = EZ_STAV_POTVRZENY
-        historie_poznamka = self.check_set_permanent_ident()
-        Historie(
-            typ_zmeny=POTVRZENI_EXT_ZD,
-            uzivatel=user,
-            vazba=self.historie,
-            poznamka=historie_poznamka,
-        ).save()
+        try:
+            self.stav = EZ_STAV_POTVRZENY
+            historie_poznamka = self.check_set_permanent_ident()
+            Historie(
+                typ_zmeny=POTVRZENI_EXT_ZD,
+                uzivatel=user,
+                vazba=self.historie,
+                poznamka=historie_poznamka,
+            ).save()
 
-        self.close_active_transaction_when_finished = True
-        self.save()
+            self.close_active_transaction_when_finished = True
+            self.save()
 
-        from arch_z.models import Akce, ArcheologickyZaznam
+            from arch_z.models import Akce, ArcheologickyZaznam
 
-        for akce in self.externi_odkazy_zdroje.all():
-            akce: Akce
-            if (
-                akce.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-                and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-                and akce.archeologicky_zaznam.lokalita.igsn
-            ):
-                akce.archeologicky_zaznam.lokalita.igsn_update()
+            for akce in self.externi_odkazy_zdroje.all():
+                akce: Akce
+                if (
+                    akce.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                    and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+                    and akce.archeologicky_zaznam.lokalita.igsn
+                ):
+                    akce.archeologicky_zaznam.lokalita.igsn_update()
+        except (DoiWriteError, FedoraError) as err:
+            logger.info(
+                "ez.models.ExterniZdroj.set_potvrzeny.error", extra={"error": err, "ident_cely": self.ident_cely}
+            )
+            transaction.set_rollback(True)
+            self.active_transaction.rollback_transaction()
 
     def set_zapsany(self, user):
         """
