@@ -71,7 +71,7 @@ from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
 from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, DeaktivovatSpolupraciForm, PotvrditNalezForm
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
-from pid.client import DoiWriteError
+from pid.exceptions import DoiWriteError
 from projekt.models import Projekt
 from services.mailer import Mailer
 from uzivatel.models import Organizace, User

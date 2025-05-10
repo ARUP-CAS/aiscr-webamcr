@@ -124,7 +124,7 @@ from nalez.forms import NalezFormSetHelper, create_nalez_objekt_form, create_nal
 from nalez.models import NalezObjekt, NalezPredmet
 from neidentakce.forms import NeidentAkceForm
 from neidentakce.models import NeidentAkce
-from pid.client import DoiWriteError
+from pid.exceptions import DoiWriteError
 from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer

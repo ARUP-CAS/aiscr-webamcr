@@ -16,7 +16,7 @@ from django.utils.translation import gettext as _
 from dokument.models import Dokument
 from fedora_management.views import AdminRecordProcessingView
 from pas.models import SamostatnyNalez
-from pid.client import DoiWriteError
+from pid.exceptions import DoiWriteError
 from SPARQLWrapper import JSON, SPARQLWrapper
 
 
