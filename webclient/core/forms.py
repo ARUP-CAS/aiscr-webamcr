@@ -274,3 +274,11 @@ class TransaltionImportForm(forms.Form):
         if file.name.split(".")[-1] != "po":
             raise forms.ValidationError({"file": TRANSLATION_FILE_WRONG_FORMAT})
         return cleaned_data
+
+
+class ImportDataAdminForm(forms.Form):
+    data_file = forms.FileField(
+        required=True,
+        label=_("core.forms.ImportDataAdminForm.data_file.label"),
+        widget=forms.FileInput(attrs={"accept": ("application/vnd.ms-excel, application/zip")}),
+    )

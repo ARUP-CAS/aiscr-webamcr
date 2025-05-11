@@ -6,6 +6,7 @@ import os
 import random
 import re
 import string
+import zipfile
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -38,7 +39,8 @@ from .constants import (
     ROLE_NASTAVENI_ODSTAVKY,
 )
 from .exceptions import WrongCSVError, WrongSheetError
-from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
+from .forms import ImportDataAdminForm, OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
+from .import_data_mappers import ImportModelMapper
 from .models import OdstavkaSystemu, Permissions, PermissionsSkip
 from .setting_models import CustomAdminSettings
 
@@ -658,6 +660,35 @@ class FedoraCustomAdminSite(admin.AdminSite):
             context["form"] = UpdateMetadataFileForm()
         return TemplateResponse(request, "admin/fedora_management/update_metadata.html", context)
 
+    def import_data(self, request):
+        context = {
+            "app_list": self.get_app_list(request),
+            **self.each_context(request),
+        }
+        if request.method == "POST" and request.user.is_superuser:
+            data_file = request.FILES["data_file"]
+            form = ImportDataAdminForm(request.POST, request.FILES)
+            context["form"] = form
+            file_bytes = data_file.read()
+            with zipfile.ZipFile(io.BytesIO(file_bytes), "r") as zf:
+                for zip_info in zf.infolist():
+                    if zip_info.is_dir() or not zip_info.filename.endswith(".csv"):
+                        continue
+                    with zf.open(zip_info) as file:
+                        sheet = pd.read_csv(file)
+                    for idx, row in sheet.iterrows():
+                        mapper_class = ImportModelMapper.get_import_data_mapper(zip_info.filename)
+                        if mapper_class:
+                            mapper = mapper_class(row.to_dict())
+                            record = mapper.map()
+                            record.suppress_signal = True
+                            record.save()
+                    break
+            return TemplateResponse(request, "admin/import_data/import_data.html", context)
+        else:
+            context["form"] = ImportDataAdminForm()
+        return TemplateResponse(request, "admin/import_data/import_data.html", context)
+
     def get_urls(
         self,
     ):
@@ -671,6 +702,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 "update-doi/",
                 self.admin_view(self.update_doi),
                 name="update_doi",
+            ),
+            path(
+                "import-data/",
+                self.admin_view(self.import_data),
+                name="import_data",
             ),
         ] + super().get_urls()
 
