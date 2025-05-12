@@ -259,7 +259,7 @@ Nastavení Elasticsearch je součástí docker-compose.yml souborů.
          "ignore_malformed": false,
          "coerce": true
          },
-         "created": {
+         "custom_created": {
          "type": "boolean"
          },
          "custom_message": {
@@ -977,7 +977,7 @@ hodnoty dále vyhledávat nebo podle nich třídit výsledky.
 +--------------------+---------+
 | count              | Long    |
 +--------------------+---------+
-| created            | Boolean |
+| custom_created     | Boolean |
 +--------------------+---------+
 | custom_message     | Text    |
 +--------------------+---------+
@@ -1195,6 +1195,7 @@ extra při logování.
 | thread_name | Text |
 +-------------+------+
 
+Nesmí se také používat jména uvedená v tomto seznamu: https://docs.python.org/3/library/logging.html#logrecord-attributes
 
 .. _kibana-1:
 
