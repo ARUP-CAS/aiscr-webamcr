@@ -60,15 +60,15 @@
     SearchTextError: '{% trans "leaflet_search.SearchTextError" %}'
 };
 </script>
-<script src="{% static 'mapa_pins.js' %}"></script>
-<script src="{% static 'coor_precision.js' %}"></script>
-<script src="{% static 'spin/spin.min.js' %}"></script>
-<script src="{% static 'leaflet.spin.min.js' %}"></script>
-<script src="{% static 'coordTransform.js' %}"></script>
-<script src="{% static 'leaflet-grayscale.js' %}"></script>
-<script src="{% static 'mapa_settings_mercator.js' %}"></script>
-<script src="{% static 'mapa_functions.js' %}?v1"></script>
-<script src="{% static 'mapa_doc.js' %}?v4"></script>
+<script src="{% static 'js/mapa_pins.js' %}"></script>
+<script src="{% static 'js/coor_precision.js' %}"></script>
+<script src="{% static 'js/spin/spin.min.js' %}"></script>
+<script src="{% static 'js/leaflet.spin.min.js' %}"></script>
+<script src="{% static 'js/coordTransform.js' %}"></script>
+<script src="{% static 'js/leaflet-grayscale.js' %}"></script>
+<script src="{% static 'js/mapa_settings_mercator.js' %}"></script>
+<script src="{% static 'js/mapa_functions.js' %}"></script>
+<script src="{% static 'js/mapa_doc.js' %}"></script>
 <script>
   $(document).ready(function () {
       {% if coordinate_wgs84_x1 is not None %}

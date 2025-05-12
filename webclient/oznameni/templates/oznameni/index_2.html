@@ -12,8 +12,8 @@
   var object_id = "{{ ident_cely }}";
   var addRemoveLinks = true;
   </script>
-  <link rel="stylesheet" type="text/css" href="{% static 'dropzone.min.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'css/dropzone.min.css' %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/bs-stepper.min.css' %}" />
 {% endblock %}
 
 {% block content %}
@@ -124,7 +124,7 @@
 {% endblock %}
 
 {% block script %}
-  <script src="{% static 'dropzone.min.js' %}"></script>
+  <script src="{% static 'js/dropzone.min.js' %}"></script>
   <script>var object_id = "{{ projekt.ident_cely }}";</script>
   {% if file_id %}
         <script>var maxFiles = 1;</script>
@@ -179,5 +179,5 @@
   });
   mock_str='{{seznam_mock|safe}}';
   </script>
-  <script src="{% static 'dz.js' %}?v4"></script>
+  <script src="{% static 'js/dz.js' %}"></script>
 {% endblock %}

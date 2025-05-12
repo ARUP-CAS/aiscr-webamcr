@@ -202,16 +202,13 @@ CRON_CLASSES = [
 
 ROOT_URLCONF = "webclient.urls"
 
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-    BASE_DIR / "static" / "js",
-    BASE_DIR / "static" / "css",
-    BASE_DIR / "static" / "scss",
-    BASE_DIR / "static" / "loga",
-    BASE_DIR / "static" / "img",
-    BASE_DIR / "static" / "fonts",
-    BASE_DIR / "static" / "icons",
-]
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+    },
+}
 
 TEMPLATES = [
     {

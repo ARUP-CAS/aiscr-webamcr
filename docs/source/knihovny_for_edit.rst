@@ -73,13 +73,17 @@ Knihovny vkládané jako statické soubory
      - MIT License
      - https://icons.getbootstrap.com/
    * - Bootstrap Select
-     - 1.13.14
+     - 1.13.18
      - MIT License
      - https://developer.snapappointments.com/bootstrap-select/
    * - Bootstrap Datepicker
-     - 1.9.0
+     - 1.10.0
      - Apache License
      - https://bootstrap-datepicker.readthedocs.io/en/latest/
+   * - Date Range Picker
+     - 3.1
+     - MIT License
+     - http://www.daterangepicker.com/
    * - Django Autocomplete Light
      -
      - MIT License
@@ -160,10 +164,10 @@ Knihovny vkládané jako statické soubory
      - 1.1
      - BSD License
      - https://github.com/tinuzz/leaflet-messagebox
-   * - LercDecode
-     - 1.0.1
-     - Apache Software License
-     - https://unpkg.com/browse/lerc@1.0.1/
+   * - Moment.js
+     - 2.30.1
+     - MIT License
+     - https://momentjs.com
    * - Select2
      - 4.0.13
      - MIT License

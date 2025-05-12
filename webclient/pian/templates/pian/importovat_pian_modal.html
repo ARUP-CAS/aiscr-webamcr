@@ -3,7 +3,7 @@
 {% load crispy_forms_tags %}
 
 {% block head %}
-  <link rel="stylesheet" type="text/css" href="{% static 'dropzone.min.css' %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/dropzone.min.css' %}"/>
 {% endblock %}
 
 <div class="modal fade app-modal-importovat-pian" id="importovat_pian" tabindex="-1" aria-hidden="true">
@@ -39,7 +39,7 @@
     </div>
   </div>
 </div>
-<script src="{% static 'dropzone.min.js' %}"></script>
+<script src="{% static 'js/dropzone.min.js' %}"></script>
 <script>
   const dz_trans = {
     description: '{% trans "pian.templates.pian.importovat_pian_modal.dz.description" %}',
@@ -53,7 +53,7 @@
     maxFilesExceeded: '{% trans "core.templates.core.upload_file.dz.maxFilesExceeded" %}',
   }
 </script>
-<script src="{% static 'dz_import_pian.js' %}?v1"></script>
+<script src="{% static 'js/dz_import_pian.js' %}"></script>
 <script>
   $('#importovat_pian').on('hidden.bs.modal', function (e) {
     $("#my-awesome-dropzone").attr('style','display:');
