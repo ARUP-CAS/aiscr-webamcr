@@ -142,7 +142,7 @@ def send_account_confirmed_email(sender, instance: User, created):
         "uzivatel.signals.send_account_confirmed_email.start",
         extra={
             "ident_cely": instance.ident_cely,
-            "created": created,
+            "custom_created": created,
             "option": instance.created_from_admin_panel,
         },
     )

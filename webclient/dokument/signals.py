@@ -172,7 +172,7 @@ def let_delete_repository_container(sender, instance: Let, **kwargs):
 
 @receiver(post_save, sender=DokumentCast, weak=False)
 def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **kwargs):
-    extra = {"pk": instance.pk, "created": created}
+    extra = {"pk": instance.pk, "custom_created": created}
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra=extra)
     from core.repository_connector import FedoraTransaction
 
