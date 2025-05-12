@@ -23,20 +23,20 @@
 	applyLabel: '{% trans "drp.applyLabel" %}'
     }
   </script>  
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js" integrity="sha512-NOqkPURPEeHGvb+6NAzb8hfxqUh9XvuaCDP+FevWSPM5a9yD8eLTVCwDzHh0G+mDRXH044rGtMKxyaDncAW4cw==" crossorigin="anonymous"></script>
-  <script type="text/javascript" src="{% static 'js/daterangepicker.min.js' %}"></script>
-  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+  <script type="text/javascript" src="{% static 'js/daterangepicker3.1/moment-with-locales.min.js' %}"></script>
+  <script type="text/javascript" src="{% static 'js/daterangepicker3.1/daterangepicker.min.js' %}"></script>
+  <link rel="stylesheet" type="text/css" href="{% static 'js/daterangepicker3.1/daterangepicker.css' %}"/>
 
-  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'css/bs-stepper.min.css' %}" />
   <!-- static leaflet additional import-->
-  <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}?v2"/>
-  <script src="{% static 'leaflet.measure.js' %}?v2"></script>
-  <script type="text/javascript" src="{% static 'leaflet.coor.js' %}?v1"></script>
-  <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'daterangepicker.css' %}"/>
+  <link rel="stylesheet" href="{% static 'css/leaflet.measure.css' %}"/>
+  <script src="{% static 'js/leaflet.measure.js' %}"></script>
+  <script type="text/javascript" src="{% static 'js/leaflet.coor.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'css/leaflet.coor.css' %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/daterangepicker.css' %}"/>
 
-  <link rel="stylesheet" href="{% static 'leaflet-search.css' %}"/>
-  <script src="{% static 'leaflet-search.js' %}?v1"></script>
+  <link rel="stylesheet" href="{% static 'css/leaflet-search.css' %}"/>
+  <script src="{% static 'js/leaflet-search.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -176,15 +176,15 @@
   };
 
   </script>
-  <script src="{% static 'coor_precision.js' %}"></script>
-  <script src="{% static 'coordTransform.js' %}"></script>
-  <script src="{% static 'leaflet-grayscale.js' %}"></script>
-  <script src="{% static 'mapa_settings_jtsk.js' %}"></script>
-  <script src="{% static 'mapa_functions.js' %}?v1"></script>
-  <script src="{% static 'mapa_basic_functions.js' %}?v1"></script>
-  <script src="{% static 'mapa_pins.js' %}"></script>
-  <script src="{% static 'mapa_oznameni.js' %}?v3"></script>
-  <script src="{% static 'daterangepicker.js' %}"></script>
+  <script src="{% static 'js/coor_precision.js' %}"></script>
+  <script src="{% static 'js/coordTransform.js' %}"></script>
+  <script src="{% static 'js/leaflet-grayscale.js' %}"></script>
+  <script src="{% static 'js/mapa_settings_jtsk.js' %}"></script>
+  <script src="{% static 'js/mapa_functions.js' %}"></script>
+  <script src="{% static 'js/mapa_basic_functions.js' %}"></script>
+  <script src="{% static 'js/mapa_pins.js' %}"></script>
+  <script src="{% static 'js/mapa_oznameni.js' %}"></script>
+  <script src="{% static 'js/daterangepicker.js' %}"></script>
   <script>
     window.onload = function (){
       load_daterangepicker("div_id_planovane_zahajeni")

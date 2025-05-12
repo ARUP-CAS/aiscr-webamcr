@@ -8,13 +8,13 @@
 {% block title %}{{ title }}{% endblock %}
 {% block head %}
 <!-- Autocomplete media files -->
-<link href="/static/static/admin/css/vendor/select2/select2.css" media="screen" rel="stylesheet" type="text/css">
-<link href="/static/static/admin/css/autocomplete.css" media="screen" rel="stylesheet" type="text/css">
-<link href="/static/static/autocomplete_light/select2.css" media="screen" rel="stylesheet" type="text/css">
-<script src="/static/static/admin/js/vendor/select2/select2.full.js"></script>
-<script src="/static/static/autocomplete_light/autocomplete_light.js"></script>
-<script src="/static/static/autocomplete_light/select2.js"></script>
-<script src="/static/static/autocomplete_light/i18n/cs.js"></script>
+<link href="{% static 'admin/css/vendor/select2/select2.css' %}" media="screen" rel="stylesheet" type="text/css">
+<link href="{% static 'admin/css/autocomplete.css' %}" media="screen" rel="stylesheet" type="text/css">
+<link href="{% static 'autocomplete_light/select2.css' %}" media="screen" rel="stylesheet" type="text/css">
+<script src="{% static 'admin/js/vendor/select2/select2.full.js' %}"></script>
+<script src="{% static 'autocomplete_light/autocomplete_light.js' %}"></script>
+<script src="{% static 'autocomplete_light/select2.js' %}"></script>
+<script src="{% static 'autocomplete_light/i18n/cs.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -103,7 +103,7 @@
 {% endblock %}
 
 {% block script %}
-<script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
+<script src="{% static 'js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
 <script>
   url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
   get_vychozi_hodnota_podrazeneho("#id_komponenta-areal","#id_komponenta-aktivity",url)

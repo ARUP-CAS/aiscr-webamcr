@@ -72,7 +72,7 @@ class NeidentAkceForm(forms.ModelForm):
         }
 
     class Media:
-        js = ["/static/static/js/create_osoba_modal.js"]
+        js = ["js/create_osoba_modal.js"]
 
     def __init__(self, *args, readonly=False, **kwargs):
         super(NeidentAkceForm, self).__init__(*args, **kwargs)
