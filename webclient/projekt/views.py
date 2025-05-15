@@ -985,6 +985,7 @@ def archivovat(request, ident_cely):
                 item: SamostatnyNalez
                 if item.igsn and item.stav == SN_ARCHIVOVANY:
                     item.igsn_update()
+            return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         except (DoiWriteError, FedoraError) as err:
             logger.info("projekt.views.archivovat.post_error", extra={"error": err, "ident_cely": projekt.ident_cely})
             transaction.set_rollback(True)

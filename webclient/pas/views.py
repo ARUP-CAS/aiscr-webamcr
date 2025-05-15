@@ -451,6 +451,7 @@ def vratit(request, ident_cely):
                 sn.close_active_transaction_when_finished = True
                 sn.save()
                 Mailer.send_en03_en04(samostatny_nalez=sn, reason=duvod)
+                return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
             except (DoiWriteError, FedoraError) as err:
                 logger.info("pas.views.vratit.error", extra={"error": err})
                 transaction.set_rollback(True)
@@ -614,6 +615,7 @@ def archivovat(request, ident_cely):
             sn.set_igsn()
             sn.close_active_transaction_when_finished = True
             sn.save()
+            return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
         except (DoiWriteError, FedoraError) as err:
             logger.info("pas.views.archivovat.error", extra={"error": err, "ident_cely": ident_cely})
             transaction.set_rollback(True)

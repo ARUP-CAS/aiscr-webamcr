@@ -163,6 +163,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
                     and akce.archeologicky_zaznam.lokalita.igsn
                 ):
                     akce.archeologicky_zaznam.lokalita.igsn_update()
+            return
         except (DoiWriteError, FedoraError) as err:
             logger.info(
                 "ez.models.ExterniZdroj.set_potvrzeny.error", extra={"error": err, "ident_cely": self.ident_cely}

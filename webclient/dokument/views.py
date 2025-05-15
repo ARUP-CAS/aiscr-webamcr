@@ -1057,6 +1057,7 @@ class DokumentCastOdpojitView(TransakceView):
                 cast.dokument.doi_update()
             cast.close_active_transaction_when_finished = True
             cast.save()
+            return JsonResponse({"redirect": cast.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info(
                 "dokument.views.DokumentCastOdpojitView.post.post_error",
@@ -1112,6 +1113,7 @@ class DokumentCastSmazatView(TransakceView):
             cast.delete()
             if lokalita_update:
                 lokalita_update.igsn_update()
+            return JsonResponse({"redirect": dokument.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info(
                 "dokument.views.DokumentCastSmazatView.post.post_error",

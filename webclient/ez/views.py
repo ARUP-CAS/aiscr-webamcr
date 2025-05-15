@@ -503,6 +503,7 @@ class ExterniOdkazOdpojitView(TransakceView):
             eo.delete()
             if lokalita_update:
                 lokalita_update.igsn_update()
+            return JsonResponse({"redirect": ez.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info("ez.views.ExterniOdkazOdpojitView.error", extra={"error": err, "ident_cely": ez.ident_cely})
             transaction.set_rollback(True)
@@ -693,6 +694,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
             eo.delete()
             if lokalita_update:
                 lokalita_update.igsn_update()
+            return JsonResponse({"redirect": az.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info("ez.views.ExterniOdkazOdpojitAZView.error", extra={"error": err, "ident_cely": az.ident_cely})
             transaction.set_rollback(True)

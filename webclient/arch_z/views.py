@@ -780,6 +780,7 @@ def archivovat(request, ident_cely):
                 item: DokumentCast
                 if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
                     item.dokument.doi_update()
+            return JsonResponse({"redirect": az.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info("arch_z.views.archivovat.post_error", extra={"error": err, "ident_cely": az.ident_cely})
             transaction.set_rollback(True)
@@ -871,6 +872,7 @@ def vratit(request, ident_cely):
                 if before_save_state == AZ_STAV_ODESLANY:
                     Mailer.send_ev01(zaznam=az, reason=duvod)
                 fedora_trasnaction.success_message = get_message(az, "USPESNE_VRACENA")
+                return JsonResponse({"redirect": az.get_absolute_url()})
             except (DoiWriteError, FedoraError) as err:
                 logger.info("arch_z.views.vratit.post_error", extra={"error": err, "ident_cely": az.ident_cely})
                 transaction.set_rollback(True)
@@ -1115,6 +1117,13 @@ def smazat(request, ident_cely):
             logger.debug(
                 "arch_z.views.smazat.success", extra={"ident_cely": ident_cely, "transaction": fedora_transaction}
             )
+            if projekt:
+                return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": projekt.ident_cely})})
+            else:
+                if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
+                    return JsonResponse({"redirect": reverse("lokalita:index")})
+                else:
+                    return JsonResponse({"redirect": reverse("arch_z:index")})
         except RestrictedError as err:
             logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "error": err})
             fedora_transaction.error_message = ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY
@@ -1129,14 +1138,6 @@ def smazat(request, ident_cely):
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             return JsonResponse({"redirect": az.get_absolute_url()})
-
-        if projekt:
-            return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": projekt.ident_cely})})
-        else:
-            if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
-                return JsonResponse({"redirect": reverse("lokalita:index")})
-            else:
-                return JsonResponse({"redirect": reverse("arch_z:index")})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
         context = {
