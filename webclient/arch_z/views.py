@@ -841,12 +841,8 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             fedora_trasnaction = az.create_transaction(request.user)
+            stav_initial = az.stav
             try:
-                try:
-                    if az.lokalita and az.stav == AZ_STAV_ARCHIVOVANY:
-                        az.lokalita.igsn_hide()
-                except ObjectDoesNotExist:
-                    pass
                 duvod = form.cleaned_data["reason"]
                 projekt = None
                 if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -872,11 +868,14 @@ def vratit(request, ident_cely):
                 if before_save_state == AZ_STAV_ODESLANY:
                     Mailer.send_ev01(zaznam=az, reason=duvod)
                 fedora_trasnaction.success_message = get_message(az, "USPESNE_VRACENA")
+                if stav_initial == AZ_STAV_ARCHIVOVANY:
+                    az.igsn_lokalita_hide()
                 return JsonResponse({"redirect": az.get_absolute_url()})
             except (DoiWriteError, FedoraError) as err:
                 logger.info("arch_z.views.vratit.post_error", extra={"error": err, "ident_cely": az.ident_cely})
                 transaction.set_rollback(True)
                 fedora_trasnaction.rollback_transaction()
+                az.igsn_lokalita_publish(check_status=False)
             return JsonResponse({"redirect": az.get_absolute_url()})
         else:
             logger.debug("arch_z.views.vratit.not_valid", extra={"error": form.errors})

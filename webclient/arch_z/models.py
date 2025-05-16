@@ -462,6 +462,14 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 self.initial_pristupnost = previous.pristupnost
         super(ArcheologickyZaznam, self).save(*args, **kwargs)
 
+    def igsn_lokalita_hide(self):
+        if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
+            self.lokalita.igsn_hide()
+
+    def igsn_lokalita_publish(self, check_status=True):
+        if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA and self.stav == AZ_STAV_ARCHIVOVANY:
+            self.lokalita.igsn_publish(check_status)
+
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):
     """

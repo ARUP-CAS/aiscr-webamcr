@@ -117,8 +117,8 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         if self.igsn:
             return self._get_igsn_client().hide_record()
 
-    def igsn_publish(self):
-        return self._get_igsn_client().publish_record()
+    def igsn_publish(self, check_status=True):
+        return self._get_igsn_client().publish_record(check_status)
 
     def igsn_update(self):
         if self.igsn:

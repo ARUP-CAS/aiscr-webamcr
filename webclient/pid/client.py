@@ -99,7 +99,7 @@ class DigitalObjectIdentifierClient:
                 extra={"ident_cely": self.serializer.get_ident_cely()},
             )
 
-    def publish_record(self):
+    def publish_record(self, check_status=True):
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.check_record_exists.publish_record",
             extra={"ident_cely": self.serializer.get_ident_cely()},
@@ -114,7 +114,8 @@ class DigitalObjectIdentifierClient:
             response = requests.post(
                 DATACITE_URL, headers=self.headers, json=self.serializer.serialize_publish(), auth=self.auth
             )
-        self._check_response_status(response)
+        if check_status:
+            self._check_response_status(response)
         return response.json()
 
     def update_record(self):
