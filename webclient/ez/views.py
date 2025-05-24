@@ -273,7 +273,6 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
         self.object.close_active_transaction_when_finished = True
         self.object.save()
         save_autor_editor(self.object, form)
-        messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
