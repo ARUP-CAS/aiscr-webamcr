@@ -742,6 +742,7 @@ def archivovat(request, ident_cely):
     Při get volání se kontrolují vyplnená pole akce a její relaci pomoci metódy na modelu.
     Po post volání se volá metóda na modelu pro posun stavu do odeslaná.
     """
+    logger.debug("arch_z.views.archivovat.start", extra={"ident_cely": ident_cely})
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ODESLANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -760,12 +761,10 @@ def archivovat(request, ident_cely):
         try:
             az.set_archivovany(request.user)
 
-            try:
-                az.lokalita.igsn_publish()
+            if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
+                az.igsn_lokalita_publish()
                 az.lokalita.set_igsn()
                 az.lokalita.save()
-            except ObjectDoesNotExist:
-                pass
 
             if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
                 all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
@@ -784,6 +783,8 @@ def archivovat(request, ident_cely):
         except (DoiWriteError, FedoraError) as err:
             logger.info("arch_z.views.archivovat.post_error", extra={"error": err, "ident_cely": az.ident_cely})
             transaction.set_rollback(True)
+            if isinstance(err, FedoraError):
+                az.igsn_lokalita_hide(False)
             fedora_transaction.rollback_transaction()
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
@@ -843,6 +844,8 @@ def vratit(request, ident_cely):
             fedora_trasnaction = az.create_transaction(request.user)
             stav_initial = az.stav
             try:
+                if stav_initial == AZ_STAV_ARCHIVOVANY:
+                    az.igsn_lokalita_hide()
                 duvod = form.cleaned_data["reason"]
                 projekt = None
                 if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -868,14 +871,13 @@ def vratit(request, ident_cely):
                 if before_save_state == AZ_STAV_ODESLANY:
                     Mailer.send_ev01(zaznam=az, reason=duvod)
                 fedora_trasnaction.success_message = get_message(az, "USPESNE_VRACENA")
-                if stav_initial == AZ_STAV_ARCHIVOVANY:
-                    az.igsn_lokalita_hide()
                 return JsonResponse({"redirect": az.get_absolute_url()})
             except (DoiWriteError, FedoraError) as err:
                 logger.info("arch_z.views.vratit.post_error", extra={"error": err, "ident_cely": az.ident_cely})
                 transaction.set_rollback(True)
                 fedora_trasnaction.rollback_transaction()
-                az.igsn_lokalita_publish(check_status=False)
+                if isinstance(err, FedoraError):
+                    az.igsn_lokalita_publish(check_status=False)
             return JsonResponse({"redirect": az.get_absolute_url()})
         else:
             logger.debug("arch_z.views.vratit.not_valid", extra={"error": form.errors})
@@ -1089,6 +1091,7 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = az.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN)
         try:
+            az.igsn_lokalita_delete()
             az.skip_container_check = True
             az.close_active_transaction_when_finished = True
             az.deleted_by_user = request.user
@@ -1136,6 +1139,8 @@ def smazat(request, ident_cely):
             logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "error": err})
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
+            if isinstance(err, FedoraError):
+                az.igsn_lokalita_publish(check_status=False)
             return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})

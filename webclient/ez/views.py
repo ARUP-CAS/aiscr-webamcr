@@ -690,10 +690,10 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         ):
             lokalita_update = eo.archeologicky_zaznam.lokalita
         try:
-            eo.close_active_transaction_when_finished = True
-            eo.delete()
             if lokalita_update:
                 lokalita_update.igsn_update()
+            eo.close_active_transaction_when_finished = True
+            eo.delete()
             return JsonResponse({"redirect": az.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info("ez.views.ExterniOdkazOdpojitAZView.error", extra={"error": err, "ident_cely": az.ident_cely})

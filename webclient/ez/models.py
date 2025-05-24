@@ -150,9 +150,6 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
                 poznamka=historie_poznamka,
             ).save()
 
-            self.close_active_transaction_when_finished = True
-            self.save()
-
             from arch_z.models import Akce, ArcheologickyZaznam
 
             for akce in self.externi_odkazy_zdroje.all():
@@ -162,7 +159,10 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
                     and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
                     and akce.archeologicky_zaznam.lokalita.igsn
                 ):
-                    akce.archeologicky_zaznam.lokalita.igsn_update()
+                    akce.archeologicky_zaznam.igsn_lokalita_update()
+
+            self.close_active_transaction_when_finished = True
+            self.save()
             return
         except (DoiWriteError, FedoraError) as err:
             logger.info(

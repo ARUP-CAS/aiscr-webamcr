@@ -109,20 +109,20 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
     def igsn_exists(self):
         return self._get_igsn_client().check_record_exists()
 
-    def igsn_delete(self):
+    def igsn_delete(self, check_status=True):
         if self.igsn:
-            return self._get_igsn_client().delete_record()
+            return self._get_igsn_client().delete_record(check_status)
 
-    def igsn_hide(self):
+    def igsn_hide(self, check_status=True):
         if self.igsn:
-            return self._get_igsn_client().hide_record()
+            return self._get_igsn_client().hide_record(check_status)
 
     def igsn_publish(self, check_status=True):
         return self._get_igsn_client().publish_record(check_status)
 
-    def igsn_update(self):
+    def igsn_update(self, check_status=True):
         if self.igsn:
-            return self._get_igsn_client().update_record()
+            return self._get_igsn_client().update_record(check_status)
 
     @property
     def igsn_url(self):

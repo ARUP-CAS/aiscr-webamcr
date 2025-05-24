@@ -456,6 +456,8 @@ def vratit(request, ident_cely):
                 logger.info("pas.views.vratit.error", extra={"error": err})
                 transaction.set_rollback(True)
                 fedora_transaction.rollback_transaction()
+                if isinstance(err, FedoraError):
+                    sn.igsn_publish(False)
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
         else:
             logger.info("pas.views.vratit.form_invalid", extra={"error": form.errors})
@@ -610,8 +612,8 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = sn.create_transaction(request.user, SAMOSTATNY_NALEZ_ARCHIVOVAN)
         try:
-            sn.set_archivovany(request.user)
             sn.igsn_publish()
+            sn.set_archivovany(request.user)
             sn.set_igsn()
             sn.close_active_transaction_when_finished = True
             sn.save()
@@ -620,6 +622,8 @@ def archivovat(request, ident_cely):
             logger.info("pas.views.archivovat.error", extra={"error": err, "ident_cely": ident_cely})
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
+            if isinstance(err, FedoraError):
+                sn.igsn_hide(False)
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
         # TODO nejake kontroly? warnings = sn.check_pred_archivaci()
@@ -727,6 +731,7 @@ def smazat(request, ident_cely):
         nalez.deleted_by_user = request.user
         fedora_transaction = nalez.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
         try:
+            nalez.igsn_delete()
             nalez.close_active_transaction_when_finished = True
             nalez.record_deletion(nalez.active_transaction)
             resp1 = nalez.delete()
@@ -746,6 +751,8 @@ def smazat(request, ident_cely):
             logger.info("pas.views.smazat.error", extra={"error": err, "ident_cely": ident_cely})
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
+            if isinstance(err, FedoraError):
+                nalez.igsn_publish(False)
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": nalez.stav})
