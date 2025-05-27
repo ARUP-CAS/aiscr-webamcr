@@ -261,6 +261,7 @@
       <xs:element name="definicni_bod_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{definicni_bod}") | ST_AsText("{definicni_bod}") -->
       <xs:element name="hranice_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{hranice}") -->
       <xs:element name="hranice_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{hranice}") | ST_AsText("{hranice}") -->
+      <xs:element name="email" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{email}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="ruian_okresType">

@@ -1,0 +1,27 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% load template_tags %}
+{% load template_filters %}
+{% block content %}
+    <p>Vážená paní/Vážený pane,</p>
+    <p>
+    v AMČR bylo nově evidováno zahájení projektu {{project.ident_cely}}, a to ke dni {{project.datum_zahajeni}}.
+    </p>
+        <ul style="list-style: none">
+            <li><b>Typ projektu:</b> {{ project.typ_projektu.heslo }}</li>
+            <li><b>Katastr:</b> {{ project.hlavni_katastr }}; {{ dalsi_katastry|katastry_to_list|check_if_none }}
+            <li><b>Podnět:</b> {{ project.podnet }}</li>
+            <li><b>Lokalizace:</b> {{ project.lokalizace }}</li>
+            <li><b>Parcelní čísla:</b> {{project.parcelni_cislo}}</li>
+            <li><b>Označení stavby:</b> {{project.oznaceni_stavby}}</li>
+            <li><b>Oznamovatel:</b> {{project.oznamovatel.oznamovatel}}</li>
+            <li><b>Oprávněná organizace:</b> {{project.organizace}}</li>
+            <li><b>Vedoucí:</b> {{project.vedouci_projektu}}</li>
+            <li><b>Doplňující informace:</b> {{info_text}}</li>
+        </ul>
+
+    <p>Detaily o projektu zjistíte po přihlášení do AMČR.</p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
+{% endblock %}

@@ -301,9 +301,15 @@ class HeslarRuianKrajAdmin(HeslarRuianAdmin):
     Admin část pro správu modelu ruian kraj.
     """
 
-    list_display = ("nazev", "kod", "rada_id", "nazev_en")
-    fields = ("nazev", "kod", "rada_id", "definicni_bod", "nazev_en")
-    search_fields = ("kod", "rada_id", "nazev_en")
+    list_display = ("nazev", "kod", "rada_id", "nazev_en", "email")
+    fields = ("nazev", "kod", "rada_id", "definicni_bod", "nazev_en", "email")
+    search_fields = ("kod", "rada_id", "nazev_en", "email")
+
+    def get_readonly_fields(self, request, obj=None):
+        return ("nazev", "kod", "rada_id", "definicni_bod")
+
+    def has_change_permission(self, request, obj=None):
+        return True
 
 
 @admin.register(RuianOkres)

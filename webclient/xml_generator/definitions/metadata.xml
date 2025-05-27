@@ -555,6 +555,7 @@
       </gml:Point>
     </amcr:hranice_gml>
     <amcr:hranice_wkt EPSG="4326">MULTIPOLYGON(X Y)</amcr:hranice_wkt>
+    <amcr:email>kraj@test.cz</amcr:email>
   </amcr:ruian_kraj>
   <amcr:ruian_okres>
     <amcr:kod>ruian-3201</amcr:kod>

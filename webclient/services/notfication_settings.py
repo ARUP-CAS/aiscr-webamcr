@@ -172,4 +172,14 @@ notification_settings = {
         "predmet": "AMČR: projekt {ident_cely} - žádost o údaje oznamovatele | AMCR: project {ident_cely} - request for announcer data",
         "cesta_sablony": "emails/E-P-08.html",
     },
+    "E-P-09": {
+        "zasilat_neaktivnim": None,
+        "predmet": "AMČR: zahájení projektu {ident_cely}",
+        "cesta_sablony": "emails/E-P-09.html",
+    },
+    "E-P-10": {
+        "zasilat_neaktivnim": None,
+        "predmet": "AMČR: ukončení projektu {ident_cely}",
+        "cesta_sablony": "emails/E-P-10.html",
+    },
 }
