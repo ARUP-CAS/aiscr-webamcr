@@ -40,8 +40,9 @@ from .constants import (
 )
 from .exceptions import WrongCSVError, WrongSheetError
 from .forms import ImportDataAdminForm, OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
-from .import_data_mappers import ImportModelMapper
+from .import_data_mappers import ImportModelMapper, LookupImportField
 from .models import OdstavkaSystemu, Permissions, PermissionsSkip
+from .repository_connector import FedoraTransaction
 from .setting_models import CustomAdminSettings
 
 logger = logging.getLogger(__name__)
@@ -666,24 +667,31 @@ class FedoraCustomAdminSite(admin.AdminSite):
             **self.each_context(request),
         }
         if request.method == "POST" and request.user.is_superuser:
+            fedora_transaction = FedoraTransaction()
             data_file = request.FILES["data_file"]
             form = ImportDataAdminForm(request.POST, request.FILES)
             context["form"] = form
             file_bytes = data_file.read()
-            with zipfile.ZipFile(io.BytesIO(file_bytes), "r") as zf:
-                for zip_info in zf.infolist():
-                    if zip_info.is_dir() or not zip_info.filename.endswith(".csv"):
+            records = []
+            LookupImportField.records = records
+            with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+                file_names = [f"{name}.csv" for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
+                for file_name in file_names:
+                    try:
+                        with zf.open(file_name) as file:
+                            sheet = pd.read_csv(file)
+                    except KeyError:
                         continue
-                    with zf.open(zip_info) as file:
-                        sheet = pd.read_csv(file)
                     for idx, row in sheet.iterrows():
-                        mapper_class = ImportModelMapper.get_import_data_mapper(zip_info.filename)
+                        mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
                         if mapper_class:
                             mapper = mapper_class(row.to_dict())
                             record = mapper.map()
-                            record.suppress_signal = True
-                            record.save()
-                    break
+                            records.append(record)
+            for record in records:
+                record.active_transaction = fedora_transaction
+                record.save()
+            fedora_transaction.mark_transaction_as_closed()
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
         else:
             context["form"] = ImportDataAdminForm()
