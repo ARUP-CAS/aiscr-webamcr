@@ -173,13 +173,13 @@ notification_settings = {
         "cesta_sablony": "emails/E-P-08.html",
     },
     "E-P-09": {
-        "zasilat_neaktivnim": None,
-        "predmet": "AMČR: zahájení projektu {ident_cely}",
+        "zasilat_neaktivnim": True,
+        "predmet": "AMČR: zahájení projektu {ident_cely} | AMCR: project {ident_cely} started",
         "cesta_sablony": "emails/E-P-09.html",
     },
     "E-P-10": {
-        "zasilat_neaktivnim": None,
-        "predmet": "AMČR: ukončení projektu {ident_cely}",
+        "zasilat_neaktivnim": True,
+        "predmet": "AMČR: ukončení projektu {ident_cely} | AMCR: project {ident_cely} finished",
         "cesta_sablony": "emails/E-P-10.html",
     },
 }
