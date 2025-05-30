@@ -283,12 +283,6 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                     + str(dj.ident_cely)
                     + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text2")
                 )
-            elif dj.pian is None:
-                result.append(
-                    _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.no_pian.text1")
-                    + str(dj.ident_cely)
-                    + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.no_pian.text2")
-                )
         result = [str(x) for x in result]
         return result
 
