@@ -886,6 +886,7 @@ def vratit(request, ident_cely):
 
 @never_cache
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def zapsat(request, projekt_ident_cely=None):
     """
@@ -952,6 +953,7 @@ def zapsat(request, projekt_ident_cely=None):
             az = form_az.save(commit=False)
             az: ArcheologickyZaznam
             fedora_transaction = az.create_transaction(request.user)
+            fedora_transaction.redirect_url = reverse("projekt:detail", args=[projekt_ident_cely])
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
             try:
