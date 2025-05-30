@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.1/" targetNamespace="https://api.aiscr.cz/schema/amcr/2.1/" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.1.0">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" targetNamespace="https://api.aiscr.cz/schema/amcr/2.2/" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.2">
 
   <xs:annotation>
-    <xs:documentation>XML Schema for native export of the AMCR database (version 2.1.0). Related API: https://api.aiscr.cz/</xs:documentation>
+    <xs:documentation>XML Schema for native export of the AMCR database (version 2.2). Related API: https://api.aiscr.cz/</xs:documentation>
   </xs:annotation>
 
   <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/03/xml.xsd"/>
@@ -218,7 +218,7 @@
       <xs:element name="prijmeni" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{last_name}" -->
       <xs:element name="email" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{email}" -->
       <xs:element name="osoba" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{osoba.ident_cely}" | "{osoba.vypis_cely}" -->
-      <xs:element name="orcid" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{orcid}" -->
+      <xs:element name="orcid" minOccurs="0" maxOccurs="1" type="xs:anyURI"/> <!-- "{orcid}" -->
       <xs:element name="organizace" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{organizace.ident_cely}" | "{organizace.nazev}" -->
       <xs:element name="jazyk" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{jazyk}" -->
       <xs:element name="telefon" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{telefon}" -->
@@ -320,8 +320,8 @@
       <xs:element name="rok_narozeni" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{rok_narozeni}" -->
       <xs:element name="rok_umrti" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{rok_umrti}" -->
       <xs:element name="rodne_prijmeni" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{rodne_prijmeni}" -->
-      <xs:element name="orcid" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{orcid}" -->
-      <xs:element name="wikidata" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{wikidata}" -->
+      <xs:element name="orcid" minOccurs="0" maxOccurs="1" type="xs:anyURI"/> <!-- "{orcid}" -->
+      <xs:element name="wikidata" minOccurs="0" maxOccurs="1" type="xs:anyURI"/> <!-- "{wikidata}" -->
     </xs:sequence>
   </xs:complexType>
  
@@ -368,7 +368,7 @@
    	  <xs:element name="rozsah" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{rozsah}" -->
    	  <xs:element name="size_mb" minOccurs="1" maxOccurs="1" type="xs:decimal"/> <!-- "{size_mb}" -->
       <xs:element name="sha_512" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{sha_512}" -->
-      <xs:element name="url" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{url}" -->
+      <xs:element name="url" minOccurs="1" maxOccurs="1" type="xs:anyURI"/> <!-- "{url}" -->
    	  <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- historie.historie_set -->
    	</xs:sequence>     
   </xs:complexType>
