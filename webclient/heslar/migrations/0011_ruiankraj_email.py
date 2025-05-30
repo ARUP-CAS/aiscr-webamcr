@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='ruiankraj',
             name='email',
-            field=models.CharField(blank=True, max_length=254, null=True, verbose_name='heslar.models.RuianKatastr.email'),
+            field=models.CharField(blank=True, max_length=254, null=True, verbose_name='heslar.models.RuianKraj.email'),
         ),
     ]

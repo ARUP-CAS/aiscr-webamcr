@@ -296,7 +296,7 @@ class HeslarRuianAdmin(ObjectWithMetadataAdmin):
 
 
 @admin.register(RuianKraj)
-class HeslarRuianKrajAdmin(HeslarRuianAdmin):
+class HeslarRuianKrajAdmin(ObjectWithMetadataAdmin):
     """
     Admin část pro správu modelu ruian kraj.
     """
@@ -304,12 +304,7 @@ class HeslarRuianKrajAdmin(HeslarRuianAdmin):
     list_display = ("nazev", "kod", "rada_id", "nazev_en", "email")
     fields = ("nazev", "kod", "rada_id", "definicni_bod", "nazev_en", "email")
     search_fields = ("kod", "rada_id", "nazev_en", "email")
-
-    def get_readonly_fields(self, request, obj=None):
-        return ("nazev", "kod", "rada_id", "definicni_bod")
-
-    def has_change_permission(self, request, obj=None):
-        return True
+    readonly_fields = ("nazev", "kod", "rada_id", "definicni_bod")
 
 
 @admin.register(RuianOkres)
