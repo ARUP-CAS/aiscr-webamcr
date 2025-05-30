@@ -5,19 +5,20 @@
 {% block content %}
     <p>Vážená paní/Vážený pane,</p>
     <p>
-    v AMČR bylo nově evidováno ukončení projektu {{project.ident_cely}}, a to ke dni {{project.datum_ukonceni}}.
+    v AMČR bylo nově evidováno ukončení projektu <strong><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{project.ident_cely}}</a></strong>, a to ke dni {{project.datum_ukonceni}}.
     </p>
         <ul style="list-style: none">
-            <li><b>Typ projektu:</b> {{ project.typ_projektu.heslo }}</li>
-            <li><b>Katastr:</b> {{ project.hlavni_katastr }}; {{ dalsi_katastry|katastry_to_list|check_if_none }}
-            <li><b>Podnět:</b> {{ project.podnet }}</li>
-            <li><b>Lokalizace:</b> {{ project.lokalizace }}</li>
-            <li><b>Parcelní čísla:</b> {{project.parcelni_cislo}}</li>
-            <li><b>Označení stavby:</b> {{project.oznaceni_stavby}}</li>
-            <li><b>Oznamovatel:</b> {{project.oznamovatel.oznamovatel}}</li>
-            <li><b>Oprávněná organizace:</b> {{project.organizace}}</li>
-            <li><b>Vedoucí:</b> {{project.vedouci_projektu}}</li>
-            <li><b>Doplňující informace:</b> {{info_text}}</li>
+            <li><strong>Typ projektu:</strong> {{ project.typ_projektu.heslo }}</li>
+            <li><strong>Katastr:</strong> {{ project.hlavni_katastr }}; {{ dalsi_katastry|katastry_to_list|check_if_none }}
+            <li><strong>Podnět:</strong> {{ project.podnet }}</li>
+            <li><strong>Lokalizace:</strong> {{ project.lokalizace }}</li>
+            <li><strong>Parcelní čísla:</strong> {{project.parcelni_cislo}}</li>
+            <li><strong>Označení stavby:</strong> {{project.oznaceni_stavby}}</li>
+            <li><strong>Oznamovatel:</strong> {{project.oznamovatel.oznamovatel}}</li>
+            <li><strong>Oprávněná organizace:</strong> {{project.organizace}}</li>
+            <li><strong>Vedoucí:</strong> {{project.vedouci_projektu}}</li>
+            <li><strong>Datum provedení:</strong> {{project.datum_zahajeni}} - {{project.datum_ukonceni}}</li>
+            <li><strong>Doplňující informace:</strong> {{info_text}}</li>
         </ul>
 
     <p>Detaily o projektu zjistíte po přihlášení do AMČR.</p>
