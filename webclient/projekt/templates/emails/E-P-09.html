@@ -5,7 +5,7 @@
 {% block content %}
     <p>Vážená paní/Vážený pane,</p>
     <p>
-    v AMČR bylo nově evidováno zahájení projektu <strong><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{project.ident_cely}}</a></strong>, a to ke dni {{project.datum_zahajeni}}.
+    v AMČR bylo nově evidováno zahájení projektu <strong><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{project.ident_cely}}</a></strong>, a to ke dni <strong>{{project.datum_zahajeni}}</strong>.
     </p>
         <ul style="list-style: none">
             <li><strong>Typ projektu:</strong> {{ project.typ_projektu.heslo }}</li>
