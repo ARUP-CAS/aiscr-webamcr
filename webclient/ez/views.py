@@ -51,6 +51,7 @@ from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
+from fedora_management.decorators import handle_fedora_error
 from uzivatel.models import Osoba, User
 
 from .filters import ExterniZdrojFilter
@@ -237,6 +238,10 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
+    @method_decorator(handle_fedora_error)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
 
 class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
     """
@@ -281,6 +286,10 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+    @method_decorator(handle_fedora_error)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 
 class TransakceView(LoginRequiredMixin, TemplateView):
@@ -343,6 +352,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
@@ -396,6 +406,7 @@ class ExterniZdrojSmazatView(TransakceView):
         self.button = _("ez.templates.ExterniZdrojSmazatView.submitButton.text")
         self.success_message = ZAZNAM_USPESNE_SMAZAN
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
@@ -435,6 +446,7 @@ class ExterniZdrojVratitView(TransakceView):
         context["form"] = form
         return self.render_to_response(context)
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
@@ -482,6 +494,7 @@ class ExterniOdkazOdpojitView(TransakceView):
         )
         return context
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         self.init_translation()
         ez = self.get_zaznam()
@@ -525,6 +538,7 @@ class ExterniOdkazPripojitView(TransakceView):
         context["card_type"] = type_arch
         return context
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         logger.debug("ez.views.ExterniOdkazPripojitView.post.start", extra={"key": self.kwargs})
@@ -606,6 +620,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
             object.active_transaction = self.active_transaction
         return object
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         self.active_transaction = self.get_object().create_transaction(request.user)
         super().post(request, *args, **kwargs)
@@ -668,6 +683,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
             context["button"] = _("lokaez.templateslita.ExterniOdkazOdpojitAZView.lokalita.submitButton.text")
         return context
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         az = self.get_zaznam()
         lokalita_update = None
@@ -761,6 +777,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
             context["button"] = _("ez.templates.ExterniOdkazPripojitDoAzView.lokalita.submitButton.text")
         return context
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         az = self.get_zaznam()
         self.active_transaction = az.create_transaction(request.user, get_message(az, "EO_USPESNE_PRIPOJEN"))

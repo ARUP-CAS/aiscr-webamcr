@@ -20,11 +20,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
+from fedora_management.decorators import handle_fedora_error
 
 logger = logging.getLogger(__name__)
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["POST"])
 def zapsat(request, dj_ident_cely):
     """
@@ -47,7 +49,8 @@ def zapsat(request, dj_ident_cely):
             messages.add_message(request, messages.ERROR, e.message)
         else:
             if FedoraRepositoryConnector.check_container_deleted_or_not_exists(adb.ident_cely, "adb"):
-                adb.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN, main_record=dj)
+                fedora_transaction = adb.create_transaction(request.user, ZAZNAM_USPESNE_VYTVOREN, main_record=dj)
+                fedora_transaction.redirect_url = dj.get_absolute_url()
                 adb.close_active_transaction_when_finished = True
                 adb.dokumentacni_jednotka = dj
                 adb.sm5 = sm5
@@ -75,6 +78,7 @@ def zapsat(request, dj_ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     """
@@ -86,6 +90,7 @@ def smazat(request, ident_cely):
         dj: DokumentacniJednotka = adb.dokumentacni_jednotka
         dj_ident_cely = dj.ident_cely
         fedora_transaction = adb.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT, dj)
+        fedora_transaction.redirect_on_error = True
         adb.close_active_transaction_when_finished = True
         for vb in adb.vyskove_body.all():
             vb.active_transaction = fedora_transaction
@@ -124,6 +129,7 @@ def smazat(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def smazat_vb(request, ident_cely):
     """

@@ -63,6 +63,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 from django.views.generic import CreateView, DetailView, TemplateView, View
 from dokument.forms import CoordinatesDokumentForm
+from fedora_management.decorators import handle_fedora_error
 from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID, TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
@@ -698,6 +699,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     """
@@ -740,6 +742,7 @@ def smazat(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def zadost(request):
     """

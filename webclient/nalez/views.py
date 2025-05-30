@@ -15,6 +15,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
+from fedora_management.decorators import handle_fedora_error
 from heslar.hesla import (
     HESLAR_OBJEKT_DRUH,
     HESLAR_OBJEKT_DRUH_KAT,
@@ -33,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def smazat_nalez(request, typ_vazby, typ, ident_cely):
     """
@@ -91,6 +93,7 @@ def smazat_nalez(request, typ_vazby, typ, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["POST"])
 def edit_nalez(request, typ_vazby, komp_ident_cely):
     """

@@ -37,6 +37,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
+from fedora_management.decorators import handle_fedora_error
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.models import Heslar
 from historie.models import Historie
@@ -47,6 +48,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
     """
@@ -89,6 +91,7 @@ def detail(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def odpojit(request, dj_ident_cely):
     """
@@ -160,6 +163,7 @@ def odpojit(request, dj_ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def potvrdit(request, dj_ident_cely):
     """
@@ -216,6 +220,7 @@ def potvrdit(request, dj_ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["POST"])
 def create(request, dj_ident_cely):
     """

@@ -93,6 +93,7 @@ from dokument.forms import (
 from dokument.models import Dokument, DokumentAutor, DokumentCast, DokumentExtraData, Let, Tvar
 from dokument.tables import DokumentTable, Model3DTable
 from ez.forms import PripojitArchZaznamForm
+from fedora_management.decorators import handle_fedora_error
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
@@ -630,8 +631,10 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
             self.object.active_transaction = self.active_transaction
         return self.object
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         self.active_transaction = self.get_object().create_transaction(request.user)
+        self.active_transaction.redirect_on_error = False
         super().post(request, *args, **kwargs)
         self.active_transaction.mark_transaction_as_closed()
         return JsonResponse({"redirect": self.get_success_url()})
@@ -725,6 +728,7 @@ class TvarEditView(LoginRequiredMixin, View):
     Třida pohledu pro uložení zmeny tvaru z formuláře.
     """
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         dokument: Dokument = get_object_or_404(
             Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES),
@@ -790,6 +794,7 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         zaznam: Tvar = self.get_zaznam()
         zaznam.active_transaction = zaznam.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN)
@@ -831,11 +836,13 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         zaznam: Dokument = self.get_zaznam()
         form = DokumentCastCreateForm(data=request.POST)
         if form.is_valid():
             fedora_transaction = zaznam.create_transaction(self.request.user, ZAZNAM_USPESNE_VYTVOREN)
+            fedora_transaction.redirect_on_error = False
             zaznam.active_transaction = fedora_transaction
             dc_ident = get_cast_dokumentu_ident(zaznam)
             dc = DokumentCast(
@@ -951,6 +958,7 @@ class DokumentCastPripojitAkciView(TransakceView):
         context["card_type"] = type_arch
         return context
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         cast = self.get_zaznam()
         cast: DokumentCast
@@ -959,6 +967,7 @@ class DokumentCastPripojitAkciView(TransakceView):
         if form.is_valid():
             logger.debug("dokument.views.DokumentCastPripojitAkciView.post.form_valid")
             fedora_transaction = cast.create_transaction(self.request.user, self.success_message)
+            fedora_transaction.redirect_on_error = False
             cast.active_transaction = fedora_transaction
             arch_z_id = form.cleaned_data["arch_z"]
             arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
@@ -991,12 +1000,14 @@ class DokumentCastPripojitProjektView(TransakceView):
         context["hide_table"] = True
         return context
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         cast = self.get_zaznam()
         form = PripojitProjektForm(data=request.POST, dok=True)
         if form.is_valid():
             projekt = form.cleaned_data["projekt"]
-            cast.create_transaction(self.request.user, self.success_message)
+            fedora_transaction = cast.create_transaction(self.request.user, self.success_message)
+            fedora_transaction.redirect_on_error = False
             cast.close_active_transaction_when_finished = True
             cast.archeologicky_zaznam = None
             cast.projekt = Projekt.objects.get(id=projekt)
@@ -1035,6 +1046,7 @@ class DokumentCastOdpojitView(TransakceView):
             )
         return context
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         cast = self.get_zaznam()
         cast.create_transaction(request.user, self.success_message)
@@ -1131,6 +1143,7 @@ class DokumentNeidentAkceSmazatView(TransakceView):
 
 @never_cache
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     """
@@ -1233,6 +1246,7 @@ def edit(request, ident_cely):
 
 @never_cache
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def edit_model_3D(request, ident_cely):
     """
@@ -1395,6 +1409,7 @@ def zapsat_do_projektu(request, proj_ident_cely):
 
 @never_cache
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def create_model_3D(request):
     """
@@ -1536,6 +1551,7 @@ def create_model_3D(request):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
     """
@@ -1841,6 +1857,7 @@ def get_detail_template_shows(dokument, user):
 
 
 @never_cache
+@handle_fedora_error
 @login_required
 def zapsat(request, zaznam=None):
     """
@@ -2059,9 +2076,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
 
         for dokument_id in dokument_ids:
             dokument = get_object_or_404(Dokument, id=dokument_id)
-            fedora_transaction = zaznam.create_transaction(
-                request.user, DOKUMENT_USPESNE_PRIPOJEN, DOKUMENT_JIZ_BYL_PRIPOJEN
-            )
+            fedora_transaction = zaznam.create_transaction(request.user, DOKUMENT_USPESNE_PRIPOJEN)
             dokument.active_transaction = fedora_transaction
             relace = casti_zaznamu.filter(dokument__id=dokument_id)
             if not relace.exists():
@@ -2085,7 +2100,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                     extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
                 )
             else:
-                messages.add_message(request, messages.WARNING, DOKUMENT_JIZ_BYL_PRIPOJEN)
+                fedora_transaction.error_message = DOKUMENT_JIZ_BYL_PRIPOJEN
                 fedora_transaction.rollback_transaction()
         return JsonResponse({"redirect": redirect_name})
     else:

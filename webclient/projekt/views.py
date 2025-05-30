@@ -75,11 +75,7 @@ from core.message_constants import (
 from core.models import Permissions
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.repository_connector import (
-    FedoraRepositoryConnector,
-    FedoraTransaction,
-    FedoraUpdatedByAnotherTransactionError,
-)
+from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
     get_heatmap_project,
     get_num_projects_from_envelope,
@@ -101,6 +97,7 @@ from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views import View
@@ -109,6 +106,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.generic import RedirectView, TemplateView
 from dokument.models import Dokument, DokumentCast
 from dokument.views import odpojit, pripojit
+from fedora_management.decorators import handle_fedora_error
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
@@ -435,6 +433,7 @@ def create(request):
 
 @never_cache
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     """
@@ -485,7 +484,8 @@ def edit(request, ident_cely):
             # Workaroud to not check if long and lat has been changed, only geom is interesting
             form.fields["coordinate_x1"].initial = x1
             form.fields["coordinate_x2"].initial = x2
-            projekt.create_transaction(request.user)
+            fedora_transaction = projekt.create_transaction(request.user)
+            fedora_transaction.redirect_on_error = True
             projekt = form.save(commit=False)
             projekt.save()
             old_geom = projekt.geom
@@ -525,6 +525,7 @@ def edit(request, ident_cely):
 
 @login_required
 @allowed_user_groups([ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID])
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     """
@@ -640,6 +641,7 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def schvalit(request, ident_cely):
     """
@@ -710,6 +712,7 @@ def schvalit(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def prihlasit(request, ident_cely):
     """
@@ -770,6 +773,7 @@ def prihlasit(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def zahajit_v_terenu(request, ident_cely):
     """
@@ -824,6 +828,7 @@ def zahajit_v_terenu(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def ukoncit_v_terenu(request, ident_cely):
     """
@@ -869,6 +874,7 @@ def ukoncit_v_terenu(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def uzavrit(request, ident_cely):
     """
@@ -1016,6 +1022,7 @@ def archivovat(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def navrhnout_ke_zruseni(request, ident_cely):
     """
@@ -1076,6 +1083,7 @@ def navrhnout_ke_zruseni(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def zrusit(request, ident_cely):
     """
@@ -1142,6 +1150,7 @@ def zrusit(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
     """
@@ -1183,6 +1192,7 @@ def vratit(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def vratit_navrh_zruseni(request, ident_cely):
     """
@@ -1229,6 +1239,7 @@ def vratit_navrh_zruseni(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def odpojit_dokument(request, ident_cely, proj_ident_cely):
     """
@@ -1252,6 +1263,7 @@ def odpojit_dokument(request, ident_cely, proj_ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def pripojit_dokument(request, proj_ident_cely):
     """
@@ -1267,6 +1279,7 @@ def pripojit_dokument(request, proj_ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["POST"])
 def generovat_oznameni(request, ident_cely):
     """
@@ -1282,22 +1295,21 @@ def generovat_oznameni(request, ident_cely):
         messages.add_message(request, messages.SUCCESS, PROJEKT_NENI_TYP_ZACHRANNY)
         return redirect(projekt.get_absolute_url())
     fedora_transaction = projekt.create_transaction(request.user)
-    try:
-        rep_bin_file = projekt.create_confirmation_document(fedora_transaction, additional=True, user=request.user)
-        if request.POST.get("odeslat_oznamovateli", False):
-            projekt.send_ep01(rep_bin_file)
-        projekt.close_active_transaction_when_finished = True
-        fedora_transaction.success_message = _("projekt.views.generovat_oznameni.success")
-        projekt.save()
-    except FedoraUpdatedByAnotherTransactionError as err:
-        logger.debug("projekt.views.generovat_oznameni.failed_another_transaction", extra={"error": err})
-        fedora_transaction.error_message = _("projekt.views.generovat_oznameni.error")
+    fedora_transaction.success_message = _("projekt.views.generovat_oznameni.success")
+    fedora_transaction.error_message = _("projekt.views.generovat_oznameni.error")
+    fedora_transaction.redirect_url = projekt.get_absolute_url()
+    rep_bin_file = projekt.create_confirmation_document(fedora_transaction, additional=True, user=request.user)
+    if request.POST.get("odeslat_oznamovateli", False):
+        projekt.send_ep01(rep_bin_file)
+    projekt.close_active_transaction_when_finished = True
+    projekt.save()
     return redirect(projekt.get_absolute_url())
 
 
 class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
     http_method_names = ["POST"]
 
+    @method_decorator(handle_fedora_error)
     def get_redirect_url(self, *args, **kwargs):
         ident_cely = kwargs["ident_cely"]
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
