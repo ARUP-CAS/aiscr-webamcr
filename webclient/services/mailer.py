@@ -185,10 +185,12 @@ class Mailer:
         from_email=settings.DEFAULT_FROM_EMAIL,
         attachment: RepositoryBinaryFile = None,
         log_user=None,
+        reply_to=None,
+        cc=None,
     ):
         if "@" in to:
             plain_text = cls.__strip_tags(html_content)
-            email = EmailMultiAlternatives(subject, plain_text, from_email, [to])
+            email = EmailMultiAlternatives(subject, plain_text, from_email, [to], reply_to=reply_to, cc=cc)
             email.attach_alternative(html_content, "text/html")
             logger.info(
                 "services.mailer.send.debug",
@@ -1070,3 +1072,53 @@ class Mailer:
             notification_type=notification_type,
             from_email=user.email,
         )
+
+    @classmethod
+    def send_ep09(cls, project: "projekt.models.Projekt", info_text, user, kraje_s_emailem):
+        IDENT_CELY = "E-P-09"
+        logger.debug("services.mailer.send_ep09", extra={"ident_cely": IDENT_CELY})
+        notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
+        html = render_to_string(
+            notification_type.cesta_sablony,
+            {
+                "title": subject,
+                "project": project,
+                "dalsi_katastry": project.katastry.all(),
+                "info_text": info_text,
+            },
+        )
+        for kraj in kraje_s_emailem:
+            cls.__send(
+                subject=subject,
+                to=kraj.email,
+                html_content=html,
+                notification_type=notification_type,
+                reply_to=[user.email],
+                cc=[user.email],
+            )
+
+    @classmethod
+    def send_ep10(cls, project: "projekt.models.Projekt", info_text, user, kraje_s_emailem):
+        IDENT_CELY = "E-P-10"
+        logger.debug("services.mailer.send_ep10", extra={"ident_cely": IDENT_CELY})
+        notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
+        html = render_to_string(
+            notification_type.cesta_sablony,
+            {
+                "title": subject,
+                "project": project,
+                "dalsi_katastry": project.katastry.all(),
+                "info_text": info_text,
+            },
+        )
+        for kraj in kraje_s_emailem:
+            cls.__send(
+                subject=subject,
+                to=kraj.email,
+                html_content=html,
+                notification_type=notification_type,
+                reply_to=[user.email],
+                cc=[user.email],
+            )

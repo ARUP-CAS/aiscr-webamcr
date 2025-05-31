@@ -37,6 +37,7 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.timezone import now
@@ -45,7 +46,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PRISTUPNOST, HESLAR_PROJEKT_TYP
 from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
-from heslar.models import Heslar, RuianKatastr
+from heslar.models import Heslar, RuianKatastr, RuianKraj
 from historie.models import Historie, HistorieVazby
 from projekt.doc_utils import DocumentCreator, OznameniPDFCreator, ZruseniPDFCreator
 from projekt.rtf_utils import ExpertniListCreator
@@ -282,7 +283,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         ).save()
         self.save()
 
-    def set_zahajeny_v_terenu(self, user):
+    def set_zahajeny_v_terenu(self, user, info_text):
         """
         Metóda pro nastavení stavu zahájený v terénu a uložení změny do historie.
         """
@@ -291,10 +292,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             typ_zmeny=ZAHAJENI_V_TERENU_PROJ,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=info_text,
         ).save()
         self.save()
 
-    def set_ukoncen_v_terenu(self, user):
+    def set_ukoncen_v_terenu(self, user, info_text):
         """
         Metóda pro nastavení stavu ukončený v terénu a uložení změny do historie.
         """
@@ -303,6 +305,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             typ_zmeny=UKONCENI_V_TERENU_PROJ,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=info_text,
         ).save()
         self.save()
 
@@ -761,6 +764,13 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         table = ProjektTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
         return self.redis_snapshot_id, data
+
+    def get_kraje_s_emailem(self):
+        all_katastre = RuianKatastr.objects.filter(
+            Q(pk=self.hlavni_katastr.id) | Q(pk__in=self.katastry.values_list("id"))
+        )
+        kraje = RuianKraj.objects.filter(ruianokres__ruiankatastr__in=all_katastre).distinct()
+        return kraje.filter(email__isnull=False).exclude(email="")
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):
