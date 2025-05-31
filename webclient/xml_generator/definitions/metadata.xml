@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.1/" xmlns:gml="http://www.opengis.net/gml/3.2" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.1/ https://api.aiscr.cz/schema/amcr/2.1/amcr.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd">
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xmlns:gml="http://www.opengis.net/gml/3.2" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd">
   <amcr:projekt>
     <amcr:ident_cely>C-201901234</amcr:ident_cely>
     <amcr:stav>6</amcr:stav>
@@ -555,6 +555,7 @@
       </gml:Point>
     </amcr:hranice_gml>
     <amcr:hranice_wkt EPSG="4326">MULTIPOLYGON(X Y)</amcr:hranice_wkt>
+    <amcr:email>kraj@test.cz</amcr:email>
   </amcr:ruian_kraj>
   <amcr:ruian_okres>
     <amcr:kod>ruian-3201</amcr:kod>
