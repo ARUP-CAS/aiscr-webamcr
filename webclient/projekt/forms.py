@@ -544,6 +544,23 @@ class ZahajitVTerenuForm(forms.ModelForm):
         label=_("projekt.forms.zahajitVTerenu.datumZahajeni.label"),
     )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
+    POSLAT_EMAIL_VOLBY = (
+        (True, _("projekt.forms.zahajitVTerenu.poslat_mail")),
+        (False, _("projekt.forms.zahajitVTerenu.neposlat_mail")),
+    )
+    poslat_email_kraj = forms.ChoiceField(
+        label=_("projekt.forms.zahajitVTerenu.email.label"),
+        choices=POSLAT_EMAIL_VOLBY,
+        widget=forms.RadioSelect,
+        help_text=_("projekt.forms.zahajitVTerenu.email.tooltip"),
+        required=True,
+    )
+    info_text = forms.CharField(
+        label=_("projekt.forms.zahajitVTerenu.infotext.label"),
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
+        help_text=_("projekt.forms.zahajitVTerenu.infotext.tooltip"),
+    )
 
     class Meta:
         model = Projekt
@@ -556,15 +573,28 @@ class ZahajitVTerenuForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ZahajitVTerenuForm, self).__init__(*args, **kwargs)
         self.fields["datum_zahajeni"].required = True
+        kraje_s_emailem = self.instance.get_kraje_s_emailem()
+        if kraje_s_emailem.count() == 0:
+            self.fields["poslat_email_kraj"].initial = False
+            self.fields["poslat_email_kraj"].disabled = True
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
                 Div("datum_zahajeni", css_class="col-sm-4"),
+                Div("poslat_email_kraj", css_class="col-sm-4"),
+                Div("info_text", css_class="col-sm-4"),
                 Div("old_stav"),
                 css_class="row",
             ),
         )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        poslat_email_kraj = cleaned_data.get("poslat_email_kraj")
+        if poslat_email_kraj == "False":
+            cleaned_data["info_text"] = ""
+        return cleaned_data
 
 
 class UkoncitVTerenuForm(forms.ModelForm):
@@ -578,6 +608,23 @@ class UkoncitVTerenuForm(forms.ModelForm):
         label=_("projekt.forms.ukoncitVTerenu.datumUkonceni.label"),
     )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
+    POSLAT_EMAIL_VOLBY = (
+        (True, _("projekt.forms.ukoncitVTerenu.poslat_mail")),
+        (False, _("projekt.forms.ukoncitVTerenu.neposlat_mail")),
+    )
+    poslat_email_kraj = forms.ChoiceField(
+        label=_("projekt.forms.ukoncitVTerenu.email.label"),
+        choices=POSLAT_EMAIL_VOLBY,
+        widget=forms.RadioSelect,
+        help_text=_("projekt.forms.ukoncitVTerenu.email.tooltip"),
+        required=True,
+    )
+    info_text = forms.CharField(
+        label=_("projekt.forms.ukoncitVTerenu.infotext.label"),
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
+        help_text=_("projekt.forms.ukoncitVTerenu.infotext.tooltip"),
+    )
 
     class Meta:
         model = Projekt
@@ -592,11 +639,17 @@ class UkoncitVTerenuForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(UkoncitVTerenuForm, self).__init__(*args, **kwargs)
         self.fields["datum_ukonceni"].required = True
+        kraje_s_emailem = self.instance.get_kraje_s_emailem()
+        if kraje_s_emailem.count() == 0:
+            self.fields["poslat_email_kraj"].initial = False
+            self.fields["poslat_email_kraj"].disabled = True
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
                 Div("datum_ukonceni", css_class="col-sm-4"),
+                Div("poslat_email_kraj", css_class="col-sm-4"),
+                Div("info_text", css_class="col-sm-4"),
                 Div("old_stav"),
                 css_class="row",
             ),
@@ -613,6 +666,9 @@ class UkoncitVTerenuForm(forms.ModelForm):
                     "Datum ukončení nemůže být pred datem zahájení (%s)"
                     % self.instance.datum_zahajeni.strftime("%d. %m. %Y")
                 )
+        poslat_email_kraj = cleaned_data.get("poslat_email_kraj")
+        if poslat_email_kraj == "False":
+            cleaned_data["info_text"] = ""
         return self.cleaned_data
 
 

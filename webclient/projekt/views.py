@@ -802,7 +802,10 @@ def zahajit_v_terenu(request, ident_cely):
         if form.is_valid():
             projekt = form.save(commit=False)
             projekt.create_transaction(request.user, PROJEKT_USPESNE_ZAHAJEN_V_TERENU)
-            projekt.set_zahajeny_v_terenu(request.user)
+            projekt.set_zahajeny_v_terenu(request.user, form.cleaned_data["info_text"])
+            kraje_s_emailem = projekt.get_kraje_s_emailem()
+            if kraje_s_emailem.count() > 0 and form.cleaned_data["poslat_email_kraj"] == "True":
+                Mailer.send_ep09(projekt, form.cleaned_data["info_text"], request.user, kraje_s_emailem)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
@@ -847,7 +850,10 @@ def ukoncit_v_terenu(request, ident_cely):
         if form.is_valid():
             projekt = form.save(commit=False)
             projekt.create_transaction(request.user, PROJEKT_USPESNE_UKONCEN_V_TERENU)
-            projekt.set_ukoncen_v_terenu(request.user)
+            projekt.set_ukoncen_v_terenu(request.user, form.cleaned_data["info_text"])
+            kraje_s_emailem = projekt.get_kraje_s_emailem()
+            if kraje_s_emailem.count() > 0 and form.cleaned_data["poslat_email_kraj"] == "True":
+                Mailer.send_ep10(projekt, form.cleaned_data["info_text"], request.user, kraje_s_emailem)
             projekt.close_active_transaction_when_finished = True
             projekt.save()
             return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
