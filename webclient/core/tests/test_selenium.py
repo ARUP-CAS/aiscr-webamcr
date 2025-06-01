@@ -207,7 +207,6 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                     data = json.load(file)
                 if data["deleted"] is True and name in data["id"]:
                     matches = data["id"][data["id"].find("/") + 1 :]
-                    # logger.error(f"delete {url}{matches}")
                     self.purge_container(f"{url}{matches}")
 
     def save_fedora_change(self, time, path):
@@ -293,7 +292,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             invalidate_all()
         except Exception as err:
             logger.error(
-                "core.tests.test_selenium.BaseSeleniumTestClass.clone_Database.general_exception", extra={"err": err}
+                "core.tests.test_selenium.BaseSeleniumTestClass.clone_Database.general_exception", extra={"error": err}
             )
         finally:
             if prod_cursor is not None:
@@ -390,7 +389,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 "BaseSeleniumTestClass.ElementClick.elementNotFound",
                 extra={
                     "filed": by,
-                    "content": value,
+                    "value": value,
                 },
             )
             raise Exception("ElementClickError")
@@ -400,7 +399,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 "BaseSeleniumTestClass.ElementClick.elementNotFound",
                 extra={
                     "filed": by,
-                    "content": value,
+                    "value": value,
                 },
             )
             raise Exception("ElementIsNotClickableError")
@@ -417,7 +416,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 "BaseSeleniumTestClass.ElementClick.elementNotFound",
                 extra={
                     "filed": by,
-                    "content": value,
+                    "value": value,
                 },
             )
             raise Exception("ElementClickError")
@@ -457,7 +456,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             field_type = value["field_type"]
             logger.info(
                 "BaseSeleniumTestClass._fill_form_fields.start",
-                extra={"filed": item, "content": value, "field_type": field_type},
+                extra={"filed": item, "value": value, "field_type": field_type},
             )
             if field_type == "text_field":
                 self._fill_text_field(value.get("field_id"), value.get("value"))
@@ -530,7 +529,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             record = None
             logger.debug(
                 "BaseSeleniumTestClass.createFedoraRecord.not_found",
-                extra={"ident_cely": ident_cely, "err": err},
+                extra={"ident_cely": ident_cely, "error": err},
             )
         if record and isinstance(record, ModelWithMetadata) or isinstance(record, User):
             try:
@@ -540,7 +539,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             except FedoraError as err:
                 logger.debug(
                     "BaseSeleniumTestClass.fedora_error.not_found",
-                    extra={"ident_cely": ident_cely, "err": err},
+                    extra={"ident_cely": ident_cely, "error": err},
                 )
 
     def odstran_elementy(self, root, ignorovane_tagy):

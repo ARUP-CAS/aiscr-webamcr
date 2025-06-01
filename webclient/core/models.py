@@ -29,7 +29,6 @@ from heslar.hesla_dynamicka import (
 from historie.models import Historie, HistorieVazby
 from nalez.models import NalezObjekt, NalezPredmet
 from notifikace_projekty.models import Pes
-from pian.models import Pian
 from PIL import Image
 from uzivatel.models import User
 from xml_generator.models import ModelWithMetadata
@@ -194,14 +193,14 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         if record is not None and self.repository_uuid is not None:
             logger.debug(
                 "core.models.Soubor.get_repository_content",
-                extra={"record_ident_cely": record.ident_cely, "repository_uuid": self.repository_uuid},
+                extra={"ident_cely": record.ident_cely, "uuid": self.repository_uuid},
             )
             conector = FedoraRepositoryConnector(record, skip_container_check=False)
             rep_bin_file = conector.get_binary_file(self.repository_uuid, ident_cely_old, thumb_small, thumb_large)
             return rep_bin_file
         logger.debug(
             "core.models.Soubor.get_repository_content.not_found",
-            extra={"record_ident_cely": record, "repository_uuid": self.repository_uuid, "soubor_pk": self.pk},
+            extra={"ident_cely": record, "uuid": self.repository_uuid, "pk": self.pk},
         )
         return None
 
@@ -302,9 +301,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         with open(file_path, "rb") as file:
             file_bytes.write(file.read())
         file_bytes.seek(0)
-        logger.debug(
-            "core.models.Soubor.get_thumb_icon.end", extra={"mime_type": mime_type, "icon_filename": icon_filename}
-        )
+        logger.debug("core.models.Soubor.get_thumb_icon.end", extra={"mime_type": mime_type, "file": icon_filename})
         if icon_filename == "file.png":
             logger.warning("core.models.Soubor.get_thumb_icon.no_icon", extra={"mime_type": mime_type})
             return None, mime_type
@@ -315,7 +312,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         file.seek(0)
         mime_type = magic.from_buffer(file.read(), mime=True)
         logger.debug(
-            "core.models.Soubor.get_mime_type.mime_type", extra={"mime_type": mime_type, "check_archive": check_archive}
+            "core.models.Soubor.get_mime_type.mime_type", extra={"mime_type": mime_type, "option": check_archive}
         )
         file.seek(0)
         if check_archive:
@@ -326,7 +323,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                     with zipfile.ZipFile(file, "r") as zip_ref:
                         zip_ref.testzip()
                 except Exception as err:
-                    logger.info("core.models.Soubor.get_mime_type.cannot_unpack_zipfile", extra={"err": err})
+                    logger.info("core.models.Soubor.get_mime_type.cannot_unpack_zipfile", extra={"error": err})
                     if "encrypted" in str(err):
                         return "encrypted"
                     return False
@@ -338,7 +335,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                         for file_name in all_files:
                             archive.read([file_name])
                 except Exception as err:
-                    logger.info("core.models.Soubor.get_mime_type.cannot_unpack_7zfile", extra={"err": err})
+                    logger.info("core.models.Soubor.get_mime_type.cannot_unpack_7zfile", extra={"error": err})
                     if "Password is required" in str(err):
                         return "encrypted"
                     return False
@@ -354,7 +351,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                         return "encrypted"
                     logger.info(
                         "core.models.Soubor.get_mime_type.cannot_unpack_rarfile",
-                        extra={"mime_type": mime_type, "err": err},
+                        extra={"mime_type": mime_type, "error": err},
                     )
                     return False
                 finally:
@@ -362,34 +359,29 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             file.seek(0)
             if "application/octet-stream" in mime_types:
                 mime_types.remove("application/octet-stream")
-            logger.debug(
-                "core.models.Soubor.get_mime_type.end", extra={"mime_types": mime_types, "check_archive": check_archive}
-            )
+            logger.debug("core.models.Soubor.get_mime_type.end", extra={"mime_type": mime_types})
             if len(mime_types) == 1:
                 return list(mime_types)[0]
             else:
                 return mime_types
         else:
-            logger.debug(
-                "core.models.Soubor.get_mime_type.end", extra={"mime_type": mime_type, "check_archive": check_archive}
-            )
+            logger.debug("core.models.Soubor.get_mime_type.end", extra={"mime_type": mime_type})
             return mime_type
 
     @classmethod
     def remove_gps_data(cls, bytes_io: io.BytesIO) -> io.BytesIO:
         try:
             img = Image.open(bytes_io)
+            exif_data = img.info.get("exif")
+            if exif_data:
+                exif_dict = piexif.load(exif_data)
+            else:
+                bytes_io.seek(0)
+                return bytes_io
         except Exception as err:
-            logger.warning("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"err": err})
+            logger.warning("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"error": err})
             bytes_io.seek(0)
             return bytes_io
-        exif_data = img.getexif()
-        if not exif_data:
-            bytes_io.seek(0)
-            return bytes_io
-
-        exif_dict = piexif.load(img.info.get("exif"))
-
         # Odstranění GPS dat, pokud existují
         if "GPS" in exif_dict and exif_dict["GPS"] != {}:
             del exif_dict["GPS"]
@@ -407,14 +399,14 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             logger.debug("core.models.Soubor.remove_gps_data.GPS_data_removed")
             return output_io
         except Exception as err:
-            logger.error("core.models.Soubor.remove_gps_data.cannot_save_file", extra={"err": err})
+            logger.error("core.models.Soubor.remove_gps_data.cannot_save_file", extra={"error": err})
             bytes_io.seek(0)
             return bytes_io
 
     @classmethod
     def check_mime_for_url(cls, file, source_url=""):
         mime = cls.get_mime_types(file, check_archive=True)
-        logger.debug("core.models.Soubor.check_mime_for_url.mime_types", extra={"mime": mime})
+        logger.debug("core.models.Soubor.check_mime_for_url.mime_types", extra={"mime_type": mime})
         if mime == "encrypted":
             return mime
         elif mime is False:
@@ -428,9 +420,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             for item in mime:
                 item: str
                 if not item.startswith("image/"):
-                    logger.debug(
-                        "core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"accepted_mime_type": mime}
-                    )
+                    logger.debug("core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"mime_type": mime})
                     return False
             return True
         elif "soubor/nahrat/dokument/" in "dokument":
@@ -445,9 +435,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             unaccepted_mime_types = mime.difference(accepted_mime_types)
             for item in unaccepted_mime_types:
                 if not item.startswith("image/"):
-                    logger.debug(
-                        "core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"accepted_mime_types": item}
-                    )
+                    logger.debug("core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"mime_type": item})
                     return False
             return True
         else:
@@ -468,9 +456,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             unaccepted_mime_types = mime.difference(accepted_mime_types)
             for item in unaccepted_mime_types:
                 if not item.startswith("image/"):
-                    logger.debug(
-                        "core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"accepted_mime_types": item}
-                    )
+                    logger.debug("core.models.Soubor.check_mime_for_url.unaccepted_types", extra={"mime_type": item})
                     return False
             return True
 
@@ -577,56 +563,6 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
 
     def __str__(self) -> str:
         return "{}: {} {}".format(_("core.model.OdstavkaSystemu.text"), self.datum_odstavky, self.cas_odstavky)
-
-
-class GeomMigrationJobError(ExportModelOperationsMixin("geom_migration_job_error"), models.Model):
-    """
-    Model pro tabulku s chybami jobu geaom migracií.
-    """
-
-    pian = models.ForeignKey(Pian, on_delete=models.CASCADE)
-
-    class Meta:
-        abstract = True
-
-
-class GeomMigrationJobSJTSKError(ExportModelOperationsMixin("geom_migration_job_sjtsk_error"), GeomMigrationJobError):  # type: ignore pylance to ignore error
-    """
-    Model pro tabulku s chybami jobu geaom SJTSK migracií.
-    """
-
-    class Meta:
-        db_table = "amcr_geom_migrations_jobs_sjtsk_errors"
-        abstract = False
-
-
-class GeomMigrationJobWGS84Error(ExportModelOperationsMixin("geom_migration_job_wgs84_error"), GeomMigrationJobError):  # type: ignore pylance to ignore error
-    """
-    Model pro tabulku s chybami jobu geaom WGS84 migracií.
-    """
-
-    class Meta:
-        db_table = "amcr_geom_migrations_jobs_wgs84_errors"
-        abstract = False
-
-
-class GeomMigrationJob(ExportModelOperationsMixin("geom_migration_job"), models.Model):
-    """
-    Model pro tabulku jobu geaom migracií.
-    """
-
-    typ = models.TextField()
-    count_selected_wgs84 = models.IntegerField(default=0)
-    count_selected_sjtsk = models.IntegerField(default=0)
-    count_updated_wgs84 = models.IntegerField(default=0)
-    count_updated_sjtsk = models.IntegerField(default=0)
-    count_error_wgs84 = models.IntegerField(default=0)
-    count_error_sjtsk = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    detail = models.TextField(null=True)
-
-    class Meta:
-        db_table = "amcr_geom_migrations_jobs"
 
 
 class Permissions(models.Model):
@@ -938,22 +874,24 @@ class Permissions(models.Model):
         self.ident = ident
         perm_check = True
         if not self.check_base():
-            logger.debug("base false")
+            logger.debug("core.model.Permissions.check_concrete_permission.base_false")
             return False
         if self.ident is not None:
             perm_check = status_check = self.check_status()
             if perm_check and not self.check_ownership(self.ownership):
-                logger.debug("ownership false")
+                logger.debug("core.model.Permissions.check_concrete_permission.ownership_false")
                 perm_check = False
             if perm_check and not self.check_accessibility():
-                logger.debug("accessibility false")
+                logger.debug("core.model.Permissions.check_concrete_permission.accessibility_false")
                 perm_check = False
             if not perm_check and status_check and self.check_permission_skip():
-                logger.debug("skip True")
+                logger.debug("core.model.Permissions.check_concrete_permission.skip_True")
                 perm_check = True
             if not perm_check and self.action in self.permission_to_override:
                 perm_check = self.permission_override()
-        logger.debug("Permission check outcome: %s", perm_check)
+        logger.debug(
+            "core.model.Permissions.check_concrete_permission.Permission_check_outcome", extra={"value": perm_check}
+        )
         return perm_check
 
     def check_base(self):
@@ -983,7 +921,10 @@ class Permissions(models.Model):
                     return False
             else:
                 if not int(self.permission_object.stav) == int(subed_status):
-                    logger.debug("status nok: %s and %s", self.permission_object.stav, subed_status)
+                    logger.debug(
+                        "core.model.Permissions.check_status.status_nok",
+                        extra={"stav": self.permission_object.stav, "value": subed_status},
+                    )
                     return False
         return True
 
@@ -1014,7 +955,7 @@ class Permissions(models.Model):
                     ):
                         return False
                 except Exception as e:
-                    logger.debug(e)
+                    logger.debug("core.model.Permissions.check_accessibility.error", extra={"error": e})
                     return False
         return True
 
@@ -1028,11 +969,13 @@ class Permissions(models.Model):
             try:
                 id = self.permission_object.ident_cely
             except Exception as e:
-                logger.debug(e)
+                logger.debug("core.model.Permissions.check_permission_skip.error", extra={"error": e})
                 try:
                     id = self.permission_object.id
                 except Exception as e:
-                    logger.debug(e)
+                    logger.debug(
+                        "core.model.Permissions.check_permission_skip.permission_object_error", extra={"error": e}
+                    )
                     id = None
             finally:
                 if id in perm_skips[0].split(","):
@@ -1063,7 +1006,10 @@ class Permissions(models.Model):
                 self.object = get_record_from_ident(self.ident)
                 self.permission_object = self.object.get_permission_object()
             except Exception as e:
-                logger.error(e)
+                logger.warning(
+                    "core.models.Permission.get_permission_object.object_error",
+                    extra={"error": e, "ident_cely": self.ident},
+                )
                 self.permission_object = "error"
 
     def permission_override(self):
@@ -1085,7 +1031,8 @@ def check_permissions(action, user, ident=None):
         main_role=user.hlavni_role,
         action=action,
     )
-    logger.debug("checking action permission: %s", permission_set)
+
+    logger.debug("core.model.check_permissions.checking_action_permission", extra={"value": permission_set})
     if permission_set.count() > 0:
         tested = []
         for concrete_permission in permission_set:

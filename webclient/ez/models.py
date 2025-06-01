@@ -251,7 +251,7 @@ def get_perm_ez_ident():
             idents = [sub.lstrip("0") for sub in idents]
             idents = [eval(i) for i in idents]
             missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
-            logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
+            logger.debug("arch_z.models.get_akce_ident.missing", extra={"data": missing[0]})
             logger.debug(missing[0])
             if missing[0] >= MAXIMUM:
                 logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})

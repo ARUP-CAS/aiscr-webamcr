@@ -1,6 +1,7 @@
 import logging
-from datetime import date, datetime, timedelta
+from datetime import datetime
 
+import pytz
 from core.constants import (
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
@@ -13,7 +14,7 @@ from core.constants import (
     PROJEKT_STAV_ZRUSENY,
     ROLE_ADMIN_ID,
 )
-from core.models import OdstavkaSystemu
+from core.utils import get_set_maintenance_in_cache
 from django.conf import settings
 from django.core.cache import cache
 from django.utils.safestring import mark_safe
@@ -71,23 +72,17 @@ def auto_logout_client(request):
 
     ctx["maintenance_logout_text"] = mark_safe("0")
     maintenance_logout = False
-    last_maintenance = cache.get("last_maintenance")
-    if last_maintenance is None:
-        odstavka = OdstavkaSystemu.objects.filter(
-            info_od__lte=datetime.today(),
-            datum_odstavky__gte=datetime.today(),
-            status=True,
-        ).order_by("-datum_odstavky", "-cas_odstavky")
-        if odstavka:
-            last_maintenance = odstavka[0]
-            cache.set("last_maintenance", last_maintenance, 600)
-        else:
-            cache.set("last_maintenance", False, 600)
-    if last_maintenance is not None and last_maintenance is not False:
-        if (
-            last_maintenance.datum_odstavky == date.today()
-            and last_maintenance.cas_odstavky < (datetime.now() + timedelta(hours=1)).time()
-        ):
+    maintenance = get_set_maintenance_in_cache()
+    if maintenance:
+        time_difference = int(
+            (
+                pytz.timezone("Europe/Prague").localize(
+                    datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
+                )
+                - datetime.now(pytz.timezone("Europe/Prague"))
+            ).total_seconds()
+        )
+        if time_difference < 3601 and time_difference > 0:
             maintenance_logout = True
 
     if "SESSION_TIME" in options:
@@ -106,19 +101,15 @@ def auto_logout_client(request):
             ctx["extra_param"] = mark_safe(_("core.context_processors.autologout.expired.text"))
         ctx["logout_warning_text"] = mark_safe("AUTOLOGOUT_EXPIRATION_WARNING")
     else:
-        cache_name = str(request.user.id) + "_maintenanteLogoutTime"
-        logout_time = cache.get_or_set(
-            cache_name,
-            datetime.now() + timedelta(seconds=options["MAINTENANCE_LOGOUT_TIME"]),
-            900,
-        )
-        logger.debug("core.context_processors.auto_logout_client", extra={"logout_time": logout_time})
-        until_logout = logout_time - datetime.now()
-        ctx["seconds_until_idle_end"] = int(until_logout.total_seconds())
-        ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5
+        logger.debug("core.context_processors.auto_logout_client_maintenance_logout")
+        ctx["seconds_until_idle_end"] = time_difference
         ctx["redirect_to_login_immediately"] = "logoutFunction"
         ctx["extra_param"] = mark_safe({"logout_type": "maintenance"})
-        ctx["logout_warning_text"] = mark_safe("MAINTENANCE_LOGOUT_WARNING")
+        user_cache = str(request.user.id) + "logout_warning"
+        if cache.get(user_cache, True) and time_difference < 605:
+            cache.set(user_cache, False, 3600)
+            ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5
+            ctx["logout_warning_text"] = mark_safe("MAINTENANCE_LOGOUT_WARNING")
         ctx["maintenance"] = mark_safe("true")
 
     return ctx

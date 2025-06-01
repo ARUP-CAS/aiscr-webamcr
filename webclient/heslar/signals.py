@@ -191,8 +191,8 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
                 "heslo.signals.save_metadata_heslar_odkaz.save_medata",
                 extra={
                     "transaction": getattr(fedora_transaction, "uid", None),
-                    "initial_heslo": getattr(instance.initial_heslo, "ident_cely", None),
-                    "heslo": getattr(instance.initial_heslo, "ident_cely", None),
+                    "initial": getattr(instance.initial_heslo, "ident_cely", None),
+                    "data": getattr(instance.initial_heslo, "ident_cely", None),
                 },
             )
 

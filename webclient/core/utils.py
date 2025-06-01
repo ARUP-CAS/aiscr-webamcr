@@ -4,6 +4,7 @@ import mimetypes
 import os
 import tempfile
 import uuid
+from datetime import datetime
 
 import core.message_constants as mc
 import django
@@ -66,39 +67,84 @@ def validate_and_split_geometry(geom):
     """
     Funkce pro validaci řetězce s WKT geometrií.
     """
+
+    valid_bbox = "5, 40, 25, 60"
+    if geom.iloc[1] == 5514:
+        valid_bbox = "-905000, -1230000, -400000, -930000"
     new_rows = []
     if not isinstance(geom.iloc[2], str) or geom.iloc[2] == "":
         geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
         new_rows.append(geom)
         return new_rows
-    query = """
-        WITH geom_to_insert AS
-          (SELECT ST_GeomFromText(%s) AS geom),
-             geometries AS
-          (SELECT (ST_Dump(geom)).geom AS POLYGON
-           FROM geom_to_insert),
-             ring AS
-          (SELECT ST_IsValid(POLYGON) AS is_valid,
-                  ST_IsSimple(POLYGON) AS is_simple,
-                  ST_IsValidReason(POLYGON) AS invalid_reason,
-                  ST_AsText((ST_DumpRings(POLYGON)).geom) AS rings,
-                  ST_GeometryType(POLYGON)
-           FROM geometries
-           WHERE ST_GeometryType(POLYGON) = 'ST_Polygon'),
-             other AS
-          (SELECT ST_IsValid(POLYGON) AS is_valid,
-                  ST_IsSimple(POLYGON) AS is_simple,
-                  ST_IsValidReason(POLYGON) AS invalid_reason,
-                  ST_AsText(POLYGON) AS rings,
-                  ST_GeometryType(POLYGON)
-           FROM geometries
-           WHERE ST_GeometryType(POLYGON) != 'ST_Polygon')
-        SELECT *
-        FROM ring
-        UNION ALL
-        SELECT *
-        FROM other
+    query = (
+        """
+      WITH bbox AS (
+    SELECT ST_MakeEnvelope("""
+        + valid_bbox
+        + """) AS geom
+),
+geom_to_insert AS (
+    SELECT ST_GeomFromText(%s) AS geom
+),
+geometries AS (
+    SELECT (ST_Dump(geom)).geom AS geom
+    FROM geom_to_insert
+),
+analyzed AS (
+    SELECT
+        g.geom,
+        ST_GeometryType(g.geom) AS geom_type,
+        ST_CoordDim(g.geom) AS coord_dim,
+        CASE
+            WHEN ST_GeometryType(g.geom) NOT IN (
+                'ST_Point', 'ST_LineString', 'ST_Polygon',
+                'ST_MultiPoint', 'ST_MultiLineString', 'ST_MultiPolygon'
+            ) THEN false
+            WHEN ST_CoordDim(g.geom) != 2 THEN false
+            WHEN NOT ST_Within(g.geom, b.geom) THEN false
+            ELSE ST_IsValid(g.geom)
+        END AS is_valid,
+        ST_IsSimple(g.geom) AS is_simple,
+        CASE
+            WHEN ST_GeometryType(g.geom) NOT IN (
+                'ST_Point', 'ST_LineString', 'ST_Polygon',
+                'ST_MultiPoint', 'ST_MultiLineString', 'ST_MultiPolygon'
+            ) THEN '"""
+        + _("pian.views.importovatPianView.check.wrongGeometry")
+        + """'
+            WHEN ST_CoordDim(g.geom) != 2 THEN '"""
+        + _("pian.views.importovatPianView.check.dimension")
+        + """'
+            WHEN NOT ST_Within(g.geom, b.geom) THEN '"""
+        + _("pian.views.importovatPianView.check.BBox")
+        + """'
+            ELSE '"""
+        + _("pian.views.importovatPianView.check.wrongGeometry")
+        + """'
+        END AS invalid_reason
+    FROM geometries g, bbox b
+),
+ring AS (
+    SELECT
+        is_valid, is_simple, invalid_reason,
+        ST_AsText((ST_DumpRings(geom)).geom) AS rings,
+        geom_type
+    FROM analyzed
+    WHERE geom_type = 'ST_Polygon'
+),
+other AS (
+    SELECT
+        is_valid, is_simple, invalid_reason,
+        ST_AsText(geom) AS rings,
+        geom_type
+    FROM analyzed
+    WHERE geom_type != 'ST_Polygon'
+)
+SELECT * FROM ring
+UNION ALL
+SELECT * FROM other;
     """
+    )
     cursor = connection.cursor()
     sid = transaction.savepoint()
     try:
@@ -106,7 +152,7 @@ def validate_and_split_geometry(geom):
         transaction.savepoint_commit(sid)
     except Exception as e:
         transaction.savepoint_rollback(sid)
-        logger.debug("core.utils.file_validate_geometry.exception", extra={"e": e})
+        logger.debug("core.utils.file_validate_geometry.exception", extra={"error": e})
         geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
         new_rows.append(geom)
         return new_rows
@@ -117,7 +163,7 @@ def validate_and_split_geometry(geom):
         if len(rows) > 1:
             new_geom.iloc[0] = f"{geom.iloc[0]}_{index + 1}"
         if row[0] is False or row[1] is False:
-            new_geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
+            new_geom["result"] = row[2]
             new_rows.append(new_geom)
             return new_rows
         new_geom["result"] = True
@@ -148,11 +194,11 @@ def get_cadastre_from_point(point):
         katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])[0]
         logger.debug(
             "core.utils.get_cadastre_from_point.start",
-            extra={"point_0": point[0], "point_1": point[1], "katastr": katastr},
+            extra={"X": point[0], "Y": point[1], "katastr": katastr},
         )
         return katastr
     except IndexError:
-        logger.warning("core.utils.get_cadastre_from_point.error", extra={"point_0": point[0], "point_1": point[1]})
+        logger.warning("core.utils.get_cadastre_from_point.error", extra={"X": point[0], "Y": point[1]})
         return None
 
 
@@ -167,7 +213,7 @@ def get_cadastre_from_point_with_geometry(point):
     try:
         logger.debug(
             "core.utils.get_cadastre_from_point.start",
-            extra={"point_0": point[0], "point_1": point[1]},
+            extra={"X": point[0], "Y": point[1]},
         )
         cursor = connection.cursor()
         cursor.execute(query, [point[0], point[1]])
@@ -176,7 +222,7 @@ def get_cadastre_from_point_with_geometry(point):
     except IndexError:
         logger.error(
             "core.utils.get_cadastre_from_point_with_geometry.error",
-            extra={"point": point},
+            extra={"geom": point},
         )
         return None
 
@@ -243,7 +289,7 @@ def get_all_pians_with_akce(ident_cely):
         return back
 
     except Exception as e:
-        logger.debug("core.utils.get_all_pians_with_akce.exception", extra={"e": e})
+        logger.debug("core.utils.get_all_pians_with_akce.exception", extra={"error": e})
         return None
 
 
@@ -293,7 +339,7 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     """
     Funkce pro bodu, geomu a presnosti z akce.
     """
-    logger.debug("core.utils.get_pians_from_akce.start", extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely})
+    logger.debug("core.utils.get_pians_from_akce.start", extra={"katastr": katastr, "ident_cely": akce_ident_cely})
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng,ST_AsText(ST_Envelope(hranice)) as bbox "
         " from public.ruian_katastr where "
@@ -312,7 +358,7 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
             for dj in DJs:
                 logger.debug(
                     "core.utils.get_pians_from_akce.loop_dj",
-                    extra={"dj_ident_cely": dj.ident_cely, "pian": getattr(dj.pian, "ident_cely", None)},
+                    extra={"ident_cely": dj.ident_cely, "pian": getattr(dj.pian, "ident_cely", None)},
                 )
                 if dj.pian and dj.pian.geom:
                     bod = dj.pian__centroid
@@ -352,7 +398,7 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     except IndexError as err:
         logger.error(
             "core.utils.get_pians_from_akce.error",
-            extra={"katastr": katastr, "akce_ident_cely": akce_ident_cely, "err": err, "bod": bod},
+            extra={"katastr": katastr, "ident_cely": akce_ident_cely, "error": err, "value": bod},
         )
         raise CannotFindCadasterCentre()
 
@@ -724,7 +770,7 @@ def get_dj_akce_for_pian(pian_ident_cely, request):
     except IndexError:
         logger.debug(
             "core.utils.get_dj_akce_for_pian.no_records",
-            extra={"pian_ident_cely": pian_ident_cely},
+            extra={"ident_cely": pian_ident_cely},
         )
         return None
 
@@ -1055,3 +1101,24 @@ class SessionIdentifier:
     def get_cached_files(self):
         files = cache.get(f"{self.cache_key}_files", set())
         return files
+
+
+def get_set_maintenance_in_cache():
+    """
+    Funkce pro získání nastavení údržby z cache.
+    """
+    maintenance = cache.get("maintenance")
+    if maintenance is None:
+        from core.models import OdstavkaSystemu
+
+        odstavka = OdstavkaSystemu.objects.filter(
+            info_od__lte=datetime.today(),
+            status=True,
+        ).order_by("-datum_odstavky", "-cas_odstavky")
+        if odstavka.count() > 0:
+            maintenance = odstavka[0]
+            cache.set("maintenance", maintenance, 600)
+        else:
+            cache.set("maintenance", False, 600)
+            maintenance = False
+    return maintenance

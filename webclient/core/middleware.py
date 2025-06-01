@@ -1,13 +1,10 @@
 import logging
 import re
-from datetime import datetime, timedelta
 
 from core.connectors import RedisConnector
-from core.message_constants import NEPRODUKCNI_PROSTREDI_INFO, ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
+from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.repository_connector import FedoraError, FedoraTransaction, FedoraTransactionResult
-from django.conf import settings
 from django.contrib import messages
-from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.utils import OperationalError
 from django.shortcuts import render
@@ -85,25 +82,6 @@ class ErrorMiddleware:
         if isinstance(exception, OperationalError) and "canceling statement due to statement timeout" in str(exception):
             context = {"exception": exception}
             return render(request, "db_timeout_error.html", context, status=504)
-
-
-class TestEnvPopupMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        response = self.get_response(request)
-        return response
-
-    def process_view(self, request, view_func, view_args, view_kwargs):
-        if settings.TEST_ENV and request.user.is_authenticated:
-            cache_name = f"test_env_{request.user.pk}"
-            last_test_env_popup = cache.get(cache_name)
-            if last_test_env_popup is None:
-                now = datetime.now()
-                midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0)
-                cache.set(cache_name, True, (midnight - now).seconds)
-                messages.add_message(request, messages.WARNING, NEPRODUKCNI_PROSTREDI_INFO, "notclosing")
 
 
 class StatusMessageMiddleware:

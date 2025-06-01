@@ -242,7 +242,7 @@ def get_sn_ident(projekt: Projekt) -> str:
         ident = projekt.ident_cely + "-N" + str(max_count + 1).zfill(last_digit_count)
         return ident
     else:
-        logger.error("core.ident_cely.get_sn_ident.error", extra={"maximal_sn": MAXIMAL_FINDS})
+        logger.error("core.ident_cely.get_sn_ident.error", extra={"count": MAXIMAL_FINDS})
         raise MaximalIdentNumberError(max_count)
 
 
@@ -257,13 +257,13 @@ def get_adb_ident(pian: Pian) -> str:
     MAXIMAL_ADBS: int = 999999
     point = None
     if type(pian.geom) == LineString:
-        point = pian.geom.interpolate(0.5)
+        point = pian.geom.interpolate_normalized(0.5)
     elif type(pian.geom) == Point:
         point = pian.geom
     elif type(pian.geom) == Polygon:
         point = Centroid(pian.geom)
     else:
-        logger.error("core.ident_cely.get_adb_ident.error", extra={"type": str(type(pian.geom))})
+        logger.error("core.ident_cely.get_adb_ident.error", extra={"info": str(type(pian.geom))})
         raise NeznamaGeometrieError()
     sm5 = get_sm_from_point(point)[0]
     record_list = "ADB-" + sm5.mapno
@@ -278,7 +278,7 @@ def get_adb_ident(pian: Pian) -> str:
             sequence.sekvence += 1
             logger.warning(
                 "core.ident_cely.get_adb_ident.already_exists",
-                extra={"perm_ident_cely": perm_ident_cely, "sequence": sequence.sekvence},
+                extra={"ident_cely": perm_ident_cely, "index": sequence.sekvence},
             )
             perm_ident_cely = record_list + "-" + f"{sequence.sekvence:06}"
         else:
@@ -289,7 +289,7 @@ def get_adb_ident(pian: Pian) -> str:
         sequence.save(using="urgent")
         return ident, sm5
     else:
-        logger.error("core.ident_cely.get_adb_ident.max_adbs_error", extra={"maximal_adbs": MAXIMAL_ADBS})
+        logger.error("core.ident_cely.get_adb_ident.max_adbs_error", extra={"count": MAXIMAL_ADBS})
         raise MaximalIdentNumberError(sequence.sekvence)
 
 

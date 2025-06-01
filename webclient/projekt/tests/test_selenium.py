@@ -34,8 +34,8 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         logger.info(
             "CoreSeleniumTest._check_column_hiding",
             extra={
-                "element_id_initial": element_id_initial,
-                "column_header_text": column_header_text,
+                "element": element_id_initial,
+                "text": column_header_text,
                 "initial": initial,
             },
         )

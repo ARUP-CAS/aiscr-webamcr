@@ -21,4 +21,19 @@
     </div>
   </form>
 {% endblock %}
+{% block script %}
+<script>
 
+  $('#div_id_info_text').hide();
+  $('input:radio[name="poslat_email_kraj"]').change(
+    function () {
+      if ($(this).is(':checked') && $(this).val() == 'True') {
+        $('#div_id_info_text').show();      
+      };
+      if ($(this).is(':checked') && $(this).val() == 'False') {
+        $('#div_id_info_text').hide();
+          console.log("02");
+      };
+    });
+</script>
+{% endblock %}

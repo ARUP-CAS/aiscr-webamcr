@@ -78,7 +78,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
             po_filepath, ext = os.path.splitext(path)
             po_file.save_as_mofile(po_filepath + ".mo")
             self.file_handler(code, form)
-        cache.delete("last_maintenance")
+        cache.delete("maintenance")
         should_try_wsgi_reload = (
             settings.ROSETTA_WSGI_AUTO_RELOAD
             and "mod_wsgi.process_group" in request.environ
@@ -593,7 +593,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
             except Exception as err:
                 logger.debug(
                     "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".cannot_read_file",
-                    extra={"err": err},
+                    extra={"error": err},
                 )
                 context["error"] = _("fedora_management.admin.YourCustomAdminSite.cannot_read_file")
         else:
@@ -602,7 +602,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
             except Exception as err:
                 logger.debug(
                     "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".cannot_read_file",
-                    extra={"err": err},
+                    extra={"error": err},
                 )
                 context["error"] = _("fedora_management.admin.YourCustomAdminSite.cannot_read_file")
         if sheet.shape[1] != 1:

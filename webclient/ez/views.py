@@ -230,7 +230,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-        logger.debug("ez.views.ExterniZdrojCreateView.form_invalid", extra={"form_errors": form.errors})
+        logger.debug("ez.views.ExterniZdrojCreateView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
 
     @method_decorator(never_cache)
@@ -271,12 +271,11 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
         self.object.close_active_transaction_when_finished = True
         self.object.save()
         save_autor_editor(self.object, form)
-        messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("ez.views.ExterniZdrojEditView.form_invalid", extra={"form_errors": form.errors})
+        logger.debug("ez.views.ExterniZdrojEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
 
     @method_decorator(never_cache)
@@ -327,7 +326,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     def dispatch(self, request, *args, **kwargs):
         zaznam = self.get_zaznam()
         if zaznam.stav not in self.allowed_states:
-            logger.debug("ez.views.TransakceView.dispatch.start", extra={"action": self.action})
+            logger.debug("ez.views.TransakceView.dispatch.start", extra={"value": self.action})
             messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
             return JsonResponse(
                 {"redirect": zaznam.get_absolute_url()},
@@ -406,7 +405,7 @@ class ExterniZdrojSmazatView(TransakceView):
         try:
             zaznam.delete()
         except RestrictedError as err:
-            logger.debug("ez.views.ExterniZdrojSmazatView.error", extra={"ident_cely": zaznam.ident_cely, "err": err})
+            logger.debug("ez.views.ExterniZdrojSmazatView.error", extra={"ident_cely": zaznam.ident_cely, "error": err})
             transaction.rollback_transaction()
             return JsonResponse(
                 {"redirect": zaznam.get_absolute_url()},
@@ -447,7 +446,7 @@ class ExterniZdrojVratitView(TransakceView):
             getattr(ExterniZdroj, self.action)(zaznam, request.user, zaznam.stav - 1, duvod)
             return JsonResponse({"redirect": zaznam.get_absolute_url()})
         else:
-            logger.debug("ez.views.ExterniZdrojVratitView.form_invalid", extra={"form_errors": form.errors})
+            logger.debug("ez.views.ExterniZdrojVratitView.form_invalid", extra={"error": form.errors})
             return self.render_to_response(context)
 
 
@@ -528,7 +527,7 @@ class ExterniOdkazPripojitView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
-        logger.debug("ez.views.ExterniOdkazPripojitView.post.start", extra={"kwargs": self.kwargs})
+        logger.debug("ez.views.ExterniOdkazPripojitView.post.start", extra={"key": self.kwargs})
         ez = self.get_zaznam()
         form = PripojitArchZaznamForm(data=request.POST, type_arch=context["type"])
         if form.is_valid():
@@ -546,7 +545,7 @@ class ExterniOdkazPripojitView(TransakceView):
             eo.close_active_transaction_when_finished = True
             eo.save()
         else:
-            logger.debug("ez.views.ExterniOdkazPripojitView.post.form_error", extra={"form_errors": form.errors})
+            logger.debug("ez.views.ExterniOdkazPripojitView.post.form_error", extra={"error": form.errors})
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
 
@@ -619,7 +618,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("ez.views.ExterniOdkazEditView.form_invalid", extra={"errors": form.errors})
+        logger.debug("ez.views.ExterniOdkazEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
 
 
@@ -658,7 +657,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         context = super().get_context_data(**kwargs)
         logger.debug(
             "ez.views.TransakceView.ExterniOdkazOdpojitAZView.get_context_data",
-            extra={"eo_id": self.kwargs.get("eo_id")},
+            extra={"pk": self.kwargs.get("eo_id")},
         )
         context["object"] = ExterniZdroj.objects.get(externi_odkazy_zdroje__id=self.kwargs.get("eo_id"))
         if self.get_zaznam().typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -780,7 +779,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
             eo.suppress_signal = False
             eo.save()
         else:
-            logger.debug("ez.views.ExterniOdkazPripojitDoAzView.form_invalid", extra={"errors": form.errors})
+            logger.debug("ez.views.ExterniOdkazPripojitDoAzView.form_invalid", extra={"error": form.errors})
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 

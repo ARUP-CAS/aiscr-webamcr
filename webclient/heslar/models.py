@@ -108,7 +108,7 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
         try:
             self.initial_obdobi = self.obdobi
         except ObjectDoesNotExist as err:
-            logger.debug("heslar.obdobi.HeslarDatace.__init__.no_obdobi", extra={"err": err})
+            logger.debug("heslar.obdobi.HeslarDatace.__init__.no_obdobi", extra={"error": err})
             self.initial_obdobi = None
         self.suppress_signal = False
 
@@ -329,6 +329,7 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
         null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326
     )
     hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
+    email = models.CharField(blank=True, null=True, verbose_name=_("heslar.models.RuianKraj.email"), max_length=254)
 
     class Meta:
         db_table = "ruian_kraj"

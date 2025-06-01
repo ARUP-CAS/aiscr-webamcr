@@ -405,8 +405,8 @@ def jtsk05_to_jtsk(x05, y05):
         logger.warning(
             "cron.coordTransform.jtsk05_to_jtsk nenalezena korekce",
             extra={
-                "coordX": x05,
-                "coordY": y05,
+                "X": x05,
+                "Y": y05,
             },
         )
     coefY = (y05 - hy) / 2000
@@ -438,8 +438,8 @@ def jtsk_to_jtsk05(X, Y):
         logger.warning(
             "cron.coordTransform.jtsk_to_jtsk05 nenalezena korekce",
             extra={
-                "coordX": X,
-                "coordY": Y,
+                "X": X,
+                "Y": Y,
             },
         )
     coefY = (Y - hy) / 2000

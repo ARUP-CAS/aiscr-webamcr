@@ -13,7 +13,7 @@ body {
 body.app-error {
     padding: 1.5rem 1rem;
     background-color: #303641;
-    background-image: url(/static/static/img/login-bg.svg?57cf2e20da6a);
+    background-image: url('../img/login-bg.svg');
     background-repeat: no-repeat;
     background-size: 700px;
     background-position: center 50px;

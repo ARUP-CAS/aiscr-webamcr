@@ -258,7 +258,10 @@ class NotificationsForm(forms.ModelForm):
 
     notification_types = forms.ModelMultipleChoiceField(
         queryset=UserNotificationType.objects.filter(
-            Q(ident_cely__icontains="S-E-A") | Q(ident_cely__icontains="S-E-N") | Q(ident_cely__icontains="S-E-K")
+            Q(ident_cely__icontains="S-E-A")
+            | Q(ident_cely__icontains="S-E-N")
+            | Q(ident_cely__icontains="S-E-K")
+            | Q(ident_cely__icontains="zpravodaj")
         ),
         widget=forms.CheckboxSelectMultiple,
         required=False,
@@ -396,7 +399,7 @@ class UserPasswordResetForm(PasswordResetForm):
         except Exception as e:
             logger.warning(
                 "uzivatel.forms.send_mail.warning",
-                extra={"from_email": from_email, "to": to_email, "subject": subject, "exception": e},
+                extra={"email": from_email, "to": to_email, "subject": subject, "exception": e},
             )
             status = "NOK"
             exception = e

@@ -8,7 +8,7 @@
 
 {% block sidebar %}
   <!-- {% compress css %}
-    <link type="text/x-scss" href="{% static '_app-sidebar.scss' %}" rel="stylesheet" media="screen">
+    <link type="text/x-scss" href="{% static 'scss/_app-sidebar.scss' %}" rel="stylesheet" media="screen">
   {% endcompress %} -->
   <div id="app-sidebar-wrapper">
   <div class="sidebar-toggle-2-container">
@@ -16,7 +16,7 @@
   </div>
     <div class="app-sidebar-heading">
       <a href="/" title="{% trans 'templates.baseLogedIn.sidebar.home' %}">
-        <img src="{% static 'logo-am-cs.png' %}" alt="{% trans 'templates.baseLogedIn.sidebar.logo.alt' %}" />
+        <img src="{% static 'img/logo-am-cs.png' %}" alt="{% trans 'templates.baseLogedIn.sidebar.logo.alt' %}" />
       </a>
     </div>
     <div class="accordion" id="accordionSidebar">
@@ -359,10 +359,10 @@
         <li class="nav-item app-pipe"></li>
         <li class="nav-item app-flags">
           <button id="czech" class="nav-link {% if "cs" in LANGUAGE_CODE  %}app-active{% endif %}" >
-            <img src="{% static 'flag-cs.svg' %}" alt="" class="app-flag" />
+            <img src="{% static 'img/flag-cs.svg' %}" alt="" class="app-flag" />
           </button>
           <button id="english" class="nav-link {% if "en" in LANGUAGE_CODE %}app-active{% endif %}">
-            <img src="{% static 'flag-en.svg' %}" alt="" class="app-flag" />
+            <img src="{% static 'img/flag-en.svg' %}" alt="" class="app-flag" />
           </button>
         </li>
       </ul>
@@ -478,7 +478,7 @@
       });
 
 </script>
-<script src="{% static '/js/create_message.js' %}"></script>
+<script src="{% static 'js/create_message.js' %}"></script>
 <script>
   // for autologout functionality timer and messages
     var time = {% if seconds_until_idle_end %} {{ seconds_until_idle_end|unlocalize }} {% else %} 60 * 60 {% endif %};
@@ -520,8 +520,8 @@
 
     document.head = document.head || document.getElementsByTagName('head')[0];
 
-    var fav_not = "{%  static '/loga/favicon-dot.png' %}"
-    var fav = "{%  static '/loga/favicon.png' %}"
+    var fav_not = "{%  static 'loga/favicon-dot.png' %}"
+    var fav = "{%  static 'loga/favicon.png' %}"
     function changeFavicon(src) {
       var link = document.createElement('link'),
       oldLink = document.getElementById('dynamic-favicon');
@@ -729,5 +729,5 @@
   });
 
 </script>
-<script src="{% static '/js/copyIdentLink.js' %}"></script>
+<script src="{% static 'js/copyIdentLink.js' %}"></script>
 {% endblock %}

@@ -1,0 +1,43 @@
+@media (max-width: 600px) {
+    .test-version {
+        display: none;
+    }
+
+    .test-version-mobile {
+        font-size: 12px;
+        background-color: #fddfdf;
+        color: #ff0000;
+        display: block;
+
+        p {
+            margin: 0 !important;
+            text-align: center !important;
+            padding: 0.5rem 1rem !important;
+            display: block !important;
+            margin-block: 1em;
+            margin-inline: 0;
+        }
+    }
+}
+
+@media (min-width: 600px) {
+    .test-version {
+        font-size: 15px;
+        background-color: #fddfdf;
+        color: #ff0000;
+        display: block;
+
+        p {
+            margin: 0 !important;
+            text-align: center !important;
+            padding: 0.5rem 1rem !important;
+            display: block !important;
+            margin-block: 1em;
+            margin-inline: 0;
+        }
+    }
+
+    .test-version-mobile {
+        display: none;
+    }
+}

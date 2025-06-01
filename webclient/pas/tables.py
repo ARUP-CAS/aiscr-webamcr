@@ -22,6 +22,12 @@ class SamostatnyNalezTable(SearchTable):
     ident_cely = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.ident_cely.label"), linkify=True)
     igsn = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.igsn.label"), default="")
     katastr = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.katastr.label"), default="")
+    kraj = tables.Column(
+        verbose_name=_("pas.tables.samostatnyNalezTable.kraj.label"), default="", accessor="katastr__okres__kraj"
+    )
+    okres = tables.Column(
+        verbose_name=_("pas.tables.samostatnyNalezTable.okres.label"), default="", accessor="katastr__okres"
+    )
     datum_nalezu = tables.columns.DateTimeColumn(
         verbose_name=_("pas.tables.samostatnyNalezTable.datum_nalezu.label"), format="Y-m-d", default=""
     )
@@ -68,6 +74,8 @@ class SamostatnyNalezTable(SearchTable):
         "poznamka",
         "okolnosti",
         "hloubka",
+        "okres",
+        "kraj",
     )
 
     class Meta:
@@ -78,6 +86,8 @@ class SamostatnyNalezTable(SearchTable):
             "stav",
             "lokalizace",
             "katastr",
+            "okres",
+            "kraj",
             "obdobi",
             "druh_nalezu",
             "specifikace",
@@ -102,6 +112,8 @@ class SamostatnyNalezTable(SearchTable):
             "pristupnost",
             "evidencni_cislo",
             "katastr",
+            "okres",
+            "kraj",
             "lokalizace",
             "datum_nalezu",
             "nalezce",

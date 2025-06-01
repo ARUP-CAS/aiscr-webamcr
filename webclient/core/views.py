@@ -152,14 +152,14 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
     except ZaznamSouborNotmatching as err:
         logger.debug(
             "core.views.delete_file_DZ.vazbar_error",
-            extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "err": err},
+            extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "error": err},
         )
         messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
         return JsonResponse({"success": False}, status=400)
     fedora_transaction = FedoraTransaction()
     logger.debug(
         "core.views.delete_file_DZ.not_deleted",
-        extra={"soubor": soubor.pk, "fedora_transaction": fedora_transaction.uid},
+        extra={"pk": soubor.pk, "transaction": fedora_transaction.uid},
     )
     soubor.deleted_by_user = request.user
     soubor.active_transaction = fedora_transaction
@@ -169,9 +169,7 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
         try:
             soubor.delete()
             connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
-            logger.debug(
-                "core.views.delete_file_DZ.deleted.delete_binary_file_completely", extra={"soubor_pk": soubor_pk}
-            )
+            logger.debug("core.views.delete_file_DZ.deleted.delete_binary_file_completely", extra={"pk": soubor_pk})
             connector.delete_binary_file_completely(soubor)
             fedora_transaction.mark_transaction_as_closed()
             session_identifier.remove_file_reference(pk)
@@ -179,7 +177,7 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
         except FedoraUpdatedByAnotherTransactionError as err:
             logger.debug(
                 "core.views.delete_file_DZ.another_transaction",
-                extra={"soubor_pk": soubor_pk, "err": err, "fedora_transaction": fedora_transaction.uid},
+                extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
             )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
             transaction_error = True
@@ -222,7 +220,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
     except ZaznamSouborNotmatching as err:
         logger.debug(
             "core.views.delete_file.vazbar_error",
-            extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "err": err},
+            extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": pk, "error": err},
         )
         messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
         if request.method == "POST":
@@ -238,7 +236,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
         fedora_transaction = FedoraTransaction()
         logger.debug(
             "core.views.delete_file.not_deleted",
-            extra={"soubor": soubor.pk, "fedora_transaction": fedora_transaction.uid},
+            extra={"pk": soubor.pk, "transaction": fedora_transaction.uid},
         )
         soubor.deleted_by_user = request.user
         soubor.active_transaction = fedora_transaction
@@ -248,14 +246,14 @@ def delete_file(request, typ_vazby, ident_cely, pk):
             try:
                 soubor.delete()
                 connector = FedoraRepositoryConnector(soubor.vazba.navazany_objekt, fedora_transaction)
-                logger.debug("core.views.delete_file.deleted.delete_binary_file", extra={"soubor_pk": soubor_pk})
+                logger.debug("core.views.delete_file.deleted.delete_binary_file", extra={"pk": soubor_pk})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
                 connector.delete_binary_file(soubor)
 
             except FedoraUpdatedByAnotherTransactionError as err:
                 logger.debug(
                     "core.views.delete_file.another_transaction",
-                    extra={"soubor_pk": soubor_pk, "err": err, "fedora_transaction": fedora_transaction.uid},
+                    extra={"pk": soubor_pk, "error": err, "transaction": fedora_transaction.uid},
                 )
                 messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
                 transaction_error = True
@@ -400,7 +398,7 @@ class Uploadfileview(LoginRequiredMixin, TemplateView):
         self.typ_vazby = self.kwargs.get("typ_vazby")
         self.ident = self.kwargs.get("ident_cely")
         logger.debug(
-            "core.views.Uploadfileview.get_zaznam.start", extra={"typ_vazby": self.typ_vazby, "ident": self.ident}
+            "core.views.Uploadfileview.get_zaznam.start", extra={"typ_vazby": self.typ_vazby, "ident_cely": self.ident}
         )
         if self.typ_vazby == "pas":
             self.info_tooltip = _("core.upload_file_PAS.tooltip")
@@ -430,7 +428,8 @@ class Uploadfileview(LoginRequiredMixin, TemplateView):
             "seznam_mock": json_mock,
         }
         logger.debug(
-            "core.views.Uploadfileview.get_context_data.start", extra={"typ_vazby": self.typ_vazby, "ident": self.ident}
+            "core.views.Uploadfileview.get_context_data.start",
+            extra={"typ_vazby": self.typ_vazby, "ident_cely": self.ident},
         )
         return context
 
@@ -459,7 +458,7 @@ def post_upload(request):
     if not update:
         logger.debug(
             "core.views.post_upload.start",
-            extra={"objectID": request.POST.get("objectID", None), "source_url": source_url},
+            extra={"pk": request.POST.get("objectID", None), "source_url": source_url},
         )
         projekt = Projekt.objects.filter(ident_cely=request.POST["objectID"])
         dokument = Dokument.objects.filter(ident_cely=request.POST["objectID"])
@@ -493,12 +492,10 @@ def post_upload(request):
                 status=403,
             )
     else:
-        logger.debug(
-            "core.views.post_upload.updating", extra={"fileID": request.POST["fileID"], "source_url": source_url}
-        )
+        logger.debug("core.views.post_upload.updating", extra={"pk": request.POST["fileID"], "source_url": source_url})
         soubor_instance: Soubor = get_object_or_404(Soubor, id=request.POST["fileID"])
         soubor_instance.active_transaction = fedora_transaction
-        logger.debug("core.views.post_upload.update", extra={"s": soubor_instance.pk})
+        logger.debug("core.views.post_upload.update", extra={"pk": soubor_instance.pk})
         objekt = soubor_instance.vazba.navazany_objekt
         new_name = soubor_instance.nazev
     soubor: TemporaryUploadedFile = request.FILES.get("file")
@@ -535,7 +532,7 @@ def post_upload(request):
                 renamed = True
                 logger.debug(
                     "core.views.post_upload.check_mime_for_url.rename",
-                    extra={"mimetype": mimetype, "old_name": old_name, "new_name": new_name},
+                    extra={"mime_type": mimetype, "old": old_name, "new": new_name},
                 )
             else:
                 renamed = False
@@ -565,7 +562,7 @@ def post_upload(request):
             duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
             response_data = {"filename": soubor_instance.nazev}
             if not duplikat.exists():
-                logger.debug("core.views.post_upload.saving", extra={"s": soubor_instance})
+                logger.debug("core.views.post_upload.saving", extra={"instance": soubor_instance})
                 soubor_instance.save()
                 if not request.user.is_authenticated:
                     user_admin = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
@@ -573,7 +570,7 @@ def post_upload(request):
                 else:
                     soubor_instance.zaznamenej_nahrani(request.user, original_filename)
             else:
-                logger.debug("core.views.post_upload.already_exists", extra={"s": soubor_instance})
+                logger.debug("core.views.post_upload.already_exists", extra={"instance": soubor_instance})
                 soubor_instance.save()
                 if not request.user.is_authenticated:
                     user_admin = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
@@ -599,7 +596,7 @@ def post_upload(request):
                 response_data["file_renamed"] = (
                     f"{help_translation} {original_filename} {help_translation2} " f"{new_name}",
                 )
-            logger.debug("core.views.post_upload.end", extra={"file_id": soubor_instance.pk})
+            logger.debug("core.views.post_upload.end", extra={"pk": soubor_instance.pk})
             response_data["id"] = soubor_instance.pk
             soubor_instance.close_active_transaction_when_finished = True
             soubor_instance.save()
@@ -625,9 +622,7 @@ def post_upload(request):
             mimetype = Soubor.get_mime_types(soubor)
             mime_extensions = Soubor.get_file_extension_by_mime(soubor)
             if len(mime_extensions) == 0:
-                logger.debug(
-                    "core.views.post_upload.check_mime_for_url.rejected", extra={"original_name": original_name}
-                )
+                logger.debug("core.views.post_upload.check_mime_for_url.rejected", extra={"old": original_name})
                 help_translation = _("core.views.post_upload.mime_rename_failed")
                 fedora_transaction.rollback_transaction()
                 return JsonResponse({"error": f"{help_translation}"}, status=400)
@@ -637,7 +632,7 @@ def post_upload(request):
                 renamed = True
                 logger.debug(
                     "core.views.post_upload.check_mime_for_url.rename",
-                    extra={"mimetype": mimetype, "original_name": original_name, "new_name": new_name},
+                    extra={"mime_type": mimetype, "old": original_name, "new": new_name},
                 )
             else:
                 renamed = False
@@ -663,7 +658,7 @@ def post_upload(request):
                     return JsonResponse({"error": help_translation}, status=400)
                 logger.debug(
                     "core.views.post_upload.update",
-                    extra={"pk": soubor_instance.pk, "new_name": new_name, "original_name": original_name},
+                    extra={"pk": soubor_instance.pk, "new": new_name, "old": original_name},
                 )
                 soubor_instance.nazev = new_name
                 soubor_instance.size_mb = rep_bin_file.size_mb
@@ -733,7 +728,7 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
         else:
             logger.warning(
                 "core.views.get_finds_soubor_name.cannot_upload",
-                extra={"file": filename, "list_last_char": list_last_char},
+                extra={"file": filename, "value": list_last_char},
             )
             return False
 
@@ -755,7 +750,7 @@ def check_stav_changed(request, zaznam):
     """
     Funkce pro oveření jestli se zmenil stav záznamu pri uložení formuláře oproti jeho načtení.
     """
-    logger.debug("core.views.check_stav_changed.start", extra={"zaznam_id": zaznam.pk})
+    logger.debug("core.views.check_stav_changed.start", extra={"pk": zaznam.pk})
     if request.method == "POST":
         # TODO BR-A-5
         form_check = CheckStavNotChangedForm(data=request.POST, db_stav=zaznam.stav)
@@ -768,8 +763,8 @@ def check_stav_changed(request, zaznam):
                     logger.debug(
                         "core.views.check_stav_changed.state_changed.error",
                         extra={
-                            "reason": SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
-                            "form_check_errors": str(form_check.errors),
+                            "value": SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+                            "form_error": str(form_check.errors),
                         },
                     )
                 elif isinstance(zaznam, ArcheologickyZaznam):
@@ -781,21 +776,21 @@ def check_stav_changed(request, zaznam):
                     logger.debug(
                         "core.views.check_stav_changed.state_changed.error",
                         extra={
-                            "reason": get_message(zaznam, "NEKDO_ZMENIL_STAV"),
-                            "form_check_errors": str(form_check.errors),
+                            "value": get_message(zaznam, "NEKDO_ZMENIL_STAV"),
+                            "form_error": str(form_check.errors),
                         },
                     )
                 elif isinstance(zaznam, Dokument):
                     messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
                     logger.debug(
                         "core.views.check_stav_changed.state_changed.error",
-                        extra={"reason": DOKUMENT_NEKDO_ZMENIL_STAV, "form_check_errors": str(form_check.errors)},
+                        extra={"value": DOKUMENT_NEKDO_ZMENIL_STAV, "form_error": str(form_check.errors)},
                     )
                 elif isinstance(zaznam, Projekt):
                     messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
                     logger.debug(
                         "core.views.check_stav_changed.state_changed.error",
-                        extra={"reason": PROJEKT_NEKDO_ZMENIL_STAV, "form_check_errors": str(form_check.errors)},
+                        extra={"value": PROJEKT_NEKDO_ZMENIL_STAV, "form_error": str(form_check.errors)},
                     )
                 return True
 
@@ -809,9 +804,9 @@ def check_stav_changed(request, zaznam):
                 logger.debug(
                     "core.views.check_stav_changed.sent_stav.error",
                     extra={
-                        "reason": SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
-                        "zaznam_stav": zaznam_stav,
-                        "sent_stav": sent_stav,
+                        "value": SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+                        "zaznam": zaznam_stav,
+                        "info": sent_stav,
                     },
                 )
             elif isinstance(zaznam, ArcheologickyZaznam):
@@ -819,22 +814,22 @@ def check_stav_changed(request, zaznam):
                 logger.debug(
                     "core.views.check_stav_changed.sent_stav.error",
                     extra={
-                        "reason": get_message(zaznam, "NEKDO_ZMENIL_STAV"),
-                        "zaznam_stav": zaznam_stav,
-                        "sent_stav": sent_stav,
+                        "value": get_message(zaznam, "NEKDO_ZMENIL_STAV"),
+                        "zaznam": zaznam_stav,
+                        "info": sent_stav,
                     },
                 )
             elif isinstance(zaznam, Dokument):
                 messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
                 logger.debug(
                     "core.views.check_stav_changed.sent_stav.error",
-                    extra={"reason": DOKUMENT_NEKDO_ZMENIL_STAV, "zaznam_stav": zaznam_stav, "sent_stav": sent_stav},
+                    extra={"value": DOKUMENT_NEKDO_ZMENIL_STAV, "zaznam": zaznam_stav, "info": sent_stav},
                 )
             elif isinstance(zaznam, Projekt):
                 messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
                 logger.debug(
                     "core.views.check_stav_changed.sent_stav.error",
-                    extra={"reason": PROJEKT_NEKDO_ZMENIL_STAV, "zaznam_stav": zaznam_stav, "sent_stav": sent_stav},
+                    extra={"value": PROJEKT_NEKDO_ZMENIL_STAV, "zaznam": zaznam_stav, "info": sent_stav},
                 )
             return True
     logger.debug("core.views.check_stav_changed.sent_stav.false")
@@ -1053,10 +1048,10 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 logger.warning("core.views.SearchListView.file_iterator.Connection_closed_by_client")
                 r.delete(redis_variable_name)
             except Exception as e:
-                logger.warning("core.views.SearchListView.file_iterator.Error_during_streaming", extra={"errors": e})
+                logger.warning("core.views.SearchListView.file_iterator.Error_during_streaming", extra={"error": e})
                 raise
 
-        logger.debug("core.views.SearchListView.create_export.start", extra={"export_format": export_format})
+        logger.debug("core.views.SearchListView.create_export.start", extra={"format": export_format})
         if self.redis_value_list_field and self.redis_snapshot_prefix:
             r = RedisConnector.get_connection_decode()
             export_suffix_string = self.request.GET["export_suffix_string"]
@@ -1067,7 +1062,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
             logger.debug(
                 "core.views.SearchListView.create_export.redis_variable_name",
-                extra={"redis_variable_name": redis_variable_name},
+                extra={"redis": redis_variable_name},
             )
             r.set(redis_variable_name, 0)
             ident_cely_list_len = len(ident_cely_list)
@@ -1137,15 +1132,14 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             logger.debug(
                 "core.views.SearchListView.create_export.end",
                 extra={
-                    "export_format": export_format,
-                    "column_names": column_names,
-                    "redis_variable_name": redis_variable_name,
+                    "format": export_format,
+                    "redis": redis_variable_name,
                 },
             )
             if check_if_aborted(r, redis_variable_name):
                 logger.debug(
                     "core.views.SearchListView.create_export.aborted",
-                    extra={"redis_variable_name": redis_variable_name},
+                    extra={"redis": redis_variable_name},
                 )
                 return HttpResponse()
             response["X-Accel-Buffering"] = "no"  # Zakázání bufferování v NGINX
@@ -1262,7 +1256,7 @@ def post_ajax_get_pas_and_pian_limit(request):
         pians, count = get_pian_from_envelope(body["bounds"], body["zoom"], request)
         num = num + count
 
-    logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"num": num})
+    logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"number": num})
     if (num < LIMIT_PRVKU_ZOBRAZENI_HEATMAP and not req_pian) or (
         num < LIMIT_PRVKU_ZOBRAZENI_HEATMAP and req_pian and pians is not None
     ):
@@ -1338,7 +1332,7 @@ class DeleteTempValueView(View):
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
             r.delete(temp_name)
-            logger.debug("core.views.ResetTempValueView.get.result", extra={"temp_name": temp_name})
+            logger.debug("core.views.ResetTempValueView.get.result", extra={"value": temp_name})
             return JsonResponse({"result": "success"})
         else:
             # Return a JSON response with a 403 Forbidden status
@@ -1351,7 +1345,7 @@ class AbortDownloadUpdateTempValueView(View):
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
             r.set(temp_name + "_stat", -1, ex=3500)
-            logger.debug("core.views.AbortDownloadUpdateTempValueView.get.result", extra={"temp_name": temp_name})
+            logger.debug("core.views.AbortDownloadUpdateTempValueView.get.result", extra={"value": temp_name})
             return JsonResponse({"result": "success"})
         else:
             # Return a JSON response with a 403 Forbidden status
