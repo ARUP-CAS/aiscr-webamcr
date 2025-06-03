@@ -44,7 +44,7 @@ from core.message_constants import (
 )
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import get_cadastre_from_point, get_cadastre_from_point_with_geometry
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from django.contrib import messages
@@ -52,6 +52,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -285,6 +286,7 @@ def detail(request, ident_cely):
 
 @never_cache
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     """
@@ -344,7 +346,7 @@ def edit(request, ident_cely):
             return redirect("pas:detail", ident_cely=ident_cely)
         else:
             logger.info("pas.views.edit.form_invalid", extra={"error": form.errors})
-
+            return redirect("pas:detail", ident_cely=ident_cely)
     else:
         form = CreateSamostatnyNalezForm(
             instance=sn,
@@ -370,6 +372,7 @@ def edit(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def edit_ulozeni(request, ident_cely):
     """
@@ -523,6 +526,7 @@ def odeslat(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def potvrdit(request, ident_cely):
     """
@@ -699,7 +703,6 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
 
 
 @login_required
-@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     """
@@ -913,12 +916,20 @@ def aktivace(request, pk):
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
-        spoluprace.active_transaction = FedoraTransaction()
-        spoluprace.close_active_transaction_when_finished = True
-        spoluprace.set_aktivni(request.user)
-        messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_AKTIVOVANA)
-        Mailer.send_en06(cooperation=spoluprace)
-        return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
+        fedora_transaction = FedoraTransaction()
+        try:
+            spoluprace.active_transaction = fedora_transaction
+            spoluprace.close_active_transaction_when_finished = True
+            spoluprace.set_aktivni(request.user)
+            messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_AKTIVOVANA)
+            Mailer.send_en06(cooperation=spoluprace)
+            return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
+        except FedoraError as err:
+            logger.info("pas.views.aktivace.error", extra={"error": err})
+            fedora_transaction.rollback_transaction()
+            transaction.set_rollback(True)
+            messages.add_message(request, messages.ERROR, SPOLUPRACI_NELZE_AKTIVOVAT)
+            return redirect(reverse("pas:spoluprace_list"))
     else:
         warnings = spoluprace.check_pred_aktivaci()
         logger.info("pas.views.aktivace.warnings", extra={"warning": warnings})
@@ -945,12 +956,19 @@ class AktivaceEmailView(LoginRequiredMixin, DetailView):
 
     def post(self, request, *args, **kwargs):
         obj: UzivatelSpoluprace = self.get_object()
-        if not obj.aktivni:
-            obj.active_transaction = FedoraTransaction()
-            obj.close_active_transaction_when_finished = True
-            obj.set_aktivni(request.user)
-            Mailer.send_en06(cooperation=obj)
-        return redirect(reverse("pas:spoluprace_list") + "?sort=organizace_vedouci&sort=spolupracovnik")
+        fedora_transaction = FedoraTransaction()
+        try:
+            if not obj.aktivni:
+                obj.active_transaction = fedora_transaction
+                obj.close_active_transaction_when_finished = True
+                obj.set_aktivni(request.user)
+                Mailer.send_en06(cooperation=obj)
+            return redirect(reverse("pas:spoluprace_list") + "?sort=organizace_vedouci&sort=spolupracovnik")
+        except FedoraError as err:
+            logger.info("pas.views.aktivace.error", extra={"error": err})
+            fedora_transaction.rollback_transaction()
+            transaction.set_rollback(True)
+            return redirect(reverse("pas:spoluprace_list") + "?sort=organizace_vedouci&sort=spolupracovnik")
 
 
 class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
@@ -991,16 +1009,31 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         obj: UzivatelSpoluprace = self.get_object()
+        logger.info("pas.views.deaktivace_spoluprace.start", extra={"pk": obj.pk})
         form = DeaktivovatSpolupraciForm(request.POST)
         if form.is_valid():
-            obj.active_transaction = FedoraTransaction()
-            obj.close_active_transaction_when_finished = True
-            obj.set_neaktivni(request.user, form.cleaned_data["reason"])
-            Mailer.send_en07(cooperation=obj, reason=form.cleaned_data["reason"])
-            messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_DEAKTIVOVANA)
+            fedora_transaction = FedoraTransaction()
+            logger.info(
+                "pas.views.deaktivace_spoluprace.form_valid",
+                extra={"pk": obj.pk, "transaction": fedora_transaction.uid},
+            )
+            try:
+                obj.active_transaction = fedora_transaction
+                obj.close_active_transaction_when_finished = True
+                obj.set_neaktivni(request.user, form.cleaned_data["reason"])
+                Mailer.send_en07(cooperation=obj, reason=form.cleaned_data["reason"])
+                messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_DEAKTIVOVANA)
+                return redirect(reverse("pas:spoluprace_list"))
+            except FedoraError as err:
+                logger.info("pas.views.deaktivace_spoluprace.fedora_error", extra={"error": err})
+                fedora_transaction.rollback_transaction()
+                transaction.set_rollback(True)
+                messages.add_message(request, messages.ERROR, SPOLUPRACE_NEBYLA_DEAKTIVOVANA)
+                return redirect(reverse("pas:spoluprace_list"))
         else:
+            logger.info("pas.views.deaktivace_spoluprace.form_error", extra={"instance": obj.pk})
             messages.add_message(request, messages.ERROR, SPOLUPRACE_NEBYLA_DEAKTIVOVANA)
-        return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
+        return redirect(reverse("pas:spoluprace_list"))
 
 
 @login_required
@@ -1011,20 +1044,28 @@ def smazat_spolupraci(request, pk):
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
-        spoluprace.active_transaction = FedoraTransaction()
-        spoluprace.close_active_transaction_when_finished = True
-        resp1 = spoluprace.delete()
-        if resp1:
-            logger.info(
-                "pas.views.smazat_spolupraci.deleted",
-                extra={"value": resp1},
-            )
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
-        else:
-            logger.warning("pas.views.smazat_spolupraci.not_deleted", extra={"pk": pk})
+        fedora_transaction = FedoraTransaction()
+        try:
+            spoluprace.active_transaction = fedora_transaction
+            spoluprace.close_active_transaction_when_finished = True
+            resp1 = spoluprace.delete()
+            if resp1:
+                logger.info(
+                    "pas.views.smazat_spolupraci.deleted",
+                    extra={"value": resp1},
+                )
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+                return redirect(reverse("pas:spoluprace_list"))
+            else:
+                logger.warning("pas.views.smazat_spolupraci.not_deleted", extra={"pk": pk})
+                messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+                return redirect(reverse("pas:spoluprace_list"))
+        except FedoraError as err:
+            logger.warning("pas.views.smazat_spolupraci.fedora_error", extra={"pk": pk, "error": err})
+            fedora_transaction.rollback_transaction()
+            transaction.set_rollback(True)
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
+            return redirect(reverse("pas:spoluprace_list"))
     else:
         context = {
             "object": spoluprace,

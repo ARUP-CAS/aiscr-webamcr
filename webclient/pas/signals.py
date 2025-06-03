@@ -37,6 +37,7 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
     logger.debug("pas.signals.save_metadata_samostatny_nalez.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
     invalidate_model(Projekt)
+    fedora_transaction = None
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
 

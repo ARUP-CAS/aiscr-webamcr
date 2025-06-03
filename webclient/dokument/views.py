@@ -1149,7 +1149,7 @@ def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci dokumentu.
     """
-    dokument = get_object_or_404(
+    dokument: Dokument = get_object_or_404(
         Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES), ident_cely=ident_cely
     )
     if dokument.stav == D_STAV_ARCHIVOVANY:
@@ -1167,6 +1167,7 @@ def edit(request, ident_cely):
     required_fields_next = get_required_fields_dokument(dokument, next=1)
     if request.method == "POST":
         fedora_transaction = dokument.create_transaction(request.user)
+        fedora_transaction.redirect_on_error = True
         form_d = EditDokumentForm(
             request.POST,
             instance=dokument,
@@ -1204,6 +1205,7 @@ def edit(request, ident_cely):
             dokument_extra = form_extra.save(commit=False)
             dokument_extra.active_transaction = fedora_transaction
             dokument_extra.save()
+            instance_d.save()
             instance_d.close_active_transaction_when_finished = True
             instance_d.save()
             form_d.save_m2m()
