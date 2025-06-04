@@ -90,8 +90,6 @@ def smazat(request, ident_cely):
         dj: DokumentacniJednotka = adb.dokumentacni_jednotka
         dj_ident_cely = dj.ident_cely
         fedora_transaction = adb.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT, dj)
-        fedora_transaction.redirect_on_error = True
-        adb.close_active_transaction_when_finished = True
         for vb in adb.vyskove_body.all():
             vb.active_transaction = fedora_transaction
             vb.delete()
@@ -109,6 +107,7 @@ def smazat(request, ident_cely):
         response.set_cookie(
             "show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000, secure=True, samesite="Strict"
         )
+        fedora_transaction.mark_transaction_as_closed()
         return response
     else:
         context = {
@@ -136,21 +135,20 @@ def smazat_vb(request, ident_cely):
     Pohled pro smazání VB.
     Po úspešném smazání je uživatel presměrován na next_url z requestu.
     """
-    zaznam = get_object_or_404(VyskovyBod, ident_cely=ident_cely)
-    zaznam: VyskovyBod
+    vyskovy_bod = get_object_or_404(VyskovyBod, ident_cely=ident_cely)
+    vyskovy_bod: VyskovyBod
     context = {
-        "object": zaznam,
+        "object": vyskovy_bod,
         "title": _("adb.views.smazat_vb.modalForm.title"),
         "id_tag": "smazat-vb-form",
         "button": _("adb.views.smazat_vb.modalForm.submit.button"),
     }
     if request.method == "POST":
         fedora_transaction = FedoraTransaction(
-            zaznam.adb.dokumentacni_jednotka, request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT
+            vyskovy_bod.adb.dokumentacni_jednotka, request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT
         )
-        zaznam.active_transaction = fedora_transaction
-        zaznam.close_active_transaction_when_finished = True
-        resp = zaznam.delete()
+        vyskovy_bod.active_transaction = fedora_transaction
+        resp = vyskovy_bod.delete()
         next_url = request.POST.get("next")
         if url_has_allowed_host_and_scheme(request.META.get("HTTP_REFERER"), allowed_hosts=settings.ALLOWED_HOSTS):
             safe_redirect = request.META.get("HTTP_REFERER")
@@ -173,11 +171,12 @@ def smazat_vb(request, ident_cely):
             response = JsonResponse({"redirect": response}, status=403)
         response.set_cookie(
             "show-form",
-            f"detail_dj_form_{zaznam.adb.dokumentacni_jednotka.ident_cely}",
+            f"detail_dj_form_{vyskovy_bod.adb.dokumentacni_jednotka.ident_cely}",
             max_age=1000,
             secure=True,
             samesite="Strict",
         )
+        fedora_transaction.mark_transaction_as_closed()
         return response
     else:
         return render(request, "core/transakce_modal.html", context)

@@ -67,6 +67,7 @@ def detail(request, ident_cely):
         logger.debug("pian.views.detail.form.valid", extra={"ident_cely": pian.ident_cely})
         pian = form.save(commit=False)
         fedora_transaction = pian.create_transaction(request.user)
+        fedora_transaction.main_record = dj
         pian.save()
         djs = DokumentacniJednotka.objects.filter(pian__ident_cely=ident_cely)
         for fdj in djs:
@@ -104,6 +105,7 @@ def odpojit(request, dj_ident_cely):
     pian: Pian
     if request.method == "POST":
         fedora_transaction = dj.archeologicky_zaznam.create_transaction(request.user)
+        fedora_transaction.main_record = dj
         dj.archeologicky_zaznam.get_absolute_url()
         dj.pian = None
         dj.active_transaction = fedora_transaction
@@ -176,6 +178,7 @@ def potvrdit(request, dj_ident_cely):
     if request.method == "POST":
         redirect_view = dj.archeologicky_zaznam.get_absolute_url(dj_ident_cely)
         fedora_transaction = pian.create_transaction(request.user, PIAN_USPESNE_POTVRZEN)
+        fedora_transaction.main_record = dj
         try:
             old_ident = pian.ident_cely
             pian.set_permanent_ident_cely()
@@ -231,7 +234,7 @@ def create(request, dj_ident_cely):
     form = PianCreateForm(data=request.POST)
     if form.is_valid():
         logger.debug("pian.views.create.form_valid")
-        pian = form.save(commit=False)
+        pian: Pian = form.save(commit=False)
         try:
             pian.ident_cely = get_temporary_pian_ident(pian.zm50)
         except MaximalIdentNumberError as e:
@@ -239,6 +242,8 @@ def create(request, dj_ident_cely):
             messages.add_message(request, messages.ERROR, e.message)
         else:
             fedora_transaction: FedoraTransaction = pian.create_transaction(request.user)
+            fedora_transaction.redirect_url = dj.get_absolute_url()
+            fedora_transaction.main_record = dj
             if FedoraRepositoryConnector.check_container_deleted_or_not_exists(pian.ident_cely, "pian"):
                 pian.save()
                 pian.set_vymezeny(request.user)
