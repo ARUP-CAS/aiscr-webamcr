@@ -1666,6 +1666,15 @@ def archivovat(request, ident_cely):
             logger.info("dokument.views.archivovat.post_error", extra={"error": err, "ident_cely": ident_cely})
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
+            dokument.doi_hide(False)
+            for item in dokument.casti.all():
+                item: DokumentCast
+                if (
+                    item.archeologicky_zaznam
+                    and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+                    and item.archeologicky_zaznam.lokalita.igsn
+                ):
+                    item.archeologicky_zaznam.lokalita.igsn_update(False)
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
     else:
         warnings = dokument.check_pred_archivaci()
