@@ -95,7 +95,7 @@ class DigitalObjectIdentifierClient:
             )
             if check_status:
                 self._check_response_status(response)
-                return response.json()
+            return response.json()
         else:
             logger.info(
                 "doi.client.DigitalObjectIdentifierClient.hide_record.does_not_exist",

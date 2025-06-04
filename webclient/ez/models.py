@@ -168,6 +168,15 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             logger.info(
                 "ez.models.ExterniZdroj.set_potvrzeny.error", extra={"error": err, "ident_cely": self.ident_cely}
             )
+            from arch_z.models import Akce, ArcheologickyZaznam
+
+            for akce in self.externi_odkazy_zdroje.all():
+                if (
+                    akce.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                    and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+                    and akce.archeologicky_zaznam.lokalita.igsn
+                ):
+                    akce.archeologicky_zaznam.igsn_lokalita_update(False)
             transaction.set_rollback(True)
             self.active_transaction.rollback_transaction()
 

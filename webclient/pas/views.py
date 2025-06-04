@@ -612,8 +612,8 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = sn.create_transaction(request.user, SAMOSTATNY_NALEZ_ARCHIVOVAN)
         try:
-            sn.igsn_publish()
             sn.set_archivovany(request.user)
+            sn.igsn_publish()
             sn.set_igsn()
             sn.close_active_transaction_when_finished = True
             sn.save()
@@ -743,6 +743,8 @@ def smazat(request, ident_cely):
                 return JsonResponse({"redirect": reverse("pas:index")})
             else:
                 logger.warning("pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
+                nalez.igsn_update(False)
+                fedora_transaction.rollback_transaction()
                 return JsonResponse(
                     {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
                     status=403,
@@ -752,7 +754,7 @@ def smazat(request, ident_cely):
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if isinstance(err, FedoraError):
-                nalez.igsn_publish(False)
+                nalez.igsn_update(False)
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": nalez.stav})

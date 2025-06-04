@@ -1140,7 +1140,7 @@ def smazat(request, ident_cely):
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if isinstance(err, FedoraError):
-                az.igsn_lokalita_publish(check_status=False)
+                az.igsn_lokalita_update(check_status=False)
             return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})

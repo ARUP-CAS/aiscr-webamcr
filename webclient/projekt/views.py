@@ -996,6 +996,14 @@ def archivovat(request, ident_cely):
             logger.info("projekt.views.archivovat.post_error", extra={"error": err, "ident_cely": projekt.ident_cely})
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
+            for item in projekt.casti_dokumentu.all():
+                item: DokumentCast
+                if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
+                    item.dokument.doi_update(False)
+            for item in projekt.samostatne_nalezy.all():
+                item: SamostatnyNalez
+                if item.igsn and item.stav == SN_ARCHIVOVANY:
+                    item.igsn_update(False)
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
     else:
         warnings = projekt.check_pred_archivaci()
