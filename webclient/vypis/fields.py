@@ -456,9 +456,9 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
 
     def get_name(self, instance):
         if len(self.accessor) > 2:
-            new_name = f"{self.name} {getattr(instance, self.accessor[0])} - {getattr(instance, self.accessor[1])}"
+            new_name = f"{self.name}&nbsp;{getattr(instance, self.accessor[0])}&nbsp;-&nbsp;{getattr(instance, self.accessor[1])}"
         else:
-            new_name = f"{self.name} {getattr(instance, self.accessor[0])}"
+            new_name = f"{self.name}&nbsp;{getattr(instance, self.accessor[0])}"
         if getattr(instance, self.accessor[-1]):
             return f"{new_name} ({getattr(instance, self.accessor[-1])})"
         return new_name
