@@ -176,6 +176,10 @@ Knihovny vkládané jako statické soubory
      - 1.2.5
      - MIT License
      - https://github.com/fgnass/spin.js
+   * - html-to-rtf-browser
+     - 1.6.1.
+     - MIT License
+     - https://github.com/antoniolucasnobar/html-to-rtf-browser; https://github.com/geraphl/javascript-html-to-rtf-browser
 
 
 Docker image
