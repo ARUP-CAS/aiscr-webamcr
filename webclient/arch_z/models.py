@@ -468,9 +468,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
             self.lokalita.igsn_delete(check_status)
 
-    def igsn_lokalita_update(self, check_status=True):
+    def igsn_lokalita_update(self, check_status=True, reload_record=False):
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
-            self.lokalita.igsn_update(check_status)
+            self.lokalita.igsn_update(check_status, reload_record)
 
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):

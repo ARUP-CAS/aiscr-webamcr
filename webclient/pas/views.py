@@ -743,7 +743,7 @@ def smazat(request, ident_cely):
                 return JsonResponse({"redirect": reverse("pas:index")})
             else:
                 logger.warning("pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
-                nalez.igsn_update(False)
+                nalez.igsn_update(False, True)
                 fedora_transaction.rollback_transaction()
                 return JsonResponse(
                     {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
@@ -754,7 +754,7 @@ def smazat(request, ident_cely):
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if isinstance(err, FedoraError):
-                nalez.igsn_update(False)
+                nalez.igsn_update(False, True)
             return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": nalez.stav})

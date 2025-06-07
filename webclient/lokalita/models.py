@@ -120,9 +120,9 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
     def igsn_publish(self, check_status=True):
         return self._get_igsn_client().publish_record(check_status)
 
-    def igsn_update(self, check_status=True):
+    def igsn_update(self, check_status=True, reload_record=False):
         if self.igsn:
-            return self._get_igsn_client().update_record(check_status)
+            return self._get_igsn_client().update_record(check_status, reload_record)
 
     @property
     def igsn_url(self):

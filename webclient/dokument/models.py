@@ -545,9 +545,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     def doi_publish(self, check_status=True):
         return self._get_doi_client().publish_record(check_status)
 
-    def doi_update(self, check_status=True):
+    def doi_update(self, check_status=True, reload_record=False):
         if self.doi:
-            return self._get_doi_client().update_record(check_status)
+            return self._get_doi_client().update_record(check_status, reload_record)
 
     @property
     def doi_url(self):

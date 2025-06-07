@@ -999,11 +999,11 @@ def archivovat(request, ident_cely):
             for item in projekt.casti_dokumentu.all():
                 item: DokumentCast
                 if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
-                    item.dokument.doi_update(False)
+                    item.dokument.doi_update(False, True)
             for item in projekt.samostatne_nalezy.all():
                 item: SamostatnyNalez
                 if item.igsn and item.stav == SN_ARCHIVOVANY:
-                    item.igsn_update(False)
+                    item.igsn_update(False, True)
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
     else:
         warnings = projekt.check_pred_archivaci()

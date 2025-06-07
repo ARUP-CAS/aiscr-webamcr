@@ -1130,7 +1130,7 @@ class DokumentCastSmazatView(TransakceView):
             transaction.set_rollback(True)
             dokument.active_transaction.rollback()
             if lokalita_update:
-                lokalita_update.igsn_update(False)
+                lokalita_update.igsn_update(False, True)
         return JsonResponse({"redirect": dokument.get_absolute_url()})
 
 
@@ -1680,7 +1680,7 @@ def archivovat(request, ident_cely):
                     and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
                     and item.archeologicky_zaznam.lokalita.igsn
                 ):
-                    item.archeologicky_zaznam.lokalita.igsn_update(False)
+                    item.archeologicky_zaznam.lokalita.igsn_update(False, True)
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
     else:
         warnings = dokument.check_pred_archivaci()
@@ -1788,14 +1788,14 @@ def smazat(request, ident_cely):
             else:
                 logger.warning("dokument.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
                 fedora_transaction.rollback_transaction()
-                dokument.doi_update(False)
+                dokument.doi_update(False, True)
                 return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
         except (DoiWriteError, FedoraError) as err:
             logger.info("dokument.views.smazat.post_error", extra={"ident_cely": ident_cely, "error": err})
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if isinstance(err, FedoraError):
-                dokument.doi_update(False)
+                dokument.doi_update(False, True)
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": dokument.stav})

@@ -121,11 +121,13 @@ class DigitalObjectIdentifierClient:
             self._check_response_status(response)
         return response.json()
 
-    def update_record(self, check_status=True):
+    def update_record(self, check_status=True, reload_record=False):
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.update_record.start",
             extra={"ident_cely": self.serializer.get_ident_cely()},
         )
+        if reload_record:
+            self.record.refresh_from_db()
         if self.check_record_exists(check_status):
             response = requests.put(
                 self.get_record_url(), headers=self.headers, json=self.serializer.serialize_update(), auth=self.auth
