@@ -301,7 +301,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         self.title = "title"
         self.button = "button"
 
-    def get_zaznam(self):
+    def get_zaznam(self) -> ExterniZdroj:
         ident_cely = self.kwargs.get("ident_cely")
         logger.debug("ez.views.TransakceView.get_zaznam.start", extra={"ident_cely": ident_cely})
         zaznam = get_object_or_404(
@@ -383,6 +383,33 @@ class ExterniZdrojPotvrditView(TransakceView):
         self.title = _("ez.templates.ExterniZdrojPotvrditView.title.text")
         self.button = _("ez.templates.ExterniZdrojPotvrditView.submitButton.text")
         self.success_message = EZ_USPESNE_POTVRZEN
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        zaznam: ExterniZdroj = context["object"]
+        fedora_transaction = zaznam.create_transaction(request.user, self.success_message)
+        try:
+            zaznam.save()
+            zaznam.close_active_transaction_when_finished = True
+            getattr(ExterniZdroj, self.action)(zaznam, request.user)
+            return JsonResponse({"redirect": zaznam.get_absolute_url()})
+        except (DoiWriteError, FedoraError) as err:
+            logger.info(
+                "ez.models.ExterniZdroj.set_potvrzeny.error", extra={"error": err, "ident_cely": zaznam.ident_cely}
+            )
+            from arch_z.models import ArcheologickyZaznam
+
+            for akce in zaznam.externi_odkazy_zdroje.all():
+                if (
+                    akce.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                    and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+                    and akce.archeologicky_zaznam.lokalita.igsn
+                ):
+                    akce.archeologicky_zaznam.igsn_lokalita_update(False)
+            transaction.set_rollback(True)
+            fedora_transaction.rollback_transaction()
+            transaction.set_rollback(True)
+            return JsonResponse({"redirect": zaznam.get_absolute_url()})
 
 
 class ExterniZdrojSmazatView(TransakceView):
