@@ -152,6 +152,9 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
             from arch_z.models import Akce, ArcheologickyZaznam
 
+            # Transaction is closed by TransakceView
+            self.save()
+
             for akce in self.externi_odkazy_zdroje.all():
                 akce: Akce
                 if (
@@ -161,9 +164,6 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
                 ):
                     akce.archeologicky_zaznam.igsn_lokalita_update()
 
-            self.close_active_transaction_when_finished = True
-            self.save()
-            return
         except (DoiWriteError, FedoraError) as err:
             logger.info(
                 "ez.models.ExterniZdroj.set_potvrzeny.error", extra={"error": err, "ident_cely": self.ident_cely}

@@ -507,7 +507,7 @@ class ExterniOdkazOdpojitView(TransakceView):
             logger.info("ez.views.ExterniOdkazOdpojitView.error", extra={"error": err, "ident_cely": ez.ident_cely})
             transaction.set_rollback(True)
             if lokalita_update:
-                lokalita_update.igsn_update()
+                lokalita_update.igsn_update(check_status=False)
             self.active_transaction.rollback_transaction()
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
@@ -700,7 +700,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
             logger.info("ez.views.ExterniOdkazOdpojitAZView.error", extra={"error": err, "ident_cely": az.ident_cely})
             transaction.set_rollback(True)
             if lokalita_update:
-                lokalita_update.igsn_update()
+                lokalita_update.igsn_update(check_status=False)
             self.active_transaction.rollback_transaction()
         return JsonResponse({"redirect": az.get_absolute_url()})
 

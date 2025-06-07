@@ -1092,6 +1092,14 @@ class DokumentCastSmazatView(TransakceView):
         cast = self.get_zaznam()
         cast.create_transaction(request.user, self.success_message)
         dokument = cast.dokument
+        if (
+            isinstance(cast.archeologicky_zaznam, ArcheologickyZaznam)
+            and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            and cast.archeologicky_zaznam.lokalita.igsn
+        ):
+            lokalita_update = cast.archeologicky_zaznam.lokalita
+        else:
+            lokalita_update = None
         try:
             if cast.komponenty:
                 komps = cast.komponenty
@@ -1111,12 +1119,8 @@ class DokumentCastSmazatView(TransakceView):
                 )
             cast.close_active_transaction_when_finished = True
             cast.delete()
-            if (
-                isinstance(cast.archeologicky_zaznam, ArcheologickyZaznam)
-                and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-                and cast.archeologicky_zaznam.lokalita.igsn
-            ):
-                cast.archeologicky_zaznam.igsn_lokalita_update()
+            if lokalita_update:
+                lokalita_update.igsn_update()
             return JsonResponse({"redirect": dokument.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info(
@@ -1125,6 +1129,8 @@ class DokumentCastSmazatView(TransakceView):
             )
             transaction.set_rollback(True)
             dokument.active_transaction.rollback()
+            if lokalita_update:
+                lokalita_update.igsn_update(False)
         return JsonResponse({"redirect": dokument.get_absolute_url()})
 
 
