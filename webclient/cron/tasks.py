@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 import traceback
 
@@ -20,13 +21,15 @@ from core.constants import (
     ZAPSANI_PROJ,
 )
 from core.coordTransform import transform_geom_to_sjtsk
+from core.import_data_mappers import ImportModelMapper
 from core.models import SouborVazby
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from django.conf import settings
-from django.db import connection
-from django.db.models import F, Min, Prefetch, Q
+from django.db import connection, transaction
+from django.db.models import F, Min, Model, Prefetch, Q
 from django.db.models.functions import Coalesce, Upper
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from dokument.models import Dokument, DokumentExtraData
 from ez.models import ExterniZdroj
 from heslar import hesla_dynamicka
@@ -86,7 +89,6 @@ def send_notifications_en():
 
 @shared_task
 def pian_to_sjtsk():
-
     query_select = (
         "select pian.id,ST_AsText(pian.geom) as geometry "
         " from public.pian pian "
@@ -608,3 +610,58 @@ def pians_properties_check():
         index = index + 1
 
     print(f"pocet zmen {pocet}")
+
+
+@shared_task
+def run_data_import(job_id):
+    logger.debug("cron.tasks.run_data_import.start", extra={"job_id": job_id})
+
+    redis_connector = RedisConnector().get_connection()
+
+    fedora_transaction = FedoraTransaction()
+    record_count = int(redis_connector.get(f"import_data_count_{job_id}").decode("utf-8"))
+    failed = False
+    import_results = {}
+
+    try:
+        with transaction.atomic():
+            for record_id in range(record_count):
+                try:
+                    serialized_record = json.loads(
+                        redis_connector.get(f"import_data_{job_id}_record_{record_id}").decode("utf-8")
+                    )
+                    mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record.pop("__file_name"))
+                    record = mapper_class(serialized_record).create_record()
+                    if isinstance(record, Model):
+                        record.save()
+                    else:
+                        raise ValueError(f"{_('cron.tasks.run_data_import.error.not_model')} {record_id}")
+                except Exception as err:
+                    logger.info("cron.tasks.run_data_import.error", extra={"error": err, "record_id": record_id})
+                    fedora_transaction.rollback_transaction()
+                    transaction.set_rollback(True)
+                    import_results[record_id] = (
+                        f"{_('cron.tasks.run_data_import.error.part_1')}: {err}, "
+                        f"{_('cron.tasks.run_data_import.error.part_2')} {serialized_record}"
+                    )
+                    redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
+                    failed = True
+                    break
+                else:
+                    logger.info("cron.tasks.run_data_import.success", extra={"record_id": record_id})
+                    import_results[record_id] = f"{_('cron.tasks.run_data_import.success')}, {record.pk}"
+                    redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
+    except Exception as err:
+        logger.info("cron.tasks.run_data_import.database_error", extra={"error": err})
+        for record_id in range(record_count):
+            import_results[record_id] = f"{_('cron.tasks.run_data_import.error.database_error')}: {err}, "
+        failed = True
+    if not failed:
+        fedora_transaction.mark_transaction_as_closed()
+    # redis_connector.delete(f"import_data_count_{job_id}")
+    # for record_id in range(record_count):
+    #     redis_connector.delete(f"import_data_{job_id}_record_{record_id}")
+
+    logger.debug(
+        "cron.tasks.run_data_import.end", extra={"job_id": job_id, "failed": failed, "record_count": record_count}
+    )

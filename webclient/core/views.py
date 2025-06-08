@@ -1578,3 +1578,21 @@ class ApplicationRestartView(LoginRequiredMixin, View):
             referer = fallback_url
         # Redirect to referer or fallback URL
         return redirect(referer)
+
+
+class DataImportProgress(LoginRequiredMixin, View):
+    def get(self, request, **kwargs):
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        job_id = kwargs.get("job_id")
+        redis_connector = RedisConnector().get_connection()
+        record_count = int(redis_connector.get(f"import_data_count_{job_id}").decode("utf-8"))
+        serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}").decode("utf-8"))
+
+        progress_response = {
+            "record_count": record_count,
+            "progress": len(serialized_results) / record_count * 100,
+            "finished_record_count": len(serialized_results),
+            "serialized_results": serialized_results,
+        }
+        return JsonResponse(progress_response)

@@ -1,4 +1,5 @@
 import csv
+import datetime
 import io
 import json
 import logging
@@ -10,10 +11,12 @@ import zipfile
 
 import pandas as pd
 from bs4 import BeautifulSoup
+from cron import tasks
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth.models import Group
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.http import HttpResponse
 from django.http.request import HttpRequest
@@ -40,9 +43,8 @@ from .constants import (
 )
 from .exceptions import WrongCSVError, WrongSheetError
 from .forms import ImportDataAdminForm, OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
-from .import_data_mappers import ImportModelMapper, LookupImportField
+from .import_data_mappers import ImportDataError, ImportModelMapper, LookupImportField
 from .models import OdstavkaSystemu, Permissions, PermissionsSkip
-from .repository_connector import FedoraTransaction
 from .setting_models import CustomAdminSettings
 
 logger = logging.getLogger(__name__)
@@ -662,18 +664,31 @@ class FedoraCustomAdminSite(admin.AdminSite):
         return TemplateResponse(request, "admin/fedora_management/update_metadata.html", context)
 
     def import_data(self, request):
+        # TODO: Remove not before deployment
+        maintenance = not OdstavkaSystemu.objects.filter(
+            datum_odstavky=datetime.datetime.now().today(),
+            cas_odstavky__lte=datetime.datetime.now().time(),
+            status=True,
+        ).exists()
         context = {
             "app_list": self.get_app_list(request),
+            "maintenance": maintenance,
             **self.each_context(request),
         }
+        if not maintenance:
+            return TemplateResponse(request, "admin/import_data/import_data.html", context)
         if request.method == "POST" and request.user.is_superuser:
-            fedora_transaction = FedoraTransaction()
             data_file = request.FILES["data_file"]
             form = ImportDataAdminForm(request.POST, request.FILES)
             context["form"] = form
             file_bytes = data_file.read()
+            job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+            context["url"] = reverse("core:data-import-progress", args=[job_id])
+            validation_results = []
             records = []
             LookupImportField.records = records
+            record_id = 0
+            invalid_records = []
             with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
                 file_names = [f"{name}.csv" for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
                 for file_name in file_names:
@@ -685,13 +700,33 @@ class FedoraCustomAdminSite(admin.AdminSite):
                     for idx, row in sheet.iterrows():
                         mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
                         if mapper_class:
-                            mapper = mapper_class(row.to_dict())
-                            record = mapper.map()
-                            records.append(record)
-            for record in records:
-                record.active_transaction = fedora_transaction
-                record.save()
-            fedora_transaction.mark_transaction_as_closed()
+                            try:
+                                mapper = mapper_class(row.to_dict())
+                                record = mapper.map()
+                                mapper.import_validation()
+                                LookupImportField.records.append(mapper.create_record())
+                                record["__file_name"] = file_name
+                            except ImportDataError as err:
+                                validation_results.append(err)
+                                invalid_records.append(record_id)
+                            else:
+                                records.append(record)
+                                validation_results.append(_("core.admin.import_data.record_valid"))
+                                self.redis_connector.set(f"import_data_{job_id}_record_{record_id}", json.dumps(record))
+                            record_id += 1
+                        else:
+                            raise ValidationError(f"Unsupported file_name: {file_name}")
+            records_count = record_id
+            self.redis_connector.set(f"import_data_count_{job_id}", records_count)
+            context["records_count"] = records_count
+            context["validation_results"] = validation_results
+            context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
+            if not invalid_records:
+                tasks.run_data_import.delay(job_id)
+            logger.debug(
+                "core.admin.FedoraCustomAdminSite.import_data.end",
+                extra={"job_id": job_id, "records_count": records_count, "invalid_records": invalid_records},
+            )
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
         else:
             context["form"] = ImportDataAdminForm()
