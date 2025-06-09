@@ -86,6 +86,7 @@ CACHEOPS = {
     "pas.SamostatnyNalez": {"ops": (), "timeout": 60 * 10},
     "dokument.Dokument": {"ops": (), "timeout": 60 * 10},
     "ez.ExterniZdroj": {"ops": (), "timeout": 60 * 10},
+    "pas.UzivatelSpoluprace": {"ops": (), "timeout": 60 * 10},
 }
 
 SECRET_KEY = get_secret("SECRET_KEY")
@@ -174,6 +175,7 @@ INSTALLED_APPS = [
     "fedora_management",
     "pid.apps.PidConfig",
     "vypis",
+    "crispy_bootstrap5",
 ]
 
 MIDDLEWARE = [
@@ -290,8 +292,8 @@ MEDIA_URL = "/static/media/"
 STATIC_ROOT = "/vol/web/static"
 MEDIA_ROOT = "/vol/web/media"
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
-CRISPY_TEMPLATE_PACK = "bootstrap4"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 AUTH_USER_MODEL = "uzivatel.User"
 
 LOGIN_REDIRECT_URL = "/"
