@@ -979,8 +979,8 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         fedora_transaction = projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
-        projekt_casti_dokumentu = projekt.casti_dokumentu.all()
-        projekt_samostatne_nalezy = projekt.samostatne_nalezy.all()
+        projekt_casti_dokumentu = list(projekt.casti_dokumentu.all())
+        projekt_samostatne_nalezy = list(projekt.samostatne_nalezy.all())
         try:
             with transaction.atomic():
                 projekt.set_archivovany(request.user)
