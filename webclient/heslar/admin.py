@@ -296,14 +296,15 @@ class HeslarRuianAdmin(ObjectWithMetadataAdmin):
 
 
 @admin.register(RuianKraj)
-class HeslarRuianKrajAdmin(HeslarRuianAdmin):
+class HeslarRuianKrajAdmin(ObjectWithMetadataAdmin):
     """
     Admin část pro správu modelu ruian kraj.
     """
 
-    list_display = ("nazev", "kod", "rada_id", "nazev_en")
-    fields = ("nazev", "kod", "rada_id", "definicni_bod", "nazev_en")
-    search_fields = ("kod", "rada_id", "nazev_en")
+    list_display = ("nazev", "kod", "rada_id", "nazev_en", "email")
+    fields = ("nazev", "kod", "rada_id", "definicni_bod", "nazev_en", "email")
+    search_fields = ("kod", "rada_id", "nazev_en", "email")
+    readonly_fields = ("nazev", "kod", "rada_id", "definicni_bod")
 
 
 @admin.register(RuianOkres)

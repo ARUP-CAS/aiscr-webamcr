@@ -73,7 +73,7 @@ def create_projekt_vazby(sender, instance, **kwargs):
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     logger.debug(
         "projekt.signals.projekt_pre_delete.start",
-        extra={"ident_cely": instance.ident_cely, "initial_dokumenty": instance.initial_dokumenty},
+        extra={"ident_cely": instance.ident_cely, "initial": instance.initial_dokumenty},
     )
     if instance.soubory and instance.soubory.soubory.exists():
         raise Exception(_("projekt.signals.projekt_pre_delete.cannot_delete"))

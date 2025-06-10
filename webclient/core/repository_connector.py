@@ -282,23 +282,23 @@ class FedoraRepositoryConnector:
                 if result_2.status_code == 200:
                     logger.debug(
                         "core_repository_connector.check_container_is_deleted.true",
-                        extra={"ident_cely": ident_cely, "result_text": result.text},
+                        extra={"ident_cely": ident_cely, "text": result.text},
                     )
                     if result_3.status_code == 200:
                         logger.debug(
                             "core_repository_connector.check_container_is_deleted.true",
-                            extra={"ident_cely": ident_cely, "result_text": result.text},
+                            extra={"ident_cely": ident_cely, "text": result.text},
                         )
                         return True
         elif result.status_code == 404 and result_2.status_code == 404:
             logger.debug(
                 "core_repository_connector.check_container_is_deleted.true",
-                extra={"ident_cely": ident_cely, "result_text": result.text},
+                extra={"ident_cely": ident_cely, "text": result.text},
             )
             return True
         logger.debug(
             "core_repository_connector.check_container_is_deleted.false",
-            extra={"ident_cely": ident_cely, "result_text": result.text},
+            extra={"ident_cely": ident_cely, "text": result.text},
         )
         return False
 
@@ -318,7 +318,7 @@ class FedoraRepositoryConnector:
     def _send_request(
         self, url: str, request_type: FedoraRequestType, *, headers=None, data=None
     ) -> requests.Response | None:
-        extra = {"url": url, "request_type": request_type, "transaction": self.transaction_uid}
+        extra = {"info": url, "request_type": request_type, "transaction": self.transaction_uid}
         if isinstance(data, str) and len(data) < 1000:
             extra["data"] = data
         logger.debug("core_repository_connector._send_request.start", extra=extra)
@@ -404,7 +404,7 @@ class FedoraRepositoryConnector:
                 "request_type": request_type,
                 "response": response.text,
                 "transaction": self.transaction_uid,
-                "url": url,
+                "info": url,
             }
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok", extra=extra)
@@ -429,7 +429,7 @@ class FedoraRepositoryConnector:
                     "request_type": request_type,
                     "response": response.text,
                     "transaction": self.transaction_uid,
-                    "url": url,
+                    "info": url,
                 }
                 if self.transaction:
                     self.transaction.rollback_transaction()
@@ -676,7 +676,7 @@ class FedoraRepositoryConnector:
     ) -> RepositoryBinaryFile:
         logger.debug(
             "core_repository_connector.save_binary_file.start",
-            extra={"file_name": file_name, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
+            extra={"file": file_name, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
         )
         self._check_binary_file_container()
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
@@ -697,13 +697,13 @@ class FedoraRepositoryConnector:
             self.save_thumbs(file_name, file, uuid)
         logger.debug(
             "core_repository_connector.save_binary_file.end",
-            extra={"url": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
+            extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
         )
         return rep_bin_file
 
     @staticmethod
     def __generate_thumb(file_name: str, file_content: BytesIO, large=False):
-        logger.debug("core_repository_connector.__generate_thumb.start", extra={"file_name": file_name, "large": large})
+        logger.debug("core_repository_connector.__generate_thumb.start", extra={"file": file_name, "large": large})
 
         def resize_image(image: BytesIO, large_inner=False):
             image = Image.open(image)
@@ -723,13 +723,13 @@ class FedoraRepositoryConnector:
                 try:
                     thumbnail = resize_image(file_content, large)
                     logger.debug(
-                        "core_repository_connector.__generate_thumb.end", extra={"file_name": file_name, "large": large}
+                        "core_repository_connector.__generate_thumb.end", extra={"file": file_name, "large": large}
                     )
                     return thumbnail
                 except Exception as err:
                     logger.info(
                         "core_repository_connector.__generate_thumb.error",
-                        extra={"err": err, "file_name": file_name, "large": large},
+                        extra={"error": err, "file": file_name, "large": large},
                     )
                     if thumb_icon is not None:
                         try:
@@ -737,7 +737,7 @@ class FedoraRepositoryConnector:
                         except Exception as err:
                             logger.error(
                                 "core_repository_connector.__generate_thumb_icon.error",
-                                extra={"err": err, "file_name": file_name, "large": large},
+                                extra={"error": err, "file": file_name, "large": large},
                             )
                     return None
             else:
@@ -751,13 +751,13 @@ class FedoraRepositoryConnector:
                 image_bytes_io.seek(0)
                 thumbnail = resize_image(image_bytes_io, large)
                 logger.debug(
-                    "core_repository_connector.__generate_thumb.end", extra={"file_name": file_name, "large": large}
+                    "core_repository_connector.__generate_thumb.end", extra={"file": file_name, "large": large}
                 )
                 return thumbnail
             except Exception as err:
                 logger.debug(
                     "core_repository_connector.__generate_thumb.error",
-                    extra={"err": err, "file_name": file_name, "large": large},
+                    extra={"error": err, "file": file_name, "large": large},
                 )
                 return __generate_thumb_from_icon(file_name, file_content, large)
         else:
@@ -767,7 +767,7 @@ class FedoraRepositoryConnector:
         logger.debug(
             "core_repository_connector._save_thumb.start",
             extra={
-                "file_name": file_name,
+                "file": file_name,
                 "ident_cely": self.record.ident_cely,
                 "update": update,
                 "uuid": uuid,
@@ -781,7 +781,7 @@ class FedoraRepositoryConnector:
                 logger.info(
                     "core_repository_connector._save_thumb.error",
                     extra={
-                        "file_name": file_name,
+                        "file": file_name,
                         "ident_cely": self.record.ident_cely,
                         "large": large,
                         "update": update,
@@ -842,7 +842,7 @@ class FedoraRepositoryConnector:
             logger.debug(
                 "core_repository_connector._save_thumb.end",
                 extra={
-                    "file_name": file_name,
+                    "file": file_name,
                     "ident_cely": self.record.ident_cely,
                     "large": large,
                     "update": update,
@@ -859,7 +859,7 @@ class FedoraRepositoryConnector:
         soubor: Soubor
         logger.debug(
             "core_repository_connector.migrate_binary_file.start",
-            extra={"soubor": soubor.pk, "transaction": self.transaction_uid},
+            extra={"pk": soubor.pk, "transaction": self.transaction_uid},
         )
         if soubor.repository_uuid is not None and check_if_exists:
             return None
@@ -908,7 +908,7 @@ class FedoraRepositoryConnector:
         logger.debug(
             "core_repository_connector.get_binary_file.start",
             extra={
-                "url": uuid,
+                "uuid": uuid,
                 "ident_cely_old": ident_cely_old,
                 "thumb_small": thumb_small,
                 "thumb_large": thumb_large,
@@ -937,8 +937,8 @@ class FedoraRepositoryConnector:
             logger.debug(
                 "core_repository_connector.get_binary_file.end",
                 extra={
-                    "url": uuid,
-                    "sha_512": rep_bin_file.sha_512,
+                    "uuid": uuid,
+                    "key": rep_bin_file.sha_512,
                     "ident_cely_old": ident_cely_old,
                     "thumb_small": thumb_small,
                     "thumb_large": thumb_large,
@@ -955,10 +955,10 @@ class FedoraRepositoryConnector:
         logger.debug(
             "core_repository_connector.update_binary_file.start",
             extra={
-                "file_name": file_name,
+                "file": file_name,
                 "ident_cely": self.record.ident_cely,
                 "transaction": self.transaction_uid,
-                "save_thumbs": save_thumbs,
+                "option": save_thumbs,
             },
         )
         rep_bin_file = RepositoryBinaryFile(uuid, file, file_name)
@@ -975,7 +975,7 @@ class FedoraRepositoryConnector:
             self.save_thumbs(file_name, file, uuid, True)
         logger.debug(
             "core_repository_connector.update_binary_file.end",
-            extra={"url": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
+            extra={"uuid": uuid, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
         )
         return rep_bin_file
 
@@ -1004,7 +1004,7 @@ class FedoraRepositoryConnector:
             logger.debug(
                 "core_repository_connector.delete_binary_file.no_repository_uuid",
                 extra={
-                    "soubor_pk": soubor.pk,
+                    "pk": soubor.pk,
                     "ident_cely": self.record.ident_cely,
                     "transaction": self.transaction_uid,
                 },
@@ -1220,7 +1220,7 @@ class FedoraRepositoryConnector:
         if file_path is None:
             logger.warning(
                 "core_repository_connector.save_single_file_from_storage.file_not_found",
-                extra={"record": record.pk, "storage_path": storage_path, "transaction": fedora_transaction.uid},
+                extra={"pk": record.pk, "value": storage_path, "transaction": fedora_transaction.uid},
             )
             return
         soubor_data = io.BytesIO()
@@ -1389,7 +1389,7 @@ class FedoraTransaction:
             self.__create_transaction()
         else:
             self.uid = uid
-            logger.debug("core_repository_connector.FedoraTransaction.__init__", extra={"uid": self.uid})
+            logger.debug("core_repository_connector.FedoraTransaction.__init__", extra={"transaction": self.uid})
         self.request = request
         self.suppress_message = suppress_message
         self.__status = FedoraTransactionStatus.ACTIVE
@@ -1435,7 +1435,7 @@ class FedoraTransaction:
             except ResponseError as err:
                 logger.error(
                     "core_repository_connector.FedoraTransaction._save_transaction_result_to_redis.failed",
-                    extra={"transaction": self.uid, "err": err},
+                    extra={"transaction": self.uid, "error": err},
                 )
         elif operation == FedoraTransactionOperation.ROLLBACK:
             response = requests.delete(url, auth=auth, verify=False)
@@ -1456,8 +1456,9 @@ class FedoraTransaction:
         logger.debug(
             "core_repository_connector.FedoraTransaction.rollback_transaction.start", extra={"transaction": self.uid}
         )
-        self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
-        self.__status = FedoraTransactionStatus.ABORTED
+        if self.__status != FedoraTransactionStatus.ABORTED:
+            self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
+            self.__status = FedoraTransactionStatus.ABORTED
         logger.debug(
             "core_repository_connector.FedoraTransaction.rollback_transaction.end", extra={"transaction": self.uid}
         )
@@ -1465,7 +1466,7 @@ class FedoraTransaction:
     def mark_transaction_as_closed(self):
         logger.debug(
             "core_repository_connector.FedoraTransaction.mark_transaction_as_closed.start",
-            extra={"transaction": self.uid, "post_commit_tasks": self.post_commit_tasks.keys()},
+            extra={"transaction": self.uid, "value": self.post_commit_tasks.keys()},
         )
         self._send_transaction_request()
         self._perform_post_commit_tasks()
@@ -1540,14 +1541,14 @@ class FedoraTransaction:
         except Exception as e:
             logger.warning(
                 "core_repository_connector.FedoraTransaction.call_digiarchiv_update.Celery_warning",
-                extra={"Exception": e, "app": app},
+                extra={"error": e, "app": app},
             )
             call_digiarchiv_update_task.apply_async()
         for queue in queues:
             if queue is None:
                 logger.warning(
                     "core_repository_connector.FedoraTransaction.call_digiarchiv_update.warning",
-                    extra={"i": i, "queues": queues},
+                    extra={"key": i, "queue": queues},
                 )
                 break
             for queue_name, queue_tasks in queue.items():

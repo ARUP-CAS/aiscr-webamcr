@@ -10,7 +10,7 @@
 {% compress css %}
     <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="print">
 {% endcompress %}
-
+<script src="{% static '/js/html-to-rtf-browser.js' %}"></script>
 {% endblock %}
 
 {% block title %}{% trans "vypis.templates.vypis.index.title" %}{% endblock %}
@@ -21,10 +21,13 @@
         <div class="col-9">
             <h1>{{title}}</h1>
         </div>
-        <div class="col-3 d-print-none align-self-center">
+        <div class="col-3 d-print-none align-self-center no-export">
             <div class="float-right">
                 <button onclick="window.print()">
                     <span class="material-icons">print</span>
+                </button>
+                <button onclick="createRtf()">
+                    <span class="material-icons">download</span>
                 </button>
             </div>
         </div>
@@ -38,15 +41,35 @@
 
 {% block script %}
 <script>
-    function copy_html() {    
-        window.getSelection
-        var range = document.createRange();
-        range.selectNode(document.getElementById('app-wrapper'));
-        var selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        var selectedText = selection.toString().replace(/^\s*$(?:\r\n?|\n)/gm, '');
-        navigator.clipboard.writeText(selectedText);
-    }    
+    function createRtf() {    
+        const htmlContent = document.getElementById('app-wrapper').innerHTML;
+        const vypisPrefix = '{{title}}';
+        const currentDateTime = new Date();
+        const formattedDate = currentDateTime.toLocaleString('cs-CZ', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+        .replace(/\//g, '-') // Replace all slashes
+        .replace(/,/g, '')   // Replace all commas
+        .replace(/\./g, '')  // Replace all dots
+        .replace(/ /g, '')   // Replace all spaces
+        .replace(/:/g, '');  // Replace all colons;
+        var htmlToRtfLocal = new window.htmlToRtf();
+        var rtfContent = htmlToRtfLocal.convertHtmlToRtf(htmlContent);
+        console.log(rtfContent);
+        const blob = new Blob([rtfContent], { type: 'application/rtf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${vypisPrefix}_${formattedDate.slice(-4)}_${formattedDate.slice(0, 8)}.rtf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        // Use the htmlToRtf function to convert HTML to RTF
+        // and create a Blob URL for the RTF file
+    }  
 </script>
 {% endblock %}

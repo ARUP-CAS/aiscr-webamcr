@@ -44,7 +44,7 @@ class CreateDJForm(forms.ModelForm):
         """
         logger.debug(
             "dj.forms.CreateDJForm.__init__.cannot_get_typ_akce",
-            extra={"jednotky": jednotky, "instance": instance, "typ_arch_z": typ_arch_z, "typ_akce": typ_akce},
+            extra={"dj": jednotky, "instance": instance, "typ_arch_z": typ_arch_z, "typ_akce": typ_akce},
         )
         queryset = Heslar.objects.filter(nazev_heslare=HESLAR_DJ_TYP)
         if typ_arch_z == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
@@ -148,7 +148,7 @@ class CreateDJForm(forms.ModelForm):
             try:
                 typ_akce = self.instance.archeologicky_zaznam.akce.typ
             except Exception as err:
-                logger.debug("dj.forms.CreateDJForm.__init__.cannot_get_typ_akce", extra={"err": err})
+                logger.debug("dj.forms.CreateDJForm.__init__.cannot_get_typ_akce", extra={"error": err})
         self.fields["typ"] = forms.ModelChoiceField(
             label=_("dj.forms.createDjForm.typ.label"),
             queryset=self.get_typ_queryset(jednotky, self.instance, typ_arch_z, typ_akce),

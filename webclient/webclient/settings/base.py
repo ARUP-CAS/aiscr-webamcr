@@ -86,6 +86,7 @@ CACHEOPS = {
     "pas.SamostatnyNalez": {"ops": (), "timeout": 60 * 10},
     "dokument.Dokument": {"ops": (), "timeout": 60 * 10},
     "ez.ExterniZdroj": {"ops": (), "timeout": 60 * 10},
+    "pas.UzivatelSpoluprace": {"ops": (), "timeout": 60 * 10},
 }
 
 SECRET_KEY = get_secret("SECRET_KEY")
@@ -202,16 +203,13 @@ CRON_CLASSES = [
 
 ROOT_URLCONF = "webclient.urls"
 
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-    BASE_DIR / "static" / "js",
-    BASE_DIR / "static" / "css",
-    BASE_DIR / "static" / "scss",
-    BASE_DIR / "static" / "loga",
-    BASE_DIR / "static" / "img",
-    BASE_DIR / "static" / "fonts",
-    BASE_DIR / "static" / "icons",
-]
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+    },
+}
 
 TEMPLATES = [
     {

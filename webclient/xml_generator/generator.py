@@ -16,10 +16,10 @@ from lxml import etree
 from lxml import etree as ET
 from xml_generator.models import ModelWithMetadata
 
-AMCR_NAMESPACE_URL = "https://api.aiscr.cz/schema/amcr/2.1/"
-AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.1/amcr.xsd"
+AMCR_NAMESPACE_URL = "https://api.aiscr.cz/schema/amcr/2.2/"
+AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
 AMCR_XSD_FILENAME = "amcr.xsd"
-SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.1/ https://api.aiscr.cz/schema/amcr/2.1/amcr.xsd"
+SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
 logger = logging.getLogger(__name__)
 
 
@@ -59,13 +59,13 @@ class DocumentGenerator:
     @classmethod
     def generate_metadata(cls, model_class=None, limit=None, start_with_pk=None):
         logger.debug(
-            "xml_generator.generator.generate_metadata.start", extra={"model_class": model_class, "limit": limit}
+            "xml_generator.generator.generate_metadata.start", extra={"class_name": model_class, "limit": limit}
         )
         if not model_class:
             for current_class in cls._get_schema_dict():
                 logger.debug(
                     "xml_generator.generator.generate_metadata.loop.strart",
-                    extra={"limit": limit, "current_class": str(current_class)},
+                    extra={"limit": limit, "class_name": str(current_class)},
                 )
                 if not start_with_pk:
                     queryset = current_class.objects.all().order_by("pk")
@@ -82,12 +82,12 @@ class DocumentGenerator:
                     obj.save_metadata(fedora_transaction, close_transaction=True)
                 logger.debug(
                     "xml_generator.generator.generate_metadata.loop.end",
-                    extra={"limit": limit, "current_class": str(current_class)},
+                    extra={"limit": limit, "class_name": str(current_class)},
                 )
         else:
             logger.debug(
                 "xml_generator.generator.generate_metadata.loop.strart",
-                extra={"model_class": model_class, "limit": limit},
+                extra={"class_name": model_class, "limit": limit},
             )
             from adb.models import Adb
             from arch_z.models import ArcheologickyZaznam
@@ -130,11 +130,9 @@ class DocumentGenerator:
                 obj.active_transaction = fedora_transaction
                 obj.save_metadata(fedora_transaction, close_transaction=True)
             logger.debug(
-                "xml_generator.generator.generate_metadata.loop.end", extra={"model_class": model_class, "limit": limit}
+                "xml_generator.generator.generate_metadata.loop.end", extra={"class_name": model_class, "limit": limit}
             )
-        logger.debug(
-            "xml_generator.generator.generate_metadata.end", extra={"model_class": model_class, "limit": limit}
-        )
+        logger.debug("xml_generator.generator.generate_metadata.end", extra={"class_name": model_class, "limit": limit})
 
     @classmethod
     def _get_schema_dict(cls):
@@ -317,7 +315,7 @@ class DocumentGenerator:
                             "_get_attribute_of_record_unbounded.object_does_not_exist",
                             extra={
                                 "ident_cely": getattr(record, "ident_cely", None),
-                                "attribute_name": record_name_split[0],
+                                "record": record_name_split[0],
                             },
                         )
                 if related_record and hasattr(related_record, "all"):
@@ -334,7 +332,7 @@ class DocumentGenerator:
                         except Exception as err:
                             logger.info(
                                 "xml_generator.generator._get_attribute_of_record_unbounded.attr.append.error",
-                                extra={"err": err},
+                                extra={"error": err},
                             )
             elif len(record_name_split) == 3:
                 related_record = getattr(record, record_name_split[0])

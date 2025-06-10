@@ -21,7 +21,7 @@ from reportlab.platypus import ListFlowable, PageBreak, Paragraph, SimpleDocTemp
 
 from webclient.settings.base import STATIC_ROOT
 
-logger_s = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 PAGESIZE = (210 * mm, 297 * mm)
 BASE_MARGIN = 20 * mm
@@ -45,7 +45,7 @@ try:
     )
 except Exception:
     # This will be triggered during collectstatic
-    logger_s.error("doc_utils.font.error", extra={"path": path})
+    logger.error("doc_utils.font.error", extra={"info": path})
 
 Title = "Hello world"
 pageinfo = "platypus example"
@@ -242,7 +242,9 @@ class DocumentCreator(ABC):
     def _create_signature(self):
         self.texts["doc_sign_1"] = "S pozdravem"
         self.texts["doc_sign_2"] = DOC_REDITEL[self.dok_index]
-        self.texts["doc_sign_3"] = f"ředitel<br/>Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i."
+        self.texts[
+            "doc_sign_3"
+        ] = f"ředitel<br/>Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i."
 
     def _create_signature_doc(self):
         return [
@@ -689,7 +691,9 @@ class ZruseniPDFCreator(DocumentCreator):
     def _generate_text(self):
         self._create_header_oznamovatel()
         self._create_header_tab_dates()
-        self.texts["doc_vec"] = "Věc: Zrušení evidence záměru v&nbsp;informačním systému Archeologická mapa České republiky"
+        self.texts[
+            "doc_vec"
+        ] = "Věc: Zrušení evidence záměru v&nbsp;informačním systému Archeologická mapa České republiky"
         self._create_data_document_part()
 
         self.texts[

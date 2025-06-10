@@ -57,7 +57,6 @@ def send_notifications_enz():
         Mailer.send_enz01()
         logger.debug("cron.tasks.send_notifications.do.send_enz_01.end")
         Mailer.send_enz02()
-        logger.debug("cron.tasks.send_notifications.do.send_enz_02.end")
         logger.debug("cron.tasks.send_notifications_enz.do.end")
     except Exception as err:
         logger.error(
@@ -224,7 +223,7 @@ def delete_personal_data_canceled_projects():
             if item.has_oznamovatel():
                 item.active_transaction = FedoraTransaction()
                 logger.debug(
-                    "core.cron.delete_personal_data_canceled_projects.do.project", extra={"project": item.ident_cely}
+                    "core.cron.delete_personal_data_canceled_projects.do.project", extra={"projekt": item.ident_cely}
                 )
                 item.oznamovatel.email = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
                 item.oznamovatel.adresa = f"{today.strftime('%Y-%m-%d')}: {deleted_string}"
@@ -263,7 +262,7 @@ def delete_reporter_data_ten_years():
             item.active_transaction = FedoraTransaction()
             logger.debug(
                 "core.cron.delete_reporter_data_canceled_projects.do.project.start",
-                extra={"project": item.ident_cely, "transaction": item.active_transaction.uid},
+                extra={"ident_cely": item.ident_cely, "transaction": item.active_transaction.uid},
             )
             item.oznamovatel.delete()
             item.archive_project_documentation()
@@ -273,7 +272,7 @@ def delete_reporter_data_ten_years():
             item.save()
             logger.debug(
                 "core.cron.delete_reporter_data_canceled_projects.do.end",
-                extra={"project": item.ident_cely, "transaction": item.active_transaction.uid},
+                extra={"ident_cely": item.ident_cely, "transaction": item.active_transaction.uid},
             )
         except Exception as err:
             logger.error("core.cron.delete_reporter_data_canceled_projects.do.error", extra={"error": err})
@@ -325,7 +324,9 @@ def change_document_accessibility():
                 item.pristupnost = pristupnost
                 item.close_active_transaction_when_finished = True
                 item.save()
-                logger.debug("core.cron.change_document_accessibility.do.dokument", extra={"dokument": item.ident_cely})
+                logger.debug(
+                    "core.cron.change_document_accessibility.do.dokument", extra={"ident_cely": item.ident_cely}
+                )
         logger.debug("core.cron.change_document_accessibility.do.end")
     except Exception as err:
         logger.error("core.cron.change_document_accessibility.do.error", extra={"error": err})
@@ -447,9 +448,7 @@ def update_all_redis_snapshots(rewrite_existing=False):
     r = RedisConnector.get_connection()
     classes_list = (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez)
     for current_class in classes_list:
-        logger.debug(
-            "cron.tasks.update_all_redis_snapshots.class_start", extra={"current_class": current_class.__name__}
-        )
+        logger.debug("cron.tasks.update_all_redis_snapshots.class_start", extra={"class_name": current_class.__name__})
         pipe = r.pipeline()
         query = current_class.objects.all()
         if current_class == Dokument:
@@ -475,7 +474,7 @@ def update_all_redis_snapshots(rewrite_existing=False):
             if (i % 1000) == 0:
                 print(f"\r{i}", end="")
         pipe.execute()
-        logger.debug("cron.tasks.update_all_redis_snapshots.class_end", extra={"current_class": current_class.__name__})
+        logger.debug("cron.tasks.update_all_redis_snapshots.class_end", extra={"class_name": current_class.__name__})
     logger.debug("cron.tasks.update_all_redis_snapshots.end")
 
 

@@ -48,7 +48,7 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
     try:
         instance.set_snapshots()
     except ValueError as err:
-        logger.debug("dokument.signals.create_dokument_vazby.type_error", extra={"pk": instance.pk, "err": err})
+        logger.debug("dokument.signals.create_dokument_vazby.type_error", extra={"pk": instance.pk, "error": err})
     logger.debug("dokument.signals.create_dokument_vazby.end", extra={"ident_cely": instance.ident_cely})
 
 
@@ -58,7 +58,7 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
     Metóda pro vytvoření komponent vazeb dokument části.
     Metóda se volá pred uložením dokument části.
     """
-    logger.debug("dokument.signals.create_dokument_cast_vazby.start", extra={"record_pk": instance.pk})
+    logger.debug("dokument.signals.create_dokument_cast_vazby.start", extra={"pk": instance.pk})
     invalidate_model(Dokument)
     invalidate_model(Akce)
     if instance.pk is None:
@@ -66,7 +66,7 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
         k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
         k.save()
         instance.komponenty = k
-    logger.debug("dokument.signals.create_dokument_cast_vazby.end", extra={"record_pk": instance.pk})
+    logger.debug("dokument.signals.create_dokument_cast_vazby.end", extra={"pk": instance.pk})
 
 
 @receiver(post_save, sender=Dokument, weak=False)
@@ -75,8 +75,8 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
         "dokument.signals.dokument_save_metadata.startdokument.signals.dokument_save_metadata.start",
         extra={
             "ident_cely": instance.ident_cely,
-            "record_pk": instance.pk,
-            "close_active_transaction_when_finished": instance.close_active_transaction_when_finished,
+            "pk": instance.pk,
+            "option": instance.close_active_transaction_when_finished,
         },
     )
     invalidate_model(Dokument)
@@ -106,7 +106,7 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
         update_single_redis_snapshot.apply_async(["Dokument", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
     logger.debug(
         "dokument.signals.dokument_save_metadata.end",
-        extra={"ident_cely": instance.ident_cely, "record_pk": instance.pk},
+        extra={"ident_cely": instance.ident_cely, "pk": instance.pk},
     )
 
 
@@ -129,7 +129,6 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
         "dokument.signals.dokument_delete_repository_container.start", extra={"ident_cely": instance.ident_cely}
     )
     fedora_transaction = instance.active_transaction
-    instance.doi_delete()
     for k in Komponenta.objects.filter(ident_cely__startswith=instance.ident_cely):
         logger.debug(
             "dokument.signals.dokument_delete_repository_container.deleting",
@@ -173,7 +172,7 @@ def let_delete_repository_container(sender, instance: Let, **kwargs):
 
 @receiver(post_save, sender=DokumentCast, weak=False)
 def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **kwargs):
-    extra = {"dokument_cast": instance.pk, "signal_created": created}
+    extra = {"pk": instance.pk, "custom_created": created}
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra=extra)
     from core.repository_connector import FedoraTransaction
 
@@ -190,25 +189,25 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
                 instance.archeologicky_zaznam.save_metadata(fedora_transaction)
                 extra.update(
                     {
-                        "archeologicky_zaznam": instance.archeologicky_zaznam.ident_cely,
-                        "record_pk": instance.archeologicky_zaznam.pk,
+                        "ident_cely": instance.archeologicky_zaznam.ident_cely,
+                        "pk": instance.archeologicky_zaznam.pk,
                     }
                 )
             if instance.initial_archeologicky_zaznam_id is not None:
                 instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction)
                 extra.update(
                     {
-                        "initial_archeologicky_zaznam": instance.initial_archeologicky_zaznam_id,
+                        "initial_ident_cely": instance.initial_archeologicky_zaznam_id,
                     }
                 )
             if instance.projekt is not None:
                 instance.projekt.save_metadata(fedora_transaction)
-                extra.update({"projekt": instance.projekt.ident_cely, "record_pk": instance.projekt.pk})
+                extra.update({"projekt": instance.projekt.ident_cely, "pk": instance.projekt.pk})
             if instance.initial_projekt_id is not None:
                 instance.initial_projekt.save_metadata(fedora_transaction)
                 extra.update(
                     {
-                        "initial_projekt": instance.initial_projekt.ident_cely,
+                        "initial_ident_cely": instance.initial_projekt.ident_cely,
                         "initial_record_pk": instance.initial_projekt.pk,
                     }
                 )

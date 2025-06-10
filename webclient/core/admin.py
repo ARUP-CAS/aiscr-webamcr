@@ -593,7 +593,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
             except Exception as err:
                 logger.debug(
                     "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".cannot_read_file",
-                    extra={"err": err},
+                    extra={"error": err},
                 )
                 context["error"] = _("fedora_management.admin.YourCustomAdminSite.cannot_read_file")
         else:
@@ -602,7 +602,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
             except Exception as err:
                 logger.debug(
                     "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".cannot_read_file",
-                    extra={"err": err},
+                    extra={"error": err},
                 )
                 context["error"] = _("fedora_management.admin.YourCustomAdminSite.cannot_read_file")
         if sheet.shape[1] != 1:

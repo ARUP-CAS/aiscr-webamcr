@@ -172,7 +172,7 @@ class PesCreateView(LoginRequiredMixin, View):
             user.save()
         else:
             logger.debug(
-                "notifikace_projekty.PesCreateView.post.not_valid", extra={"errors": [fs.errors for fs in formsets]}
+                "notifikace_projekty.PesCreateView.post.not_valid", extra={"error": [fs.errors for fs in formsets]}
             )
             request.session["_old_pes_post"] = request.POST
             request.session["_old_pes_notifications"] = request.POST.getlist("notifications-notification_types")
@@ -234,6 +234,6 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
             user.close_active_transaction_when_finished = True
             user.save()
         except Exception as err:
-            logger.warning("notifikace_projekty.PesSmazatView.post.not_valid", extra={"err": err})
+            logger.warning("notifikace_projekty.PesSmazatView.post.not_valid", extra={"error": err})
             messages.add_message(request, messages.SUCCESS, HLIDACI_PES_NEUSPESNE_SMAZAN)
         return JsonResponse({"redirect": reverse("notifikace_projekty:list")})

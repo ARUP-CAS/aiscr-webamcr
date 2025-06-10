@@ -39,7 +39,7 @@
           document.getElementById("id-app-entity-item").innerHTML = "{% trans "pas.templates.create.toolbar.title" %}"
       })
   </script>
-  <script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
+  <script src="{% static 'js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
   <script>
     url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
     get_vychozi_hodnota_podrazeneho("#id_druh_nalezu","#id_specifikace",url)

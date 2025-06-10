@@ -37,6 +37,7 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.timezone import now
@@ -45,7 +46,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PRISTUPNOST, HESLAR_PROJEKT_TYP
 from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
-from heslar.models import Heslar, RuianKatastr
+from heslar.models import Heslar, RuianKatastr, RuianKraj
 from historie.models import Historie, HistorieVazby
 from projekt.doc_utils import DocumentCreator, OznameniPDFCreator, ZruseniPDFCreator
 from projekt.rtf_utils import ExpertniListCreator
@@ -203,9 +204,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         verbose_name = "projekty"
 
     def send_ep01(self, rep_bin_file=None):
-        logger.debug(
-            "projekt.models.Projekt.send_ep01", extra={"rep_bin_file": rep_bin_file, "ident_cely": self.ident_cely}
-        )
+        logger.debug("projekt.models.Projekt.send_ep01", extra={"file": rep_bin_file, "ident_cely": self.ident_cely})
         from services.mailer import Mailer
 
         if self.ident_cely[0] == OBLAST_CECHY:
@@ -242,8 +241,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         logger.debug(
             "projekt.models.Projekt.set_schvaleny.start",
             extra={
-                "old_ident_cely": old_ident,
-                "new_idet_cely": self.ident_cely,
+                "ident_cely_old": old_ident,
+                "ident_cely": self.ident_cely,
                 "transaction": self.active_transaction.uid,
             },
         )
@@ -258,8 +257,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         logger.debug(
             "projekt.models.Projekt.set_schvaleny.end",
             extra={
-                "old_ident_cely": old_ident,
-                "new_idet_cely": self.ident_cely,
+                "ident_cely_old": old_ident,
+                "ident_cely": self.ident_cely,
                 "transaction": self.active_transaction.uid,
             },
         )
@@ -284,7 +283,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         ).save()
         self.save()
 
-    def set_zahajeny_v_terenu(self, user):
+    def set_zahajeny_v_terenu(self, user, info_text):
         """
         Metóda pro nastavení stavu zahájený v terénu a uložení změny do historie.
         """
@@ -293,10 +292,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             typ_zmeny=ZAHAJENI_V_TERENU_PROJ,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=info_text,
         ).save()
         self.save()
 
-    def set_ukoncen_v_terenu(self, user):
+    def set_ukoncen_v_terenu(self, user, info_text):
         """
         Metóda pro nastavení stavu ukončený v terénu a uložení změny do historie.
         """
@@ -305,6 +305,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             typ_zmeny=UKONCENI_V_TERENU_PROJ,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=info_text,
         ).save()
         self.save()
 
@@ -333,7 +334,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 file_deleted_pk_list.append(file.pk)
             logger.debug(
                 "projekt.models.Projekt.set_archivovany.files_deleted",
-                extra={"deleted": len(file_deleted_pk_list), "deleted_list": file_deleted_pk_list},
+                extra={"count": len(file_deleted_pk_list), "list": file_deleted_pk_list},
             )
 
     def set_archivovany(self, user):
@@ -493,7 +494,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                         + a.archeologicky_zaznam.ident_cely
                     ] = akce_warnings
             else:
-                logger.error("projekt.models.check_pred_uzavrenim.check_akce_error", extra={"ident": self.ident_cely})
+                logger.error(
+                    "projekt.models.check_pred_uzavrenim.check_akce_error", extra={"ident_cely": self.ident_cely}
+                )
         result = {k: str(v) for (k, v) in result.items()}
         return result
 
@@ -572,7 +575,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 idents = [sub.lstrip("0") for sub in idents]
                 idents = [eval(i) for i in idents]
                 missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
-                logger.debug("dokuments.models.get_akce_ident.missing", extra={"missing": missing[0]})
+                logger.debug("dokuments.models.get_akce_ident.missing", extra={"data": missing[0]})
                 logger.debug(missing[0])
                 if missing[0] >= MAXIMUM:
                     logger.error("dokuments.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
@@ -588,8 +591,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 "projekt.models.projekt.set_permanent_ident_cely.update_repository",
                 extra={
                     "ident_cely_old": old_ident,
-                    "ident_cely_new": self.ident_cely,
-                    "fedora_transaction": self.active_transaction.uid,
+                    "ident_cely": self.ident_cely,
+                    "transaction": self.active_transaction.uid,
                 },
             )
             self.save_metadata()
@@ -599,7 +602,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             "projekt.models.projekt.set_permanent_ident_cely.end",
             extra={
                 "ident_cely_old": old_ident,
-                "ident_cely_new": self.ident_cely,
+                "ident_cely": self.ident_cely,
                 "transaction": getattr(self.active_transaction, "uid", None),
             },
         )
@@ -624,9 +627,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             logger.debug(
                 "projekt.models._save_document.created",
                 extra={
-                    "projekt_ident": self.ident_cely,
-                    "soubor": soubor.pk,
-                    "created_filename": filename,
+                    "ident_cely": self.ident_cely,
+                    "pk": soubor.pk,
+                    "file": filename,
                     "transaction": fedora_transaction.uid,
                 },
             )
@@ -638,7 +641,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             logger.debug(
                 "projekt.models.create_confirmation_document.duplicat_exists",
-                extra={"projekt_ident": self.ident_cely, "filename": filename, "transaction": fedora_transaction.uid},
+                extra={"ident_cely": self.ident_cely, "file": filename, "transaction": fedora_transaction.uid},
             )
         return rep_bin_file
 
@@ -649,8 +652,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         logger.debug(
             "projekt.models.create_cancel_confirmation_document.start",
             extra={
-                "projekt_ident": self.ident_cely,
-                "user": user,
+                "projekt": self.ident_cely,
+                "ident_cely": user,
                 "transaction": self.active_transaction.uid,
             },
         )
@@ -666,9 +669,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         logger.debug(
             "projekt.models.create_confirmation_document.start",
             extra={
-                "projekt_ident": self.ident_cely,
-                "additional": additional,
-                "user": user,
+                "projekt": self.ident_cely,
+                "data": additional,
+                "ident_cely": user,
                 "transaction": fedora_transaction.uid,
             },
         )
@@ -761,6 +764,13 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         table = ProjektTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
         return self.redis_snapshot_id, data
+
+    def get_kraje_s_emailem(self):
+        all_katastre = RuianKatastr.objects.filter(
+            Q(pk=self.hlavni_katastr.id) | Q(pk__in=self.katastry.values_list("id"))
+        )
+        kraje = RuianKraj.objects.filter(ruianokres__ruiankatastr__in=all_katastre).distinct()
+        return kraje.filter(email__isnull=False).exclude(email="")
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

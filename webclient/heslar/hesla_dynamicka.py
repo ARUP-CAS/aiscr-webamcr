@@ -40,7 +40,7 @@ def load_constants(model, constant_name, CONSTANTS, COMPOSITE_CONSTANTS={}):
     if missing_keys:
         logger.error(
             "heslar.hesla_dynamicka.load_constants.items_not_exist",
-            extra={"val": constant_name, "constant": str(missing_keys)},
+            extra={"value": constant_name, "constant": str(missing_keys)},
         )
     globals().update({key: get_id_from_database(model, key, value, heslarDB) for key, value in CONSTANTS.items()})
 
@@ -49,7 +49,7 @@ def load_constants(model, constant_name, CONSTANTS, COMPOSITE_CONSTANTS={}):
     if missing_keys:
         logger.error(
             "heslar.hesla_dynamicka.load_constants_group.items_not_exist",
-            extra={"val": constant_name, "constant": str(missing_keys)},
+            extra={"value": constant_name, "constant": str(missing_keys)},
         )
     for key, values in COMPOSITE_CONSTANTS.items():
         group = []
@@ -61,7 +61,7 @@ def load_constants(model, constant_name, CONSTANTS, COMPOSITE_CONSTANTS={}):
             else:
                 logger.warning(
                     "heslar.hesla_dynamicka.load_constants_group.item_not_exist",
-                    extra={"val": val, "constant": key},
+                    extra={"value": val, "constant": key},
                 )
         globals()[key] = group
 

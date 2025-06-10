@@ -20,12 +20,12 @@
     <script src="{% static 'js/Leaflet1.9.4/leaflet.js' %}"></script>
 	</script>
 
-  <script src="{% static 'coordTransform.js' %}"></script>
-  <script src="{% static 'heatmap/heatmap.js' %}"></script>
-  <script src="{% static 'heatmap/leaflet-heatmap.js' %}"></script>
-  <script src="{% static 'leaflet.markercluster-src.js' %}"></script>
-  <link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
-  <link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
+  <script src="{% static 'js/coordTransform.js' %}"></script>
+  <script src="{% static 'js/heatmap/heatmap.js' %}"></script>
+  <script src="{% static 'js/heatmap/leaflet-heatmap.js' %}"></script>
+  <script src="{% static 'js/leaflet.markercluster-src.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'css/MarkerCluster.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/MarkerCluster.Default.css' %}" />
 	<!--Leaflet FullScreen-->
   <script src='{% static 'js/Leaflet.fullscreen1.0.1/Leaflet.fullscreen.min.js' %}'></script>
   <link href='{% static 'js/Leaflet.fullscreen1.0.1/leaflet.fullscreen.css' %}'rel='stylesheet'/>
@@ -39,17 +39,17 @@
 			applyLabel: '{% trans "drp.applyLabel" %}'
     		}
   	</script> 
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js" integrity="sha512-NOqkPURPEeHGvb+6NAzb8hfxqUh9XvuaCDP+FevWSPM5a9yD8eLTVCwDzHh0G+mDRXH044rGtMKxyaDncAW4cw==" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="{% static 'js/daterangepicker.min.js' %}"></script>
-  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+    <script type="text/javascript" src="{% static 'js/daterangepicker3.1/moment-with-locales.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/daterangepicker3.1/daterangepicker.min.js' %}"></script>
+  <link rel="stylesheet" type="text/css" href="{% static 'js/daterangepicker3.1/daterangepicker.css' %}"/>
 	<!-- static leaflet additional import-->
-<link rel="stylesheet" href="{% static 'leaflet.measure.css' %}?v2"/>
-<script src="{% static 'leaflet.measure.js' %}?v2"></script>
-<script type="text/javascript" src="{% static 'leaflet.coor.js' %}?v1"></script>
-<link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
-<link rel="stylesheet" type="text/css" href="{% static 'daterangepicker.css' %}"/>
-<link rel="stylesheet" href="{% static 'leaflet-search.css' %}"/>
-<script src="{% static 'leaflet-search.js' %}?v1"></script>
+<link rel="stylesheet" href="{% static 'css/leaflet.measure.css' %}"/>
+<script src="{% static 'js/leaflet.measure.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/leaflet.coor.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/leaflet.coor.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'css/daterangepicker.css' %}"/>
+<link rel="stylesheet" href="{% static 'css/leaflet-search.css' %}"/>
+<script src="{% static 'js/leaflet-search.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -117,17 +117,17 @@
   <script >
     var static_url = "{% get_static_prefix %}";
   </script>
-  <script src="{% static 'mapa_pins.js' %}"></script>
-  <script src="{% static 'coor_precision.js' %}"></script>
-  <script src="{% static 'coordTransform.js' %}"></script>
-  <script src="{% static 'leaflet-grayscale.js' %}"></script>
-  <script src="{% static 'mapa_settings_jtsk.js' %}"></script>
-  <script src="{% static 'mapa_functions.js' %}?v1"></script>
-  <script src="{% static 'mapa_basic_functions.js' %}?v1"></script>
-  <script src="{% static 'spin/spin.min.js' %}"></script>
-  <script src="{% static 'leaflet.spin.min.js' %}"></script>
-  <script src="{% static 'leaflet_subgroup.js' %}"></script>
-  <script src="{% static 'mapa_projekty.js' %}?v4"></script>
+  <script src="{% static 'js/mapa_pins.js' %}"></script>
+  <script src="{% static 'js/coor_precision.js' %}"></script>
+  <script src="{% static 'js/coordTransform.js' %}"></script>
+  <script src="{% static 'js/leaflet-grayscale.js' %}"></script>
+  <script src="{% static 'js/mapa_settings_jtsk.js' %}"></script>
+  <script src="{% static 'js/mapa_functions.js' %}"></script>
+  <script src="{% static 'js/mapa_basic_functions.js' %}"></script>
+  <script src="{% static 'js/spin/spin.min.js' %}"></script>
+  <script src="{% static 'js/leaflet.spin.min.js' %}"></script>
+  <script src="{% static 'js/leaflet_subgroup.js' %}"></script>
+  <script src="{% static 'js/mapa_projekty.js' %}"></script>
   <script>
     window.addEventListener("DOMContentLoaded", function() {
       {% if edit_geom %}
@@ -147,7 +147,7 @@
     })
   </script>
 
-  <script src="{% static 'daterangepicker.js' %}"></script>
+  <script src="{% static 'js/daterangepicker3.1/daterangepicker.js' %}"></script>
 
   <script src="{% static 'js/form_fields_disabling.js' %}"></script>
   <script>
@@ -178,7 +178,7 @@
         }
     })
   </script>
-  <script src="{% static '/js/create_message.js' %}"></script>
+  <script src="{% static 'js/create_message.js' %}"></script>
   <script type="text/javascript">
     // create osoba scripts
     var successFunction = function(settings, response) {

@@ -32,13 +32,14 @@ from core.message_constants import (
 )
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.repository_connector import FedoraRepositoryConnector
+from core.repository_connector import FedoraError, FedoraRepositoryConnector
 from core.utils import get_message
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import Prefetch, Q, RestrictedError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -51,6 +52,7 @@ from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
+from pid.exceptions import DoiWriteError
 from uzivatel.models import Osoba, User
 
 from .filters import ExterniZdrojFilter
@@ -230,7 +232,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-        logger.debug("ez.views.ExterniZdrojCreateView.form_invalid", extra={"form_errors": form.errors})
+        logger.debug("ez.views.ExterniZdrojCreateView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
 
     @method_decorator(never_cache)
@@ -271,12 +273,11 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
         self.object.close_active_transaction_when_finished = True
         self.object.save()
         save_autor_editor(self.object, form)
-        messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("ez.views.ExterniZdrojEditView.form_invalid", extra={"form_errors": form.errors})
+        logger.debug("ez.views.ExterniZdrojEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
 
     @method_decorator(never_cache)
@@ -300,7 +301,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         self.title = "title"
         self.button = "button"
 
-    def get_zaznam(self):
+    def get_zaznam(self) -> ExterniZdroj:
         ident_cely = self.kwargs.get("ident_cely")
         logger.debug("ez.views.TransakceView.get_zaznam.start", extra={"ident_cely": ident_cely})
         zaznam = get_object_or_404(
@@ -327,7 +328,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     def dispatch(self, request, *args, **kwargs):
         zaznam = self.get_zaznam()
         if zaznam.stav not in self.allowed_states:
-            logger.debug("ez.views.TransakceView.dispatch.start", extra={"action": self.action})
+            logger.debug("ez.views.TransakceView.dispatch.start", extra={"value": self.action})
             messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
             return JsonResponse(
                 {"redirect": zaznam.get_absolute_url()},
@@ -383,6 +384,33 @@ class ExterniZdrojPotvrditView(TransakceView):
         self.button = _("ez.templates.ExterniZdrojPotvrditView.submitButton.text")
         self.success_message = EZ_USPESNE_POTVRZEN
 
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        zaznam: ExterniZdroj = context["object"]
+        fedora_transaction = zaznam.create_transaction(request.user, self.success_message)
+        try:
+            with transaction.atomic():
+                zaznam.save()
+                zaznam.close_active_transaction_when_finished = True
+                getattr(ExterniZdroj, self.action)(zaznam, request.user)
+                return JsonResponse({"redirect": zaznam.get_absolute_url()})
+        except (DoiWriteError, FedoraError) as err:
+            logger.info(
+                "ez.models.ExterniZdroj.set_potvrzeny.error", extra={"error": err, "ident_cely": zaznam.ident_cely}
+            )
+            from arch_z.models import ArcheologickyZaznam
+
+            for akce in zaznam.externi_odkazy_zdroje.all():
+                if (
+                    akce.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                    and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+                    and akce.archeologicky_zaznam.lokalita.igsn
+                ):
+                    akce.archeologicky_zaznam.igsn_lokalita_update(False, True)
+            fedora_transaction.rollback_transaction()
+            transaction.set_rollback(True)
+            return JsonResponse({"redirect": zaznam.get_absolute_url()})
+
 
 class ExterniZdrojSmazatView(TransakceView):
     """
@@ -406,7 +434,7 @@ class ExterniZdrojSmazatView(TransakceView):
         try:
             zaznam.delete()
         except RestrictedError as err:
-            logger.debug("ez.views.ExterniZdrojSmazatView.error", extra={"ident_cely": zaznam.ident_cely, "err": err})
+            logger.debug("ez.views.ExterniZdrojSmazatView.error", extra={"ident_cely": zaznam.ident_cely, "error": err})
             transaction.rollback_transaction()
             return JsonResponse(
                 {"redirect": zaznam.get_absolute_url()},
@@ -447,7 +475,7 @@ class ExterniZdrojVratitView(TransakceView):
             getattr(ExterniZdroj, self.action)(zaznam, request.user, zaznam.stav - 1, duvod)
             return JsonResponse({"redirect": zaznam.get_absolute_url()})
         else:
-            logger.debug("ez.views.ExterniZdrojVratitView.form_invalid", extra={"form_errors": form.errors})
+            logger.debug("ez.views.ExterniZdrojVratitView.form_invalid", extra={"error": form.errors})
             return self.render_to_response(context)
 
 
@@ -497,9 +525,18 @@ class ExterniOdkazOdpojitView(TransakceView):
         ):
             lokalita_update = eo.archeologicky_zaznam.lokalita
         eo.close_active_transaction_when_finished = True
-        eo.delete()
-        if lokalita_update:
-            lokalita_update.igsn_update()
+        try:
+            with transaction.atomic():
+                eo.delete()
+                if lokalita_update:
+                    lokalita_update.igsn_update()
+                return JsonResponse({"redirect": ez.get_absolute_url()})
+        except (DoiWriteError, FedoraError) as err:
+            logger.info("ez.views.ExterniOdkazOdpojitView.error", extra={"error": err, "ident_cely": ez.ident_cely})
+            transaction.set_rollback(True)
+            if lokalita_update:
+                lokalita_update.igsn_update(False, True)
+            self.active_transaction.rollback_transaction()
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
 
@@ -528,7 +565,7 @@ class ExterniOdkazPripojitView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
-        logger.debug("ez.views.ExterniOdkazPripojitView.post.start", extra={"kwargs": self.kwargs})
+        logger.debug("ez.views.ExterniOdkazPripojitView.post.start", extra={"key": self.kwargs})
         ez = self.get_zaznam()
         form = PripojitArchZaznamForm(data=request.POST, type_arch=context["type"])
         if form.is_valid():
@@ -546,7 +583,7 @@ class ExterniOdkazPripojitView(TransakceView):
             eo.close_active_transaction_when_finished = True
             eo.save()
         else:
-            logger.debug("ez.views.ExterniOdkazPripojitView.post.form_error", extra={"form_errors": form.errors})
+            logger.debug("ez.views.ExterniOdkazPripojitView.post.form_error", extra={"error": form.errors})
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
 
@@ -619,7 +656,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger.debug("ez.views.ExterniOdkazEditView.form_invalid", extra={"errors": form.errors})
+        logger.debug("ez.views.ExterniOdkazEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
 
 
@@ -658,7 +695,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         context = super().get_context_data(**kwargs)
         logger.debug(
             "ez.views.TransakceView.ExterniOdkazOdpojitAZView.get_context_data",
-            extra={"eo_id": self.kwargs.get("eo_id")},
+            extra={"pk": self.kwargs.get("eo_id")},
         )
         context["object"] = ExterniZdroj.objects.get(externi_odkazy_zdroje__id=self.kwargs.get("eo_id"))
         if self.get_zaznam().typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -681,10 +718,19 @@ class ExterniOdkazOdpojitAZView(TransakceView):
             and eo.archeologicky_zaznam.lokalita.igsn
         ):
             lokalita_update = eo.archeologicky_zaznam.lokalita
-        eo.close_active_transaction_when_finished = True
-        eo.delete()
-        if lokalita_update:
-            lokalita_update.igsn_update()
+        try:
+            with transaction.atomic():
+                eo.close_active_transaction_when_finished = True
+                eo.delete()
+                if lokalita_update:
+                    lokalita_update.igsn_update()
+                return JsonResponse({"redirect": az.get_absolute_url()})
+        except (DoiWriteError, FedoraError) as err:
+            logger.info("ez.views.ExterniOdkazOdpojitAZView.error", extra={"error": err, "ident_cely": az.ident_cely})
+            transaction.set_rollback(True)
+            if lokalita_update:
+                lokalita_update.igsn_update(False, True)
+            self.active_transaction.rollback_transaction()
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 
@@ -780,7 +826,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
             eo.suppress_signal = False
             eo.save()
         else:
-            logger.debug("ez.views.ExterniOdkazPripojitDoAzView.form_invalid", extra={"errors": form.errors})
+            logger.debug("ez.views.ExterniOdkazPripojitDoAzView.form_invalid", extra={"error": form.errors})
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 

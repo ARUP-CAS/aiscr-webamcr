@@ -90,7 +90,7 @@ class OznameniZapsatView(OznameniView):
                 logger.debug(
                     "oznameni.views.index.hlavni_katastr",
                     extra={
-                        "hlavni_katastr": projekt.hlavni_katastr,
+                        "katastr": projekt.hlavni_katastr,
                         "transaction": getattr(fedora_transaction, "uid", None),
                     },
                 )
@@ -98,7 +98,7 @@ class OznameniZapsatView(OznameniView):
                 if projekt.hlavni_katastr is not None and not self.ident_cely:
                     projekt.ident_cely = get_temporary_project_ident(projekt.hlavni_katastr.okres.kraj.rada_id)
                 else:
-                    logger.debug("oznameni.views.index.unknow_location", extra={"point": str(projekt.geom)})
+                    logger.debug("oznameni.views.index.unknow_location", extra={"geom": str(projekt.geom)})
                 projekt.save()
                 oznamovatel.projekt = projekt
                 oznamovatel.save()
@@ -108,9 +108,9 @@ class OznameniZapsatView(OznameniView):
                 self.session_identifier.set_ident(projekt.ident_cely)
                 return redirect("oznameni:index2", ident_cely=projekt.ident_cely)
             else:
-                extra = {"form_ozn_errors": form_ozn.errors, "form_projekt_errors": form_projekt.errors}
+                extra = {"form_error": form_ozn.errors, "error": form_projekt.errors}
                 if not settings.SKIP_RECAPTCHA:
-                    extra["form_captcha_errors"] = form_captcha.errors
+                    extra["error"] = form_captcha.errors
                 logger.debug("oznameni.views.index.form_not_valid", extra=extra)
                 return render(
                     request,
@@ -131,14 +131,14 @@ class OznameniZapsatView(OznameniView):
 
             logger.debug(
                 "oznameni.views.index.get.cookie",
-                extra={"ident_cely": self.ident_cely, "cookie_project": cache_project},
+                extra={"ident_cely": self.ident_cely, "projekt": cache_project},
             )
             if cache_project is not None and self.ident_cely == cache_project:
                 projekty = Projekt.objects.filter(ident_cely=self.ident_cely, stav=PROJEKT_STAV_VYTVORENY)
                 if not projekty:
                     logger.debug(
                         "oznameni.views.index.get.permission_denied",
-                        extra={"ident_cely": self.ident_cely, "cookie_project": cache_project},
+                        extra={"ident_cely": self.ident_cely, "projekt": cache_project},
                     )
                     raise PermissionDenied
                 else:
@@ -150,14 +150,13 @@ class OznameniZapsatView(OznameniView):
                         "oznameni.views.index.get.projekt",
                         extra={
                             "ident_cely": self.ident_cely,
-                            "cookie_project": cache_project,
                             "projekt": projekt.ident_cely,
                         },
                     )
             else:
                 logger.debug(
                     "oznameni.views.index.get.permission_denied",
-                    extra={"ident_cely": self.ident_cely, "cookie_project": cache_project},
+                    extra={"ident_cely": self.ident_cely, "projekt": cache_project},
                 )
                 raise PermissionDenied
 
@@ -208,14 +207,14 @@ class OznameniDokumentaceView(OznameniView):
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug(
-                "oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely, "cache_project": cache_project}
+                "oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely, "projekt": cache_project}
             )
             if cache_project is not None and self.ident_cely == cache_project:
                 projekt = Projekt.objects.filter(ident_cely=self.ident_cely, stav=PROJEKT_STAV_VYTVORENY).first()
                 if not projekt:
                     logger.debug(
                         "oznameni.views.index.get.permission_denied",
-                        extra={"ident_cely": self.ident_cely, "cache_project": cache_project},
+                        extra={"ident_cely": self.ident_cely, "projekt": cache_project},
                     )
                     raise PermissionDenied
                 else:
@@ -228,7 +227,7 @@ class OznameniDokumentaceView(OznameniView):
             else:
                 logger.debug(
                     "oznameni.views.index.get.permission_denied",
-                    extra={"ident_cely": self.ident_cely, "cookie_project": cache_project},
+                    extra={"ident_cely": self.ident_cely, "projekt": cache_project},
                 )
                 raise PermissionDenied
         return redirect("oznameni:index")
@@ -245,14 +244,14 @@ class OznameniPotvrzeniView(OznameniView):
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug(
-                "oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely, "cache_project": cache_project}
+                "oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely, "projekt": cache_project}
             )
             if cache_project is not None and self.ident_cely == cache_project:
                 projekty = Projekt.objects.filter(ident_cely=self.ident_cely, stav=PROJEKT_STAV_OZNAMENY)
                 if not projekty:
                     logger.debug(
                         "oznameni.views.index.get.permission_denied",
-                        extra={"ident_cely": self.ident_cely, "cache_project": cache_project},
+                        extra={"ident_cely": self.ident_cely, "projekt": cache_project},
                     )
                     raise PermissionDenied
                 else:
@@ -263,7 +262,7 @@ class OznameniPotvrzeniView(OznameniView):
             else:
                 logger.debug(
                     "oznameni.views.index.get.permission_denied",
-                    extra={"ident_cely": self.ident_cely, "cookie_project": cache_project},
+                    extra={"ident_cely": self.ident_cely, "projekt": cache_project},
                 )
                 raise PermissionDenied
         return redirect("oznameni:index")

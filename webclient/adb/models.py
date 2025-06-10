@@ -146,7 +146,7 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
     else:
         logger.error(
             "adb.models.get_vyskovy_bod.maximal_number_reached",
-            extra={"max": str(MAXIMAL_VYSKOVY_BOD)},
+            extra={"count": MAXIMAL_VYSKOVY_BOD},
         )
         raise MaximalIdentNumberError(max_count)
 
@@ -175,7 +175,7 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
 
         logger.debug(
             "adb.models.VyskovyBod.set_geom",
-            extra={"northing": northing, "easting": easting, "nivelete": niveleta},
+            extra={"X": northing, "Y": easting, "Z": niveleta},
         )
         if northing != 0.0:
             self.geom = Point(
@@ -184,7 +184,7 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
                 z=fabs(niveleta),
             )
             self.geom_changed = True
-            logger.debug("adb.models.VyskovyBod.set_geom.point", extra={"point": self.geom})
+            logger.debug("adb.models.VyskovyBod.set_geom.point", extra={"geom": self.geom})
 
     def save(self, *args, **kwargs):
         """

@@ -137,6 +137,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         Metóda pro nastavení stavu potvrzená a uložení změny do historie pro externí zdroj.
         Pokud je ident dočasný nahrazení identem stálým.
         """
+
         self.stav = EZ_STAV_POTVRZENY
         historie_poznamka = self.check_set_permanent_ident()
         Historie(
@@ -146,10 +147,10 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             poznamka=historie_poznamka,
         ).save()
 
-        self.close_active_transaction_when_finished = True
-        self.save()
-
         from arch_z.models import Akce, ArcheologickyZaznam
+
+        # Transaction is closed by TransakceView
+        self.save()
 
         for akce in self.externi_odkazy_zdroje.all():
             akce: Akce
@@ -158,7 +159,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
                 and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
                 and akce.archeologicky_zaznam.lokalita.igsn
             ):
-                akce.archeologicky_zaznam.lokalita.igsn_update()
+                akce.archeologicky_zaznam.igsn_lokalita_update()
 
     def set_zapsany(self, user):
         """
@@ -251,7 +252,7 @@ def get_perm_ez_ident():
             idents = [sub.lstrip("0") for sub in idents]
             idents = [eval(i) for i in idents]
             missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
-            logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
+            logger.debug("arch_z.models.get_akce_ident.missing", extra={"data": missing[0]})
             logger.debug(missing[0])
             if missing[0] >= MAXIMUM:
                 logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})

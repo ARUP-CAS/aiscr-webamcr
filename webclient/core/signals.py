@@ -38,7 +38,7 @@ def soubor_get_rozsah(sender, instance, **kwargs):
 def soubor_save_update_record_metadata(sender, instance: Soubor, **kwargs):
     logger.debug(
         "cron.signals.soubor_save_update_record_metadata.start",
-        extra={"close_active_transaction_when_finished": instance.close_active_transaction_when_finished},
+        extra={"option": instance.close_active_transaction_when_finished},
     )
     if not instance.suppress_signal:
         fedora_transaction: FedoraTransaction = instance.active_transaction
@@ -54,7 +54,7 @@ def soubor_save_update_record_metadata(sender, instance: Soubor, **kwargs):
                 "cron.signals.soubor_save_update_record_metadata.save_metadata",
                 extra={
                     "transaction": getattr(fedora_transaction, "uid", ""),
-                    "navazany_objekt": getattr(instance, "ident_cely", ""),
+                    "ident_cely": getattr(instance, "ident_cely", ""),
                 },
             )
         elif instance.close_active_transaction_when_finished:
@@ -83,6 +83,6 @@ def soubor_delete_update_metadata(sender, instance: Soubor, **kwargs):
         )
         logger.debug(
             "cron.signals.soubor_delete_update_metadata.save_metadata",
-            extra={"transaction": transaction, "navazany_objekt": getattr(instance, "ident_cely", "")},
+            extra={"transaction": transaction, "ident_cely": getattr(instance, "ident_cely", "")},
         )
     logger.debug("cron.signals.soubor_delete_update_metadata.no_action", extra={"instance": instance.pk})
