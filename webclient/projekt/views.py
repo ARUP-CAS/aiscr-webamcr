@@ -979,28 +979,31 @@ def archivovat(request, ident_cely):
         )
     if request.method == "POST":
         fedora_transaction = projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
+        projekt_casti_dokumentu = projekt.casti_dokumentu.all()
+        projekt_samostatne_nalezy = projekt.samostatne_nalezy.all()
         try:
-            projekt.set_archivovany(request.user)
-            for item in projekt.casti_dokumentu.all():
-                item: DokumentCast
-                if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
-                    item.dokument.doi_update()
-            for item in projekt.samostatne_nalezy.all():
-                item: SamostatnyNalez
-                if item.igsn and item.stav == SN_ARCHIVOVANY:
-                    item.igsn_update()
-            projekt.close_active_transaction_when_finished = True
-            projekt.save()
-            return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
+            with transaction.atomic():
+                projekt.set_archivovany(request.user)
+                for item in projekt_casti_dokumentu:
+                    item: DokumentCast
+                    if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
+                        item.dokument.doi_update()
+                for item in projekt_samostatne_nalezy:
+                    item: SamostatnyNalez
+                    if item.igsn and item.stav == SN_ARCHIVOVANY:
+                        item.igsn_update()
+                projekt.close_active_transaction_when_finished = True
+                projekt.save()
+                return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
         except (DoiWriteError, FedoraError) as err:
             logger.info("projekt.views.archivovat.post_error", extra={"error": err, "ident_cely": projekt.ident_cely})
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
-            for item in projekt.casti_dokumentu.all():
+            for item in projekt_casti_dokumentu:
                 item: DokumentCast
                 if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
                     item.dokument.doi_update(False, True)
-            for item in projekt.samostatne_nalezy.all():
+            for item in projekt_samostatne_nalezy:
                 item: SamostatnyNalez
                 if item.igsn and item.stav == SN_ARCHIVOVANY:
                     item.igsn_update(False, True)

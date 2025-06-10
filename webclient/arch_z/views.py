@@ -1091,41 +1091,44 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         fedora_transaction = az.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN)
         try:
-            az.igsn_lokalita_delete()
-            az.skip_container_check = True
-            az.close_active_transaction_when_finished = True
-            az.deleted_by_user = request.user
-            az.record_deletion(fedora_transaction)
-            for dj in az.dokumentacni_jednotky_akce.all():
-                dj: DokumentacniJednotka
-                dj.active_transaction = fedora_transaction
-                dj.suppress_signal_arch_z = True
-                dj.delete()
-            if az.externi_odkazy:
-                for eo in az.externi_odkazy.all():
-                    eo.suppress_signal_arch_z = True
-                    eo.active_transaction = az.active_transaction
-                    eo.delete()
-                invalidate_model(ExterniZdroj)
-            for pk in az.initial_casti_dokumentu:
-                item = DokumentCast.objects.get(pk=pk)
-                item.suppress_signal_arch_z = True
-                item.active_transaction = fedora_transaction
-                item.delete()
-            from arch_z.signals import invalidate_arch_z_related_models
+            with transaction.atomic():
+                az.igsn_lokalita_delete()
+                az.skip_container_check = True
+                az.close_active_transaction_when_finished = True
+                az.deleted_by_user = request.user
+                az.record_deletion(fedora_transaction)
+                for dj in az.dokumentacni_jednotky_akce.all():
+                    dj: DokumentacniJednotka
+                    dj.active_transaction = fedora_transaction
+                    dj.suppress_signal_arch_z = True
+                    dj.delete()
+                if az.externi_odkazy:
+                    for eo in az.externi_odkazy.all():
+                        eo.suppress_signal_arch_z = True
+                        eo.active_transaction = az.active_transaction
+                        eo.delete()
+                    invalidate_model(ExterniZdroj)
+                for pk in az.initial_casti_dokumentu:
+                    item = DokumentCast.objects.get(pk=pk)
+                    item.suppress_signal_arch_z = True
+                    item.active_transaction = fedora_transaction
+                    item.delete()
+                from arch_z.signals import invalidate_arch_z_related_models
 
-            invalidate_arch_z_related_models()
-            az.delete()
-            logger.debug(
-                "arch_z.views.smazat.success", extra={"ident_cely": ident_cely, "transaction": fedora_transaction}
-            )
-            if projekt:
-                return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": projekt.ident_cely})})
-            else:
-                if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
-                    return JsonResponse({"redirect": reverse("lokalita:index")})
+                invalidate_arch_z_related_models()
+                az.delete()
+                logger.debug(
+                    "arch_z.views.smazat.success", extra={"ident_cely": ident_cely, "transaction": fedora_transaction}
+                )
+                if projekt:
+                    return JsonResponse(
+                        {"redirect": reverse("projekt:detail", kwargs={"ident_cely": projekt.ident_cely})}
+                    )
                 else:
-                    return JsonResponse({"redirect": reverse("arch_z:index")})
+                    if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
+                        return JsonResponse({"redirect": reverse("lokalita:index")})
+                    else:
+                        return JsonResponse({"redirect": reverse("arch_z:index")})
         except RestrictedError as err:
             logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely, "error": err})
             fedora_transaction.error_message = ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY
@@ -1140,7 +1143,7 @@ def smazat(request, ident_cely):
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if isinstance(err, FedoraError):
-                az.igsn_lokalita_update(check_status=False)
+                az.igsn_lokalita_update(False, True)
             return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})

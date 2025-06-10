@@ -1044,19 +1044,20 @@ class DokumentCastOdpojitView(TransakceView):
         cast.archeologicky_zaznam = None
         cast.projekt = None
         try:
-            cast.save()
-            if (
-                archeologicky_zaznam
-                and archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
-                and archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-                and archeologicky_zaznam.lokalita.igsn
-            ):
-                archeologicky_zaznam.lokalita.igsn_update()
-            if cast.dokument.stav == D_STAV_ARCHIVOVANY and cast.dokument.doi:
-                cast.dokument.doi_update()
-            cast.close_active_transaction_when_finished = True
-            cast.save()
-            return JsonResponse({"redirect": cast.get_absolute_url()})
+            with transaction.atomic():
+                cast.save()
+                if (
+                    archeologicky_zaznam
+                    and archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                    and archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+                    and archeologicky_zaznam.lokalita.igsn
+                ):
+                    archeologicky_zaznam.lokalita.igsn_update()
+                if cast.dokument.stav == D_STAV_ARCHIVOVANY and cast.dokument.doi:
+                    cast.dokument.doi_update()
+                cast.close_active_transaction_when_finished = True
+                cast.save()
+                return JsonResponse({"redirect": cast.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info(
                 "dokument.views.DokumentCastOdpojitView.post.post_error",
@@ -1072,7 +1073,7 @@ class DokumentCastOdpojitView(TransakceView):
             ):
                 archeologicky_zaznam.lokalita.igsn_update(check_status=False)
             if cast.dokument.stav == D_STAV_ARCHIVOVANY and cast.dokument.doi:
-                cast.dokument.doi_update(check_status=False)
+                cast.dokument.doi_update(False, True)
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
 
@@ -1101,27 +1102,28 @@ class DokumentCastSmazatView(TransakceView):
         else:
             lokalita_update = None
         try:
-            if cast.komponenty:
-                komps = cast.komponenty
-                cast.komponenty = None
-                cast.save()
-                komps.delete()
-            try:
-                if cast.neident_akce:
-                    neident_akce = cast.neident_akce
-                    neident_akce: NeidentAkce
-                    neident_akce.suppress_signal = True
-                    neident_akce.delete()
-            except ObjectDoesNotExist:
-                logger.debug(
-                    "dokument.views.DokumentCastSmazatView.post.neident_akce_not_exists",
-                    extra={"ident_cely": cast.ident_cely},
-                )
-            cast.close_active_transaction_when_finished = True
-            cast.delete()
-            if lokalita_update:
-                lokalita_update.igsn_update()
-            return JsonResponse({"redirect": dokument.get_absolute_url()})
+            with transaction.atomic():
+                if cast.komponenty:
+                    komps = cast.komponenty
+                    cast.komponenty = None
+                    cast.save()
+                    komps.delete()
+                try:
+                    if cast.neident_akce:
+                        neident_akce = cast.neident_akce
+                        neident_akce: NeidentAkce
+                        neident_akce.suppress_signal = True
+                        neident_akce.delete()
+                except ObjectDoesNotExist:
+                    logger.debug(
+                        "dokument.views.DokumentCastSmazatView.post.neident_akce_not_exists",
+                        extra={"ident_cely": cast.ident_cely},
+                    )
+                cast.close_active_transaction_when_finished = True
+                cast.delete()
+                if lokalita_update:
+                    lokalita_update.igsn_update()
+                return JsonResponse({"redirect": dokument.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info(
                 "dokument.views.DokumentCastSmazatView.post.post_error",
@@ -1638,42 +1640,44 @@ def archivovat(request, ident_cely):
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ARCHIVOVAN)
         dokument.active_transaction = fedora_transaction
         old_ident = dokument.ident_cely
+        dokument_casti = dokument.casti.all()
         try:
-            for item in dokument.casti.all():
-                item: DokumentCast
-                if (
-                    item.archeologicky_zaznam
-                    and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
-                    and item.archeologicky_zaznam.lokalita.igsn
-                ):
-                    item.archeologicky_zaznam.lokalita.igsn_update()
-            # Nastav identifikator na permanentny
-            if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
-                rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
-                try:
-                    dokument.set_permanent_ident_cely(dokument.ident_cely[2], rada)
-                except MaximalIdentNumberError:
-                    fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
-                    fedora_transaction.rollback_transaction()
-                    dokument.close_active_transaction_when_finished = True
-                    return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
-                else:
-                    dokument.save()
-                    logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": dokument.ident_cely})
-            dokument.set_archivovany(request.user, old_ident)
-            dokument.doi_publish()
-            dokument.set_doi()
-            if dokument.rada == Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D):
-                Mailer.send_ek01(document=dokument)
-            dokument.close_active_transaction_when_finished = True
-            dokument.save()
-            return JsonResponse({"redirect": get_detail_json_view(dokument.ident_cely)})
+            with transaction.atomic():
+                # Nastav identifikator na permanentny
+                if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
+                    rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
+                    try:
+                        dokument.set_permanent_ident_cely(dokument.ident_cely[2], rada)
+                    except MaximalIdentNumberError:
+                        fedora_transaction.error_message = MAXIMUM_IDENT_DOSAZEN
+                        fedora_transaction.rollback_transaction()
+                        dokument.close_active_transaction_when_finished = True
+                        return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
+                    else:
+                        dokument.save()
+                        logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": dokument.ident_cely})
+                dokument.set_archivovany(request.user, old_ident)
+                dokument.doi_publish()
+                dokument.set_doi()
+                for item in dokument_casti:
+                    item: DokumentCast
+                    if (
+                        item.archeologicky_zaznam
+                        and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+                        and item.archeologicky_zaznam.lokalita.igsn
+                    ):
+                        item.archeologicky_zaznam.lokalita.igsn_update()
+                if dokument.rada == Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D):
+                    Mailer.send_ek01(document=dokument)
+                dokument.close_active_transaction_when_finished = True
+                dokument.save()
+                return JsonResponse({"redirect": get_detail_json_view(dokument.ident_cely)})
         except (DoiWriteError, FedoraError) as err:
             logger.info("dokument.views.archivovat.post_error", extra={"error": err, "ident_cely": ident_cely})
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             dokument.doi_hide(False)
-            for item in dokument.casti.all():
+            for item in dokument_casti:
                 item: DokumentCast
                 if (
                     item.archeologicky_zaznam
@@ -1681,7 +1685,7 @@ def archivovat(request, ident_cely):
                     and item.archeologicky_zaznam.lokalita.igsn
                 ):
                     item.archeologicky_zaznam.lokalita.igsn_update(False, True)
-            return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
+        return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
     else:
         warnings = dokument.check_pred_archivaci()
         logger.debug("dokument.views.archivovat.warnings", extra={"warning": warnings})
@@ -1765,32 +1769,30 @@ def smazat(request, ident_cely):
             request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT
         )
         try:
-            dokument.doi_delete()
-            dokument.save_record_deletion_record(fedora_transaction, request.user)
-            for item in dokument.casti.all():
-                if hasattr(item, "neident_akce"):
-                    neident_akce = item.neident_akce
-                    neident_akce: NeidentAkce
-                    neident_akce.suppress_signal = True
-                    neident_akce.delete()
-                item: DokumentCast
-                item.suppress_dokument_signal = True
-                item.active_transaction = fedora_transaction
-                item.delete()
-            resp1 = dokument.delete()
-            if resp1:
-                logger.debug("dokument.views.smazat.deleted", extra={"value": resp1})
-                fedora_transaction.mark_transaction_as_closed()
-                if "3D" in ident_cely:
-                    return JsonResponse({"redirect": reverse("dokument:index-model-3D")})
+            with transaction.atomic():
+                dokument.doi_delete()
+                dokument.save_record_deletion_record(fedora_transaction, request.user)
+                for item in dokument.casti.all():
+                    if hasattr(item, "neident_akce"):
+                        neident_akce = item.neident_akce
+                        neident_akce: NeidentAkce
+                        neident_akce.suppress_signal = True
+                        neident_akce.delete()
+                    item: DokumentCast
+                    item.suppress_dokument_signal = True
+                    item.active_transaction = fedora_transaction
+                    item.delete()
+                resp1 = dokument.delete()
+                if resp1:
+                    logger.debug("dokument.views.smazat.deleted", extra={"value": resp1})
+                    fedora_transaction.mark_transaction_as_closed()
+                    if "3D" in ident_cely:
+                        return JsonResponse({"redirect": reverse("dokument:index-model-3D")})
+                    else:
+                        return JsonResponse({"redirect": reverse("dokument:index")})
                 else:
-                    return JsonResponse({"redirect": reverse("dokument:index")})
-            else:
-                logger.warning("dokument.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
-                fedora_transaction.rollback_transaction()
-                dokument.doi_update(False, True)
-                return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
-        except (DoiWriteError, FedoraError) as err:
+                    raise ValueError("dokument.views.smazat.deleted")
+        except (DoiWriteError, FedoraError, ValueError) as err:
             logger.info("dokument.views.smazat.post_error", extra={"ident_cely": ident_cely, "error": err})
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
@@ -2060,27 +2062,28 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
         if dokument_cast.dokument and dokument_cast.dokument.doi and dokument_cast.dokument.stav == D_STAV_ARCHIVOVANY:
             dokument_update = dokument_cast.dokument
         try:
-            resp = dokument_cast.delete()
-            logger.debug("dokument.views.odpojit.deleted", extra={"value": resp})
-            if remove_orphan:
-                orphan_dokument.active_transaction = fedora_transaction
-                orphan_dokument.record_deletion()
-                orphan_dokument.delete()
-                logger.debug("dokument.views.odpojit.deleted")
-            if lokalita_update:
-                lokalita_update.igsn_update()
-            if dokument_update:
-                dokument_update.doi_update()
-            fedora_transaction.mark_transaction_as_closed()
-            return JsonResponse({"redirect": zaznam.get_absolute_url()})
+            with transaction.atomic():
+                resp = dokument_cast.delete()
+                logger.debug("dokument.views.odpojit.deleted", extra={"value": resp})
+                if remove_orphan:
+                    orphan_dokument.active_transaction = fedora_transaction
+                    orphan_dokument.record_deletion()
+                    orphan_dokument.delete()
+                    logger.debug("dokument.views.odpojit.deleted")
+                if lokalita_update:
+                    lokalita_update.igsn_update()
+                if dokument_update:
+                    dokument_update.doi_update()
+                fedora_transaction.mark_transaction_as_closed()
+                return JsonResponse({"redirect": zaznam.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info("dokument.views.odpojit.post_error", extra={"error": err, "ident_cely": zaznam.ident_cely})
             transaction.set_rollback(True)
             fedora_transaction.rollback_transaction()
             if lokalita_update:
-                lokalita_update.igsn_update()
+                lokalita_update.igsn_update(False, True)
             if dokument_update:
-                dokument_update.doi_update()
+                dokument_update.doi_update(False, True)
             return JsonResponse({"redirect": zaznam.get_absolute_url()})
     else:
         warnings = []

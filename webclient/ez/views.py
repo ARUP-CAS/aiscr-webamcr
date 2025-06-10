@@ -389,10 +389,11 @@ class ExterniZdrojPotvrditView(TransakceView):
         zaznam: ExterniZdroj = context["object"]
         fedora_transaction = zaznam.create_transaction(request.user, self.success_message)
         try:
-            zaznam.save()
-            zaznam.close_active_transaction_when_finished = True
-            getattr(ExterniZdroj, self.action)(zaznam, request.user)
-            return JsonResponse({"redirect": zaznam.get_absolute_url()})
+            with transaction.atomic():
+                zaznam.save()
+                zaznam.close_active_transaction_when_finished = True
+                getattr(ExterniZdroj, self.action)(zaznam, request.user)
+                return JsonResponse({"redirect": zaznam.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info(
                 "ez.models.ExterniZdroj.set_potvrzeny.error", extra={"error": err, "ident_cely": zaznam.ident_cely}
@@ -405,8 +406,7 @@ class ExterniZdrojPotvrditView(TransakceView):
                     and akce.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
                     and akce.archeologicky_zaznam.lokalita.igsn
                 ):
-                    akce.archeologicky_zaznam.igsn_lokalita_update(False)
-            transaction.set_rollback(True)
+                    akce.archeologicky_zaznam.igsn_lokalita_update(False, True)
             fedora_transaction.rollback_transaction()
             transaction.set_rollback(True)
             return JsonResponse({"redirect": zaznam.get_absolute_url()})
@@ -526,15 +526,16 @@ class ExterniOdkazOdpojitView(TransakceView):
             lokalita_update = eo.archeologicky_zaznam.lokalita
         eo.close_active_transaction_when_finished = True
         try:
-            eo.delete()
-            if lokalita_update:
-                lokalita_update.igsn_update()
-            return JsonResponse({"redirect": ez.get_absolute_url()})
+            with transaction.atomic():
+                eo.delete()
+                if lokalita_update:
+                    lokalita_update.igsn_update()
+                return JsonResponse({"redirect": ez.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info("ez.views.ExterniOdkazOdpojitView.error", extra={"error": err, "ident_cely": ez.ident_cely})
             transaction.set_rollback(True)
             if lokalita_update:
-                lokalita_update.igsn_update(check_status=False)
+                lokalita_update.igsn_update(False, True)
             self.active_transaction.rollback_transaction()
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
@@ -718,16 +719,17 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         ):
             lokalita_update = eo.archeologicky_zaznam.lokalita
         try:
-            if lokalita_update:
-                lokalita_update.igsn_update()
-            eo.close_active_transaction_when_finished = True
-            eo.delete()
-            return JsonResponse({"redirect": az.get_absolute_url()})
+            with transaction.atomic():
+                eo.close_active_transaction_when_finished = True
+                eo.delete()
+                if lokalita_update:
+                    lokalita_update.igsn_update()
+                return JsonResponse({"redirect": az.get_absolute_url()})
         except (DoiWriteError, FedoraError) as err:
             logger.info("ez.views.ExterniOdkazOdpojitAZView.error", extra={"error": err, "ident_cely": az.ident_cely})
             transaction.set_rollback(True)
             if lokalita_update:
-                lokalita_update.igsn_update(check_status=False)
+                lokalita_update.igsn_update(False, True)
             self.active_transaction.rollback_transaction()
         return JsonResponse({"redirect": az.get_absolute_url()})
 
