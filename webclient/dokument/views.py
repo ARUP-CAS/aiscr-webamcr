@@ -1640,7 +1640,7 @@ def archivovat(request, ident_cely):
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ARCHIVOVAN)
         dokument.active_transaction = fedora_transaction
         old_ident = dokument.ident_cely
-        dokument_casti = dokument.casti.all()
+        dokument_casti = list(dokument.casti.all())
         try:
             with transaction.atomic():
                 # Nastav identifikator na permanentny
