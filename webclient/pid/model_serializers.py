@@ -239,7 +239,7 @@ class ModelSerializer(ABC):
                     "rightsList": self._serialize_rightslist(),
                     "descriptions": self._serialize_descriptions(),
                     "geoLocations": self._serialize_geolocations(),
-                    "info": f"{settings.DIGI_LINKS['Digi_archiv_link']}{self.get_ident_cely()}",
+                    "url": f"{settings.DIGI_LINKS['Digi_archiv_link']}{self.get_ident_cely()}",
                 },
             }
         }

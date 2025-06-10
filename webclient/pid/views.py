@@ -16,6 +16,7 @@ from django.utils.translation import gettext as _
 from dokument.models import Dokument
 from fedora_management.views import AdminRecordProcessingView
 from pas.models import SamostatnyNalez
+from pid.exceptions import DoiWriteError
 from SPARQLWrapper import JSON, SPARQLWrapper
 
 
@@ -255,8 +256,11 @@ class ContinuePidProcessing(AdminRecordProcessingView):
                     record.lokalita.active_transaction = record.active_transaction
                     record.lokalita.save()
             return result.get("data", {}).get("id")
-        except Exception as e:
-            return f"{_('core.admin.FedoraCustomAdminSite.unexpected_error')}: {e}"
+        except DoiWriteError as e:
+            return (
+                f"{_('core.admin.FedoraCustomAdminSite.unexpected_error')}: {e.response_text}, "
+                f"{_('core.admin.FedoraCustomAdminSite.request_url')}: {e.request_url}"
+            )
 
     def process_record(self, record, result, **kwargs):
         fedora_transaction = FedoraTransaction()
