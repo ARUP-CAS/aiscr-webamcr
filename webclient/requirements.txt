@@ -2,7 +2,7 @@ Django==5.2.1
 psycopg2-binary==2.9.10
 simplejson==3.20.1
 django-crispy-forms==2.4
-crispy-bootstrap4==2024.10
+crispy-bootstrap4==2025.6
 django-recaptcha==4.1.0
 django_registration==5.2.1
 django-filter==25.1
