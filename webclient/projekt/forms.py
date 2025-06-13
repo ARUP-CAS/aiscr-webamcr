@@ -663,8 +663,8 @@ class UkoncitVTerenuForm(forms.ModelForm):
         if {"datum_ukonceni"} <= cleaned_data.keys():
             if self.instance.datum_zahajeni > cleaned_data.get("datum_ukonceni"):
                 raise forms.ValidationError(
-                    "Datum ukončení nemůže být pred datem zahájení (%s)"
-                    % self.instance.datum_zahajeni.strftime("%d. %m. %Y")
+                    _("projekt.forms.ukoncitVTerenu.datumUkonceni.datumEerror")
+                    + f" ({self.instance.datum_zahajeni.strftime('%d. %m. %Y')})"
                 )
         poslat_email_kraj = cleaned_data.get("poslat_email_kraj")
         if poslat_email_kraj == "False":
