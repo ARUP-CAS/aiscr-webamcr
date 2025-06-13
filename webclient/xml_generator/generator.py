@@ -54,6 +54,7 @@ class DocumentGenerator:
         "amcr:langstringType",
         "amcr:vocabType",
         "xs:decimal",
+        "xs:anyURI",
     )
 
     @classmethod
@@ -470,6 +471,7 @@ class DocumentGenerator:
                                 "xs:string",
                                 "langstringType",
                                 "vocabType",
+                                "xs:anyURI",
                             ):
                                 self._iterate_unbound_records(related_records_dict, schema_element, parent_element)
                             else:
@@ -540,6 +542,7 @@ class DocumentGenerator:
                                 "xs:string",
                                 "langstringType",
                                 "vocabType",
+                                "xs:anyURI",
                             ):
                                 self._iterate_unbound_records(
                                     related_records_dict, child_schema_element, child_parent_element
