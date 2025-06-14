@@ -620,6 +620,7 @@ def run_data_import(job_id):
 
     fedora_transaction = FedoraTransaction()
     record_count = int(redis_connector.get(f"import_data_count_{job_id}").decode("utf-8"))
+    performed_action = redis_connector.get(f"import_performed_action_{job_id}").decode("utf-8")
     failed = False
     import_results = {}
 
@@ -631,7 +632,7 @@ def run_data_import(job_id):
                         redis_connector.get(f"import_data_{job_id}_record_{record_id}").decode("utf-8")
                     )
                     mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record.pop("__file_name"))
-                    record = mapper_class(serialized_record).create_record()
+                    record = mapper_class(serialized_record).create_record(performed_action)
                     if isinstance(record, Model):
                         record.save()
                     else:
@@ -642,7 +643,8 @@ def run_data_import(job_id):
                     transaction.set_rollback(True)
                     import_results[record_id] = (
                         f"{_('cron.tasks.run_data_import.error.part_1')}: {err}, "
-                        f"{_('cron.tasks.run_data_import.error.part_2')} {serialized_record}"
+                        f"{_('cron.tasks.run_data_import.error.part_2')} {serialized_record}, "
+                        f"{_('cron.tasks.run_data_import.error.part_3')} {performed_action}"
                     )
                     redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
                     failed = True

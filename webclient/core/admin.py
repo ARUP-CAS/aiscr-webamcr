@@ -680,6 +680,10 @@ class FedoraCustomAdminSite(admin.AdminSite):
         if request.method == "POST" and request.user.is_superuser:
             data_file = request.FILES["data_file"]
             form = ImportDataAdminForm(request.POST, request.FILES)
+            if form.is_valid():
+                cleaned_data = form.cleaned_data
+            else:
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
             context["form"] = form
             file_bytes = data_file.read()
             job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
@@ -689,6 +693,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
             LookupImportField.records = records
             record_id = 0
             invalid_records = []
+            performed_action = cleaned_data["performed_action"]
             with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
                 file_names = [f"{name}.csv" for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
                 for file_name in file_names:
@@ -703,8 +708,8 @@ class FedoraCustomAdminSite(admin.AdminSite):
                             try:
                                 mapper = mapper_class(row.to_dict())
                                 record = mapper.map()
-                                mapper.import_validation()
-                                LookupImportField.records.append(mapper.create_record())
+                                mapper.import_validation(performed_action)
+                                LookupImportField.records.append(mapper.create_record(performed_action))
                                 record["__file_name"] = file_name
                             except ImportDataError as err:
                                 validation_results.append(err)
@@ -718,6 +723,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
                             raise ValidationError(f"Unsupported file_name: {file_name}")
             records_count = record_id
             self.redis_connector.set(f"import_data_count_{job_id}", records_count)
+            self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)
             context["records_count"] = records_count
             context["validation_results"] = validation_results
             context["invalid_records"] = ", ".join([str(r) for r in invalid_records])

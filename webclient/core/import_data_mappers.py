@@ -2,6 +2,7 @@ import re
 from abc import ABC
 
 from arch_z.models import AkceVedouci, ArcheologickyZaznam
+from core.forms import ImportDataAdminForm
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from heslar.models import (
@@ -35,13 +36,15 @@ class ImportDataMissingReferencedValueError(ImportDataError):
 
 
 class ImportDataIntegrityError(ImportDataError):
-    def __init__(self, record_id, model_name):
+    def __init__(self, record_id, model_name, performed_action):
         self.record_id = record_id
         self.model_name = model_name
+        self.performed_action = performed_action
         super().__init__(
             f'{_("core_admin.ImportDataIntegrityError.message.part_1")} '
             + f'{record_id} {_("core_admin.ImportDataIntegrityError.message.part_2")} '
-            + f'{model_name} {_("core_admin.ImportDataIntegrityError.message.part_2")} '
+            + f'{model_name} {_("core_admin.ImportDataIntegrityError.message.part_3")} '
+            + f'({_("core_admin.ImportDataIntegrityError.message.part_4")} {performed_action})'
         )
 
 
@@ -145,20 +148,41 @@ class ImportModelMapper(ABC):
         if isinstance(model_field, models.IntegerField):
             return IntegerImportField()
 
-    def create_record(self):
+    def create_record(self, performed_action):
         mapping_dict = self.map(True)
-        return self.model_class(**mapping_dict)
+        if performed_action not in (
+            ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+            ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+        ):
+            raise ImportDataError(
+                f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
+            )
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+            return self.model_class(**mapping_dict)
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
+            record = self.model_class.objects.get(pk=mapping_dict[self.private_key_field])
+            for field_name, field_value in mapping_dict.items():
+                if field_name != self.private_key_field:
+                    setattr(record, field_name, field_value)
+            return record
 
-    def import_validation(self, error_when_exists=True):
+    def import_validation(self, performed_action):
         if self.private_key_field:
             mapping_dict = self.map()
-            if error_when_exists and self.model_class.objects.filter(pk=mapping_dict[self.private_key_field]).exists():
-                raise ImportDataIntegrityError(mapping_dict[self.private_key_field], self.model_class.__name__)
+            if (
+                performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT
+                and self.model_class.objects.filter(pk=mapping_dict[self.private_key_field]).exists()
+            ):
+                raise ImportDataIntegrityError(
+                    mapping_dict[self.private_key_field], self.model_class.__name__, performed_action
+                )
             elif (
-                not error_when_exists
+                performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE
                 and not self.model_class.objects.filter(pk=mapping_dict[self.private_key_field]).exists()
             ):
-                raise ImportDataIntegrityError(mapping_dict[self.private_key_field], self.model_class.__name__)
+                raise ImportDataIntegrityError(
+                    mapping_dict[self.private_key_field], self.model_class.__name__, performed_action
+                )
 
     def map(self, instance_values=False):
         mapping_dict = {}
