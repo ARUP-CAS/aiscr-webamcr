@@ -40,7 +40,6 @@ class DigitalObjectIdentifierClient:
                 extra={
                     "ident_cely": self.serializer.get_ident_cely(),
                     "status_code": response.status_code,
-                    "request_url": response.url,
                     "response": response.text,
                 },
             )

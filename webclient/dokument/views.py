@@ -1662,7 +1662,8 @@ def archivovat(request, ident_cely):
                 for item in dokument_casti:
                     item: DokumentCast
                     if (
-                        item.archeologicky_zaznam
+                        item.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                        and item.archeologicky_zaznam
                         and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
                         and item.archeologicky_zaznam.lokalita.igsn
                     ):
@@ -1681,6 +1682,7 @@ def archivovat(request, ident_cely):
                 item: DokumentCast
                 if (
                     item.archeologicky_zaznam
+                    and item.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
                     and item.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
                     and item.archeologicky_zaznam.lokalita.igsn
                 ):
