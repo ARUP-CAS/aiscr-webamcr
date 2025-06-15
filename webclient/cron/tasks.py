@@ -632,7 +632,7 @@ def run_data_import(job_id):
                         redis_connector.get(f"import_data_{job_id}_record_{record_id}").decode("utf-8")
                     )
                     mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record.pop("__file_name"))
-                    record = mapper_class(serialized_record).create_record(performed_action)
+                    record = mapper_class(serialized_record).create_records(performed_action)
                     if isinstance(record, Model):
                         record.save()
                     else:

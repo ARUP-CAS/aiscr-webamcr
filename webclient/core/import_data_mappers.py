@@ -1,10 +1,25 @@
+import datetime
 import re
 from abc import ABC
 
-from arch_z.models import AkceVedouci, ArcheologickyZaznam
+from adb.models import Adb, VyskovyBod
+from arch_z.models import AkceVedouci, ArcheologickyZaznam, ArcheologickyZaznamKatastr, ExterniOdkaz
 from core.forms import ImportDataAdminForm
+from core.models import Soubor
+from dj.models import DokumentacniJednotka
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from dokument.models import (
+    Dokument,
+    DokumentAutor,
+    DokumentCast,
+    DokumentJazyk,
+    DokumentOsoba,
+    DokumentPosudek,
+    Let,
+    Tvar,
+)
+from ez.models import ExterniZdroj, ExterniZdrojAutor, ExterniZdrojEditor
 from heslar.models import (
     Heslar,
     HeslarDatace,
@@ -14,10 +29,16 @@ from heslar.models import (
     HeslarOdkaz,
     RuianKatastr,
 )
+from historie.models import Historie
+from komponenta.models import Komponenta, KomponentaAktivita
 from lokalita.models import Lokalita
+from nalez.models import NalezObjekt, NalezPredmet
+from neidentakce.models import NeidentAkce, NeidentAkceVedouci
+from notifikace_projekty.models import Pes
 from pas.models import SamostatnyNalez
+from pian.models import Kladyzm, Pian
 from projekt.models import Projekt, ProjektKatastr
-from uzivatel.models import Organizace, Osoba
+from uzivatel.models import Organizace, Osoba, User
 
 
 class ImportDataError(Exception):
@@ -83,6 +104,21 @@ class IntegerImportField(BaseImportField):
             raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_integer_value')}: {value}")
 
 
+class DateImportField(BaseImportField):
+    pattern_iso = re.compile(r"\d{4}-\d{1,2}-\d{1,2}")
+    pattern_localized = re.compile(r"\d{1,2}\. ?\d{1,2}\. ?\d{4}")
+
+    def _process_value(self, value):
+        if isinstance(value, str):
+            if self.pattern_iso.match(value):
+                return datetime.datetime.strptime(value, "%Y-%m-%d").date()
+            if self.pattern_localized.match(value):
+                return datetime.datetime.strptime(value.replace(" ", ""), "%d.%m.%Y").date()
+        elif isinstance(value, datetime.date):
+            return value
+        raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_date_value')}: {value}")
+
+
 class LookupImportField(BaseImportField):
     records = []
 
@@ -114,7 +150,7 @@ class LookupImportField(BaseImportField):
 class ImportModelMapper(ABC):
     fields = tuple()
     model_class = None
-    private_key_field = "ident_cely"
+    primary_key = "ident_cely"
 
     def __init__(self, value_dict):
         self.value_dict = value_dict
@@ -147,8 +183,10 @@ class ImportModelMapper(ABC):
             return BaseImportField()
         if isinstance(model_field, models.IntegerField):
             return IntegerImportField()
+        if isinstance(model_field, models.DateField):
+            return BaseImportField()
 
-    def create_record(self, performed_action):
+    def create_records(self, performed_action) -> list:
         mapping_dict = self.map(True)
         if performed_action not in (
             ImportDataAdminForm.PERFORMED_ACTION_INSERT,
@@ -158,30 +196,45 @@ class ImportModelMapper(ABC):
                 f"{_('core_admin.ImportDataError.message.invalid_performed_action')}: {performed_action}"
             )
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
-            return self.model_class(**mapping_dict)
+            return [
+                self.model_class(**mapping_dict),
+            ]
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
-            record = self.model_class.objects.get(pk=mapping_dict[self.private_key_field])
-            for field_name, field_value in mapping_dict.items():
-                if field_name != self.private_key_field:
-                    setattr(record, field_name, field_value)
-            return record
+            if isinstance(self.primary_key, str):
+                record = self.model_class.objects.get(pk=mapping_dict[self.primary_key])
+                for field_name, field_value in mapping_dict.items():
+                    if field_name != self.primary_key:
+                        setattr(record, field_name, field_value)
+                return [
+                    record,
+                ]
+            elif isinstance(self.primary_key, tuple):
+                get_args = {key: mapping_dict[key] for key in self.primary_key}
+                record = self.model_class.objects.get(**get_args)
+                for field_name, field_value in mapping_dict.items():
+                    if field_name not in self.primary_key:
+                        setattr(record, field_name, field_value)
+                return [
+                    record,
+                ]
+        return []
 
     def import_validation(self, performed_action):
-        if self.private_key_field:
+        if self.primary_key:
             mapping_dict = self.map()
             if (
                 performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT
-                and self.model_class.objects.filter(pk=mapping_dict[self.private_key_field]).exists()
+                and self.model_class.objects.filter(pk=mapping_dict[self.primary_key]).exists()
             ):
                 raise ImportDataIntegrityError(
-                    mapping_dict[self.private_key_field], self.model_class.__name__, performed_action
+                    mapping_dict[self.primary_key], self.model_class.__name__, performed_action
                 )
             elif (
                 performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE
-                and not self.model_class.objects.filter(pk=mapping_dict[self.private_key_field]).exists()
+                and not self.model_class.objects.filter(pk=mapping_dict[self.primary_key]).exists()
             ):
                 raise ImportDataIntegrityError(
-                    mapping_dict[self.private_key_field], self.model_class.__name__, performed_action
+                    mapping_dict[self.primary_key], self.model_class.__name__, performed_action
                 )
 
     def map(self, instance_values=False):
@@ -236,7 +289,7 @@ class HeslarDataceMapper(ImportModelMapper):
 class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
     fields = ("id",)
     model_class = HeslarDokumentTypMaterialRada
-    private_key_field = "id"
+    primary_key = "id"
 
     @classmethod
     def get_mapping(cls):
@@ -250,7 +303,7 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
 class HeslarHierarchieMapper(ImportModelMapper):
     fields = ("typ",)
     model_class = HeslarHierarchie
-    private_key_field = "id"
+    primary_key = "id"
 
     @classmethod
     def get_mapping(cls):
@@ -269,7 +322,7 @@ class HeslarOdkazMapper(ImportModelMapper):
         "skos_mapping_relation",
     )
     model_class = HeslarOdkaz
-    private_key_field = "id"
+    primary_key = "id"
 
     @classmethod
     def get_mapping(cls):
@@ -450,7 +503,7 @@ class LokalitaMapper(ImportModelMapper):
 class AkceVedouciMapper(ImportModelMapper):
     fields = ("id", "akce", "vedouci", "organizace")
     model_class = AkceVedouci
-    private_key_field = "id"
+    primary_key = "id"
 
     @classmethod
     def get_mapping(cls):
@@ -459,3 +512,442 @@ class AkceVedouciMapper(ImportModelMapper):
         field_mapping["vedouci"] = LookupImportField(Osoba)
         field_mapping["organizace"] = LookupImportField(Organizace)
         return field_mapping
+
+
+class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
+    fields = ("archeologicky_zaznam", "katastr")
+    model_class = ArcheologickyZaznamKatastr
+    primary_key = ("archeologicky_zaznam", "katastr")
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
+        field_mapping["katastr"] = LookupImportField(RuianKatastr, "kod")
+        return field_mapping
+
+
+class PianMapper(ImportModelMapper):
+    fields = ("ident_cely", "stav", "geom_system", "geom", "geom_sjtsk")
+    model_class = Pian
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["typ"] = LookupImportField(Projekt)
+        field_mapping["presnost"] = LookupImportField(Projekt)
+        field_mapping["zm10"] = LookupImportField(Kladyzm, "gid")
+        field_mapping["zm50"] = LookupImportField(Kladyzm, "gid")
+        return field_mapping
+
+
+class DokumentacniJednotkaMapper(ImportModelMapper):
+    fields = ("ident_cely", "negativni_jednotka", "nazev")
+    model_class = DokumentacniJednotka
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
+        field_mapping["pian"] = LookupImportField(Pian)
+        field_mapping["typ"] = LookupImportField(Heslar)
+        return field_mapping
+
+
+class AdbMapper(ImportModelMapper):
+    fields = (
+        "ident_cely",
+        "uzivatelske_oznaceni_sondy",
+        "trat",
+        "cislo_popisne",
+        "parcelni_cislo",
+        "stratigraficke_jednotky",
+        "rok_popisu",
+        "rok_revize",
+        "poznamka",
+    )
+    model_class = Adb
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["dokumentacni_jednotka"] = LookupImportField(DokumentacniJednotka)
+        field_mapping["typ_sondy"] = LookupImportField(Heslar)
+        field_mapping["podnet"] = LookupImportField(Heslar)
+        field_mapping["autor_popisu"] = LookupImportField(Osoba)
+        field_mapping["autor_popisu"] = LookupImportField(Osoba)
+        field_mapping["sm5"] = LookupImportField(Kladyzm, "gid")
+        return field_mapping
+
+
+class AdbVyskovyBod(ImportModelMapper):
+    fields = ("ident_cely", "geom")
+    model_class = VyskovyBod
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["adb"] = LookupImportField(Adb)
+        field_mapping["typ"] = LookupImportField(Heslar)
+        return field_mapping
+
+
+class DokumentLetMapper(ImportModelMapper):
+    fields = (
+        "ident_cely",
+        "uzivatelske_oznaceni",
+        "datum",
+        "hodina_zacatek",
+        "hodina_konec",
+        "fotoaparat",
+        "pilot",
+        "typ_letounu",
+        "ucel_letu",
+    )
+    model_class = Let
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["letiste_start"] = LookupImportField(Heslar)
+        field_mapping["letiste_cil"] = LookupImportField(Heslar)
+        field_mapping["pozorovatel"] = LookupImportField(Osoba)
+        field_mapping["organizace"] = LookupImportField(Organizace)
+        field_mapping["pocasi"] = LookupImportField(Heslar)
+        field_mapping["dohlednost"] = LookupImportField(Heslar)
+        return field_mapping
+
+
+class DokumentMapper(ImportModelMapper):
+    fields = (
+        "ident_cely",
+        "doi",
+        "stav",
+        "rok_vzniku",
+        "datum_zverejneni",
+        "oznaceni_originalu",
+        "popis",
+        "poznamka",
+    )
+    fields_extra_data = (
+        "cislo_objektu",
+        "meritko",
+        "vyska",
+        "sirka",
+        "pocet_variant_originalu",
+        "odkaz",
+        "datum_vzniku",
+        "udalost",
+        "region",
+        "rok_od",
+        "rok_do",
+        "duveryhodnost",
+        "geom_system",
+        "geom",
+        "geom_sjtsk",
+    )
+    model_class = Dokument
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        return field_mapping
+
+    def create_records(self, performed_action) -> list:
+        pass
+
+
+class DokumentAutorMapper(ImportModelMapper):
+    fields = ("poradi",)
+    model_class = DokumentAutor
+    primary_key = ("dokument", "autor")
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["dokument"] = LookupImportField(Dokument)
+        field_mapping["autor"] = LookupImportField(Osoba)
+        return field_mapping
+
+
+class DokumentJazykMapper(ImportModelMapper):
+    fields = tuple()
+    model_class = DokumentJazyk
+    primary_key = ("dokument", "jazyk")
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["dokument"] = LookupImportField(Dokument)
+        field_mapping["jazyk"] = LookupImportField(Heslar)
+        return field_mapping
+
+
+class DokumentOsobaMapper(ImportModelMapper):
+    fields = tuple()
+    model_class = DokumentOsoba
+    primary_key = ("dokument", "osoba")
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["dokument"] = LookupImportField(Dokument)
+        field_mapping["osoba"] = LookupImportField(Osoba)
+        return field_mapping
+
+
+class DokumentPosudekMapper(ImportModelMapper):
+    fields = tuple()
+    model_class = DokumentPosudek
+    primary_key = ("dokument", "posudek")
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["dokument"] = LookupImportField(Dokument)
+        field_mapping["posudek"] = LookupImportField(Heslar)
+        return field_mapping
+
+
+class TvarMapper(ImportModelMapper):
+    fields = ("id", "poznamka")
+    model_class = Tvar
+    primary_key = "id"
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["dokument"] = LookupImportField(Dokument)
+        field_mapping["tvar"] = LookupImportField(Heslar)
+        return field_mapping
+
+
+class DokumentCastMapper(ImportModelMapper):
+    fields = ("ident_cely", "poznamka")
+    model_class = DokumentCast
+    primary_key = "ident_cely"
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["dokument"] = LookupImportField(Dokument)
+        field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
+        field_mapping["projekt"] = LookupImportField(Projekt)
+        return field_mapping
+
+
+class NeidentAkceMapper(ImportModelMapper):
+    fields = ("rok_zahajeni", "rok_ukonceni", "lokalizace", "popis", "poznamka", "pian")
+    model_class = NeidentAkce
+    primary_key = "ident_cely"
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["dokument_cast"] = LookupImportField(DokumentCast)
+        field_mapping["katastr"] = LookupImportField(RuianKatastr, "kod")
+        return field_mapping
+
+
+class NeidentAkceVedouciMapper(ImportModelMapper):
+    fields = tuple()
+    model_class = NeidentAkceVedouci
+    primary_key = ("neident_akce", "vedouci")
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["neident_akce"] = LookupImportField(DokumentCast)
+        field_mapping["vedouci"] = LookupImportField(Osoba)
+        return field_mapping
+
+
+class KomponentaMapper(ImportModelMapper):
+    fields = ("ident_cely", "jistota", "presna_datace", "poznamka")
+    model_class = Komponenta
+    primary_key = "ident_cely"
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["obdobi"] = LookupImportField(Heslar)
+        field_mapping["areal"] = LookupImportField(Heslar)
+        return field_mapping
+
+
+class KomponentaAktivitaMapper(ImportModelMapper):
+    fields = ()
+    model_class = KomponentaAktivita
+    primary_key = ("komponenta", "aktivita")
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["komponenta"] = LookupImportField(Komponenta)
+        field_mapping["aktivita"] = LookupImportField(Heslar)
+        return field_mapping
+
+
+class NalezMapper(ImportModelMapper):
+    fields = ("id", "pocet", "poznamka")
+    primary_key = "id"
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["komponenta"] = LookupImportField(Komponenta)
+        field_mapping["druh"] = LookupImportField(Heslar)
+        field_mapping["specifikace"] = LookupImportField(Heslar)
+        return field_mapping
+
+
+class NalezObjektMapper(NalezMapper):
+    model_class = NalezObjekt
+
+
+class NalezPredmetMapper(NalezMapper):
+    model_class = NalezPredmet
+
+
+class ExterniZdrojMapper(ImportModelMapper):
+    fields = (
+        "ident_cely",
+        "doi",
+        "stav",
+        "rok_vydani_vzniku",
+        "nazev",
+        "sbornik_nazev",
+        "edice_rada",
+        "casopis_denik_nazev",
+        "casopis_rocnik",
+        "isbn",
+        "issn",
+        "misto",
+        "vydavatel",
+        "datum_rd",
+        "paginace_titulu",
+        "link",
+        "organizace",
+        "poznamka",
+    )
+    model_class = ExterniZdroj
+    primary_key = "ident_cely"
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["typ"] = LookupImportField(Heslar)
+        field_mapping["typ_dokumentu"] = LookupImportField(Heslar)
+        return field_mapping
+
+
+class ExterniZdrojOsobaMapper(ImportModelMapper):
+    fields = ("poradi",)
+    primary_key = ("externi_zdroj", "autor")
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["externi_zdroj"] = LookupImportField(ExterniZdroj)
+        field_mapping["autor"] = LookupImportField(Osoba)
+        return field_mapping
+
+
+class ExterniZdrojAutorMapper(ImportModelMapper):
+    model_class = ExterniZdrojAutor
+
+
+class ExterniZdrojEditorMapper(ImportModelMapper):
+    model_class = ExterniZdrojEditor
+
+
+class ExterniOdkazMapper(ImportModelMapper):
+    fields = ("id", "organizace")
+    model_class = ExterniOdkaz
+    primary_key = "id"
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
+        field_mapping["externi_zdroj"] = LookupImportField(ExterniZdroj)
+        return field_mapping
+
+
+class UzivatelMapper(ImportModelMapper):
+    fields = (
+        "ident_cely",
+        "first_name",
+        "last_name",
+        "email",
+        "telefon",
+        "orcid",
+        "jazyk",
+        "is_active",
+        "is_staff",
+        "is_superuser",
+        "date_joined",
+        "last_login",
+    )
+    model_class = User
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["osoba"] = LookupImportField(Osoba)
+        field_mapping["organizace"] = LookupImportField(Organizace)
+        return field_mapping
+
+
+class UzivatelNotifikaceProjektyMapper(ImportModelMapper):
+    fields = tuple()
+    model_class = Pes
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["uzivatel"] = LookupImportField(User)
+        return field_mapping
+
+
+class UzivatelOpravneniMapper:
+    pass
+
+
+class UzivatelNotifikaceMapper:
+    pass
+
+
+class SouborMapper(ImportModelMapper):
+    fields = (
+        "id",
+        "path",
+        "nazev",
+        "mimetype",
+        "rozsah",
+        "size_mb",
+        "sha_512",
+    )
+    models_class = Soubor
+    primary_key = "id"
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        return field_mapping
+
+    class HistorieMapper(ImportModelMapper):
+        fields = (
+            "id",
+            "datum_zmeny",
+            "typ_zmeny",
+            "poznamka",
+        )
+        model_class = Historie
+        primary_key = "id"
+
+        @classmethod
+        def get_mapping(cls):
+            field_mapping = super().get_mapping()
+            field_mapping["uzivatel"] = LookupImportField(User)
+            return field_mapping

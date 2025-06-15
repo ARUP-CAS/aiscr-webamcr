@@ -709,7 +709,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
                                 mapper = mapper_class(row.to_dict())
                                 record = mapper.map()
                                 mapper.import_validation(performed_action)
-                                LookupImportField.records.append(mapper.create_record(performed_action))
+                                LookupImportField.records += mapper.create_records(performed_action)
                                 record["__file_name"] = file_name
                             except ImportDataError as err:
                                 validation_results.append(err)
