@@ -635,6 +635,7 @@ def run_data_import(job_id):
                     records = mapper_class(serialized_record).create_records(performed_action)
                     for record in records:
                         if isinstance(record, Model):
+                            record.active_transaction = fedora_transaction
                             record.save()
                         else:
                             raise ValueError(f"{_('cron.tasks.run_data_import.error.not_model')} {record_id}")

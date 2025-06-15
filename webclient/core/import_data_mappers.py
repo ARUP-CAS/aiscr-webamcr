@@ -48,13 +48,17 @@ class ImportDataError(Exception):
 
 
 class ImportDataMissingReferencedValueError(ImportDataError):
-    def __init__(self, missing_value_id, missing_model_name):
+    def __init__(self, missing_value_id, missing_model_name=None):
         self.missing_value_id = missing_value_id
         self.missing_model_name = missing_model_name
         super().__init__(
             f'{_("core_admin.ImportDataMissingReferencedValueError.message.part_1")} '
             + f'{missing_value_id} {_("core_admin.ImportDataMissingReferencedValueError.message.part_2")} '
-            + f'{missing_model_name} {_("core_admin.ImportDataMissingReferencedValueError.message.part_2")} '
+            + (
+                f'{missing_model_name} {_("core_admin.ImportDataMissingReferencedValueError.message.part_2")} '
+                if missing_model_name
+                else ""
+            )
         )
 
 
@@ -104,6 +108,18 @@ class IntegerImportField(BaseImportField):
             return int(value) if value is not None else None
         else:
             raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_integer_value')}: {value}")
+
+
+class BooleanImportField(BaseImportField):
+    def _process_value(self, value):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            if value.lower() == "true":
+                return True
+            elif value.lower() == "false":
+                return False
+        raise ImportDataError(f"{_('core_admin.BooleanImportField.message.invalid_boolean_value')}: {value}")
 
 
 class DateImportField(BaseImportField):
@@ -160,21 +176,28 @@ class LookupImportField(BaseImportField):
         )
 
 
-class HistorieLookupImportField(LookupImportField):
+class MultipleLookupImportField(LookupImportField):
+    def __init__(self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", read_field_name: str = None):
+        super().__init__(lookup_model_classes, lookup_field_name)
+        self.read_field_name = read_field_name
+
     def _process_value(self, value):
         record = get_record_from_ident(value)
-        if record and hasattr(record, "historie"):
-            self._instance_value = record.historie
+        if isinstance(record, Dokument):
+            self._instance_value = DokumentCast.objects.get(ident_cely=value)
+            return value
+        if record and hasattr(record, self.read_field_name):
+            self._instance_value = getattr(record, self.read_field_name)
             return value
         filtered_records = [
             record
             for record in self.records
-            if getattr(record, "ident_cely", None) == value and hasattr(record, "historie")
+            if getattr(record, self.lookup_field_name, None) == value and hasattr(record, self.read_field_name)
         ]
         if len(filtered_records) == 1:
             self._instance_value = filtered_records[0].historie
             return value
-        raise ImportDataMissingReferencedValueError(value, "HistorieVazba")
+        raise ImportDataMissingReferencedValueError(value)
 
 
 class ImportModelMapper(ABC):
@@ -245,6 +268,12 @@ class ImportModelMapper(ABC):
             field_mapping[item] = cls.map_field(item)
         return field_mapping
 
+    def _get_filter_kwargs_primary_key(self):
+        if isinstance(self.primary_key, str):
+            return {self.primary_key: self.value_dict[self.primary_key]}
+        elif isinstance(self.primary_key, Iterable):
+            return {key: self.value_dict[key] for key in self.primary_key}
+
     @classmethod
     def map_field(cls, field_name):
         model_field = cls.model_class._meta.get_field(field_name)
@@ -254,6 +283,9 @@ class ImportModelMapper(ABC):
             return IntegerImportField()
         if isinstance(model_field, models.DateField):
             return BaseImportField()
+        if isinstance(model_field, models.BooleanField):
+            return BooleanImportField()
+        raise ImportDataError(f"_('core.admin.ImportModelMapper.map_field.error'): {field_name}")
 
     def create_records(self, performed_action) -> list:
         mapping_dict = self.map(True)
@@ -269,23 +301,13 @@ class ImportModelMapper(ABC):
                 self.model_class(**mapping_dict),
             ]
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
-            if isinstance(self.primary_key, str):
-                record = self.model_class.objects.get(pk=mapping_dict[self.primary_key])
-                for field_name, field_value in mapping_dict.items():
-                    if field_name != self.primary_key:
-                        setattr(record, field_name, field_value)
-                return [
-                    record,
-                ]
-            elif isinstance(self.primary_key, tuple):
-                get_args = {key: mapping_dict[key] for key in self.primary_key}
-                record = self.model_class.objects.get(**get_args)
-                for field_name, field_value in mapping_dict.items():
-                    if field_name not in self.primary_key:
-                        setattr(record, field_name, field_value)
-                return [
-                    record,
-                ]
+            record = self.model_class.objects.get(**self._get_filter_kwargs_primary_key())
+            for field_name, field_value in mapping_dict.items():
+                if field_name != self.primary_key:
+                    setattr(record, field_name, field_value)
+            return [
+                record,
+            ]
         return []
 
     def import_validation(self, performed_action):
@@ -293,14 +315,14 @@ class ImportModelMapper(ABC):
             mapping_dict = self.map()
             if (
                 performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT
-                and self.model_class.objects.filter(pk=mapping_dict[self.primary_key]).exists()
+                and self.model_class.objects.filter(**self._get_filter_kwargs_primary_key()).exists()
             ):
                 raise ImportDataIntegrityError(
                     mapping_dict[self.primary_key], self.model_class.__name__, performed_action
                 )
             elif (
                 performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE
-                and not self.model_class.objects.filter(pk=mapping_dict[self.primary_key]).exists()
+                and not self.model_class.objects.filter(**self._get_filter_kwargs_primary_key()).exists()
             ):
                 raise ImportDataIntegrityError(
                     mapping_dict[self.primary_key], self.model_class.__name__, performed_action
@@ -839,6 +861,9 @@ class KomponentaMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls):
         field_mapping = super().get_mapping()
+        field_mapping["vazba"] = MultipleLookupImportField(
+            [DokumentacniJednotka, DokumentCast], read_field_name="komponenty"
+        )
         field_mapping["obdobi"] = LookupImportField(Heslar)
         field_mapping["areal"] = LookupImportField(Heslar)
         return field_mapping
@@ -1032,6 +1057,6 @@ class HistorieMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls):
         field_mapping = super().get_mapping()
-        field_mapping["vazba"] = HistorieLookupImportField()
+        field_mapping["vazba"] = MultipleLookupImportField(read_field_name="historie")
         field_mapping["uzivatel"] = LookupImportField(User)
         return field_mapping
