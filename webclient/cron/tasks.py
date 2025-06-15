@@ -632,11 +632,12 @@ def run_data_import(job_id):
                         redis_connector.get(f"import_data_{job_id}_record_{record_id}").decode("utf-8")
                     )
                     mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record.pop("__file_name"))
-                    record = mapper_class(serialized_record).create_records(performed_action)
-                    if isinstance(record, Model):
-                        record.save()
-                    else:
-                        raise ValueError(f"{_('cron.tasks.run_data_import.error.not_model')} {record_id}")
+                    records = mapper_class(serialized_record).create_records(performed_action)
+                    for record in records:
+                        if isinstance(record, Model):
+                            record.save()
+                        else:
+                            raise ValueError(f"{_('cron.tasks.run_data_import.error.not_model')} {record_id}")
                 except Exception as err:
                     logger.info("cron.tasks.run_data_import.error", extra={"error": err, "record_id": record_id})
                     fedora_transaction.rollback_transaction()
@@ -651,7 +652,9 @@ def run_data_import(job_id):
                     break
                 else:
                     logger.info("cron.tasks.run_data_import.success", extra={"record_id": record_id})
-                    import_results[record_id] = f"{_('cron.tasks.run_data_import.success')}, {record.pk}"
+                    import_results[
+                        record_id
+                    ] = f"{_('cron.tasks.run_data_import.success')}, {[', '.join(str(record.pk) for record in records)]}"
                     redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
     except Exception as err:
         logger.info("cron.tasks.run_data_import.database_error", extra={"error": err})

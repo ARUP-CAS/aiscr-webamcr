@@ -1,10 +1,12 @@
 import datetime
 import re
 from abc import ABC
+from collections.abc import Iterable
 
 from adb.models import Adb, VyskovyBod
 from arch_z.models import AkceVedouci, ArcheologickyZaznam, ArcheologickyZaznamKatastr, ExterniOdkaz
 from core.forms import ImportDataAdminForm
+from core.ident_cely import get_record_from_ident
 from core.models import Soubor
 from dj.models import DokumentacniJednotka
 from django.db import models
@@ -35,7 +37,7 @@ from lokalita.models import Lokalita
 from nalez.models import NalezObjekt, NalezPredmet
 from neidentakce.models import NeidentAkce, NeidentAkceVedouci
 from notifikace_projekty.models import Pes
-from pas.models import SamostatnyNalez
+from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pian.models import Kladyzm, Pian
 from projekt.models import Projekt, ProjektKatastr
 from uzivatel.models import Organizace, Osoba, User
@@ -122,9 +124,16 @@ class DateImportField(BaseImportField):
 class LookupImportField(BaseImportField):
     records = []
 
-    def __init__(self, lookup_model_class, lookup_field_name: str = "ident_cely"):
+    def __init__(self, lookup_model_classes=None, lookup_field_name: str = "ident_cely"):
         super().__init__()
-        self.lookup_model_class = lookup_model_class
+        if not isinstance(lookup_model_classes, Iterable):
+            self.lookup_model_class_list = [
+                lookup_model_classes,
+            ]
+        elif lookup_model_classes is None:
+            self.lookup_model_class_list = []
+        else:
+            self.lookup_model_class_list = lookup_model_classes
         self.lookup_field_name = lookup_field_name
         self._instance_value = None
 
@@ -133,18 +142,39 @@ class LookupImportField(BaseImportField):
         return self._instance_value
 
     def _process_value(self, value):
-        saved_records_query = self.lookup_model_class.objects.filter(**{self.lookup_field_name: value})
-        if saved_records_query.exists():
-            self._instance_value = saved_records_query.first()
+        for current_class in self.lookup_model_class_list:
+            saved_records_query = current_class.objects.filter(**{self.lookup_field_name: value})
+            if saved_records_query.exists():
+                self._instance_value = saved_records_query.first()
+                return value
+            filtered_records = [
+                record
+                for record in self.records
+                if isinstance(record, current_class) and getattr(record, self.lookup_field_name, None) == value
+            ]
+            if len(filtered_records) == 1:
+                self._instance_value = filtered_records[0]
+                return value
+        raise ImportDataMissingReferencedValueError(
+            value, ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list])
+        )
+
+
+class HistorieLookupImportField(LookupImportField):
+    def _process_value(self, value):
+        record = get_record_from_ident(value)
+        if record and hasattr(record, "historie"):
+            self._instance_value = record.historie
             return value
         filtered_records = [
             record
             for record in self.records
-            if isinstance(record, self.lookup_model_class) and getattr(record, self.lookup_field_name, None) == value
+            if getattr(record, "ident_cely", None) == value and hasattr(record, "historie")
         ]
         if len(filtered_records) == 1:
+            self._instance_value = filtered_records[0].historie
             return value
-        raise ImportDataMissingReferencedValueError(value, self.lookup_model_class.__name__)
+        raise ImportDataMissingReferencedValueError(value, "HistorieVazba")
 
 
 class ImportModelMapper(ABC):
@@ -162,7 +192,46 @@ class ImportModelMapper(ABC):
             "heslar_datace": HeslarDataceMapper,
             "heslar_dokument_typ_material_rada": HeslarDokumentTypMaterialRadaMapper,
             "heslar_hierarchie": HeslarHierarchieMapper,
-            "heslar_odkaz": HeslarOdkazMapper,
+            "heslar_odkazy": HeslarOdkazMapper,
+            "organizace": OrganizaceMapper,
+            "osoby": OsobaMapper,
+            "projekty": ProjektMapper,
+            "projekty_katastry": ProjektKatastrMapper,
+            "projekt_oznamovatele": ProjektOznamovatelMapper,
+            "samostatne_nalezy": SamostatnyNalezMapper,
+            "AZ_akce": ArcheologickyZaznamAkceMapper,
+            "AZ_lokality": LokalitaMapper,
+            "AZ_akce_vedouci": AkceVedouciMapper,
+            "AZ_katastry": ArcheologickyZaznamKatastrMapper,
+            "AZ_pian": PianMapper,
+            "AZ_dokumentacni_jednotky": DokumentacniJednotkaMapper,
+            "AZ_adb": AdbMapper,
+            "AZ_adb_vyskove_body": AdbVyskovyBod,
+            "dokumenty_lety": DokumentLetMapper,
+            "dokumenty": DokumentMapper,
+            "dokumenty_autori": DokumentAutorMapper,
+            "dokumenty_jazyky": DokumentJazykMapper,
+            "dokumenty_osoby": DokumentOsobaMapper,
+            "dokumenty_posudky": DokumentPosudekMapper,
+            "dokumenty_tvary": TvarMapper,
+            "dokumenty_casti": DokumentCastMapper,
+            "dokumenty_neident_akce": NeidentAkceMapper,
+            "dokumenty_neident_akce_vedouci": NeidentAkceVedouciMapper,
+            "komponenty": KomponentaMapper,
+            "komponenty_aktivity": KomponentaAktivitaMapper,
+            "komponenty_nalezy_objekty": NalezObjektMapper,
+            "komponenty_nalezy_predmety": NalezPredmetMapper,
+            "externi_zdroje": ExterniZdrojMapper,
+            "externi_zdroje_autori": ExterniZdrojAutorMapper,
+            "externi_zdroje_editori": ExterniZdrojEditorMapper,
+            "externi_odkazy": ExterniOdkazMapper,
+            "uzivatele": UzivatelMapper,
+            "uzivatele_notifikace_projekty": UzivatelNotifikaceProjektMapper,
+            "uzivatele_spoluprace": UzivatelSpolupraceMapper,
+            "uzivatele_opravneni": UzivatelOpravneniMapper,
+            "uzivatele_notifikace": UzivatelNotifikaceMapper,
+            "soubory": SouborMapper,
+            "historie": HistorieMapper,
         }
 
     @classmethod
@@ -899,7 +968,7 @@ class UzivatelMapper(ImportModelMapper):
         return field_mapping
 
 
-class UzivatelNotifikaceProjektyMapper(ImportModelMapper):
+class UzivatelNotifikaceProjektMapper(ImportModelMapper):
     fields = tuple()
     model_class = Pes
 
@@ -907,6 +976,19 @@ class UzivatelNotifikaceProjektyMapper(ImportModelMapper):
     def get_mapping(cls):
         field_mapping = super().get_mapping()
         field_mapping["uzivatel"] = LookupImportField(User)
+        return field_mapping
+
+
+class UzivatelSpolupraceMapper(ImportModelMapper):
+    fields = ("id", "stav")
+    model_class = UzivatelSpoluprace
+    primary_key = "id"
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["vedouci"] = LookupImportField(User)
+        field_mapping["spolupracovnik"] = LookupImportField(User)
         return field_mapping
 
 
@@ -936,18 +1018,20 @@ class SouborMapper(ImportModelMapper):
         field_mapping = super().get_mapping()
         return field_mapping
 
-    class HistorieMapper(ImportModelMapper):
-        fields = (
-            "id",
-            "datum_zmeny",
-            "typ_zmeny",
-            "poznamka",
-        )
-        model_class = Historie
-        primary_key = "id"
 
-        @classmethod
-        def get_mapping(cls):
-            field_mapping = super().get_mapping()
-            field_mapping["uzivatel"] = LookupImportField(User)
-            return field_mapping
+class HistorieMapper(ImportModelMapper):
+    fields = (
+        "id",
+        "datum_zmeny",
+        "typ_zmeny",
+        "poznamka",
+    )
+    model_class = Historie
+    primary_key = "id"
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["vazba"] = HistorieLookupImportField()
+        field_mapping["uzivatel"] = LookupImportField(User)
+        return field_mapping
