@@ -1432,6 +1432,7 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
             "title": _("arch_z.views.smazat_akce_vedoucí.title.text"),
             "id_tag": "smazat-objekt-form",
             "button": _("core.views.smazat.submitButton.text"),
+            "warnings": [_("arch_z.views.smazat_akce_vedoucí.save_warning")],
         }
         return render(request, "core/transakce_modal.html", context)
 
