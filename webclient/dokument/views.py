@@ -785,6 +785,7 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
             "title": _("dokument.views.TvarSmazatView.title.text"),
             "id_tag": self.id_tag,
             "button": _("dokument.views.TvarSmazatView.submitButton.text"),
+            "warnings": [_("dokument.views.TvarSmazatView.save_warning")],
         }
         return context
 
