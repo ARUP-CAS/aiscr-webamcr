@@ -684,7 +684,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/wsproto/
    * - xlrd
-     - 2.0.1
+     - 2.0.2
      - BSD License
      - http://www.python-excel.org/
    * - xlwt
