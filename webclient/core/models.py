@@ -331,13 +331,13 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 file_input = io.BytesIO(file.read())
                 try:
                     with py7zr.SevenZipFile(file_input, mode="r") as archive:
-                        all_files = archive.getnames()
-                        for file_name in all_files:
-                            archive.read([file_name])
+                        if archive.needs_password():
+                            return "encrypted"
+                        result = archive.test()
+                        if result is False:
+                            return False
                 except Exception as err:
                     logger.info("core.models.Soubor.get_mime_type.cannot_unpack_7zfile", extra={"error": err})
-                    if "Password is required" in str(err):
-                        return "encrypted"
                     return False
                 finally:
                     file_input.close()
