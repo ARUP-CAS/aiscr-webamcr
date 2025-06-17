@@ -136,7 +136,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://docs.celeryq.dev/
    * - certifi
-     - 2025.4.26
+     - 2025.6.15
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
@@ -176,7 +176,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.8.2
+     - 7.9.1
      - Apache-2.0
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
@@ -212,7 +212,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/bugov/django-auto-logout
    * - django-autocomplete-light
-     - 3.11.0
+     - 3.12.1
      - MIT License
      - http://django-autocomplete-light.rtfd.org
    * - django-cacheops
@@ -428,7 +428,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/tox-dev/platformdirs
    * - polars
-     - 1.29.0
+     - 1.30.0
      - MIT License
      - https://www.pola.rs/
    * - polib
@@ -464,7 +464,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Library or Lesser General Public License (LGPL)
      - https://psycopg.org/
    * - py7zr
-     - 0.22.0
+     - 1.0.0
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://py7zr.readthedocs.io/
    * - pyOpenSSL
@@ -492,8 +492,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/py-pdf/pypdf
    * - pyppmd
-     - 1.1.1
-     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - 1.2.0
+     - LGPL-2.1-or-later
      - https://pyppmd.readthedocs.io/
    * - python-crontab
      - 3.2.0
