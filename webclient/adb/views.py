@@ -137,6 +137,7 @@ def smazat_vb(request, ident_cely):
         "title": _("adb.views.smazat_vb.modalForm.title"),
         "id_tag": "smazat-vb-form",
         "button": _("adb.views.smazat_vb.modalForm.submit.button"),
+        "warnings": [_("adb.views.smazat_vb.modalForm.save_warning")],
     }
     if request.method == "POST":
         fedora_transaction = FedoraTransaction(
