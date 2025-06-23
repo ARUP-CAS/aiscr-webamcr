@@ -37,9 +37,9 @@ jobs:
     name: Deploy to ${{ inputs.environment }} Server
     runs-on: ubuntu-latest
     env:
-      DEPLOYMENT_SERVER: ${{ secrets[format('DEPLOYMENT_SERVER_{0}', inputs.environment)] }}
-      SSH_PRIVATE_KEY: ${{ secrets[format('SSH_PRIVATE_KEY_SERVER_{0}', inputs.environment)] }}
-      SSH_KNOWN_HOST: ${{ secrets[format('SSH_KNOWN_HOST_{0}', inputs.environment)] }}
+      DEPLOYMENT_SERVER: ${{ inputs.environment == 'DEV' && secrets.DEPLOYMENT_SERVER_DEV || inputs.environment == 'TEST' && secrets.DEPLOYMENT_SERVER_TEST }}
+      SSH_PRIVATE_KEY: ${{ inputs.environment == 'DEV' && secrets.SSH_PRIVATE_KEY_SERVER_DEV || inputs.environment == 'TEST' && secrets.SSH_PRIVATE_KEY_SERVER_TEST }}
+      SSH_KNOWN_HOST: ${{ inputs.environment == 'DEV' && secrets.SSH_KNOWN_HOST_DEV || inputs.environment == 'TEST' && secrets.SSH_KNOWN_HOST_TEST }}
     
     steps:
       - uses: actions/checkout@v4
