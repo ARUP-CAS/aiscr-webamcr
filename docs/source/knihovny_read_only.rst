@@ -80,7 +80,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://pyyaml.org/
    * - Pygments
-     - 2.19.1
+     - 2.19.2
      - BSD License
      - https://pygments.org
    * - SPARQLWrapper
@@ -372,7 +372,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.3.0
+     - 2.3.1
      - BSD License
      - https://numpy.org
    * - odfpy
