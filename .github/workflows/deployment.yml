@@ -79,21 +79,18 @@ jobs:
           chmod 700 ~/.ssh
           echo "${{ env.SSH_KNOWN_HOST }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          sleep 30
-          
-          ping -c 10 ${{ env.DEPLOYMENT_SERVER }}
-          
-          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
-          
+          sleep 30          
+          ping -c 10 ${{ env.DEPLOYMENT_SERVER }}          
+          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"          
           ssh amcr@${{ env.DEPLOYMENT_SERVER }} << EOF
-            sudo su - root << AOF
-              cd ${{ env.server_deploy_root }}
-              git stash push -m "CI_autostash_${{ inputs.tag }}_${{ env.date_stamp }}"
-              git checkout ${{ env.branch }}
-              git pull
-              chmod +x ${{ env.dep_script }}
-              ./${{ env.dep_script }} ${{ inputs.tag }} ${{ env.server_deploy_root }} ${{ env.branch }} ${{ inputs.source }}
-            AOF
+          sudo su - root << AOF
+          cd ${{ env.server_deploy_root }}
+          git stash push -m "CI_autostash_${{ inputs.tag }}_${{ env.date_stamp }}"
+          git checkout ${{ env.branch }}
+          git pull
+          chmod +x ${{ env.dep_script }}
+          ./${{ env.dep_script }} ${{ inputs.tag }} ${{ env.server_deploy_root }} ${{ env.branch }} ${{ inputs.source }}
+          AOF
           EOF
 
       - name: Disconnect VPN
