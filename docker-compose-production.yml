@@ -1,7 +1,7 @@
 
 services:
   web:
-    image: aiscr/webamcr:${IMAGE_TAG}
+    image: ${amcr_image}
     secrets:
       - db_conf
       - mail_conf
@@ -42,7 +42,7 @@ services:
       - client
 
   redis:
-    image: aiscr/webamcr-redis:${IMAGE_TAG}
+    image: ${redis_image}
     restart: always
     ports:
       - "6379:6379"
@@ -73,7 +73,7 @@ services:
 
 
   celery_worker:
-    image: aiscr/webamcr:${IMAGE_TAG}
+    image: ${amcr_image}
     command: celery -A webclient worker -l DEBUG -n worker1@amcr
     environment:
       - IMAGE_TAG=${IMAGE_TAG}
@@ -98,7 +98,7 @@ services:
       - redis
 
   celery_beat:
-    image: aiscr/webamcr:${IMAGE_TAG}
+    image: ${amcr_image}
     command: celery -A webclient beat -l INFO
     environment:
       - IMAGE_TAG=${IMAGE_TAG}
