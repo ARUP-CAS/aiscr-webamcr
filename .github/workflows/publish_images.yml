@@ -56,7 +56,7 @@ jobs:
       contents: read
       attestations: write
     
-      steps:
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
