@@ -153,7 +153,19 @@ do_manual_checks ()
 
 script_name=$(basename ${0})
 passed_args="$@"
-#export IMAGE_TAG="latest"
+
+# Read first positional argument if exists (before any flags like -t or -u) 
+if [[ "$1" != -* ]] && [[ -n "$1" ]]; then
+    IMAGE_SOURCE=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+    if [[ "$IMAGE_SOURCE" != "dockerhub" && "$IMAGE_SOURCE" != "github" ]]; then
+        echo "ERROR: Invalid source type '$IMAGE_SOURCE'. Use 'dockerhub' or 'github'."
+        exit 1
+    fi
+    echo ">>> IMAGE SOURCE: ${IMAGE_SOURCE}"
+    shift # Shift to process remaining args with getopts
+fi
+
+IMAGE_SOURCE="${IMAGE_SOURCE:-github}" # Default to github if not specified
 
 while getopts ":t:u:" option; do
     
@@ -173,9 +185,21 @@ while getopts ":t:u:" option; do
 done
 
 #INPUTS
-dockerhub_account="aiscr"
-prod_image_name="${dockerhub_account}/webamcr:${IMAGE_TAG}"
-proxy_image_name="${dockerhub_account}/webamcr-proxy:${IMAGE_TAG}"
+
+# Override image source path based on the chosen source
+# Compose image tags (must match how GitHub Actions publish images)
+case $IMAGE_SOURCE in
+  dockerhub)
+    export amcr_image="aiscr/webamcr:${IMAGE_TAG}"
+    export proxy_image="aiscr/webamcr-proxy:${IMAGE_TAG}"
+    export redis_image="aiscr/webamcr-redis:${IMAGE_TAG}"
+    ;;
+  github)
+    export amcr_image="ghcr.io/arup-cas/aiscr-webamcr:${IMAGE_TAG}"
+    export proxy_image="ghcr.io/arup-cas/aiscr-webamcr-proxy:${IMAGE_TAG}"
+    export redis_image="ghcr.io/arup-cas/aiscr-webamcr-redis:${IMAGE_TAG}"
+    ;;
+esac
 
 stack_name="swarm_webamcr"
 network_name="prod-net" #MUST MATCH WITH COMPOSE FILES!!!
@@ -206,7 +230,7 @@ exec 2>&1
 
 #Build commands
 cmd_stack_rm="docker stack rm ${stack_name}"
-cmd_pull_images="docker pull ${proxy_image_name} && docker pull ${prod_image_name}"
+cmd_pull_images="docker pull ${proxy_image} && docker pull ${amcr_image}"
 cmd_deploy_base="docker stack deploy --compose-file"
 
 prune_images (){
@@ -215,13 +239,17 @@ echo "Pruning unused Docker images..."
 docker image prune -f
 }
 
+option_passed=false
+
 while getopts "hxu:t:i" option; do
    case ${option} in
       h) # display Help
          echo "OPTION: -h"
+         option_passed=true
          Help
          exit;;
       x) echo "OPTION: -x" 
+         option_passed=true
          prune_images
          echo_dec "Remove docker stack: ${stack_name}"
          if check_stack_exists; then
@@ -236,12 +264,13 @@ while getopts "hxu:t:i" option; do
          ;;
       u) #update services
         echo "OPTION: -u with ${IMAGE_TAG}"
+        option_passed=true
         prune_images
         echo_dec "Update services with new images!"
         if check_stack_exists ; then
             do_manual_checks
-            docker service update --force --image ${prod_image_name} ${stack_name}_web && \
-            docker service update --force --image ${proxy_image_name} ${stack_name}_proxy && \
+            docker service update --force --image ${amcr_image} ${stack_name}_web && \
+            docker service update --force --image ${proxy_image} ${stack_name}_proxy && \
             echo_dec "$msg_success" || echo_dec "$msg_fail_build"
         else
             echo_dec "SERVICE CANNOT BE UPDATED because stack doesn't exist !!!"
@@ -249,10 +278,12 @@ while getopts "hxu:t:i" option; do
         ;;
       t)
         echo "OPTION: -t with ${IMAGE_TAG}"
+        option_passed=true
         prune_images
         run_default b
 	      ;;
       i)
+        option_passed=true
         echo 10 last available versions
         curl -s https://hub.docker.com/v2/repositories/aiscr/webamcr/tags/ | jq '."results"[0:10] | .[]["name"]'
 	      ;;
@@ -263,7 +294,7 @@ while getopts "hxu:t:i" option; do
    esac
 done
 
-if [ -z ${option_passed+x} ]; then
+if [ "$option_passed" = false ]; then
    echo_dec "No option is passed as ARG, you have to specify a parameter, for help use -h."
 fi
 

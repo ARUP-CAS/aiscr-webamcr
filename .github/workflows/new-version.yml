@@ -54,24 +54,24 @@ jobs:
           echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
 
       - name: Set up Python
-        if: ${{ inputs.pip_update  }}
+        if: ${{ inputs.pip_update }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: Install Dependencies
-        if: ${{ inputs.pip_update  }}      
+        if: ${{ inputs.pip_update }}      
         run: |
           python -m pip install --upgrade pip
           pip install pip-licenses
           pip install -r webclient/requirements.txt
 
       - name: Run convert_to_rst.py
-        if: ${{ inputs.pip_update  }}
+        if: ${{ inputs.pip_update }}
         run: python docs/licenses/convert_to_rst.py
 
       - name: Update pip package list
-        if: ${{ inputs.pip_update  }}
+        if: ${{ inputs.pip_update }}
         run: |
           VERSION=${{ inputs.new_tag }}
           git config --global user.email "action@github.com"
@@ -88,7 +88,7 @@ jobs:
           fi
 
       - name: Update CITATION.cff
-        if: ${{ inputs.citation_update  }}
+        if: ${{ inputs.citation_update }}
         run: |
           VERSION=${{ inputs.new_tag }}
           DATE=$(date -I)

@@ -1,0 +1,102 @@
+name: Deployment to selected environment
+permissions:
+  contents: read
+  packages: read
+
+on:
+  workflow_dispatch :
+    inputs:
+      tag:
+       description: 'Version tag for deployment'
+       type: string
+       required: true
+      environment:
+        description: 'Environment'
+        type: choice
+        options:
+          - DEV
+          - TEST
+        required: true
+        default: TEST
+      source:
+        description: 'Docker imag source'
+        type: choice
+        options:
+          - GitHub
+          - DockerHub
+        required: true
+        default: GitHub 
+
+env:
+  branch: dev
+  server_deploy_root: /home/amcr/aiscr-webamcr
+  dep_script: scripts/ci_deployment/deploy_server.sh
+
+jobs:
+  deployment:
+    name: Deploy to ${{ inputs.environment }} Server
+    runs-on: ubuntu-latest
+    env:
+      DEPLOYMENT_SERVER: ${{ inputs.environment == 'DEV' && secrets.DEPLOYMENT_SERVER_DEV || inputs.environment == 'TEST' && secrets.DEPLOYMENT_SERVER_TEST }}
+      SSH_PRIVATE_KEY: ${{ inputs.environment == 'DEV' && secrets.SSH_PRIVATE_KEY_SERVER_DEV || inputs.environment == 'TEST' && secrets.SSH_PRIVATE_KEY_SERVER_TEST }}
+      SSH_KNOWN_HOST: ${{ inputs.environment == 'DEV' && secrets.SSH_KNOWN_HOST_DEV || inputs.environment == 'TEST' && secrets.SSH_KNOWN_HOST_TEST }}
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ inputs.tag }}
+
+      - name: Install OpenVPN
+        run: |
+          sudo apt-get update
+          sudo apt-get --assume-yes --no-install-recommends install openvpn iputils-ping dnsutils          
+
+      - name: Setup VPN config
+        run: |
+          echo "${{ secrets.VPN_CA_CRT }}" > .github/vpn/openvpn20_huldio_ci_ca.crt
+          echo "${{ secrets.VPN_USER_CRT }}" > .github/vpn/openvpn20_huldio_ci_user.crt
+          echo "${{ secrets.VPN_USER_KEY }}" > .github/vpn/openvpn20_huldio_ci_user.key
+          echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > secret.txt
+
+      - name: Connect VPN
+        run: sudo openvpn --config ".github/vpn/openvpn20_huldio_ci.ovpn" --daemon --askpass secret.txt
+
+      - name: Wait for VPN & DNS resolve
+        shell: bash
+        timeout-minutes: 2
+        run: |
+          for i in {1..10}; do
+            dig ${{ secrets.DNS_RESOLVER }} ${{ env.DEPLOYMENT_SERVER }} A +time=1 && break
+            sleep 2
+          done
+
+      - name: SSH connection
+        shell: bash
+        run: |
+          eval $(ssh-agent -s)
+          echo "${{ env.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ env.SSH_KNOWN_HOST }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          sleep 30
+          
+          ping -c 10 ${{ env.DEPLOYMENT_SERVER }}
+          
+          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
+          
+          ssh amcr@${{ env.DEPLOYMENT_SERVER }} << EOF
+            sudo su - root << AOF
+              cd ${{ env.server_deploy_root }}
+              git stash push -m "CI_autostash_${{ inputs.tag }}_${{ env.date_stamp }}"
+              git checkout ${{ env.branch }}
+              git pull
+              chmod +x ${{ env.dep_script }}
+              ./${{ env.dep_script }} ${{ inputs.tag }} ${{ env.server_deploy_root }} ${{ env.branch }} ${{ inputs.source }}
+            AOF
+          EOF
+
+      - name: Disconnect VPN
+        if: always()
+        run: |
+          sudo killall openvpn
