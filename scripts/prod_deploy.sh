@@ -190,28 +190,16 @@ done
 # Compose image tags (must match how GitHub Actions publish images)
 case $IMAGE_SOURCE in
   dockerhub)
-    registry_url="docker.io"
-    registry_account="aiscr"
-    amcr_image="${registry_account}/webamcr:${IMAGE_TAG}"
-    proxy_image="${registry_account}/webamcr-proxy:${IMAGE_TAG}"
-    redis_image="${registry_account}/webamcr-redis:${IMAGE_TAG}"
-    amcr_image_name="${registry_url}/${amcr_image}"
-    proxy_image_name="${registry_url}/${proxy_image}"
+    export amcr_image="aiscr/webamcr:${IMAGE_TAG}"
+    export proxy_image="aiscr/webamcr-proxy:${IMAGE_TAG}"
+    export redis_image="aiscr/webamcr-redis:${IMAGE_TAG}"
     ;;
   github)
-    registry_url="ghcr.io"
-    registry_account="arup-cas"
-    amcr_image="${registry_account}/aiscr-webamcr:${IMAGE_TAG}"
-    proxy_image="${registry_account}/aiscr-webamcr-proxy:${IMAGE_TAG}"
-    redis_image="${registry_account}/aiscr-webamcr-redis:${IMAGE_TAG}"    
-    amcr_image_name="${registry_url}/${amcr_image}"
-    proxy_image_name="${registry_url}/${proxy_image}"
+    export amcr_image="ghcr.io/arup-cas/aiscr-webamcr:${IMAGE_TAG}"
+    export proxy_image="ghcr.io/arup-cas/aiscr-webamcr-proxy:${IMAGE_TAG}"
+    export redis_image="ghcr.io/arup-cas/aiscr-webamcr-redis:${IMAGE_TAG}"
     ;;
 esac
-
-export amcr_image
-export proxy_image
-export redis_image
 
 stack_name="swarm_webamcr"
 network_name="prod-net" #MUST MATCH WITH COMPOSE FILES!!!
@@ -242,7 +230,7 @@ exec 2>&1
 
 #Build commands
 cmd_stack_rm="docker stack rm ${stack_name}"
-cmd_pull_images="docker pull ${proxy_image_name} && docker pull ${amcr_image_name}"
+cmd_pull_images="docker pull ${proxy_image} && docker pull ${amcr_image}"
 cmd_deploy_base="docker stack deploy --compose-file"
 
 prune_images (){
@@ -281,8 +269,8 @@ while getopts "hxu:t:i" option; do
         echo_dec "Update services with new images!"
         if check_stack_exists ; then
             do_manual_checks
-            docker service update --force --image ${amcr_image_name} ${stack_name}_web && \
-            docker service update --force --image ${proxy_image_name} ${stack_name}_proxy && \
+            docker service update --force --image ${amcr_image} ${stack_name}_web && \
+            docker service update --force --image ${proxy_image} ${stack_name}_proxy && \
             echo_dec "$msg_success" || echo_dec "$msg_fail_build"
         else
             echo_dec "SERVICE CANNOT BE UPDATED because stack doesn't exist !!!"
