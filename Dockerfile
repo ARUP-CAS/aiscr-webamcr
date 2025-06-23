@@ -23,7 +23,7 @@ RUN echo "$TZ" > /etc/timezone && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY ./webclient/requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt --break-system-packages
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt --break-system-packages
 
 COPY ./webclient /code
 WORKDIR /code
