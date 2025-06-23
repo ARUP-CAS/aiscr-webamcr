@@ -19,7 +19,7 @@ Docker-hub repozitář pak slouží jako místo, kde se uchovávají všechny vy
 
 Alternativně lze docker obrazy vytvořit manuálně, s pomocí předpřipravených Dockerfile souborů:
 
-* Dockerfile-production - definice docker obrazu pro aplikaci WebAMČR, produkční / testovací nasazení, nutná existence systémových proměnných VERSION_APP, TAG_APP, které popisují verzi vytvářeného obrazu (automaticky dodáváno při vytváření přes automatizační skripty)
+* Dockerfile - definice docker obrazu pro aplikaci WebAMČR, produkční / testovací nasazení, nutná existence systémových proměnných VERSION_APP, TAG_APP, které popisují verzi vytvářeného obrazu (automaticky dodáváno při vytváření přes automatizační skripty)
 * Dockerfile-DEV - definice docker obrazu pro aplikaci WebAMČR pro vývojové nasazení, nutná existence parametrů --build-arg TAG_APP=<value> a --build-arg VERSION_APP=<value> při spuštění vytváření obrazu z příkazové řádky (automatizační skript toto dodává bez nutnosti zásahu uživatele)
 * Dockerfile-DB - definice docker obrazu databáze Postgresql pro lokální nasazení a vývojové účely
 * redis/Dockerfile - definice docker obrazu pro redis server s upravenou konfigurací
@@ -207,7 +207,7 @@ Při specifických způsobech nasazení, kdy výše uvedené automatizační skr
  
  * proxy - proxy server NGINX
 
-* `./git_docker-compose-production.yml` - obsahuje stejné služby jako `./docker-compose-production.yml`, ale pro službu web využívá lokální build přes ``Dockerfile-production`` místo stažení obrazu z docker-hubu
+* `./git_docker-compose-production.yml` - obsahuje stejné služby jako `./docker-compose-production.yml`, ale pro službu web využívá lokální build přes ``Dockerfile`` místo stažení obrazu z docker-hubu
 * `./git_docker-compose-production-proxy.yml` - obsahuje stejné služby jako `./docker-compose-production-proxy.yml`, ale pro službu proxy využívá lokální build přes ``proxy\Dockerfile`` a nastavuje port na 8081
 * `./git_docker-compose-production.override.yml` - obsahuje alternativní secrets, samostatně nespustitelné, využívá se pouze nepřímo skrze rozhodovací strukturu v rámci skriptu `./scripts/git_prod_deploy.sh`
   

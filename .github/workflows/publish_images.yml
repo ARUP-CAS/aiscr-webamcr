@@ -28,7 +28,7 @@ jobs:
         include:
           - component: prod
             context: .
-            dockerfile: Dockerfile-production
+            dockerfile: Dockerfile
             image_name_github: arup-cas/aiscr-webamcr
             image_name_dockerhub: aiscr/webamcr
             description: Archaeological Map of the Czech Republic (AMCR)
