@@ -165,7 +165,7 @@ if [[ "$1" != -* ]] && [[ -n "$1" ]]; then
     shift # Shift to process remaining args with getopts
 fi
 
-IMAGE_SOURCE="${IMAGE_SOURCE:-dockerhub}" # Default to dockerhub if not specified
+IMAGE_SOURCE="${IMAGE_SOURCE:-github}" # Default to github if not specified
 
 while getopts ":t:u:" option; do
     
