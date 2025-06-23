@@ -204,8 +204,8 @@ esac
 stack_name="swarm_webamcr"
 network_name="prod-net" #MUST MATCH WITH COMPOSE FILES!!!
 
-compose_proxy="docker-compose-production-proxy.yml"
-compose_prod="docker-compose-production.yml"
+compose_proxy="docker-compose-proxy.yml"
+compose_prod="docker-compose.yml"
 
 msg_fail_build="!! DEPLOYMENT not successfull"
 msg_pull_fail="!! PULL not successfull"
