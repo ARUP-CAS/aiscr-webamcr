@@ -1097,6 +1097,7 @@ class DokumentCastSmazatView(TransakceView):
         if (
             isinstance(cast.archeologicky_zaznam, ArcheologickyZaznam)
             and cast.archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+            and cast.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
             and cast.archeologicky_zaznam.lokalita.igsn
         ):
             lokalita_update = cast.archeologicky_zaznam.lokalita
