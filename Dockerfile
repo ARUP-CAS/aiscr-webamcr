@@ -42,10 +42,13 @@ RUN echo $TZ > /etc/timezone && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Set python aliases for python3
+RUN echo 'alias python=python3' >> ~/.bashrc && \
+    echo 'alias pip=pip3' >> ~/.bashrc
+
 # Install Python dependencies
-COPY ./webclient/requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt --break-system-packages && \
-    rm /tmp/requirements.txt
+COPY ./webclient/requirements.txt .
+RUN pip3 install -r requirements.txt --break-system-packages
 
 # Set up application code
 COPY ./webclient /code
