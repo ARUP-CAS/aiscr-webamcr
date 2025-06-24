@@ -1,6 +1,6 @@
 # Dockerfile
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.11.0
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.9.1
 
 LABEL maintainer="Archaeological Information System of the Czech Republic (AIS CR) <amcr@arup.cas.cz>" \
       org.opencontainers.image.title="aiscr-webamcr" \
@@ -42,13 +42,10 @@ RUN echo $TZ > /etc/timezone && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set python aliases for python3
-RUN echo 'alias python=python3' >> ~/.bashrc && \
-    echo 'alias pip=pip3' >> ~/.bashrc
-
 # Install Python dependencies
-COPY ./webclient/requirements.txt .
-RUN pip3 install -r requirements.txt --break-system-packages
+COPY ./webclient/requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt --break-system-packages && \
+    rm /tmp/requirements.txt
 
 # Set up application code
 COPY ./webclient /code
