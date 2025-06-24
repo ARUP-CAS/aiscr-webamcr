@@ -1452,8 +1452,7 @@ class FedoraTransaction:
             try:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)
             except ResponseError as err:
-                # Fedora will probably rollback the transaction automatically, but we want to log the error
-                logger.info(
+                logger.error(
                     "core_repository_connector.FedoraTransaction._save_transaction_result_to_redis.rollback.failed",
                     extra={"transaction": self.uid, "error": err},
                 )
