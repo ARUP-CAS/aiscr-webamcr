@@ -8,23 +8,19 @@ ARG TAG_APP
 ENV TZ="Europe/Prague" \
     LC_ALL='cs_CZ.utf8'
 
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    echo "$TZ" > /etc/timezone && \
+RUN echo "$TZ" > /etc/timezone && \
     apt-get update && \
-    apt-get install -y --no-install-recommends \
+    DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
         tzdata \
-        ca-certificates \
-        software-properties-common \
-        curl \
-        gnupg \
         python3-pip \
         libgdal-dev \
         locales \
-        gettext && \
+        gettext \
+        curl && \
     locale-gen cs_CZ.utf8 && \
     ln -sf python3 /usr/bin/python && \
     ln -sf pip3 /usr/bin/pip && \
-    pip install --upgrade pip && \
+    pip3 install --upgrade pip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY ./webclient/requirements.txt /tmp/requirements.txt
