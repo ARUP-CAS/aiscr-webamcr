@@ -1,11 +1,13 @@
+import base64
 import json
 import logging
 import os
 import os.path
+import re
 import time
 import xml.etree.ElementTree as ET
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from unittest.util import safe_repr
 from urllib.parse import urlparse
@@ -136,9 +138,18 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
-        extensions = {"text/turtle": "turtle", "application/xml": "xml"}
+        extensions = {
+            "text/turtle": "turtle",
+            "application/xml": "xml",
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "application/zip": "zip",
+            "application/pdf": "pdf",
+        }
         filename = str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__")
         extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
+        if "__file__" in filename:
+            filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
         if response.status_code == 200:
             f = open(f"{path}/{filename}.{extension}", "wb")
             f.write(response.content)
@@ -149,9 +160,18 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
-        extensions = {"text/turtle": "turtle", "application/xml": "xml"}
+        extensions = {
+            "text/turtle": "turtle",
+            "application/xml": "xml",
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "application/zip": "zip",
+            "application/pdf": "pdf",
+        }
         filename = str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__")
         extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
+        if "__file__" in filename:
+            filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
         if response.status_code == 200:
             f = open(f"{path}/{filename}.{extension}", "rb")
             sample_file = f.read()
@@ -160,10 +180,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             assert self.porovnej_rdf_obsah(
                 response.content, sample_file, ignorovat_predikaty=["fedora:created", "fedora:lastModified"]
             )
-        else:
+        elif extension == "xml":
             assert self.porovnej_xml_bez_ignorovanych(
-                sample_file, response.content, ignorovane_tagy=["amcr:datum_zmeny"]
+                sample_file, response.content, ignorovane_tagy=["amcr:datum_zmeny", "amcr:datum_registrace"]
             )
+        else:
+            assert sample_file == response.content
+
         return members
 
     api_url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
@@ -216,7 +239,6 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             auth=self.auth,
             headers=headers,
         )
-        import json
 
         if response.status_code == 200:
             os.makedirs(path, exist_ok=True)
@@ -228,6 +250,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 self.save_container_content(n["fedora_id"], path)
 
     def check_fedora_change(self, time, path):
+        self.save_fedora_change(time, path)
         headers = {}
         response = requests.get(
             f"{self.api_url}fcr:search?condition=fedora_id={self.api_url}{settings.FEDORA_SERVER_NAME}/*&condition=modified>{time}&offset=0&max_results=100&format=json",
@@ -522,6 +545,18 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         )
         self.driver.execute_script(script)
 
+    def upload_file(self, file_path, file_name):
+        with open(file_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+        self.addFileToDropzone("#my-awesome-dropzone", file_name, encoded_string)
+        self.driver.set_script_timeout(15)
+        self.driver.execute_async_script(
+            """
+            var done = arguments[0];
+            newDropzone.on("success", function(){ done('foo');});
+            """
+        )
+
     def createFedoraRecord(self, ident_cely):
         try:
             record = get_record_from_ident(ident_cely)
@@ -550,6 +585,24 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             else:
                 self.odstran_elementy(elem, ignorovane_tagy)
 
+    def odstran_uuid_z_xml(self, element):
+        """
+        Rekurzivně odstraní UUID z textů a atributů XML elementu.
+        """
+        # Nahraď v textu
+        if element.text:
+            element.text = self.UUID_REGEX.sub("UUID-REMOVED", element.text)
+        if element.tail:
+            element.tail = self.UUID_REGEX.sub("UUID-REMOVED", element.tail)
+
+        # Nahraď v atributech
+        for key, value in element.attrib.items():
+            element.attrib[key] = self.UUID_REGEX.sub("UUID-REMOVED", value)
+
+        # Rekurzivně pokračuj
+        for child in element:
+            self.odstran_uuid_z_xml(child)
+
     def xml_to_string_bez_ignorovanych_z_textu(self, xml_text, ignorovane_tagy):
         """
         Načte XML z textového vstupu, odstraní ignorované tagy a vrátí serializovanou podobu.
@@ -557,8 +610,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         root = ET.fromstring(xml_text)
         ignorovane_tagy_trans = []
         for item in ignorovane_tagy:
-            ignorovane_tagy_trans.append(item.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.1/}"))
+            ignorovane_tagy_trans.append(item.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.2/}"))
         self.odstran_elementy(root, ignorovane_tagy_trans)
+        self.odstran_uuid_z_xml(root)
         return ET.tostring(root, encoding="utf-8")
 
     def porovnej_xml_bez_ignorovanych(self, vzorovy_soubor, vystupni_soubor, ignorovane_tagy):
@@ -633,6 +687,30 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             for s, p, o in list(graf.triples((None, pred_uri, None))):
                 graf.remove((s, p, o))
 
+    def odstran_uuid_z_rdf(self, graf):
+        """
+        Projde RDF graf a nahradí výskyty UUID v URIRef i Literal hodnotách.
+        """
+        nove_triples = []
+
+        for s, p, o in list(graf):
+            # Subjekt
+            new_s = URIRef(self.UUID_REGEX.sub("UUID-REMOVED", str(s))) if isinstance(s, URIRef) else s
+            # Objekt
+            if isinstance(o, URIRef):
+                new_o = URIRef(self.UUID_REGEX.sub("UUID-REMOVED", str(o)))
+            elif isinstance(o, Literal) and isinstance(o.value, str):
+                new_o = Literal(self.UUID_REGEX.sub("UUID-REMOVED", str(o)), datatype=o.datatype, lang=o.language)
+            else:
+                new_o = o
+
+            # Zachováme predikát beze změny (většinou se UUID v predikátu nevyskytuje)
+            nove_triples.append((new_s, p, new_o))
+            graf.remove((s, p, o))
+
+        for triple in nove_triples:
+            graf.add(triple)
+
     def porovnej_rdf_obsah(self, aktualni_rdf, ocekavany_rdf, ignorovat_predikaty=None):
         g1 = Graph()
         g1.parse(data=aktualni_rdf, format="turtle")
@@ -646,6 +724,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
         self.nahrad_base_uri_auto(g1)
         self.nahrad_base_uri_auto(g2)
+
+        self.odstran_uuid_z_rdf(g1)
+        self.odstran_uuid_z_rdf(g2)
 
         return g1.isomorphic(g2)
 
@@ -726,6 +807,21 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         else:
             return data
 
+    UUID_REGEX = re.compile(r"[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}", re.IGNORECASE)
+
+    def odstran_uuid(self, data):
+        """
+        Rekurzivně nahradí UUID ve stringových hodnotách JSON objektu za placeholder.
+        """
+        if isinstance(data, dict):
+            return {k: self.odstran_uuid(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [self.odstran_uuid(item) for item in data]
+        elif isinstance(data, str):
+            return self.UUID_REGEX.sub("UUID-REMOVED", data)
+        else:
+            return data
+
     def porovnej_json_rovnost(self, vzor_json_text, vystup_json_text, klice_k_ignoraci=None):
         json_vzor = json.loads(vzor_json_text)
         json_vystup = json.loads(vystup_json_text)
@@ -737,6 +833,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         json_vzor = self.nahrad_base_uri_auto_json(json_vzor)
         json_vystup = self.nahrad_base_uri_auto_json(json_vystup)
 
+        json_vzor = self.odstran_uuid(json_vzor)
+        json_vystup = self.odstran_uuid(json_vystup)
+
         json_vzor = self.normalizuj_json(json_vzor)
         json_vystup = self.normalizuj_json(json_vystup)
         res = json_vzor == json_vystup
@@ -746,6 +845,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 extra={"data": json_vystup},
             )
         return json_vzor == json_vystup
+
+    def getTime(self):
+        return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 class CoreSeleniumTest(BaseSeleniumTestClass):

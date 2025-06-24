@@ -1,4 +1,3 @@
-import base64
 import logging
 import unittest
 
@@ -679,11 +678,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.goToAddress("/arch-z/akce/detail/C-202309724A/dj/C-202309724A-D01")
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_C-202309724A-D01 .btn-group:nth-child(1) .material-icons")
         self.ElementClick(By.CSS_SELECTOR, ".show > .dropdown-item:nth-child(2)")
-        with open("arch_z/tests/resources/geom.csv", "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-
-        self.addFileToDropzone("#my-awesome-dropzone", "geom.csv", encoded_string)
-        self.wait(1)
+        self.upload_file("arch_z/tests/resources/geom.csv", "geom.csv")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
@@ -713,11 +708,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202005190A_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
         self.ElementClick(By.CSS_SELECTOR, ".show > .dropdown-item:nth-child(2)")
-        with open("arch_z/tests/resources/geom.csv", "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-
-        self.addFileToDropzone("#my-awesome-dropzone", "geom.csv", encoded_string)
-        self.wait(1)
+        self.upload_file("arch_z/tests/resources/geom.csv", "geom.csv")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         with WaitForPageLoad(self.driver):
@@ -839,13 +830,7 @@ class AkceProjektoveAkce(AkceTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceSamostatneAkce(AkceTestClass):
-    def test_046_vytvoreni_samostatne_akce_p_001(self):
-        # Scenar_46 Vytvoření samostané akce (pozitivní scénář 1)
-        logger.info("AkceSamostatneAkce.test_046_vytvoreni_samostatne_akce_p_001.start")
-        self.login("badatel")
-
-        arch_z_count_old = Akce.objects.count()
-
+    def create_Samostatna_Akce(self):
         self.go_to_Akce_zapsat()
         self.ElementClick(By.ID, "select2-id_hlavni_katastr-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
@@ -880,6 +865,13 @@ class AkceSamostatneAkce(AkceTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
 
+    def test_046_vytvoreni_samostatne_akce_p_001(self):
+        # Scenar_46 Vytvoření samostané akce (pozitivní scénář 1)
+        logger.info("AkceSamostatneAkce.test_046_vytvoreni_samostatne_akce_p_001.start")
+        self.login("badatel")
+
+        arch_z_count_old = Akce.objects.count()
+        self.create_Samostatna_Akce()
         arch_z_count_new = Akce.objects.count()
         self.assertEqual(arch_z_count_old + 1, arch_z_count_new)
         logger.info("AkceSamostatneAkce.test_046_vytvoreni_samostatne_akce_p_001.end")
@@ -1382,12 +1374,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
 
         self.ElementClick(By.CSS_SELECTOR, ".show > .dropdown-item:nth-child(2)")
-
-        with open("arch_z/tests/resources/geom.csv", "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-
-        self.addFileToDropzone("#my-awesome-dropzone", "geom.csv", encoded_string)
-        self.wait(1)
+        self.upload_file("arch_z/tests/resources/geom.csv", "geom.csv")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         with WaitForPageLoad(self.driver):
@@ -1416,11 +1403,7 @@ class AkceSamostatneAkce(AkceTestClass):
             By.CSS_SELECTOR, "#detail_dj_form_X-C-9000000002A-D01 .btn-group:nth-child(1) .material-icons"
         )
         self.ElementClick(By.CSS_SELECTOR, ".show > .dropdown-item:nth-child(2)")
-        with open("arch_z/tests/resources/geom.csv", "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-
-        self.addFileToDropzone("#my-awesome-dropzone", "geom.csv", encoded_string)
-        self.wait(1)
+        self.upload_file("arch_z/tests/resources/geom.csv", "geom.csv")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
@@ -1489,8 +1472,497 @@ class AkceSamostatneAkce(AkceTestClass):
         self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-9157766A")
         self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-9157766A")
+        time = self.getTime()
         self.ElementClick(By.ID, "akce-archivovat")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-9157766A").first().stav, AZ_STAV_ARCHIVOVANY)
+        self.check_fedora_change(time, "arch_z/tests/resources/archivace_AZ")
         logger.info("AkceProjektoveAkce.test_103_archivace_samostatne_akce_p_001.end")
+
+    def test_138_test_Fedory_samostatne_akce_p_001(self):
+        # Scenar_138 Test Fedory pro Samostatne akce
+        logger.info("AkceProjektoveAkce.test_138_test_Fedory_samostatne_akce_p_001.start")
+
+        # vytvoření akce
+        time = self.getTime()
+        self.login("badatel")
+        self.create_Samostatna_Akce()
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_AZ")
+        self.logout()
+
+        # update akce X-M-9922437A
+        self.login("archivar")
+        self.createFedoraRecord("X-M-9922437A")
+        self.goToAddress("/id/X-M-9922437A")
+        time = self.getTime()
+        self.ElementClick(By.ID, "edit-btn")
+        self.ElementClick(By.ID, "id_lokalizace_okolnosti")
+        self.driver.find_element(By.ID, "id_lokalizace_okolnosti").send_keys("Louny")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "actionSubmitBtn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_AZ")
+
+        # C akce_vedouci
+        time = self.getTime()
+        self.ElementClick(By.ID, "edit-btn")
+        self.ElementClick(By.CSS_SELECTOR, ".select2-selection__placeholder")
+        self.wait(1)
+        self.ElementClick(By.CSS_SELECTOR, "#select2-id__osv-0-vedouci-results > li:nth-child(5)")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id__osv-0-organizace .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-9-9 > .text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "actionSubmitBtn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_vedouci")
+
+        # U akce_vedouci
+        time = self.getTime()
+        self.ElementClick(By.ID, "edit-btn")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id__osv-0-organizace .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-9-16 > .text")
+        self.ElementClick(By.CSS_SELECTOR, "#select2-id__osv-0-vedouci-container")
+        self.wait(1)
+        self.ElementClick(By.CSS_SELECTOR, "#select2-id__osv-0-vedouci-results > li:nth-child(4)")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "actionSubmitBtn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_vedouci")
+
+        # D akce_vedouci
+        time = self.getTime()
+        self.ElementClick(By.ID, "edit-btn")
+        self.ElementClick(By.CSS_SELECTOR, ".app-color-danger")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "actionSubmitBtn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_vedouci")
+
+        # C DJ
+        time = self.getTime()
+        self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
+        self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "newDjSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_DJ")
+
+        # U DJ
+        time = self.getTime()
+        self.ElementClick(By.ID, "id_X-M-9922437A-D01-nazev")
+        self.driver.find_element(By.ID, "id_X-M-9922437A-D01-nazev").send_keys("test")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editDjSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_DJ")
+
+        # D DJ
+        time = self.getTime()
+        self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
+        self.ElementClick(By.ID, "dj-smazat-X-M-9922437A-D01")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_DJ")
+
+        # C komponenta
+        self.createFedoraRecord("X-C-9000000002A")
+        self.goToAddress("/id/X-C-9000000002A")
+        time = self.getTime()
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_X_C_9000000002A_D01 > strong")
+        self.ElementClick(
+            By.CSS_SELECTOR, "#detail_dj_form_X-C-9000000002A-D01 .btn-group:nth-child(1) .material-icons"
+        )
+        self.ElementClick(
+            By.LINK_TEXT, _("arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatKomponentu.label")
+        )
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_obdobi .btn")
+        self.ElementClick(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control")
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("únětická kultura")
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("poh")
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "createCompotSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_komponenta")
+
+        # U komponenta
+        time = self.getTime()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001-obdobi .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-6 > .text")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001-jistota .filter-option-inner-inner")
+        self.ElementClick(By.ID, "bs-select-2-1")
+        self.ElementClick(By.ID, "id_X-C-9000000002A-K001-presna_datace")
+        self.driver.find_element(By.ID, "id_X-C-9000000002A-K001-presna_datace").send_keys("ne")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001-areal .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-5 > .text")
+        self.ElementClick(By.CSS_SELECTOR, ".show-tick .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-4-1 > .text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editKompSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_komponenta")
+
+        # C nalez
+        time = self.getTime()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_o-0-druh .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-7-8 > .text")
+        self.ElementClick(By.ID, "id_X-C-9000000002A-K001_o-0-pocet")
+        self.driver.find_element(By.ID, "id_X-C-9000000002A-K001_o-0-pocet").send_keys("1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_p-0-druh .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-15-19 > .text")
+        self.ElementClick(By.CSS_SELECTOR, ".dropup > .bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-16-4 > .text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editKompSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_nalez")
+
+        # U nalez
+        time = self.getTime()
+        self.driver.find_element(By.ID, "id_X-C-9000000002A-K001_o-0-pocet").send_keys("2")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_p-0-specifikace .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-18-14 > .text")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_o-0-specifikace .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-8-7 > .text")
+        self.ElementClick(By.ID, "id_X-C-9000000002A-K001_p-0-pocet")
+        self.driver.find_element(By.ID, "id_X-C-9000000002A-K001_p-0-pocet").send_keys("2")
+        self.ElementClick(By.ID, "id_X-C-9000000002A-K001_p-0-poznamka")
+        self.driver.find_element(By.ID, "id_X-C-9000000002A-K001_p-0-poznamka").send_keys("test")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editKompSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_nalez")
+
+        # D nalez
+        time = self.getTime()
+        self.ElementClick(By.ID, "objekt-smazat-180492")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.ElementClick(By.ID, "objekt-smazat-175763")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_nalez")
+
+        # D komponenta
+        time = self.getTime()
+        self.ElementClick(By.CSS_SELECTOR, "#detail_komponenta_form_X-C-9000000002A-K001 #others > .material-icons")
+        self.ElementClick(By.ID, "komponenta-smazat-X-C-9000000002A-K001")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_komponenta")
+
+        # C dokument_cast
+        time = self.getTime()
+        self.ElementClick(By.ID, "others_doc")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.LINK_TEXT, _("dokument.templates.dokument_table.pridatNovyDokument.label"))
+        self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
+        self.wait(1)
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        self.ElementClick(By.ID, "id_rok_vzniku")
+        self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_organizace .filter-option-inner-inner")
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(
+            "Archeologický ústav Brno"
+        )
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-0 > .text")
+        self.ElementClick(By.ID, "id_popis")
+        self.driver.find_element(By.ID, "id_popis").send_keys("test")
+        self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.ID, "bs-select-7-1")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "newDocumentSubmitBtn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_dokument_cast")
+
+        # D dokument_cast
+        time = self.getTime()
+        with WaitForPageLoad(self.driver):
+            self.goToAddress("/id/X-C-9000000002A")
+        self.wait(1)
+        self.ElementClick(By.ID, "dokument-odpojit-X-C-TX-000000009")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_dokument_cast")
+
+        # C EZ
+        time = self.getTime()
+        self.ElementClick(By.ID, "eo-pripojit-do-az")
+        self.ElementClick(By.ID, "select2-id_ez-container")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_EZ")
+
+        # U EZ
+        time = self.getTime()
+        self.ElementClick(By.ID, "ez-change-788")
+        self.driver.find_element(By.ID, "id_paginace").send_keys("10")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_EZ")
+
+        # D EZ
+        time = self.getTime()
+        self.ElementClick(By.ID, "ez-odpojit-788")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_EZ")
+
+        # změna ident_cely AZ X-C-91468414A
+        # změna ident_cely DJ
+        # změna ident_cely komponenta
+
+        self.createFedoraRecord("X-C-91468414A")
+        self.createFedoraRecord("X-C-TX-000000008")
+        self.createFedoraRecord("BIB-0000001")
+        self.goToAddress("/id/X-C-TX-000000008")
+        self.ElementClick(By.ID, "NahratSoubory")
+        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "buttonUploadSubmit")
+        time = self.getTime()
+        self.goToAddress("/id/X-C-91468414A")
+        self.ElementClick(By.ID, "akce-odeslat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/ident_cely")
+
+        # AZ smazat
+        time = self.getTime()
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "akce-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_AZ")
+
+    def test_139_test_Fedory_PIAN_p_001(self):
+        # Scenar_138 Test Fedory pro PIAN ADB vyskovy bod
+        logger.info("AkceProjektoveAkce.test_139_test_Fedory_PIAN_p_001.start")
+
+        # C PIAN X-C-9000000011A
+        self.login("archivar")
+        self.createFedoraRecord("X-C-9000000011A")
+        self.goToAddress("/id/X-C-9000000011A")
+        self.ElementClick(By.ID, "button-add-dj")
+        self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-2 > .text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "newDjSubmitButton")
+        time = self.getTime()
+        self.ElementClick(By.ID, "add_others")
+        self.ElementClick(By.ID, "show_menu_pian_new_id")
+        self.wait(1)
+        self.driver.execute_script("""map.setZoom(16); return map.getZoom();""")
+        self.wait(2)
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditAddMarker"))
+        self.clickAt(self.driver.find_element(By.ID, "djMap"), 0, 0)
+        self.wait(0.2)
+        self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "createPianSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_PIAN")
+
+        # C ADB
+        time = self.getTime()
+        self.ElementClick(By.ID, "add_others")
+        self.ElementClick(By.LINK_TEXT, "ADB - vytvořit")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_typ_sondy .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-4 > .text")
+        self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-2 > .text")
+        self.ElementClick(By.ID, "id_trat")
+        self.driver.find_element(By.ID, "id_trat").send_keys("test")
+        self.ElementClick(By.ID, "id_cislo_popisne")
+        self.driver.find_element(By.ID, "id_cislo_popisne").send_keys("559")
+        self.ElementClick(By.ID, "id_parcelni_cislo")
+        self.driver.find_element(By.ID, "id_parcelni_cislo").send_keys("5")
+        self.ElementClick(By.ID, "id_stratigraficke_jednotky")
+        self.driver.find_element(By.ID, "id_stratigraficke_jednotky").send_keys("2")
+        self.ElementClick(By.ID, "select2-id_autor_popisu-container")
+        self.ElementClick(By.CSS_SELECTOR, "li.select2-results__option:nth-child(2)")
+        self.ElementClick(By.ID, "id_rok_popisu")
+        self.ElementClick(By.CSS_SELECTOR, ".year:nth-child(7)")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "createAdbSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_ADB")
+
+        # C výškový bod
+        time = self.getTime()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_ADB-KRAS07-000001_vb-0-typ .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-6-3 > .text")
+        self.ElementClick(By.ID, "id_ADB-KRAS07-000001_vb-0-niveleta")
+        self.driver.find_element(By.ID, "id_ADB-KRAS07-000001_vb-0-niveleta").send_keys("500")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editDjSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_vyskovy_bod")
+
+        # U PIAN
+        time = self.getTime()
+        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
+        self.ElementClick(By.ID, "id_X-C-9000000011A-D01-nazev")
+        self.driver.find_element(By.ID, "id_X-C-9000000011A-D01-nazev").send_keys("Test")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editDjSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/update_PIAN")
+
+        # U ADB
+        time = self.getTime()
+        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
+        self.ElementClick(By.ID, "id_cislo_popisne")
+        self.driver.find_element(By.ID, "id_cislo_popisne").send_keys("59")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editDjSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/update_ADB")
+
+        # změna přístupnosti
+        time = self.getTime()
+        self.ElementClick(By.ID, "edit-btn")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-5-2 > .text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "actionSubmitBtn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/zmena_pristupnosti")
+
+        # U  výškový bod
+        time = self.getTime()
+        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
+        self.ElementClick(By.ID, "id_ADB-KRAS07-000001_vb-0-niveleta")
+        self.driver.find_element(By.ID, "id_ADB-KRAS07-000001_vb-0-niveleta").send_keys("50")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editDjSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/update_vyskovy_bod")
+
+        # D výškový bod
+        time = self.getTime()
+        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
+        self.ElementClick(By.ID, "vb-smazat-10782")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/delete_vyskovy_bod")
+
+        # D ADB
+        time = self.getTime()
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "adb-smazat-ADB-KRAS07-000001")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/delete_adb")
+
+        # odpojení smazání PIAN
+        time = self.getTime()
+        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "pian-odpojit-N-1121-000000006")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/odpojeni_smazani_PIAN")
+
+        # připorení PIAN
+        time = self.getTime()
+        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
+        self.ElementClick(By.ID, "add_others")
+        self.ElementClick(By.ID, "pian-pripojit-")
+        self.ElementClick(By.ID, "select2-id_X-C-9000000011A-D01-pian-container")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("P-1121-100070")
+        self.wait(0.5)
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editDjSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/pripojeni_PIAN")
+
+        # PIAN odpojení bez smazání
+        time = self.getTime()
+        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "pian-odpojit-P-1121-100070")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/odpojeni_PIAN")
+
+        # změna ident_cely PIAN
+        time = self.getTime()
+        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
+        self.ElementClick(By.ID, "add_others")
+        self.ElementClick(By.ID, "show_menu_pian_new_id")
+        self.wait(1)
+        self.driver.execute_script("""map.setZoom(16); return map.getZoom();""")
+        self.wait(2)
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditAddMarker"))
+        self.wait(0.2)
+        self.clickAt(self.driver.find_element(By.ID, "djMap"), 10, 10)
+        self.wait(0.2)
+        self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "createPianSubmitButton")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "pian-potvrdit-N-1121-000000007")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/ident_cely_PIAN")
+
+        # C DJ katastr
+        time = self.getTime()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000011A-D01-typ .btn")
+        self.ElementClick(By.ID, "bs-select-1-3")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editDjSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_DJ_katastr")
+
+        # U DJ katastr
+        time = self.getTime()
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "zmenit-katastr-X-C-9000000011A-D01")
+        self.ElementClick(By.CSS_SELECTOR, ".modelselect2 b")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Louny")
+        self.wait(0.2)
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/update_DJ_katastr")
+
+        # D DJ katastr
+        time = self.getTime()
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000011A-D01-typ .btn")
+        self.ElementClick(By.ID, "bs-select-1-1")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editDjSubmitButton")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/delete_DJ_katastr")
+
+        # D DJ
+        self.createFedoraRecord("X-M-91366821A")
+        self.goToAddress("/id/X-M-91366821A")
+        time = self.getTime()
+        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_M_91366821A_D01")
+        self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
+        self.ElementClick(By.ID, "dj-smazat-X-M-91366821A-D01")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_139/delete_DJ")
+        logger.info("AkceProjektoveAkce.test_139_test_Fedory_PIAN_p_001.end")
+
+    def test_140_test_Fedory_PIAN_p_002(self):
+        # Scenar_138 Test Fedory pro ADB a výškový bod
+        logger.info("AkceProjektoveAkce.test_140_test_Fedory_PIAN_p_002.start")
+        self.login("archivar")
+        # změna ident_cely PIAN
+        self.createFedoraRecord("X-M-91366821A")
+        self.goToAddress("/id/X-M-91366821A")
+        time = self.getTime()
+        self.ElementClick(By.ID, "akce-odeslat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_140/ident_cely_1")
+
+        # AZ smazat
+        time = self.getTime()
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "akce-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_140/delete_AZ")
+
+        logger.info("AkceProjektoveAkce.test_140_test_Fedory_PIAN_p_002.end")

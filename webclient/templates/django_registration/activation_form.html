@@ -19,7 +19,7 @@
               {{ form.activation_key|as_crispy_field }}
               {% csrf_token %}
               <small id="hint_id_activation_key" class="form-text text-muted">{% trans 'templates.djangoRegistration.activationKey.tooltip' %}</small>
-              <input type="submit" class="btn btn-primary" value="{% trans 'templates.djangoRegistration.activationForm.submit' %}">
+              <input type="submit" id="submit-btn" class="btn btn-primary" value="{% trans 'templates.djangoRegistration.activationForm.submit' %}">
             </form>
           </div>
         </div>

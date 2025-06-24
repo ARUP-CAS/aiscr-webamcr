@@ -8,7 +8,7 @@
       
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
-          <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
+          <button class="btn" type="button" id="others_doc" type="button" data-toggle="dropdown" aria-haspopup="true"
                   aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'dokument.templates.dokument_table.dalsiNabidka.tooltip' %}">
             <span class="material-icons">add</span>
           </button>
@@ -30,7 +30,7 @@
               {% endif %}
             {% elif type == "projekt" %}
               {% if show.zapsat_dokumenty %}
-                <a class="dropdown-item"
+                <a class="dropdown-item" id="dokument-add"
                 href="{% url 'dokument:zapsat-do-projektu' zaznam.ident_cely %}">{% trans 'dokument.templates.dokument_table.pridatNovyDokumentDoProjektu.label' %}</a>
               {% endif %}
               {% if show.pripojit_dokumenty %}

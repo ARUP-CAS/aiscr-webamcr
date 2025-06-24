@@ -1,8 +1,8 @@
-import base64
 import logging
 import unittest
 
 from core.constants import SN_ARCHIVOVANY, SN_ODESLANY, SN_POTVRZENY, SN_ZAPSANY
+from core.models import Soubor
 
 # from core.tests.runner import EXISTING_PROJECT_IDENT_ZACHRANNY, EXISTING_PROJECT_IDENT_STATUS
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
@@ -21,19 +21,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "menuSamostatneNalezy")
         self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.zapsat"))
 
-    def test_025_zapsani_samostatneho_nalezu_p_001(self):
-        # Scenar_25 Zapsání samostatného nálezu (pozitivní scénář 1)
-        logger.info("AkceSamostatneNalezy.test_025_zapsani_samostatneho_nalezu_p_001.start")
-        self.login("badatel1")
+    def create_PAS(self):
         self.go_to_form()
-        SN_count_old = SamostatnyNalez.objects.count()
-
         self.ElementClick(By.CSS_SELECTOR, "#div_id_projekt .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("M-202105907")
         self.wait(self.wait_interval)
-
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-
         self.ElementClick(By.ID, "select2-id_nalezce-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Omelka, Zdeněk")
         self.wait(self.wait_interval)
@@ -64,6 +57,14 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
+        return self.driver.current_url.split("/")[-1]
+
+    def test_025_zapsani_samostatneho_nalezu_p_001(self):
+        # Scenar_25 Zapsání samostatného nálezu (pozitivní scénář 1)
+        logger.info("AkceSamostatneNalezy.test_025_zapsani_samostatneho_nalezu_p_001.start")
+        self.login("badatel1")
+        SN_count_old = SamostatnyNalez.objects.count()
+        self.create_PAS()
         SN_count_new = SamostatnyNalez.objects.count()
         self.assertEqual(SN_count_old + 1, SN_count_new)
         logger.info("AkceSamostatneNalezy.test_025_zapsani_samostatneho_nalezu_p_001.end")
@@ -127,12 +128,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "M-202105907-N00091")
 
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons")
-
-        with open("pas/tests/resources/test_foto_1.jpg", "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-
-        self.addFileToDropzone("#my-awesome-dropzone", "test_foto_1.jpg", encoded_string)
-        self.wait(1)
+        self.upload_file("pas/tests/resources/test_foto_1.jpg", "test_foto_1.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
 
@@ -351,3 +347,70 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
 
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="M-202301371-N00015").first().stav, SN_ODESLANY)
         logger.info("AkceSamostatneNalezy.test_045_vraceni_samostatneho_nalezu_p_001.end")
+
+    def test_147_test_Fedora_PAS_001(self):
+        # Scenar_147 Test Fedory pro PAS
+        logger.info("AkceSamostatneNalezy.test_147_test_Fedora_PAS_001.start")
+        # C PAS
+        self.login("badatel1")
+        time = self.getTime()
+        ident = self.create_PAS()
+        self.check_fedora_change(time, "pas/tests/resources/test_147/create_PAS")
+
+        # U detail
+        time = self.getTime()
+        self.ElementClick(By.ID, "edit-btn")
+        self.ElementClick(By.ID, "id_lokalizace")
+        self.driver.find_element(By.ID, "id_lokalizace").send_keys("test")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-id-save")
+        self.check_fedora_change(time, "pas/tests/resources/test_147/update_PAS")
+
+        # C soubor
+        time = self.getTime()
+        self.ElementClick(By.ID, "NahratSoubory")
+        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "buttonUploadSubmit")
+        self.check_fedora_change(time, "pas/tests/resources/test_147/create_soubor")
+
+        # U soubor
+        time = self.getTime()
+        file = Soubor.objects.filter(vazba__samostatny_nalez_souboru__ident_cely=ident).first().pk
+        self.ElementClick(By.ID, f"file-upgrade-{file}")
+        self.upload_file("dokument/tests/resources/test1.jpg", "test1.jpg")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "buttonUploadSubmit")
+        self.check_fedora_change(time, "pas/tests/resources/test_147/update_soubor")
+
+        # D soubor
+        time = self.getTime()
+        file = Soubor.objects.filter(vazba__samostatny_nalez_souboru__ident_cely=ident).first().pk
+        self.ElementClick(By.ID, f"file-smazat-{file}")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "pas/tests/resources/test_147/delete_soubor")
+
+        self.logout()
+        self.login("archivar")
+        self.goToAddress(f"/id/{ident}")
+
+        # U ulozeni
+        time = self.getTime()
+        self.ElementClick(By.ID, "pas-edit-ulozeni")
+        self.driver.find_element(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo").send_keys("1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .btn")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "pas/tests/resources/test_147/update_ulozeni")
+
+        # D PAS
+        time = self.getTime()
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "pas-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "pas/tests/resources/test_147/delete_PAS")
+
+        logger.info("AkceSamostatneNalezy.test_147_test_Fedora_PAS_001.end")

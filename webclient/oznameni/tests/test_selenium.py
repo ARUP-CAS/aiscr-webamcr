@@ -1,4 +1,3 @@
-import base64
 import logging
 import re
 import unittest
@@ -45,11 +44,7 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "id_souhlas")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-id-save")
-        with open("oznameni/tests/resources/test_foto_1.jpg", "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-
-        self.addFileToDropzone("#my-awesome-dropzone", "test_foto_1.jpg", encoded_string)
-        self.wait(1)
+        self.upload_file("oznameni/tests/resources/test_foto_1.jpg", "test_foto_1.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit_btn")
             self.driver.switch_to.alert.accept()

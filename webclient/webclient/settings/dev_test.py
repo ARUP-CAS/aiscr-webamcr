@@ -43,8 +43,7 @@ FEDORA_PATH = get_test_secret("TEST_FEDORA_PATH")
 TEST_SCREENSHOT_PATH = get_test_secret("TEST_SCREENSHOT_PATH")
 DATABASES["default"]["TEST"] = {"MIGRATE": False}
 
-EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-EMAIL_FILE_PATH = get_test_secret("TEST_EMAIL_FILE_PATH")
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 LOGGING["handlers"]["console"]["level"] = "ERROR"
 SILENCED_SYSTEM_CHECKS = ["django_recaptcha.recaptcha_test_key_error"]
 
