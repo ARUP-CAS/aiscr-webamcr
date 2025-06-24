@@ -4,26 +4,12 @@ from arch_z.signals import invalidate_arch_z_related_models
 from core.repository_connector import FedoraTransaction
 from dj.models import DokumentacniJednotka
 from django.db import transaction
-from django.db.models.signals import post_delete, post_save, pre_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from dokument.models import DokumentCast
-from komponenta.models import Komponenta, KomponentaVazby
+from komponenta.models import Komponenta
 
 logger = logging.getLogger(__name__)
-
-
-@receiver(pre_delete, sender=KomponentaVazby, weak=False)
-def delete_komponenta_vazby(sender, instance: KomponentaVazby, **kwargs):
-    """
-    Náhrada triggeru delete_connected_komponenta_vazby_relations.
-    """
-    logger.debug("komponenta.signals.delete_komponenta_vazby.start")
-    for item in Komponenta.objects.filter(komponenta_vazby=instance.id):
-        item: Komponenta
-        if instance.suppress_komponenta_signal:
-            item.suppress_signal = True
-        item.delete()
-    logger.debug("komponenta.signals.delete_komponenta_vazby.end")
 
 
 @receiver(post_save, sender=Komponenta, weak=False)

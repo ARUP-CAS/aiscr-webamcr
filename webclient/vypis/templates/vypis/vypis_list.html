@@ -10,7 +10,7 @@
 {% compress css %}
     <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="print">
 {% endcompress %}
-
+<script src="{% static 'js/html-to-rtf-browser.js' %}"></script>
 {% endblock %}
 
 {% block title %}{% trans "vypis.templates.vypis_list.index.title" %}{% endblock %}
@@ -20,10 +20,13 @@
     <div class="col-9">
         <h1>{{title}}</h1>
     </div>
-    <div class="col-3 d-print-none align-self-center">
+    <div class="col-3 d-print-none align-self-center no-export">
         <div class="float-right">
-            <button onclick="window.print()">
+            <button onclick="window.print()" title="{% trans 'vypis.templates.vypis_list.print.tooltip' %}">
                 <span class="material-icons">print</span>
+            </button>
+            <button onclick="createRtf()" title="{% trans 'vypis.templates.vypis_list.download.tooltip' %}">
+                <span class="material-icons">download</span>
             </button>
         </div>
     </div>
@@ -83,6 +86,7 @@
                         if (current_done === identy_list.length) {
                             for (let j = 0; j < responses.length; j++) {
                                 $('.vypisy-content').append(responses[j]);
+                                $('.vypisy-content').append("<div class='new-record'></div>");
                             }
                         }
                     },
@@ -116,15 +120,30 @@
 
 </script>
 <script>
-    function copy_html() {    
-        window.getSelection
-        var range = document.createRange();
-        range.selectNode(document.getElementById('app-wrapper'));
-        var selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        var selectedText = selection.toString().replace(/^\s*$(?:\r\n?|\n)/gm, '');
-        navigator.clipboard.writeText(selectedText);
-    }    
+    function createRtf() {    
+        const htmlContent = document.getElementById('app-wrapper').innerHTML;
+        const vypisPrefix = 'AMCR_vypis';
+        const currentDateTime = new Date();
+        const year = currentDateTime.getFullYear();
+        const month = String(currentDateTime.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+        const day = String(currentDateTime.getDate()).padStart(2, '0');
+        const hours = String(currentDateTime.getHours()).padStart(2, '0');
+        const minutes = String(currentDateTime.getMinutes()).padStart(2, '0');
+        const seconds = String(currentDateTime.getSeconds()).padStart(2, '0');
+        const formattedDate = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+        var htmlToRtfLocal = new window.htmlToRtf();
+        var rtfContent = htmlToRtfLocal.convertHtmlToRtf(htmlContent);
+        console.log(rtfContent);
+        const blob = new Blob([rtfContent], { type: 'application/rtf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${vypisPrefix}_${formattedDate}.rtf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        // Use the htmlToRtf function to convert HTML to RTF
+        // and create a Blob URL for the RTF file
+    }  
 </script>
 {% endblock %}

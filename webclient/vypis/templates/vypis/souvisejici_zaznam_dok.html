@@ -1,4 +1,6 @@
+<div class="row">
 {% for zaznam in field.zaznamy %}
-<a href="{% url 'core:redirect_ident' zaznam.ident_cely %}" target="_blank">{{ zaznam.ident_cely }}</a> 
-{% if zaznam.autori_snapshot and  zaznam.rok_vzniku %}({{zaznam.autori_snapshot}} {{zaznam.rok_vzniku}}){% elif zaznam.autori_snapshot and not zaznam.rok_vzniku %}({{zaznam.autori_snapshot}}){% elif zaznam.rok_vzniku and not zaznam.autori_snapshot %}({{zaznam.rok_vzniku}}){% endif %}{% if not forloop.last %}, {% endif %}
+<a href="{% url 'core:redirect_ident' zaznam.ident_cely %}" target="_blank">{{ zaznam.ident_cely }}</a>&nbsp;
+{% if zaznam.autori_snapshot and  zaznam.rok_vzniku %}({{zaznam.autori_snapshot}} {{zaznam.rok_vzniku}}){% elif zaznam.autori_snapshot and not zaznam.rok_vzniku %}({{zaznam.autori_snapshot}}){% elif zaznam.rok_vzniku and not zaznam.autori_snapshot %}({{zaznam.rok_vzniku}}){% endif %}{% if not forloop.last %},&nbsp;{% endif %}
 {% endfor %}
+</div>

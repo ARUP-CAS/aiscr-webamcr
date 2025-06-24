@@ -76,6 +76,7 @@ from core.models import Permissions
 from core.models import Permissions as p
 from core.models import check_permissions
 from core.repository_connector import (
+    FedoraError,
     FedoraRepositoryConnector,
     FedoraTransaction,
     FedoraUpdatedByAnotherTransactionError,
@@ -95,6 +96,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
+from django.db import transaction
 from django.db.models import Q
 from django.db.models.functions import Length
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
@@ -117,6 +119,7 @@ from oznameni.forms import OznamovatelProjektCreateForm
 from pas.models import SamostatnyNalez
 from pas.views import PasPermissionFilterMixin
 from pian.views import PianPermissionFilterMixin
+from pid.exceptions import DoiWriteError
 from projekt.filters import ProjektFilter
 from projekt.forms import (
     CreateProjektForm,
@@ -975,18 +978,35 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
-        projekt.set_archivovany(request.user)
-        projekt.close_active_transaction_when_finished = True
-        projekt.save()
-        for item in projekt.casti_dokumentu.all():
-            item: DokumentCast
-            if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
-                item.dokument.doi_update()
-        for item in projekt.samostatne_nalezy.all():
-            item: SamostatnyNalez
-            if item.igsn and item.stav == SN_ARCHIVOVANY:
-                item.igsn_update()
+        fedora_transaction = projekt.create_transaction(request.user, PROJEKT_USPESNE_ARCHIVOVAN)
+        projekt_casti_dokumentu = list(projekt.casti_dokumentu.all())
+        projekt_samostatne_nalezy = list(projekt.samostatne_nalezy.all())
+        try:
+            with transaction.atomic():
+                projekt.set_archivovany(request.user)
+                for item in projekt_casti_dokumentu:
+                    item: DokumentCast
+                    if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
+                        item.dokument.doi_update()
+                for item in projekt_samostatne_nalezy:
+                    item: SamostatnyNalez
+                    if item.igsn and item.stav == SN_ARCHIVOVANY:
+                        item.igsn_update()
+                projekt.close_active_transaction_when_finished = True
+                projekt.save()
+                return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
+        except (DoiWriteError, FedoraError) as err:
+            logger.info("projekt.views.archivovat.post_error", extra={"error": err, "ident_cely": projekt.ident_cely})
+            transaction.set_rollback(True)
+            fedora_transaction.rollback_transaction()
+            for item in projekt_casti_dokumentu:
+                item: DokumentCast
+                if item.dokument.doi and item.dokument.stav == D_STAV_ARCHIVOVANY:
+                    item.dokument.doi_update(False, True)
+            for item in projekt_samostatne_nalezy:
+                item: SamostatnyNalez
+                if item.igsn and item.stav == SN_ARCHIVOVANY:
+                    item.igsn_update(False, True)
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
     else:
         warnings = projekt.check_pred_archivaci()

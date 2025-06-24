@@ -4,7 +4,7 @@ import subprocess
 
 def csv_to_rst_table():
     output = subprocess.run(
-        ["pip-licenses", "--format=json", "--with-urls", " --from=mixed", "--with-system"],
+        ["pip-licenses", "--format=json", "--with-urls", "--from=mixed", "--with-system"],
         capture_output=True,
         text=True,
     )

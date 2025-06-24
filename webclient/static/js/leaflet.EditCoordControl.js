@@ -26,7 +26,7 @@ L.Control.EditCoordControl = L.Control.extend({
         this._container.href = '#'
         this._container.title = this.options.titleText;
         this._container.innerHTML =
-            '<img src="../img/coord-edit.png" style="width:20px">'
+            '<img src="'+static_url+'img/coord-edit.png" style="width:20px">'
         this._container.style.backgroundImage = 'none'
         this._container.style.background
 
