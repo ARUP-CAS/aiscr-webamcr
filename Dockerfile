@@ -1,6 +1,6 @@
 # Dockerfile
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.9.1
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.11.0
 
 LABEL maintainer="Archaeological Information System of the Czech Republic (AIS CR) <amcr@arup.cas.cz>" \
       org.opencontainers.image.title="aiscr-webamcr" \
