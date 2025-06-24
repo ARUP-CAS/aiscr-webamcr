@@ -401,11 +401,6 @@ class FedoraRepositoryConnector:
             response = requests.patch(url, auth=auth, headers=headers, data=data)
         extra["status_code"] = response.status_code
 
-        # TODO: Remove before merge
-        # raise FedoraUpdatedByAnotherTransactionError(
-        #    url, response.text, response.status_code, response.headers, self.transaction
-        # )
-
         if request_type in (
             FedoraRequestType.CONNECT_DELETED_RECORD_4,
             FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_5,
