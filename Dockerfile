@@ -20,6 +20,7 @@ RUN echo "$TZ" > /etc/timezone && \
     locale-gen cs_CZ.utf8 && \
     ln -sf python3 /usr/bin/python && \
     ln -sf pip3 /usr/bin/pip && \
+    pip install --upgrade pip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY ./webclient/requirements.txt /tmp/requirements.txt
