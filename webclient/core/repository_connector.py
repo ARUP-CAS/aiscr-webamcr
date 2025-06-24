@@ -1477,8 +1477,9 @@ class FedoraTransaction:
         logger.debug(
             "core_repository_connector.FedoraTransaction.rollback_transaction.start", extra={"transaction": self.uid}
         )
-        self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
-        self.__status = FedoraTransactionStatus.ABORTED
+        if self.__status != FedoraTransactionStatus.ABORTED:
+            self._send_transaction_request(FedoraTransactionOperation.ROLLBACK)
+            self.__status = FedoraTransactionStatus.ABORTED
         logger.debug(
             "core_repository_connector.FedoraTransaction.rollback_transaction.end", extra={"transaction": self.uid}
         )

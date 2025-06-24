@@ -10,7 +10,7 @@
 {% compress css %}
     <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="print">
 {% endcompress %}
-<script src="{% static '/js/html-to-rtf-browser.js' %}"></script>
+<script src="{% static 'js/html-to-rtf-browser.js' %}"></script>
 {% endblock %}
 
 {% block title %}{% trans "vypis.templates.vypis_list.index.title" %}{% endblock %}
@@ -22,10 +22,10 @@
     </div>
     <div class="col-3 d-print-none align-self-center no-export">
         <div class="float-right">
-            <button onclick="window.print()">
+            <button onclick="window.print()" title="{% trans 'vypis.templates.vypis_list.print.tooltip' %}">
                 <span class="material-icons">print</span>
             </button>
-            <button onclick="createRtf()">
+            <button onclick="createRtf()" title="{% trans 'vypis.templates.vypis_list.download.tooltip' %}">
                 <span class="material-icons">download</span>
             </button>
         </div>
@@ -86,7 +86,7 @@
                         if (current_done === identy_list.length) {
                             for (let j = 0; j < responses.length; j++) {
                                 $('.vypisy-content').append(responses[j]);
-                                $('.vypisy-content').append("<div class='row'></div>");
+                                $('.vypisy-content').append("<div class='new-record'></div>");
                             }
                         }
                     },
@@ -122,20 +122,15 @@
 <script>
     function createRtf() {    
         const htmlContent = document.getElementById('app-wrapper').innerHTML;
-        const vypisPrefix = '{{title}}';
+        const vypisPrefix = 'AMCR_vypis';
         const currentDateTime = new Date();
-        const formattedDate = currentDateTime.toLocaleString('cs-CZ', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        })
-        .replace(/\//g, '-') // Replace all slashes
-        .replace(/,/g, '')   // Replace all commas
-        .replace(/\./g, '')  // Replace all dots
-        .replace(/ /g, '')   // Replace all spaces
-        .replace(/:/g, '');  // Replace all colons;
+        const year = currentDateTime.getFullYear();
+        const month = String(currentDateTime.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+        const day = String(currentDateTime.getDate()).padStart(2, '0');
+        const hours = String(currentDateTime.getHours()).padStart(2, '0');
+        const minutes = String(currentDateTime.getMinutes()).padStart(2, '0');
+        const seconds = String(currentDateTime.getSeconds()).padStart(2, '0');
+        const formattedDate = `${year}${month}${day}_${hours}${minutes}${seconds}`;
         var htmlToRtfLocal = new window.htmlToRtf();
         var rtfContent = htmlToRtfLocal.convertHtmlToRtf(htmlContent);
         console.log(rtfContent);
@@ -143,7 +138,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${vypisPrefix}_${formattedDate.slice(-4)}_${formattedDate.slice(0, 8)}.rtf`;
+        a.download = `${vypisPrefix}_${formattedDate}.rtf`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

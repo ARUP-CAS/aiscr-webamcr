@@ -56,7 +56,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.2
+     - 5.2.1
      - BSD License
      - https://www.djangoproject.com/
    * - Jinja2
@@ -132,11 +132,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/psf/black
    * - celery
-     - 5.5.2
+     - 5.5.3
      - BSD License
      - https://docs.celeryq.dev/
    * - certifi
-     - 2025.4.26
+     - 2025.6.15
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
@@ -152,12 +152,12 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://github.com/chardet/chardet
    * - charset-normalizer
-     - 3.4.1
+     - 3.4.2
      - MIT License
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
-     - 8.1.8
-     - BSD License
+     - 8.2.1
+     - UNKNOWN
      - https://github.com/pallets/click/
    * - click-didyoumean
      - 0.3.1
@@ -176,11 +176,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.8.0
+     - 7.9.1
      - Apache-2.0
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
-     - 2024.10
+     - 2025.6
      - MIT License
      - https://github.com/django-crispy-forms/crispy-bootstrap4
    * - cron-descriptor
@@ -188,8 +188,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
-     - 44.0.2
-     - Apache Software License; BSD License
+     - 45.0.4
+     - Apache-2.0 OR BSD-3-Clause
      - https://github.com/pyca/cryptography
    * - defusedxml
      - 0.7.1
@@ -212,7 +212,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/bugov/django-auto-logout
    * - django-autocomplete-light
-     - 3.11.0
+     - 3.12.1
      - MIT License
      - http://django-autocomplete-light.rtfd.org
    * - django-cacheops
@@ -220,7 +220,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://github.com/Suor/django-cacheops
    * - django-celery-beat
-     - 2.8.0
+     - 2.8.1
      - BSD License
      - https://github.com/celery/django-celery-beat
    * - django-compressor
@@ -232,7 +232,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/django-crispy-forms/django-crispy-forms
    * - django-debug-toolbar
-     - 5.1.0
+     - 5.2.0
      - BSD License
      - https://github.com/django-commons/django-debug-toolbar
    * - django-debug-toolbar-template-profiler
@@ -328,7 +328,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.6.10
+     - 2.6.12
      - MIT
      - https://github.com/pre-commit/identify
    * - idna
@@ -340,15 +340,15 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/shibukawa/imagesize_py
    * - inflate64
-     - 1.0.1
+     - 1.0.3
      - GNU Lesser General Public License v2 or later (LGPLv2+)
-     - UNKNOWN
+     - https://inflate64.readthedocs.io/
    * - isort
      - 6.0.1
      - MIT License
      - https://github.com/PyCQA/isort/releases
    * - kombu
-     - 5.5.3
+     - 5.5.4
      - BSD License
      - https://kombu.readthedocs.io
    * - libsass
@@ -372,7 +372,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.2.5
+     - 2.3.0
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -392,7 +392,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/pypa/packaging
    * - pandas
-     - 2.2.3
+     - 2.3.0
      - BSD License
      - https://pandas.pydata.org
    * - pathspec
@@ -404,7 +404,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.4
+     - 9.0.7
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -415,12 +415,20 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 11.2.1
      - UNKNOWN
      - https://python-pillow.github.io
+   * - pip
+     - 25.1.1
+     - MIT License
+     - https://pip.pypa.io/
+   * - pip-licenses
+     - 5.0.0
+     - MIT License
+     - https://github.com/raimon49/pip-licenses
    * - platformdirs
-     - 4.3.7
+     - 4.3.8
      - MIT License
      - https://github.com/tox-dev/platformdirs
    * - polars
-     - 1.28.1
+     - 1.30.0
      - MIT License
      - https://www.pola.rs/
    * - polib
@@ -431,9 +439,13 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 4.2.0
      - MIT License
      - https://github.com/pre-commit/pre-commit
+   * - prettytable
+     - 3.16.0
+     - UNKNOWN
+     - https://github.com/prettytable/prettytable
    * - prometheus_client
-     - 0.21.1
-     - Apache Software License
+     - 0.22.1
+     - UNKNOWN
      - https://github.com/prometheus/client_python
    * - prompt_toolkit
      - 3.0.51
@@ -452,11 +464,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Library or Lesser General Public License (LGPL)
      - https://psycopg.org/
    * - py7zr
-     - 0.22.0
+     - 1.0.0
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://py7zr.readthedocs.io/
    * - pyOpenSSL
-     - 25.0.0
+     - 25.1.0
      - Apache Software License
      - https://pyopenssl.org/
    * - pybcj
@@ -468,7 +480,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/eliben/pycparser
    * - pycryptodomex
-     - 3.22.0
+     - 3.23.0
      - BSD License; Public Domain
      - https://www.pycryptodome.org
    * - pyparsing
@@ -476,12 +488,12 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 5.4.0
+     - 5.6.0
      - BSD License
      - https://github.com/py-pdf/pypdf
    * - pyppmd
-     - 1.1.1
-     - GNU Lesser General Public License v2 or later (LGPLv2+)
+     - 1.2.0
+     - LGPL-2.1-or-later
      - https://pyppmd.readthedocs.io/
    * - python-crontab
      - 3.2.0
@@ -504,7 +516,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://pythonhosted.org/pytz
    * - pyzstd
-     - 0.16.2
+     - 0.17.0
      - BSD License
      - https://github.com/Rogdham/pyzstd
    * - rarfile
@@ -520,15 +532,15 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/RDFLib/rdflib
    * - redis
-     - 5.2.1
+     - 6.2.0
      - MIT License
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.4.0
+     - 4.4.1
      - BSD License
      - https://www.reportlab.com/
    * - requests
-     - 2.32.3
+     - 2.32.4
      - Apache Software License
      - https://requests.readthedocs.io
    * - rjsmin
@@ -540,9 +552,13 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - CC0 1.0 Universal (CC0 1.0) Public Domain Dedication; Zero-Clause BSD (0BSD)
      - https://github.com/AA-Turner/roman-numerals/blob/master/CHANGES.rst
    * - selenium
-     - 4.31.0
-     - Apache Software License
+     - 4.33.0
+     - Apache 2.0
      - https://www.selenium.dev
+   * - setuptools
+     - 80.9.0
+     - UNKNOWN
+     - https://github.com/pypa/setuptools
    * - simplejson
      - 3.20.1
      - Academic Free License (AFL); MIT License
@@ -556,7 +572,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; MIT License
      - https://github.com/python-trio/sniffio
    * - snowballstemmer
-     - 2.2.0
+     - 3.0.1
      - BSD License
      - https://github.com/snowballstem/snowball
    * - sortedcontainers
@@ -576,8 +592,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://www.sphinx-doc.org/
    * - sphinxcontrib-googleanalytics
-     - 0.4
-     - BSD License
+     - 0.5
+     - UNKNOWN
      - https://github.com/sphinx-contrib/googleanalytics
    * - sphinxcontrib-htmlhelp
      - 2.1.0
@@ -611,8 +627,12 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.7.0
      - MIT License
      - https://github.com/foutaise/texttable/
+   * - tomli
+     - 2.2.1
+     - MIT License
+     - https://github.com/hukkin/tomli
    * - tornado
-     - 6.4.2
+     - 6.5.1
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
@@ -632,7 +652,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/python/tzdata
    * - uWSGI
-     - 2.0.29
+     - 2.0.30
      - GNU General Public License v2 or later (GPLv2+)
      - https://uwsgi-docs.readthedocs.io/en/latest/
    * - urllib3
@@ -644,9 +664,13 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.30.0
+     - 20.31.2
      - MIT License
      - https://github.com/pypa/virtualenv
+   * - wcwidth
+     - 0.2.13
+     - MIT License
+     - https://github.com/jquast/wcwidth
    * - websocket-client
      - 1.8.0
      - Apache Software License
@@ -660,7 +684,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/wsproto/
    * - xlrd
-     - 2.0.1
+     - 2.0.2
      - BSD License
      - http://www.python-excel.org/
    * - xlwt
@@ -689,13 +713,17 @@ Knihovny vkládané jako statické soubory
      - MIT License
      - https://icons.getbootstrap.com/
    * - Bootstrap Select
-     - 1.13.14
+     - 1.13.18
      - MIT License
      - https://developer.snapappointments.com/bootstrap-select/
    * - Bootstrap Datepicker
-     - 1.9.0
+     - 1.10.0
      - Apache License
      - https://bootstrap-datepicker.readthedocs.io/en/latest/
+   * - Date Range Picker
+     - 3.1
+     - MIT License
+     - http://www.daterangepicker.com/
    * - Django Autocomplete Light
      -
      - MIT License
@@ -776,10 +804,10 @@ Knihovny vkládané jako statické soubory
      - 1.1
      - BSD License
      - https://github.com/tinuzz/leaflet-messagebox
-   * - LercDecode
-     - 1.0.1
-     - Apache Software License
-     - https://unpkg.com/browse/lerc@1.0.1/
+   * - Moment.js
+     - 2.30.1
+     - MIT License
+     - https://momentjs.com
    * - Select2
      - 4.0.13
      - MIT License
@@ -788,6 +816,10 @@ Knihovny vkládané jako statické soubory
      - 1.2.5
      - MIT License
      - https://github.com/fgnass/spin.js
+   * - html-to-rtf-browser
+     - 1.6.1.
+     - MIT License
+     - https://github.com/antoniolucasnobar/html-to-rtf-browser; https://github.com/geraphl/javascript-html-to-rtf-browser
 
 
 Docker image

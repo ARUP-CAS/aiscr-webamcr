@@ -47,6 +47,7 @@ def smazat_nalez(request, typ_vazby, typ, ident_cely):
             "title": _("nalez.views.smazatNalez.objekt.title.text"),
             "id_tag": "smazat-objekt-form",
             "button": _("nalez.views.smazatNalez.objekt.submitButton"),
+            "warnings": [_("nalez.views.smazatNalez.save_warning")],
         }
     elif typ == "predmet":
         zaznam = get_object_or_404(NalezPredmet, id=ident_cely)
@@ -55,6 +56,7 @@ def smazat_nalez(request, typ_vazby, typ, ident_cely):
             "title": _("nalez.views.smazatNalez.predmet.title.text"),
             "id_tag": "smazat-objekt-form",
             "button": _("nalez.views.smazatNalez.predmet.submitButton"),
+            "warnings": [_("nalez.views.smazatNalez.save_warning")],
         }
     else:
         return

@@ -86,6 +86,7 @@ CACHEOPS = {
     "pas.SamostatnyNalez": {"ops": (), "timeout": 60 * 10},
     "dokument.Dokument": {"ops": (), "timeout": 60 * 10},
     "ez.ExterniZdroj": {"ops": (), "timeout": 60 * 10},
+    "pas.UzivatelSpoluprace": {"ops": (), "timeout": 60 * 10},
 }
 
 SECRET_KEY = get_secret("SECRET_KEY")

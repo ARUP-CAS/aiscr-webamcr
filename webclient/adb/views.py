@@ -142,6 +142,7 @@ def smazat_vb(request, ident_cely):
         "title": _("adb.views.smazat_vb.modalForm.title"),
         "id_tag": "smazat-vb-form",
         "button": _("adb.views.smazat_vb.modalForm.submit.button"),
+        "warnings": [_("adb.views.smazat_vb.modalForm.save_warning")],
     }
     if request.method == "POST":
         fedora_transaction = FedoraTransaction(
@@ -150,25 +151,25 @@ def smazat_vb(request, ident_cely):
         vyskovy_bod.active_transaction = fedora_transaction
         resp = vyskovy_bod.delete()
         next_url = request.POST.get("next")
-        if url_has_allowed_host_and_scheme(request.META.get("HTTP_REFERER"), allowed_hosts=settings.ALLOWED_HOSTS):
-            safe_redirect = request.META.get("HTTP_REFERER")
+        referer = request.META.get("HTTP_REFERER", "").replace("\\", "")
+        if url_has_allowed_host_and_scheme(referer, allowed_hosts=settings.ALLOWED_HOSTS):
+            safe_redirect = referer
         else:
             safe_redirect = "/"
-        if next_url:
-            if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
-                response = next_url
-            else:
-                logger.warning("adb.views.smazat.smazat_vb.not_safe", extra={"next_url": str(next_url)})
-                response = redirect(safe_redirect)
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+            redirect_url = next_url
+        elif next_url:
+            logger.warning("adb.views.smazat.smazat_vb.not_safe", extra={"next_url": str(next_url)})
+            redirect_url = safe_redirect
         else:
-            response = redirect(safe_redirect)
+            redirect_url = safe_redirect
         if resp:
             logger.debug("adb.views.smazat.smazat_vb.deleted", extra={"value": str(resp)})
-            response = JsonResponse({"redirect": response})
+            response = JsonResponse({"redirect": redirect_url})
         else:
             logger.warning("adb.views.smazat.smazat_vb.deleted", extra={"ident_cely": str(ident_cely)})
             fedora_transaction.rollback_transaction()
-            response = JsonResponse({"redirect": response}, status=403)
+            response = JsonResponse({"redirect": redirect_url}, status=403)
         response.set_cookie(
             "show-form",
             f"detail_dj_form_{vyskovy_bod.adb.dokumentacni_jednotka.ident_cely}",

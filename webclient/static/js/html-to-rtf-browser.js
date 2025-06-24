@@ -8917,8 +8917,17 @@
                     tagName = tagName + '.section-name';
 
                 }
+                if (attributes.class && attributes.class.includes('main-header')) {
+                    tagName = tagName + '.main-header';
+
+                }
                 if (attributes.class && attributes.class.includes('row')) {
                     tagName = tagName + '.row';
+
+                }
+                if (attributes.class && attributes.class.includes('new-record')) {
+                    tagName = tagName + '.new-record';
+                    console.log(`New record row detected: ${tagName}`);
 
                 }
                 allowedTag = this.getAllowedTag(tagName);
@@ -9132,9 +9141,9 @@
             },
             {
                 opening: 'img',
-                openingRtf: '{\\pict',
+                openingRtf: '(st\\u225?hnout soubor)\\line',
                 closing: '/img',
-                closingRtf: '}'
+                closingRtf: ''
             },
             {
                 opening: 'html',
@@ -9189,7 +9198,19 @@
                 openingRtf: '{\\pard{\\b',
                 closing: '/div.section-name.row',
                 closingRtf: '}\\sb70\\par}'
-            }
+            },
+            {
+                opening: 'div.new-record',
+                openingRtf: '\\page',
+                closing: '/div.new-record',
+                closingRtf: ''
+            },
+            {
+                opening: 'div.main-header.row',
+                openingRtf: '{\\pard{\\b',
+                closing: '/div.main-header.row',
+                closingRtf: '}\\sb70\\par}'
+            },
         ];
 
     }, {}], 57: [function (require, module, exports) {
@@ -9872,7 +9893,7 @@
             },
             {
                 htmlEntity: '&nbsp;',
-                rtfEscapeChar: '\\~'
+                rtfEscapeChar: ' '
             },
             {
                 htmlEntity: '&ordm;',
@@ -9917,11 +9938,9 @@
                 if (this.IGNORED_TAGS.includes(element.name.toLowerCase())) {
                     return true;
                 }
-                console.log(element)
                 // Check if the element has any ignored classes
                 if (element.attribs.class) {
                     for (const className of this.IGNORED_CLASSES) {
-                        console.log(className);
                         if (element.attribs.class.includes(className)) {
                             return true;
                         }
@@ -10048,7 +10067,7 @@
                     this.addReferenceTagInRtfCode(Alignment.getRtfAlignmentReference(attributes.align));
                 }
                 if (attributes.src !== undefined) {
-                    this.addReferenceTagInRtfCode(Sources.getRtfSourcesReference(attributes.src, attributes.style));
+                    //this.addReferenceTagInRtfCode(Sources.getRtfSourcesReference(attributes.src, attributes.style));
                 }
             }
 
