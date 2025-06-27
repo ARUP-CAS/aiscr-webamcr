@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:ext_zdroj>
+    <amcr:ident_cely>X-BIB-1557662</amcr:ident_cely>
+    <amcr:stav>2</amcr:stav>
+    <amcr:typ xml:lang="cs" id="HES-001119">článek v časopise</amcr:typ>
+    <amcr:autor id="OS-005797" poradi="1">Baloun, Lukáš</amcr:autor>
+    <amcr:nazev>Terénní výzkumy ÚAPPSČ v letech 2009 a 2010: 11. Brandýs nad Labem, okr. Praha-východ</amcr:nazev>
+    <amcr:rok_vydani_vzniku>2011</amcr:rok_vydani_vzniku>
+    <amcr:issn>1214-3553</amcr:issn>
+    <amcr:casopis_denik_nazev>Archeologie ve středních Čechách</amcr:casopis_denik_nazev>
+    <amcr:casopis_rocnik>15/2</amcr:casopis_rocnik>
+    <amcr:paginace_titulu>1147-1197</amcr:paginace_titulu>
+    <amcr:link>https://www.uappsc.cz/wp-content/uploads/2015/11/ASC15_2.pdf</amcr:link>
+    <amcr:poznamka>Krátká zmínka o lokalitě se nachází na straně 1152.</amcr:poznamka>
+    <amcr:historie>
+      <amcr:id>hist-972552</amcr:id>
+      <amcr:datum_zmeny>2023-04-23T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000367">U-000367</amcr:uzivatel>
+      <amcr:typ_zmeny>EZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-693</amcr:id>
+      <amcr:archeologicky_zaznam id="C-9003982A">C-9003982A</amcr:archeologicky_zaznam>
+    </amcr:ext_odkaz>
+  </amcr:ext_zdroj>
+</amcr:amcr>

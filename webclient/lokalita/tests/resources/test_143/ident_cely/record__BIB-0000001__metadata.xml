@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:ext_zdroj>
+    <amcr:ident_cely>BIB-0000001</amcr:ident_cely>
+    <amcr:stav>3</amcr:stav>
+    <amcr:typ xml:lang="cs" id="HES-001117">kniha</amcr:typ>
+    <amcr:autor id="OS-001253" poradi="1">Buchvaldek, Miroslav</amcr:autor>
+    <amcr:autor id="OS-001014" poradi="2">Koutecký, Drahomír</amcr:autor>
+    <amcr:nazev>Vikletice: Ein Schnurkeramisches Gräberfeld</amcr:nazev>
+    <amcr:edice_rada>Praehistorica III</amcr:edice_rada>
+    <amcr:rok_vydani_vzniku>1970</amcr:rok_vydani_vzniku>
+    <amcr:misto>Praha</amcr:misto>
+    <amcr:historie>
+      <amcr:id>hist-972430</amcr:id>
+      <amcr:datum_zmeny>2018-10-01T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000203">U-000203</amcr:uzivatel>
+      <amcr:typ_zmeny>EZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-43</amcr:id>
+      <amcr:archeologicky_zaznam id="C-9000547A">C-9000547A</amcr:archeologicky_zaznam>
+    </amcr:ext_odkaz>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-47</amcr:id>
+      <amcr:archeologicky_zaznam id="C-9000549A">C-9000549A</amcr:archeologicky_zaznam>
+    </amcr:ext_odkaz>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-48</amcr:id>
+      <amcr:archeologicky_zaznam id="C-9000551A">C-9000551A</amcr:archeologicky_zaznam>
+    </amcr:ext_odkaz>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-52</amcr:id>
+      <amcr:archeologicky_zaznam id="C-9000552A">C-9000552A</amcr:archeologicky_zaznam>
+    </amcr:ext_odkaz>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-58</amcr:id>
+      <amcr:archeologicky_zaznam id="C-9000556A">C-9000556A</amcr:archeologicky_zaznam>
+    </amcr:ext_odkaz>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-61</amcr:id>
+      <amcr:archeologicky_zaznam id="C-9000558A">C-9000558A</amcr:archeologicky_zaznam>
+    </amcr:ext_odkaz>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-63</amcr:id>
+      <amcr:archeologicky_zaznam id="C-9000559A">C-9000559A</amcr:archeologicky_zaznam>
+    </amcr:ext_odkaz>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-787</amcr:id>
+      <amcr:archeologicky_zaznam id="X-C-91468414A">X-C-91468414A</amcr:archeologicky_zaznam>
+    </amcr:ext_odkaz>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-788</amcr:id>
+      <amcr:archeologicky_zaznam id="C-L0000001">C-L0000001</amcr:archeologicky_zaznam>
+      <amcr:paginace>10</amcr:paginace>
+    </amcr:ext_odkaz>
+  </amcr:ext_zdroj>
+</amcr:amcr>

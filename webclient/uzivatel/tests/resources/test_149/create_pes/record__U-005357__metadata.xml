@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:uzivatel>
+    <amcr:ident_cely>U-005357</amcr:ident_cely>
+    <amcr:jmeno>Test</amcr:jmeno>
+    <amcr:prijmeni>Havrlant</amcr:prijmeni>
+    <amcr:email>archeolog1@arup.cas.cz</amcr:email>
+    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+    <amcr:jazyk>cs</amcr:jazyk>
+    <amcr:aktivni>true</amcr:aktivni>
+    <amcr:admin>false</amcr:admin>
+    <amcr:superadmin>false</amcr:superadmin>
+    <amcr:skupina xml:lang="cs">Archeolog</amcr:skupina>
+    <amcr:notifikace>S-E-A-XX</amcr:notifikace>
+    <amcr:notifikace>S-E-N-01</amcr:notifikace>
+    <amcr:notifikace>S-E-N-02</amcr:notifikace>
+    <amcr:notifikace>S-E-N-05</amcr:notifikace>
+    <amcr:notifikace>S-E-K-01</amcr:notifikace>
+    <amcr:notifikace>S-E-P-02c</amcr:notifikace>
+    <amcr:notifikace>S-E-P-02b</amcr:notifikace>
+    <amcr:hlidaci_pes xml:lang="cs" id="ruian-60">Ústecký kraj</amcr:hlidaci_pes>
+    <amcr:hlidaci_pes xml:lang="cs" id="ruian-3303">Jindřichův Hradec</amcr:hlidaci_pes>
+    <amcr:hlidaci_pes xml:lang="cs" id="ruian-663409">Adamov u Karlovic (Bruntál; 663409)</amcr:hlidaci_pes>
+    <amcr:datum_registrace>2024-03-19T12:46:36.676633+00:00</amcr:datum_registrace>
+    <amcr:historie>
+      <amcr:id>hist-2803083</amcr:id>
+      <amcr:datum_zmeny>2024-03-19T12:46:46.914462+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-004219">U-004219</amcr:uzivatel>
+      <amcr:poznamka>role: Archeolog</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803084</amcr:id>
+      <amcr:datum_zmeny>2024-03-19T12:46:46.927393+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-004219">U-004219</amcr:uzivatel>
+      <amcr:poznamka>email: archeolog1@arup.cas.cz, is_active: True, organizace: Archeologický ústav Praha, first_name: Test, last_name: Havrlant</amcr:poznamka>
+      <amcr:typ_zmeny>ZUA</amcr:typ_zmeny>
+    </amcr:historie>
+  </amcr:uzivatel>
+</amcr:amcr>

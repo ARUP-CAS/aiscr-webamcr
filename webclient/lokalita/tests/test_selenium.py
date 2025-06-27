@@ -520,8 +520,8 @@ class AkceLokality(BaseSeleniumTestClass):
 
         # U externi_odkaz
         time = self.getTime()
-        id = ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident).first().pk
-        self.ElementClick(By.ID, f"ez-change-{id}")
+        pk = ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident).first().pk
+        self.ElementClick(By.ID, f"ez-change-{pk}")
         self.driver.find_element(By.ID, "id_paginace").send_keys("10")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -537,7 +537,7 @@ class AkceLokality(BaseSeleniumTestClass):
 
         # D externi_odkaz
         time = self.getTime()
-        self.ElementClick(By.ID, f"ez-odpojit-{id}")
+        self.ElementClick(By.ID, f"ez-odpojit-{pk}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/delete_EZ")

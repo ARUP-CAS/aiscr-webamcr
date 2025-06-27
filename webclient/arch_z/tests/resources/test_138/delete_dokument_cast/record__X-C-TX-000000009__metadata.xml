@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:dokument>
+    <amcr:ident_cely>X-C-TX-000000009</amcr:ident_cely>
+    <amcr:stav>1</amcr:stav>
+    <amcr:typ_dokumentu xml:lang="cs" id="HES-001075">nálezová zpráva</amcr:typ_dokumentu>
+    <amcr:material_originalu xml:lang="cs" id="HES-000217">digitální soubor</amcr:material_originalu>
+    <amcr:rada xml:lang="cs" id="HES-000883">zprávy a hlášení</amcr:rada>
+    <amcr:autor id="OS-002151" poradi="1">Pavloň, Tomáš</amcr:autor>
+    <amcr:rok_vzniku>2023</amcr:rok_vzniku>
+    <amcr:organizace xml:lang="cs" id="ORG-000104">Archeologický ústav AV ČR, Brno, v.v.i.</amcr:organizace>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
+    <amcr:ulozeni_originalu xml:lang="cs" id="HES-001166">primárně digitální dokument</amcr:ulozeni_originalu>
+    <amcr:popis>test</amcr:popis>
+    <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
+    <amcr:historie>
+      <amcr:id>hist-2803185</amcr:id>
+      <amcr:datum_zmeny>2025-06-26T17:56:35.146961+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803186</amcr:id>
+      <amcr:datum_zmeny>2025-06-26T17:56:43.152177+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:poznamka>X-C-TX-000000009</amcr:poznamka>
+      <amcr:typ_zmeny>DEL</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:extra_data>
+      <amcr:geom_system>4326</amcr:geom_system>
+    </amcr:extra_data>
+  </amcr:dokument>
+</amcr:amcr>

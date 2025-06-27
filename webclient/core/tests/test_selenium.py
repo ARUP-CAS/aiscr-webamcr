@@ -250,7 +250,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 self.save_container_content(n["fedora_id"], path)
 
     def check_fedora_change(self, time, path):
-        self.save_fedora_change(time, path)
+        # self.save_fedora_change(time, path)
         headers = {}
         response = requests.get(
             f"{self.api_url}fcr:search?condition=fedora_id={self.api_url}{settings.FEDORA_SERVER_NAME}/*&condition=modified>{time}&offset=0&max_results=100&format=json",
@@ -613,7 +613,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             ignorovane_tagy_trans.append(item.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.2/}"))
         self.odstran_elementy(root, ignorovane_tagy_trans)
         self.odstran_uuid_z_xml(root)
-        return ET.tostring(root, encoding="utf-8")
+        text = ET.tostring(root, encoding="utf-8")
+        text = re.sub(rb">hist-\d+<", rb">hist-<", text)
+        return text
 
     def porovnej_xml_bez_ignorovanych(self, vzorovy_soubor, vystupni_soubor, ignorovane_tagy):
         """Porovná dva XML soubory po odstranění ignorovaných tagů."""

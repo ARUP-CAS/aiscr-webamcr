@@ -378,14 +378,14 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         # vytvoření
         logger.info("AkceExterniZdroj.test_136_test_Fedory_externi_zdroj_p_001.start")
 
-        time = self.getTime()
         self.login("archeolog")
+        # C EZ
+        time = self.getTime()
         count_old = ExterniZdroj.objects.count()
         self.zapsat_zaznam()
         count_new = ExterniZdroj.objects.count()
         self.assertEqual(count_old + 1, count_new)
-        self.check_fedora_change(time, "ez/tests/resources/fedora_create")
-
+        self.check_fedora_change(time, "ez/tests/resources/test_136/create_EZ")
         self.logout()
 
         # změna ident_cely EZ
@@ -399,11 +399,10 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.assertEqual(ExterniZdroj.objects.filter(id=dbID).first().stav, EZ_STAV_POTVRZENY)
-
-        self.check_fedora_change(time, "ez/tests/resources/fedora_pozvrzeni")
+        self.check_fedora_change(time, "ez/tests/resources/test_136/ident_cely")
         self.check_fedora_delete(["record/X-BIB-1408662"])
 
-        # update EZ
+        # U EZ
         self.createFedoraRecord("X-BIB-0926116")
         self.goToAddress("/id/X-BIB-0926116")
         time = self.getTime()
@@ -412,10 +411,9 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "id_misto").send_keys("Louny")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
-        self.check_fedora_change(time, "ez/tests/resources/fedora_update")
+        self.check_fedora_change(time, "ez/tests/resources/test_136/update_EZ")
 
-        # delete EZ
-
+        # D EZ
         self.createFedoraRecord("X-BIB-0700016")
         self.goToAddress("/id/X-BIB-0700016")
         count_old = ExterniZdroj.objects.count()
@@ -427,7 +425,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         count_new = ExterniZdroj.objects.count()
         self.assertEqual(count_old - 1, count_new)
-        self.check_fedora_change(time, "ez/tests/resources/fedora_delete")
+        self.check_fedora_change(time, "ez/tests/resources/test_136/delete_EZ")
         # self.check_fedora_delete(["record/X-BIB-0700016"])
         logger.info("AkceExterniZdroj.test_136_test_Fedory_externi_zdroj_p_001.end")
 
@@ -450,25 +448,26 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj=id)
         count_new = ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE).count()
-
         self.assertEqual(count_old + 1, count_new)
-        self.check_fedora_change(time, "ez/tests/resources/fedora_pripojeniAZ_1")
+        self.check_fedora_change(time, "ez/tests/resources/test_137/pripojeni_AZ")
 
         # editace paginace
         time = self.getTime()
-        self.ElementClick(By.ID, "ez-change-787")
+        pk = ExterniOdkaz.objects.filter(externi_zdroj__ident_cely="X-BIB-000000001").first().id
+        self.ElementClick(By.ID, f"ez-change-{pk}")
         self.ElementClick(By.ID, "id_paginace")
         self.driver.find_element(By.ID, "id_paginace").send_keys("22")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "ez/tests/resources/fedora_editAZ_1")
+        self.check_fedora_change(time, "ez/tests/resources/test_137/edit_paginace_EZ")
 
         # odpojení AZ
         time = self.getTime()
-        self.ElementClick(By.ID, "ez-odpojit-787")
+        pk = ExterniOdkaz.objects.filter(externi_zdroj__ident_cely="X-BIB-000000001").first().id
+        self.ElementClick(By.ID, f"ez-odpojit-{pk}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "ez/tests/resources/fedora_odpojeniAZ_1")
+        self.check_fedora_change(time, "ez/tests/resources/test_137/odpojeni_AZ")
 
         # změna ident_cely AZ X-C-91557641A
         self.logout()
@@ -480,7 +479,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "akce-odeslat")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "ez/tests/resources/fedora_odeslaniAZ_1")
+        self.check_fedora_change(time, "ez/tests/resources/test_137/zmena_ident_cely_AZ")
         self.check_fedora_delete(["record/X-C-91557641A"])
 
         logger.info("AkceExterniZdroj.test_137_test_Fedory_externi_zdroj_p_002.end")

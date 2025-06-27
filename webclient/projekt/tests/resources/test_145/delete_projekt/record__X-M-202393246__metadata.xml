@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:projekt>
+    <amcr:ident_cely>X-M-202393246</amcr:ident_cely>
+    <amcr:stav>0</amcr:stav>
+    <amcr:typ_projektu xml:lang="cs" id="HES-001136">záchranný</amcr:typ_projektu>
+    <amcr:okres xml:lang="cs" id="ruian-3707">Jihlava</amcr:okres>
+    <amcr:podnet>Chodník</amcr:podnet>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
+    <amcr:geom_system>5514</amcr:geom_system>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-612952">Brtnice</amcr:hlavni_katastr>
+      <amcr:lokalizace>Úprava zpevněných pěších ploch v části ul. Horní Město</amcr:lokalizace>
+      <amcr:parcelni_cislo>2166/1,298/1,2426,241/3,241/5,249</amcr:parcelni_cislo>
+    </amcr:chranene_udaje>
+    <amcr:historie>
+      <amcr:id>hist-2256280</amcr:id>
+      <amcr:datum_zmeny>2023-10-18T13:59:44+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803188</amcr:id>
+      <amcr:datum_zmeny>2025-06-26T18:11:18.536478+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:poznamka>X-M-202393246</amcr:poznamka>
+      <amcr:typ_zmeny>DEL</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:oznamovatel>
+      <amcr:oznamovatel>Město Brtnice</amcr:oznamovatel>
+      <amcr:odpovedna_osoba>Jan Přibyl</amcr:odpovedna_osoba>
+      <amcr:adresa>nám. Svobody 379, 588 32 Brtnice</amcr:adresa>
+      <amcr:telefon>724387837</amcr:telefon>
+      <amcr:email>starosta@brtnice.cz</amcr:email>
+    </amcr:oznamovatel>
+  </amcr:projekt>
+</amcr:amcr>

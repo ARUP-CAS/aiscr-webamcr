@@ -399,15 +399,9 @@ class AkceProjektoveAkce(AkceTestClass):
         self.login("archeolog")
 
         count_old = DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="C-202207641A").count()
-        self.go_to_Projekty_vyper()
-
-        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202207641")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-202207641")
+        self.goToAddress("/id/C-202207641")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
-        self.ElementClick(By.CSS_SELECTOR, "#others > .material-icons")
+        self.ElementClick(By.ID, "others_doc")
         self.ElementClick(By.LINK_TEXT, _("dokument.templates.dokument_table.pridatNovyDokument.label"))
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Absolon")
@@ -454,7 +448,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "C-202207641")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
-        self.ElementClick(By.CSS_SELECTOR, "#others > .material-icons")
+        self.ElementClick(By.ID, "others_doc")
         self.ElementClick(By.ID, "dokument-pripojit")
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("M-TX-194300151")
@@ -484,7 +478,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.LINK_TEXT, "C-202401979")
         self.ElementClick(By.CSS_SELECTOR, ".app-card-akce > .card-body")
         self.ElementClick(By.CSS_SELECTOR, "tr:nth-child(2) a")
-        self.ElementClick(By.CSS_SELECTOR, "#others > .material-icons")
+        self.ElementClick(By.ID, "others_doc")
         self.ElementClick(By.ID, "dokument-pripojit-z-projektu")
         self.ElementClick(By.NAME, "dokument")
         with WaitForPageLoad(self.driver):
@@ -1200,7 +1194,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.LINK_TEXT, "X-C-9000000003A")
 
         # self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
-        self.ElementClick(By.CSS_SELECTOR, "#others > .material-icons")
+        self.ElementClick(By.ID, "others_doc")
         self.ElementClick(By.LINK_TEXT, _("dokument.templates.dokument_table.pridatNovyDokument.label"))
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Absolon")
@@ -1250,7 +1244,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.ID, "buttonVybrat")
         self.ElementClick(By.LINK_TEXT, "X-C-9000000004A")
 
-        self.ElementClick(By.CSS_SELECTOR, "#others > .material-icons")
+        self.ElementClick(By.ID, "others_doc")
         self.driver.execute_script('$("#app-wrapper").scrollTop($("#app-wrapper")[0].scrollHeight);')
         self.ElementClick(By.ID, "dokument-pripojit")
 
@@ -1485,8 +1479,8 @@ class AkceSamostatneAkce(AkceTestClass):
         logger.info("AkceProjektoveAkce.test_138_test_Fedory_samostatne_akce_p_001.start")
 
         # vytvoření akce
-        time = self.getTime()
         self.login("badatel")
+        time = self.getTime()
         self.create_Samostatna_Akce()
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_AZ")
         self.logout()
@@ -1631,18 +1625,32 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_nalez")
 
         # D nalez
+        pk = (
+            NalezObjekt.objects.filter(
+                komponenta__komponenta_vazby__dokumentacni_jednotka__archeologicky_zaznam__ident_cely="X-C-9000000002A"
+            )
+            .first()
+            .pk
+        )
         time = self.getTime()
-        self.ElementClick(By.ID, "objekt-smazat-180492")
+        self.ElementClick(By.ID, f"objekt-smazat-{pk}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.ElementClick(By.ID, "objekt-smazat-175763")
+        pk = (
+            NalezPredmet.objects.filter(
+                komponenta__komponenta_vazby__dokumentacni_jednotka__archeologicky_zaznam__ident_cely="X-C-9000000002A"
+            )
+            .first()
+            .pk
+        )
+        self.ElementClick(By.ID, f"objekt-smazat-{pk}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_nalez")
 
         # D komponenta
         time = self.getTime()
-        self.ElementClick(By.CSS_SELECTOR, "#detail_komponenta_form_X-C-9000000002A-K001 #others > .material-icons")
+        self.ElementClick(By.ID, "others_komponenta")
         self.ElementClick(By.ID, "komponenta-smazat-X-C-9000000002A-K001")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -1697,7 +1705,8 @@ class AkceSamostatneAkce(AkceTestClass):
 
         # U EZ
         time = self.getTime()
-        self.ElementClick(By.ID, "ez-change-788")
+        pk = ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000002A").first().id
+        self.ElementClick(By.ID, f"ez-change-{pk}")
         self.driver.find_element(By.ID, "id_paginace").send_keys("10")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -1705,7 +1714,8 @@ class AkceSamostatneAkce(AkceTestClass):
 
         # D EZ
         time = self.getTime()
-        self.ElementClick(By.ID, "ez-odpojit-788")
+        pk = ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000002A").first().id
+        self.ElementClick(By.ID, f"ez-odpojit-{pk}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_EZ")
@@ -1713,7 +1723,6 @@ class AkceSamostatneAkce(AkceTestClass):
         # změna ident_cely AZ X-C-91468414A
         # změna ident_cely DJ
         # změna ident_cely komponenta
-
         self.createFedoraRecord("X-C-91468414A")
         self.createFedoraRecord("X-C-TX-000000008")
         self.createFedoraRecord("BIB-0000001")

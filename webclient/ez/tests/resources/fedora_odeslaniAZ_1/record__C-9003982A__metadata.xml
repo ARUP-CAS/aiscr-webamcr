@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:archeologicky_zaznam>
+    <amcr:ident_cely>C-9003982A</amcr:ident_cely>
+    <amcr:stav>2</amcr:stav>
+    <amcr:okres xml:lang="cs" id="ruian-3209">Praha-východ</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-609048">Brandýs nad Labem</amcr:hlavni_katastr>
+      <amcr:uzivatelske_oznaceni>bez č.j.</amcr:uzivatelske_oznaceni>
+    </amcr:chranene_udaje>
+    <amcr:akce>
+      <amcr:typ>N</amcr:typ>
+      <amcr:je_nz>true</amcr:je_nz>
+      <amcr:odlozena_nz>false</amcr:odlozena_nz>
+      <amcr:hlavni_vedouci id="OS-005797">Baloun, Lukáš</amcr:hlavni_vedouci>
+      <amcr:organizace xml:lang="cs" id="ORG-000052">Ústav archeologické památkové péče středních Čech, p.o.</amcr:organizace>
+      <amcr:specifikace_data xml:lang="cs" id="HES-000886">přesně v letech</amcr:specifikace_data>
+      <amcr:datum_zahajeni>2010-01-01</amcr:datum_zahajeni>
+      <amcr:datum_ukonceni>2010-12-31</amcr:datum_ukonceni>
+      <amcr:hlavni_typ xml:lang="cs" id="HES-001056">vertikální řez</amcr:hlavni_typ>
+      <amcr:ulozeni_nalezu>ÚAPPSČ</amcr:ulozeni_nalezu>
+      <amcr:chranene_udaje>
+        <amcr:lokalizace_okolnosti>Brandýs n. Labem, ul. F. X. Procházky, parc. č. 173/1. Kanalizační přípojka k budově děkanství č.p. 24.</amcr:lokalizace_okolnosti>
+        <amcr:souhrn_upresneni>Stavba oznámena pouze telefonicky zhotovitelem investora. Investor stavby Římskokatolická farnost Brandýs nad Labem s oprávněnou organizací nekommunikoval, odmítal zaslat písemné oznámení stavby či objednávku. Stavebními pracemi bylo narušeno kulturní souvrství s několika zahloubenými objekty. Dokumentovány byly pouze profily liniového výkopu. Vzorkováním a sběrem z odkopané zeminy byl získán nepočetný soubor pravěké a časně novověké keramiky.</amcr:souhrn_upresneni>
+      </amcr:chranene_udaje>
+    </amcr:akce>
+    <amcr:historie>
+      <amcr:id>hist-207203</amcr:id>
+      <amcr:datum_zmeny>2023-04-23T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000367">U-000367</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803168</amcr:id>
+      <amcr:datum_zmeny>2025-04-11T11:00:18.043261+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:poznamka>X-C-91557641A -&gt; C-9003982A</amcr:poznamka>
+      <amcr:typ_zmeny>AZ12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:dokumentacni_jednotka>
+      <amcr:ident_cely>C-9003982A-D01</amcr:ident_cely>
+      <amcr:pian id="P-1224-015888">P-1224-015888</amcr:pian>
+      <amcr:typ xml:lang="cs" id="HES-001070">celek akce</amcr:typ>
+      <amcr:negativni_jednotka>true</amcr:negativni_jednotka>
+    </amcr:dokumentacni_jednotka>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-693</amcr:id>
+      <amcr:ext_zdroj id="X-BIB-1557662">X-BIB-1557662</amcr:ext_zdroj>
+    </amcr:ext_odkaz>
+  </amcr:archeologicky_zaznam>
+</amcr:amcr>

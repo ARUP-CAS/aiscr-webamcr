@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:dokument>
+    <amcr:ident_cely>C-TX-202500002</amcr:ident_cely>
+    <amcr:stav>2</amcr:stav>
+    <amcr:typ_dokumentu xml:lang="cs" id="HES-001075">nálezová zpráva</amcr:typ_dokumentu>
+    <amcr:material_originalu xml:lang="cs" id="HES-000217">digitální soubor</amcr:material_originalu>
+    <amcr:rada xml:lang="cs" id="HES-000883">zprávy a hlášení</amcr:rada>
+    <amcr:autor id="OS-002151" poradi="1">Pavloň, Tomáš</amcr:autor>
+    <amcr:rok_vzniku>2023</amcr:rok_vzniku>
+    <amcr:organizace xml:lang="cs" id="ORG-000104">Archeologický ústav AV ČR, Brno, v.v.i.</amcr:organizace>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
+    <amcr:ulozeni_originalu xml:lang="cs" id="HES-001166">primárně digitální dokument</amcr:ulozeni_originalu>
+    <amcr:popis>test</amcr:popis>
+    <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
+    <amcr:historie>
+      <amcr:id>hist-2803186</amcr:id>
+      <amcr:datum_zmeny>2025-06-26T18:07:14.953973+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803189</amcr:id>
+      <amcr:datum_zmeny>2025-06-26T18:07:39.823234+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:poznamka>X-C-TX-000000009 -&gt; C-TX-202500002</amcr:poznamka>
+      <amcr:typ_zmeny>D12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:soubor>
+      <amcr:id>soub-646257</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/C-TX-202500002/file/f3e262da-7162-4b14-a227-217e2c232e3e</amcr:path>
+      <amcr:nazev>CTX202500002.jpg</amcr:nazev>
+      <amcr:mimetype>image/jpeg</amcr:mimetype>
+      <amcr:rozsah>1</amcr:rozsah>
+      <amcr:size_mb>0.0048723221</amcr:size_mb>
+      <amcr:sha_512>e4a286b41334ffa0f4dbe9218519e5e6913d5759d5ddbb481fd67a4d1a8c22d30a53d9d1af2bc6873fe6e99e79dcaccd2ab8c0e332201b0c267d89e7f81738b7</amcr:sha_512>
+      <amcr:url>https://digiarchiv.aiscr.cz/id/C-TX-202500002/file/f3e262da-7162-4b14-a227-217e2c232e3e</amcr:url>
+      <amcr:historie>
+        <amcr:id>hist-2803187</amcr:id>
+        <amcr:datum_zmeny>2025-06-26T18:07:17.690074+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+        <amcr:poznamka>test.jpg</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:soubor>
+    <amcr:extra_data>
+      <amcr:geom_system>4326</amcr:geom_system>
+    </amcr:extra_data>
+    <amcr:dokument_cast>
+      <amcr:ident_cely>C-TX-202500002-D001</amcr:ident_cely>
+      <amcr:archeologicky_zaznam id="C-L0000001">C-L0000001</amcr:archeologicky_zaznam>
+    </amcr:dokument_cast>
+  </amcr:dokument>
+</amcr:amcr>

@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:heslo>
+    <amcr:ident_cely>HES-001066</amcr:ident_cely>
+    <amcr:nazev_heslare xml:lang="cs">akce_typ_kat</amcr:nazev_heslare>
+    <amcr:heslo xml:lang="cs">terénní odkryv</amcr:heslo>
+    <amcr:heslo_en xml:lang="en">field excavation</amcr:heslo_en>
+    <amcr:razeni>40</amcr:razeni>
+    <amcr:hierarchie_vyse>
+      <amcr:id>hier-1215</amcr:id>
+      <amcr:heslo_nadrazene xml:lang="cs" id="HES-000886">přesně v letech</amcr:heslo_nadrazene>
+      <amcr:typ xml:lang="cs">uplatnění</amcr:typ>
+    </amcr:hierarchie_vyse>
+    <amcr:hierarchie_nize>
+      <amcr:id>hier-667</amcr:id>
+      <amcr:heslo_podrazene xml:lang="cs" id="HES-001057">sonda</amcr:heslo_podrazene>
+      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
+    </amcr:hierarchie_nize>
+    <amcr:hierarchie_nize>
+      <amcr:id>hier-668</amcr:id>
+      <amcr:heslo_podrazene xml:lang="cs" id="HES-001059">plošný odkryv</amcr:heslo_podrazene>
+      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
+    </amcr:hierarchie_nize>
+    <amcr:hierarchie_nize>
+      <amcr:id>hier-671</amcr:id>
+      <amcr:heslo_podrazene xml:lang="cs" id="HES-001058">skupina/síť sond</amcr:heslo_podrazene>
+      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
+    </amcr:hierarchie_nize>
+    <amcr:odkaz>
+      <amcr:id>hodk-560</amcr:id>
+      <amcr:zdroj>Getty Art &amp; Architecture Thesaurus</amcr:zdroj>
+      <amcr:nazev_kodu>ID</amcr:nazev_kodu>
+      <amcr:kod>300077463</amcr:kod>
+      <amcr:uri>http://vocab.getty.edu/aat/300077463</amcr:uri>
+      <amcr:skos_mapping_relation>skos:broadMatch</amcr:skos_mapping_relation>
+    </amcr:odkaz>
+  </amcr:heslo>
+</amcr:amcr>

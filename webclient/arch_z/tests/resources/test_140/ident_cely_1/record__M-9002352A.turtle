@@ -1,0 +1,18 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix fedora: <http://fedora.info/definitions/v4/repository#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-9002352A>
+        dcterms:replaces       "http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-M-91366821A" ;
+        fedora:created         "2025-06-26T18:00:44.088736Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-26T18:00:44.369506Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:createdBy       "AMCR" ;
+        fedora:lastModifiedBy  "AMCR" ;
+        rdf:type               ldp:BasicContainer ;
+        rdf:type               ldp:Resource ;
+        rdf:type               fedora:Resource ;
+        rdf:type               ldp:RDFSource ;
+        rdf:type               ldp:Container ;
+        rdf:type               fedora:Container ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-9002352A/metadata> .

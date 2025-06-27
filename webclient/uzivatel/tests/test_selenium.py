@@ -363,7 +363,7 @@ class AkceOsoba(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "id_vypis").send_keys("Archeolog, J")
         self.ElementClick(By.ID, "select2-id_orcid-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Havrlant")
-        self.wait(1)
+        self.wait(2)
         self.ElementClick(By.CSS_SELECTOR, "#select2-id_orcid-results > li:nth-child(1)")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.NAME, "_save")

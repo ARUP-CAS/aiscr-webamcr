@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:archeologicky_zaznam>
+    <amcr:ident_cely>X-C-9000000001A</amcr:ident_cely>
+    <amcr:stav>1</amcr:stav>
+    <amcr:okres xml:lang="cs" id="ruian-3507">Louny</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-687391">Louny</amcr:hlavni_katastr>
+    </amcr:chranene_udaje>
+    <amcr:akce>
+      <amcr:typ>N</amcr:typ>
+      <amcr:je_nz>false</amcr:je_nz>
+      <amcr:odlozena_nz>false</amcr:odlozena_nz>
+      <amcr:hlavni_vedouci id="OS-000174">Havrlant, Jan</amcr:hlavni_vedouci>
+      <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+      <amcr:specifikace_data xml:lang="cs" id="HES-000887">přesné datum</amcr:specifikace_data>
+      <amcr:datum_zahajeni>2024-04-01</amcr:datum_zahajeni>
+      <amcr:datum_ukonceni>2024-04-01</amcr:datum_ukonceni>
+      <amcr:hlavni_typ xml:lang="cs" id="HES-001057">sonda</amcr:hlavni_typ>
+      <amcr:chranene_udaje>
+        <amcr:lokalizace_okolnosti>Doma</amcr:lokalizace_okolnosti>
+      </amcr:chranene_udaje>
+    </amcr:akce>
+    <amcr:historie>
+      <amcr:id>hist-2803098</amcr:id>
+      <amcr:datum_zmeny>2024-03-30T17:08:09.211634+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005362">U-005362</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-787</amcr:id>
+      <amcr:ext_zdroj id="X-BIB-000000001">X-BIB-000000001</amcr:ext_zdroj>
+      <amcr:paginace>22</amcr:paginace>
+    </amcr:ext_odkaz>
+  </amcr:archeologicky_zaznam>
+</amcr:amcr>

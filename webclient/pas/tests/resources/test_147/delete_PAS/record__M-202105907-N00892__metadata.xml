@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:samostatny_nalez>
+    <amcr:ident_cely>M-202105907-N00892</amcr:ident_cely>
+    <amcr:evidencni_cislo>1</amcr:evidencni_cislo>
+    <amcr:projekt id="M-202105907">M-202105907</amcr:projekt>
+    <amcr:okres xml:lang="cs" id="ruian-3701">Blansko</amcr:okres>
+    <amcr:hloubka>20</amcr:hloubka>
+    <amcr:obdobi xml:lang="cs" id="HES-000256">kultura púchovská</amcr:obdobi>
+    <amcr:druh_nalezu xml:lang="cs" id="HES-000691">lahev</amcr:druh_nalezu>
+    <amcr:specifikace xml:lang="cs" id="HES-000972">jantar</amcr:specifikace>
+    <amcr:nalezce id="OS-001507">Omelka, Zdeněk</amcr:nalezce>
+    <amcr:datum_nalezu>2023-10-18</amcr:datum_nalezu>
+    <amcr:stav>1</amcr:stav>
+    <amcr:predano>false</amcr:predano>
+    <amcr:predano_organizace xml:lang="cs" id="ORG-000105">Archeologický ústav AV ČR, Brno, v.v.i. - detašované pracoviště Dolní Dunajovice</amcr:predano_organizace>
+    <amcr:geom_system>4326</amcr:geom_system>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:katastr xml:lang="cs" id="ruian-676730">Křtiny</amcr:katastr>
+      <amcr:lokalizace>testtest</amcr:lokalizace>
+      <amcr:geom_gml>
+        <gml:Point srsName="EPSG:4326">
+          <gml:coordinates>16.7494989,49.2941092</gml:coordinates>
+        </gml:Point>
+      </amcr:geom_gml>
+      <amcr:geom_wkt EPSG="4326">POINT(16.7494989 49.2941092)</amcr:geom_wkt>
+      <amcr:geom_sjtsk_gml>
+        <gml:Point srsName="EPSG:5514">
+          <gml:coordinates>-586746.29,-1150904.89</gml:coordinates>
+        </gml:Point>
+      </amcr:geom_sjtsk_gml>
+      <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-586746.29 -1150904.89)</amcr:geom_sjtsk_wkt>
+    </amcr:chranene_udaje>
+    <amcr:historie>
+      <amcr:id>hist-2803184</amcr:id>
+      <amcr:datum_zmeny>2025-06-26T18:13:33.154209+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
+      <amcr:typ_zmeny>SN01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803187</amcr:id>
+      <amcr:datum_zmeny>2025-06-26T18:14:11.687428+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:poznamka>M-202105907-N00892</amcr:poznamka>
+      <amcr:typ_zmeny>DEL</amcr:typ_zmeny>
+    </amcr:historie>
+  </amcr:samostatny_nalez>
+</amcr:amcr>

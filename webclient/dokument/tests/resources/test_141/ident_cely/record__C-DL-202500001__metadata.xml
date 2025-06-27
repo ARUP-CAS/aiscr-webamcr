@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:dokument>
+    <amcr:ident_cely>C-DL-202500001</amcr:ident_cely>
+    <amcr:let id="C-LET-00001">C-LET-00001</amcr:let>
+    <amcr:stav>2</amcr:stav>
+    <amcr:typ_dokumentu xml:lang="cs" id="HES-001099">letecká fotografie – lokalita</amcr:typ_dokumentu>
+    <amcr:material_originalu xml:lang="cs" id="HES-000217">digitální soubor</amcr:material_originalu>
+    <amcr:rada xml:lang="cs" id="HES-000872">fotografie – letecké (digitální)</amcr:rada>
+    <amcr:autor id="OS-002151" poradi="1">Pavloň, Tomáš</amcr:autor>
+    <amcr:rok_vzniku>2023</amcr:rok_vzniku>
+    <amcr:organizace xml:lang="cs" id="ORG-000104">Archeologický ústav AV ČR, Brno, v.v.i.</amcr:organizace>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
+    <amcr:ulozeni_originalu xml:lang="cs" id="HES-001166">primárně digitální dokument</amcr:ulozeni_originalu>
+    <amcr:popis>testtest</amcr:popis>
+    <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
+    <amcr:historie>
+      <amcr:id>hist-2803184</amcr:id>
+      <amcr:datum_zmeny>2025-06-26T18:01:21.726447+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803186</amcr:id>
+      <amcr:datum_zmeny>2025-06-26T18:02:41.424013+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:poznamka>X-C-DL-000000009 -&gt; C-DL-202500001</amcr:poznamka>
+      <amcr:typ_zmeny>D12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:soubor>
+      <amcr:id>soub-646257</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/C-DL-202500001/file/ea885760-956b-4b3a-9832-ffb26cacc86c</amcr:path>
+      <amcr:nazev>CDL202500001.jpg</amcr:nazev>
+      <amcr:mimetype>image/jpeg</amcr:mimetype>
+      <amcr:rozsah>1</amcr:rozsah>
+      <amcr:size_mb>0.0048723221</amcr:size_mb>
+      <amcr:sha_512>e4a286b41334ffa0f4dbe9218519e5e6913d5759d5ddbb481fd67a4d1a8c22d30a53d9d1af2bc6873fe6e99e79dcaccd2ab8c0e332201b0c267d89e7f81738b7</amcr:sha_512>
+      <amcr:url>https://digiarchiv.aiscr.cz/id/C-DL-202500001/file/ea885760-956b-4b3a-9832-ffb26cacc86c</amcr:url>
+      <amcr:historie>
+        <amcr:id>hist-2803185</amcr:id>
+        <amcr:datum_zmeny>2025-06-26T18:02:32.325876+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+        <amcr:poznamka>test.jpg</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:soubor>
+    <amcr:extra_data>
+      <amcr:geom_system>4326</amcr:geom_system>
+    </amcr:extra_data>
+    <amcr:tvar>
+      <amcr:id>tvar-22982</amcr:id>
+      <amcr:tvar xml:lang="cs" id="HES-001035">kruhové ohrazení (malé)</amcr:tvar>
+    </amcr:tvar>
+    <amcr:dokument_cast>
+      <amcr:ident_cely>C-DL-202500001-D001</amcr:ident_cely>
+      <amcr:archeologicky_zaznam id="C-200810821A">C-200810821A</amcr:archeologicky_zaznam>
+    </amcr:dokument_cast>
+    <amcr:dokument_cast>
+      <amcr:ident_cely>C-DL-202500001-D002</amcr:ident_cely>
+      <amcr:archeologicky_zaznam id="C-K9000001">C-K9000001</amcr:archeologicky_zaznam>
+    </amcr:dokument_cast>
+    <amcr:dokument_cast>
+      <amcr:ident_cely>C-DL-202500001-D003</amcr:ident_cely>
+      <amcr:projekt id="C-201911202">C-201911202</amcr:projekt>
+    </amcr:dokument_cast>
+    <amcr:dokument_cast>
+      <amcr:ident_cely>C-DL-202500001-D004</amcr:ident_cely>
+      <amcr:komponenta>
+        <amcr:ident_cely>C-DL-202500001-K001</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000391">protoúnětická kultura</amcr:obdobi>
+        <amcr:jistota>true</amcr:jistota>
+        <amcr:areal xml:lang="cs" id="HES-000025">pohřební areál</amcr:areal>
+        <amcr:nalez_objekt>
+          <amcr:id>nalo-180492</amcr:id>
+          <amcr:druh xml:lang="cs" id="HES-000479">kašna</amcr:druh>
+          <amcr:pocet>1</amcr:pocet>
+        </amcr:nalez_objekt>
+        <amcr:nalez_predmet>
+          <amcr:id>nalp-175763</amcr:id>
+          <amcr:druh xml:lang="cs" id="HES-000749">hudební nástroj</amcr:druh>
+          <amcr:specifikace xml:lang="cs" id="HES-000968">dehet</amcr:specifikace>
+        </amcr:nalez_predmet>
+      </amcr:komponenta>
+    </amcr:dokument_cast>
+  </amcr:dokument>
+</amcr:amcr>
