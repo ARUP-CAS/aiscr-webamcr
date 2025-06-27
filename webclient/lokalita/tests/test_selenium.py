@@ -426,6 +426,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("poh")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
+        self.wait(1)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createCompotSubmitButton")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_komponenta")

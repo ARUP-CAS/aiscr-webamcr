@@ -15,20 +15,20 @@
       <amcr:parcelni_cislo>test</amcr:parcelni_cislo>
       <amcr:geom_gml>
         <gml:Point srsName="EPSG:4326">
-          <gml:coordinates>15.1699998,49.8399999</gml:coordinates>
+          <gml:coordinates>15.1700002,49.84</gml:coordinates>
         </gml:Point>
       </amcr:geom_gml>
-      <amcr:geom_wkt EPSG="4326">POINT(15.1699998 49.8399999)</amcr:geom_wkt>
+      <amcr:geom_wkt EPSG="4326">POINT(15.1700002 49.84)</amcr:geom_wkt>
       <amcr:geom_sjtsk_gml>
         <gml:Point srsName="EPSG:5514">
-          <gml:coordinates>-693174.84,-1077354.28</gml:coordinates>
+          <gml:coordinates>-693174.81,-1077354.27</gml:coordinates>
         </gml:Point>
       </amcr:geom_sjtsk_gml>
-      <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-693174.84 -1077354.28)</amcr:geom_sjtsk_wkt>
+      <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-693174.81 -1077354.27)</amcr:geom_sjtsk_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
       <amcr:id>hist-2803184</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:10:28.478776+00:00</amcr:datum_zmeny>
+      <amcr:datum_zmeny>2025-06-28T11:20:36.496650+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
     </amcr:historie>

@@ -17,7 +17,7 @@
     <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
     <amcr:historie>
       <amcr:id>hist-2803184</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:01:21.726447+00:00</amcr:datum_zmeny>
+      <amcr:datum_zmeny>2025-06-28T11:22:25.758298+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:typ_zmeny>D01</amcr:typ_zmeny>
     </amcr:historie>
@@ -47,6 +47,7 @@
         <amcr:obdobi xml:lang="cs" id="HES-000391">protoúnětická kultura</amcr:obdobi>
         <amcr:jistota>true</amcr:jistota>
         <amcr:areal xml:lang="cs" id="HES-000025">pohřební areál</amcr:areal>
+        <amcr:aktivita xml:lang="cs" id="HES-000002">pohřbívání</amcr:aktivita>
         <amcr:nalez_objekt>
           <amcr:id>nalo-180492</amcr:id>
           <amcr:druh xml:lang="cs" id="HES-000479">kašna</amcr:druh>

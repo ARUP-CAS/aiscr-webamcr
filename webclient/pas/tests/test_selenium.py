@@ -398,7 +398,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         # U ulozeni
         time = self.getTime()
         self.ElementClick(By.ID, "pas-edit-ulozeni")
-        self.driver.find_element(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo").send_keys("1")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo", "1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
         with WaitForPageLoad(self.driver):

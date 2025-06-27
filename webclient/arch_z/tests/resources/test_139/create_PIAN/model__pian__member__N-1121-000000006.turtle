@@ -4,8 +4,8 @@
 
 <http://192.168.1.28:8081/rest/AMCR-selenium-test/model/pian/member/N-1121-000000006>
         <http://www.openarchives.org/ore/terms/proxyFor>  <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/N-1121-000000006> ;
-        fedora:created         "2025-06-26T17:58:07.282891Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-06-26T17:58:07.282891Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:created         "2025-06-28T11:19:04.644990Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-28T11:19:04.644990Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;

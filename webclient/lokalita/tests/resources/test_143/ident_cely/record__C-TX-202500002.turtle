@@ -5,8 +5,8 @@
 
 <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002>
         dcterms:replaces       "http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-TX-000000009" ;
-        fedora:created         "2025-06-26T18:07:37.608108Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-06-26T18:07:37.918187Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:created         "2025-06-28T11:25:09.166551Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-28T11:25:09.447375Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;

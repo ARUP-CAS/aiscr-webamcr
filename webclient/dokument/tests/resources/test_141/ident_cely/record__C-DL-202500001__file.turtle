@@ -3,8 +3,8 @@
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
 
 <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-DL-202500001/file>
-        fedora:created         "2025-06-26T18:02:39.219293Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-06-26T18:02:39.219293Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:created         "2025-06-28T11:23:04.332051Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-28T11:23:04.332051Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;
@@ -13,4 +13,4 @@
         rdf:type               ldp:RDFSource ;
         rdf:type               ldp:Container ;
         rdf:type               fedora:Container ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-DL-202500001/file/ea885760-956b-4b3a-9832-ffb26cacc86c> .
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-DL-202500001/file/5e8a0980-75c0-440d-8683-3328c275a208> .

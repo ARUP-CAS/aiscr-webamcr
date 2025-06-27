@@ -5,8 +5,8 @@
 
 <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892>
         dcterms:type           "deleted" ;
-        fedora:created         "2025-06-26T18:13:32.891720Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-06-26T18:14:11.892101Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:created         "2025-06-27T15:52:58.436028Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-27T15:53:14.040531Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;

@@ -38,6 +38,7 @@
         <amcr:obdobi xml:lang="cs" id="HES-000391">protoúnětická kultura</amcr:obdobi>
         <amcr:jistota>true</amcr:jistota>
         <amcr:areal xml:lang="cs" id="HES-000025">pohřební areál</amcr:areal>
+        <amcr:aktivita xml:lang="cs" id="HES-000002">pohřbívání</amcr:aktivita>
       </amcr:komponenta>
     </amcr:dokumentacni_jednotka>
   </amcr:archeologicky_zaznam>

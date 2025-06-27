@@ -2,9 +2,9 @@
 @prefix fedora: <http://fedora.info/definitions/v4/repository#> .
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
 
-<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/de76addf-e75b-4896-a323-8cbc9095b822>
-        fedora:created         "2025-06-26T18:13:44.767622Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-06-26T18:13:44.767622Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/bdb72fb6-fcd1-46a3-b2d5-b551cfbf28cd>
+        fedora:created         "2025-06-27T15:53:02.744953Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-27T15:53:02.744953Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;
@@ -13,6 +13,6 @@
         rdf:type               ldp:RDFSource ;
         rdf:type               ldp:Container ;
         rdf:type               fedora:Container ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/de76addf-e75b-4896-a323-8cbc9095b822/orig> ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/de76addf-e75b-4896-a323-8cbc9095b822/thumb> ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/de76addf-e75b-4896-a323-8cbc9095b822/thumb-large> .
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/bdb72fb6-fcd1-46a3-b2d5-b551cfbf28cd/orig> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/bdb72fb6-fcd1-46a3-b2d5-b551cfbf28cd/thumb> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/bdb72fb6-fcd1-46a3-b2d5-b551cfbf28cd/thumb-large> .

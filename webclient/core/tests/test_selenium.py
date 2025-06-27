@@ -8,6 +8,7 @@ import time
 import xml.etree.ElementTree as ET
 from collections import Counter
 from datetime import datetime, timezone
+from io import BytesIO
 from typing import Optional
 from unittest.util import safe_repr
 from urllib.parse import urlparse
@@ -24,6 +25,7 @@ from django.conf import settings
 from django.db import connection
 from django.http import Http404
 from django.test import LiveServerTestCase
+from PIL import Image, ImageChops
 from rdflib import Graph, Literal, URIRef
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -156,6 +158,23 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             f.close()
         return members
 
+    def porovnej_png_obsah(self, bin1, bin2):
+        """
+        Porovná dva PNG obrázky zadané jako binární řetězce.
+        Vrací True, pokud jsou zcela totožné.
+        """
+        try:
+            img1 = Image.open(BytesIO(bin1)).convert("RGBA")
+            img2 = Image.open(BytesIO(bin2)).convert("RGBA")
+        except Exception:
+            return False
+
+        if img1.size != img2.size or img1.mode != img2.mode:
+            return False
+
+        rozdil = ImageChops.difference(img1, img2)
+        return not rozdil.getbbox()
+
     def check_container_content(self, container_path, path):
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
@@ -184,8 +203,17 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             assert self.porovnej_xml_bez_ignorovanych(
                 sample_file, response.content, ignorovane_tagy=["amcr:datum_zmeny", "amcr:datum_registrace"]
             )
+        elif extension == "png":
+            assert self.porovnej_png_obsah(sample_file, response.content)
         else:
-            assert sample_file == response.content
+            res = sample_file == response.content
+            if res is False:
+                logger.error(
+                    "BaseSeleniumTestClass.fedora_error.check_container_content.file",
+                    extra={"data": filename},
+                )
+
+            assert res
 
         return members
 
@@ -250,15 +278,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 self.save_container_content(n["fedora_id"], path)
 
     def check_fedora_change(self, time, path):
-        # self.save_fedora_change(time, path)
+        self.save_fedora_change(time, path)
         headers = {}
         response = requests.get(
             f"{self.api_url}fcr:search?condition=fedora_id={self.api_url}{settings.FEDORA_SERVER_NAME}/*&condition=modified>{time}&offset=0&max_results=100&format=json",
             auth=self.auth,
             headers=headers,
         )
-        import json
-
         if response.status_code == 200:
             os.makedirs(path, exist_ok=True)
             f = open(f"{path}/index.json", "rb")
@@ -266,7 +292,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             f.close()
 
             assert self.porovnej_json_rovnost(
-                vzor_json_text=json_vzor, vystup_json_text=response.content, klice_k_ignoraci=["created", "modified"]
+                vzor_json_text=json_vzor,
+                vystup_json_text=response.content,
+                klice_k_ignoraci=["created", "modified", "content_size"],
             )
 
             res = json.loads(response.text)
@@ -444,11 +472,62 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
             raise Exception("ElementClickError")
 
+    def ElementSendKeys(self, by, value, keys):
+        res = self.wait_for(self.findElement, by, value)
+        if res is False:
+            logger.warning(
+                "BaseSeleniumTestClass.ElementClick.elementNotFound",
+                extra={
+                    "filed": by,
+                    "value": value,
+                },
+            )
+            raise Exception("ElementSendKeysError")
+        attempts = 0
+        while attempts < 10:
+            try:
+                self.driver.find_element(by, value).send_keys(keys)
+                break
+            except Exception:
+                attempts += 1
+                time.sleep(1)
+        if attempts >= 10:
+            logger.warning(
+                "BaseSeleniumTestClass.ElementSendKeys.elementError",
+                extra={
+                    "filed": by,
+                    "value": value,
+                },
+            )
+            raise Exception("ElementSendKeysError")
+
     def clickAt(self, el, position_x, position_y):
         action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(el, position_x, position_y)
         action.click()
         action.perform()
+
+    def clickAtMapCoord(self, lon, lat):
+
+        self.driver.execute_script(
+            f"""
+ const latlng = L.latLng({lat}, {lon});
+ map.setView(latlng, 17);
+ const containerPoint = map.latLngToContainerPoint(latlng);
+ const layerPoint = map.latLngToLayerPoint(latlng); 
+ const syntheticEvent = new MouseEvent('click', {{
+ bubbles: true,
+ cancelable: true,
+ clientX: 0,
+ clientY: 0
+}});
+ map.fire('click', {{
+ latlng: latlng,
+ containerPoint: containerPoint,
+ layerPoint: layerPoint,
+ originalEvent: syntheticEvent
+}});"""
+        )
 
     def _username(self, type="archeolog"):
         return USERS[type]["USERNAME"]
@@ -621,7 +700,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """Porovná dva XML soubory po odstranění ignorovaných tagů."""
         vzor = self.xml_to_string_bez_ignorovanych_z_textu(vzorovy_soubor, ignorovane_tagy)
         vystup = self.xml_to_string_bez_ignorovanych_z_textu(vystupni_soubor, ignorovane_tagy)
-        return vzor == vystup
+        res = vzor == vystup
+        if res is False:
+            logger.error(
+                "BaseSeleniumTestClass.fedora_error.porovnej_xml_bez_ignorovanych",
+                extra={"data": vystup},
+            )
+        return res
 
     def nahrad_base_uri_auto(self, graf, nova_base_uri="info:test-base/"):
         """
@@ -844,9 +929,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         if res is False:
             logger.error(
                 "BaseSeleniumTestClass.fedora_error.porovnej_json_rovnost",
-                extra={"data": json_vystup},
+                extra={"data": vystup_json_text},
             )
-        return json_vzor == json_vystup
+        return res
 
     def getTime(self):
         return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")

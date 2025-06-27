@@ -2,9 +2,9 @@
 @prefix fedora: <http://fedora.info/definitions/v4/repository#> .
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
 
-<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-DL-000000009/file/cad6b03f-09f8-4dc7-8edc-5a053c8b4937>
-        fedora:created         "2025-06-26T18:02:31.605180Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-06-26T18:02:31.605180Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-DL-000000009/file/2dc2d618-e8f1-4e5b-ad40-ed67e6e96ceb>
+        fedora:created         "2025-06-28T11:23:00.813204Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-28T11:23:00.813204Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;
@@ -13,6 +13,6 @@
         rdf:type               ldp:RDFSource ;
         rdf:type               ldp:Container ;
         rdf:type               fedora:Container ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-DL-000000009/file/cad6b03f-09f8-4dc7-8edc-5a053c8b4937/orig> ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-DL-000000009/file/cad6b03f-09f8-4dc7-8edc-5a053c8b4937/thumb> ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-DL-000000009/file/cad6b03f-09f8-4dc7-8edc-5a053c8b4937/thumb-large> .
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-DL-000000009/file/2dc2d618-e8f1-4e5b-ad40-ed67e6e96ceb/orig> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-DL-000000009/file/2dc2d618-e8f1-4e5b-ad40-ed67e6e96ceb/thumb> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-DL-000000009/file/2dc2d618-e8f1-4e5b-ad40-ed67e6e96ceb/thumb-large> .

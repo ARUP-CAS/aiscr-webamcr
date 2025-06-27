@@ -522,6 +522,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("poh")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
+        self.wait(1)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createCompotSubmitButton")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_komponenta")

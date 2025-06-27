@@ -2,9 +2,9 @@
 @prefix fedora: <http://fedora.info/definitions/v4/repository#> .
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
 
-<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/f3e262da-7162-4b14-a227-217e2c232e3e>
-        fedora:created         "2025-06-26T18:07:38.642063Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-06-26T18:07:38.642063Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/2d1bf552-8fbd-48da-a375-8dd983f434eb>
+        fedora:created         "2025-06-28T11:25:10.131954Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-28T11:25:10.131954Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;
@@ -13,6 +13,6 @@
         rdf:type               ldp:RDFSource ;
         rdf:type               ldp:Container ;
         rdf:type               fedora:Container ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/f3e262da-7162-4b14-a227-217e2c232e3e/orig> ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/f3e262da-7162-4b14-a227-217e2c232e3e/thumb> ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/f3e262da-7162-4b14-a227-217e2c232e3e/thumb-large> .
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/2d1bf552-8fbd-48da-a375-8dd983f434eb/orig> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/2d1bf552-8fbd-48da-a375-8dd983f434eb/thumb> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/2d1bf552-8fbd-48da-a375-8dd983f434eb/thumb-large> .

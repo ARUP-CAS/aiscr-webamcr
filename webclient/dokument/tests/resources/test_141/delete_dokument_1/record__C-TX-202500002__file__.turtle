@@ -3,10 +3,10 @@
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 
-<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/78e8984d-e2f7-4990-8188-afd3258c99f1>
+<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/50eb7d8f-ff82-4bc5-9e2f-ffe960821738>
         dcterms:type           "deleted" ;
-        fedora:created         "2025-06-26T18:04:21.854496Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-06-26T18:04:34.136277Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:created         "2025-06-28T11:23:47.147219Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-28T11:23:55.528640Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;
@@ -15,6 +15,6 @@
         rdf:type               ldp:RDFSource ;
         rdf:type               ldp:Container ;
         rdf:type               fedora:Container ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/78e8984d-e2f7-4990-8188-afd3258c99f1/orig> ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/78e8984d-e2f7-4990-8188-afd3258c99f1/thumb> ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/78e8984d-e2f7-4990-8188-afd3258c99f1/thumb-large> .
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/50eb7d8f-ff82-4bc5-9e2f-ffe960821738/orig> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/50eb7d8f-ff82-4bc5-9e2f-ffe960821738/thumb> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-TX-202500002/file/50eb7d8f-ff82-4bc5-9e2f-ffe960821738/thumb-large> .

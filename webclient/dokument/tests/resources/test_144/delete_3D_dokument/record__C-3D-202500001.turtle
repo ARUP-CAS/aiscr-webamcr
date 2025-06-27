@@ -6,8 +6,8 @@
 <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-3D-202500001>
         dcterms:replaces       "http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-3D-000000009" ;
         dcterms:type           "deleted" ;
-        fedora:created         "2025-06-26T18:09:38.637838Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-06-26T18:10:00.383965Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:created         "2025-06-28T05:52:25.809423Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-28T05:52:35.615500Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;

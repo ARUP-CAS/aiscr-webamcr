@@ -757,7 +757,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.LINK_TEXT, "C-201015104")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.ID, "el_komponenta_C_201015104A_K001")
-        self.ElementClick(By.CSS_SELECTOR, "#detail_komponenta_form_C-201015104A-K001 #others > .material-icons")
+        self.ElementClick(By.ID, "others_komponenta")
         self.ElementClick(By.ID, "komponenta-smazat-C-201015104A-K001")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -1471,7 +1471,7 @@ class AkceSamostatneAkce(AkceTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-9157766A").first().stav, AZ_STAV_ARCHIVOVANY)
-        self.check_fedora_change(time, "arch_z/tests/resources/archivace_AZ")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_103/archivace_AZ")
         logger.info("AkceProjektoveAkce.test_103_archivace_samostatne_akce_p_001.end")
 
     def test_138_test_Fedory_samostatne_akce_p_001(self):
@@ -1575,6 +1575,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("poh")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
+        self.wait(1)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createCompotSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_komponenta")
@@ -1708,6 +1709,7 @@ class AkceSamostatneAkce(AkceTestClass):
         pk = ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000002A").first().id
         self.ElementClick(By.ID, f"ez-change-{pk}")
         self.driver.find_element(By.ID, "id_paginace").send_keys("10")
+        self.ElementSendKeys(By.ID, f"ez-change-{pk}", "10")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_EZ")
@@ -1763,11 +1765,12 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.ID, "add_others")
         self.ElementClick(By.ID, "show_menu_pian_new_id")
         self.wait(1)
-        self.driver.execute_script("""map.setZoom(16); return map.getZoom();""")
+        self.driver.execute_script("""map.setZoom(17); return map.getZoom();""")
         self.wait(2)
         self.ElementClick(By.LINK_TEXT, _("mapa.EditAddMarker"))
-        self.clickAt(self.driver.find_element(By.ID, "djMap"), 0, 0)
-        self.wait(0.2)
+        self.wait(0.5)
+        self.clickAtMapCoord(12.8289904, 50.3706078)
+        self.wait(0.5)
         self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
         with WaitForPageLoad(self.driver):
@@ -1897,12 +1900,12 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.ID, "add_others")
         self.ElementClick(By.ID, "show_menu_pian_new_id")
         self.wait(1)
-        self.driver.execute_script("""map.setZoom(16); return map.getZoom();""")
+        self.driver.execute_script("""map.setZoom(17); return map.getZoom();""")
         self.wait(2)
         self.ElementClick(By.LINK_TEXT, _("mapa.EditAddMarker"))
-        self.wait(0.2)
-        self.clickAt(self.driver.find_element(By.ID, "djMap"), 10, 10)
-        self.wait(0.2)
+        self.wait(0.5)
+        self.clickAtMapCoord(12.8224622, 50.3416221)
+        self.wait(0.5)
         self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
         with WaitForPageLoad(self.driver):
