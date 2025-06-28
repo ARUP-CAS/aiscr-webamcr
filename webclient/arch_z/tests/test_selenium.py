@@ -1492,7 +1492,7 @@ class AkceSamostatneAkce(AkceTestClass):
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.ID, "id_lokalizace_okolnosti")
-        self.driver.find_element(By.ID, "id_lokalizace_okolnosti").send_keys("Louny")
+        self.ElementSendKeys(By.ID, "id_lokalizace_okolnosti", "Louny")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_AZ")
@@ -1543,7 +1543,7 @@ class AkceSamostatneAkce(AkceTestClass):
         # U DJ
         time = self.getTime()
         self.ElementClick(By.ID, "id_X-M-9922437A-D01-nazev")
-        self.driver.find_element(By.ID, "id_X-M-9922437A-D01-nazev").send_keys("test")
+        self.ElementSendKeys(By.ID, "id_X-M-9922437A-D01-nazev", "test")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_DJ")
@@ -1570,10 +1570,10 @@ class AkceSamostatneAkce(AkceTestClass):
         )
         self.ElementClick(By.CSS_SELECTOR, "#div_id_obdobi .btn")
         self.ElementClick(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("únětická kultura")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control", "únětická kultura")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("poh")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control", "poh")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.wait(1)
         with WaitForPageLoad(self.driver):
@@ -1587,7 +1587,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001-jistota .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-2-1")
         self.ElementClick(By.ID, "id_X-C-9000000002A-K001-presna_datace")
-        self.driver.find_element(By.ID, "id_X-C-9000000002A-K001-presna_datace").send_keys("ne")
+        self.ElementSendKeys(By.ID, "id_X-C-9000000002A-K001-presna_datace", "ne")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001-areal .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-5 > .text")
         self.ElementClick(By.CSS_SELECTOR, ".show-tick .filter-option-inner-inner")
@@ -1601,7 +1601,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_o-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-7-8 > .text")
         self.ElementClick(By.ID, "id_X-C-9000000002A-K001_o-0-pocet")
-        self.driver.find_element(By.ID, "id_X-C-9000000002A-K001_o-0-pocet").send_keys("1")
+        self.ElementSendKeys(By.ID, "id_X-C-9000000002A-K001_o-0-pocet", "1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_p-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-15-19 > .text")
         self.ElementClick(By.CSS_SELECTOR, ".dropup > .bs-placeholder .filter-option-inner-inner")
@@ -1612,15 +1612,15 @@ class AkceSamostatneAkce(AkceTestClass):
 
         # U nalez
         time = self.getTime()
-        self.driver.find_element(By.ID, "id_X-C-9000000002A-K001_o-0-pocet").send_keys("2")
+        self.ElementSendKeys(By.ID, "id_X-C-9000000002A-K001_o-0-pocet", "2")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_p-0-specifikace .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-18-14 > .text")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_o-0-specifikace .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-8-7 > .text")
         self.ElementClick(By.ID, "id_X-C-9000000002A-K001_p-0-pocet")
-        self.driver.find_element(By.ID, "id_X-C-9000000002A-K001_p-0-pocet").send_keys("2")
+        self.ElementSendKeys(By.ID, "id_X-C-9000000002A-K001_p-0-pocet", "2")
         self.ElementClick(By.ID, "id_X-C-9000000002A-K001_p-0-poznamka")
-        self.driver.find_element(By.ID, "id_X-C-9000000002A-K001_p-0-poznamka").send_keys("test")
+        self.ElementSendKeys(By.ID, "id_X-C-9000000002A-K001_p-0-poznamka", "test")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_nalez")
@@ -1663,11 +1663,11 @@ class AkceSamostatneAkce(AkceTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.LINK_TEXT, _("dokument.templates.dokument_table.pridatNovyDokument.label"))
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Pavloň")
         self.wait(1)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
-        self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")
+        self.ElementSendKeys(By.ID, "id_rok_vzniku", "2023")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_organizace .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(
             "Archeologický ústav Brno"
@@ -1678,7 +1678,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-0 > .text")
         self.ElementClick(By.ID, "id_popis")
-        self.driver.find_element(By.ID, "id_popis").send_keys("test")
+        self.ElementSendKeys(By.ID, "id_popis", "test")
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-7-1")
         with WaitForPageLoad(self.driver):
@@ -1708,7 +1708,7 @@ class AkceSamostatneAkce(AkceTestClass):
         time = self.getTime()
         pk = ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000002A").first().id
         self.ElementClick(By.ID, f"ez-change-{pk}")
-        self.driver.find_element(By.ID, "id_paginace").send_keys("10")
+        self.ElementSendKeys(By.ID, "id_paginace", "10")
         self.ElementSendKeys(By.ID, f"ez-change-{pk}", "10")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -1786,13 +1786,13 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-2 > .text")
         self.ElementClick(By.ID, "id_trat")
-        self.driver.find_element(By.ID, "id_trat").send_keys("test")
+        self.ElementSendKeys(By.ID, "id_trat", "test")
         self.ElementClick(By.ID, "id_cislo_popisne")
-        self.driver.find_element(By.ID, "id_cislo_popisne").send_keys("559")
+        self.ElementSendKeys(By.ID, "id_cislo_popisne", "559")
         self.ElementClick(By.ID, "id_parcelni_cislo")
-        self.driver.find_element(By.ID, "id_parcelni_cislo").send_keys("5")
+        self.ElementSendKeys(By.ID, "id_parcelni_cislo", "5")
         self.ElementClick(By.ID, "id_stratigraficke_jednotky")
-        self.driver.find_element(By.ID, "id_stratigraficke_jednotky").send_keys("2")
+        self.ElementSendKeys(By.ID, "id_stratigraficke_jednotky", "2")
         self.ElementClick(By.ID, "select2-id_autor_popisu-container")
         self.ElementClick(By.CSS_SELECTOR, "li.select2-results__option:nth-child(2)")
         self.ElementClick(By.ID, "id_rok_popisu")
@@ -1806,7 +1806,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_ADB-KRAS07-000001_vb-0-typ .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-6-3 > .text")
         self.ElementClick(By.ID, "id_ADB-KRAS07-000001_vb-0-niveleta")
-        self.driver.find_element(By.ID, "id_ADB-KRAS07-000001_vb-0-niveleta").send_keys("500")
+        self.ElementSendKeys(By.ID, "id_ADB-KRAS07-000001_vb-0-niveleta", "500")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_vyskovy_bod")
@@ -1815,7 +1815,7 @@ class AkceSamostatneAkce(AkceTestClass):
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
         self.ElementClick(By.ID, "id_X-C-9000000011A-D01-nazev")
-        self.driver.find_element(By.ID, "id_X-C-9000000011A-D01-nazev").send_keys("Test")
+        self.ElementSendKeys(By.ID, "id_X-C-9000000011A-D01-nazev", "Test")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/update_PIAN")
@@ -1824,7 +1824,7 @@ class AkceSamostatneAkce(AkceTestClass):
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
         self.ElementClick(By.ID, "id_cislo_popisne")
-        self.driver.find_element(By.ID, "id_cislo_popisne").send_keys("59")
+        self.ElementSendKeys(By.ID, "id_cislo_popisne", "59")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/update_ADB")
@@ -1842,7 +1842,7 @@ class AkceSamostatneAkce(AkceTestClass):
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
         self.ElementClick(By.ID, "id_ADB-KRAS07-000001_vb-0-niveleta")
-        self.driver.find_element(By.ID, "id_ADB-KRAS07-000001_vb-0-niveleta").send_keys("50")
+        self.ElementSendKeys(By.ID, "id_ADB-KRAS07-000001_vb-0-niveleta", "50")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/update_vyskovy_bod")
@@ -1878,7 +1878,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.ID, "add_others")
         self.ElementClick(By.ID, "pian-pripojit-")
         self.ElementClick(By.ID, "select2-id_X-C-9000000011A-D01-pian-container")
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("P-1121-100070")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "P-1121-100070")
         self.wait(0.5)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
@@ -1929,7 +1929,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.ID, "others")
         self.ElementClick(By.ID, "zmenit-katastr-X-C-9000000011A-D01")
         self.ElementClick(By.CSS_SELECTOR, ".modelselect2 b")
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Louny")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Louny")
         self.wait(0.2)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):

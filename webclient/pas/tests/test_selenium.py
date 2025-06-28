@@ -361,7 +361,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.ID, "id_lokalizace")
-        self.driver.find_element(By.ID, "id_lokalizace").send_keys("test")
+        self.ElementSendKeys(By.ID, "id_lokalizace", "test")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-id-save")
         self.check_fedora_change(time, "pas/tests/resources/test_147/update_PAS")

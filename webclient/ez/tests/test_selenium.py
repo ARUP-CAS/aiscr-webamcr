@@ -408,7 +408,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.ID, "id_misto")
-        self.driver.find_element(By.ID, "id_misto").send_keys("Louny")
+        self.ElementSendKeys(By.ID, "id_misto", "Louny")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
         self.check_fedora_change(time, "ez/tests/resources/test_136/update_EZ")
@@ -441,7 +441,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         time = self.getTime()
         self.ElementClick(By.ID, "eo-pripojit-akce")
         self.ElementClick(By.ID, "select2-id_arch_z-container")
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-C-9000000001A")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "X-C-9000000001A")
         self.wait(2)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
@@ -456,7 +456,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         pk = ExterniOdkaz.objects.filter(externi_zdroj__ident_cely="X-BIB-000000001").first().id
         self.ElementClick(By.ID, f"ez-change-{pk}")
         self.ElementClick(By.ID, "id_paginace")
-        self.driver.find_element(By.ID, "id_paginace").send_keys("22")
+        self.ElementSendKeys(By.ID, "id_paginace", "22")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "ez/tests/resources/test_137/edit_paginace_EZ")

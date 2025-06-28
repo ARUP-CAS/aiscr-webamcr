@@ -142,17 +142,17 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.wait(0.5)
         self.clickAtMapCoord(15.1700002, 49.84)
         self.wait(0.5)
-        self.driver.find_element(By.ID, "id_podnet").send_keys("test")
-        self.driver.find_element(By.ID, "id_lokalizace").send_keys("test")
-        self.driver.find_element(By.ID, "id_parcelni_cislo").send_keys("test")
-        self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys("11.6.2025 - 12.6.2025")
+        self.ElementSendKeys(By.ID, "id_podnet", "test")
+        self.ElementSendKeys(By.ID, "id_lokalizace", "test")
+        self.ElementSendKeys(By.ID, "id_parcelni_cislo", "test")
+        self.ElementSendKeys(By.ID, "id_planovane_zahajeni", "11.6.2025 - 12.6.2025")
         self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys(Keys.ESCAPE)
         self.ElementClick(By.ID, "id_oznamovatel")
-        self.driver.find_element(By.ID, "id_oznamovatel").send_keys("test")
-        self.driver.find_element(By.ID, "id_odpovedna_osoba").send_keys("test")
-        self.driver.find_element(By.ID, "id_adresa").send_keys("test")
-        self.driver.find_element(By.ID, "id_telefon").send_keys("xxx")
-        self.driver.find_element(By.ID, "id_email").send_keys("test@example.com")
+        self.ElementSendKeys(By.ID, "id_oznamovatel", "test")
+        self.ElementSendKeys(By.ID, "id_odpovedna_osoba", "test")
+        self.ElementSendKeys(By.ID, "id_adresa", "test")
+        self.ElementSendKeys(By.ID, "id_telefon", "xxx")
+        self.ElementSendKeys(By.ID, "id_email", "test@example.com")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
@@ -162,7 +162,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # U projekt detail
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
-        self.driver.find_element(By.ID, "id_podnet").send_keys("test1")
+        self.ElementSendKeys(By.ID, "id_podnet", "test1")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-id-save")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/update_projekt")
@@ -170,7 +170,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # U oznamovatel
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn2")
-        self.driver.find_element(By.ID, "id_adresa").send_keys("test1")
+        self.ElementSendKeys(By.ID, "id_adresa", "test1")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-id-save")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/update_oznamovatel")
@@ -258,10 +258,10 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.wait(0.5)
         self.clickAtMapCoord(15.1700002, 49.84)
         self.wait(0.5)
-        self.driver.find_element(By.ID, "id_podnet").send_keys("test")
-        self.driver.find_element(By.ID, "id_lokalizace").send_keys("test")
-        self.driver.find_element(By.ID, "id_parcelni_cislo").send_keys("test")
-        self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys("11.6.2025 - 12.6.2025")
+        self.ElementSendKeys(By.ID, "id_podnet", "test")
+        self.ElementSendKeys(By.ID, "id_lokalizace", "test")
+        self.ElementSendKeys(By.ID, "id_parcelni_cislo", "test")
+        self.ElementSendKeys(By.ID, "id_planovane_zahajeni", "11.6.2025 - 12.6.2025")
         self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys(Keys.ESCAPE)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
@@ -276,11 +276,11 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "dokument-add")
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Pavloň")
         self.wait(1)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
-        self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")
+        self.ElementSendKeys(By.ID, "id_rok_vzniku", "2023")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_organizace .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(
             "Archeologický ústav Brno"
@@ -291,7 +291,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-0 > .text")
         self.ElementClick(By.ID, "id_popis")
-        self.driver.find_element(By.ID, "id_popis").send_keys("test")
+        self.ElementSendKeys(By.ID, "id_popis", "test")
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-7-1")
         with WaitForPageLoad(self.driver):
@@ -310,7 +310,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # zmena pristupnosti PAS
         time = self.getTime()
         self.ElementClick(By.ID, "pas-edit-ulozeni")
-        self.driver.find_element(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo").send_keys("1")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo", "1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
         with WaitForPageLoad(self.driver):

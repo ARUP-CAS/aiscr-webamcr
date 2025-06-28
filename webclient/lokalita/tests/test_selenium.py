@@ -373,13 +373,13 @@ class AkceLokality(BaseSeleniumTestClass):
             Keys.ENTER
         )
         self.ElementClick(By.CSS_SELECTOR, "#div_id_druh .filter-option-inner-inner")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("pol")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control", "pol")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-5-0 > .text")
         self.wait(1)
         self.ElementClick(By.ID, "id_nazev")
-        self.driver.find_element(By.ID, "id_nazev").send_keys("test")
+        self.ElementSendKeys(By.ID, "id_nazev", "test")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
         ident = self.driver.current_url.split("/")[-1]
@@ -389,7 +389,7 @@ class AkceLokality(BaseSeleniumTestClass):
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.ID, "id_nazev")
-        self.driver.find_element(By.ID, "id_nazev").send_keys("test")
+        self.ElementSendKeys(By.ID, "id_nazev", "test")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/update_lokalita")
@@ -421,10 +421,10 @@ class AkceLokality(BaseSeleniumTestClass):
         )
         self.ElementClick(By.CSS_SELECTOR, "#div_id_obdobi .btn")
         self.ElementClick(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("únětická kultura")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control", "únětická kultura")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("poh")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control", "poh")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.wait(1)
         with WaitForPageLoad(self.driver):
@@ -482,11 +482,11 @@ class AkceLokality(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.LINK_TEXT, _("dokument.templates.dokument_table.pridatNovyDokument.label"))
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
-        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Pavloň")
         self.wait(1)
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
-        self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")
+        self.ElementSendKeys(By.ID, "id_rok_vzniku", "2023")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_organizace .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(
             "Archeologický ústav Brno"
@@ -497,7 +497,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-0 > .text")
         self.ElementClick(By.ID, "id_popis")
-        self.driver.find_element(By.ID, "id_popis").send_keys("test")
+        self.ElementSendKeys(By.ID, "id_popis", "test")
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-7-1")
         with WaitForPageLoad(self.driver):
@@ -523,7 +523,7 @@ class AkceLokality(BaseSeleniumTestClass):
         time = self.getTime()
         pk = ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident).first().pk
         self.ElementClick(By.ID, f"ez-change-{pk}")
-        self.driver.find_element(By.ID, "id_paginace").send_keys("10")
+        self.ElementSendKeys(By.ID, "id_paginace", "10")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/upadate_EZ")
