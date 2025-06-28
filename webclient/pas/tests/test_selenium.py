@@ -414,3 +414,17 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.check_fedora_change(time, "pas/tests/resources/test_147/delete_PAS")
 
         logger.info("AkceSamostatneNalezy.test_147_test_Fedora_PAS_001.end")
+
+    def test_154_zobrazeni_spoluprace_p_001(self):
+        # Scenar_25 Zobrazební spolupráce badatel archeolog (pozitivní scénář 1)
+        logger.info("AkceSamostatneNalezy.test_154_zobrazeni_spoluprace_p_001.start")
+        self.login("badatel1")
+        self.goToAddress("/pas/spoluprace/vyber")
+        pocet_zaznamu = self.driver.find_element(By.ID, "pocet_zaznamu").text
+        self.assertEqual(pocet_zaznamu, "3")
+        self.logout()
+        self.login("archeolog")
+        self.goToAddress("/pas/spoluprace/vyber")
+        pocet_zaznamu = self.driver.find_element(By.ID, "pocet_zaznamu").text
+        self.assertEqual(pocet_zaznamu, "70")
+        logger.info("AkceSamostatneNalezy.test_154_zobrazeni_spoluprace_p_001.end")
