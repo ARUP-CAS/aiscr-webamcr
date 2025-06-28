@@ -535,6 +535,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         new_ident = self.driver.current_url.split("/")[-1]
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/ident_cely")
+        self.check_fedora_delete(["record/X-C-L000000003", "record/X-C-TX-000000009"])
 
         # D externi_odkaz
         time = self.getTime()

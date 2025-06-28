@@ -278,7 +278,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 self.save_container_content(n["fedora_id"], path)
 
     def check_fedora_change(self, time, path):
-        self.save_fedora_change(time, path)
+        # self.save_fedora_change(time, path)
         headers = {}
         response = requests.get(
             f"{self.api_url}fcr:search?condition=fedora_id={self.api_url}{settings.FEDORA_SERVER_NAME}/*&condition=modified>{time}&offset=0&max_results=100&format=json",

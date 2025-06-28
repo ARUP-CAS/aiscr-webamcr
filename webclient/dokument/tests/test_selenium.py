@@ -564,6 +564,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         new_ident = self.driver.current_url.split("/")[-1]
         self.check_fedora_change(time, "dokument/tests/resources/test_141/ident_cely")
+        self.check_fedora_delete(["record/X-C-DL-000000009"])
 
         # U dokument_cast
         time = self.getTime()
@@ -712,6 +713,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         new_ident = self.driver.current_url.split("/")[-1]
         self.check_fedora_change(time, "dokument/tests/resources/test_141/ident_cely_1")
+        self.check_fedora_delete(["record/X-C-TX-201801164"])
 
         # D dokument X-C-TX-201801164
         time = self.getTime()
@@ -1270,6 +1272,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         new_ident = self.driver.current_url.split("/")[-1]
         self.check_fedora_change(time, "dokument/tests/resources/test_144/ident_cely")
+        self.check_fedora_delete(["record/X-C-3D-000000009"])
 
         # D nalez_
         time = self.getTime()

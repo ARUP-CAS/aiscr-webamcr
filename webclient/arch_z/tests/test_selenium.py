@@ -1739,6 +1739,7 @@ class AkceSamostatneAkce(AkceTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/ident_cely")
+        self.check_fedora_delete(["record/X-C-91468414A", "record/X-C-TX-000000008"])
 
         # AZ smazat
         time = self.getTime()
@@ -1915,6 +1916,7 @@ class AkceSamostatneAkce(AkceTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/ident_cely_PIAN")
+        self.check_fedora_delete(["record/N-1121-000000007"])
 
         # C DJ katastr
         time = self.getTime()
@@ -1968,6 +1970,7 @@ class AkceSamostatneAkce(AkceTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_140/ident_cely_1")
+        self.check_fedora_delete(["record/X-M-91366821A"])
 
         # AZ smazat
         time = self.getTime()

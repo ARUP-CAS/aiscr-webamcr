@@ -248,6 +248,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         # ident_new = self.driver.find_element(By.ID, "id-app-entity-item").text
         self.check_fedora_change(time, "projekt/tests/resources/test_146/ident_cely")
+        self.check_fedora_delete(["record/X-C-000000001"])
 
         # C projekt pruzkum
         self.goToAddress("/projekt/zapsat")
