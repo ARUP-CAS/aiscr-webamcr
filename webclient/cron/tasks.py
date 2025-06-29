@@ -2,6 +2,8 @@ import datetime
 import json
 import logging
 import traceback
+from ftplib import FTP
+from io import BytesIO
 
 import requests
 from arch_z.models import Akce
@@ -9,6 +11,7 @@ from cacheops import invalidate_model
 from celery import shared_task
 from core.connectors import RedisConnector
 from core.constants import (
+    IMPORT,
     PRISTUPNOST_MIN_RAZENI,
     PROJEKT_STAV_VYTVORENY,
     PROJEKT_STAV_ZAPSANY,
@@ -21,8 +24,9 @@ from core.constants import (
     ZAPSANI_PROJ,
 )
 from core.coordTransform import transform_geom_to_sjtsk
+from core.forms import ImportDataAdminForm
 from core.import_data_mappers import ImportModelMapper
-from core.models import SouborVazby
+from core.models import Soubor, SouborVazby
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from django.conf import settings
 from django.db import connection, transaction
@@ -43,6 +47,7 @@ from pian.models import Pian
 from projekt.models import Projekt
 from services.mailer import Mailer
 from uzivatel.models import Osoba, User
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -613,7 +618,7 @@ def pians_properties_check():
 
 
 @shared_task
-def run_data_import(job_id):
+def run_data_import(job_id, user_id):
     logger.debug("cron.tasks.run_data_import.start", extra={"job_id": job_id})
 
     redis_connector = RedisConnector().get_connection()
@@ -623,6 +628,8 @@ def run_data_import(job_id):
     performed_action = redis_connector.get(f"import_performed_action_{job_id}").decode("utf-8")
     failed = False
     import_results = {}
+    mapper_classes = {}
+    all_records = []
 
     try:
         with transaction.atomic():
@@ -632,13 +639,33 @@ def run_data_import(job_id):
                         redis_connector.get(f"import_data_{job_id}_record_{record_id}").decode("utf-8")
                     )
                     mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record.pop("__file_name"))
+                    mapper_classes[record_id] = mapper_class
                     records = mapper_class(serialized_record).create_records(performed_action)
                     for record in records:
-                        if isinstance(record, Model):
+                        all_records.append(record)
+                        if performed_action in (
+                            ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+                            ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                        ):
+                            if isinstance(record, Model):
+                                record.suppress_signal = True
+                                mapper_class.create_relations(record)
+                                if hasattr(record, "historie"):
+                                    record.save()
+                                    Historie(
+                                        typ_zmeny=IMPORT,
+                                        uzivatel=User.objects.get(pk=user_id),
+                                        vazba=record.historie,
+                                        poznamka=serialized_record,
+                                    ).save()
+                                else:
+                                    record.save()
+                            else:
+                                raise ValueError(f"{_('cron.tasks.run_data_import.error.not_model')} {record_id}")
+                        elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                            record.suppress_signal = False
                             record.active_transaction = fedora_transaction
-                            record.save()
-                        else:
-                            raise ValueError(f"{_('cron.tasks.run_data_import.error.not_model')} {record_id}")
+                            record.delete()
                 except Exception as err:
                     logger.info("cron.tasks.run_data_import.error", extra={"error": err, "record_id": record_id})
                     fedora_transaction.rollback_transaction()
@@ -655,18 +682,69 @@ def run_data_import(job_id):
                     logger.info("cron.tasks.run_data_import.success", extra={"record_id": record_id})
                     import_results[
                         record_id
-                    ] = f"{_('cron.tasks.run_data_import.success')}, {[', '.join(str(record.pk) for record in records)]}"
+                    ] = f"{_('cron.tasks.run_data_import.success')}, {[', '.join(str(record.pk) for record in records if record.pk)]}"
                     redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
     except Exception as err:
         logger.info("cron.tasks.run_data_import.database_error", extra={"error": err})
         for record_id in range(record_count):
             import_results[record_id] = f"{_('cron.tasks.run_data_import.error.database_error')}: {err}, "
         failed = True
+
+    if not failed and performed_action in (
+        ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+        ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+    ):
+        with FTP(
+            host=settings.FILE_IMPORT_FTP_HOSTNAME,
+            user=settings.FILE_IMPORT_FTP_USER_NAME,
+            passwd=settings.FILE_IMPORT_FTP_PASSWORD,
+        ) as ftp:
+            ftp.cwd(settings.FILE_IMPORT_FTP_PATH)
+            for record_id in range(record_count):
+                mapper_class = mapper_classes[record_id]
+                record = mapper_class.model_class.objects.filter(ident_cely=serialized_record["ident_cely"]).first()
+                if hasattr(record, "soubory"):
+                    if record.ident_cely in ftp.nlst():
+                        ftp.cwd(record.ident_cely)
+                        file_names = [f for f in ftp.nlst() if f not in (".", "..")]
+                        for filename in file_names:
+                            conn = FedoraRepositoryConnector(record, fedora_transaction, skip_container_check=False)
+                            bio = BytesIO()
+                            ftp.retrbinary(f"RETR {filename}", bio.write)
+                            mimetype = Soubor.get_mime_types(bio)
+                            soubor_query = Soubor.objects.filter(nazev=filename, vazba=record.soubory)
+                            if soubor_query.exists():
+                                soubor = Soubor.objects.filter(nazev=filename, vazba=record.soubory).first()
+                                rep_bin_file = conn.update_binary_file(filename, mimetype, bio, soubor.repository_uuid)
+                                soubor.mimetype = mimetype
+                                soubor.size_mb = rep_bin_file.size_mb
+                                soubor.sha_512 = rep_bin_file.sha_512
+                            else:
+                                rep_bin_file = conn.save_binary_file(filename, mimetype, bio)
+                                sha_512 = rep_bin_file.sha_512
+                                soubor: Soubor = Soubor(
+                                    vazba=record.soubory,
+                                    nazev=filename,
+                                    mimetype=mimetype,
+                                    size_mb=rep_bin_file.size_mb,
+                                    path=rep_bin_file.url_without_domain,
+                                    sha_512=sha_512,
+                                )
+                            soubor.suppress_signal = True
+                            soubor.save()
+                        ftp.cwd("..")
+
+        for record in all_records:
+            if isinstance(record, ModelWithMetadata):
+                record.save_metadata(fedora_transaction)
+
     if not failed:
         fedora_transaction.mark_transaction_as_closed()
-    # redis_connector.delete(f"import_data_count_{job_id}")
-    # for record_id in range(record_count):
-    #     redis_connector.delete(f"import_data_{job_id}_record_{record_id}")
+
+    expiration_seconds = 300
+    redis_connector.expire(f"import_data_count_{job_id}", expiration_seconds)
+    for record_id in range(record_count):
+        redis_connector.expire(f"import_data_{job_id}_record_{record_id}", expiration_seconds)
 
     logger.debug(
         "cron.tasks.run_data_import.end", extra={"job_id": job_id, "failed": failed, "record_count": record_count}

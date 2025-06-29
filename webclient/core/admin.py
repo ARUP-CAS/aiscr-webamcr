@@ -664,7 +664,10 @@ class FedoraCustomAdminSite(admin.AdminSite):
         return TemplateResponse(request, "admin/fedora_management/update_metadata.html", context)
 
     def import_data(self, request):
-        # TODO: Remove not before deployment
+        """
+        Creates a view for importing data from a zip file.
+        """
+
         maintenance = not OdstavkaSystemu.objects.filter(
             datum_odstavky=datetime.datetime.now().today(),
             cas_odstavky__lte=datetime.datetime.now().time(),
@@ -675,6 +678,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
             "maintenance": maintenance,
             **self.each_context(request),
         }
+        # TODO: Remove not before deployment
         if not maintenance:
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
         if request.method == "POST" and request.user.is_superuser:
@@ -707,16 +711,16 @@ class FedoraCustomAdminSite(admin.AdminSite):
                         if mapper_class:
                             try:
                                 mapper = mapper_class(row.to_dict())
-                                record = mapper.map()
-                                mapper.import_validation(performed_action)
+                                record = mapper.map(performed_action, serialize=True)
+                                primary_key = mapper.import_validation(performed_action)
                                 LookupImportField.records += mapper.create_records(performed_action)
                                 record["__file_name"] = file_name
                             except ImportDataError as err:
-                                validation_results.append(err)
+                                validation_results.append([getattr(err, "record_id", ""), err])
                                 invalid_records.append(record_id)
                             else:
                                 records.append(record)
-                                validation_results.append(_("core.admin.import_data.record_valid"))
+                                validation_results.append([primary_key, _("core.admin.import_data.record_valid")])
                                 self.redis_connector.set(f"import_data_{job_id}_record_{record_id}", json.dumps(record))
                             record_id += 1
                         else:
@@ -728,7 +732,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
             context["validation_results"] = validation_results
             context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
             if not invalid_records:
-                tasks.run_data_import.delay(job_id)
+                tasks.run_data_import.delay(job_id, request.user.id)
             logger.debug(
                 "core.admin.FedoraCustomAdminSite.import_data.end",
                 extra={"job_id": job_id, "records_count": records_count, "invalid_records": invalid_records},

@@ -64,8 +64,8 @@
         </tr>
         {% for result in validation_results %}
           <tr>
-            <td>{{ forloop.counter0 }}</td>
-            <td>{{ result }}</td>
+            <td>{{ forloop.counter0 }} ({{ result.0 }})</td>
+            <td>{{ result.1 }}</td>
             <td></td>
           </tr>
         {% endfor %}
@@ -97,7 +97,7 @@
     {% endif %}
   </div>
 
-  <script>;
+  <script>
       let stopRequests = false;
       const records_count = {{ records_count }};
       document.getElementById("stopRequests").addEventListener("click", () => {
@@ -126,6 +126,11 @@
               for (let i = 0; i < data.finished_record_count; i++) {
                   const row = table.rows[i + 1];
                   row.cells[2].innerText = data.serialized_results[i];
+              }
+
+              if (data.status === "finished") {
+                  document.getElementById("stopRequests").disabled = true;
+                  stopRequests = true;
               }
 
           } catch (error) {

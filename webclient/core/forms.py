@@ -279,6 +279,7 @@ class TransaltionImportForm(forms.Form):
 class ImportDataAdminForm(forms.Form):
     PERFORMED_ACTION_INSERT = "insert"
     PERFORMED_ACTION_UPDATE = "update"
+    PERFORMED_ACTION_DELETE = "delete"
 
     data_file = forms.FileField(
         required=True,
@@ -293,6 +294,7 @@ class ImportDataAdminForm(forms.Form):
             choices=[
                 (PERFORMED_ACTION_INSERT, _("core.forms.ImportDataAdminForm.insert")),
                 (PERFORMED_ACTION_UPDATE, _("core.forms.ImportDataAdminForm.update")),
+                (PERFORMED_ACTION_DELETE, _("core.forms.ImportDataAdminForm.delete")),
             ]
         ),
     )

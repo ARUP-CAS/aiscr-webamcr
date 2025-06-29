@@ -1586,13 +1586,18 @@ class DataImportProgress(LoginRequiredMixin, View):
             raise PermissionDenied
         job_id = kwargs.get("job_id")
         redis_connector = RedisConnector().get_connection()
-        record_count = int(redis_connector.get(f"import_data_count_{job_id}").decode("utf-8"))
-        serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}").decode("utf-8"))
-
-        progress_response = {
-            "record_count": record_count,
-            "progress": len(serialized_results) / record_count * 100,
-            "finished_record_count": len(serialized_results),
-            "serialized_results": serialized_results,
-        }
+        try:
+            record_count = int(redis_connector.get(f"import_data_count_{job_id}").decode("utf-8"))
+            serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}").decode("utf-8"))
+            progress_response = {
+                "record_count": record_count,
+                "progress": len(serialized_results) / record_count * 100,
+                "finished_record_count": len(serialized_results),
+                "serialized_results": serialized_results,
+                "status": "in_progress" if len(serialized_results) < record_count else "finished",
+            }
+        except AttributeError:
+            progress_response = {
+                "status": "unknown",
+            }
         return JsonResponse(progress_response)
