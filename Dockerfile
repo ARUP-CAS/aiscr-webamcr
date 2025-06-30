@@ -2,6 +2,10 @@
 
 FROM ghcr.io/osgeo/gdal:ubuntu-small-3.11.0
 
+# Load arguments
+ARG VERSION_APP
+ARG TAG_APP
+
 LABEL maintainer="Archaeological Information System of the Czech Republic (AIS CR) <amcr@arup.cas.cz>" \
       org.opencontainers.image.title="aiscr-webamcr" \
       org.opencontainers.image.version="${VERSION_APP}" \
@@ -10,10 +14,6 @@ LABEL maintainer="Archaeological Information System of the Czech Republic (AIS C
       org.opencontainers.image.licenses="GPL-3.0-or-later" \
       org.opencontainers.image.url="https://github.com/ARUP-CAS/aiscr-webamcr" \
       org.opencontainers.image.documentation="https://aiscr-webamcr.readthedocs.io/"
-
-# Load arguments
-ARG VERSION_APP
-ARG TAG_APP
 
 # Set environmental variables
 ENV VERSION=${VERSION_APP} \
