@@ -70,6 +70,9 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                         self.fields[key].widget.template_name = "core/select_to_text.html"
                     self.fields[key].help_text = ""
 
+            if not not_readonly:
+                self.fields["druh"].required = False
+
     return CreateNalezObjektForm
 
 
@@ -130,5 +133,8 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices,
                     if isinstance(self.fields[key].widget, forms.widgets.Select):
                         self.fields[key].widget.template_name = "core/select_to_text.html"
                     self.fields[key].help_text = ""
+            if not not_readonly:
+                self.fields["druh"].required = False
+                self.fields["specifikace"].required = False
 
     return CreateNalezPredmetForm
