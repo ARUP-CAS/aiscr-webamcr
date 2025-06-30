@@ -38,6 +38,9 @@ RUN echo $TZ > /etc/timezone && \
         jq \
         postgresql-client \
         curl \
+        build-essential \
+        python3-dev \
+        libmagic1 \
         redis-tools && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -60,6 +63,7 @@ RUN mkdir -p /vol/web/media /vol/web/static /vol/web/locale/cs/LC_MESSAGES /vol/
 # Create non-root user
 RUN userdel ubuntu && \
     adduser --disabled-password --gecos "" user && \
+    passwd -d user && \
     usermod -aG sudo user && \
     chown -R user:user /vol /code /custom_html && \
     chmod -R 755 /vol/web /code /custom_html
