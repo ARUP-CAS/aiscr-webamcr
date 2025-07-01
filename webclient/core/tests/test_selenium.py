@@ -201,7 +201,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
         elif extension == "xml":
             assert self.porovnej_xml_bez_ignorovanych(
-                sample_file, response.content, ignorovane_tagy=["amcr:datum_zmeny", "amcr:datum_registrace"]
+                sample_file,
+                response.content,
+                ignorovane_tagy=["amcr:datum_zmeny", "amcr:datum_registrace", "amcr:datum_zverejneni"],
             )
         elif extension == "png":
             assert self.porovnej_png_obsah(sample_file, response.content)
@@ -660,7 +662,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """Rekurzivně odstraní ignorované tagy z XML stromu."""
         for elem in list(root):
             if elem.tag in ignorovane_tagy:
-                root.remove(elem)
+                elem.text = None
             else:
                 self.odstran_elementy(elem, ignorovane_tagy)
 

@@ -14,6 +14,8 @@ from pian.models import Pian
 from projekt.models import Projekt
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 logger = logging.getLogger("tests")
 
@@ -1880,7 +1882,12 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.ID, "pian-pripojit-")
         self.ElementClick(By.ID, "select2-id_X-C-9000000011A-D01-pian-container")
         self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "P-1121-100070")
-        self.wait(0.5)
+        wait = WebDriverWait(self.driver, 10)
+        wait.until(
+            EC.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "li.select2-results__option--highlighted"), "P-1121-100070 (PI2 - potvrzený)"
+            )
+        )
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
@@ -1962,6 +1969,7 @@ class AkceSamostatneAkce(AkceTestClass):
         # Scenar_138 Test Fedory pro ADB a výškový bod
         logger.info("AkceProjektoveAkce.test_140_test_Fedory_PIAN_p_002.start")
         self.login("archivar")
+
         # změna ident_cely PIAN
         self.createFedoraRecord("X-M-91366821A")
         self.goToAddress("/id/X-M-91366821A")
