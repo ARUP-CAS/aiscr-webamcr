@@ -84,6 +84,8 @@ def create_akce_vedouci_objekt_form(readonly=True):
             self.readonly = readonly
             logger.debug("CreateAkceVedouciObjektForm.init", extra={"option": readonly, "initial": self.initial})
             self.fields["vedouci"].required = False
+            if readonly:
+                self.fields["organizace"].required = False
 
     return CreateAkceVedouciObjektForm
 
