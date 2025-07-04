@@ -351,7 +351,7 @@ class AkceOrganizace(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceOsoba(BaseSeleniumTestClass):
     def test_153_test_Fedora_osoba_001(self):
-        # Scenar_152 Test Fedory pro sosbu
+        # Scenar_152 Test Fedory pro osobu
         logger.info("AkceOsoba.test_153_test_Fedora_osoba_001.start")
         self.login("administrator")
         # C osoba

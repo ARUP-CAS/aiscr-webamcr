@@ -1875,7 +1875,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/odpojeni_smazani_PIAN")
 
-        # připorení PIAN
+        # připojení PIAN
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
         self.ElementClick(By.ID, "add_others")
@@ -1970,7 +1970,7 @@ class AkceSamostatneAkce(AkceTestClass):
         logger.info("AkceProjektoveAkce.test_140_test_Fedory_PIAN_p_002.start")
         self.login("archivar")
 
-        # změna ident_cely PIAN
+        # změna ident_cely akce
         self.createFedoraRecord("X-M-91366821A")
         self.goToAddress("/id/X-M-91366821A")
         time = self.getTime()
