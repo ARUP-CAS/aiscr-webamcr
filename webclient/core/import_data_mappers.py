@@ -567,14 +567,17 @@ class ImportModelMapper(ABC):
                 missing_columns = value_dict_column_set - mapping_column_set
                 raise ImportDataIncorrectStructureError(missing_columns, excess_columns)
         for field_name, field_instance in self.get_mapping().items():
-            field_value = self.value_dict[field_name]
-            field_instance.value = field_value
-            if instance_values:
-                mapping_dict[field_name] = (
-                    field_instance.instance_value if not serialize else field_instance.serialized_value
-                )
-            else:
-                mapping_dict[field_name] = field_instance.value if not serialize else field_instance.serialized_value
+            if field_name in self.value_dict:
+                field_value = self.value_dict[field_name]
+                field_instance.value = field_value
+                if instance_values:
+                    mapping_dict[field_name] = (
+                        field_instance.instance_value if not serialize else field_instance.serialized_value
+                    )
+                else:
+                    mapping_dict[field_name] = (
+                        field_instance.value if not serialize else field_instance.serialized_value
+                    )
         return mapping_dict
 
     def map_column_name_to_field_name(self, column_name):
