@@ -293,7 +293,7 @@ def get_adb_ident(pian: Pian) -> str:
         raise MaximalIdentNumberError(sequence.sekvence)
 
 
-def get_temp_lokalita_ident(typ, region, lokalita):
+def get_temp_lokalita_ident(typ, region):
     """
     Metóda pro výpočet dočasného identu lokality.
 

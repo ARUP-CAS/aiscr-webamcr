@@ -25,10 +25,11 @@ from core.constants import (
 )
 from core.coordTransform import transform_geom_to_sjtsk
 from core.forms import ImportDataAdminForm
-from core.import_data_mappers import ImportModelMapper
+from core.import_data_mappers import ImportModelMapper, UzivatelNotifikaceMapper, UzivatelOpravneniMapper
 from core.models import Soubor, SouborVazby
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.db import connection, transaction
 from django.db.models import F, Min, Model, Prefetch, Q
 from django.db.models.functions import Coalesce, Upper
@@ -46,7 +47,7 @@ from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pian.models import Pian
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Osoba, User
+from uzivatel.models import Osoba, User, UserNotificationType
 from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
@@ -643,29 +644,51 @@ def run_data_import(job_id, user_id):
                     records = mapper_class(serialized_record).create_records(performed_action)
                     for record in records:
                         all_records.append(record)
-                        if performed_action in (
-                            ImportDataAdminForm.PERFORMED_ACTION_INSERT,
-                            ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
-                        ):
-                            if isinstance(record, Model):
-                                record.suppress_signal = True
-                                mapper_class.create_relations(record)
-                                if hasattr(record, "historie"):
-                                    record.save()
-                                    Historie(
-                                        typ_zmeny=IMPORT,
-                                        uzivatel=User.objects.get(pk=user_id),
-                                        vazba=record.historie,
-                                        poznamka=serialized_record,
-                                    ).save()
+                        if mapper_class == UzivatelOpravneniMapper:
+                            record: User
+                            group = Group.objects.get(name=serialized_record["skupina"])
+                            if performed_action in (
+                                ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+                                ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                            ):
+                                record.groups.add(group)
+                            elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                                record.groups.remove(group)
+                        if mapper_class == UzivatelNotifikaceMapper:
+                            record: User
+                            group = UserNotificationType.objects.get(ident_cely=serialized_record["notifikace"])
+                            if performed_action in (
+                                ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+                                ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                            ):
+                                record.notification_types.add(group)
+                            elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                                record.notification_types.remove(group)
+                        else:
+                            if performed_action in (
+                                ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+                                ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                            ):
+                                if isinstance(record, Model):
+                                    record.suppress_signal = True
+                                    mapper_class.create_relations(record)
+                                    mapper_class.record_postprocessing(record, performed_action)
+                                    if hasattr(record, "historie"):
+                                        record.save()
+                                        Historie(
+                                            typ_zmeny=IMPORT,
+                                            uzivatel=User.objects.get(pk=user_id),
+                                            vazba=record.historie,
+                                            poznamka=serialized_record,
+                                        ).save()
+                                    else:
+                                        record.save()
                                 else:
-                                    record.save()
-                            else:
-                                raise ValueError(f"{_('cron.tasks.run_data_import.error.not_model')} {record_id}")
-                        elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
-                            record.suppress_signal = False
-                            record.active_transaction = fedora_transaction
-                            record.delete()
+                                    raise ValueError(f"{_('cron.tasks.run_data_import.error.not_model')} {record_id}")
+                            elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                                record.suppress_signal = False
+                                record.active_transaction = fedora_transaction
+                                record.delete()
                 except Exception as err:
                     logger.info("cron.tasks.run_data_import.error", extra={"error": err, "record_id": record_id})
                     fedora_transaction.rollback_transaction()
@@ -673,7 +696,7 @@ def run_data_import(job_id, user_id):
                     import_results[record_id] = (
                         f"{_('cron.tasks.run_data_import.error.part_1')}: {err}, "
                         f"{_('cron.tasks.run_data_import.error.part_2')} {serialized_record}, "
-                        f"{_('cron.tasks.run_data_import.error.part_3')} {performed_action}"
+                        f"{_('cron.tasks.run_data_import.error.part_3')} {performed_action}" + traceback.format_exc()
                     )
                     redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
                     failed = True
@@ -732,6 +755,14 @@ def run_data_import(job_id, user_id):
                                 )
                             soubor.suppress_signal = True
                             soubor.save()
+                            soubor.create_soubor_vazby()
+                            Historie(
+                                typ_zmeny=IMPORT,
+                                uzivatel=User.objects.get(pk=user_id),
+                                vazba=soubor.historie,
+                                poznamka=f"{_('cron.tasks.run_data_import.imported_file')} "
+                                f"{settings.FILE_IMPORT_FTP_PATH}/{record.ident_cely}/{filename}",
+                            ).save()
                         ftp.cwd("..")
 
         for record in all_records:

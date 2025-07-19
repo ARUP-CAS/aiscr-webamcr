@@ -238,7 +238,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
             form_az.save_m2m()
             region = az.hlavni_katastr.okres.kraj.rada_id
             typ = lokalita.typ_lokality.zkratka
-            az.ident_cely = get_temp_lokalita_ident(typ, region, az)
+            az.ident_cely = get_temp_lokalita_ident(typ, region)
             az.save()
             az.set_zapsany(self.request.user)
             lokalita.archeologicky_zaznam = az

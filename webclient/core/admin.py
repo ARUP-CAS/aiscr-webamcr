@@ -18,6 +18,7 @@ from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
+from django.db.models import DateTimeField, ExpressionWrapper, F
 from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import redirect
@@ -668,17 +669,20 @@ class FedoraCustomAdminSite(admin.AdminSite):
         Creates a view for importing data from a zip file.
         """
 
-        maintenance = not OdstavkaSystemu.objects.filter(
-            datum_odstavky=datetime.datetime.now().today(),
-            cas_odstavky__lte=datetime.datetime.now().time(),
-            status=True,
-        ).exists()
+        maintenance = (
+            OdstavkaSystemu.objects.annotate(
+                datetime_odstavky=ExpressionWrapper(
+                    F("datum_odstavky") + F("cas_odstavky"), output_field=DateTimeField()
+                )
+            )
+            .filter(datetime_odstavky__lte=datetime.datetime.now(), status=True)
+            .exists()
+        )
         context = {
             "app_list": self.get_app_list(request),
             "maintenance": maintenance,
             **self.each_context(request),
         }
-        # TODO: Remove not before deployment
         if not maintenance:
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
         if request.method == "POST" and request.user.is_superuser:
@@ -699,6 +703,16 @@ class FedoraCustomAdminSite(admin.AdminSite):
             invalid_records = []
             performed_action = cleaned_data["performed_action"]
             with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+                file_names = [name for name in zf.namelist() if not name.startswith("__MACOSX")]
+                file_names = set(file_names)
+                allowed_file_names = set(
+                    [f"{name}.csv" for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
+                )
+                if not file_names.issubset(allowed_file_names):
+                    raise ValidationError(
+                        _("core.admin.import_data.unsupported_file_names"),
+                        params={"file_names": ", ".join(file_names - allowed_file_names)},
+                    )
                 file_names = [f"{name}.csv" for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
                 for file_name in file_names:
                     try:
