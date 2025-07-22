@@ -1441,6 +1441,7 @@ def get_detail_template_shows(projekt, user):
         "samostatne_nalezy": show_samostatne_nalezy,
         "pridat_akci": show_pridat_akci,
         "editovat": check_permissions(p.actionChoices.projekt_edit, user, projekt.ident_cely),
+        "oznamovatel_editovat": check_permissions(p.actionChoices.projekt_oznamovatel_edit, user, projekt.ident_cely),
         "dokumenty": show_dokumenty,
         "arch_links": show_arch_links,
         "akce": show_akce,
