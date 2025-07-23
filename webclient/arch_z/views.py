@@ -788,7 +788,7 @@ def archivovat(request, ident_cely):
             fedora_transaction.rollback_transaction()
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
-        warnings = az.check_pred_archivaci()
+        warnings, docs_warings = az.check_pred_archivaci()
         logger.debug("arch_z.views.archivovat", extra={"warning": warnings})
         if warnings:
             request.session["temp_data"] = warnings
@@ -804,7 +804,9 @@ def archivovat(request, ident_cely):
             doi_confirmation = False
     except ObjectDoesNotExist:
         doi_confirmation = False
-    form_check = CheckStavNotChangedForm(require_confirmation=doi_confirmation, initial={"old_stav": az.stav})
+    form_check = CheckStavNotChangedForm(
+        require_confirmation=doi_confirmation, dokument_warnings=docs_warings, initial={"old_stav": az.stav}
+    )
     context = {
         "object": az,
         "title": _("arch_z.views.archivovat.title.text"),
