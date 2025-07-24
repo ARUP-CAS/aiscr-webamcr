@@ -128,7 +128,7 @@ from pid.exceptions import DoiWriteError
 from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Osoba, User
+from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -2428,3 +2428,18 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
         }
         logger.debug(context)
         return HttpResponse(render_to_string("dokument/dokument_table_only.html", context))
+
+
+@login_required
+def zjisti_licenci_organizace(request):
+    """
+    Funkce pohledu pro zjištení licence organizace.
+    """
+    organizace_id = request.GET.get("organizace", 0)
+    organizace = Organizace.objects.filter(pk=organizace_id)
+    if len(organizace) != 1:
+        logger.debug("dokument.views.zjisti_licenci_organizace.does_not_exist", extra={"data": organizace_id})
+
+        return JsonResponse(data={}, status=400)
+    list = {"licence": organizace.first().licence_id}
+    return JsonResponse(data=list, status=200, safe=False)

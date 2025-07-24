@@ -31,7 +31,7 @@ from dokument.models import Dokument, DokumentExtraData
 from ez.models import ExterniZdroj
 from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PRISTUPNOST
-from heslar.hesla_dynamicka import DOKUMENT_LICENCE_CC_BY_NC, DOKUMENT_LICENCE_NEZNAMA, TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import DOKUMENT_LICENCE_NEZNAMA, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
 from historie.models import Historie
 from lokalita.models import Lokalita
@@ -319,11 +319,15 @@ def change_document_accessibility():
             pristupnost = (
                 Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST).filter(razeni=pristupnost_razeni).first()
             )
+            save = False
             if item.pristupnost != pristupnost:
-                item.active_transaction = FedoraTransaction()
-                if item.licence_id == DOKUMENT_LICENCE_NEZNAMA:
-                    item.licence = Heslar.objects.get(id=DOKUMENT_LICENCE_CC_BY_NC)
                 item.pristupnost = pristupnost
+                save = True
+            if item.licence_id == DOKUMENT_LICENCE_NEZNAMA:
+                item.licence = item.organizace.licence
+                save = True
+            if save:
+                item.active_transaction = FedoraTransaction()
                 item.close_active_transaction_when_finished = True
                 item.save()
                 logger.debug(

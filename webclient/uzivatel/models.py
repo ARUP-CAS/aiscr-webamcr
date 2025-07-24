@@ -38,7 +38,7 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
-from heslar.hesla import HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
+from heslar.hesla import HESLAR_LICENCE, HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.models import Heslar
 from services.notfication_settings import notification_settings
 from uzivatel.managers import CustomUserManager
@@ -49,6 +49,12 @@ logger = logging.getLogger(__name__)
 
 def only_notification_groups():
     return UserNotificationType.objects.filter(ident_cely__icontains="S-E-").all()
+
+
+def get_default_licence():
+    from heslar.hesla_dynamicka import DOKUMENT_LICENCE_NEZNAMA
+
+    return DOKUMENT_LICENCE_NEZNAMA
 
 
 class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin):
@@ -382,6 +388,16 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
     ident_cely = models.CharField(max_length=20, unique=True)
     cteni_dokumentu = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.cteni_dokumentu"))
     ror = models.CharField(max_length=255, null=True, blank=True)
+    licence = models.ForeignKey(
+        Heslar,
+        models.RESTRICT,
+        related_name="organizace_licence",
+        limit_choices_to={"nazev_heslare": HESLAR_LICENCE},
+        null=False,
+        blank=False,
+        db_index=True,
+        default=get_default_licence,
+    )
 
     def save(self, *args, **kwargs):
         """
