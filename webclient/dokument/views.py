@@ -277,8 +277,7 @@ class Model3DListView(SearchListView):
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
-        qs = qs.order_by(*sort_params)
-        qs = qs.distinct("pk", *sort_params)
+        qs = qs.order_by(*sort_params).distinct()
         qs = qs.filter(ident_cely__contains="3D")
         qs = qs.select_related("typ_dokumentu", "extra_data", "organizace", "extra_data__format").prefetch_related(
             Prefetch(
