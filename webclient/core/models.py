@@ -697,6 +697,9 @@ class Permissions(models.Model):
         projekt_oznamovatel_zapsat = "projekt_oznamovatel_zapsat", _(
             "core.models.permissions.actionChoices.projekt_oznamovatel_zapsat"
         )
+        projekt_oznamovatel_edit = "projekt_oznamovatel_edit", _(
+            "core.models.permissions.actionChoices.projekt_oznamovatel_edit"
+        )
         projekt_zadost_udaje_oznamovatel = "projekt_zadost_udaje_oznamovatel", _(
             "core.models.permissions.actionChoices.projekt_zadost_udaje_oznamovatel"
         )
