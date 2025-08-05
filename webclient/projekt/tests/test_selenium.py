@@ -17,6 +17,7 @@ from core.models import Soubor
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
 from django.utils.translation import gettext as _
+from freezegun import freeze_time
 from oznameni.tests.test_selenium import OznameniSeleniumTest
 from projekt.models import Projekt
 from selenium.webdriver.common.by import By
@@ -153,9 +154,10 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementSendKeys(By.ID, "id_adresa", "test")
         self.ElementSendKeys(By.ID, "id_telefon", "xxx")
         self.ElementSendKeys(By.ID, "id_email", "test@example.com")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "actionSubmitBtn")
+        # self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
+        with freeze_time("2025-07-26 12:00:01"):
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/create_projekt_zachranny")
         ident = self.driver.current_url.split("/")[-1]
 
@@ -175,14 +177,6 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-id-save")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/update_oznamovatel")
 
-        # C soubor
-        time = self.getTime()
-        self.ElementClick(By.ID, "add_dokumentace")
-        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "buttonUploadSubmit")
-        self.check_fedora_change(time, "projekt/tests/resources/test_145/create_soubor")
-
         # D soubor
         time = self.getTime()
         file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident).first().pk
@@ -190,6 +184,14 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_soubor")
+
+        # C soubor
+        time = self.getTime()
+        self.ElementClick(By.ID, "add_dokumentace")
+        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "buttonUploadSubmit")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/create_soubor")
 
         # C projektova akce
         self.createFedoraRecord("C-201121404")
@@ -227,6 +229,22 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_projekt")
 
+        # reC projektova akce
+        self.createFedoraRecord("C-202111043")
+        self.createFedoraRecord("C-202111043A")
+        self.goToAddress("/id/C-202111043A")
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "akce-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.goToAddress("/projekt/detail/C-202111043")
+        time = self.getTime()
+        self.ElementClick(By.ID, "add_akce")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "actionSubmitBtn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/recreate_projektova_akce")
+        self.check_fedora_delete(["model/deleted/member/C-202111043A"])
+
         logger.info("ProjektSeleniumTest.test_145_test_Fedora_projekt_001.end")
 
     def test_146_test_Fedora_projekt_002(self):
@@ -238,14 +256,23 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         ident = OznameniSeleniumTest.oznameni_projektu(self)
         self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt")
 
-        # ident cely projektu
+        # U projektu - delete dokumentace
         self.login("archivar")
         self.goToAddress(f"/id/{ident}")
         time = self.getTime()
-        self.ElementClick(By.ID, "projekt-schvalit")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail > label")
+        file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident).first().pk
+        self.ElementClick(By.ID, f"file-smazat-{file}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_soubor")
+
+        # ident cely projektu
+        self.goToAddress(f"/id/{ident}")
+        time = self.getTime()
+        self.ElementClick(By.ID, "projekt-schvalit")
+        with freeze_time("2025-07-27 12:00:01"):
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.ID, "submit-btn")
         # ident_new = self.driver.find_element(By.ID, "id-app-entity-item").text
         self.check_fedora_change(time, "projekt/tests/resources/test_146/ident_cely")
         self.check_fedora_delete(["record/X-C-000000001"])
@@ -278,7 +305,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "dokument-add")
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Pavloň")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
         self.ElementSendKeys(By.ID, "id_rok_vzniku", "2023")
@@ -336,16 +363,36 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_PAS")
 
-        # D projekt
+        # D projekt C-202210662
         self.logout()
         self.login("administrator")
-        self.goToAddress("/id/C-202209999")
+        self.createFedoraRecord("C-202210662")
+        self.createFedoraRecord("C-200810918A-DT-15")
+        self.goToAddress("/id/C-202210662")
         time = self.getTime()
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "projekt-smazat")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_projekt")
+
+        # reC PAS
+        self.logout()
+        self.login("archivar")
+        self.createFedoraRecord("M-202302810")
+        self.createFedoraRecord("M-202302810-N00001")
+        self.goToAddress("/id/M-202302810-N00001")
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "pas-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.goToAddress("/projekt/detail/M-202302810")
+        time = self.getTime()
+        self.ElementClick(By.ID, "add_PAS")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "newEntitySubmitBtn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/recreate_PAS")
+        self.check_fedora_delete(["model/deleted/member/M-202302810-N00001"])
 
         logger.info("ProjektSeleniumTest.test_146_test_Fedora_projekt_002.end")
 

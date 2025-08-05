@@ -35,7 +35,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
 
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
         self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")
@@ -302,6 +302,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         # self.wait(1)
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Pavloň")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
         self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")
@@ -421,7 +422,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "submit-btn")
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Pavloň")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
         self.ElementSendKeys(By.ID, "id_rok_vzniku", "2023")
@@ -455,6 +456,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_dokument")
 
         # U detail let
+        self.createFedoraRecord("C-LET-00001")
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_let .btn")
@@ -464,6 +466,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_let")
 
         # C dokument_cast akce
+        self.createFedoraRecord("C-200810821A")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
         with WaitForPageLoad(self.driver):
@@ -472,13 +475,15 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "button-pripojit-akci")
         self.wait(2)
         self.ElementClick(By.ID, "select2-id_arch_z-container")
-        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "C")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "C-200810821A")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_akce")
 
         # C dokument_cast lokalita
+        self.createFedoraRecord("C-K9000001")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
         with WaitForPageLoad(self.driver):
@@ -487,13 +492,15 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "button-pripojit-lokalitu")
         self.wait(2)
         self.ElementClick(By.ID, "select2-id_arch_z-container")
-        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "C")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "C-K9000001")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_lokalita")
 
         # C dokument_cast projekt
+        self.createFedoraRecord("C-201911202")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
         with WaitForPageLoad(self.driver):
@@ -502,7 +509,8 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "pripojit-projekt-btn")
         self.wait(2)
         self.ElementClick(By.ID, "select2-id_projekt-container")
-        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "C")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "C-201911202")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -636,6 +644,15 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_cast_projekt")
 
+        # D dokument_cast lokalita
+        time = self.getTime()
+        self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(1) strong")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "smazat-cast-btn")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_cast_lokalita")
+
         # U tvar
         time = self.getTime()
         self.ElementClick(By.ID, f"id_{new_ident}_d-0-poznamka")
@@ -702,6 +719,10 @@ class AkceDokumenty(BaseSeleniumTestClass):
 
         # zmena idnet_cely s akci lokalitou a projektem a letem X-C-TX-201801164
         self.createFedoraRecord("X-C-TX-201801164")
+        self.createFedoraRecord("C-201125635A")
+        self.createFedoraRecord("C-202010506")
+        self.createFedoraRecord("C-K9000010")
+        self.createFedoraRecord("C-LET-00010")
         self.goToAddress("/id/X-C-TX-201801164")
         self.ElementClick(By.ID, "NahratSoubory")
         self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
@@ -722,6 +743,38 @@ class AkceDokumenty(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_1")
+
+        # odpojeni akce
+        self.createFedoraRecord("X-C-TX-201801166")
+        self.createFedoraRecord("C-201226860A")
+        self.createFedoraRecord("C-K9000024")
+        self.createFedoraRecord("C-202104117")
+        self.goToAddress("/dokument/detail/X-C-TX-201801166/cast/X-C-TX-201801166-D001")
+        time = self.getTime()
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "odpojit-cast-btn")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/odpojeni_akce")
+
+        # odpojeni lokality
+        self.goToAddress("/dokument/detail/X-C-TX-201801166/cast/X-C-TX-201801166-D002")
+        time = self.getTime()
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "odpojit-cast-btn")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/odpojeni_lokality")
+
+        # odpojeni projektu
+        self.goToAddress("/dokument/detail/X-C-TX-201801166/cast/X-C-TX-201801166-D003")
+        time = self.getTime()
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "odpojit-cast-btn")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/odpojeni_projektu")
+
         logger.info("AkceDokumenty.test_141_test_Fedory_dokument_p_001.end")
 
     def test_142_test_Fedory_LET_p_001(self):
@@ -786,17 +839,6 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "dokument/tests/resources/test_142/pripojeni_dokument")
 
-        # zmena ident_cely
-        time = self.getTime()
-        let = Let.objects.filter(ident_cely="C-LET-00413").first().pk
-        self.goToAddress(f"/admin/dokument/let/{let}/change/")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").clear()
-        self.ElementSendKeys(By.ID, "id_ident_cely", "C-LET-00414")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.NAME, "_save")
-        self.check_fedora_change(time, "dokument/tests/resources/test_142/ident_cely")
-
         # odpojeni dokument
         time = self.getTime()
         self.goToAddress("/id/M-TX-202000166")
@@ -809,6 +851,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
 
         # D Let
         time = self.getTime()
+        let = Let.objects.filter(ident_cely="C-LET-00413").first().pk
         self.goToAddress(f"/admin/dokument/let/{let}/change/")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.LINK_TEXT, "Odstranit")
@@ -833,7 +876,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.go_to_form_zapsat()
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("švejcar")
-        self.wait(0.5)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
         self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2024")

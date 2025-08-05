@@ -3,10 +3,10 @@
   <amcr:archeologicky_zaznam>
     <amcr:ident_cely>X-C-9000000011A</amcr:ident_cely>
     <amcr:stav>1</amcr:stav>
-    <amcr:okres xml:lang="cs" id="ruian-3403">Karlovy Vary</amcr:okres>
+    <amcr:okres xml:lang="cs" id="ruian-3507">Louny</amcr:okres>
     <amcr:pristupnost xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost>
     <amcr:chranene_udaje>
-      <amcr:hlavni_katastr xml:lang="cs" id="ruian-600016">Abertamy</amcr:hlavni_katastr>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-687391">Louny</amcr:hlavni_katastr>
     </amcr:chranene_udaje>
     <amcr:akce>
       <amcr:typ>N</amcr:typ>
@@ -30,10 +30,9 @@
     </amcr:historie>
     <amcr:dokumentacni_jednotka>
       <amcr:ident_cely>X-C-9000000011A-D01</amcr:ident_cely>
-      <amcr:pian id="P-1121-900087">P-1121-900087</amcr:pian>
+      <amcr:pian id="P-1212-900063">P-1212-900063</amcr:pian>
       <amcr:typ xml:lang="cs" id="HES-001073">katastrální území</amcr:typ>
       <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
-      <amcr:nazev>Test</amcr:nazev>
     </amcr:dokumentacni_jednotka>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

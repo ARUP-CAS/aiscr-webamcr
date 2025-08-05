@@ -29,7 +29,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "select2-id_nalezce-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Omelka, Zdeněk")
-        self.wait(self.wait_interval)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.driver.find_element(By.ID, "id_datum_nalezu").send_keys("18.10.2023")
 
@@ -84,7 +84,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
 
         self.ElementClick(By.ID, "select2-id_nalezce-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Omelka, Zdeněk")
-        self.wait(self.wait_interval)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.driver.find_element(By.ID, "id_datum_nalezu").send_keys("18.10.2023")
 
@@ -353,6 +353,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_147_test_Fedora_PAS_001.start")
         # C PAS
         self.login("badatel1")
+        self.createFedoraRecord("M-202105907")
         time = self.getTime()
         ident = self.create_PAS()
         self.check_fedora_change(time, "pas/tests/resources/test_147/create_PAS")

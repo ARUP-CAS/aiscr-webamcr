@@ -23,16 +23,16 @@
       <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-851522.07 -998289.77)</amcr:geom_sjtsk_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-2803186</amcr:id>
-      <amcr:datum_zmeny>2025-06-28T11:19:45.511022+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-2803192</amcr:id>
+      <amcr:datum_zmeny>2025-07-29T12:43:53.662036+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:typ_zmeny>PI01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2803187</amcr:id>
-      <amcr:datum_zmeny>2025-06-28T11:19:49.045106+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-2803193</amcr:id>
+      <amcr:datum_zmeny>2025-07-29T12:45:24.471627+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-      <amcr:poznamka>N-1121-000000007 -&gt; P-1121-100081</amcr:poznamka>
+      <amcr:poznamka>N-1121-000000009 -&gt; P-1121-100081</amcr:poznamka>
       <amcr:typ_zmeny>PI12</amcr:typ_zmeny>
     </amcr:historie>
   </amcr:pian>

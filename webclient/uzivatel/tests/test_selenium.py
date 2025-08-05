@@ -222,7 +222,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_ruianokres-0-object_id .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-4-8 > .text")
         self.ElementClick(By.ID, "select2-id_ruiankatastr-0-object_id-container")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.ElementClick(By.CSS_SELECTOR, "#select2-id_ruiankatastr-0-object_id-results > li:nth-child(4)")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editPesSubmitButton")
@@ -363,7 +363,7 @@ class AkceOsoba(BaseSeleniumTestClass):
         self.ElementSendKeys(By.ID, "id_vypis", "Archeolog, J")
         self.ElementClick(By.ID, "select2-id_orcid-container")
         self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Havrlant")
-        self.wait(2)
+        self.wait_for_select2_results()
         self.ElementClick(By.CSS_SELECTOR, "#select2-id_orcid-results > li:nth-child(1)")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.NAME, "_save")

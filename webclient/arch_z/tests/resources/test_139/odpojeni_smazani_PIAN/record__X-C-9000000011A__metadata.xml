@@ -3,10 +3,10 @@
   <amcr:archeologicky_zaznam>
     <amcr:ident_cely>X-C-9000000011A</amcr:ident_cely>
     <amcr:stav>1</amcr:stav>
-    <amcr:okres xml:lang="cs" id="ruian-3403">Karlovy Vary</amcr:okres>
+    <amcr:okres xml:lang="cs" id="ruian-3503">Chomutov</amcr:okres>
     <amcr:pristupnost xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost>
     <amcr:chranene_udaje>
-      <amcr:hlavni_katastr xml:lang="cs" id="ruian-600016">Abertamy</amcr:hlavni_katastr>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-782432">Kojetín u Radonic</amcr:hlavni_katastr>
     </amcr:chranene_udaje>
     <amcr:akce>
       <amcr:typ>N</amcr:typ>
@@ -32,7 +32,6 @@
       <amcr:ident_cely>X-C-9000000011A-D01</amcr:ident_cely>
       <amcr:typ xml:lang="cs" id="HES-001072">sonda</amcr:typ>
       <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
-      <amcr:nazev>Test</amcr:nazev>
     </amcr:dokumentacni_jednotka>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

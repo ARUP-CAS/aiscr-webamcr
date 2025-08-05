@@ -14,8 +14,6 @@ from pian.models import Pian
 from projekt.models import Projekt
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 
 logger = logging.getLogger("tests")
 
@@ -407,6 +405,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.LINK_TEXT, _("dokument.templates.dokument_table.pridatNovyDokument.label"))
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Absolon")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
         self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")
@@ -454,7 +453,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.ID, "dokument-pripojit")
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("M-TX-194300151")
-        self.wait(3)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
 
         with WaitForPageLoad(self.driver):
@@ -506,16 +505,16 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#eo-pripojit-do-az > .material-icons")
         self.ElementClick(By.ID, "select2-id_ez-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-BIB-1295324")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
-        self.wait(3)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 
         self.ElementClick(By.CSS_SELECTOR, "#eo-pripojit-do-az > .material-icons")
         self.ElementClick(By.ID, "select2-id_ez-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-BIB-1295325")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
-        self.wait(3)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 
@@ -733,7 +732,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.ID, "pian-pripojit-")
         self.ElementClick(By.ID, "select2-id_C-202401980A-D01-pian-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("P-0134-00000")
-        self.wait(0.5)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
@@ -832,7 +831,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
             "Velká Do"
         )
-        self.wait(self.wait_interval)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
             Keys.ENTER
         )
@@ -840,7 +839,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
             "Švejcar"
         )
-        self.wait(self.wait_interval)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
             Keys.ENTER
         )
@@ -888,7 +887,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
             "Švejcar"
         )
-        self.wait(self.wait_interval)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
             Keys.ENTER
         )
@@ -1200,7 +1199,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.LINK_TEXT, _("dokument.templates.dokument_table.pridatNovyDokument.label"))
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Absolon")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
         self.driver.find_element(By.ID, "id_rok_vzniku").send_keys("2023")
@@ -1252,7 +1251,7 @@ class AkceSamostatneAkce(AkceTestClass):
 
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-C-TX-000000003")
-        self.wait(3)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
 
         with WaitForPageLoad(self.driver):
@@ -1279,15 +1278,15 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#eo-pripojit-do-az > .material-icons")
         self.ElementClick(By.ID, "select2-id_ez-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-BIB-1295324")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
-        self.wait(3)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.ElementClick(By.CSS_SELECTOR, "#eo-pripojit-do-az > .material-icons")
         self.ElementClick(By.ID, "select2-id_ez-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-BIB-1295325")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
-        self.wait(3)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 
@@ -1503,7 +1502,7 @@ class AkceSamostatneAkce(AkceTestClass):
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__placeholder")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.ElementClick(By.CSS_SELECTOR, "#select2-id__osv-0-vedouci-results > li:nth-child(5)")
         self.ElementClick(By.CSS_SELECTOR, "#div_id__osv-0-organizace .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-9-9 > .text")
@@ -1517,7 +1516,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id__osv-0-organizace .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-9-16 > .text")
         self.ElementClick(By.CSS_SELECTOR, "#select2-id__osv-0-vedouci-container")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.ElementClick(By.CSS_SELECTOR, "#select2-id__osv-0-vedouci-results > li:nth-child(4)")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
@@ -1606,7 +1605,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementSendKeys(By.ID, "id_X-C-9000000002A-K001_o-0-pocet", "1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_p-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-15-19 > .text")
-        self.ElementClick(By.CSS_SELECTOR, ".dropup > .bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_p-0-specifikace .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-16-4 > .text")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")
@@ -1666,7 +1665,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.LINK_TEXT, _("dokument.templates.dokument_table.pridatNovyDokument.label"))
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Pavloň")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
         self.ElementSendKeys(By.ID, "id_rok_vzniku", "2023")
@@ -1698,9 +1697,11 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_dokument_cast")
 
         # C EZ
+        self.createFedoraRecord("BIB-0000001")
         time = self.getTime()
         self.ElementClick(By.ID, "eo-pripojit-do-az")
         self.ElementClick(By.ID, "select2-id_ez-container")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -1797,6 +1798,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.ID, "id_stratigraficke_jednotky")
         self.ElementSendKeys(By.ID, "id_stratigraficke_jednotky", "2")
         self.ElementClick(By.ID, "select2-id_autor_popisu-container")
+        self.wait_for_select2_results()
         self.ElementClick(By.CSS_SELECTOR, "li.select2-results__option:nth-child(2)")
         self.ElementClick(By.ID, "id_rok_popisu")
         self.ElementClick(By.CSS_SELECTOR, ".year:nth-child(7)")
@@ -1815,12 +1817,20 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_vyskovy_bod")
 
         # U PIAN
+        pian = Pian.objects.filter(dokumentacni_jednotky_pianu__ident_cely="X-C-9000000011A-D01").first().ident_cely
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
-        self.ElementClick(By.ID, "id_X-C-9000000011A-D01-nazev")
-        self.ElementSendKeys(By.ID, "id_X-C-9000000011A-D01-nazev", "Test")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, f"pian-upravit-{pian}")
+        self.wait(1)
+        self.driver.execute_script("""map.setZoom(17); return map.getZoom();""")
+        self.wait(2)
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditAddMarker"))
+        self.wait(0.5)
+        self.clickAtMapCoord(13.2262752, 50.3166203)
+        self.wait(0.5)
         with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "editDjSubmitButton")
+            self.ElementClick(By.ID, "editPianButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/update_PIAN")
 
         # U ADB
@@ -1870,24 +1880,20 @@ class AkceSamostatneAkce(AkceTestClass):
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
         self.ElementClick(By.ID, "others")
-        self.ElementClick(By.ID, "pian-odpojit-N-1121-000000006")
+        self.ElementClick(By.ID, f"pian-odpojit-{pian}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/odpojeni_smazani_PIAN")
 
         # připorení PIAN
+        self.createFedoraRecord("P-1121-100070")
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
         self.ElementClick(By.ID, "add_others")
         self.ElementClick(By.ID, "pian-pripojit-")
         self.ElementClick(By.ID, "select2-id_X-C-9000000011A-D01-pian-container")
         self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "P-1121-100070")
-        wait = WebDriverWait(self.driver, 10)
-        wait.until(
-            EC.text_to_be_present_in_element(
-                (By.CSS_SELECTOR, "li.select2-results__option--highlighted"), "P-1121-100070 (PI2 - potvrzený)"
-            )
-        )
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
@@ -1918,14 +1924,16 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "createPianSubmitButton")
+        pian = Pian.objects.filter(dokumentacni_jednotky_pianu__ident_cely="X-C-9000000011A-D01").first().ident_cely
         self.ElementClick(By.ID, "others")
-        self.ElementClick(By.ID, "pian-potvrdit-N-1121-000000007")
+        self.ElementClick(By.ID, f"pian-potvrdit-{pian}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/ident_cely_PIAN")
-        self.check_fedora_delete(["record/N-1121-000000007"])
+        self.check_fedora_delete([f"record/{pian}"])
 
         # C DJ katastr
+        self.createFedoraRecord("ruian-693154")
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000011A-D01-typ .btn")
         self.ElementClick(By.ID, "bs-select-1-3")
@@ -1934,12 +1942,13 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_DJ_katastr")
 
         # U DJ katastr
+        self.createFedoraRecord("ruian-600016")
         time = self.getTime()
         self.ElementClick(By.ID, "others")
         self.ElementClick(By.ID, "zmenit-katastr-X-C-9000000011A-D01")
         self.ElementClick(By.CSS_SELECTOR, ".modelselect2 b")
         self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Louny")
-        self.wait(0.2)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -1958,7 +1967,11 @@ class AkceSamostatneAkce(AkceTestClass):
         self.goToAddress("/id/X-M-91366821A")
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_M_91366821A_D01")
-        self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "adb-smazat-ADB-OPAV13-000001")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.ElementClick(By.ID, "others")
         self.ElementClick(By.ID, "dj-smazat-X-M-91366821A-D01")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -1966,11 +1979,11 @@ class AkceSamostatneAkce(AkceTestClass):
         logger.info("AkceProjektoveAkce.test_139_test_Fedory_PIAN_p_001.end")
 
     def test_140_test_Fedory_PIAN_p_002(self):
-        # Scenar_138 Test Fedory pro ADB a výškový bod
+        # Scenar_140 Test Fedory pro PIAN
         logger.info("AkceProjektoveAkce.test_140_test_Fedory_PIAN_p_002.start")
         self.login("archivar")
 
-        # změna ident_cely PIAN
+        # změna ident_cely Akce
         self.createFedoraRecord("X-M-91366821A")
         self.goToAddress("/id/X-M-91366821A")
         time = self.getTime()
@@ -1980,12 +1993,16 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_140/ident_cely_1")
         self.check_fedora_delete(["record/X-M-91366821A"])
 
-        # AZ smazat
-        time = self.getTime()
-        self.ElementClick(By.ID, "otherOptions")
-        self.ElementClick(By.ID, "akce-smazat")
+        # změna zmena stavu ADB
+        self.goToAddress("/arch-z/akce/detail/M-9002352A/dj/M-9002352A-D01")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "pian-potvrdit-N-1541-000000005")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "arch_z/tests/resources/test_140/delete_AZ")
+        time = self.getTime()
+        self.ElementClick(By.ID, "akce-archivovat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_140/zmena_stavu")
 
         logger.info("AkceProjektoveAkce.test_140_test_Fedory_PIAN_p_002.end")

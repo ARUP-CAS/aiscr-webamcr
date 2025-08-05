@@ -1,5 +1,6 @@
 from .dev import *
 
+DEBUG = False
 LOGGING["handlers"]["logstash"]["tags"] = "dev_test"
 
 if "debug_toolbar" in INSTALLED_APPS:

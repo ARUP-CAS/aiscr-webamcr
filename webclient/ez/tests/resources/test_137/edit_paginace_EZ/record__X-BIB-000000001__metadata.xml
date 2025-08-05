@@ -15,9 +15,13 @@
       <amcr:typ_zmeny>EZ01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:ext_odkaz>
-      <amcr:id>exto-788</amcr:id>
+      <amcr:id>exto-789</amcr:id>
       <amcr:archeologicky_zaznam id="X-C-9000000001A">X-C-9000000001A</amcr:archeologicky_zaznam>
       <amcr:paginace>22</amcr:paginace>
+    </amcr:ext_odkaz>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-790</amcr:id>
+      <amcr:archeologicky_zaznam id="C-K9000001">C-K9000001</amcr:archeologicky_zaznam>
     </amcr:ext_odkaz>
   </amcr:ext_zdroj>
 </amcr:amcr>

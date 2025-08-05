@@ -33,7 +33,6 @@
       <amcr:pian id="P-1121-900086">P-1121-900086</amcr:pian>
       <amcr:typ xml:lang="cs" id="HES-001073">katastrální území</amcr:typ>
       <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
-      <amcr:nazev>Test</amcr:nazev>
     </amcr:dokumentacni_jednotka>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

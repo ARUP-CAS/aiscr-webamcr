@@ -3,10 +3,10 @@
   <amcr:archeologicky_zaznam>
     <amcr:ident_cely>X-C-L000000003</amcr:ident_cely>
     <amcr:stav>1</amcr:stav>
-    <amcr:okres xml:lang="cs" id="ruian-3611">Ústí nad Orlicí</amcr:okres>
+    <amcr:okres xml:lang="cs" id="ruian-3410">Tachov</amcr:okres>
     <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
     <amcr:chranene_udaje>
-      <amcr:hlavni_katastr xml:lang="cs" id="ruian-679038">Lanšperk</amcr:hlavni_katastr>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-680290">Domaslav</amcr:hlavni_katastr>
     </amcr:chranene_udaje>
     <amcr:lokalita>
       <amcr:typ_lokality xml:lang="cs" id="HES-001123">polygon průzkumu</amcr:typ_lokality>
@@ -16,15 +16,15 @@
       </amcr:chranene_udaje>
     </amcr:lokalita>
     <amcr:historie>
-      <amcr:id>hist-2803184</amcr:id>
-      <amcr:datum_zmeny>2025-06-28T11:24:31.288619+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-2803190</amcr:id>
+      <amcr:datum_zmeny>2025-07-29T10:25:37.257147+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:dokumentacni_jednotka>
       <amcr:ident_cely>X-C-L000000003-D01</amcr:ident_cely>
-      <amcr:pian id="P-1432-900061">P-1432-900061</amcr:pian>
-      <amcr:typ xml:lang="cs" id="HES-001073">katastrální území</amcr:typ>
+      <amcr:pian id="N-1121-000000008">N-1121-000000008</amcr:pian>
+      <amcr:typ xml:lang="cs" id="HES-001074">lokalita</amcr:typ>
       <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
       <amcr:nazev>test</amcr:nazev>
       <amcr:komponenta>
@@ -51,7 +51,7 @@
       </amcr:komponenta>
     </amcr:dokumentacni_jednotka>
     <amcr:ext_odkaz>
-      <amcr:id>exto-788</amcr:id>
+      <amcr:id>exto-789</amcr:id>
       <amcr:ext_zdroj id="BIB-0000001">BIB-0000001</amcr:ext_zdroj>
     </amcr:ext_odkaz>
     <amcr:dokument id="X-C-TX-000000009">X-C-TX-000000009</amcr:dokument>

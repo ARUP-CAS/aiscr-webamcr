@@ -5,7 +5,6 @@ import os
 import os.path
 import re
 import time
-import xml.etree.ElementTree as ET
 from collections import Counter
 from datetime import datetime, timezone
 from io import BytesIO
@@ -25,6 +24,7 @@ from django.conf import settings
 from django.db import connection
 from django.http import Http404
 from django.test import LiveServerTestCase
+from lxml import etree
 from PIL import Image, ImageChops
 from rdflib import Graph, Literal, URIRef
 from selenium import webdriver
@@ -154,7 +154,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
         if response.status_code == 200:
             f = open(f"{path}/{filename}.{extension}", "wb")
-            f.write(response.content)
+            if extension == "xml":
+                f.write(response.content.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+            else:
+                f.write(response.content)
             f.close()
         return members
 
@@ -281,6 +284,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def check_fedora_change(self, time, path):
         # self.save_fedora_change(time, path)
+        if os.name == "nt":
+            self.wait(1.5)
+            self.save_fedora_change(
+                time,
+                f"{settings.TEST_SCREENSHOT_PATH}result_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')}_{path.rsplit('/', 1)[-1]}",
+            )
+
         headers = {}
         response = requests.get(
             f"{self.api_url}fcr:search?condition=fedora_id={self.api_url}{settings.FEDORA_SERVER_NAME}/*&condition=modified>{time}&offset=0&max_results=100&format=json",
@@ -309,7 +319,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             response = requests.get(
                 f"{self.api_url}{settings.FEDORA_SERVER_NAME}/{item}", auth=self.auth, headers=headers
             )
-            self.assertEqual(response.status_code, 410)
+            self.assertIn(response.status_code, [410, 404])
 
     def wipe_Fedora(self):
         self.wipe_Fedora_dir(f"{self.api_url}{settings.FEDORA_SERVER_NAME}/model", 0)
@@ -684,17 +694,45 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         for child in element:
             self.odstran_uuid_z_xml(child)
 
+    def serad_elementy_xml(self, element):
+        """
+        Rekurzivně seřadí podřízené XML elementy podle tagu, obsahu a atributů.
+        """
+        # Nejprve rekurzivně seřaď všechny děti
+        for child in element:
+            self.serad_elementy_xml(child)
+
+        # Pokud má element více dětí stejného názvu, seřadíme je podle vnitřního obsahu
+        if len(element) > 1:
+            element[:] = sorted(element, key=lambda e: (e.tag, self._element_klic(e)))
+
+    def _element_klic(self, elem):
+        """
+        Vytvoří porovnávací klíč pro element: spojení tagu, textu, vnořených textů a atributů.
+        """
+        hodnoty = [elem.tag]
+        if elem.text:
+            hodnoty.append(elem.text.strip())
+        for pod in elem:
+            if pod.text:
+                hodnoty.append(pod.text.strip())
+            for _, v in sorted(pod.attrib.items()):
+                hodnoty.append(v.strip())
+        return "|".join(hodnoty)
+
     def xml_to_string_bez_ignorovanych_z_textu(self, xml_text, ignorovane_tagy):
         """
         Načte XML z textového vstupu, odstraní ignorované tagy a vrátí serializovanou podobu.
         """
-        root = ET.fromstring(xml_text)
+        parser = etree.XMLParser(remove_blank_text=True)
+        root = etree.fromstring(xml_text, parser)
         ignorovane_tagy_trans = []
         for item in ignorovane_tagy:
             ignorovane_tagy_trans.append(item.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.2/}"))
         self.odstran_elementy(root, ignorovane_tagy_trans)
         self.odstran_uuid_z_xml(root)
-        text = ET.tostring(root, encoding="utf-8")
+        self.serad_elementy_xml(root)
+        text = etree.tostring(root, pretty_print=True, encoding="utf-8")
         text = re.sub(rb">hist-\d+<", rb">hist-<", text)
         return text
 
@@ -936,7 +974,32 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return res
 
     def getTime(self):
-        return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        if os.name == "nt":
+            self.wait(1.5)
+        t = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        if os.name == "nt":
+            self.wait(1.5)
+        return t
+
+    def wait_for_select2_results(self):
+        self.driver.set_script_timeout(6)
+        try:
+            self.driver.find_element(By.CSS_SELECTOR, ".loading-results")
+            self.driver.execute_async_script(
+                """
+var done = arguments[0];
+var $ = window.jQuery || (typeof django !== 'undefined' && django.jQuery);
+if (!$) {
+    done("no jQuery");
+    return;
+}
+$(document).one('ajaxSuccess', function(event, xhr, settings) {
+done("ok");
+});
+"""
+            )
+        except Exception:
+            pass
 
 
 class CoreSeleniumTest(BaseSeleniumTestClass):

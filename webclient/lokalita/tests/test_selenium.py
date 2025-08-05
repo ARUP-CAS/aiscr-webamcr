@@ -11,6 +11,7 @@ from dokument.models import Dokument
 from komponenta.models import Komponenta
 from lokalita.models import Lokalita
 from nalez.models import NalezObjekt, NalezPredmet
+from pian.models import Pian
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
@@ -38,7 +39,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
             "Křtiny"
         )
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
             Keys.ENTER
         )
@@ -69,6 +70,7 @@ class AkceLokality(BaseSeleniumTestClass):
 
         self.ElementClick(By.ID, "select2-id_hlavni_katastr-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("Křtiny")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.CSS_SELECTOR, "#div_id_druh .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("pol")
@@ -368,7 +370,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
             "Lanšperk"
         )
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(
             Keys.ENTER
         )
@@ -407,9 +409,45 @@ class AkceLokality(BaseSeleniumTestClass):
         time = self.getTime()
         self.ElementClick(By.ID, f"id_{ident}-D01-nazev")
         self.driver.find_element(By.ID, f"id_{ident}-D01-nazev").send_keys("test")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-L000000003-D01-typ .btn.dropdown-toggle.btn-light")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-2 > .text")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/update_DJ")
+
+        # C PIAN
+        time = self.getTime()
+        self.ElementClick(By.ID, "add_others")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "show_menu_pian_new_id")
+        self.driver.execute_script("""map.setZoom(17); return map.getZoom();""")
+        self.wait(2)
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditAddMarker"))
+        self.wait(0.5)
+        self.clickAtMapCoord(12.8289904, 50.3706078)
+        self.wait(0.5)
+        self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "createPianSubmitButton")
+        self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_PIAN")
+
+        # U PIAN
+        pian = Pian.objects.filter(dokumentacni_jednotky_pianu__ident_cely="X-C-L000000003-D01").first().ident_cely
+        time = self.getTime()
+        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_L000000003_D01")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, f"pian-upravit-{pian}")
+        self.wait(1)
+        self.driver.execute_script("""map.setZoom(17); return map.getZoom();""")
+        self.wait(2)
+        self.ElementClick(By.LINK_TEXT, _("mapa.EditAddMarker"))
+        self.wait(0.5)
+        self.clickAtMapCoord(12.9, 49.88)
+        self.wait(0.5)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "editPianButton")
+        self.check_fedora_change(time, "lokalita/tests/resources/test_143/update_PIAN")
 
         # C komponenta
         time = self.getTime()
@@ -455,7 +493,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, f"id_{ident}-K001_o-0-pocet").send_keys("1")
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-15-19 > .text")
-        self.ElementClick(By.CSS_SELECTOR, ".dropup > .bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-specifikace .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-16-4 > .text")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")
@@ -483,7 +521,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.LINK_TEXT, _("dokument.templates.dokument_table.pridatNovyDokument.label"))
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Pavloň")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vzniku")
         self.ElementSendKeys(By.ID, "id_rok_vzniku", "2023")
@@ -510,10 +548,12 @@ class AkceLokality(BaseSeleniumTestClass):
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_dokument_cast")
 
         # C externi_odkaz
+        self.createFedoraRecord("BIB-0000001")
         time = self.getTime()
         self.goToAddress(f"/id/{ident}")
         self.ElementClick(By.ID, "eo-pripojit-do-az")
         self.ElementClick(By.ID, "select2-id_ez-container")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -602,4 +642,17 @@ class AkceLokality(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/delete_lokalita")
+
+        # změna ident_cely PIAN
+        self.createFedoraRecord("X-C-K0751147")
+        self.createFedoraRecord("N-1412-000000007")
+        time = self.getTime()
+        self.goToAddress("/arch-z/lokalita/detail/X-C-K0751147/dj/C-K0751147-D01")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "pian-potvrdit-N-1412-000000007")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "lokalita/tests/resources/test_143/ident_cely_PIAN")
+        self.check_fedora_delete(["record/N-1412-000000007"])
+
         logger.info("AkceLokality.test_143_test_Fedory_lokalita_p_001.end")
