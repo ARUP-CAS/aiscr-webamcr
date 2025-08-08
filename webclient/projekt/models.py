@@ -184,6 +184,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def pristupnost(self):
         return self.pristupnost_snapshot
 
+    @property
+    def get_ident_cely_link(self):
+        if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
+            return f"<a href='{self.get_absolute_url()}' target='_blank' class='link-projekt'>{self.ident_cely}</a>"
+
     def save(self, *args, **kwargs):
         if self.pk is None:
             self.set_pristupnost()
