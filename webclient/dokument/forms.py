@@ -822,7 +822,8 @@ def create_tvar_form(not_readonly=True):
 
         def __init__(self, *args, **kwargs):
             super(TvarForm, self).__init__(*args, **kwargs)
-            self.fields["tvar"].required = True
+            if not not_readonly:
+                self.fields["tvar"].required = False
             self.fields["tvar"].choices = [("", "")] + list(
                 Heslar.objects.filter(nazev_heslare=HESLAR_LETFOTO_TVAR).values_list("id", "heslo")
             )

@@ -177,6 +177,8 @@ class CreateADBForm(forms.ModelForm):
                 if isinstance(self.fields[key].widget, forms.widgets.Select):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
                 self.fields[key].help_text = ""
+            if readonly:
+                self.fields[key].required = False
 
 
 class VyskovyBodFormSetHelper(FormHelper):
@@ -338,6 +340,8 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
                     if isinstance(self.fields[key].widget, forms.widgets.Select):
                         self.fields[key].widget.template_name = "core/select_to_text.html"
                     self.fields[key].help_text = ""
+                if not not_readonly:
+                    self.fields[key].required = False
             self.fields["ident_cely"].disabled = True
 
     return CreateVyskovyBodForm
