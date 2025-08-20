@@ -747,6 +747,9 @@ class FedoraCustomAdminSite(admin.AdminSite):
             context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
             if not invalid_records:
                 tasks.run_data_import.delay(job_id, request.user.id)
+                context["stop_request"] = False
+            else:
+                context["stop_request"] = True
             logger.debug(
                 "core.admin.FedoraCustomAdminSite.import_data.end",
                 extra={"job_id": job_id, "records_count": records_count, "invalid_records": invalid_records},

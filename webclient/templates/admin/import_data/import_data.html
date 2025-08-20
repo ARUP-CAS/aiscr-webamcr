@@ -98,8 +98,7 @@
   </div>
 
   <script>
-      let stopRequests = false;
-      const records_count = {{ records_count }};
+      let stopRequests = {% if stop_request is True %}true{% else %}false{% endif %};
       document.getElementById("stopRequests").addEventListener("click", () => {
           stopRequests = true;
       });

@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from adb.models import Adb, VyskovyBod
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam, ArcheologickyZaznamKatastr, ExterniOdkaz
 from core.constants import DOKUMENT_RELATION_TYPE
+from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
 from core.forms import ImportDataAdminForm
 from core.ident_cely import get_record_from_ident, get_temp_lokalita_ident
 from core.models import Soubor, SouborVazby
@@ -43,11 +44,12 @@ from heslar.models import (
     RuianOkres,
 )
 from historie.models import Historie, HistorieVazby
-from komponenta.models import Komponenta, KomponentaAktivita
+from komponenta.models import Komponenta, KomponentaAktivita, KomponentaVazby
 from lokalita.models import Lokalita
 from nalez.models import NalezObjekt, NalezPredmet
 from neidentakce.models import NeidentAkce, NeidentAkceVedouci
 from notifikace_projekty.models import Pes
+from oznameni.models import Oznamovatel
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pian.models import Kladyzm, Pian
 from projekt.models import Projekt, ProjektKatastr
@@ -150,7 +152,7 @@ class BaseImportField:
 
 class IntegerImportField(BaseImportField):
     """
-    Class for import fields that should contain geometries.
+    Class for import fields that should contain integer values.
     """
 
     pattern = re.compile(r"\d+")
@@ -355,9 +357,10 @@ class RuianLookupImportField(LookupImportField):
         LookupImportField.value.fset(self, value)
 
 
-class KomponentaLookupImportField(LookupImportField):
+class VazbaLookupImportField(LookupImportField):
     """
-    Class for import field with referenced models for Komponenta.
+    Class for import field with referenced models for vazba (relation). This relation is 1:1 instead of 1:N
+    and these fields manage relation to another model.
     """
 
     def __init__(self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", read_field_name: str = None):
@@ -385,7 +388,7 @@ class KomponentaLookupImportField(LookupImportField):
 
 class GeomImportField(BaseImportField):
     """
-    Class for import fields that should contain boolean values.
+    Class for import fields that should contain geometries.
     """
 
     def __init__(self, srid):
@@ -424,7 +427,7 @@ class GenericForeignKeyImportField(LookupImportField):
             return self._value.pk
 
     def _process_value(self, value):
-        if isinstance(value, str) and (match := re.match(r"ruian-(\d+)", value)):
+        if isinstance(value, str) and (match := re.match(r"(?:\w+-)?(\d+)", value)):
             value = int(match.group(1))
 
         for current_class in self.lookup_model_class_list:
@@ -448,6 +451,7 @@ class ImportModelMapper(ABC):
     primary_key_filter_field = None
     historie_typ_vazby = None
     soubory_typ_vazby = None
+    komponenty_vazba = False
     require_primary_key_value = False
     primary_key_prefix = None
 
@@ -651,9 +655,10 @@ class ImportModelMapper(ABC):
         """
 
         mapping_dict = {}
+        primary_keys = set((self.primary_key,) if isinstance(self.primary_key, str) else self.primary_key)
+        mapping_column_set = set(self.value_dict.keys())
+        value_dict_column_set = set(self.get_mapping().keys()) | primary_keys
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
-            mapping_column_set = set(self.value_dict.keys())
-            value_dict_column_set = set(self.get_mapping().keys())
             if mapping_column_set != value_dict_column_set:
                 excess_columns = mapping_column_set - value_dict_column_set
                 missing_columns = (
@@ -667,6 +672,11 @@ class ImportModelMapper(ABC):
                 )
                 if missing_columns:
                     raise ImportDataIncorrectStructureError(missing_columns, excess_columns)
+        else:
+            missing_columns = primary_keys - set(self.value_dict.keys())
+            excess_columns = mapping_column_set - value_dict_column_set
+            if missing_columns or excess_columns:
+                raise ImportDataIncorrectStructureError(missing_columns, excess_columns)
         for field_name, field_instance in self.get_mapping().items():
             if field_name in self.value_dict:
                 field_value = self.value_dict[field_name]
@@ -703,10 +713,25 @@ class ImportModelMapper(ABC):
             sv = SouborVazby(typ_vazby=cls.soubory_typ_vazby)
             sv.save()
             instance.soubory = sv
+        if cls.komponenty_vazba is True and not getattr(instance, "komponenty", None):
+            kv = KomponentaVazby()
+            kv.save()
+            instance.komponenty = kv
 
     @classmethod
     def record_postprocessing(cls, record, performed_action):
         return record
+
+
+class ImportModelMapperWithGeom(ImportModelMapper):
+    def map(self, performed_action, instance_values=False, serialize=False) -> dict:
+        mapping_dict = super().map(performed_action, instance_values, serialize)
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+            if mapping_dict.get("geom_system") == 4326 and mapping_dict.get("geom"):
+                mapping_dict["geom_sjtsk"] = transform_geom_to_sjtsk(mapping_dict["geom"])
+            elif mapping_dict.get("geom_system") == 5514 and mapping_dict.get("geom_sjtsk"):
+                mapping_dict["geom"] = transform_geom_to_wgs84(mapping_dict["geom_sjtsk"])
+        return mapping_dict
 
 
 class MultipleClassImportModelMapper(ImportModelMapper):
@@ -802,7 +827,6 @@ class HeslarDataceMapper(ImportModelMapper):
 
 
 class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
-    fields = tuple()
     model_class = HeslarDokumentTypMaterialRada
     primary_key = "id"
 
@@ -830,7 +854,6 @@ class HeslarHierarchieMapper(ImportModelMapper):
 
 class HeslarOdkazMapper(ImportModelMapper):
     fields = (
-        "id",
         "zdroj",
         "nazev_kodu",
         "kod",
@@ -894,7 +917,7 @@ class OsobaMapper(ImportModelMapper):
     require_primary_key_value = True
 
 
-class ProjektMapper(ImportModelMapper):
+class ProjektMapper(ImportModelMapperWithGeom):
     fields = (
         "ident_cely",
         "stav",
@@ -942,19 +965,21 @@ class ProjektKatastrMapper(ImportModelMapper):
 
 
 class ProjektOznamovatelMapper(ImportModelMapper):
-    fields = ("projekt", "oznamovatel", "odpovedna_osoba", "adresa", "telefon", "email", "poznamka")
-    model_class = ProjektKatastr
+    fields = ("oznamovatel", "odpovedna_osoba", "adresa", "telefon", "email", "poznamka")
+    model_class = Oznamovatel
+    primary_key = "projekt"
 
     @classmethod
     def get_mapping(cls):
         field_mapping = super().get_mapping()
-        field_mapping["ident_cely"] = LookupImportField(Projekt)
+        field_mapping["projekt"] = LookupImportField(Projekt)
         return field_mapping
 
 
-class SamostatnyNalezMapper(ImportModelMapper):
+class SamostatnyNalezMapper(ImportModelMapperWithGeom):
     fields = (
         "ident_cely",
+        "igsn",
         "stav",
         "evidencni_cislo",
         "lokalizace",
@@ -1135,7 +1160,7 @@ class LokalitaMapper(MultipleClassImportModelMapper):
 
 
 class AkceVedouciMapper(ImportModelMapper):
-    fields = ("id", "akce", "vedouci", "organizace")
+    fields = ("akce", "vedouci", "organizace")
     model_class = AkceVedouci
     primary_key = "id"
 
@@ -1161,7 +1186,7 @@ class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
         return field_mapping
 
 
-class PianMapper(ImportModelMapper):
+class PianMapper(ImportModelMapperWithGeom):
     fields = ("ident_cely", "stav", "geom_system", "geom", "geom_sjtsk")
     model_class = Pian
     require_primary_key_value = True
@@ -1171,8 +1196,8 @@ class PianMapper(ImportModelMapper):
         field_mapping = super().get_mapping()
         field_mapping["typ"] = LookupImportField(Heslar)
         field_mapping["presnost"] = LookupImportField(Heslar)
-        field_mapping["zm10"] = LookupImportField(Kladyzm, "gid")
-        field_mapping["zm50"] = LookupImportField(Kladyzm, "gid")
+        field_mapping["zm10"] = LookupImportField(Kladyzm, "cislo")
+        field_mapping["zm50"] = LookupImportField(Kladyzm, "cislo")
         return field_mapping
 
 
@@ -1180,6 +1205,7 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
     fields = ("ident_cely", "negativni_jednotka", "nazev")
     model_class = DokumentacniJednotka
     require_primary_key_value = True
+    komponenty_vazba = True
 
     @classmethod
     def get_mapping(cls):
@@ -1213,7 +1239,7 @@ class AdbMapper(ImportModelMapper):
         field_mapping["podnet"] = LookupImportField(Heslar)
         field_mapping["autor_popisu"] = LookupImportField(Osoba)
         field_mapping["autor_revize"] = LookupImportField(Osoba)
-        field_mapping["sm5"] = LookupImportField(Kladyzm, "gid")
+        field_mapping["sm5"] = LookupImportField(Kladyzm, "mapno")
         return field_mapping
 
 
@@ -1300,6 +1326,7 @@ class DokumentMapper(MultipleClassImportModelMapper):
     model_class = Dokument
     historie_typ_vazby = DOKUMENT_RELATION_TYPE
     soubory_typ_vazby = DOKUMENT_RELATION_TYPE
+    komponenty_vazba = True
     classes = (
         ("dokument", Dokument),
         ("dokument_extra_data", DokumentExtraData, "dokument"),
@@ -1411,7 +1438,6 @@ class DokumentAutorMapper(MultipleClassImportModelMapper):
 
 
 class DokumentJazykMapper(ImportModelMapper):
-    fields = tuple()
     model_class = DokumentJazyk
     primary_key = ("dokument", "jazyk")
 
@@ -1424,7 +1450,6 @@ class DokumentJazykMapper(ImportModelMapper):
 
 
 class DokumentOsobaMapper(ImportModelMapper):
-    fields = tuple()
     model_class = DokumentOsoba
     primary_key = ("dokument", "osoba")
 
@@ -1437,7 +1462,6 @@ class DokumentOsobaMapper(ImportModelMapper):
 
 
 class DokumentPosudekMapper(ImportModelMapper):
-    fields = tuple()
     model_class = DokumentPosudek
     primary_key = ("dokument", "posudek")
 
@@ -1450,7 +1474,7 @@ class DokumentPosudekMapper(ImportModelMapper):
 
 
 class TvarMapper(ImportModelMapper):
-    fields = ("id", "poznamka")
+    fields = ("poznamka",)
     model_class = Tvar
     primary_key = "id"
 
@@ -1465,7 +1489,6 @@ class TvarMapper(ImportModelMapper):
 class DokumentCastMapper(ImportModelMapper):
     fields = ("ident_cely", "poznamka")
     model_class = DokumentCast
-    primary_key = "ident_cely"
 
     @classmethod
     def get_mapping(cls):
@@ -1479,7 +1502,7 @@ class DokumentCastMapper(ImportModelMapper):
 class NeidentAkceMapper(ImportModelMapper):
     fields = ("rok_zahajeni", "rok_ukonceni", "lokalizace", "popis", "poznamka", "pian")
     model_class = NeidentAkce
-    primary_key = "ident_cely"
+    primary_key = "dokument_cast"
 
     @classmethod
     def get_mapping(cls):
@@ -1490,7 +1513,6 @@ class NeidentAkceMapper(ImportModelMapper):
 
 
 class NeidentAkceVedouciMapper(ImportModelMapper):
-    fields = tuple()
     model_class = NeidentAkceVedouci
     primary_key = ("neident_akce", "vedouci")
 
@@ -1510,7 +1532,7 @@ class KomponentaMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls):
         field_mapping = super().get_mapping()
-        field_mapping["vazba"] = KomponentaLookupImportField(
+        field_mapping["vazba"] = VazbaLookupImportField(
             [DokumentacniJednotka, DokumentCast], read_field_name="komponenty"
         )
         field_mapping["obdobi"] = LookupImportField(Heslar)
@@ -1519,7 +1541,6 @@ class KomponentaMapper(ImportModelMapper):
 
 
 class KomponentaAktivitaMapper(ImportModelMapper):
-    fields = ()
     model_class = KomponentaAktivita
     primary_key = ("komponenta", "aktivita")
 
@@ -1532,7 +1553,7 @@ class KomponentaAktivitaMapper(ImportModelMapper):
 
 
 class NalezMapper(ImportModelMapper):
-    fields = ("id", "pocet", "poznamka")
+    fields = ("pocet", "poznamka")
     primary_key = "id"
 
     @classmethod
@@ -1584,10 +1605,11 @@ class ExterniZdrojMapper(ImportModelMapper):
         return field_mapping
 
 
-class ExterniZdrojOsobaMapper(ImportModelMapper):
+class ExterniZdrojAutorMapper(ImportModelMapper):
     fields = ("poradi",)
     primary_key = ("externi_zdroj", "autor")
     primary_key_filter_field = ("externi_zdroj__ident_cely", "autor__ident_cely")
+    model_class = ExterniZdrojAutor
 
     @classmethod
     def get_mapping(cls):
@@ -1597,16 +1619,22 @@ class ExterniZdrojOsobaMapper(ImportModelMapper):
         return field_mapping
 
 
-class ExterniZdrojAutorMapper(ExterniZdrojOsobaMapper):
-    model_class = ExterniZdrojAutor
-
-
-class ExterniZdrojEditorMapper(ExterniZdrojOsobaMapper):
+class ExterniZdrojEditorMapper(ImportModelMapper):
+    fields = ("poradi",)
+    primary_key = ("externi_zdroj", "editor")
+    primary_key_filter_field = ("externi_zdroj__ident_cely", "editor__ident_cely")
     model_class = ExterniZdrojEditor
+
+    @classmethod
+    def get_mapping(cls):
+        field_mapping = super().get_mapping()
+        field_mapping["externi_zdroj"] = LookupImportField(ExterniZdroj)
+        field_mapping["editor"] = LookupImportField(Osoba)
+        return field_mapping
 
 
 class ExterniOdkazMapper(ImportModelMapper):
-    fields = ("id", "organizace")
+    fields = ("paginace",)
     model_class = ExterniOdkaz
     primary_key = "id"
 
@@ -1645,7 +1673,6 @@ class UzivatelMapper(ImportModelMapper):
 
 
 class UzivatelNotifikaceProjektMapper(ImportModelMapper):
-    fields = tuple()
     model_class = Pes
     primary_key = ("uzivatel", "ruian")
 
@@ -1667,7 +1694,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
 
 
 class UzivatelSpolupraceMapper(ImportModelMapper):
-    fields = ("id", "stav")
+    fields = ("stav",)
     model_class = UzivatelSpoluprace
     primary_key = "id"
 
@@ -1680,9 +1707,8 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
 
 
 class UzivatelOpravneniMapper(ImportModelMapper):
-    fields = tuple()
     model_class = User
-    primary_key = "ident_cely"
+    primary_key = ("uzivatel", "skupina")
     column_to_field_mapping = {"uzivatel": "ident_cely"}
 
     def get_mapping(cls):
@@ -1701,7 +1727,6 @@ class UzivatelOpravneniMapper(ImportModelMapper):
 
 class SouborMapper(ImportModelMapper):
     fields = (
-        "id",
         "path",
         "nazev",
         "mimetype",
@@ -1715,14 +1740,13 @@ class SouborMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls):
         field_mapping = super().get_mapping()
-        field_mapping["vazba"] = KomponentaLookupImportField(read_field_name="soubory")
+        field_mapping["vazba"] = VazbaLookupImportField(read_field_name="soubory")
         return field_mapping
 
 
 class UzivatelNotifikaceMapper(ImportModelMapper):
-    fields = tuple()
     model_class = User
-    primary_key = "ident_cely"
+    primary_key = ("uzivatel", "notifikace")
     column_to_field_mapping = {"uzivatel": "ident_cely"}
 
     def get_mapping(cls):
@@ -1741,7 +1765,6 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
 
 class HistorieMapper(ImportModelMapper):
     fields = (
-        "id",
         "datum_zmeny",
         "typ_zmeny",
         "poznamka",
@@ -1753,6 +1776,6 @@ class HistorieMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls):
         field_mapping = super().get_mapping()
-        field_mapping["vazba"] = KomponentaLookupImportField(read_field_name="historie")
+        field_mapping["vazba"] = VazbaLookupImportField(read_field_name="historie")
         field_mapping["uzivatel"] = LookupImportField(User)
         return field_mapping

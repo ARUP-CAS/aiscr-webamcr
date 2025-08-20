@@ -28,6 +28,7 @@ from core.forms import ImportDataAdminForm
 from core.import_data_mappers import ImportModelMapper, UzivatelNotifikaceMapper, UzivatelOpravneniMapper
 from core.models import Soubor, SouborVazby
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.setting_models import CustomAdminSettings
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.db import connection, transaction
@@ -624,7 +625,6 @@ def run_data_import(job_id, user_id):
 
     redis_connector = RedisConnector().get_connection()
 
-    fedora_transaction = FedoraTransaction()
     record_count = int(redis_connector.get(f"import_data_count_{job_id}").decode("utf-8"))
     performed_action = redis_connector.get(f"import_performed_action_{job_id}").decode("utf-8")
     failed = False
@@ -636,6 +636,7 @@ def run_data_import(job_id, user_id):
         with transaction.atomic():
             for record_id in range(record_count):
                 try:
+                    fedora_transaction = FedoraTransaction()
                     serialized_record = json.loads(
                         redis_connector.get(f"import_data_{job_id}_record_{record_id}").decode("utf-8")
                     )
@@ -689,6 +690,9 @@ def run_data_import(job_id, user_id):
                                 record.suppress_signal = False
                                 record.active_transaction = fedora_transaction
                                 record.delete()
+                        if isinstance(record, ModelWithMetadata):
+                            record.save_metadata(fedora_transaction)
+                            fedora_transaction.mark_transaction_as_closed()
                 except Exception as err:
                     logger.info("cron.tasks.run_data_import.error", extra={"error": err, "record_id": record_id})
                     fedora_transaction.rollback_transaction()
@@ -717,12 +721,13 @@ def run_data_import(job_id, user_id):
         ImportDataAdminForm.PERFORMED_ACTION_INSERT,
         ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
     ):
+        ftp_settings = json.loads(CustomAdminSettings.objects.get(item_id="ftp_import_settings").value)
         with FTP(
-            host=settings.FILE_IMPORT_FTP_HOSTNAME,
-            user=settings.FILE_IMPORT_FTP_USER_NAME,
-            passwd=settings.FILE_IMPORT_FTP_PASSWORD,
+            host=ftp_settings["FILE_IMPORT_FTP_HOSTNAME"],
+            user=ftp_settings["FILE_IMPORT_FTP_USER_NAME"],
+            passwd=ftp_settings["FILE_IMPORT_FTP_PASSWORD"],
         ) as ftp:
-            ftp.cwd(settings.FILE_IMPORT_FTP_PATH)
+            ftp.cwd(ftp_settings["FILE_IMPORT_FTP_PATH"])
             for record_id in range(record_count):
                 mapper_class = mapper_classes[record_id]
                 record = mapper_class.model_class.objects.filter(ident_cely=serialized_record["ident_cely"]).first()
@@ -731,18 +736,23 @@ def run_data_import(job_id, user_id):
                         ftp.cwd(record.ident_cely)
                         file_names = [f for f in ftp.nlst() if f not in (".", "..")]
                         for filename in file_names:
+                            fedora_transaction = FedoraTransaction()
                             conn = FedoraRepositoryConnector(record, fedora_transaction, skip_container_check=False)
                             bio = BytesIO()
                             ftp.retrbinary(f"RETR {filename}", bio.write)
                             mimetype = Soubor.get_mime_types(bio)
                             soubor_query = Soubor.objects.filter(nazev=filename, vazba=record.soubory)
                             if soubor_query.exists():
+                                if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+                                    continue
                                 soubor = Soubor.objects.filter(nazev=filename, vazba=record.soubory).first()
                                 rep_bin_file = conn.update_binary_file(filename, mimetype, bio, soubor.repository_uuid)
                                 soubor.mimetype = mimetype
                                 soubor.size_mb = rep_bin_file.size_mb
                                 soubor.sha_512 = rep_bin_file.sha_512
                             else:
+                                if performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
+                                    continue
                                 rep_bin_file = conn.save_binary_file(filename, mimetype, bio)
                                 sha_512 = rep_bin_file.sha_512
                                 soubor: Soubor = Soubor(
@@ -761,16 +771,12 @@ def run_data_import(job_id, user_id):
                                 uzivatel=User.objects.get(pk=user_id),
                                 vazba=soubor.historie,
                                 poznamka=f"{_('cron.tasks.run_data_import.imported_file')} "
-                                f"{settings.FILE_IMPORT_FTP_PATH}/{record.ident_cely}/{filename}",
+                                f"{ftp_settings['FILE_IMPORT_FTP_PATH']}/{record.ident_cely}/{filename}",
                             ).save()
+                            soubor.active_transaction = fedora_transaction
+                            soubor.save()
+                            fedora_transaction.mark_transaction_as_closed()
                         ftp.cwd("..")
-
-        for record in all_records:
-            if isinstance(record, ModelWithMetadata):
-                record.save_metadata(fedora_transaction)
-
-    if not failed:
-        fedora_transaction.mark_transaction_as_closed()
 
     expiration_seconds = 300
     redis_connector.expire(f"import_data_count_{job_id}", expiration_seconds)
