@@ -17,6 +17,16 @@
           width: 300px;
           margin-right: 10px;
       }
+      #progressBarBox {
+          width: 100%;
+          background-color: grey;
+      }
+
+      #progressBar {
+          width: 0;
+          height: 30px;
+          background-color: rgb(32, 80, 103);
+      }
   </style>
 {% endblock %}
 
@@ -37,20 +47,28 @@
 {% block content %}
   <div id="content-main">
     {% if not request.user.is_superuser %}
-      <p>{% trans "core.templates.admin.import_data.not_superuser" %}</p>
+        <p>{% trans "core.templates.admin.import_data.not_superuser" %}</p>
       {% elif not maintenance %}
-      <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
+        <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
       {% elif validation_results %}
       <div class="submit-row">
-        <input type="submit" id="stopRequests" class="default"
-               value="{% trans "core.templates.admin.import_data.stop_request" %}">
+        <div id="progressBarBox" style="margin-bottom: 1rem">
+          <div id="progressBar" style="position: relative;">
+            <span id="progressPercent" style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); color: #fff; line-height: 30px; font-weight: bold;"></span>
+          </div>
+        </div>
+        <p style="width: 100%;">
+          <b>{% trans "core.templates.admin.import_data.status" %}:</b>
+          <span id="processCurrentStatus">{% trans "core.templates.admin.import_data.starting" %}</span>
+        </p>
+        <p>
+          <input type="submit" id="stopRequests" class="default"
+                 value="{% trans "core.templates.admin.import_data.stop_request" %}">
+        </p>
       </div>
       <p id="processFinishedParagraph" style="display: none">
         <strong>{% trans "core.templates.admin.import_data.finished" %}</strong>
       </p>
-      <div id="progressBarBox" style="margin-bottom: 1rem">
-        <div id="progressBar"></div>
-      </div>
       {% if invalid_records %}
         <p>
           <strong>{% trans "core.templates.admin.import_data.invalid_records" %}</strong>: {{ invalid_records }}
@@ -69,6 +87,14 @@
             <td></td>
           </tr>
         {% endfor %}
+      </table>
+      <table id="result_list_files" class="table table-bordered table-striped">
+        <tr>
+          <th>{% trans "core.templates.admin.import_data.files.ident_cely" %}</th>
+          <th>{% trans "core.templates.admin.import_data.files.file_name" %}</th>
+          <th>{% trans "core.templates.admin.import_data.files.mimetype" %}</th>
+          <th>{% trans "core.templates.admin.import_data.files.size_mb" %}</th>
+        </tr>
       </table>
     {% else %}
       <form method="post" enctype="multipart/form-data">
@@ -98,12 +124,15 @@
   </div>
 
   <script>
+      const requestUrl = "{{ url }}";
+      const stopRequestUrl = "{{ url_stop }}";
       let stopRequests = {% if stop_request is True %}true{% else %}false{% endif %};
       document.getElementById("stopRequests").addEventListener("click", () => {
-          stopRequests = true;
+          fetch(stopRequestUrl);
+          document.getElementById("stopRequests").disabled = true;
+          const progressBarBox = document.getElementById("progressBarBox");
+          progressBarBox.style.display = "none";
       });
-
-      const requestUrl = "{{ url }}";
 
       async function sendRequest(url) {
           try {
@@ -121,13 +150,45 @@
               const progressBar = document.getElementById("progressBar");
               progressBar.style.width = data.progress + "%"
 
+              const processCurrentStatus = document.getElementById("processCurrentStatus");
+              processCurrentStatus.textContent = data.status_message;
+
+              if (data.progress > 0) {
+                  const progressPercent = document.getElementById("progressPercent");
+                  progressPercent.textContent = data.progress + "%";
+              }
+
               const table = document.getElementById("result_list");
               for (let i = 0; i < data.finished_record_count; i++) {
                   const row = table.rows[i + 1];
                   row.cells[2].innerText = data.serialized_results[i];
               }
 
-              if (data.status === "finished") {
+              const table_files = document.getElementById("result_list_files");
+              const start_index = table_files.rows.length - 1;
+              for (let i = start_index; i < data.serialized_results_files.length; i++) {
+                  const row = document.createElement("tr");
+
+                  const cell_1 = document.createElement("td");
+                  cell_1.innerText = data.serialized_results_files[i]["ident_cely"];
+                  row.appendChild(cell_1);
+
+                  const cell_2 = document.createElement("td");
+                  cell_2.innerText = data.serialized_results_files[i]["file_name"];
+                  row.appendChild(cell_2);
+
+                  const cell_3 = document.createElement("td");
+                  cell_3.innerText = data.serialized_results_files[i]["mimetype"];
+                  row.appendChild(cell_3);
+
+                  const cell_4 = document.createElement("td");
+                  cell_4.innerText = data.serialized_results_files[i]["size_mb"];
+                  row.appendChild(cell_4);
+
+                  table_files.appendChild(row);
+              }
+
+              if (data.status === "finished" || data.status === "stopped") {
                   document.getElementById("stopRequests").disabled = true;
                   stopRequests = true;
               }

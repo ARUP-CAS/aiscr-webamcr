@@ -585,6 +585,8 @@ class ImportModelMapper(ABC):
             return BooleanImportField()
         if isinstance(model_field, pgmodels.PointField):
             return GeomImportField(model_field.srid)
+        if isinstance(model_field, pgmodels.GeometryField):
+            return GeomImportField(model_field.srid)
         if isinstance(model_field, DateRangeField):
             return DateRangeImportField()
         raise ImportDataError(f"_('core.admin.ImportModelMapper.map_field.error'): {field_name}")
@@ -1507,7 +1509,7 @@ class NeidentAkceMapper(ImportModelMapper):
     fields = ("rok_zahajeni", "rok_ukonceni", "lokalizace", "popis", "poznamka", "pian")
     model_class = NeidentAkce
     primary_key = "dokument_cast"
-    primery_key_filter_field = "dokument_cast__ident_cely"
+    primary_key_filter_field = "dokument_cast__ident_cely"
 
     @classmethod
     def get_mapping(cls):

@@ -696,6 +696,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
             file_bytes = data_file.read()
             job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
             context["url"] = reverse("core:data-import-progress", args=[job_id])
+            context["url_stop"] = reverse("core:data-import-stop", args=[job_id])
             validation_results = []
             records = []
             LookupImportField.records = records
@@ -742,6 +743,8 @@ class FedoraCustomAdminSite(admin.AdminSite):
             records_count = record_id
             self.redis_connector.set(f"import_data_count_{job_id}", records_count)
             self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)
+            self.redis_connector.set(f"import_data_files_{job_id}", json.dumps([]))
+            self.redis_connector.set(f"import_data_progress_files_{job_id}", 0)
             context["records_count"] = records_count
             context["validation_results"] = validation_results
             context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
