@@ -692,7 +692,7 @@ def run_data_import(job_id, user_id):
                                 record.delete()
                         if isinstance(record, ModelWithMetadata):
                             record.save_metadata(fedora_transaction)
-                            fedora_transaction.mark_transaction_as_closed()
+                        fedora_transaction.mark_transaction_as_closed()
                 except Exception as err:
                     logger.info("cron.tasks.run_data_import.error", extra={"error": err, "record_id": record_id})
                     fedora_transaction.rollback_transaction()
@@ -730,6 +730,8 @@ def run_data_import(job_id, user_id):
             ftp.cwd(ftp_settings["FILE_IMPORT_FTP_PATH"])
             for record_id in range(record_count):
                 mapper_class = mapper_classes[record_id]
+                if "ident_cely" not in serialized_record:
+                    continue
                 record = mapper_class.model_class.objects.filter(ident_cely=serialized_record["ident_cely"]).first()
                 if hasattr(record, "soubory"):
                     if record.ident_cely in ftp.nlst():

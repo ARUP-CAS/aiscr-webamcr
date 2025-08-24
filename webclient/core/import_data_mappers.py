@@ -658,6 +658,8 @@ class ImportModelMapper(ABC):
         primary_keys = set((self.primary_key,) if isinstance(self.primary_key, str) else self.primary_key)
         mapping_column_set = set(self.value_dict.keys())
         value_dict_column_set = set(self.get_mapping().keys()) | primary_keys
+        missing_columns = set()
+        excess_columns = set()
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             if mapping_column_set != value_dict_column_set:
                 excess_columns = mapping_column_set - value_dict_column_set
@@ -670,13 +672,16 @@ class ImportModelMapper(ABC):
                         else set()
                     )
                 )
-                if missing_columns:
-                    raise ImportDataIncorrectStructureError(missing_columns, excess_columns)
-        else:
+        elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
             missing_columns = primary_keys - set(self.value_dict.keys())
             excess_columns = mapping_column_set - value_dict_column_set
             if missing_columns or excess_columns:
                 raise ImportDataIncorrectStructureError(missing_columns, excess_columns)
+        elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+            missing_columns = primary_keys - set(self.value_dict.keys())
+            excess_columns = mapping_column_set - primary_keys
+        if missing_columns or excess_columns:
+            raise ImportDataIncorrectStructureError(missing_columns, excess_columns)
         for field_name, field_instance in self.get_mapping().items():
             if field_name in self.value_dict:
                 field_value = self.value_dict[field_name]
@@ -951,7 +956,6 @@ class ProjektMapper(ImportModelMapperWithGeom):
 
 
 class ProjektKatastrMapper(ImportModelMapper):
-    fields = ("projekt", "katastr")
     model_class = ProjektKatastr
     primary_key = ("projekt", "katastr")
     require_primary_key_value = True
@@ -968,6 +972,7 @@ class ProjektOznamovatelMapper(ImportModelMapper):
     fields = ("oznamovatel", "odpovedna_osoba", "adresa", "telefon", "email", "poznamka")
     model_class = Oznamovatel
     primary_key = "projekt"
+    primary_key_filter_field = "projekt__ident_cely"
 
     @classmethod
     def get_mapping(cls):
@@ -1174,7 +1179,6 @@ class AkceVedouciMapper(ImportModelMapper):
 
 
 class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
-    fields = ("archeologicky_zaznam", "katastr")
     model_class = ArcheologickyZaznamKatastr
     primary_key = ("archeologicky_zaznam", "katastr")
 
@@ -1503,6 +1507,7 @@ class NeidentAkceMapper(ImportModelMapper):
     fields = ("rok_zahajeni", "rok_ukonceni", "lokalizace", "popis", "poznamka", "pian")
     model_class = NeidentAkce
     primary_key = "dokument_cast"
+    primery_key_filter_field = "dokument_cast__ident_cely"
 
     @classmethod
     def get_mapping(cls):
