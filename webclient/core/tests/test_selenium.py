@@ -523,6 +523,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
         self.driver.execute_script(
             f"""
+ window.getToday = function() {{
+return new Date('2025-06-28T12:00:00Z');}};
  const latlng = L.latLng({lat}, {lon});
  map.setView(latlng, 17);
  const containerPoint = map.latLngToContainerPoint(latlng);

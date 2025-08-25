@@ -17,14 +17,14 @@
       <amcr:geom_wkt EPSG="4326">POINT(12.8289904 50.3706078)</amcr:geom_wkt>
       <amcr:geom_sjtsk_gml>
         <gml:Point srsName="EPSG:5514">
-          <gml:coordinates>-850555.62,-995179.2</gml:coordinates>
+          <gml:coordinates>-850555.61,-995179.2</gml:coordinates>
         </gml:Point>
       </amcr:geom_sjtsk_gml>
-      <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-850555.62 -995179.2)</amcr:geom_sjtsk_wkt>
+      <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-850555.61 -995179.2)</amcr:geom_sjtsk_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
       <amcr:id>hist-2803190</amcr:id>
-      <amcr:datum_zmeny>2025-07-29T12:07:48.738625+00:00</amcr:datum_zmeny>
+      <amcr:datum_zmeny>2025-08-20T17:48:21.063151+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:typ_zmeny>PI01</amcr:typ_zmeny>
     </amcr:historie>
