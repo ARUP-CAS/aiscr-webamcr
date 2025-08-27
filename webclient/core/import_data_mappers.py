@@ -836,6 +836,7 @@ class HeslarDataceMapper(ImportModelMapper):
 class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
     model_class = HeslarDokumentTypMaterialRada
     primary_key = "id"
+    primary_key_prefix = "hdtm"
 
     @classmethod
     def get_mapping(cls):
@@ -850,6 +851,7 @@ class HeslarHierarchieMapper(ImportModelMapper):
     fields = ("typ",)
     model_class = HeslarHierarchie
     primary_key = "id"
+    primary_key_prefix = "hier"
 
     @classmethod
     def get_mapping(cls):
@@ -870,6 +872,7 @@ class HeslarOdkazMapper(ImportModelMapper):
     )
     model_class = HeslarOdkaz
     primary_key = "id"
+    primary_key_prefix = "hodk"
 
     @classmethod
     def get_mapping(cls):
@@ -1170,6 +1173,7 @@ class AkceVedouciMapper(ImportModelMapper):
     fields = ("akce", "vedouci", "organizace")
     model_class = AkceVedouci
     primary_key = "id"
+    primary_key_prefix = "vedo"
 
     @classmethod
     def get_mapping(cls):
@@ -1483,6 +1487,7 @@ class TvarMapper(ImportModelMapper):
     fields = ("poznamka",)
     model_class = Tvar
     primary_key = "id"
+    primary_key_prefix = "tvar"
 
     @classmethod
     def get_mapping(cls):
@@ -1574,10 +1579,12 @@ class NalezMapper(ImportModelMapper):
 
 class NalezObjektMapper(NalezMapper):
     model_class = NalezObjekt
+    primary_key_prefix = "nalo"
 
 
 class NalezPredmetMapper(NalezMapper):
     model_class = NalezPredmet
+    primary_key_prefix = "nalp"
 
 
 class ExterniZdrojMapper(ImportModelMapper):
@@ -1644,6 +1651,7 @@ class ExterniOdkazMapper(ImportModelMapper):
     fields = ("paginace",)
     model_class = ExterniOdkaz
     primary_key = "id"
+    primary_key_prefix = "exto"
 
     @classmethod
     def get_mapping(cls):
@@ -1704,6 +1712,7 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
     fields = ("stav",)
     model_class = UzivatelSpoluprace
     primary_key = "id"
+    primary_key_prefix = "spol"
 
     @classmethod
     def get_mapping(cls):
@@ -1743,6 +1752,7 @@ class SouborMapper(ImportModelMapper):
     )
     models_class = Soubor
     primary_key = "id"
+    primary_key_prefix = "soub"
 
     @classmethod
     def get_mapping(cls):
