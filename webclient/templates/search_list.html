@@ -80,7 +80,7 @@
                           {{ column.header }}
                         </a>
                       {% endif %}
-                    {% endif %}  
+                    {% endif %}
                   {% endfor %}
                 </div>
               </div>
@@ -130,7 +130,7 @@
 {% block script %}
   <script
       type="text/javascript"
-      src="{% static "django_tables2_column_shifter/js/django_tables2_column_shifter.js" %}">
+      src="{% static "django_tables2_column_shifter/js/django_tables2_column_shifter.min.js" %}">
   </script>
 <script>
   const generateExportSuffixString = () => {
