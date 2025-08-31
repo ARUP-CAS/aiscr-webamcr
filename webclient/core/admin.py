@@ -16,7 +16,6 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth.models import Group
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db.models import DateTimeField, ExpressionWrapper, F
 from django.http import HttpResponse
@@ -44,7 +43,12 @@ from .constants import (
 )
 from .exceptions import WrongCSVError, WrongSheetError
 from .forms import ImportDataAdminForm, OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
-from .import_data_mappers import ImportDataError, ImportModelMapper, LookupImportField
+from .import_data_mappers import (
+    ImportDataUnsupportedFileError,
+    ImportDataUnsupportedMultipleFilesError,
+    ImportModelMapper,
+    LookupImportField,
+)
 from .models import OdstavkaSystemu, Permissions, PermissionsSkip
 from .setting_models import CustomAdminSettings
 
@@ -707,13 +711,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 file_names = [name for name in zf.namelist() if not name.startswith("__MACOSX")]
                 file_names = set(file_names)
                 allowed_file_names = set(
-                    [f"{name}.csv" for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
+                    [f"{name}.csv".lower() for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
                 )
-                if not file_names.issubset(allowed_file_names):
-                    raise ValidationError(
-                        _("core.admin.import_data.unsupported_file_names"),
-                        params={"file_names": ", ".join(file_names - allowed_file_names)},
-                    )
+                normalized_imported_file_names = set([file_name.lower() for file_name in file_names])
+                if not normalized_imported_file_names.issubset(allowed_file_names):
+                    raise ImportDataUnsupportedMultipleFilesError(normalized_imported_file_names - allowed_file_names)
                 file_names = [f"{name}.csv" for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
                 for file_name in file_names:
                     try:
@@ -726,11 +728,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
                         if mapper_class:
                             try:
                                 mapper = mapper_class(row.to_dict())
-                                record = mapper.map(performed_action, serialize=True)
+                                record = mapper.map(performed_action, serialize=True, include_primary_key=True)
                                 primary_key = mapper.import_validation(performed_action)
                                 LookupImportField.records += mapper.create_records(performed_action)
                                 record["__file_name"] = file_name
-                            except ImportDataError as err:
+                            except ZeroDivisionError as err:
                                 validation_results.append([getattr(err, "record_id", ""), err])
                                 invalid_records.append(record_id)
                             else:
@@ -739,7 +741,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
                                 self.redis_connector.set(f"import_data_{job_id}_record_{record_id}", json.dumps(record))
                             record_id += 1
                         else:
-                            raise ValidationError(f"Unsupported file_name: {file_name}")
+                            raise ImportDataUnsupportedFileError(file_name)
             records_count = record_id
             self.redis_connector.set(f"import_data_count_{job_id}", records_count)
             self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)

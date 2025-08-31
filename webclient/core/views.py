@@ -1598,10 +1598,9 @@ class DataImportProgress(LoginRequiredMixin, View):
             serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}").decode("utf-8"))
             serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}").decode("utf-8"))
 
-            progress = math.floor((len(serialized_results) / record_count) * 50) + math.floor(
-                import_data_progress_files * 50
-            )
-            if progress == 100:
+            progress_data = math.floor((len(serialized_results) / record_count) * 100)
+            progress_files = math.floor(import_data_progress_files * 100)
+            if progress_data == progress_files == 100:
                 status = "finished"
             elif stopped:
                 status = "stopped"
@@ -1609,7 +1608,8 @@ class DataImportProgress(LoginRequiredMixin, View):
                 status = "in_progress"
             progress_response = {
                 "record_count": record_count,
-                "progress": progress,
+                "progress_data": progress_data,
+                "progress_files": progress_files,
                 "finished_record_count": len(serialized_results),
                 "serialized_results": serialized_results,
                 "status": status,
