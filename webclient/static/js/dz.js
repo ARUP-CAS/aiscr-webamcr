@@ -213,7 +213,6 @@ window.onload = function () {
                 }
                 if (result !== ActionResultsEnum.success) {
                     show_action_result_message(file, result, message);
-                    console.log("success > " + file.name);
                 } else {
                     show_action_result_message(file, result, message);
                 }
@@ -281,5 +280,4 @@ window.onload = function () {
         newDropzone.emit("complete", mockFile);
     });
 
-    console.log("Loaded");
 };

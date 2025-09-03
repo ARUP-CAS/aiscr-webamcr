@@ -171,7 +171,6 @@ map.on('click', function (e) {
         if (point_leaf[1] >= 12.06 && point_leaf[1] <= 18.87 && point_leaf[0] >= 48.55 && point_leaf[0] <= 51.08)
             if (map.getZoom() > 11) {
                 try {
-                    //console.log("Position is: "+corX+" "+corY)
                     document.getElementById('id_coordinate_x2').value = point_leaf[0]
                     document.getElementById('id_coordinate_x1').value = point_leaf[1]
                 } catch (e) {
@@ -192,14 +191,12 @@ loadMapState('projekty');
 // Připojení eventů pro sledování změn
 addEventLayerChange('projekty');
 map.on('overlayadd', function(eventlayer){
-    console.log("pridat mapu")
     if(eventlayer.layer===poi_p1 || eventlayer.layer===poi_p2 || eventlayer.layer===poi_p3 || eventlayer.layer===poi_p46 || eventlayer.layer===poi_p78){
         switchMap(false)
     }
 });
 
 map.on('overlayremove', function(eventlayer){
-    console.log("ubrat mapu")
     if(eventlayer.layer===poi_p1 || eventlayer.layer===poi_p2 || eventlayer.layer===poi_p3 || eventlayer.layer===poi_p46 || eventlayer.layer===poi_p78){
         switchMap(false)
     }
@@ -242,7 +239,6 @@ var addPointToPoiLayer = (st_text, layer, text, overview = false, presnost=4) =>
         x0 = 0.0;
         x1 = 0.0
         c0 = 0
-        //console.log(coor)
         for (const i of coor) {
             if(!(st_text.includes("POLYGON") && c0==coor.length-1)){
                 x0 = x0 + parseFloat(i[0])
@@ -271,7 +267,6 @@ switchMap = function (overview = false) {
     var northWest = bounds.getNorthWest(),
         southEast = bounds.getSouthEast();
     if (overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest) {
-        console.log("Change: " + northWest + "  " + southEast + " " + zoom);
         boundsLock = bounds;
         let xhr_proj = new XMLHttpRequest();            
         xhr_proj.open('POST', '/projekt/mapa-projekty');           
@@ -330,7 +325,6 @@ switchMap = function (overview = false) {
                     heatPoints.push({lat:coords[1], lng: coords[0], count:i.pocet});//chyba je to geome
                 })
                 heatLayer = new HeatmapOverlay( heatmapOptions); //= L.heatLayer(heatPoints, heatmapOptions);
-                //console.log({max:maxHeat,data:heatPoints})
                 heatLayer.setData({max:maxHeat,data:heatPoints})
                 //heatLayer = L.heatLayer(heatPoints, heatmapOptions);
                 map.addLayer(heatLayer);
@@ -342,7 +336,6 @@ switchMap = function (overview = false) {
 
             }
             map.spin(false);
-            //console.log("loaded")
         };
     }    
 }
