@@ -133,6 +133,7 @@
         const formattedDate = `${year}${month}${day}_${hours}${minutes}${seconds}`;
         var htmlToRtfLocal = new window.htmlToRtf();
         var rtfContent = htmlToRtfLocal.convertHtmlToRtf(htmlContent);
+        console.log(rtfContent);
         const blob = new Blob([rtfContent], { type: 'application/rtf' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
