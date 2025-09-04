@@ -249,12 +249,13 @@ services:
     restart: always
 
   postgresql_exporter:
-    image: prometheuscommunity/postgres-exporter:v0.15.0
+    image: prometheuscommunity/postgres-exporter:v0.17.1
     restart: always
     environment:
       - DATA_SOURCE_URI_FILE=/run/secrets/postgresql_exporter_uri
       - DATA_SOURCE_USER=postgres
       - DATA_SOURCE_PASS_FILE=/run/secrets/postgresql_exporter
+      - PG_EXPORTER_EXTEND_QUERY_PATH=/etc/postgres-exporter/collectors/pg_stat_statements.yaml
     networks:
       - prod-net
     ports:
@@ -262,6 +263,8 @@ services:
     secrets:
       - postgresql_exporter
       - postgresql_exporter_uri
+    volumes:
+      - ./prometheus/collectors:/etc/postgres-exporter/collectors
 
 volumes:
   static_data:
