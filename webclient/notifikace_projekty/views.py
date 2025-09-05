@@ -15,9 +15,11 @@ from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import TemplateView
+from fedora_management.decorators import handle_fedora_error
 from heslar.models import RuianKatastr, RuianKraj, RuianOkres
 from uzivatel.models import User, UserNotificationType
 
@@ -124,6 +126,7 @@ class PesCreateView(LoginRequiredMixin, View):
 
     http_method_names = ["post"]
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         formsets = []
         valid = True

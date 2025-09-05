@@ -510,7 +510,6 @@
       }
       var successFunctionAutorPopisu = function(settings, response) {
         var newOption = new Option(response.text, response.value, true, true);
-        console.log("test")
         $('#id_autor_popisu').append(newOption).trigger('change');
         $('#id_autor_popisu').trigger({
           type: 'select2:select',
