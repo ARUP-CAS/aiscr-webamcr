@@ -55,20 +55,12 @@ function amcr_static_geom_precision(in_text, in_precison) {
         if (loc_buffer.length > 0) {
             var nn = Math.pow(10, in_precison) * 1.0;
             var num = Math.round(loc_buffer * nn) / nn;
-            /*if(num.lastIndexOf(".")==-1){
-                num=num+".";
-                //console.log(".")
-            }
-            while(num.lastIndexOf(".")+in_precison+1>num.length){
-                num=num+"0";
-                //console.log("0")
-            }*/
             text = text + (num).toFixed(in_precison);
             loc_buffer = "";
         }
 
     }
-    //console.log("---------------"+in_text)
+
     for (const x of in_text.toString()) {
         if ("0123456789.".indexOf(x) > -1) {
             if (loc_p == -1) {

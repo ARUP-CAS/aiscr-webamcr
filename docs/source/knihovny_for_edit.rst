@@ -242,7 +242,7 @@ Docker image
      - Apache-2.0 License
      - https://github.com/prometheus/prometheus
    * - Postgres-exporter
-     - 0.15.0
+     - 0.17.1
      - Apache-2.0 License
      - https://github.com/prometheus-community/postgres_exporter
    * - Redis

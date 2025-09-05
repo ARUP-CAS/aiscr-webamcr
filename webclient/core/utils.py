@@ -896,6 +896,7 @@ class SearchTable(ColumnShiftTableBootstrap4):
 
     columns_to_hide = []
     app = None
+    column_excluded = ["ident_cely"]
 
     def get_column_default_show(self):
         self.column_default_show = list(set(self.columns.columns.keys()) - set(self.columns_to_hide))

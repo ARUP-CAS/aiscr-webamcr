@@ -36,6 +36,7 @@ from django.views.decorators.cache import never_cache
 from django.views.generic import TemplateView
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import CreateView, UpdateView
+from fedora_management.decorators import handle_fedora_error
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
 from pian.forms import PianCreateForm
@@ -263,6 +264,10 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
+    @method_decorator(handle_fedora_error)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
 
 class LokalitaEditView(LoginRequiredMixin, UpdateView):
     """
@@ -324,6 +329,10 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+    @method_decorator(handle_fedora_error)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 
 class LokalitaRelatedView(LokalitaDetailView):

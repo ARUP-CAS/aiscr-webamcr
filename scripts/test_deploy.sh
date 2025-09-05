@@ -73,6 +73,9 @@ actualize_repo ()
         if [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
             echo "Update repository..."
             git fetch origin
+            git clean -fd
+            git restore .
+            git checkout -B dev origin/dev
             git reset --hard origin/dev
             valid_ans=true
         elif [ "$ans" = "n" ] || [ "$ans" = "N" ]; then

@@ -86,10 +86,10 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
     def get_name(self, instance):
         if self.foreign_key:
             if getattr(instance, self.foreign_key):
-                return f"{self.name} {getattr(getattr(instance, self.foreign_key), self.accessor)}"
+                return f"{self.name}&nbsp;{getattr(getattr(instance, self.foreign_key), self.accessor)}"
             else:
                 return None
-        return f"{self.name} {getattr(instance, self.accessor)}"
+        return f"{self.name}&nbsp;{getattr(instance, self.accessor)}"
 
 
 class PianSectionNameWithAccessor(SectionNameWithAccessor):
@@ -97,7 +97,7 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
         if getattr(instance, self.foreign_key):
             pian = getattr(instance, self.foreign_key)
             stav = getattr(pian, self.accessor[1])()
-            return f"{self.name} {getattr(pian, self.accessor[0])} ({stav}) - {getattr(pian, self.accessor[2])} ({getattr(pian, self.accessor[3])})"
+            return f"{self.name}&nbsp;{getattr(pian, self.accessor[0])}&nbsp;({stav})&nbsp;-&nbsp;{getattr(pian, self.accessor[2])}&nbsp;({getattr(pian, self.accessor[3])})"
         else:
             return None
 
@@ -491,18 +491,18 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         vypis_jistota_translated_ano = _("vypis.vypis_config.komponenta.jistota.Ano")
         if jistota is not None:
             if jistota:
-                second_part += f" ({vypis_jistota_translated_ano}"
+                second_part += f"&nbsp;({vypis_jistota_translated_ano}"
             else:
-                second_part += f" ({vypis_jistota_translated_ne}"
+                second_part += f"&nbsp;({vypis_jistota_translated_ne}"
             if presna_datace:
-                second_part += f"; {presna_datace})"
+                second_part += f";&nbsp;{presna_datace})"
             else:
                 second_part += ")"
         elif presna_datace:
-            second_part += f" ({presna_datace})"
+            second_part += f"&nbsp;({presna_datace})"
         if aktivity:
-            third_part = f" ({'; '.join([str(a) for a in aktivity])})"
-        return f"{self.name} {getattr(instance, self.accessor[0])} - {obdobi}{second_part} - {areal}{third_part}"
+            third_part = f"&nbsp;({';&nbsp;'.join([str(a) for a in aktivity])})"
+        return f"{self.name}&nbsp;{getattr(instance, self.accessor[0])}&nbsp;-&nbsp;{obdobi}{second_part}&nbsp;-&nbsp;{areal}{third_part}"
 
 
 class SubSectionField:

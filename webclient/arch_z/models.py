@@ -269,9 +269,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             všechny DJ mají potvrzený pian
         """
         result = self.check_pred_odeslanim()
+        doc_result = []
         for dc in self.casti_dokumentu.all():
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
-                result.append(
+                doc_result.append(
                     _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text1")
                     + dc.dokument.ident_cely
                     + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text2")
@@ -283,8 +284,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                     + str(dj.ident_cely)
                     + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text2")
                 )
+        doc_result = [str(x) for x in doc_result]
         result = [str(x) for x in result]
-        return result
+        return result, doc_result
 
     def set_lokalita_permanent_ident_cely(self):
         """

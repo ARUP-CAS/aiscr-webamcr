@@ -64,7 +64,6 @@
   $('#importovat_pian').on('show.bs.modal', function(e) {
     var actionId = $(e.relatedTarget).data('action-id');
     if (actionId) {
-      console.log(actionId)
       $(e.currentTarget).find('input[name="action"]').val(actionId)
     }
 });
