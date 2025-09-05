@@ -78,6 +78,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
 from dokument.models import Dokument, DokumentCast
 from dokument.views import get_komponenta_form_detail, odpojit, pripojit
+from fedora_management.decorators import handle_fedora_error
 from heslar.hesla import HESLAR_AREAL, HESLAR_AREAL_KAT, HESLAR_OBDOBI, HESLAR_OBDOBI_KAT
 from heslar.hesla_dynamicka import (
     HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
@@ -576,6 +577,7 @@ class AdbCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
 @never_cache
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     """
@@ -614,6 +616,7 @@ def edit(request, ident_cely):
             logger.debug("arch_z.views.edit.form_valid")
             az = form_az.save(commit=False)
             fedora_transaction = az.create_transaction(request.user)
+            fedora_transaction.redirect_on_error = True
             az.save()
             form_az.save_m2m()
             akce = form_akce.save(commit=False)
@@ -674,6 +677,7 @@ def edit(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
     """
@@ -819,6 +823,7 @@ def archivovat(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
     """
@@ -897,6 +902,7 @@ def vratit(request, ident_cely):
 
 @never_cache
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def zapsat(request, projekt_ident_cely=None):
     """
@@ -963,6 +969,7 @@ def zapsat(request, projekt_ident_cely=None):
             az = form_az.save(commit=False)
             az: ArcheologickyZaznam
             fedora_transaction = az.create_transaction(request.user)
+            fedora_transaction.redirect_url = reverse("projekt:detail", args=[projekt_ident_cely])
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
             try:
@@ -1073,6 +1080,7 @@ def zapsat(request, projekt_ident_cely=None):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     """
@@ -1091,7 +1099,7 @@ def smazat(request, ident_cely):
     else:
         projekt = None
     if request.method == "POST":
-        fedora_transaction = az.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN)
+        fedora_transaction = az.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
         try:
             with transaction.atomic():
                 az.igsn_lokalita_delete()
@@ -1160,6 +1168,7 @@ def smazat(request, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
     """
@@ -1175,6 +1184,7 @@ def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
     """
@@ -1403,6 +1413,7 @@ def get_required_fields(zaznam=None, next=0):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
     """
@@ -1606,6 +1617,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             )
         return self.render_to_response(context)
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """
         Metóda po potvrzení zmeny akce na samostatnou.
@@ -1679,6 +1691,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         context["hide_table"] = True
         return self.render_to_response(context)
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """
         Metóda po potvrzení zmeny akce na projektovou.

@@ -27,6 +27,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument, DokumentCast
+from fedora_management.decorators import handle_fedora_error
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
@@ -50,6 +51,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["POST"])
 def detail(request, typ_vazby, ident_cely):
     """
@@ -164,6 +166,7 @@ def detail(request, typ_vazby, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["POST"])
 def zapsat(request, typ_vazby, dj_ident_cely):
     """
@@ -255,6 +258,7 @@ def zapsat(request, typ_vazby, dj_ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def smazat(request, typ_vazby, ident_cely):
     """
