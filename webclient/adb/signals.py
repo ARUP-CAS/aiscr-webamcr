@@ -4,7 +4,6 @@ from adb.models import Adb, VyskovyBod
 from arch_z.signals import invalidate_arch_z_related_models
 from core.repository_connector import FedoraTransaction
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -58,22 +57,16 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
     logger.debug("adb.signals.adb_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     invalidate_arch_z_related_models()
     fedora_transaction = instance.active_transaction
-    if instance.close_active_transaction_when_finished:
 
-        def save_metadata():
-            try:
-                instance.initial_dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
-            except (ObjectDoesNotExist, AttributeError) as err:
-                logger.debug(
-                    "adb.signals.adb_delete_repository_container.not_exists",
-                    extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid, "error": err},
-                )
-            instance.record_deletion(fedora_transaction, close_transaction=True)
-
-        transaction.on_commit(save_metadata)
-    else:
+    try:
         instance.initial_dokumentacni_jednotka.archeologicky_zaznam.save_metadata(fedora_transaction)
-        instance.record_deletion(fedora_transaction)
+    except (ObjectDoesNotExist, AttributeError) as err:
+        logger.debug(
+            "adb.signals.adb_delete_repository_container.not_exists",
+            extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid, "error": err},
+        )
+    instance.record_deletion(fedora_transaction, close_transaction=True)
+
     logger.debug(
         "adb.signals.adb_delete_repository_container.end",
         extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid},
@@ -85,10 +78,7 @@ def vyskovy_bod_delete_repository_container(sender, instance: VyskovyBod, **kwar
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
     invalidate_arch_z_related_models()
-    if instance.close_active_transaction_when_finished:
-        transaction.on_commit(lambda: instance.adb.save_metadata(fedora_transaction, close_transaction=True))
-    else:
-        instance.adb.save_metadata(fedora_transaction)
+    instance.adb.save_metadata(fedora_transaction)
     logger.debug(
         "adb.signals.vyskovy_bod_delete_repository_container.end",
         extra={"ident_cely": instance.ident_cely, "transaction": getattr(fedora_transaction, "uid", None)},

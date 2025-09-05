@@ -1,9 +1,7 @@
 <div>
 {% for objekt in field.zaznamy %}
-    <li> {{ objekt.druh }} 
-        {% if objekt.specifikace or objekt.pocet or objekt.poznamka %} - 
-        {% if objekt.specifikace %}{{ objekt.specifikace }}{% endif %}
-        {% if objekt.pocet or objekt.poznamka %} ({% if objekt.pocet %}{{objekt.pocet}}{% endif %}{% if objekt.pocet and objekt.poznamka %}; {% endif %}{% if objekt.poznamka %}{{objekt.poznamka}}{% endif %}){% endif %}
-        {% endif %}</li>
+    <li> {{ objekt.druh }}&nbsp;{% if objekt.specifikace or objekt.pocet or objekt.poznamka %}&nbsp;-&nbsp;
+{% if objekt.specifikace %}{{ objekt.specifikace }}{% endif %}{% if objekt.pocet or objekt.poznamka %}&nbsp;({% if objekt.pocet %}{{objekt.pocet}}{% endif %}{% if objekt.pocet and objekt.poznamka %};&nbsp;{% endif %}{% if objekt.poznamka %}{{objekt.poznamka}}{% endif %}){% endif %}
+{% endif %}</li>
 {% endfor %}
     </div>

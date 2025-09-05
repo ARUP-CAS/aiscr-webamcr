@@ -36,6 +36,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
 from django.views.generic.edit import UpdateView
 from django_registration.backends.activation.views import ActivationView, RegistrationView
+from fedora_management.decorators import handle_fedora_error
 from historie.models import Historie
 from rest_framework import exceptions
 from rest_framework.authentication import TokenAuthentication
@@ -301,6 +302,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         context[form_tag] = form
         return context
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         request_data = dict(request.POST)
         logger.debug("uzivatel.views.UserAccountUpdateView.post.start")
@@ -313,6 +315,8 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
             obj = form.save(commit=False)
             obj: User
             obj.active_transaction = FedoraTransaction(obj, request.user)
+            obj.active_transaction.redirect_on_error = True
+            obj.active_transaction.redirect_url = reverse_lazy("uzivatel:update-uzivatel")
             obj.save(update_fields=("telefon",))
             poznamka = ", ".join([f"{fieldname}: {form.cleaned_data[fieldname]}" for fieldname in form.changed_data])
             if len(poznamka) > 0:

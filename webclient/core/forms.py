@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from core.message_constants import TRANSLATION_FILE_TOOSMALL, TRANSLATION_FILE_WRONG_FORMAT
 from core.models import OdstavkaSystemu
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Layout
+from crispy_forms.layout import HTML, Div, Layout
 from django import forms
 from django.conf import settings
 from django.utils import formats
@@ -80,21 +80,36 @@ class CheckStavNotChangedForm(forms.Form):
 
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
-    def __init__(self, db_stav=None, require_confirmation=False, *args, **kwargs):
+    def __init__(self, db_stav=None, require_confirmation=False, dokument_warnings=None, *args, **kwargs):
         self.db_stav = db_stav
         super(CheckStavNotChangedForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
+        layout_blocks = [
+            Div("old_stav", css_class="col-sm-12"),
+        ]
         if require_confirmation:
             self.fields["confirm"] = forms.BooleanField(
                 required=True, label=_("core.forms.CheckStavNotChangedForm.confirm")
             )
-            self.helper.layout = Layout(
-                Div(
-                    Div("confirm", css_class="col-sm-12"),
-                    Div("old_stav", css_class="col-sm-12"),
-                    css_class="app-card-form",
-                ),
+            layout_blocks.append(
+                Div("confirm", css_class="col-sm-12"),
             )
+        if dokument_warnings:
+            self.fields["dokument_confirm"] = forms.BooleanField(
+                required=True, label=_("core.forms.CheckStavNotChangedForm.dokument_confirm")
+            )
+            layout_blocks.append(
+                HTML(
+                    '<div class="alert alert-info" role="alert">'
+                    + "<ul>{}</ul>".format("".join(f"<li>{item}</li>" for item in dokument_warnings))
+                    + "</div>"
+                )
+            )
+            layout_blocks.append(
+                Div("dokument_confirm", css_class="col-sm-12"),
+            )
+
+        self.helper.layout = Layout(Div(*layout_blocks, css_class="app-card-form"))
         self.helper.form_tag = False
 
     def clean(self):

@@ -91,5 +91,4 @@ window.onload = function () {
     };
     const uploader = document.querySelector('#my-awesome-dropzone');
     const newDropzone = new Dropzone(uploader, dropzoneOptions);
-    console.log("Loaded");
 };
