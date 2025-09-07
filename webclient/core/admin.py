@@ -44,6 +44,7 @@ from .constants import (
 from .exceptions import WrongCSVError, WrongSheetError
 from .forms import ImportDataAdminForm, OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
 from .import_data_mappers import (
+    ImportDataError,
     ImportDataUnsupportedFileError,
     ImportDataUnsupportedMultipleFilesError,
     ImportModelMapper,
@@ -729,10 +730,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
                             try:
                                 mapper = mapper_class(row.to_dict())
                                 record = mapper.map(performed_action, serialize=True, include_primary_key=True)
+                                mapper.check_required_fields(performed_action)
                                 primary_key = mapper.import_validation(performed_action)
                                 LookupImportField.records += mapper.create_records(performed_action)
                                 record["__file_name"] = file_name
-                            except ZeroDivisionError as err:
+                            except ImportDataError as err:
                                 validation_results.append([getattr(err, "record_id", ""), err])
                                 invalid_records.append(record_id)
                             else:

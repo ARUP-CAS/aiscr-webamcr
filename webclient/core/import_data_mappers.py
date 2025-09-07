@@ -4,6 +4,7 @@ from abc import ABC
 from collections.abc import Iterable
 from decimal import Decimal
 
+import pandas as pd
 from adb.models import Adb, Kladysm5, VyskovyBod
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam, ArcheologickyZaznamKatastr, ExterniOdkaz
 from core.constants import DOKUMENT_RELATION_TYPE
@@ -17,6 +18,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.postgres.fields import DateRangeField
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.utils import timezone
@@ -225,6 +227,10 @@ class BaseImportField:
         if str(value).lower() == "nan":
             value = None
         self._value = self._process_value(value)
+
+    @property
+    def is_null(self):
+        return self._value is None or str(self._value).lower() == "nan"
 
     @property
     def instance_value(self):
@@ -756,6 +762,14 @@ class ImportModelMapper(ABC):
             return None
         raise ImportDataError(f"_('core.admin.ImportModelMapper.map_field.error'): {field_name}")
 
+    @classmethod
+    def is_field_required(cls, field_name) -> bool:
+        try:
+            model_field = cls.model_class._meta.get_field(field_name)
+            return not model_field.null
+        except FieldDoesNotExist:
+            return False
+
     def create_records(self, performed_action) -> list:
         """
         Create a record instance or multiple model instances that can be saved to database.
@@ -865,6 +879,12 @@ class ImportModelMapper(ABC):
                     )
         return mapping_dict
 
+    def check_required_fields(self, performed_action):
+        for key, value in self.value_dict.items():
+            required = self.is_field_required(key)
+            if required and (value is None or str(value).lower().strip() in ("nan", "") or pd.isna(value)):
+                raise ImportDataError(f"{_('core_admin.ImportDataError.message.missing_required_field')}: {key}")
+
     def map_column_name_to_field_name(self, column_name):
         """
         Map a column name from the import file to the field name of the Django model. Used when the Django field
@@ -960,6 +980,17 @@ class MultipleClassImportModelMapper(ImportModelMapper):
                 setattr(instance_class_1, field_name, field_value)
             return [instance_class_0, instance_class_1]
         return []
+
+    @classmethod
+    def is_field_required(cls, field_name) -> bool:
+        for mapper_class_tuple in cls.classes:
+            mapper_class = mapper_class_tuple[1]
+            try:
+                model_field = mapper_class._meta.get_field(field_name)
+                return not model_field.null
+            except FieldDoesNotExist:
+                continue
+        return False
 
 
 class HeslarMapper(ImportModelMapper):
