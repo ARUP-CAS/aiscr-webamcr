@@ -404,7 +404,7 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
             logger.debug("pian.views.ImportovatPianView.post.label_check.fileEmpty")
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.fileEmpty."))
         try:
-            sheet = pd.read_csv(docfile, sep=",")
+            sheet = pd.read_csv(docfile, sep=",", dtype=str)
         except ValueError as err:
             logger.debug("pian.views.ImportovatPianView.post.label_check.unreadable_or_empty", extra={"error": err})
             return HttpResponseBadRequest(_("pian.views.importovatPianView.check.unreadable_or_empty."))
