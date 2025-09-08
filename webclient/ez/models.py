@@ -309,4 +309,4 @@ class ExterniZdrojSekvence(models.Model):
 
     class Meta:
         db_table = "externi_zdroj_sekvence"
-        constraints = [models.CheckConstraint(name="constraint_only_one_sekvence", check=models.Q(id=1))]
+        constraints = [models.CheckConstraint(name="constraint_only_one_sekvence", condition=models.Q(id=1))]
