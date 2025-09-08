@@ -41,9 +41,9 @@ class CannotFindCadasterCentre(Exception):
 
 
 def file_validate_epsg(epsg):
-    if epsg == "4326" or epsg == 4326:
+    if epsg == "4326":
         return True
-    elif epsg == "5514" or epsg == 5514:
+    elif epsg == "5514":
         return True
     else:
         return False
@@ -69,7 +69,7 @@ def validate_and_split_geometry(geom):
     """
 
     valid_bbox = "5, 40, 25, 60"
-    if geom.iloc[1] == 5514:
+    if geom.iloc[1] == "5514":
         valid_bbox = "-905000, -1230000, -400000, -930000"
     new_rows = []
     if not isinstance(geom.iloc[2], str) or geom.iloc[2] == "":
