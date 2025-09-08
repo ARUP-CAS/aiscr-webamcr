@@ -83,7 +83,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         db_table = "archeologicky_zaznam"
         constraints = [
             CheckConstraint(
-                check=(Q(typ_zaznamu="L") | Q(typ_zaznamu="A")),
+                condition=(Q(typ_zaznamu="L") | Q(typ_zaznamu="A")),
                 name="archeologicky_zaznam_typ_zaznamu_check",
             ),
         ]
@@ -566,7 +566,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         db_table = "akce"
         constraints = [
             CheckConstraint(
-                check=((Q(typ="N") & Q(projekt__isnull=True)) | (Q(typ="R") & Q(projekt__isnull=False))),
+                condition=((Q(typ="N") & Q(projekt__isnull=True)) | (Q(typ="R") & Q(projekt__isnull=False))),
                 name="akce_typ_check",
             ),
         ]

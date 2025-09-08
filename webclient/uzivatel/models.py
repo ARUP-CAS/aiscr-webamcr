@@ -438,7 +438,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         verbose_name_plural = "Organizace"
         constraints = [
             CheckConstraint(
-                check=Q(mesicu_do_zverejneni__lte=ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX),
+                condition=Q(mesicu_do_zverejneni__lte=ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX),
                 name="organizace_mesicu_do_zverejneni_max_value_check",
             ),
         ]
