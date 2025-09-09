@@ -1,14 +1,25 @@
+import json
 import logging
 import threading
 import time
 
+from core.setting_models import CustomAdminSettings
 from django.urls import Resolver404, resolve
 
 log_request_data = threading.local()
 logger = logging.getLogger("request.timer")
 
+
+def get_slow_request_settings():
+    try:
+        settings_query = CustomAdminSettings.objects.filter(item_group="settings", item_id="variables")
+        return json.loads(settings_query.last().value)["SLOW_REQUEST_THRESHOLD"]
+    except Exception:
+        return 2.0
+
+
 # práh pro „pomalé“ požadavky (v sekundách)
-SLOW_REQUEST_THRESHOLD = 2.0
+SLOW_REQUEST_THRESHOLD = get_slow_request_settings()
 
 
 def _resolve_view_info(request) -> dict:
