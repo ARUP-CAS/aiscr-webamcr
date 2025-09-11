@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from adb.models import VyskovyBod
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
@@ -122,6 +123,8 @@ class Field:
         value = getattr(instance, self.accessor)
         if isinstance(value, date) and value:
             return value.strftime("%-d.%-m.%Y")
+        if isinstance(value, Decimal) and value:
+            return f"{value:.3f}"
         return getattr(instance, self.accessor)
 
     def get_label(self):
