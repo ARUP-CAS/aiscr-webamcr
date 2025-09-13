@@ -210,7 +210,6 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
             query = f"""
                 SELECT ?item ?itemLabel WHERE {{
                 VALUES ?item {{ wd:{q} }}
-                ?item wdt:P31 wd:Q5.
                 SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,cs". }}
                 }}
                 LIMIT 50
@@ -240,7 +239,11 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
             id = result["item"]["value"]
             if "/" in id:
                 id = id.split("/")[-1]
-            result_list.append([id, f"{result['itemLabel']['value']} ({id})"])
+            if (title := result["itemLabel"]["value"]) and title != id and title != "Q":
+                title = f"{title} ({id})"
+            else:
+                title = id
+            result_list.append([id, title])
         return result_list
 
 
