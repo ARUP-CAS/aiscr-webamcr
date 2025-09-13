@@ -591,7 +591,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
         db_table = "dokument_cast"
         constraints = [
             CheckConstraint(
-                check=(~(Q(archeologicky_zaznam__isnull=False) & Q(projekt__isnull=False))),
+                condition=(~(Q(archeologicky_zaznam__isnull=False) & Q(projekt__isnull=False))),
                 name="dokument_cast_vazba_check",
             ),
         ]
@@ -735,7 +735,7 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
         db_table = "dokument_extra_data"
         constraints = [
             CheckConstraint(
-                check=Q(duveryhodnost__gte=0) & Q(duveryhodnost__lte=100),
+                condition=Q(duveryhodnost__gte=0) & Q(duveryhodnost__lte=100),
                 name="duveryhodnost_check",
             ),
         ]

@@ -25,6 +25,7 @@ from core.message_constants import (
     PRISTUP_ZAKAZAN,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
+    ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
@@ -32,7 +33,8 @@ from core.message_constants import (
 )
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.repository_connector import FedoraError, FedoraRepositoryConnector
+from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import get_message
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
@@ -52,6 +54,7 @@ from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
+from fedora_management.decorators import handle_fedora_error
 from pid.exceptions import DoiWriteError
 from uzivatel.models import Osoba, User
 
@@ -265,11 +268,14 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
         context["submit_button"] = _("ez.templates.ExterniZdrojEditView.ulozitButton.label")
         return context
 
+    @method_decorator(handle_fedora_error)
     def form_valid(self, form):
-        self.object = form.save(commit=False)
+        self.object: ExterniZdroj = form.save(commit=False)
         self.object.active_transaction = self.object.create_transaction(self.request.user)
+        self.object.active_transaction.redirect_on_error = True
         self.object.autori.clear()
         self.object.editori.clear()
+        self.object.save()
         self.object.close_active_transaction_when_finished = True
         self.object.save()
         save_autor_editor(self.object, form)
@@ -283,6 +289,9 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 
 class TransakceView(LoginRequiredMixin, TemplateView):
@@ -345,10 +354,12 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
         zaznam.create_transaction(request.user, self.success_message)
+        zaznam.save()
         zaznam.close_active_transaction_when_finished = True
         getattr(ExterniZdroj, self.action)(zaznam, request.user)
 
@@ -425,17 +436,21 @@ class ExterniZdrojSmazatView(TransakceView):
         self.button = _("ez.templates.ExterniZdrojSmazatView.submitButton.text")
         self.success_message = ZAZNAM_USPESNE_SMAZAN
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
         zaznam.deleted_by_user = request.user
-        transaction = zaznam.create_transaction(request.user, error_message=ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
+        fedora_transaction: FedoraTransaction = zaznam.create_transaction(
+            request.user, error_message=ZAZNAM_SE_NEPOVEDLO_SMAZAT
+        )
         zaznam.close_active_transaction_when_finished = True
         try:
             zaznam.delete()
         except RestrictedError as err:
             logger.debug("ez.views.ExterniZdrojSmazatView.error", extra={"ident_cely": zaznam.ident_cely, "error": err})
-            transaction.rollback_transaction()
+            fedora_transaction.error_message = ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY
+            fedora_transaction.rollback_transaction()
             return JsonResponse(
                 {"redirect": zaznam.get_absolute_url()},
                 status=403,
@@ -464,6 +479,7 @@ class ExterniZdrojVratitView(TransakceView):
         context["form"] = form
         return self.render_to_response(context)
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
@@ -511,6 +527,7 @@ class ExterniOdkazOdpojitView(TransakceView):
         )
         return context
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         self.init_translation()
         ez = self.get_zaznam()
@@ -563,6 +580,7 @@ class ExterniOdkazPripojitView(TransakceView):
         context["card_type"] = type_arch
         return context
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         logger.debug("ez.views.ExterniOdkazPripojitView.post.start", extra={"key": self.kwargs})
@@ -644,6 +662,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
             object.active_transaction = self.active_transaction
         return object
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         self.active_transaction = self.get_object().create_transaction(request.user)
         super().post(request, *args, **kwargs)
@@ -706,6 +725,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
             context["button"] = _("lokaez.templateslita.ExterniOdkazOdpojitAZView.lokalita.submitButton.text")
         return context
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         az = self.get_zaznam()
         lokalita_update = None
@@ -808,6 +828,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
             context["button"] = _("ez.templates.ExterniOdkazPripojitDoAzView.lokalita.submitButton.text")
         return context
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         az = self.get_zaznam()
         self.active_transaction = az.create_transaction(request.user, get_message(az, "EO_USPESNE_PRIPOJEN"))

@@ -28,11 +28,15 @@ class FedoraValidationError(Exception):
 
 
 class FedoraError(Exception):
-    def __init__(self, url, message, code, headers=None):
+    def __init__(self, url, message, code, headers=None, fedora_transaction=None):
         self.url = url
         self.message = message
         self.code = code
         self.headers = headers
+        self.fedora_transaction: FedoraTransaction = fedora_transaction
+        self.ident_cely: str = fedora_transaction.main_record.ident_cely if fedora_transaction else None
+        self.redirect = self.fedora_transaction.redirect_on_error
+        self.redirect_url = self.fedora_transaction.redirect_url if fedora_transaction else None
         super().__init__(self.message)
 
 
@@ -137,6 +141,8 @@ class FedoraRepositoryConnector:
         self.restored_container = False
         self.skip_container_check = skip_container_check
         self.transaction = transaction
+        if transaction and not transaction.main_record:
+            transaction.main_record = record
         logger.debug(
             "core_repository_connector.__init__.end",
             extra={"transaction": self.transaction_uid, "ident_cely": record.ident_cely},
@@ -441,11 +447,11 @@ class FedoraRepositoryConnector:
                         "core_repository_connector._send_request.response.another_transaction_error", extra=extra
                     )
                     raise FedoraUpdatedByAnotherTransactionError(
-                        url, response.text, response.status_code, response.headers
+                        url, response.text, response.status_code, response.headers, self.transaction
                     )
                 else:
                     logger.error("core_repository_connector._send_request.response.error", extra=extra)
-                    raise FedoraError(url, response.text, response.status_code, response.headers)
+                    raise FedoraError(url, response.text, response.status_code, response.headers, self.transaction)
         elif request_type in (
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE,
@@ -1376,6 +1382,8 @@ class FedoraTransaction:
         uid=None,
         request=None,
         suppress_message=False,
+        redirect_on_error=False,
+        redirect_url=None,
     ):
         from uzivatel.models import User
 
@@ -1393,6 +1401,8 @@ class FedoraTransaction:
         self.request = request
         self.suppress_message = suppress_message
         self.__status = FedoraTransactionStatus.ACTIVE
+        self.redirect_on_error = redirect_on_error
+        self.redirect_url = redirect_url
 
     def __str__(self):
         return self.uid
@@ -1434,12 +1444,18 @@ class FedoraTransaction:
                 self._save_transaction_result_to_redis(FedoraTransactionResult.COMMITED)
             except ResponseError as err:
                 logger.error(
-                    "core_repository_connector.FedoraTransaction._save_transaction_result_to_redis.failed",
+                    "core_repository_connector.FedoraTransaction._save_transaction_result_to_redis.commited.failed",
                     extra={"transaction": self.uid, "error": err},
                 )
         elif operation == FedoraTransactionOperation.ROLLBACK:
             response = requests.delete(url, auth=auth, verify=False)
-            self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)
+            try:
+                self._save_transaction_result_to_redis(FedoraTransactionResult.ABORTED)
+            except ResponseError as err:
+                logger.error(
+                    "core_repository_connector.FedoraTransaction._save_transaction_result_to_redis.rollback.failed",
+                    extra={"transaction": self.uid, "error": err},
+                )
         else:
             raise FedoraTransactionUnsupportedOperationError(operation)
         if not str(response.status_code).startswith("2"):

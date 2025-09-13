@@ -176,7 +176,6 @@
   if (document.getElementsByClassName("create-vedouci")){
     elements = document.getElementsByClassName("create-vedouci")
     for (let i = 0; i < elements.length; i++){
-      console.log(elements.item(i).getAttribute("ref"))
       var successFunctionVedouci = function(settings, response, elements) {
         var newOption = new Option(response.text, response.value, true, true);
           id_ref= this.button.getAttribute("ref")

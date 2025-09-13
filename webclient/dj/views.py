@@ -25,9 +25,11 @@ from django.db.models import Q, RestrictedError
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
+from fedora_management.decorators import handle_fedora_error
 from heslar.hesla import HESLAR_DJ_TYP
 from heslar.hesla_dynamicka import TYP_DJ_CAST, TYP_DJ_CELEK, TYP_DJ_KATASTR, TYP_DJ_LOKALITA, TYP_DJ_SONDA_ID
 from heslar.models import Heslar
@@ -38,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["POST"])
 def detail(request, typ_vazby, ident_cely):
     """
@@ -46,6 +49,8 @@ def detail(request, typ_vazby, ident_cely):
     logger.debug("dj.views.detail.start")
     dj: DokumentacniJednotka = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     fedora_transaction = dj.archeologicky_zaznam.create_transaction(request.user)
+    fedora_transaction.redirect_on_error = True
+    fedora_transaction.redirect_url = dj.archeologicky_zaznam.get_redirect(dj.ident_cely).url
     pian_db: Pian = dj.pian
     if pian_db is not None:
         pian_db.active_transaction = fedora_transaction
@@ -214,6 +219,7 @@ def detail(request, typ_vazby, ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["POST"])
 def zapsat(request, arch_z_ident_cely):
     """
@@ -240,6 +246,7 @@ def zapsat(request, arch_z_ident_cely):
             fedora_transaction = az.create_transaction(
                 request.user, ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
             )
+            fedora_transaction.redirect_url = az.get_redirect()
             dj.active_transaction = fedora_transaction
             dj.close_active_transaction_when_finished = True
             resp = dj.save()
@@ -252,6 +259,7 @@ def zapsat(request, arch_z_ident_cely):
 
 
 @login_required
+@handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     """
@@ -326,6 +334,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
+    @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         zaznam: DokumentacniJednotka = self.get_zaznam()
         form = ChangeKatastrForm(data=request.POST)
