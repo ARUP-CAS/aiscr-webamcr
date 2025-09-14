@@ -210,6 +210,7 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
             query = f"""
                 SELECT ?item ?itemLabel WHERE {{
                 VALUES ?item {{ wd:{q} }}
+                ?item wdt:P31 wd:Q5.
                 SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,cs". }}
                 }}
                 LIMIT 50
