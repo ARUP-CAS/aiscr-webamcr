@@ -74,15 +74,35 @@ def auto_logout_client(request):
     maintenance_logout = False
     maintenance = get_set_maintenance_in_cache()
     if maintenance:
-        time_difference = int(
-            (
-                pytz.timezone("Europe/Prague").localize(
-                    datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
+        date_time_now = datetime.now(pytz.timezone("Europe/Prague"))
+        if (
+            pytz.timezone("Europe/Prague").localize(
+                datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
+            )
+            > date_time_now
+        ):
+            time_difference = int(
+                (
+                    pytz.timezone("Europe/Prague").localize(
+                        datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
+                    )
+                    - date_time_now
+                ).total_seconds()
+            )
+        else:
+            user_time_cache = str(request.user.id) + "user_time"
+            if cache.get(user_time_cache):
+                user_datetime = cache.get(user_time_cache)
+                time_difference = 600 - int(
+                    (datetime.now(pytz.timezone("Europe/Prague")) - user_datetime).total_seconds()
                 )
-                - datetime.now(pytz.timezone("Europe/Prague"))
-            ).total_seconds()
-        )
-        if time_difference < 3601 and time_difference > 0:
+                if time_difference < 0:
+                    time_difference = 0
+            else:
+                time_difference = 600
+                cache.set(user_time_cache, date_time_now, 3600)
+            logger.debug(time_difference)
+        if time_difference < 3601:
             maintenance_logout = True
 
     if "SESSION_TIME" in options:
