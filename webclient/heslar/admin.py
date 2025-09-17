@@ -275,6 +275,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
         "zanikla",
         "cteni_dokumentu",
         "ror",
+        "licence",
     )
     readonly_fields = ("ident_cely",)
 
