@@ -604,7 +604,6 @@
           url: '{% url "core:prolong_session" %}',
           dataType: 'json',
           success: function(data){
-            console.log("session prolonged"+data.session_time)
             $(".app-alert-floating").alert('close');
             timer.stop();
             timer.start({countdown: true, startValues: {seconds: data.session_time}});
@@ -623,10 +622,8 @@
     }
 
     const increase_ul_height = (parent_element) => {
-        console.log(parent_element)
         const li_elements = parent_element.querySelectorAll("li.select2-selection__choice");
         const select2_element = parent_element;
-        console.log(select2_element)
         const select2_element_selection_rendered = parent_element.querySelector(".select2-selection__rendered")
         const select2_element_selection = parent_element.querySelector(".select2-selection");
         let element_line_width_sum = 0;

@@ -10,6 +10,8 @@ from django.db.utils import OperationalError
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy
 
+from redis import ResponseError
+
 logger = logging.getLogger(__name__)
 
 
@@ -99,14 +101,22 @@ class StatusMessageMiddleware:
     def _show_message(self, value, request, redis_key):
         value = int(value.decode("utf-8"))
         if value == FedoraTransactionResult.COMMITED.value:
-            success_message = self.redis_connection.hget(redis_key, "success_message")
+            try:
+                success_message = self.redis_connection.hget(redis_key, "success_message")
+            except ResponseError as err:
+                logger.warning("core.middleware._show_message.success.error", extra={"error": err})
+                success_message = None
             if success_message:
                 success_message = gettext_lazy(success_message.decode("utf-8"))
             else:
                 success_message = ZAZNAM_USPESNE_EDITOVAN
             messages.add_message(request, messages.SUCCESS, success_message)
         else:
-            error_message = self.redis_connection.hget(redis_key, "error_message")
+            try:
+                error_message = self.redis_connection.hget(redis_key, "error_message")
+            except ResponseError as err:
+                logger.warning("core.middleware._show_message.error.error", extra={"error": err})
+                error_message = None
             if error_message:
                 error_message = gettext_lazy(error_message.decode("utf-8"))
             else:
@@ -118,7 +128,11 @@ class StatusMessageMiddleware:
         regex_result = self.pattern.findall(request.path)
         for item in regex_result:
             redis_key = FedoraTransaction.get_transaction_redis_key(item, request.user.id)
-            status = self.redis_connection.hget(redis_key, "status")
+            try:
+                status = self.redis_connection.hget(redis_key, "status")
+            except ResponseError as err:
+                logger.warning("core.middleware.process_view.status.error", extra={"error": err})
+                status = None
             if status:
                 self._show_message(status, request, redis_key)
                 break

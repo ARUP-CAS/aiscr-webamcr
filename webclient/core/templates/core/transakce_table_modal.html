@@ -101,7 +101,6 @@
     
     tag.on('select2:select', function (e) {
         var data = e.params.data;
-        console.log(data);
         var first_row = $(cl + " table tbody tr:first")
         $.ajax({
             type: "GET",
