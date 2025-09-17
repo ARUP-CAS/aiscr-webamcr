@@ -341,7 +341,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         db_table = "samostatny_nalez"
         constraints = [
             CheckConstraint(
-                check=(
+                condition=(
                     (Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
                     | (Q(geom_system="4326") & Q(geom__isnull=False))
                     | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))

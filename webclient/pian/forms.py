@@ -8,7 +8,7 @@ from django import forms
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.forms import HiddenInput
 from django.contrib.gis.geos import LineString, Point, Polygon
-from django.db import connection
+from django.db import connections
 from django.utils.translation import gettext_lazy as _
 from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
 from heslar.models import Heslar
@@ -57,7 +57,7 @@ class PianCreateForm(forms.ModelForm):
 
     def clean_geom(self):
         validation_geom = self.data.get("geom")
-        c = connection.cursor()
+        c = connections["urgent"].cursor()
         logger.debug("pian.forms.clean_geom.start")
         try:
             c.execute("BEGIN")
