@@ -72,7 +72,7 @@ class LogMiddleware:
                     "view_module": view_info["view_module"],
                     "url_kwargs": view_info["url_kwargs"],
                 }
-                logger.warning("slow request", extra=payload)
+                logger.warning("core.log_middleware.LogMiddleware.slow_request", extra=payload)
             return response
         except Exception:
             duration = time.monotonic() - start
@@ -84,7 +84,7 @@ class LogMiddleware:
                 "view_module": view_info["view_module"],
                 "url_kwargs": view_info["url_kwargs"],
             }
-            logger.error("request.error", exc_info=True, extra=payload)
+            logger.error("core.log_middleware.LogMiddleware.request_error", exc_info=True, extra=payload)
             raise
         finally:
             for attr in ("url", "user_id"):
