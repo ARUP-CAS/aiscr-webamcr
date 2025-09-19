@@ -1,9 +1,11 @@
 import logging
 
+from core.constants import ROLE_BADATEL_ID
 from core.ident_cely import get_uzivatel_ident
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from django.contrib.auth import user_logged_in
 from django.contrib.auth.hashers import check_password
+from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_delete, pre_save
@@ -56,7 +58,7 @@ def create_ident_cely(sender, instance: User, **kwargs):
         else:
             instance.old = None
     if instance.pk is None:
-        instance.model_is_updated = False
+        instance.model_is_being_created = True
         logger.debug("uzivatel.signals.create_ident_cely.running_create_ident_cely_receiver")
         if not instance.ident_cely:
             instance.ident_cely = get_uzivatel_ident()
@@ -85,6 +87,9 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
             "transaction": getattr(fedora_transaction, "uid", None),
         },
     )
+    if instance.model_is_being_created and not instance.is_active:
+        group = Group.objects.get(pk=ROLE_BADATEL_ID)
+        instance.groups.set([group], clear=True)
     if not instance.suppress_signal:
 
         def check_password_change():

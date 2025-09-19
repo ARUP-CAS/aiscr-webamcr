@@ -108,6 +108,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         self.suppress_signal = False
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
+        self.model_is_being_created = False
 
     @cached_property
     def hlavni_role(self) -> Union[Group, None]:
