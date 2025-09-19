@@ -431,7 +431,6 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         count_new = ExterniZdroj.objects.count()
         self.assertEqual(count_old - 1, count_new)
         self.check_fedora_change(time, "ez/tests/resources/test_136/delete_EZ")
-        # self.check_fedora_delete(["record/X-BIB-0700016"])
         logger.info("AkceExterniZdroj.test_136_test_Fedory_externi_zdroj_p_001.end")
 
     def test_137_test_Fedory_externi_zdroj_p_002(self):

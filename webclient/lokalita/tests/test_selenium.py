@@ -397,6 +397,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/update_lokalita")
 
         # C dokumentacni_jednotka
+        self.createFedoraRecord("ruian-679038")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-dj")
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
@@ -566,7 +567,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementSendKeys(By.ID, "id_paginace", "10")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "lokalita/tests/resources/test_143/upadate_EZ")
+        self.check_fedora_change(time, "lokalita/tests/resources/test_143/update_EZ")
 
         # ident_cely
         time = self.getTime()
@@ -654,5 +655,20 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/ident_cely_PIAN")
         self.check_fedora_delete(["record/N-1412-000000007"])
+
+        # C dokument_cast existujici
+        self.createFedoraRecord("M-L9000181")
+        self.createFedoraRecord("M-TX-194300151")
+        time = self.getTime()
+        self.goToAddress("/id/M-L9000181")
+        self.ElementClick(By.ID, "others_doc")
+        self.ElementClick(By.ID, "dokument-pripojit")
+        self.ElementClick(By.CSS_SELECTOR, ".select2-selection--multiple > .select2-selection__rendered")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("M-TX-194300151")
+        self.wait_for_select2_results()
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_dokument_cast_1")
 
         logger.info("AkceLokality.test_143_test_Fedory_lokalita_p_001.end")

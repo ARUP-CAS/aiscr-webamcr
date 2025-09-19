@@ -695,8 +695,8 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument")
 
         # U neident_akce
-        time = self.getTime()
         self.createFedoraRecord("C-TX-197602290")
+        time = self.getTime()
         self.goToAddress("/id/C-TX-197602290")
         self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(1) strong")
         self.ElementClick(By.ID, "button-edit-neident")
@@ -717,7 +717,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_neident_akce")
 
-        # zmena idnet_cely s akci lokalitou a projektem a letem X-C-TX-201801164
+        # D dokument X-C-TX-201801164
         self.createFedoraRecord("X-C-TX-201801164")
         self.createFedoraRecord("C-201125635A")
         self.createFedoraRecord("C-202010506")
@@ -728,15 +728,6 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
-        time = self.getTime()
-        self.ElementClick(By.ID, "dokument-odeslat")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
-        new_ident = self.driver.current_url.split("/")[-1]
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/ident_cely_1")
-        self.check_fedora_delete(["record/X-C-TX-201801164"])
-
-        # D dokument X-C-TX-201801164
         time = self.getTime()
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "dokument-smazat")

@@ -1,6 +1,7 @@
 import logging
 import unittest
 
+from adb.models import VyskovyBod
 from arch_z.models import Akce, ArcheologickyZaznam, ExterniOdkaz
 from core.constants import AZ_STAV_ARCHIVOVANY, AZ_STAV_ODESLANY, PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_UZAVRENY
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
@@ -1460,6 +1461,7 @@ class AkceSamostatneAkce(AkceTestClass):
         # Scenar_103 Archivace samostatné akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_103_archivace_samostatne_akce_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-9157766A")
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-9157766A").first().stav, AZ_STAV_ODESLANY)
         self.go_to_Akce_vybrat()
         self.ElementClick(By.ID, "buttonFiltr")
@@ -1728,9 +1730,12 @@ class AkceSamostatneAkce(AkceTestClass):
         # změna ident_cely AZ X-C-91468414A
         # změna ident_cely DJ
         # změna ident_cely komponenta
+        # ADB-BLAT60-000001
         self.createFedoraRecord("X-C-91468414A")
         self.createFedoraRecord("X-C-TX-000000008")
         self.createFedoraRecord("BIB-0000001")
+        self.createFedoraRecord("ADB-BLAT60-000001")
+        self.createFedoraRecord("N-2214-000000004")
         self.goToAddress("/id/X-C-TX-000000008")
         self.ElementClick(By.ID, "NahratSoubory")
         self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
@@ -1745,12 +1750,32 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_delete(["record/X-C-91468414A", "record/X-C-TX-000000008"])
 
         # AZ smazat
+        self.goToAddress("/id/C-9003982A-D01")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "adb-smazat-ADB-BLAT60-000001")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
         time = self.getTime()
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "akce-smazat")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_AZ")
+
+        # C dokument_cast existujici
+        self.createFedoraRecord("X-M-91558334A")
+        self.createFedoraRecord("M-TX-194300151")
+        time = self.getTime()
+        self.goToAddress("/id/X-M-91558334A")
+        self.ElementClick(By.ID, "others_doc")
+        self.ElementClick(By.ID, "dokument-pripojit")
+        self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("M-TX-194300151")
+        self.wait_for_select2_results()
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_dokument_cast_1")
 
     def test_139_test_Fedory_PIAN_p_001(self):
         # Scenar_138 Test Fedory pro PIAN ADB vyskovy bod
@@ -1814,6 +1839,11 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementSendKeys(By.ID, "id_ADB-KRAS07-000001_vb-0-niveleta", "500")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
+        pk_vyskovy_bod = (
+            VyskovyBod.objects.filter(adb__dokumentacni_jednotka__archeologicky_zaznam__ident_cely="X-C-9000000011A")
+            .first()
+            .pk
+        )
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_vyskovy_bod")
 
         # U PIAN
@@ -1863,7 +1893,7 @@ class AkceSamostatneAkce(AkceTestClass):
         # D výškový bod
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
-        self.ElementClick(By.ID, "vb-smazat-10782")
+        self.ElementClick(By.ID, f"vb-smazat-{pk_vyskovy_bod}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/delete_vyskovy_bod")
@@ -1963,37 +1993,26 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/delete_DJ_katastr")
 
         # D DJ
-        self.createFedoraRecord("X-M-91366821A")
-        self.goToAddress("/id/X-M-91366821A")
+        self.createFedoraRecord("X-C-91601363A")
+        self.createFedoraRecord("P-2212-010011")
+        self.goToAddress("/id/X-C-91601363A-D01")
         time = self.getTime()
-        self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_M_91366821A_D01")
         self.ElementClick(By.ID, "others")
-        self.ElementClick(By.ID, "adb-smazat-ADB-OPAV13-000001")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
-        self.ElementClick(By.ID, "others")
-        self.ElementClick(By.ID, "dj-smazat-X-M-91366821A-D01")
+        self.ElementClick(By.ID, "dj-smazat-X-C-91601363A-D01")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/delete_DJ")
         logger.info("AkceProjektoveAkce.test_139_test_Fedory_PIAN_p_001.end")
 
-    def test_140_test_Fedory_PIAN_p_002(self):
-        # Scenar_140 Test Fedory pro PIAN
-        logger.info("AkceProjektoveAkce.test_140_test_Fedory_PIAN_p_002.start")
+    def test_140_test_Fedory_ADB_p_001(self):
+        # Scenar_140 Test Fedory pro ADB
+        logger.info("AkceProjektoveAkce.test_140_test_Fedory_ADB_p_001.start")
         self.login("archivar")
 
-        # změna ident_cely Akce
-        self.createFedoraRecord("X-M-91366821A")
-        self.goToAddress("/id/X-M-91366821A")
-        time = self.getTime()
-        self.ElementClick(By.ID, "akce-odeslat")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "arch_z/tests/resources/test_140/ident_cely_1")
-        self.check_fedora_delete(["record/X-M-91366821A"])
-
         # změna zmena stavu ADB
+        self.createFedoraRecord("M-9002352A")
+        self.createFedoraRecord("N-1541-000000005")
+        self.createFedoraRecord("ADB-OPAV13-000001")
         self.goToAddress("/arch-z/akce/detail/M-9002352A/dj/M-9002352A-D01")
         self.ElementClick(By.ID, "others")
         self.ElementClick(By.ID, "pian-potvrdit-N-1541-000000005")
