@@ -8,6 +8,7 @@ from datetime import datetime
 
 import core.message_constants as mc
 import django
+import pytz
 from arch_z.models import ArcheologickyZaznam
 from core.constants import EPSG_WGS84, LIMIT_PRVKU_ZOBRAZENI_HEATMAP, ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
 from core.message_constants import (
@@ -1123,3 +1124,16 @@ def get_set_maintenance_in_cache():
             cache.set("maintenance", False, 600)
             maintenance = False
     return maintenance
+
+
+def is_maintenance_in_progress():
+    """
+    Funkce pro zjištění, zda je údržba v průběhu.
+    """
+    maintenance = get_set_maintenance_in_cache()
+    if maintenance:
+        if pytz.timezone("Europe/Prague").localize(
+            datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
+        ) <= datetime.now(pytz.timezone("Europe/Prague")):
+            return True
+    return False

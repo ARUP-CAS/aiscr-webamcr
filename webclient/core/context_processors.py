@@ -14,7 +14,7 @@ from core.constants import (
     PROJEKT_STAV_ZRUSENY,
     ROLE_ADMIN_ID,
 )
-from core.utils import get_set_maintenance_in_cache
+from core.utils import get_set_maintenance_in_cache, is_maintenance_in_progress
 from django.conf import settings
 from django.core.cache import cache
 from django.utils.safestring import mark_safe
@@ -74,35 +74,29 @@ def auto_logout_client(request):
     maintenance_logout = False
     maintenance = get_set_maintenance_in_cache()
     if maintenance:
-        date_time_now = datetime.now(pytz.timezone("Europe/Prague"))
-        if (
-            pytz.timezone("Europe/Prague").localize(
-                datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
-            )
-            > date_time_now
-        ):
+        if not is_maintenance_in_progress():
             time_difference = int(
                 (
                     pytz.timezone("Europe/Prague").localize(
                         datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
                     )
-                    - date_time_now
+                    - datetime.now(pytz.timezone("Europe/Prague"))
                 ).total_seconds()
             )
         else:
             user_time_cache = str(request.user.id) + "user_time"
             if cache.get(user_time_cache):
                 user_datetime = cache.get(user_time_cache)
-                time_difference = 600 - int(
+                time_difference = options["MAINTENANCE_LOGOUT_TIME"] - int(
                     (datetime.now(pytz.timezone("Europe/Prague")) - user_datetime).total_seconds()
                 )
                 if time_difference < 0:
                     time_difference = 0
             else:
-                time_difference = 600
-                cache.set(user_time_cache, date_time_now, 3600)
+                time_difference = options["MAINTENANCE_LOGOUT_TIME"]
+                cache.set(user_time_cache, datetime.now(pytz.timezone("Europe/Prague")), options["IDLE_TIME"])
             logger.debug(time_difference)
-        if time_difference < 3601:
+        if time_difference < (options["IDLE_TIME"] + 1):
             maintenance_logout = True
 
     if "SESSION_TIME" in options:
@@ -126,7 +120,7 @@ def auto_logout_client(request):
         ctx["redirect_to_login_immediately"] = "logoutFunction"
         ctx["extra_param"] = mark_safe({"logout_type": "maintenance"})
         user_cache = str(request.user.id) + "logout_warning"
-        if cache.get(user_cache, True) and time_difference < 605:
+        if cache.get(user_cache, True) and time_difference < (options["MAINTENANCE_LOGOUT_TIME"] + 5):
             cache.set(user_cache, False, 3600)
             ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5
             ctx["logout_warning_text"] = mark_safe("MAINTENANCE_LOGOUT_WARNING")
