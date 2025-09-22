@@ -400,6 +400,13 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         default=get_default_licence,
     )
 
+    web = models.URLField(
+        verbose_name=_("uzivatel.models.Organizace.web"),
+        max_length=500,
+        blank=True,
+        null=True,
+    )
+
     def save(self, *args, **kwargs):
         """
         save metóda pro přidelení identu celý.
