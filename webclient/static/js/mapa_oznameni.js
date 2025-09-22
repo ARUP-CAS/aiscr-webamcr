@@ -10,7 +10,6 @@ map.on('click', function (e) {
                 document.getElementById('id_coordinate_x1').value = x1
                 document.getElementById('id_coordinate_x2').value = x2
                 point_leaf=[x2,x1]
-                console.log(point_leaf)
                 addPointToPoiLayer(point_leaf, [map_translations['lokalizaceZamer']]);  // 'Vámi vybraná poloha záměru'
                 let xhr = new XMLHttpRequest();
                 xhr.open('POST', '/oznameni/mapa-zjisti-katastr');

@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:organizace>
+    <amcr:ident_cely>ORG-000202</amcr:ident_cely>
+    <amcr:nazev xml:lang="cs">Argeolog sro</amcr:nazev>
+    <amcr:nazev_zkraceny xml:lang="cs">Argeolog</amcr:nazev_zkraceny>
+    <amcr:nazev_zkraceny_en xml:lang="en">Argeologaj</amcr:nazev_zkraceny_en>
+    <amcr:typ_organizace xml:lang="cs" id="HES-001128">jiná organizace</amcr:typ_organizace>
+    <amcr:oao>false</amcr:oao>
+    <amcr:mesicu_do_zverejneni>36</amcr:mesicu_do_zverejneni>
+    <amcr:zverejneni_pristupnost xml:lang="cs" id="HES-000866">badatel</amcr:zverejneni_pristupnost>
+    <amcr:email>adsds@aaa.cz</amcr:email>
+    <amcr:zanikla>false</amcr:zanikla>
+    <amcr:cteni_dokumentu>false</amcr:cteni_dokumentu>
+  </amcr:organizace>
+</amcr:amcr>

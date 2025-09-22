@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:projekt>
+    <amcr:ident_cely>C-202111043</amcr:ident_cely>
+    <amcr:stav>4</amcr:stav>
+    <amcr:typ_projektu xml:lang="cs" id="HES-001136">záchranný</amcr:typ_projektu>
+    <amcr:okres xml:lang="cs" id="ruian-3403">Karlovy Vary</amcr:okres>
+    <amcr:podnet>stabilizace hrad_zříceniny hradu Engelsburg, přepad vody z cisterny</amcr:podnet>
+    <amcr:planovane_zahajeni>[2021-01-01, 2021-12-31]</amcr:planovane_zahajeni>
+    <amcr:vedouci_projektu id="OS-005733">Prekop, Filip</amcr:vedouci_projektu>
+    <amcr:organizace xml:lang="cs" id="ORG-000048">Národní památkový ústav - územní odborné pracoviště v Lokti</amcr:organizace>
+    <amcr:uzivatelske_oznaceni>13/21LO, A.Hora, prepad z cisterny</amcr:uzivatelske_oznaceni>
+    <amcr:kulturni_pamatka xml:lang="cs" id="HES-000177">kulturní památka</amcr:kulturni_pamatka>
+    <amcr:datum_zahajeni>2021-07-13</amcr:datum_zahajeni>
+    <amcr:datum_ukonceni>2021-09-01</amcr:datum_ukonceni>
+    <amcr:termin_odevzdani_nz>2024-09-01</amcr:termin_odevzdani_nz>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
+    <amcr:geom_system>5514</amcr:geom_system>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-600369">Andělská Hora</amcr:hlavni_katastr>
+      <amcr:lokalizace>nádvoří za Druhou bránou</amcr:lokalizace>
+      <amcr:parcelni_cislo>57</amcr:parcelni_cislo>
+      <amcr:geom_gml>
+        <gml:Point srsName="EPSG:4326">
+          <gml:coordinates>12.9638884,50.2057912</gml:coordinates>
+        </gml:Point>
+      </amcr:geom_gml>
+      <amcr:geom_wkt EPSG="4326">POINT(12.9638884 50.2057912)</amcr:geom_wkt>
+      <amcr:kulturni_pamatka_cislo> 29616/4-724</amcr:kulturni_pamatka_cislo>
+      <amcr:kulturni_pamatka_popis>zřícenina hradu Engelsburg</amcr:kulturni_pamatka_popis>
+    </amcr:chranene_udaje>
+    <amcr:historie>
+      <amcr:id>hist-1484588</amcr:id>
+      <amcr:datum_zmeny>2021-09-23T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000309">U-000309</amcr:uzivatel>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-1658747</amcr:id>
+      <amcr:datum_zmeny>2021-09-23T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000309">U-000309</amcr:uzivatel>
+      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2028105</amcr:id>
+      <amcr:datum_zmeny>2021-09-23T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000309">U-000309</amcr:uzivatel>
+      <amcr:typ_zmeny>P23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2230747</amcr:id>
+      <amcr:datum_zmeny>2021-09-24T18:44:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2135643</amcr:id>
+      <amcr:datum_zmeny>2023-03-12T23:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000309">U-000309</amcr:uzivatel>
+      <amcr:typ_zmeny>P34</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:oznamovatel>
+      <amcr:oznamovatel>obec Andělská Hora</amcr:oznamovatel>
+      <amcr:odpovedna_osoba>-</amcr:odpovedna_osoba>
+      <amcr:adresa>-</amcr:adresa>
+      <amcr:telefon>-</amcr:telefon>
+      <amcr:email>-</amcr:email>
+    </amcr:oznamovatel>
+    <amcr:soubor>
+      <amcr:id>soub-364200</amcr:id>
+      <amcr:nazev>oznameni_C-202111043.pdf</amcr:nazev>
+      <amcr:mimetype>application/pdf</amcr:mimetype>
+      <amcr:rozsah>3</amcr:rozsah>
+      <amcr:size_mb>0.1370201111</amcr:size_mb>
+      <amcr:historie>
+        <amcr:id>hist-2478151</amcr:id>
+        <amcr:datum_zmeny>2021-09-23T22:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-000159">U-000159</amcr:uzivatel>
+        <amcr:poznamka>oznameni_C-202111043.pdf</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:soubor>
+    <amcr:archeologicky_zaznam id="C-202111043A">C-202111043A</amcr:archeologicky_zaznam>
+  </amcr:projekt>
+</amcr:amcr>

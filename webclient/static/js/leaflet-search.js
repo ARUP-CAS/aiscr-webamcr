@@ -426,10 +426,10 @@ L.Control.Search = L.Control.extend({
 		form.radio=radio1;
         L.DomEvent
 			.disableClickPropagation(radio1)
-			.on(radio1, 'change', () => {console.log('radio clicked');this._getParcela()}, this);
+			.on(radio1, 'change', () => {this._getParcela()}, this);
         L.DomEvent
 			.disableClickPropagation(radio2)
-			.on(radio2, 'change', () => {console.log('radio clicked');this._getParcela()}, this);
+			.on(radio2, 'change', () => {this._getParcela()}, this);
 		L.DomEvent
 			.disableClickPropagation(input)
 			.on(input, 'keyup', this._handleKeypressParcela, this)

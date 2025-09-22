@@ -189,7 +189,7 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
         verbose_name_plural = "Heslář hierarchie"
         constraints = [
             CheckConstraint(
-                check=(Q(typ__in=["podřízenost", "uplatnění", "výchozí hodnota"])),
+                condition=(Q(typ__in=["podřízenost", "uplatnění", "výchozí hodnota"])),
                 name="heslar_hierarchie_typ_check",
             ),
         ]

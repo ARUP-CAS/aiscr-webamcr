@@ -140,7 +140,6 @@
               $(field).prop('disabled', disabled);
               if (field !='#id_oznaceni_stavby' && field != '#id_poznamka' && field != '#id_send_mail'){
                 $(field).prop('required', !disabled);
-                console.log($(field))
                 if (disabled){
                   $(field)[0].classList.remove("required-next")
                 }
@@ -199,7 +198,7 @@
       applyLabel: '{% trans "drp.applyLabel" %}'
     }
   </script>
-  <script src="{% static 'js/daterangepicker.js' %}"></script>
+  <script src="{% static 'js/daterangepicker-init.js' %}"></script>
   <script>
     $(document).ready(function () {
         var sel = document.getElementById('id_katastry');

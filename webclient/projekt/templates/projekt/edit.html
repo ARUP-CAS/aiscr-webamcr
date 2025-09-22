@@ -137,17 +137,15 @@
       button_map_lock.disable();
       {% endif %}
       if (document.getElementById("id_coordinate_x2").value > 1) {
-          console.log("Adding point to map.")
           addPointOnLoad(document.getElementById("id_coordinate_x2").value, document.getElementById("id_coordinate_x1").value,  '{% trans "mapa.lokalizaceProjektu" %}',"{{projekt.ident_cely}}", "{{projekt.stav}}");
       } else {
           addProjektWithoutPointOnLoad("{{projekt.ident_cely}}");
           switchMap(false);
-          console.log("Not adding point to map!")
       }
     })
   </script>
 
-  <script src="{% static 'js/daterangepicker3.1/daterangepicker.js' %}"></script>
+  <script src="{% static 'js/daterangepicker-init.js' %}"></script>
 
   <script src="{% static 'js/form_fields_disabling.js' %}"></script>
   <script>

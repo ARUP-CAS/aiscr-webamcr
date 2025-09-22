@@ -416,7 +416,8 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                 "uzivatel.admin.save_model.manage_user_groups.deactivated",
                 extra={"pk": obj.pk, "transaction": fedora_transaction.uid},
             )
-            transaction.on_commit(lambda: obj.groups.set([], clear=True))
+            group = Group.objects.get(pk=ROLE_BADATEL_ID)
+            transaction.on_commit(lambda: obj.groups.set([group], clear=True))
             obj.save()
             fedora_transaction.mark_transaction_as_closed()
             return

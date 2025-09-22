@@ -190,7 +190,15 @@ class RorAutocompleteView(LoginRequiredMixin, ApiView):
 
             for result in data.get("items", []):
                 ror_id = result.get("id", "")
-                name = result.get("name", "")
+                name = ""
+                for item in result.get("names", []):
+                    if (
+                        (item.get("lang") in ("en", "cs") or item.get("lang") is None)
+                        and item.get("value")
+                        and ("label" in item.get("types") or "ror_display" in item.get("types"))
+                    ):
+                        name = item.get("value")
+                        break
                 result_list.append([ror_id, f"{name} ({ror_id})"])
         return result_list
 
@@ -218,13 +226,20 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         else:
             q = unicodedata.normalize("NFKD", q)
             query = f"""
-                SELECT ?item ?itemLabel
+                SELECT DISTINCT ?item ?itemLabel
                 WHERE {{
-                  {{ ?item rdfs:label "{q}"@en }}
-                  UNION
-                  {{ ?item rdfs:label "{q}"@cs }}
+                  VALUES ?lang {{ "en" "cs" }}
+                  SERVICE wikibase:mwapi {{
+                    bd:serviceParam wikibase:endpoint "www.wikidata.org";
+                                   wikibase:api "EntitySearch";
+                                   mwapi:search "{q}";
+                                   mwapi:language ?lang;
+                                   wikibase:limit "50".
+                    ?item wikibase:apiOutputItem mwapi:item.
+                  }}
+                  ?item wdt:P31 wd:Q5. 
                   SERVICE wikibase:label {{
-                    bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,cs"
+                    bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en,cs".
                   }}
                 }}
             """
@@ -240,7 +255,11 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
             id = result["item"]["value"]
             if "/" in id:
                 id = id.split("/")[-1]
-            result_list.append([id, f"{result['itemLabel']['value']} ({id})"])
+            if (title := result["itemLabel"]["value"]) and title != id and title != "Q":
+                title = f"{title} ({id})"
+            else:
+                title = id
+            result_list.append([id, title])
         return result_list
 
 

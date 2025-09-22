@@ -42,3 +42,8 @@ class LetAdmin(DokumentWithMetadataAdmin):
         "organizace",
     )
     search_fields = ("ident_cely", "uzivatelske_oznaceni")
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:  # editace existujícího objektu
+            return self.readonly_fields + ("ident_cely",)
+        return self.readonly_fields

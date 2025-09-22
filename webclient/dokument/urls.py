@@ -67,4 +67,5 @@ urlpatterns = [
         DokumentyAzTableView.as_view(),
         name="get_dokumenty_table",
     ),
+    path("zjisti-licenci-organizace/", views.zjisti_licenci_organizace, name="zjisti-licenci-organizace"),
 ]

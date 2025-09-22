@@ -16,6 +16,12 @@
 {% block title %}{% trans "vypis.templates.vypis_list.index.title" %}{% endblock %}
 
 {% block content %}
+{% get_current_language as LANGUAGE_CODE %}
+  {% if "en" in LANGUAGE_CODE %}
+  <div id="app-lang" lang="english"></div>
+  {% else %}
+  <div id="app-lang" lang="czech"></div>
+  {% endif %}
 <div class="row" id="title_row">
     <div class="col-9">
         <h1>{{title}}</h1>
@@ -133,7 +139,8 @@
         const formattedDate = `${year}${month}${day}_${hours}${minutes}${seconds}`;
         var htmlToRtfLocal = new window.htmlToRtf();
         var rtfContent = htmlToRtfLocal.convertHtmlToRtf(htmlContent);
-        console.log(rtfContent);
+        var rtfContent = rtfContent.replace(/ \\\'20/g, "\\\'20");
+        // console.log(rtfContent); only for debug
         const blob = new Blob([rtfContent], { type: 'application/rtf' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');

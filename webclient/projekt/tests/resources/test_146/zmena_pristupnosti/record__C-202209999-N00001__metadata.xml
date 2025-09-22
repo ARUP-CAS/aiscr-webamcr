@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:samostatny_nalez>
+    <amcr:ident_cely>C-202209999-N00001</amcr:ident_cely>
+    <amcr:evidencni_cislo>1</amcr:evidencni_cislo>
+    <amcr:projekt id="C-202209999">C-202209999</amcr:projekt>
+    <amcr:stav>1</amcr:stav>
+    <amcr:predano>false</amcr:predano>
+    <amcr:predano_organizace xml:lang="cs" id="ORG-000126">Městské muzeum v Čelákovicích, p.o.</amcr:predano_organizace>
+    <amcr:geom_system>4326</amcr:geom_system>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:chranene_udaje/>
+    <amcr:historie>
+      <amcr:id>hist-2803189</amcr:id>
+      <amcr:datum_zmeny>2025-06-28T11:21:46.018165+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:typ_zmeny>SN01</amcr:typ_zmeny>
+    </amcr:historie>
+  </amcr:samostatny_nalez>
+</amcr:amcr>

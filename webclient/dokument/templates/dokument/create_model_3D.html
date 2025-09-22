@@ -103,10 +103,12 @@
 {% endblock %}
 
 {% block script %}
-<script src="{% static 'js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
+<script src="{% static 'js/ajax_functions.js' %}"></script>
 <script>
   url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
   get_vychozi_hodnota_podrazeneho("#id_komponenta-areal","#id_komponenta-aktivity",url)
+  url = '{% url "dokument:zjisti-licenci-organizace" %}' + "?organizace="
+  get_vychozi_licence("#id_organizace","#id_licence",url)
 </script>
 <script type="text/javascript">
   // create osoba scripts

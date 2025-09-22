@@ -283,7 +283,7 @@
       SearchTextError: '{% trans "leaflet_search.SearchTextError" %}'
     };
   </script>
-  <script src="{% static 'js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
+  <script src="{% static 'js/ajax_functions.js' %}"></script>
   <script src="{% static 'js/mapa_pins.js' %}"></script>
   <script src="{% static 'js/coor_precision.js' %}"></script>
   <script src="{% static 'js/spin/spin.min.js' %}"></script>
@@ -510,7 +510,6 @@
       }
       var successFunctionAutorPopisu = function(settings, response) {
         var newOption = new Option(response.text, response.value, true, true);
-        console.log("test")
         $('#id_autor_popisu').append(newOption).trigger('change');
         $('#id_autor_popisu').trigger({
           type: 'select2:select',

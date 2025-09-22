@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:archeologicky_zaznam>
+    <amcr:ident_cely>C-L0000001</amcr:ident_cely>
+    <amcr:stav>2</amcr:stav>
+    <amcr:okres xml:lang="cs" id="ruian-3410">Tachov</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-680290">Domaslav</amcr:hlavni_katastr>
+    </amcr:chranene_udaje>
+    <amcr:lokalita>
+      <amcr:typ_lokality xml:lang="cs" id="HES-001123">polygon průzkumu</amcr:typ_lokality>
+      <amcr:druh xml:lang="cs" id="HES-000111">polygon leteckého průzkumu</amcr:druh>
+      <amcr:chranene_udaje>
+        <amcr:nazev>testtest</amcr:nazev>
+      </amcr:chranene_udaje>
+    </amcr:lokalita>
+    <amcr:historie>
+      <amcr:id>hist-2803190</amcr:id>
+      <amcr:datum_zmeny>2025-07-29T10:52:49.000847+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803195</amcr:id>
+      <amcr:datum_zmeny>2025-07-29T10:54:37.828030+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:poznamka>X-C-L000000003 -&gt; C-L0000001</amcr:poznamka>
+      <amcr:typ_zmeny>AZ12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:dokumentacni_jednotka>
+      <amcr:ident_cely>C-L0000001-D01</amcr:ident_cely>
+      <amcr:pian id="N-1121-000000008">N-1121-000000008</amcr:pian>
+      <amcr:typ xml:lang="cs" id="HES-001074">lokalita</amcr:typ>
+      <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
+      <amcr:nazev>test</amcr:nazev>
+      <amcr:komponenta>
+        <amcr:ident_cely>C-L0000001-K001</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000312">moustérien</amcr:obdobi>
+        <amcr:jistota>false</amcr:jistota>
+        <amcr:presna_datace>ne</amcr:presna_datace>
+        <amcr:areal xml:lang="cs" id="HES-000065">osídlený skalní prostor</amcr:areal>
+        <amcr:aktivita xml:lang="cs" id="HES-000001">sídlení</amcr:aktivita>
+        <amcr:aktivita xml:lang="cs" id="HES-000002">pohřbívání</amcr:aktivita>
+        <amcr:nalez_objekt>
+          <amcr:id>nalo-180492</amcr:id>
+          <amcr:druh xml:lang="cs" id="HES-000479">kašna</amcr:druh>
+          <amcr:specifikace xml:lang="cs" id="HES-000897">konstrukce – dřevěná</amcr:specifikace>
+          <amcr:pocet>12</amcr:pocet>
+        </amcr:nalez_objekt>
+        <amcr:nalez_predmet>
+          <amcr:id>nalp-175763</amcr:id>
+          <amcr:druh xml:lang="cs" id="HES-000749">hudební nástroj</amcr:druh>
+          <amcr:specifikace xml:lang="cs" id="HES-000978">kámen – štípaný</amcr:specifikace>
+          <amcr:pocet>2</amcr:pocet>
+          <amcr:poznamka>test</amcr:poznamka>
+        </amcr:nalez_predmet>
+      </amcr:komponenta>
+    </amcr:dokumentacni_jednotka>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-789</amcr:id>
+      <amcr:ext_zdroj id="BIB-0000001">BIB-0000001</amcr:ext_zdroj>
+      <amcr:paginace>10</amcr:paginace>
+    </amcr:ext_odkaz>
+    <amcr:dokument id="C-TX-202500002">C-TX-202500002</amcr:dokument>
+  </amcr:archeologicky_zaznam>
+</amcr:amcr>

@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:archeologicky_zaznam>
+    <amcr:ident_cely>C-9120749A</amcr:ident_cely>
+    <amcr:stav>3</amcr:stav>
+    <amcr:okres xml:lang="cs" id="ruian-3503">Chomutov</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-778001">Veliká Ves</amcr:hlavni_katastr>
+    </amcr:chranene_udaje>
+    <amcr:akce>
+      <amcr:typ>N</amcr:typ>
+      <amcr:je_nz>true</amcr:je_nz>
+      <amcr:odlozena_nz>false</amcr:odlozena_nz>
+      <amcr:hlavni_vedouci id="OS-000510">anonym</amcr:hlavni_vedouci>
+      <amcr:organizace xml:lang="cs" id="ORG-000012">[neurčená/nejasná organizace]</amcr:organizace>
+      <amcr:specifikace_data xml:lang="cs" id="HES-000889">někdy v letech</amcr:specifikace_data>
+      <amcr:datum_zahajeni>1800-01-01</amcr:datum_zahajeni>
+      <amcr:datum_ukonceni>1988-12-31</amcr:datum_ukonceni>
+      <amcr:hlavni_typ xml:lang="cs" id="HES-001062">bez okolností</amcr:hlavni_typ>
+      <amcr:chranene_udaje>
+        <amcr:lokalizace_okolnosti>Cihelna "v nivách".</amcr:lokalizace_okolnosti>
+      </amcr:chranene_udaje>
+    </amcr:akce>
+    <amcr:historie>
+      <amcr:id>hist-67472</amcr:id>
+      <amcr:datum_zmeny>2021-03-20T23:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-004403">U-004403</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-308842</amcr:id>
+      <amcr:datum_zmeny>2021-03-20T23:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-470844</amcr:id>
+      <amcr:datum_zmeny>2022-12-08T23:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000203">U-000203</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2781327</amcr:id>
+      <amcr:datum_zmeny>2024-02-28T00:51:17.954917+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:poznamka>PODLESICE -&gt; VELIKÁ VES</amcr:poznamka>
+      <amcr:typ_zmeny>KAT</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:dokumentacni_jednotka>
+      <amcr:ident_cely>C-9120749A-D01</amcr:ident_cely>
+      <amcr:pian id="P-1122-100045">P-1122-100045</amcr:pian>
+      <amcr:typ xml:lang="cs" id="HES-001070">celek akce</amcr:typ>
+      <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
+      <amcr:komponenta>
+        <amcr:ident_cely>C-9120749A-K001</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000379">raný středověk 3</amcr:obdobi>
+        <amcr:jistota>true</amcr:jistota>
+        <amcr:areal xml:lang="cs" id="HES-000060">neurčený areál</amcr:areal>
+        <amcr:nalez_predmet>
+          <amcr:id>nalp-91481</amcr:id>
+          <amcr:druh xml:lang="cs" id="HES-000705">zlomek keramiky</amcr:druh>
+          <amcr:specifikace xml:lang="cs" id="HES-000979">keramika</amcr:specifikace>
+        </amcr:nalez_predmet>
+      </amcr:komponenta>
+      <amcr:komponenta>
+        <amcr:ident_cely>C-9120749A-K002</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000325">raný středověk 4</amcr:obdobi>
+        <amcr:jistota>true</amcr:jistota>
+        <amcr:areal xml:lang="cs" id="HES-000060">neurčený areál</amcr:areal>
+        <amcr:nalez_predmet>
+          <amcr:id>nalp-158386</amcr:id>
+          <amcr:druh xml:lang="cs" id="HES-000705">zlomek keramiky</amcr:druh>
+          <amcr:specifikace xml:lang="cs" id="HES-000979">keramika</amcr:specifikace>
+        </amcr:nalez_predmet>
+      </amcr:komponenta>
+    </amcr:dokumentacni_jednotka>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-684</amcr:id>
+      <amcr:ext_zdroj id="BIB-0000027">BIB-0000027</amcr:ext_zdroj>
+      <amcr:paginace>150</amcr:paginace>
+    </amcr:ext_odkaz>
+  </amcr:archeologicky_zaznam>
+</amcr:amcr>

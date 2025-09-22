@@ -1,4 +1,3 @@
-import base64
 import logging
 import re
 import unittest
@@ -29,10 +28,10 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "id_email")
         self.driver.find_element(By.ID, "id_email").send_keys("jhavrlant@arup.cas.cz")
         self.driver.execute_script("$(window).scrollTop(1500 );")
-        self.driver.execute_script("""map.setZoom(16); return map.getZoom();""")
-        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 0, 0)
-        self.wait(self.wait_interval)
-        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 0, 0)
+        self.driver.execute_script("""map.setZoom(17); return map.getZoom();""")
+        self.wait(0.5)
+        self.clickAtMapCoord(15.1700002, 49.84)
+        self.wait(0.5)
         self.ElementClick(By.ID, "id_planovane_zahajeni")
         self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys("28.11.2024 - 30.11.2024")
         self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys(Keys.ENTER)
@@ -45,11 +44,7 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "id_souhlas")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-id-save")
-        with open("oznameni/tests/resources/test_foto_1.jpg", "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-
-        self.addFileToDropzone("#my-awesome-dropzone", "test_foto_1.jpg", encoded_string)
-        self.wait(1)
+        self.upload_file("oznameni/tests/resources/test_foto_1.jpg", "test_foto_1.jpg")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit_btn")
             self.driver.switch_to.alert.accept()

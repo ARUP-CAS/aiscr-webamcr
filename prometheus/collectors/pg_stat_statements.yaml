@@ -1,0 +1,87 @@
+pg_stat_statements:
+  query: |
+    SELECT
+      pg_get_userbyid(userid) AS user,
+      pg_database.datname,
+      pg_stat_statements.queryid::text,
+      LEFT(pg_stat_statements.query, 100) AS query_text,
+      SUM(pg_stat_statements.calls) AS calls,
+      SUM(pg_stat_statements.total_exec_time + COALESCE(pg_stat_statements.total_plan_time, 0)) AS time_milliseconds,
+      SUM(pg_stat_statements.rows) AS rows,
+      SUM(pg_stat_statements.shared_blks_hit) AS shared_blks_hit,
+      SUM(pg_stat_statements.shared_blks_read) AS shared_blks_read,
+      SUM(pg_stat_statements.shared_blks_dirtied) AS shared_blks_dirtied,
+      SUM(pg_stat_statements.shared_blks_written) AS shared_blks_written,
+      SUM(pg_stat_statements.local_blks_hit) AS local_blks_hit,
+      SUM(pg_stat_statements.local_blks_read) AS local_blks_read,
+      SUM(pg_stat_statements.local_blks_dirtied) AS local_blks_dirtied,
+      SUM(pg_stat_statements.local_blks_written) AS local_blks_written,
+      SUM(pg_stat_statements.temp_blks_read) AS temp_blks_read,
+      SUM(pg_stat_statements.temp_blks_written) AS temp_blks_written,
+      SUM(pg_stat_statements.blk_read_time) AS blk_read_time,
+      SUM(pg_stat_statements.blk_write_time) AS blk_write_time
+    FROM pg_stat_statements
+    JOIN pg_database ON pg_database.oid = pg_stat_statements.dbid
+    GROUP BY
+      pg_get_userbyid(userid),
+      pg_database.datname,
+      pg_stat_statements.queryid,
+      LEFT(pg_stat_statements.query, 100)
+  metrics:
+    - user:
+        usage: "LABEL"
+        description: "Uživatel, který dotaz spouští"
+    - datname:
+        usage: "LABEL"
+        description: "Databáze, ve které dotaz běží"
+    - queryid:
+        usage: "LABEL"
+        description: "Hash (parse tree) dotazu"
+    - query_text:
+        usage: "LABEL"
+        description: "Prvních 100 znaků dotazu"
+    - calls:
+        usage: "COUNTER"
+        description: "Počet volání"
+    - time_milliseconds:
+        usage: "COUNTER"
+        description: "Součet exec+plan času (ms)"
+    - rows:
+        usage: "COUNTER"
+        description: "Počet vrácených/ovlivněných řádků"
+    - shared_blks_hit:
+        usage: "COUNTER"
+        description: "Zásahy do sdílené cache"
+    - shared_blks_read:
+        usage: "COUNTER"
+        description: "Čtené sdílené bloky"
+    - shared_blks_dirtied:
+        usage: "COUNTER"
+        description: "Pozměněné sdílené bloky"
+    - shared_blks_written:
+        usage: "COUNTER"
+        description: "Zapsané sdílené bloky"
+    - local_blks_hit:
+        usage: "COUNTER"
+        description: "Zásahy do lokální cache"
+    - local_blks_read:
+        usage: "COUNTER"
+        description: "Čtené lokální bloky"
+    - local_blks_dirtied:
+        usage: "COUNTER"
+        description: "Pozměněné lokální bloky"
+    - local_blks_written:
+        usage: "COUNTER"
+        description: "Zapsané lokální bloky"
+    - temp_blks_read:
+        usage: "COUNTER"
+        description: "Čtené dočasné bloky"
+    - temp_blks_written:
+        usage: "COUNTER"
+        description: "Zapsané dočasné bloky"
+    - blk_read_time:
+        usage: "COUNTER"
+        description: "Čas čtení bloků (ms)"
+    - blk_write_time:
+        usage: "COUNTER"
+        description: "Čas zápisu bloků (ms)"

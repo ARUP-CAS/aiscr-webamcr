@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:osoba>
+    <amcr:ident_cely>OS-006534</amcr:ident_cely>
+    <amcr:jmeno>Martin</amcr:jmeno>
+    <amcr:prijmeni>Argeolog</amcr:prijmeni>
+    <amcr:vypis>Archeolog, J</amcr:vypis>
+    <amcr:vypis_cely>Archeolog, Jan</amcr:vypis_cely>
+    <amcr:orcid>https://orcid.org/0000-0003-0139-3494</amcr:orcid>
+  </amcr:osoba>
+</amcr:amcr>

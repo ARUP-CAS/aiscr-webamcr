@@ -29,6 +29,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-4 > .text")
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".required-next .select2-search__field").send_keys("Pavloň")
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".required-next .select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vydani_vzniku")
         self.driver.find_element(By.ID, "id_rok_vydani_vzniku").send_keys("2023")
@@ -77,7 +78,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "eo-pripojit-akce")
         self.ElementClick(By.ID, "select2-id_arch_z-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("X-C-9000000001A")
-        self.wait(2)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -98,7 +99,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "eo-pripojit-lokalita")
         self.ElementClick(By.ID, "select2-id_arch_z-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("C-K9000001")
-        self.wait(2)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
@@ -155,11 +156,11 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_autori .select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys("havrlant")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.CSS_SELECTOR, "#div_id_editori .select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_editori .select2-search__field").send_keys("abr")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_editori .select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vydani_vzniku")
         self.driver.find_element(By.ID, "id_rok_vydani_vzniku").send_keys("2023")
@@ -187,7 +188,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-2 > .text")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_autori .select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys("havrlant")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vydani_vzniku")
         self.driver.find_element(By.ID, "id_rok_vydani_vzniku").send_keys("2024")
@@ -216,7 +217,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-3 > .text")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_autori .select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys("havrlant")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vydani_vzniku")
         self.driver.find_element(By.ID, "id_rok_vydani_vzniku").send_keys("2024")
@@ -246,7 +247,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-5 > .text")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_autori .select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys("havrlant")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vydani_vzniku")
         self.driver.find_element(By.ID, "id_rok_vydani_vzniku").send_keys("2024")
@@ -269,11 +270,11 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_autori .select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys("havrlant")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.CSS_SELECTOR, "#div_id_editori .select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_editori .select2-search__field").send_keys("abr")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_editori .select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vydani_vzniku")
         self.driver.find_element(By.ID, "id_rok_vydani_vzniku").send_keys("2023")
@@ -301,7 +302,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-2 > .text")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_autori .select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys("havrlant")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vydani_vzniku")
         self.driver.find_element(By.ID, "id_rok_vydani_vzniku").send_keys("2024")
@@ -330,7 +331,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-3 > .text")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_autori .select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys("havrlant")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vydani_vzniku")
         self.driver.find_element(By.ID, "id_rok_vydani_vzniku").send_keys("2024")
@@ -360,7 +361,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-5 > .text")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_autori .select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys("havrlant")
-        self.wait(1)
+        self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, "#div_id_autori .select2-search__field").send_keys(Keys.ENTER)
         self.ElementClick(By.ID, "id_rok_vydani_vzniku")
         self.driver.find_element(By.ID, "id_rok_vydani_vzniku").send_keys("2024")
@@ -372,3 +373,159 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         count_new = ExterniZdroj.objects.count()
         self.assertEqual(count_old + 1, count_new)
         logger.info("AkceExterniZdroj.test_131_zapsani_externího_zdroje_p_010.end")
+
+    def test_136_test_Fedory_externi_zdroj_p_001(self):
+        # Scenar_136 Test Fedory pro EZ
+        # vytvoření
+        logger.info("AkceExterniZdroj.test_136_test_Fedory_externi_zdroj_p_001.start")
+
+        self.login("archeolog")
+        # C EZ
+        time = self.getTime()
+        count_old = ExterniZdroj.objects.count()
+        self.zapsat_zaznam()
+        count_new = ExterniZdroj.objects.count()
+        self.assertEqual(count_old + 1, count_new)
+        self.check_fedora_change(time, "ez/tests/resources/test_136/create_EZ")
+        self.logout()
+
+        # změna ident_cely EZ
+        self.login("archivar")
+        self.createFedoraRecord("X-BIB-1408662")
+        self.createFedoraRecord("C-9120419A")
+        self.createFedoraRecord("C-9120749A")
+        self.createFedoraRecord("C-9133040A")
+        self.createFedoraRecord("C-K9000004")
+        time = self.getTime()
+        dbID = ExterniZdroj.objects.filter(ident_cely="X-BIB-1408662").first().id
+        self.assertEqual(ExterniZdroj.objects.filter(id=dbID).first().stav, EZ_STAV_ODESLANY)
+        self.goToAddress("/id/X-BIB-1408662")
+        self.ElementClick(By.ID, "ez-potvrdit")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(ExterniZdroj.objects.filter(id=dbID).first().stav, EZ_STAV_POTVRZENY)
+        self.check_fedora_change(time, "ez/tests/resources/test_136/ident_cely")
+        self.check_fedora_delete(["record/X-BIB-1408662"])
+
+        # U EZ
+        self.createFedoraRecord("X-BIB-0926116")
+        self.goToAddress("/id/X-BIB-0926116")
+        time = self.getTime()
+        self.ElementClick(By.ID, "edit-btn")
+        self.ElementClick(By.ID, "id_misto")
+        self.ElementSendKeys(By.ID, "id_misto", "Louny")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "newEntitySubmitBtn")
+        self.check_fedora_change(time, "ez/tests/resources/test_136/update_EZ")
+
+        # D EZ
+        self.createFedoraRecord("X-BIB-0700016")
+        self.goToAddress("/id/X-BIB-0700016")
+        count_old = ExterniZdroj.objects.count()
+        time = self.getTime()
+
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "ez-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        count_new = ExterniZdroj.objects.count()
+        self.assertEqual(count_old - 1, count_new)
+        self.check_fedora_change(time, "ez/tests/resources/test_136/delete_EZ")
+        logger.info("AkceExterniZdroj.test_136_test_Fedory_externi_zdroj_p_001.end")
+
+    def test_137_test_Fedory_externi_zdroj_p_002(self):
+        logger.info("AkceExterniZdroj.test_137_test_Fedory_externi_zdroj_p_002.start")
+        # připojení AZ
+        self.login("archeolog")
+        self.createFedoraRecord("X-BIB-000000001")
+        self.createFedoraRecord("X-C-9000000001A")
+        id = ExterniZdroj.objects.filter(ident_cely="X-BIB-000000001").first().id
+        ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj=id)
+        count_old = ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE).count()
+        self.goToAddress("/id/X-BIB-000000001")
+        time = self.getTime()
+        self.ElementClick(By.ID, "eo-pripojit-akce")
+        self.ElementClick(By.ID, "select2-id_arch_z-container")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "X-C-9000000001A")
+        self.wait_for_select2_results()
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj=id)
+        count_new = ez_odkazy.filter(archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE).count()
+        self.assertEqual(count_old + 1, count_new)
+        self.check_fedora_change(time, "ez/tests/resources/test_137/pripojeni_AZ")
+
+        # připojení lokalita
+        self.createFedoraRecord("C-K9000001")
+        time = self.getTime()
+        self.ElementClick(By.ID, "eo-pripojit-lokalita")
+        self.ElementClick(By.ID, "select2-id_arch_z-container")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "C-K9000001")
+        self.wait_for_select2_results()
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "ez/tests/resources/test_137/pripojeni_lokalita")
+
+        # editace paginace AZ
+        time = self.getTime()
+        pk = (
+            ExterniOdkaz.objects.filter(
+                externi_zdroj__ident_cely="X-BIB-000000001", archeologicky_zaznam__ident_cely="X-C-9000000001A"
+            )
+            .first()
+            .id
+        )
+        self.ElementClick(By.ID, f"ez-change-{pk}")
+        self.ElementClick(By.ID, "id_paginace")
+        self.ElementSendKeys(By.ID, "id_paginace", "22")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "ez/tests/resources/test_137/edit_paginace_EZ")
+
+        # editace paginace lokalita
+        time = self.getTime()
+        pk = (
+            ExterniOdkaz.objects.filter(
+                externi_zdroj__ident_cely="X-BIB-000000001", archeologicky_zaznam__ident_cely="C-K9000001"
+            )
+            .first()
+            .id
+        )
+        self.ElementClick(By.ID, f"ez-change-{pk}")
+        self.ElementClick(By.ID, "id_paginace")
+        self.ElementSendKeys(By.ID, "id_paginace", "22")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "ez/tests/resources/test_137/edit_paginace_lokalita")
+
+        # odpojení AZ
+        time = self.getTime()
+        pk = (
+            ExterniOdkaz.objects.filter(
+                externi_zdroj__ident_cely="X-BIB-000000001", archeologicky_zaznam__ident_cely="X-C-9000000001A"
+            )
+            .first()
+            .id
+        )
+        self.ElementClick(By.ID, f"ez-odpojit-{pk}")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "ez/tests/resources/test_137/odpojeni_AZ")
+
+        # odpojení lokalita
+        time = self.getTime()
+        pk = (
+            ExterniOdkaz.objects.filter(
+                externi_zdroj__ident_cely="X-BIB-000000001", archeologicky_zaznam__ident_cely="C-K9000001"
+            )
+            .first()
+            .id
+        )
+        self.ElementClick(By.ID, f"ez-odpojit-{pk}")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "ez/tests/resources/test_137/odpojeni_lokalita")
+
+        logger.info("AkceExterniZdroj.test_137_test_Fedory_externi_zdroj_p_002.end")

@@ -292,7 +292,7 @@
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-projekt" href="{% url 'projekt:edit' projekt.ident_cely %}" rel="tooltip" data-placement="top" data-offset="0px, 1px" title="{% trans 'projekt.templates.detail.upravit.button.text' %}">
-              <span class="material-icons">edit</span>
+              <span id="edit-btn" class="material-icons">edit</span>
             </a>
           </div>
         </div>
@@ -520,11 +520,11 @@
           <div class="app-fx app-left">
             {% trans "projekt.templates.detail.cardHeader.oznamovatel" %}
           </div>
-          {% if show.editovat %}
+          {% if show.oznamovatel_editovat %}
           <div class="app-fx app-right">
             <div class="btn-group" role="group">
               <a class="btn app-entity-projekt" href="{% url 'oznameni_edit' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'projekt.templates.detail.oznamovatel.upravit' %}">
-                <span class="material-icons">edit</span>
+                <span id="edit-btn2" class="material-icons">edit</span>
               </a>
             </div>
           </div>
@@ -582,7 +582,7 @@
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-projekt" href="{% url 'core:upload_file' 'projekt' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'projekt.templates.detail.dokumentacePart.nahrat' %}">
-              <span class="material-icons">publish</span>
+              <span id="add_dokumentace" class="material-icons">publish</span>
             </a>
           </div>
         </div>
@@ -610,7 +610,7 @@
           <div class="btn-group" role="group">
             {% if show.pridat_akci == True %}
             <a class="btn app-entity-projekt" href="{% url 'arch_z:zapsat' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'projekt.templates.detail.akcePart.pridat' %}">
-              <span class="material-icons">add</span>
+              <span id="add_akce" class="material-icons">add</span>
             </a>
             {% endif %}
           </div>
@@ -638,7 +638,7 @@
         {% if show.pridat_sam_nalez == True %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-projekt" href="{% url 'pas:create-from-project' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'projekt.templates.detail.nalezyPart.vlozit' %}">
+            <a id="add_PAS" class="btn app-entity-projekt" href="{% url 'pas:create-from-project' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'projekt.templates.detail.nalezyPart.vlozit' %}">
               <span class="material-icons">add</span>
             </a>
           </div>

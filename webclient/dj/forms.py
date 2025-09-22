@@ -196,6 +196,8 @@ class CreateDJForm(forms.ModelForm):
             and self.instance.komponenty.komponenty.count() > 0
         ):
             self.fields["negativni_jednotka"].disabled = True
+        if not not_readonly:
+            self.fields["typ"].required = False
 
 
 class ChangeKatastrForm(forms.Form):

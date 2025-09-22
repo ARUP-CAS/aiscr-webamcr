@@ -11,7 +11,6 @@ var successFunction = function(settings, response) {
     dropdown.value = response.value;
     $(settings.modalIDD).modal("hide");
   };
-  console.log(document.getElementById('id_vedouci_modal'))
   window.addEventListener("modalLoaded", function() {
     var options = Object.assign(Object.create(defaults), {
       modalID: "modal-osoba-form",

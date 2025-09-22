@@ -341,6 +341,11 @@ LOGGING = {
             "level": "WARNING",
             "propagate": False,
         },
+        "request.timer": {
+            "handlers": ["logstash", "console"],
+            "level": "INFO",
+            "propagate": False,
+        },
         "tests": {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",

@@ -1,0 +1,20 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix fedora: <http://fedora.info/definitions/v4/repository#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-202500001/file/063ed7a1-06b0-41cc-8904-11a899e836e5>
+        dcterms:type           "deleted" ;
+        fedora:created         "2025-06-28T11:20:41.392629Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-28T11:20:44.116768Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:createdBy       "AMCR" ;
+        fedora:lastModifiedBy  "AMCR" ;
+        rdf:type               ldp:BasicContainer ;
+        rdf:type               ldp:Resource ;
+        rdf:type               fedora:Resource ;
+        rdf:type               ldp:RDFSource ;
+        rdf:type               ldp:Container ;
+        rdf:type               fedora:Container ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-202500001/file/063ed7a1-06b0-41cc-8904-11a899e836e5/orig> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-202500001/file/063ed7a1-06b0-41cc-8904-11a899e836e5/thumb> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-202500001/file/063ed7a1-06b0-41cc-8904-11a899e836e5/thumb-large> .

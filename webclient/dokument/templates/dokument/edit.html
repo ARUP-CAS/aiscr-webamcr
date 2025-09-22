@@ -5,6 +5,7 @@
 
 {% block title %}{% trans "dokument.templates.edit.editaceDokumentu.title" %}{% endblock %}
 {% block head %}
+  <script src="{% static 'js/ajax_functions.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -130,6 +131,9 @@
           })
           new Modal(options, "create-dok-osoba"); 
         });
+
+        url = '{% url "dokument:zjisti-licenci-organizace" %}' + "?organizace="
+        get_vychozi_licence("#id_organizace","#id_licence",url)
   </script>
 
 {% endblock %}
