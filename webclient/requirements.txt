@@ -15,7 +15,7 @@ django-widget-tweaks==1.5.0
 distlib==0.4.0
 django-rosetta==0.10.2
 django-auto-logout==0.5.1
-reportlab==4.4.3
+reportlab==4.4.4
 PyRTF3==0.47.5
 pypdf==6.0.0
 Pillow==11.3.0
