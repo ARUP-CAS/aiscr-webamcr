@@ -4,6 +4,7 @@ import logging
 import math
 import os
 import re
+import sys
 from datetime import date
 
 logger = logging.getLogger(__name__)
@@ -352,7 +353,10 @@ def JTSK052ETRFtransform_coords(xs, ys, zs):
 
 
 def WGS2ETRFtransform_coords(xs, ys, zs):
-    today = date.today()
+    if "test" in sys.argv:
+        today = date(2025, 6, 28)
+    else:
+        today = date.today()
     epoch = today.year - 2000 + (today.month - 1) / 12 + (today.day - 1) / 365.25
     ro = 1 / 3600 / 180 * math.pi / 1000
     p1 = 5.21e-02 + 1e-04 * epoch
@@ -370,7 +374,10 @@ def WGS2ETRFtransform_coords(xs, ys, zs):
 
 
 def ETRF2WGStransform_coords(xs, ys, zs):
-    today = date.today()
+    if "test" in sys.argv:
+        today = date(2025, 6, 28)
+    else:
+        today = date.today()
     epoch = today.year - 2000 + (today.month - 1) / 12 + (today.day - 1) / 365.25
     ro = 1 / 3600 / 180 * math.pi / 1000
     p1 = -(5.21e-02 + 1e-04 * epoch)

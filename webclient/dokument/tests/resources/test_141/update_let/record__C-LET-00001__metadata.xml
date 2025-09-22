@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:let>
+    <amcr:ident_cely>C-LET-00001</amcr:ident_cely>
+    <amcr:datum>1992-05-31</amcr:datum>
+    <amcr:hodina_zacatek>13:40</amcr:hodina_zacatek>
+    <amcr:hodina_konec>14:50</amcr:hodina_konec>
+    <amcr:pozorovatel id="OS-001262">Gojda, Martin</amcr:pozorovatel>
+    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+    <amcr:pilot>Polák</amcr:pilot>
+    <amcr:typ_letounu>Z 43 (OK-WOK)</amcr:typ_letounu>
+    <amcr:ucel_letu>Další pozorovatelé: Smrž. Navigátor: Smrž. Podmínky letu: vegetace. Teplota: 23 (st.). 21 dní bez srážek. Zralost plodin: I/zelená. Viditelné situace: vegetační příznaky; půdní příznaky; viditelné struktury; historická architektura; urbánní jednotky; těžba.</amcr:ucel_letu>
+    <amcr:letiste_start xml:lang="cs" id="HES-000190">Chomutov-Pesvice</amcr:letiste_start>
+    <amcr:letiste_cil xml:lang="cs" id="HES-000190">Chomutov-Pesvice</amcr:letiste_cil>
+    <amcr:pocasi xml:lang="cs" id="HES-000590">slunečno</amcr:pocasi>
+    <amcr:dohlednost xml:lang="cs" id="HES-000102">20–30 km</amcr:dohlednost>
+    <amcr:dokument id="C-LD-000010010">C-LD-000010010</amcr:dokument>
+    <amcr:dokument id="C-LD-000010013">C-LD-000010013</amcr:dokument>
+    <amcr:dokument id="C-LD-000010014">C-LD-000010014</amcr:dokument>
+    <amcr:dokument id="C-LD-000010015">C-LD-000010015</amcr:dokument>
+    <amcr:dokument id="C-LD-000000943">C-LD-000000943</amcr:dokument>
+    <amcr:dokument id="C-LD-000000944">C-LD-000000944</amcr:dokument>
+    <amcr:dokument id="C-LD-000010002">C-LD-000010002</amcr:dokument>
+    <amcr:dokument id="C-LD-000010017">C-LD-000010017</amcr:dokument>
+    <amcr:dokument id="C-LD-000010018">C-LD-000010018</amcr:dokument>
+    <amcr:dokument id="C-LD-000010024">C-LD-000010024</amcr:dokument>
+    <amcr:dokument id="C-LD-000010025">C-LD-000010025</amcr:dokument>
+    <amcr:dokument id="C-LD-000010026">C-LD-000010026</amcr:dokument>
+    <amcr:dokument id="C-LD-000010027">C-LD-000010027</amcr:dokument>
+    <amcr:dokument id="C-LD-000010028">C-LD-000010028</amcr:dokument>
+    <amcr:dokument id="C-LD-000010029">C-LD-000010029</amcr:dokument>
+    <amcr:dokument id="C-LD-000010030">C-LD-000010030</amcr:dokument>
+    <amcr:dokument id="C-LD-000010011">C-LD-000010011</amcr:dokument>
+    <amcr:dokument id="C-LD-000010009">C-LD-000010009</amcr:dokument>
+    <amcr:dokument id="C-LD-000010021">C-LD-000010021</amcr:dokument>
+    <amcr:dokument id="C-LD-000000937">C-LD-000000937</amcr:dokument>
+    <amcr:dokument id="C-LD-000010020">C-LD-000010020</amcr:dokument>
+    <amcr:dokument id="C-LD-000000657">C-LD-000000657</amcr:dokument>
+    <amcr:dokument id="C-LD-000010001">C-LD-000010001</amcr:dokument>
+    <amcr:dokument id="C-LD-000010008">C-LD-000010008</amcr:dokument>
+    <amcr:dokument id="C-LD-000010016">C-LD-000010016</amcr:dokument>
+    <amcr:dokument id="X-C-DL-000000009">X-C-DL-000000009</amcr:dokument>
+  </amcr:let>
+</amcr:amcr>

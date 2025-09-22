@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:heslo>
+    <amcr:ident_cely>HES-000886</amcr:ident_cely>
+    <amcr:nazev_heslare xml:lang="cs">datum_specifikace</amcr:nazev_heslare>
+    <amcr:heslo xml:lang="cs">přesně v letech</amcr:heslo>
+    <amcr:heslo_en xml:lang="en">exact years</amcr:heslo_en>
+    <amcr:popis xml:lang="cs">možno zadat pouze rok; pouze u neregistrovaných akcí</amcr:popis>
+    <amcr:razeni>2</amcr:razeni>
+    <amcr:hierarchie_nize>
+      <amcr:id>hier-1215</amcr:id>
+      <amcr:heslo_podrazene xml:lang="cs" id="HES-001066">terénní odkryv</amcr:heslo_podrazene>
+      <amcr:typ xml:lang="cs">výchozí hodnota</amcr:typ>
+    </amcr:hierarchie_nize>
+  </amcr:heslo>
+</amcr:amcr>

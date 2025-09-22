@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:pian>
+    <amcr:ident_cely>P-1121-100081</amcr:ident_cely>
+    <amcr:stav>2</amcr:stav>
+    <amcr:typ xml:lang="cs" id="HES-001133">bod</amcr:typ>
+    <amcr:presnost xml:lang="cs" id="HES-000861">odchylka jednotky metrů</amcr:presnost>
+    <amcr:geom_system>5514</amcr:geom_system>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
+    <amcr:chranene_udaje>
+      <amcr:zm10>11-21-08</amcr:zm10>
+      <amcr:geom_gml>
+        <gml:Point srsName="EPSG:4326">
+          <gml:coordinates>12.8224622,50.3416221</gml:coordinates>
+        </gml:Point>
+      </amcr:geom_gml>
+      <amcr:geom_wkt EPSG="4326">POINT(12.8224622 50.3416221)</amcr:geom_wkt>
+      <amcr:geom_sjtsk_gml>
+        <gml:Point srsName="EPSG:5514">
+          <gml:coordinates>-851522.07,-998289.77</gml:coordinates>
+        </gml:Point>
+      </amcr:geom_sjtsk_gml>
+      <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-851522.07 -998289.77)</amcr:geom_sjtsk_wkt>
+    </amcr:chranene_udaje>
+    <amcr:historie>
+      <amcr:id>hist-2803192</amcr:id>
+      <amcr:datum_zmeny>2025-07-29T12:43:53.662036+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:typ_zmeny>PI01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803193</amcr:id>
+      <amcr:datum_zmeny>2025-07-29T12:45:24.471627+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:poznamka>N-1121-000000009 -&gt; P-1121-100081</amcr:poznamka>
+      <amcr:typ_zmeny>PI12</amcr:typ_zmeny>
+    </amcr:historie>
+  </amcr:pian>
+</amcr:amcr>

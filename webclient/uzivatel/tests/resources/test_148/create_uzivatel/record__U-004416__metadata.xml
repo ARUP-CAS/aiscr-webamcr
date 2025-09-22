@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:uzivatel>
+    <amcr:ident_cely>U-004416</amcr:ident_cely>
+    <amcr:jmeno>Jan</amcr:jmeno>
+    <amcr:prijmeni>Havrlant</amcr:prijmeni>
+    <amcr:email>jan.havrlant@centrum.cz</amcr:email>
+    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+    <amcr:jazyk>cs</amcr:jazyk>
+    <amcr:aktivni>false</amcr:aktivni>
+    <amcr:admin>false</amcr:admin>
+    <amcr:superadmin>false</amcr:superadmin>
+    <amcr:datum_registrace>2025-06-26T18:14:36.224445+00:00</amcr:datum_registrace>
+  </amcr:uzivatel>
+</amcr:amcr>

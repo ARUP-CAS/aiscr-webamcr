@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:let>
+    <amcr:ident_cely>C-LET-00413</amcr:ident_cely>
+    <amcr:datum>2025-06-08</amcr:datum>
+    <amcr:hodina_zacatek>10</amcr:hodina_zacatek>
+    <amcr:hodina_konec>11</amcr:hodina_konec>
+    <amcr:pozorovatel id="OS-001500">Andelt, Daniel</amcr:pozorovatel>
+    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+    <amcr:fotoaparat>nicnic</amcr:fotoaparat>
+    <amcr:pilot>Havrlant</amcr:pilot>
+    <amcr:typ_letounu>Blaník</amcr:typ_letounu>
+    <amcr:ucel_letu>Vyhlídkový</amcr:ucel_letu>
+    <amcr:letiste_start xml:lang="cs" id="HES-000198">Kolín</amcr:letiste_start>
+    <amcr:letiste_cil xml:lang="cs" id="HES-000198">Kolín</amcr:letiste_cil>
+    <amcr:pocasi xml:lang="cs" id="HES-000590">slunečno</amcr:pocasi>
+    <amcr:dohlednost xml:lang="cs" id="HES-000106">60–70 km</amcr:dohlednost>
+    <amcr:uzivatelske_oznaceni>test</amcr:uzivatelske_oznaceni>
+  </amcr:let>
+</amcr:amcr>

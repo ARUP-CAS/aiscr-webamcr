@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:uzivatel>
+    <amcr:ident_cely>U-000408</amcr:ident_cely>
+    <amcr:jmeno>Zdeněk</amcr:jmeno>
+    <amcr:prijmeni>Omelka</amcr:prijmeni>
+    <amcr:email>zdenek.omelka@email.cz</amcr:email>
+    <amcr:osoba id="OS-001507">Omelka, Zdeněk</amcr:osoba>
+    <amcr:organizace xml:lang="cs" id="ORG-000011">[amaterský archeolog/zájemce]</amcr:organizace>
+    <amcr:jazyk>cs</amcr:jazyk>
+    <amcr:aktivni>true</amcr:aktivni>
+    <amcr:admin>false</amcr:admin>
+    <amcr:superadmin>false</amcr:superadmin>
+    <amcr:skupina xml:lang="cs">Badatel</amcr:skupina>
+    <amcr:notifikace>S-E-A-XX</amcr:notifikace>
+    <amcr:notifikace>S-E-N-01</amcr:notifikace>
+    <amcr:notifikace>S-E-N-02</amcr:notifikace>
+    <amcr:notifikace>S-E-N-05</amcr:notifikace>
+    <amcr:notifikace>S-E-K-01</amcr:notifikace>
+    <amcr:hlidaci_pes xml:lang="cs" id="ruian-116">Jihomoravský kraj</amcr:hlidaci_pes>
+    <amcr:datum_registrace>2024-02-27T22:43:20.909112+00:00</amcr:datum_registrace>
+    <amcr:historie>
+      <amcr:id>hist-2299832</amcr:id>
+      <amcr:datum_zmeny>2017-06-05T17:28:35.102631+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:poznamka>1</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803097</amcr:id>
+      <amcr:datum_zmeny>2024-03-26T07:12:43.823839+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
+      <amcr:typ_zmeny>ZHA</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:spoluprace_nadrizeni>
+      <amcr:id>spol-27</amcr:id>
+      <amcr:vedouci id="U-001172">U-001172</amcr:vedouci>
+      <amcr:stav>2</amcr:stav>
+      <amcr:historie>
+        <amcr:id>hist-2304557</amcr:id>
+        <amcr:datum_zmeny>2021-01-27T19:29:46.110102+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
+      </amcr:historie>
+      <amcr:historie>
+        <amcr:id>hist-2304558</amcr:id>
+        <amcr:datum_zmeny>2021-01-28T09:45:01.457342+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-001172">U-001172</amcr:uzivatel>
+        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:spoluprace_nadrizeni>
+    <amcr:spoluprace_nadrizeni>
+      <amcr:id>spol-92</amcr:id>
+      <amcr:vedouci id="U-001227">U-001227</amcr:vedouci>
+      <amcr:stav>2</amcr:stav>
+      <amcr:historie>
+        <amcr:id>hist-2304647</amcr:id>
+        <amcr:datum_zmeny>2021-04-12T11:43:21.496311+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
+      </amcr:historie>
+      <amcr:historie>
+        <amcr:id>hist-2304648</amcr:id>
+        <amcr:datum_zmeny>2021-04-12T11:53:58.451571+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-001227">U-001227</amcr:uzivatel>
+        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:spoluprace_nadrizeni>
+    <amcr:spoluprace_nadrizeni>
+      <amcr:id>spol-465</amcr:id>
+      <amcr:vedouci id="U-001102">U-001102</amcr:vedouci>
+      <amcr:stav>2</amcr:stav>
+      <amcr:historie>
+        <amcr:id>hist-2305263</amcr:id>
+        <amcr:datum_zmeny>2022-11-08T14:20:15.088367+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
+      </amcr:historie>
+      <amcr:historie>
+        <amcr:id>hist-2305265</amcr:id>
+        <amcr:datum_zmeny>2022-11-09T12:44:36.255914+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-001102">U-001102</amcr:uzivatel>
+        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:spoluprace_nadrizeni>
+    <amcr:spoluprace_nadrizeni>
+      <amcr:id>spol-822</amcr:id>
+      <amcr:vedouci id="U-005357">U-005357</amcr:vedouci>
+      <amcr:stav>1</amcr:stav>
+      <amcr:historie>
+        <amcr:id>hist-2803184</amcr:id>
+        <amcr:datum_zmeny>2025-06-26T18:18:02.337731+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
+        <amcr:poznamka>Zadost</amcr:poznamka>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:spoluprace_nadrizeni>
+  </amcr:uzivatel>
+</amcr:amcr>

@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:archeologicky_zaznam>
+    <amcr:ident_cely>C-200810821A</amcr:ident_cely>
+    <amcr:stav>3</amcr:stav>
+    <amcr:okres xml:lang="cs" id="ruian-3406">Plzeň-jih</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-627615">Dobřany</amcr:hlavni_katastr>
+      <amcr:uzivatelske_oznaceni>ARÚ Praha 77/2012</amcr:uzivatelske_oznaceni>
+    </amcr:chranene_udaje>
+    <amcr:akce>
+      <amcr:projekt id="C-200810821">C-200810821</amcr:projekt>
+      <amcr:typ>R</amcr:typ>
+      <amcr:je_nz>false</amcr:je_nz>
+      <amcr:odlozena_nz>false</amcr:odlozena_nz>
+      <amcr:hlavni_vedouci id="OS-002497">Postránecká, Kateřina</amcr:hlavni_vedouci>
+      <amcr:organizace xml:lang="cs" id="ORG-000043">ZIP o.p.s.</amcr:organizace>
+      <amcr:specifikace_data xml:lang="cs" id="HES-000886">přesně v letech</amcr:specifikace_data>
+      <amcr:datum_zahajeni>2011-01-01</amcr:datum_zahajeni>
+      <amcr:datum_ukonceni>2011-12-31</amcr:datum_ukonceni>
+      <amcr:hlavni_typ xml:lang="cs" id="HES-001055">orientační zjištění</amcr:hlavni_typ>
+      <amcr:chranene_udaje>
+        <amcr:lokalizace_okolnosti>Ústavní ulice, areál psychiatrické léčebny, p. p. č. 820/2. Podnět: stavební úpravy - výstavbě schodiště.</amcr:lokalizace_okolnosti>
+      </amcr:chranene_udaje>
+    </amcr:akce>
+    <amcr:historie>
+      <amcr:id>hist-198022</amcr:id>
+      <amcr:datum_zmeny>2010-09-22T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000180">U-000180</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-571302</amcr:id>
+      <amcr:datum_zmeny>2017-05-23T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-412258</amcr:id>
+      <amcr:datum_zmeny>2017-05-23T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000180">U-000180</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:dokumentacni_jednotka>
+      <amcr:ident_cely>C-200810821A-D01</amcr:ident_cely>
+      <amcr:pian id="P-2122-010119">P-2122-010119</amcr:pian>
+      <amcr:typ xml:lang="cs" id="HES-001070">celek akce</amcr:typ>
+      <amcr:negativni_jednotka>true</amcr:negativni_jednotka>
+    </amcr:dokumentacni_jednotka>
+    <amcr:dokument id="C-TX-201200077">C-TX-201200077</amcr:dokument>
+    <amcr:dokument id="C-DL-202500001">C-DL-202500001</amcr:dokument>
+  </amcr:archeologicky_zaznam>
+</amcr:amcr>
