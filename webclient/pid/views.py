@@ -190,7 +190,15 @@ class RorAutocompleteView(LoginRequiredMixin, ApiView):
 
             for result in data.get("items", []):
                 ror_id = result.get("id", "")
-                name = result.get("name", "")
+                name = ""
+                for item in result.get("names", []):
+                    if (
+                        (item.get("lang") in ("en", "cs") or item.get("lang") is None)
+                        and item.get("value")
+                        and ("label" in item.get("types") or "ror_display" in item.get("types"))
+                    ):
+                        name = item.get("value")
+                        break
                 result_list.append([ror_id, f"{name} ({ror_id})"])
         return result_list
 
