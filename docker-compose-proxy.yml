@@ -1,7 +1,7 @@
 
 services:
   proxy:
-    image: aiscr/webamcr-proxy:${IMAGE_TAG}
+    image: ${proxy_image}
     volumes:
       - static_data:/vol/static
       - nginx_data:/vol/nginx/data

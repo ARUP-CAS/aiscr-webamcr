@@ -123,9 +123,9 @@ script_name=$(basename ${0})
 
 # INPUTS
 project_name="git_aiscr"
-compose_prod="git_docker-compose-production.yml"
-compose_proxy="git_docker-compose-production-proxy.yml"
-compose_override="git_docker-compose-production.override.yml"
+compose_prod="git_docker-compose.yml"
+compose_proxy="git_docker-compose-proxy.yml"
+compose_override="git_docker-compose.override.yml"
 
 # !!! Need to be CHECKED UPDATED ACCORDINGLY to point to the same secrets as in docker-compose-dev-local-db.yml
 secret_db_conf_1="./secrets.json"

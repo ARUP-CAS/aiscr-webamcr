@@ -3,7 +3,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile-production
+      dockerfile: Dockerfile
     secrets:
       - db_conf
       - mail_conf

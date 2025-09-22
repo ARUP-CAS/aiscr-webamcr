@@ -59,7 +59,7 @@ notification_settings = {
     },
     "E-A-02": {
         "zasilat_neaktivnim": False,
-        "predmet": "AMČR: zánam {ident_cely} - archivován | AMCR: record {ident_cely} - archived",
+        "predmet": "AMČR: záznam {ident_cely} - archivován | AMCR: record {ident_cely} - archived",
         "cesta_sablony": "emails/E-A-02.html",
     },
     "E-O-01": {

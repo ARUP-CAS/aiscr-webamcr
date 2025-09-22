@@ -12,6 +12,7 @@ stack_name="swarm_webamcr"
 current_deployment_tag=${1}
 deployment_root=${2}
 branch=${3}
+image_source=${4}
 
 d_stamp="$(date +%Y%m%dT%H%M%S)"
 logpath="${deployment_root}/logs"
@@ -35,10 +36,10 @@ git pull
 print_d1 "START DEPLOYMENT SCRIPT @${d_stamp}"
 
 #Docker deployement
-print_d1 "DOCKER ROLLING OUT"
+print_d1 "DOCKER ROLLING OUT FROM ${image_source} - TAG ${current_deployment_tag}"
 chmod +x ${scriptpath}/prod_deploy.sh
 ${scriptpath}/prod_deploy.sh -x
-${scriptpath}/prod_deploy.sh -t ${current_deployment_tag}
+${scriptpath}/prod_deploy.sh ${image_source} -t ${current_deployment_tag}
 
 #Status check
 print_d1 "STATUS CHECK"
