@@ -1074,7 +1074,7 @@ class SessionIdentifier:
     def clear_cached_files(self):
         cache.delete(f"{self.cache_key}_files")
 
-    def set_ident(self, ident_cely, timeout=3600):
+    def set_ident(self, ident_cely, timeout=options["IDLE_TIME"]):
         old_ident_cely = self.get_ident()
         if old_ident_cely != ident_cely:
             self.clear_cached_files()
@@ -1083,7 +1083,7 @@ class SessionIdentifier:
     def get_ident(self):
         return cache.get(self.cache_key, None)
 
-    def add_file_reference(self, ident, timeout=3600):
+    def add_file_reference(self, ident, timeout=options["IDLE_TIME"]):
         files = cache.get(f"{self.cache_key}_files", set())
         files.add(ident)
         cache.set(f"{self.cache_key}_files", files, timeout)
@@ -1119,9 +1119,9 @@ def get_set_maintenance_in_cache():
         ).order_by("-datum_odstavky", "-cas_odstavky")
         if odstavka.count() > 0:
             maintenance = odstavka[0]
-            cache.set("maintenance", maintenance, 600)
+            cache.set("maintenance", maintenance, options["MAINTENANCE_LOGOUT_TIME"])
         else:
-            cache.set("maintenance", False, 600)
+            cache.set("maintenance", False, options["MAINTENANCE_LOGOUT_TIME"])
             maintenance = False
     return maintenance
 
@@ -1132,8 +1132,8 @@ def is_maintenance_in_progress():
     """
     maintenance = get_set_maintenance_in_cache()
     if maintenance:
-        if pytz.timezone("Europe/Prague").localize(
+        if pytz.timezone(options["TIME_ZONE"]).localize(
             datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
-        ) <= datetime.now(pytz.timezone("Europe/Prague")):
+        ) <= datetime.now(pytz.timezone(options["TIME_ZONE"])):
             return True
     return False
