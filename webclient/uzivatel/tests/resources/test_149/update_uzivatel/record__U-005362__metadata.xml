@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:uzivatel>
+    <amcr:ident_cely>U-005362</amcr:ident_cely>
+    <amcr:jmeno>test</amcr:jmeno>
+    <amcr:prijmeni>badatel</amcr:prijmeni>
+    <amcr:email>badatel2@arup.cas.cz</amcr:email>
+    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+    <amcr:jazyk>cs</amcr:jazyk>
+    <amcr:telefon>608456654</amcr:telefon>
+    <amcr:aktivni>true</amcr:aktivni>
+    <amcr:admin>false</amcr:admin>
+    <amcr:superadmin>false</amcr:superadmin>
+    <amcr:skupina xml:lang="cs">Badatel</amcr:skupina>
+    <amcr:datum_registrace>2024-03-21T08:26:09.709807+00:00</amcr:datum_registrace>
+    <amcr:historie>
+      <amcr:id>hist-2803094</amcr:id>
+      <amcr:datum_zmeny>2024-03-21T08:26:11.188352+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-004219">U-004219</amcr:uzivatel>
+      <amcr:poznamka>role: Badatel</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803095</amcr:id>
+      <amcr:datum_zmeny>2024-03-21T08:26:11.195288+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-004219">U-004219</amcr:uzivatel>
+      <amcr:poznamka>email: badatel2@arup.cas.cz, is_active: True, organizace: Archeologický ústav Praha, first_name: test, last_name: badatel</amcr:poznamka>
+      <amcr:typ_zmeny>ZUA</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-2803184</amcr:id>
+      <amcr:datum_zmeny>2025-06-26T18:16:41.150675+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005362">U-005362</amcr:uzivatel>
+      <amcr:poznamka>telefon: 608456654</amcr:poznamka>
+      <amcr:typ_zmeny>ZUU</amcr:typ_zmeny>
+    </amcr:historie>
+  </amcr:uzivatel>
+</amcr:amcr>

@@ -256,6 +256,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
         "email",
         "telefon",
         "ror",
+        "web",
     )
     fields = (
         "ident_cely",
@@ -275,6 +276,8 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
         "zanikla",
         "cteni_dokumentu",
         "ror",
+        "licence",
+        "web",
     )
     readonly_fields = ("ident_cely",)
 

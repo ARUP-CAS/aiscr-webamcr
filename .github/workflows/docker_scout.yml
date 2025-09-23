@@ -52,7 +52,7 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@v6
         with:
-          file: Dockerfile-production
+          file: Dockerfile
           sbom: ${{ github.event_name != 'pull_request' }}
           provenance: ${{ github.event_name != 'pull_request' }}
           push: ${{ github.event_name != 'pull_request' }}

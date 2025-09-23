@@ -80,7 +80,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://pyyaml.org/
    * - Pygments
-     - 2.19.1
+     - 2.19.2
      - BSD License
      - https://pygments.org
    * - SPARQLWrapper
@@ -95,10 +95,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 3.1.3
      - BSD License
      - UNKNOWN
-   * - XlsxWriter
-     - 3.2.3
-     - BSD License
-     - https://github.com/jmcnamara/XlsxWriter
    * - alabaster
      - 1.0.0
      - BSD License
@@ -147,10 +143,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 3.4.0
      - MIT License
      - https://github.com/asottile/cfgv
-   * - chardet
-     - 5.2.0
-     - GNU Lesser General Public License v2 or later (LGPLv2+)
-     - https://github.com/chardet/chardet
    * - charset-normalizer
      - 3.4.2
      - MIT License
@@ -164,7 +156,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/click-contrib/click-didyoumean
    * - click-plugins
-     - 1.1.1
+     - 1.1.1.2
      - BSD License
      - https://github.com/click-contrib/click-plugins
    * - click-repl
@@ -264,7 +256,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/crccheck/django-object-actions
    * - django-prometheus
-     - 2.3.1
+     - 2.4.0
      - Apache Software License
      - http://github.com/korfuri/django-prometheus
    * - django-recaptcha
@@ -372,7 +364,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.3.0
+     - 2.3.1
      - BSD License
      - https://numpy.org
    * - odfpy
@@ -428,7 +420,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/tox-dev/platformdirs
    * - polars
-     - 1.30.0
+     - 1.31.0
      - MIT License
      - https://www.pola.rs/
    * - polib
@@ -455,10 +447,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 7.0.0
      - BSD License
      - https://github.com/giampaolo/psutil
-   * - psycopg2
-     - 2.9.10
-     - GNU Library or Lesser General Public License (LGPL)
-     - https://psycopg.org/
    * - psycopg2-binary
      - 2.9.10
      - GNU Library or Lesser General Public License (LGPL)
@@ -488,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 5.6.0
+     - 5.6.1
      - BSD License
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -536,7 +524,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.4.1
+     - 4.4.2
      - BSD License
      - https://www.reportlab.com/
    * - requests
@@ -687,6 +675,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 2.0.2
      - BSD License
      - http://www.python-excel.org/
+   * - xlsxwriter
+     - 3.2.5
+     - BSD License
+     - https://github.com/jmcnamara/XlsxWriter
    * - xlwt
      - 1.3.0
      - BSD License

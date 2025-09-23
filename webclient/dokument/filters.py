@@ -39,6 +39,7 @@ from heslar.hesla import (
     HESLAR_JAZYK,
     HESLAR_LETFOTO_TVAR,
     HESLAR_LETISTE,
+    HESLAR_LICENCE,
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
     HESLAR_OBJEKT_DRUH,
@@ -295,6 +296,13 @@ class Model3DFilter(HistorieFilter, FilterSet):
         distinct=True,
     )
 
+    licence = ModelMultipleChoiceFilter(
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LICENCE),
+        label=_("dokument.filters.dokumentFilter.Licence.label"),
+        field_name="licence",
+        widget=SelectMultipleSeparator(),
+    )
+
     def filter_queryset(self, queryset):
         logger.debug("dokument.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
@@ -489,6 +497,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
                     Div("obdobi", css_class="col-sm-2"),
                     Div("areal", css_class="col-sm-2"),
                     Div("aktivity", css_class="col-sm-2"),
+                    Div("licence", css_class="col-sm-2"),
                     css_class="row",
                 ),
                 Div(
@@ -1144,6 +1153,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     Div("autor", css_class="col-sm-2"),
                     Div("organizace", css_class="col-sm-2"),
                     Div("rok_vzniku", css_class="col-sm-4 app-daterangepicker"),
+                    Div("licence", css_class="col-sm-2"),
                     Div("popisne_udaje", css_class="col-sm-4"),
                     Div("jazyky", css_class="col-sm-2"),
                     Div("ulozeni_originalu", css_class="col-sm-2"),
