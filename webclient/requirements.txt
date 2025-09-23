@@ -59,7 +59,7 @@ pytz==2025.2
 python-dateutil==2.9.0.post0
 setuptools==80.9.0
 Werkzeug==3.1.3
-pyOpenSSL==25.2.0
+pyOpenSSL==25.3.0
 sphinxcontrib-googleanalytics==0.5
 SPARQLWrapper==2.0.0
 freezegun==1.5.5
