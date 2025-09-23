@@ -13,6 +13,7 @@
 <script src="{% static 'autocomplete_light/autocomplete_light.js' %}"></script>
 <script src="{% static 'autocomplete_light/select2.js' %}"></script>
 <script src="{% static 'autocomplete_light/i18n/cs.js' %}"></script>
+<script src="{% static 'js/ajax_functions.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -68,7 +69,7 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-dismiss="modal">{% trans "dokument.templates.create.region.submitButton.text" %}</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal" id="submit-btn">{% trans "dokument.templates.create.region.submitButton.text" %}</button>
           </div>
         </form>
       </div>
@@ -159,6 +160,9 @@
           new Modal(options, "create-autor"); 
           
         });
+
+    url = '{% url "dokument:zjisti-licenci-organizace" %}' + "?organizace="
+    get_vychozi_licence("#id_organizace","#id_licence",url)
   </script>
 
 {% endblock %}

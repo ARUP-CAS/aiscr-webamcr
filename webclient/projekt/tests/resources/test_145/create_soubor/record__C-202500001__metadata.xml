@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:projekt>
+    <amcr:ident_cely>C-202500001</amcr:ident_cely>
+    <amcr:stav>1</amcr:stav>
+    <amcr:typ_projektu xml:lang="cs" id="HES-001136">záchranný</amcr:typ_projektu>
+    <amcr:okres xml:lang="cs" id="ruian-3205">Kutná Hora</amcr:okres>
+    <amcr:podnet>testtest1</amcr:podnet>
+    <amcr:planovane_zahajeni>[2025-06-11, 2025-06-12]</amcr:planovane_zahajeni>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
+    <amcr:geom_system>5514</amcr:geom_system>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-672424">Všesoky</amcr:hlavni_katastr>
+      <amcr:lokalizace>test</amcr:lokalizace>
+      <amcr:parcelni_cislo>test</amcr:parcelni_cislo>
+      <amcr:geom_gml>
+        <gml:Point srsName="EPSG:4326">
+          <gml:coordinates>15.1700002,49.84</gml:coordinates>
+        </gml:Point>
+      </amcr:geom_gml>
+      <amcr:geom_wkt EPSG="4326">POINT(15.1700002 49.84)</amcr:geom_wkt>
+      <amcr:geom_sjtsk_gml>
+        <gml:Point srsName="EPSG:5514">
+          <gml:coordinates>-693174.81,-1077354.27</gml:coordinates>
+        </gml:Point>
+      </amcr:geom_sjtsk_gml>
+      <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-693174.81 -1077354.27)</amcr:geom_sjtsk_wkt>
+    </amcr:chranene_udaje>
+    <amcr:historie>
+      <amcr:id>hist-2803190</amcr:id>
+      <amcr:datum_zmeny>2025-07-26T12:00:01+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:oznamovatel>
+      <amcr:oznamovatel>test</amcr:oznamovatel>
+      <amcr:odpovedna_osoba>test</amcr:odpovedna_osoba>
+      <amcr:adresa>testtest1</amcr:adresa>
+      <amcr:telefon>xxx</amcr:telefon>
+      <amcr:email>test@example.com</amcr:email>
+    </amcr:oznamovatel>
+    <amcr:soubor>
+      <amcr:id>soub-646258</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/C-202500001/file/df4cd0d7-f53a-4c1b-b90a-23eda625cdd1</amcr:path>
+      <amcr:nazev>test.jpg</amcr:nazev>
+      <amcr:mimetype>image/jpeg</amcr:mimetype>
+      <amcr:rozsah>1</amcr:rozsah>
+      <amcr:size_mb>0.0048723221</amcr:size_mb>
+      <amcr:sha_512>e4a286b41334ffa0f4dbe9218519e5e6913d5759d5ddbb481fd67a4d1a8c22d30a53d9d1af2bc6873fe6e99e79dcaccd2ab8c0e332201b0c267d89e7f81738b7</amcr:sha_512>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-202500001/file/df4cd0d7-f53a-4c1b-b90a-23eda625cdd1</amcr:url>
+      <amcr:historie>
+        <amcr:id>hist-2803192</amcr:id>
+        <amcr:datum_zmeny>2025-07-30T07:49:50.884911+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+        <amcr:poznamka>test.jpg</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:soubor>
+  </amcr:projekt>
+</amcr:amcr>

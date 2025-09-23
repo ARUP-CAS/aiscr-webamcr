@@ -40,6 +40,7 @@ class Model3DTable(SearchTable):
         default="", accessor="autori_snapshot", verbose_name=_("dokument.tables.modelTable.autori.label")
     )
     stav = tables.columns.Column(default="", verbose_name=_("dokument.tables.modelTable.stav.label"))
+    licence = tables.columns.Column(default="", verbose_name=_("dokument.tables.dokumentTable.licence.label"))
     app = "knihovna_3d"
     first_columns = None
     nahled = tables.columns.Column(
@@ -55,6 +56,7 @@ class Model3DTable(SearchTable):
         "doi",
         "extra_data__zeme",
         "extra_data__region_extra",
+        "licence",
     )
 
     class Meta:
@@ -66,6 +68,7 @@ class Model3DTable(SearchTable):
             "typ_dokumentu",
             "organizace",
             "popis",
+            "licence",
             "rok_vzniku",
             "extra_data__format",
             "extra_data__odkaz",
@@ -83,6 +86,7 @@ class Model3DTable(SearchTable):
             "organizace",
             "rok_vzniku",
             "popis",
+            "licence",
             "extra_data__format",
             "extra_data__odkaz",
             "extra_data__duveryhodnost",

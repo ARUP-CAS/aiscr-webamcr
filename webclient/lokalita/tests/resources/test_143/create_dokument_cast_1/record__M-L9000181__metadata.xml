@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:archeologicky_zaznam>
+    <amcr:ident_cely>M-L9000181</amcr:ident_cely>
+    <amcr:stav>2</amcr:stav>
+    <amcr:okres xml:lang="cs" id="ruian-3709">Prostějov</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-767549">Tištín</amcr:hlavni_katastr>
+    </amcr:chranene_udaje>
+    <amcr:lokalita>
+      <amcr:typ_lokality xml:lang="cs" id="HES-001123">polygon průzkumu</amcr:typ_lokality>
+      <amcr:druh xml:lang="cs" id="HES-000111">polygon leteckého průzkumu</amcr:druh>
+      <amcr:chranene_udaje>
+        <amcr:nazev>Tištín - polygon průzkumu 4</amcr:nazev>
+      </amcr:chranene_udaje>
+    </amcr:lokalita>
+    <amcr:historie>
+      <amcr:id>hist-975379</amcr:id>
+      <amcr:datum_zmeny>2022-05-20T15:38:25+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000691">U-000691</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-978755</amcr:id>
+      <amcr:datum_zmeny>2022-05-20T15:38:25+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000691">U-000691</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:dokumentacni_jednotka>
+      <amcr:ident_cely>M-L9000181-D01</amcr:ident_cely>
+      <amcr:pian id="P-2442-100563">P-2442-100563</amcr:pian>
+      <amcr:typ xml:lang="cs" id="HES-001074">lokalita</amcr:typ>
+      <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
+    </amcr:dokumentacni_jednotka>
+    <amcr:dokument id="M-LN-000000803">M-LN-000000803</amcr:dokument>
+    <amcr:dokument id="M-TX-194300151">M-TX-194300151</amcr:dokument>
+  </amcr:archeologicky_zaznam>
+</amcr:amcr>

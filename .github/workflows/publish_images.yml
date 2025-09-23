@@ -9,34 +9,53 @@ on:
       latest:
         type: boolean
         required: true
-  workflow_dispatch:
-    inputs:
-      tag:
-        type: string
-        required: true
-      latest:
-        type: boolean
-        required: true
 
 env:
-  IMAGE_NAME_REDIS_GITHUB: arup-cas/aiscr-webamcr-redis
-  IMAGE_NAME_PROXY_GITHUB: arup-cas/aiscr-webamcr-proxy
-  IMAGE_NAME_PROD_GITHUB: arup-cas/aiscr-webamcr
-  IMAGE_NAME_REDIS_DOCKERHUB: aiscr/webamcr-redis
-  IMAGE_NAME_PROXY_DOCKERHUB: aiscr/webamcr-proxy
-  IMAGE_NAME_PROD_DOCKERHUB: aiscr/webamcr
   REGISTRY_GITHUB: ghcr.io
   REGISTRY_DOCKERHUB: index.docker.io
+  COMMON_LABELS: |
+    org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
+    org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
+    org.opencontainers.image.licenses=GPL-3.0-or-later
 
 jobs:
   build_publish_images:
     name: Build and publish images
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [prod, proxy, redis]
+        include:
+          - component: prod
+            context: .
+            dockerfile: Dockerfile
+            image_name_github: arup-cas/aiscr-webamcr
+            image_name_dockerhub: aiscr/webamcr
+            description: Archaeological Map of the Czech Republic (AMCR)
+            url: https://github.com/ARUP-CAS/aiscr-webamcr
+
+          - component: proxy
+            context: ./proxy
+            dockerfile: Dockerfile
+            image_name_github: arup-cas/aiscr-webamcr-proxy
+            image_name_dockerhub: aiscr/webamcr-proxy
+            description: Archaeological Map of the Czech Republic (AMCR) - Proxy Server
+            url: https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/proxy
+
+          - component: redis
+            context: ./redis
+            dockerfile: Dockerfile
+            image_name_github: arup-cas/aiscr-webamcr-redis
+            image_name_dockerhub: aiscr/webamcr-redis
+            description: Archaeological Map of the Czech Republic (AMCR) - Redis Server
+            url: https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/redis
+
     permissions:
       id-token: write
       packages: write
       contents: read
       attestations: write
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -59,153 +78,49 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      #---------------------
-      # BUILD PROD
-      #---------------------
-      - name: PROD - extract metadata
-        id: meta_prod
+      - name: Extract metadata
+        id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME_PROD_GITHUB }}
-            ${{ env.IMAGE_NAME_PROD_DOCKERHUB }}
+            ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
+            ${{ matrix.image_name_dockerhub }}
           flavor: |
             latest=false
           tags: |
             type=semver,pattern={{version}},value=${{ inputs.tag }}
             type=raw,value=latest,enable=${{ inputs.latest }}
           labels: |
-            org.opencontainers.image.description=Archaeological Map of the Czech Republic (AMCR)
-            org.opencontainers.image.url=https://github.com/ARUP-CAS/aiscr-webamcr
-            org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
-            org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
-            org.opencontainers.image.licenses=GPL-3.0-or-later
-          
-      - name: PROD - build and push
-        id: push_prod
+            org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.url=${{ matrix.url }}
+            ${{ env.COMMON_LABELS }}
+
+      - name: Build and push image
+        id: push
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: Dockerfile-production
+          context: ${{ matrix.context }}
+          file: ${{ matrix.context }}/${{ matrix.dockerfile }}
           push: true
           sbom: true
           provenance: mode=max
-          tags: ${{ steps.meta_prod.outputs.tags }}
-          labels: ${{ steps.meta_prod.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VERSION_APP=${{ steps.meta_prod.outputs.version }}
-            TAG_APP=${{ github.ref }}
-      
-      - name: PROD - attest - GitHub
-        uses: actions/attest-build-provenance@v1
-        id: attest_prod_github
-        with:
-          subject-name: ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME_PROD_GITHUB }}
-          subject-digest: ${{ steps.push_prod.outputs.digest }}
-          
-      - name: PROD - attest - DockerHub
-        uses: actions/attest-build-provenance@v1
-        id: attest_prod_dockerhub
-        with:
-          subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME_PROD_DOCKERHUB }}
-          subject-digest: ${{ steps.push_prod.outputs.digest }}
-
-      #---------------------
-      # BUILD PROXY
-      #---------------------
-      - name: PROXY - extract metadata
-        id: meta_proxy
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME_PROXY_GITHUB }}
-            ${{ env.IMAGE_NAME_PROXY_DOCKERHUB }}
-          flavor: |
-            latest=false
-          tags: |
-            type=semver,pattern={{version}},value=${{ inputs.tag }}
-            type=raw,value=latest,enable=${{ inputs.latest }}
-          labels: |
-            org.opencontainers.image.description=Archaeological Map of the Czech Republic (AMCR) - Proxy Server
-            org.opencontainers.image.url=https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/proxy
-            org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
-            org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
-            org.opencontainers.image.licenses=GPL-3.0-or-later
-
-      - name: PROXY - build and push
-        id: push_proxy
-        uses: docker/build-push-action@v6
-        with:
-          context: ./proxy
-          push: true
-          sbom: true
-          provenance: mode=max
-          tags: ${{ steps.meta_proxy.outputs.tags }}
-          labels: ${{ steps.meta_proxy.outputs.labels }}
-          build-args: |
-            VERSION_APP=${{ steps.meta_proxy.outputs.version }}
+            VERSION_APP=${{ steps.meta.outputs.version }}
             TAG_APP=${{ github.ref }}
 
-      - name: PROXY - attest - GitHub
+      - name: Attest build - GitHub
         uses: actions/attest-build-provenance@v1
-        id: attest_proxy_github
+        id: attest_github
         with:
-          subject-name: ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME_PROXY_GITHUB }}
-          subject-digest: ${{ steps.push_proxy.outputs.digest }}
-          
-      - name: PROXY - attest - DockerHub
-        uses: actions/attest-build-provenance@v1
-        id: attest_proxy_dockerhub
-        with:
-          subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME_PROXY_DOCKERHUB }}
-          subject-digest: ${{ steps.push_proxy.outputs.digest }}
-          
-      #---------------------
-      # BUILD REDIS
-      #---------------------
-      - name: REDIS - extract metadata
-        id: meta_redis
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME_REDIS_GITHUB }}
-            ${{ env.IMAGE_NAME_REDIS_DOCKERHUB }}
-          flavor: |
-            latest=false
-          tags: |
-            type=semver,pattern={{version}},value=${{ inputs.tag }}
-            type=raw,value=latest,enable=${{ inputs.latest }}
-          labels: |
-            org.opencontainers.image.description=Archaeological Map of the Czech Republic (AMCR) - Redis Server
-            org.opencontainers.image.url=https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/redis
-            org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
-            org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
-            org.opencontainers.image.licenses=GPL-3.0-or-later
+          subject-name: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
+          subject-digest: ${{ steps.push.outputs.digest }}
 
-      - name: REDIS - build and push
-        id: push_redis
-        uses: docker/build-push-action@v6
-        with:
-          context: ./redis
-          push: true
-          sbom: true
-          provenance: mode=max
-          tags: ${{ steps.meta_redis.outputs.tags }}
-          labels: ${{ steps.meta_redis.outputs.labels }}
-          build-args: |
-            VERSION_APP=${{ steps.meta_redis.outputs.version }}
-            TAG_APP=${{ github.ref }}
-
-      - name: REDIS - attest - GitHub
+      - name: Attest build - DockerHub
         uses: actions/attest-build-provenance@v1
-        id: attest_redis_github
+        id: attest_dockerhub
         with:
-          subject-name: ${{ env.REGISTRY_GITHUB }}/${{ env.IMAGE_NAME_REDIS_GITHUB }}
-          subject-digest: ${{ steps.push_redis.outputs.digest }}
+          subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}
+          subject-digest: ${{ steps.push.outputs.digest }}
           
-      - name: REDIS - attest - DockerHub
-        uses: actions/attest-build-provenance@v1
-        id: attest_redis_dockerhub
-        with:
-          subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME_REDIS_DOCKERHUB }}
-          subject-digest: ${{ steps.push_redis.outputs.digest }}

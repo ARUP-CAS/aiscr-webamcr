@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:samostatny_nalez>
+    <amcr:ident_cely>M-202105907-N00892</amcr:ident_cely>
+    <amcr:projekt id="M-202105907">M-202105907</amcr:projekt>
+    <amcr:okres xml:lang="cs" id="ruian-3701">Blansko</amcr:okres>
+    <amcr:hloubka>20</amcr:hloubka>
+    <amcr:obdobi xml:lang="cs" id="HES-000256">kultura púchovská</amcr:obdobi>
+    <amcr:druh_nalezu xml:lang="cs" id="HES-000691">lahev</amcr:druh_nalezu>
+    <amcr:specifikace xml:lang="cs" id="HES-000972">jantar</amcr:specifikace>
+    <amcr:nalezce id="OS-001507">Omelka, Zdeněk</amcr:nalezce>
+    <amcr:datum_nalezu>2023-10-18</amcr:datum_nalezu>
+    <amcr:stav>1</amcr:stav>
+    <amcr:predano>false</amcr:predano>
+    <amcr:predano_organizace xml:lang="cs" id="ORG-000105">Archeologický ústav AV ČR, Brno, v.v.i. - detašované pracoviště Dolní Dunajovice</amcr:predano_organizace>
+    <amcr:geom_system>4326</amcr:geom_system>
+    <amcr:pristupnost xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:katastr xml:lang="cs" id="ruian-676730">Křtiny</amcr:katastr>
+      <amcr:lokalizace>testtest</amcr:lokalizace>
+      <amcr:geom_gml>
+        <gml:Point srsName="EPSG:4326">
+          <gml:coordinates>16.7494989,49.2941092</gml:coordinates>
+        </gml:Point>
+      </amcr:geom_gml>
+      <amcr:geom_wkt EPSG="4326">POINT(16.7494989 49.2941092)</amcr:geom_wkt>
+      <amcr:geom_sjtsk_gml>
+        <gml:Point srsName="EPSG:5514">
+          <gml:coordinates>-586746.29,-1150904.89</gml:coordinates>
+        </gml:Point>
+      </amcr:geom_sjtsk_gml>
+      <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-586746.29 -1150904.89)</amcr:geom_sjtsk_wkt>
+    </amcr:chranene_udaje>
+    <amcr:historie>
+      <amcr:id>hist-2803184</amcr:id>
+      <amcr:datum_zmeny>2025-06-27T15:52:58.760592+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
+      <amcr:typ_zmeny>SN01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:soubor>
+      <amcr:id>soub-646257</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/M-202105907-N00892/file/bdb72fb6-fcd1-46a3-b2d5-b551cfbf28cd</amcr:path>
+      <amcr:nazev>M202105907N00892F01.jpg</amcr:nazev>
+      <amcr:mimetype>image/jpeg</amcr:mimetype>
+      <amcr:rozsah>1</amcr:rozsah>
+      <amcr:size_mb>0.0048723221</amcr:size_mb>
+      <amcr:sha_512>e4a286b41334ffa0f4dbe9218519e5e6913d5759d5ddbb481fd67a4d1a8c22d30a53d9d1af2bc6873fe6e99e79dcaccd2ab8c0e332201b0c267d89e7f81738b7</amcr:sha_512>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/M-202105907-N00892/file/bdb72fb6-fcd1-46a3-b2d5-b551cfbf28cd</amcr:url>
+      <amcr:historie>
+        <amcr:id>hist-2803185</amcr:id>
+        <amcr:datum_zmeny>2025-06-27T15:53:03.406951+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
+        <amcr:poznamka>test.jpg</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:soubor>
+  </amcr:samostatny_nalez>
+</amcr:amcr>
