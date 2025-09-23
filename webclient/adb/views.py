@@ -174,6 +174,7 @@ def smazat_vb(request, ident_cely):
             f"detail_dj_form_{vyskovy_bod.adb.dokumentacni_jednotka.ident_cely}",
             max_age=1000,
             secure=True,
+            httponly=True,
             samesite="Strict",
         )
         fedora_transaction.mark_transaction_as_closed()
