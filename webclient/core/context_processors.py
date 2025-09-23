@@ -77,10 +77,10 @@ def auto_logout_client(request):
         if not is_maintenance_in_progress():
             time_difference = int(
                 (
-                    pytz.timezone("Europe/Prague").localize(
+                    pytz.timezone(options["TIME_ZONE"]).localize(
                         datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
                     )
-                    - datetime.now(pytz.timezone("Europe/Prague"))
+                    - datetime.now(pytz.timezone(options["TIME_ZONE"]))
                 ).total_seconds()
             )
         else:
@@ -88,13 +88,13 @@ def auto_logout_client(request):
             if cache.get(user_time_cache):
                 user_datetime = cache.get(user_time_cache)
                 time_difference = options["MAINTENANCE_LOGOUT_TIME"] - int(
-                    (datetime.now(pytz.timezone("Europe/Prague")) - user_datetime).total_seconds()
+                    (datetime.now(pytz.timezone(options["TIME_ZONE"])) - user_datetime).total_seconds()
                 )
                 if time_difference < 0:
                     time_difference = 0
             else:
                 time_difference = options["MAINTENANCE_LOGOUT_TIME"]
-                cache.set(user_time_cache, datetime.now(pytz.timezone("Europe/Prague")), options["IDLE_TIME"])
+                cache.set(user_time_cache, datetime.now(pytz.timezone(options["TIME_ZONE"])), options["IDLE_TIME"])
             logger.debug(time_difference)
         if time_difference < (options["IDLE_TIME"] + 1):
             maintenance_logout = True
@@ -121,7 +121,7 @@ def auto_logout_client(request):
         ctx["extra_param"] = mark_safe({"logout_type": "maintenance"})
         user_cache = str(request.user.id) + "logout_warning"
         if cache.get(user_cache, True) and time_difference < (options["MAINTENANCE_LOGOUT_TIME"] + 5):
-            cache.set(user_cache, False, 3600)
+            cache.set(user_cache, False, options["IDLE_TIME"])
             ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5
             ctx["logout_warning_text"] = mark_safe("MAINTENANCE_LOGOUT_WARNING")
         ctx["maintenance"] = mark_safe("true")
