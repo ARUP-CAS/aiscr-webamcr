@@ -1674,12 +1674,12 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
         projekt: Projekt = context["object"]
         instance = self._get_existing_record(projekt)
         if instance:
-            prague_timezone = pytz.timezone("Europe/Prague")
+            timezone = pytz.timezone(options["TIME_ZONE"])
             form = UpravitDatumOznameniForm(
                 instance=instance,
                 initial={
                     "datum_oznameni": instance.datum_zmeny,
-                    "cas_oznameni": instance.datum_zmeny.astimezone(prague_timezone),
+                    "cas_oznameni": instance.datum_zmeny.astimezone(timezone),
                 },
             )
         else:
@@ -1694,11 +1694,11 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
         if form.is_valid():
             histore = self._get_existing_record(projekt)
             if histore:
-                prague_timezone = pytz.timezone("Europe/Prague")
+                timezone = pytz.timezone(options["TIME_ZONE"])
                 histore.poznamka = form.cleaned_data["poznamka"]
                 histore.datum_zmeny = datetime.combine(
                     form.cleaned_data["datum_oznameni"], form.cleaned_data["cas_oznameni"]
-                ).astimezone(prague_timezone)
+                ).astimezone(timezone)
             else:
                 histore = form.save(commit=False)
                 histore: Historie
