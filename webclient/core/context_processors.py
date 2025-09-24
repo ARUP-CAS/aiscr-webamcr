@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 
-import pytz
 from core.constants import (
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
@@ -14,7 +13,7 @@ from core.constants import (
     PROJEKT_STAV_ZRUSENY,
     ROLE_ADMIN_ID,
 )
-from core.utils import get_set_maintenance_in_cache, is_maintenance_in_progress
+from core.utils import get_set_maintenance_in_cache, get_timezone, is_maintenance_in_progress
 from django.conf import settings
 from django.core.cache import cache
 from django.utils.safestring import mark_safe
@@ -77,10 +76,8 @@ def auto_logout_client(request):
         if not is_maintenance_in_progress():
             time_difference = int(
                 (
-                    pytz.timezone("Europe/Prague").localize(
-                        datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
-                    )
-                    - datetime.now(pytz.timezone("Europe/Prague"))
+                    get_timezone().localize(datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky))
+                    - datetime.now(get_timezone())
                 ).total_seconds()
             )
         else:
@@ -88,13 +85,13 @@ def auto_logout_client(request):
             if cache.get(user_time_cache):
                 user_datetime = cache.get(user_time_cache)
                 time_difference = options["MAINTENANCE_LOGOUT_TIME"] - int(
-                    (datetime.now(pytz.timezone("Europe/Prague")) - user_datetime).total_seconds()
+                    (datetime.now(get_timezone()) - user_datetime).total_seconds()
                 )
                 if time_difference < 0:
                     time_difference = 0
             else:
                 time_difference = options["MAINTENANCE_LOGOUT_TIME"]
-                cache.set(user_time_cache, datetime.now(pytz.timezone("Europe/Prague")), options["IDLE_TIME"])
+                cache.set(user_time_cache, datetime.now(get_timezone()), options["IDLE_TIME"])
             logger.debug(time_difference)
         if time_difference < (options["IDLE_TIME"] + 1):
             maintenance_logout = True

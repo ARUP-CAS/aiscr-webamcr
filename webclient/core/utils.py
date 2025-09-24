@@ -1119,9 +1119,9 @@ def get_set_maintenance_in_cache():
         ).order_by("-datum_odstavky", "-cas_odstavky")
         if odstavka.count() > 0:
             maintenance = odstavka[0]
-            cache.set("maintenance", maintenance, 600)
+            cache.set("maintenance", maintenance, settings.AUTO_LOGOUT.get("MAINTENANCE_CACHE_TIMEOUT", 600))
         else:
-            cache.set("maintenance", False, 600)
+            cache.set("maintenance", False, settings.AUTO_LOGOUT.get("MAINTENANCE_CACHE_TIMEOUT", 600))
             maintenance = False
     return maintenance
 
@@ -1132,8 +1132,19 @@ def is_maintenance_in_progress():
     """
     maintenance = get_set_maintenance_in_cache()
     if maintenance:
-        if pytz.timezone("Europe/Prague").localize(
+        if get_timezone().localize(
             datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
-        ) <= datetime.now(pytz.timezone("Europe/Prague")):
+        ) <= datetime.now(get_timezone()):
             return True
     return False
+
+
+def get_timezone():
+    """
+    Funkce pro získání časového pásma z nastavení.
+    """
+    try:
+        return pytz.timezone(settings.TIME_ZONE)
+    except Exception as err:
+        logger.error("core.utils.get_timezone.error", extra={"error": err, "value": settings.TIME_ZONE})
+        return pytz.timezone("Europe/Prague")
