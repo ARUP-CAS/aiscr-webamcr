@@ -118,7 +118,7 @@ def auto_logout_client(request):
         ctx["extra_param"] = mark_safe({"logout_type": "maintenance"})
         user_cache = str(request.user.id) + "logout_warning"
         if cache.get(user_cache, True) and time_difference < (options["MAINTENANCE_LOGOUT_TIME"] + 5):
-            cache.set(user_cache, False, 3600)
+            cache.set(user_cache, False, options["IDLE_TIME"])
             ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5
             ctx["logout_warning_text"] = mark_safe("MAINTENANCE_LOGOUT_WARNING")
         ctx["maintenance"] = mark_safe("true")
