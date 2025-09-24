@@ -10,6 +10,7 @@
     <amcr:aktivni>false</amcr:aktivni>
     <amcr:admin>false</amcr:admin>
     <amcr:superadmin>false</amcr:superadmin>
-    <amcr:datum_registrace>2025-06-26T18:14:36.224445+00:00</amcr:datum_registrace>
+    <amcr:skupina xml:lang="cs">Badatel</amcr:skupina>
+    <amcr:datum_registrace>2025-09-23T20:01:29.754895+00:00</amcr:datum_registrace>
   </amcr:uzivatel>
 </amcr:amcr>

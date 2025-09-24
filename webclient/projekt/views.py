@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime, timedelta
 
-import pytz
 import simplejson as json
 from arch_z.models import Akce
 from cacheops import invalidate_model
@@ -75,12 +74,7 @@ from core.message_constants import (
 from core.models import Permissions
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.repository_connector import (
-    FedoraError,
-    FedoraRepositoryConnector,
-    FedoraTransaction,
-    FedoraUpdatedByAnotherTransactionError,
-)
+from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import (
     get_heatmap_project,
     get_num_projects_from_envelope,
@@ -88,6 +82,7 @@ from core.utils import (
     get_project_pas_from_envelope,
     get_project_pian_from_envelope,
     get_projects_from_envelope,
+    get_timezone,
 )
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
@@ -1674,12 +1669,12 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
         projekt: Projekt = context["object"]
         instance = self._get_existing_record(projekt)
         if instance:
-            prague_timezone = pytz.timezone("Europe/Prague")
+            timezone = get_timezone()
             form = UpravitDatumOznameniForm(
                 instance=instance,
                 initial={
                     "datum_oznameni": instance.datum_zmeny,
-                    "cas_oznameni": instance.datum_zmeny.astimezone(prague_timezone),
+                    "cas_oznameni": instance.datum_zmeny.astimezone(timezone),
                 },
             )
         else:
@@ -1694,11 +1689,11 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
         if form.is_valid():
             histore = self._get_existing_record(projekt)
             if histore:
-                prague_timezone = pytz.timezone("Europe/Prague")
+                timezone = get_timezone()
                 histore.poznamka = form.cleaned_data["poznamka"]
                 histore.datum_zmeny = datetime.combine(
                     form.cleaned_data["datum_oznameni"], form.cleaned_data["cas_oznameni"]
-                ).astimezone(prague_timezone)
+                ).astimezone(timezone)
             else:
                 histore = form.save(commit=False)
                 histore: Historie

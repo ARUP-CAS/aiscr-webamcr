@@ -20,17 +20,17 @@
     <amcr:notifikace>S-E-P-02b</amcr:notifikace>
     <amcr:notifikace>S-E-P-02a</amcr:notifikace>
     <amcr:notifikace>zpravodaj</amcr:notifikace>
-    <amcr:datum_registrace>2025-06-26T18:14:36.224445+00:00</amcr:datum_registrace>
+    <amcr:datum_registrace>2025-09-23T20:05:11.318290+00:00</amcr:datum_registrace>
     <amcr:historie>
-      <amcr:id>hist-2803184</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:14:47.864854+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-2803191</amcr:id>
+      <amcr:datum_zmeny>2025-09-23T20:05:25.375552+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
-      <amcr:poznamka>role: </amcr:poznamka>
+      <amcr:poznamka>role: Badatel</amcr:poznamka>
       <amcr:typ_zmeny>HR</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2803185</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:14:47.866901+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-2803192</amcr:id>
+      <amcr:datum_zmeny>2025-09-23T20:05:25.378158+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
       <amcr:poznamka>is_active: True</amcr:poznamka>
       <amcr:typ_zmeny>ZUA</amcr:typ_zmeny>
