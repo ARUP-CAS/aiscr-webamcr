@@ -63,7 +63,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.forms import inlineformset_factory
 from django.http import HttpResponse, JsonResponse
@@ -2044,6 +2044,7 @@ def zapsat(request, zaznam=None):
     )
 
 
+@handle_fedora_error
 def odpojit(request, ident_doku, ident_zaznamu, zaznam):
     """
     Funkce pohledu pro odpojení dokumentu cez modal.
@@ -2128,6 +2129,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
         )
 
 
+@handle_fedora_error(additional_exceptions=(IntegrityError,))
 def pripojit(request, ident_zaznam, proj_ident_cely, typ):
     """
     Funkce pohledu pro pripojení dokumentu cez modal.
