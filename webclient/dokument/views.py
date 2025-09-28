@@ -2451,7 +2451,8 @@ def zjisti_licenci_organizace(request):
     """
     Funkce pohledu pro zjištení licence organizace.
     """
-    organizace_id = request.GET.get("organizace", 0)
+    organizace_id = request.GET.get("organizace", "").strip()
+    organizace_id = int(organizace_id) if organizace_id and organizace_id.isdigit() else 0
     organizace = Organizace.objects.filter(pk=organizace_id)
     if len(organizace) != 1:
         logger.debug("dokument.views.zjisti_licenci_organizace.does_not_exist", extra={"data": organizace_id})
