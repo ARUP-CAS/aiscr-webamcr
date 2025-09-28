@@ -479,7 +479,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
     """
 
     IDENT_PREFIX = "HES"
-    SEQUENCE_NAME = "Osoba"
+    SEQUENCE_NAME = "osoba_ident_seq"
 
     jmeno = models.CharField(verbose_name=_("uzivatel.models.Osoba.jmeno"), max_length=100)
     prijmeni = models.CharField(verbose_name=_("uzivatel.models.Osoba.prijmeni"), max_length=100)
