@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from heslar.models import HeslarHierarchie, HeslarNazev, HeslarOdkaz
 from pid.fields import OrcidAutocompleteField, RorAutocompleteField, WikiDataAutocompleteField
 from pid.forms import FormWithOrcid, FormWithWikidata
+from pid.views import WikiDataAutocompleteView
 from uzivatel.models import Organizace, Osoba
 
 logger = logging.getLogger(__name__)
@@ -90,13 +91,17 @@ class OsobaAdminForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
             initial_value=args[0].get("orcid") if args else None,
             help_text=_("heslar.forms.OsobaAdminForm.orcid.tooltip"),
         )
-        self.fields["wikidata"] = WikiDataAutocompleteField(
-            widget=AutocompleteListSelect2(url="pid:wikidata-autocomplete"),
-            label=_("heslar.forms.OsobaAdminForm.wikidata.label"),
-            instance=self.instance,
-            initial_value=args[0].get("wikidata") if args else None,
-            help_text=_("heslar.forms.OsobaAdminForm.wikidata.tooltip"),
-        )
+        try:
+            WikiDataAutocompleteView.api_call("test")
+            self.fields["wikidata"] = WikiDataAutocompleteField(
+                widget=AutocompleteListSelect2(url="pid:wikidata-autocomplete"),
+                label=_("heslar.forms.OsobaAdminForm.wikidata.label"),
+                instance=self.instance,
+                initial_value=args[0].get("wikidata") if args else None,
+                help_text=_("heslar.forms.OsobaAdminForm.wikidata.tooltip"),
+            )
+        except Exception as err:
+            logger.warning("heslar.admin.OsobaAdminForm.__init__.wikidata_error", extra={"error": err})
 
 
 class OrganizaceAdminForm(forms.ModelForm):
