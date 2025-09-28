@@ -674,7 +674,12 @@ class FedoraCustomAdminSite(admin.AdminSite):
         Creates a view for importing data from a zip file.
         """
 
-        maintenance = (
+        def normalize_file_name(name: str) -> str:
+            if "/" in name:
+                name = name.split("/")[-1]
+            return name.strip().lower()
+
+        maintenance = not (
             OdstavkaSystemu.objects.annotate(
                 datetime_odstavky=ExpressionWrapper(
                     F("datum_odstavky") + F("cas_odstavky"), output_field=DateTimeField()
@@ -714,16 +719,13 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 allowed_file_names = set(
                     [f"{name}.csv".lower() for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
                 )
-                normalized_imported_file_names = set([file_name.lower() for file_name in file_names])
+                normalized_imported_file_names = set([normalize_file_name(file_name) for file_name in file_names])
                 if not normalized_imported_file_names.issubset(allowed_file_names):
                     raise ImportDataUnsupportedMultipleFilesError(normalized_imported_file_names - allowed_file_names)
-                file_names = [f"{name}.csv" for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
                 for file_name in file_names:
-                    try:
-                        with zf.open(file_name) as file:
-                            sheet = pd.read_csv(file)
-                    except KeyError:
-                        continue
+                    with zf.open(file_name) as file:
+                        sheet = pd.read_csv(file)
+                    file_name = normalize_file_name(file_name)
                     for idx, row in sheet.iterrows():
                         mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
                         if mapper_class:
