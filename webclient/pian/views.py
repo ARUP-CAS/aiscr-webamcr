@@ -30,6 +30,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.db import IntegrityError
 from django.db.models import FilteredRelation, OuterRef, Q, Subquery
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -48,7 +49,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
-@handle_fedora_error
+@handle_fedora_error(additional_exceptions=(IntegrityError,))
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
     """
