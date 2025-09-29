@@ -64,8 +64,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/pallets/jinja/
    * - MarkupSafe
-     - 3.0.2
-     - BSD License
+     - 3.0.3
+     - UNKNOWN
      - https://github.com/pallets/markupsafe/
    * - PyRTF3
      - 0.47.5
@@ -76,7 +76,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD
      - https://github.com/Anorov/PySocks
    * - PyYAML
-     - 6.0.2
+     - 6.0.3
      - MIT License
      - https://pyyaml.org/
    * - Pygments
