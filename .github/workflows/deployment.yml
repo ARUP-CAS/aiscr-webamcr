@@ -4,10 +4,10 @@ permissions:
   packages: read
 
 on:
-  workflow_dispatch :
+  workflow_dispatch:
     inputs:
       tag:
-       description: 'Version tag for deployment'
+       description: 'Version tag for deployment (without starting "v", e.g "1.0.0")'
        type: string
        required: true
       environment:
@@ -19,7 +19,7 @@ on:
         required: true
         default: TEST
       source:
-        description: 'Docker imag source'
+        description: 'Docker image source'
         type: choice
         options:
           - GitHub

@@ -104,7 +104,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://github.com/celery/py-amqp
    * - asgiref
-     - 3.9.1
+     - 3.9.2
      - BSD License
      - https://github.com/django/asgiref/
    * - attrs
@@ -124,7 +124,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/billiard
    * - black
-     - 25.1.0
+     - 25.9.0
      - MIT License
      - https://github.com/psf/black
    * - celery
@@ -168,7 +168,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.10.6
+     - 7.10.7
      - Apache-2.0
      - https://github.com/nedbat/coveragepy
    * - crispy-bootstrap4
@@ -180,8 +180,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - UNKNOWN
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
-     - 45.0.7
-     - Apache-2.0 OR BSD-3-Clause
+     - 46.0.1
+     - UNKNOWN
      - https://github.com/pyca/cryptography
    * - defusedxml
      - 0.7.1
@@ -312,7 +312,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - The Unlicense (Unlicense)
      - https://github.com/tox-dev/py-filelock
    * - freezegun
-     - 1.5.3
+     - 1.5.5
      - Apache-2.0
      - https://github.com/spulec/freezegun
    * - funcy
@@ -352,8 +352,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://sass.github.io/libsass-python/
    * - lxml
-     - 6.0.1
-     - BSD License
+     - 6.0.2
+     - BSD-3-Clause
      - https://lxml.de/
    * - multivolumefile
      - 0.2.3
@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.13
+     - 9.0.14
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -423,10 +423,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 4.4.0
      - MIT License
      - https://github.com/tox-dev/platformdirs
-   * - polars
-     - 1.33.1
-     - MIT License
-     - https://www.pola.rs/
    * - polib
      - 1.2.0
      - MIT License
@@ -460,7 +456,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://py7zr.readthedocs.io/
    * - pyOpenSSL
-     - 25.2.0
+     - 25.3.0
      - Apache Software License
      - https://pyopenssl.org/
    * - pybcj
@@ -480,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - UNKNOWN
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.0.0
+     - 6.1.0
      - UNKNOWN
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -503,6 +499,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.4.27
      - MIT License
      - http://github.com/ahupp/python-magic
+   * - pytokens
+     - 0.1.10
+     - MIT License
+     - https://github.com/tusharsadhwani/pytokens
    * - pytz
      - 2025.2
      - MIT License
@@ -528,7 +528,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.4.3
+     - 4.4.4
      - BSD License
      - https://www.reportlab.com/
    * - requests
@@ -679,10 +679,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 2.0.2
      - BSD License
      - http://www.python-excel.org/
-   * - xlsxwriter
-     - 3.2.8
-     - BSD License
-     - https://github.com/jmcnamara/XlsxWriter
    * - xlwt
      - 1.3.0
      - BSD License

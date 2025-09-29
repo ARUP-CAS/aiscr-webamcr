@@ -1,10 +1,10 @@
 name: New version
 
 on:
-  workflow_dispatch :
+  workflow_dispatch:
     inputs:
       new_tag:
-        description: 'Tag name following vx.x.x semantics:'
+        description: 'Tag name following "vx.x.x" semantics (e.g. "v1.0.0"):'
         type: string
         required: true
       pip_update:
