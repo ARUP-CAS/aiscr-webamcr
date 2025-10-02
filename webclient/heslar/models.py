@@ -31,7 +31,8 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
     popis_en = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.popis_en"))
     razeni = models.IntegerField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.razeni"))
 
-    ident_prefix = "HES"
+    IDENT_PREFIX = "HES"
+    SEQUENCE_NAME = "heslar_ident_cely_seq"
 
     @property
     def dokument_typ_material_rada(self):
