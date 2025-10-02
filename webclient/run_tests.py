@@ -69,6 +69,8 @@ else:
         "pas.tests.test_selenium",
         "oznameni.tests.test_selenium",
         "ez.tests.test_selenium",
+        "uzivatel.tests.test_selenium",
+        "heslar.tests.test_selenium",
     ]
 
 

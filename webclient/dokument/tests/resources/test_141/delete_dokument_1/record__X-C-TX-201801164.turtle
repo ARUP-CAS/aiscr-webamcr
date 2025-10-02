@@ -1,0 +1,19 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix fedora: <http://fedora.info/definitions/v4/repository#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://172.16.16.136:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164>
+        dcterms:type           "deleted" ;
+        fedora:created         "2025-09-15T05:40:02.137253Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-09-15T05:40:13.481493Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:createdBy       "AMCR" ;
+        fedora:lastModifiedBy  "AMCR" ;
+        rdf:type               ldp:BasicContainer ;
+        rdf:type               ldp:Resource ;
+        rdf:type               fedora:Resource ;
+        rdf:type               ldp:RDFSource ;
+        rdf:type               ldp:Container ;
+        rdf:type               fedora:Container ;
+        ldp:contains           <http://172.16.16.136:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164/file> ;
+        ldp:contains           <http://172.16.16.136:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164/metadata> .

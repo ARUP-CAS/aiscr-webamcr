@@ -13,12 +13,15 @@ from core.constants import (
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
 )
+from core.models import Soubor
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
 from django.utils.translation import gettext as _
+from freezegun import freeze_time
 from oznameni.tests.test_selenium import OznameniSeleniumTest
 from projekt.models import Projekt
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 
 logger = logging.getLogger("tests")
 
@@ -112,7 +115,6 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.LINK_TEXT, _("projekt.tables.ProjektTable.planovane_zahajeni.label"))
         self.assertIn2("sort=planovane_zahajeni", "sort=-planovane_zahajeni", self.driver)
         check_column_hiding_ids = (
-            ("ident_cely", "ID"),
             ("stav", "Stav"),
             ("hlavni_katastr", "Hlavní katastr"),
             ("podnet", "Podnět"),
@@ -126,6 +128,291 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self._check_column_hiding(item[0], item[1])
             self.driver.refresh()
 
+    def test_145_test_Fedora_projekt_001(self):
+        # Scenar_145 Test Fedory pro projekty
+        logger.info("ProjektSeleniumTest.test_145_test_Fedora_projekt_001.start")
+        self.login("archivar")
+        # C projekt zachrany
+        self.createFedoraRecord("U-005361")
+        self.goToAddress("/projekt/zapsat")
+        time = self.getTime()
+        self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
+        self.driver.execute_script("""map.setZoom(17); return map.getZoom();""")
+        self.wait(0.5)
+        self.clickAtMapCoord(15.1700002, 49.84)
+        self.wait(0.5)
+        self.ElementSendKeys(By.ID, "id_podnet", "test")
+        self.ElementSendKeys(By.ID, "id_lokalizace", "test")
+        self.ElementSendKeys(By.ID, "id_parcelni_cislo", "test")
+        self.ElementSendKeys(By.ID, "id_planovane_zahajeni", "11.6.2025 - 12.6.2025")
+        self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys(Keys.ESCAPE)
+        self.ElementClick(By.ID, "id_oznamovatel")
+        self.ElementSendKeys(By.ID, "id_oznamovatel", "test")
+        self.ElementSendKeys(By.ID, "id_odpovedna_osoba", "test")
+        self.ElementSendKeys(By.ID, "id_adresa", "test")
+        self.ElementSendKeys(By.ID, "id_telefon", "xxx")
+        self.ElementSendKeys(By.ID, "id_email", "test@example.com")
+        # self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
+        with freeze_time("2025-07-26 12:00:01", ignore=["core.tests.test_selenium"]):
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.ID, "actionSubmitBtn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/create_projekt_zachranny")
+        ident = self.driver.current_url.split("/")[-1]
+
+        # U projekt detail
+        time = self.getTime()
+        self.ElementClick(By.ID, "edit-btn")
+        self.ElementSendKeys(By.ID, "id_podnet", "test1")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-id-save")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/update_projekt")
+
+        # U oznamovatel
+        time = self.getTime()
+        self.ElementClick(By.ID, "edit-btn2")
+        self.ElementSendKeys(By.ID, "id_adresa", "test1")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-id-save")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/update_oznamovatel")
+
+        # D soubor
+        time = self.getTime()
+        file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident).first().pk
+        self.ElementClick(By.ID, f"file-smazat-{file}")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_soubor")
+
+        # C soubor
+        time = self.getTime()
+        self.ElementClick(By.ID, "add_dokumentace")
+        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "buttonUploadSubmit")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/create_soubor")
+
+        # C projektova akce
+        self.createFedoraRecord("C-201121404")
+        self.goToAddress("/projekt/detail/C-201121404")
+        time = self.getTime()
+        self.ElementClick(By.ID, "add_akce")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "actionSubmitBtn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/create_projektova_akce")
+
+        # zmena pristupnosti akce
+        time = self.getTime()
+        self.ElementClick(By.ID, "edit-btn")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .btn")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-5-2 > .text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "actionSubmitBtn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/zmena_pristupnosti_akce")
+
+        # D projektova akce
+        time = self.getTime()
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "akce-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_projektova_akce")
+
+        # D projekt
+        self.createFedoraRecord("X-M-202393246")
+        self.goToAddress("/projekt/detail/X-M-202393246")
+        time = self.getTime()
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "projekt-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_projekt")
+
+        # reC projektova akce
+        self.createFedoraRecord("C-202111043")
+        self.createFedoraRecord("C-202111043A")
+        self.goToAddress("/id/C-202111043A")
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "akce-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.goToAddress("/projekt/detail/C-202111043")
+        time = self.getTime()
+        self.ElementClick(By.ID, "add_akce")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "actionSubmitBtn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/recreate_projektova_akce")
+        self.check_fedora_delete(["model/deleted/member/C-202111043A"])
+
+        logger.info("ProjektSeleniumTest.test_145_test_Fedora_projekt_001.end")
+
+    def test_146_test_Fedora_projekt_002(self):
+        # Scenar_146 Test Fedory pro projekty
+        logger.info("ProjektSeleniumTest.test_146_test_Fedora_projekt_002.start")
+
+        # C oznameni
+        time = self.getTime()
+        with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
+            ident = OznameniSeleniumTest.oznameni_projektu(self)
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt")
+
+        # U projektu - delete dokumentace
+        self.login("archivar")
+        self.goToAddress(f"/id/{ident}")
+        time = self.getTime()
+        file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident).first().pk
+        self.ElementClick(By.ID, f"file-smazat-{file}")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_soubor")
+
+        # ident cely projektu
+        self.goToAddress(f"/id/{ident}")
+        time = self.getTime()
+        self.ElementClick(By.ID, "projekt-schvalit")
+        with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.ID, "submit-btn")
+        # ident_new = self.driver.find_element(By.ID, "id-app-entity-item").text
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/ident_cely")
+        self.check_fedora_delete(["record/X-C-000000001"])
+
+        # C projekt pruzkum
+        self.goToAddress("/projekt/zapsat")
+        time = self.getTime()
+        self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-3 > .text")
+        self.driver.execute_script("""map.setZoom(17); return map.getZoom();""")
+        self.wait(0.5)
+        self.clickAtMapCoord(15.1700002, 49.84)
+        self.wait(0.5)
+        self.ElementSendKeys(By.ID, "id_podnet", "test")
+        self.ElementSendKeys(By.ID, "id_lokalizace", "test")
+        self.ElementSendKeys(By.ID, "id_parcelni_cislo", "test")
+        self.ElementSendKeys(By.ID, "id_planovane_zahajeni", "11.6.2025 - 12.6.2025")
+        self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys(Keys.ESCAPE)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "actionSubmitBtn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt_pruzkum")
+        ident = self.driver.current_url.split("/")[-1]
+
+        # C dokument_cast
+        self.createFedoraRecord("C-202209999")
+        self.goToAddress("/id/C-202209999")
+        time = self.getTime()
+        self.ElementClick(By.ID, "others_doc")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "dokument-add")
+        self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Pavloň")
+        self.wait_for_select2_results()
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        self.ElementClick(By.ID, "id_rok_vzniku")
+        self.ElementSendKeys(By.ID, "id_rok_vzniku", "2023")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_organizace .filter-option-inner-inner")
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(
+            "Archeologický ústav Brno"
+        )
+        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_typ_dokumentu .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_material_originalu .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-0 > .text")
+        self.ElementClick(By.ID, "id_popis")
+        self.ElementSendKeys(By.ID, "id_popis", "test")
+        self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.ID, "bs-select-7-1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_licence .btn")
+        self.ElementClick(By.ID, "bs-select-8-1")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "newDocumentSubmitBtn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_dokument_cast")
+        doc_ident = self.driver.current_url.split("/")[-1]
+
+        # C PAS
+        time = self.getTime()
+        self.goToAddress("/id/C-202209999")
+        self.ElementClick(By.ID, "add_PAS")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "newEntitySubmitBtn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_PAS")
+
+        # zmena pristupnosti PAS
+        time = self.getTime()
+        self.ElementClick(By.ID, "pas-edit-ulozeni")
+        self.ElementSendKeys(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo", "1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .btn")
+        self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/zmena_pristupnosti")
+        PAS_ident = self.driver.current_url.split("/")[-1]
+
+        # D dokument_cast
+        time = self.getTime()
+        self.goToAddress("/id/C-202209999")
+        self.ElementClick(By.ID, f"dokument-odpojit-{doc_ident}")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_dokument_cast")
+
+        # D PAS
+        time = self.getTime()
+        self.goToAddress(f"/id/{PAS_ident}")
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "pas-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_PAS")
+
+        # D projekt C-202210662
+        self.logout()
+        self.login("administrator")
+        self.createFedoraRecord("C-202210662")
+        self.createFedoraRecord("C-200810918A-DT-15")
+        self.goToAddress("/id/C-202210662")
+        time = self.getTime()
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "projekt-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_projekt")
+
+        # reC PAS
+        self.logout()
+        self.login("archivar")
+        self.createFedoraRecord("M-202302810")
+        self.createFedoraRecord("M-202302810-N00001")
+        self.goToAddress("/id/M-202302810-N00001")
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "pas-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.goToAddress("/projekt/detail/M-202302810")
+        time = self.getTime()
+        self.ElementClick(By.ID, "add_PAS")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "newEntitySubmitBtn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/recreate_PAS")
+        self.check_fedora_delete(["model/deleted/member/M-202302810-N00001"])
+
+        # C dokument_cast existujici
+        self.createFedoraRecord("C-202114070")
+        self.createFedoraRecord("M-TX-194300151")
+        time = self.getTime()
+        self.goToAddress("/id/C-202114070")
+        self.ElementClick(By.ID, "others_doc")
+        self.ElementClick(By.ID, "dokument-pripojit")
+        self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("M-TX-194300151")
+        self.wait_for_select2_results()
+        self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_dokument_cast_1")
+
+        logger.info("ProjektSeleniumTest.test_146_test_Fedora_projekt_002.end")
+
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
@@ -137,10 +424,10 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         project_count_old = Projekt.objects.count()
         self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
-        self.driver.execute_script("""map.setZoom(16); return map.getZoom();""")
-        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 0, 0)
-        self.wait(self.wait_interval)
-        self.clickAt(self.driver.find_element(By.ID, "projectMap"), 0, 0)
+        self.driver.execute_script("""map.setZoom(17); return map.getZoom();""")
+        self.wait(0.5)
+        self.clickAtMapCoord(15.1700002, 49.84)
+        self.wait(0.5)
         self.driver.find_element(By.ID, "id_podnet").send_keys("test")
         self.driver.find_element(By.ID, "id_lokalizace").send_keys("test")
         self.driver.find_element(By.ID, "id_parcelni_cislo").send_keys("test")
@@ -150,6 +437,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
             + (datetime.datetime.today() + datetime.timedelta(days=date_to)).strftime("%d.%m.%Y")
         )
         self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys(datum)
+        self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys(Keys.ESCAPE)
         self.ElementClick(By.ID, "id_oznamovatel")
         self.driver.find_element(By.ID, "id_oznamovatel").send_keys("test")
         self.driver.find_element(By.ID, "id_odpovedna_osoba").send_keys("test")

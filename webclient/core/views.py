@@ -9,7 +9,7 @@ from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 
-import polars as pl
+import pandas
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
@@ -1059,7 +1059,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             redis_variable_name = f"export_{self.request.user.email.replace('@', '(at)')}_{export_suffix_string}"
             update_progress_bar(r, redis_variable_name, 0, _("core.templates.core.export_modal.collecting_data"))
             dataset = self.get_table_data()
-            ident_cely_list = set(dataset.values_list(self.redis_value_list_field, flat=True))
+            ident_cely_list = list(dataset.values_list(self.redis_value_list_field, flat=True))
             ident_cely_list = [f"{self.redis_snapshot_prefix}_{x}" for x in ident_cely_list]
             logger.debug(
                 "core.views.SearchListView.create_export.redis_variable_name",
@@ -1104,24 +1104,21 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
             if update_progress_bar(r, redis_variable_name, 100, _("core.templates.core.export_modal.converting_data")):
                 return HttpResponse()
-            data = pl.DataFrame(data)
+            data = pandas.DataFrame(data)
             filtered_column_order = [col.name for col in self.get_table().columns if col.name in data.columns]
-            data = data.select(filtered_column_order)
+            data = data[filtered_column_order]
             column_names = {str(column.name): str(column.verbose_name) for column in self.get_table().columns}
-            data = data.rename(column_names, strict=False)
-            for column in data.columns:
-                if data[column].dtype == pl.Utf8:
-                    data = data.with_columns(pl.col(column).str.strip_chars())
-
+            data = data.rename(columns=column_names)
             if export_format == TableExport.CSV:
                 filetype = 'attachment; filename="export.csv"'
-                resdata = data.write_csv()
+                resdata = data.to_csv(index=False)
             elif export_format == TableExport.JSON:
                 filetype = 'attachment; filename="export.json"'
-                resdata = data.write_json()
+                resdata = data.to_json(orient="records", force_ascii=False, index=False)
             elif export_format == TableExport.XLSX:
                 excel_file = BytesIO()
-                data.write_excel(workbook=excel_file)
+                with pandas.ExcelWriter(excel_file, engine="openpyxl") as writer:
+                    data.to_excel(writer, index=False)
                 resdata = excel_file.getvalue()
                 filetype = "attachment; filename=export.xlsx"
             else:

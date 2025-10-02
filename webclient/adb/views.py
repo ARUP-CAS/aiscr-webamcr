@@ -107,7 +107,6 @@ def smazat(request, ident_cely):
         response.set_cookie(
             "show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000, secure=True, samesite="Strict"
         )
-        fedora_transaction.mark_transaction_as_closed()
         return response
     else:
         context = {

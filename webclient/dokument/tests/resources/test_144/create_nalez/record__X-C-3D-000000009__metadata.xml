@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:dokument>
+    <amcr:ident_cely>X-C-3D-000000009</amcr:ident_cely>
+    <amcr:stav>1</amcr:stav>
+    <amcr:typ_dokumentu xml:lang="cs" id="HES-001113">3D – rekonstrukce</amcr:typ_dokumentu>
+    <amcr:material_originalu xml:lang="cs" id="HES-000217">digitální soubor</amcr:material_originalu>
+    <amcr:rada xml:lang="cs" id="HES-000870">data 3D</amcr:rada>
+    <amcr:autor id="OS-001170" poradi="1">Švejcar, Ondřej</amcr:autor>
+    <amcr:rok_vzniku>2024</amcr:rok_vzniku>
+    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:ulozeni_originalu xml:lang="cs" id="HES-001166">primárně digitální dokument</amcr:ulozeni_originalu>
+    <amcr:popis>test1</amcr:popis>
+    <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
+    <amcr:historie>
+      <amcr:id>hist-2803184</amcr:id>
+      <amcr:datum_zmeny>2025-06-28T05:52:05.444884+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:extra_data>
+      <amcr:format xml:lang="cs" id="HES-000152">3D – Autocad (*.dwg)</amcr:format>
+      <amcr:duveryhodnost>100</amcr:duveryhodnost>
+      <amcr:geom_system>4326</amcr:geom_system>
+    </amcr:extra_data>
+    <amcr:dokument_cast>
+      <amcr:ident_cely>X-C-3D-000000009-D001</amcr:ident_cely>
+      <amcr:komponenta>
+        <amcr:ident_cely>X-C-3D-000000009-K001</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000253">paleolit</amcr:obdobi>
+        <amcr:areal xml:lang="cs" id="HES-000081">sídliště</amcr:areal>
+        <amcr:aktivita xml:lang="cs" id="HES-000001">sídlení</amcr:aktivita>
+        <amcr:nalez_objekt>
+          <amcr:id>nalo-180492</amcr:id>
+          <amcr:druh xml:lang="cs" id="HES-000438">budova/stavba</amcr:druh>
+          <amcr:specifikace xml:lang="cs" id="HES-000893">konstrukce – zděná</amcr:specifikace>
+          <amcr:pocet>1</amcr:pocet>
+          <amcr:poznamka>test</amcr:poznamka>
+        </amcr:nalez_objekt>
+        <amcr:nalez_predmet>
+          <amcr:id>nalp-175763</amcr:id>
+          <amcr:druh xml:lang="cs" id="HES-000706">zlomek mazanice</amcr:druh>
+          <amcr:specifikace xml:lang="cs" id="HES-000992">malta</amcr:specifikace>
+          <amcr:pocet>2</amcr:pocet>
+          <amcr:poznamka>test</amcr:poznamka>
+        </amcr:nalez_predmet>
+      </amcr:komponenta>
+    </amcr:dokument_cast>
+  </amcr:dokument>
+</amcr:amcr>

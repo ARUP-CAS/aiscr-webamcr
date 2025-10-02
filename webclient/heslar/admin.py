@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import admin
 from django.http import StreamingHttpResponse
 from django_object_actions import DjangoObjectActions, action
@@ -13,7 +15,10 @@ from heslar.models import (
     RuianKraj,
     RuianOkres,
 )
+from pid.views import WikiDataAutocompleteView
 from uzivatel.models import Organizace, Osoba
+
+logger = logging.getLogger(__name__)
 
 
 class ObjectWithMetadataAdmin(DjangoObjectActions, admin.ModelAdmin):
@@ -213,10 +218,28 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
     search_fields = ("ident_cely", "vypis_cely", "vypis", "prijmeni", "rodne_prijmeni", "jmeno", "orcid", "wikidata")
     readonly_fields = ("ident_cely",)
 
+    def __init__(self, *args, **kwargs):
+        self.wiki_data_available = None
+        super().__init__(*args, **kwargs)
+
     def has_delete_permission(self, request, obj=None):
         if obj is not None:
             return not obj.has_connections
         return super().has_delete_permission(request)
+
+    def get_fields(self, request, obj=None):
+        fields = list(self.fields)
+        if self.wiki_data_available is None:
+            try:
+                WikiDataAutocompleteView.api_call("test")
+            except Exception as err:
+                logger.warning("heslar.admin.OsobaAdmin.get_fields.wikidata_error", extra={"error": err})
+                self.wiki_data_available = False
+            else:
+                self.wiki_data_available = True
+        if not self.wiki_data_available:
+            fields.remove("wikidata")
+        return tuple(fields)
 
 
 @admin.register(Organizace)
@@ -256,6 +279,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
         "email",
         "telefon",
         "ror",
+        "web",
     )
     fields = (
         "ident_cely",
@@ -276,6 +300,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
         "cteni_dokumentu",
         "ror",
         "licence",
+        "web",
     )
     readonly_fields = ("ident_cely",)
 

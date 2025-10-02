@@ -51,7 +51,7 @@
       {% if allow_replace and show.soubor_nahradit %}
           <td>
             <a href="{% url 'core:update_file' vazba_trida ident soubor.id %}?next={{ next_url }}{{ ident }}">
-              <span class="material-icons app-color-danger">upgrade</span>
+              <span class="material-icons app-color-danger" id="file-upgrade-{{soubor.id}}">upgrade</span>
             </a>
           </td>
       {% endif %}

@@ -341,6 +341,11 @@ LOGGING = {
             "level": "WARNING",
             "propagate": False,
         },
+        "request.timer": {
+            "handlers": ["logstash", "console"],
+            "level": "INFO",
+            "propagate": False,
+        },
         "tests": {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
@@ -494,6 +499,7 @@ AUTO_LOGOUT = {
     "MESSAGE": AUTOLOGOUT_AFTER_LOGOUT,
     "REDIRECT_TO_LOGIN_IMMEDIATELY": True,
     "IDLE_WARNING_TIME": 600,
+    "MAINTENANCE_CACHE_TIMEOUT": 600,
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

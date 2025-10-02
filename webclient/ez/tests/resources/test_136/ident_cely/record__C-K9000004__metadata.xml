@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='utf-8'?>
+<amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
+  <amcr:archeologicky_zaznam>
+    <amcr:ident_cely>C-K9000004</amcr:ident_cely>
+    <amcr:stav>3</amcr:stav>
+    <amcr:okres xml:lang="cs" id="ruian-3503">Chomutov</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-696013">Blahuňov</amcr:hlavni_katastr>
+    </amcr:chranene_udaje>
+    <amcr:lokalita>
+      <amcr:typ_lokality xml:lang="cs" id="HES-001124">krajina</amcr:typ_lokality>
+      <amcr:druh xml:lang="cs" id="HES-000117">krajinný prvek</amcr:druh>
+      <amcr:chranene_udaje>
+        <amcr:nazev>Blahuňov</amcr:nazev>
+      </amcr:chranene_udaje>
+    </amcr:lokalita>
+    <amcr:historie>
+      <amcr:id>hist-973101</amcr:id>
+      <amcr:datum_zmeny>2021-02-01T20:19:22+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-976477</amcr:id>
+      <amcr:datum_zmeny>2021-02-01T20:19:22+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-788</amcr:id>
+      <amcr:ext_zdroj id="BIB-0000027">BIB-0000027</amcr:ext_zdroj>
+    </amcr:ext_odkaz>
+    <amcr:dokument id="C-LD-000010013">C-LD-000010013</amcr:dokument>
+    <amcr:dokument id="C-LD-000010014">C-LD-000010014</amcr:dokument>
+  </amcr:archeologicky_zaznam>
+</amcr:amcr>

@@ -79,7 +79,6 @@ logs/*
 
 #files not in dev scope
 .scannerwork/*
-*.json
 *.tar
 
 #jnihnat - local changes

@@ -1,9 +1,7 @@
 import logging
-from datetime import datetime
 from functools import wraps
 
-import pytz
-from core.utils import get_set_maintenance_in_cache
+from core.utils import get_set_maintenance_in_cache, is_maintenance_in_progress
 from django.shortcuts import render
 
 logger = logging.getLogger(__name__)
@@ -39,9 +37,7 @@ def odstavka_in_progress(view_func):
     def wrapper(request, *args, **kwargs):
         maintenance = get_set_maintenance_in_cache()
         if maintenance:
-            if pytz.timezone("Europe/Prague").localize(
-                datetime.combine(maintenance.datum_odstavky, maintenance.cas_odstavky)
-            ) <= datetime.now(pytz.timezone("Europe/Prague")):
+            if is_maintenance_in_progress():
                 try:
                     language = request.LANGUAGE_CODE
                 except Exception:

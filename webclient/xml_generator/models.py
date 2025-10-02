@@ -62,6 +62,9 @@ class BaseAmcrModel(models.Model):
 
 
 class ModelWithMetadata(BaseAmcrModel):
+    IDENT_PREFIX = None
+    SEQUENCE_NAME = None
+
     ident_cely = models.TextField(unique=True)
 
     def __init__(self, *args, **kwargs):
