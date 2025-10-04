@@ -593,11 +593,13 @@ class ImportModelMapper(ABC):
     historie_typ_vazby = None
     soubory_typ_vazby = None
     komponenty_vazba = False
-    require_primary_key_value = False
+    require_primary_key_value = None
     primary_key_prefix = None
 
     def __init__(self, value_dict):
         self.value_dict = value_dict
+        if self.require_primary_key_value is None:
+            self.require_primary_key_value = isinstance(self.primary_key, tuple)
 
     @classmethod
     def get_import_data_mapper_dict(cls):
@@ -688,8 +690,8 @@ class ImportModelMapper(ABC):
 
         if (
             not self.require_primary_key_value
-            and self.primary_key == "ident_cely"
-            and "ident_cely" not in self.value_dict
+            and isinstance(self.primary_key, str)
+            and self.primary_key not in self.value_dict
         ):
             return None
 
@@ -733,7 +735,11 @@ class ImportModelMapper(ABC):
         """
 
         model_field = cls.model_class._meta.get_field(field_name)
-        if isinstance(model_field, models.TextField) or isinstance(model_field, models.CharField):
+        if (
+            isinstance(model_field, models.TextField)
+            or isinstance(model_field, models.CharField)
+            or isinstance(model_field, models.URLField)
+        ):
             return BaseImportField()
         if isinstance(model_field, models.IntegerField):
             return IntegerImportField()
@@ -1096,6 +1102,7 @@ class OrganizaceMapper(ImportModelMapper):
         "zanikla",
         "cteni_dokumentu",
         "ror",
+        "web",
     )
     model_class = Organizace
     require_primary_key_value = True
@@ -1110,6 +1117,7 @@ class OrganizaceMapper(ImportModelMapper):
         field_mapping["zverejneni_pristupnost"] = LookupImportField(
             Heslar, limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST}
         )
+        field_mapping["licence"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LICENCE})
         return field_mapping
 
 
@@ -1175,7 +1183,6 @@ class ProjektKatastrMapper(ImportModelMapper):
     model_class = ProjektKatastr
     primary_key = ("projekt", "katastr")
     primary_key_filter_field = ("projekt__ident_cely", "katastr__kod")
-    require_primary_key_value = True
     primary_key_prefix = (None, "ruian")
 
     @classmethod
@@ -1465,7 +1472,6 @@ class AdbMapper(ImportModelMapper):
 class AdbVyskovyBod(ImportModelMapper):
     fields = ("ident_cely", "geom")
     model_class = VyskovyBod
-    require_primary_key_value = True
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
@@ -1964,14 +1970,7 @@ class UzivatelOpravneniMapper(ImportModelMapper):
 
 
 class SouborMapper(ImportModelMapper):
-    fields = (
-        "path",
-        "nazev",
-        "mimetype",
-        "rozsah",
-        "size_mb",
-        "sha_512",
-    )
+    fields = ("nazev",)
     model_class = Soubor
     primary_key = "id"
     primary_key_prefix = "soub"

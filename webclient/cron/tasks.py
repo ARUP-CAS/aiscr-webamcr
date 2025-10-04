@@ -25,7 +25,7 @@ from core.constants import (
 )
 from core.coordTransform import transform_geom_to_sjtsk
 from core.forms import ImportDataAdminForm
-from core.import_data_mappers import ImportModelMapper, UzivatelNotifikaceMapper, UzivatelOpravneniMapper
+from core.import_data_mappers import ImportModelMapper, SouborMapper, UzivatelNotifikaceMapper, UzivatelOpravneniMapper
 from core.models import Soubor, SouborVazby
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from core.setting_models import CustomAdminSettings
@@ -633,10 +633,13 @@ def run_data_import(job_id, user_id):
 
     record_count = int(redis_connector.get(f"import_data_count_{job_id}").decode("utf-8"))
     performed_action = redis_connector.get(f"import_performed_action_{job_id}").decode("utf-8")
+    redis_connector.set(f"import_data_progress_{job_id}", json.dumps([]))
+    redis_connector.set(f"import_data_files_{job_id}", json.dumps([]))
     failed = False
     import_results = {}
     mapper_classes = {}
     all_records = []
+    import_files_list: list[Soubor] = []
     stopped = False
 
     try:
@@ -650,6 +653,14 @@ def run_data_import(job_id, user_id):
                     mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record.pop("__file_name"))
                     mapper_classes[record_id] = mapper_class
                     records = mapper_class(serialized_record).create_records(performed_action)
+                    if mapper_class == SouborMapper:
+                        import_files_list += records
+                        record: Soubor = records[0]
+                        import_results[
+                            record_id
+                        ] = f"{_('cron.tasks.run_data_import.file')}, {str(record.nazev)} ({record.vazba.navazany_objekt.ident_cely})"
+                        redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
+                        continue
                     for record in records:
                         redis_connector.set(
                             f"import_data_status_message_{job_id}",
@@ -734,7 +745,7 @@ def run_data_import(job_id, user_id):
                     break
     except Exception as err:
         redis_connector.set(f"import_data_stop_{job_id}", 1)
-        logger.info("cron.tasks.run_data_import.database_error", extra={"error": err, "job_id": job_id})
+        logger.error("cron.tasks.run_data_import.database_error", extra={"error": err, "job_id": job_id})
         for record_id in range(record_count):
             import_results[record_id] = f"{_('cron.tasks.run_data_import.error.database_error')}: {err}, "
         failed = True
@@ -763,100 +774,71 @@ def run_data_import(job_id, user_id):
                 redis_connector.set(
                     f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.file_import.connected")
                 )
-                for record_id in range(record_count):
+                for soubor in import_files_list:
+                    soubor: Soubor
                     if stopped:
                         break
-                    mapper_class = mapper_classes[record_id]
-                    serialized_record = json.loads(
-                        redis_connector.get(f"import_data_{job_id}_record_{record_id}").decode("utf-8")
-                    )
-                    if "ident_cely" not in serialized_record:
-                        continue
-                    record = mapper_class.model_class.objects.filter(ident_cely=serialized_record["ident_cely"]).first()
-                    if hasattr(record, "soubory"):
-                        logger.info(
-                            "cron.tasks.run_data_import.files.insert.start",
-                            extra={"ident_cely": record.ident_cely, "job_id": job_id},
+                    ident_cely = soubor.vazba.navazany_objekt.ident_cely
+                    if ident_cely in ftp.nlst():
+                        ftp.cwd(ident_cely)
+                        filename = soubor.nazev
+                        stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
+                        if stopped:
+                            logger.info("cron.tasks.run_data_import.files.insert.stopped", extra={"job_id": job_id})
+                            redis_connector.set(
+                                f"import_data_status_message_{job_id}",
+                                _("cron.tasks.run_data_import.stopped_by_user"),
+                            )
+                            break
+                        soubor_query = Soubor.objects.filter(nazev=filename, vazba=soubor.vazba)
+                        if (
+                            not soubor_query.exists()
+                            and performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE
+                        ):
+                            import_results_files.append(
+                                {
+                                    "ident_cely": ident_cely,
+                                    "file_name": filename,
+                                    "mimetype": None,
+                                    "size_mb": None,
+                                }
+                            )
+                            redis_connector.set(f"import_data_files_{job_id}", json.dumps(import_results_files))
+                            continue
+                        elif soubor_query.exists() and performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+                            import_results_files.append(
+                                {
+                                    "ident_cely": ident_cely,
+                                    "file_name": filename,
+                                    "mimetype": None,
+                                    "size_mb": None,
+                                }
+                            )
+                            redis_connector.set(f"import_data_files_{job_id}", json.dumps(import_results_files))
+                            continue
+                        else:
+                            soubor = soubor_query.first() or soubor
+                        redis_connector.set(
+                            f"import_data_status_message_{job_id}",
+                            _("cron.tasks.run_data_import.importing_file") + f" {filename} ({ident_cely})",
                         )
-                        if record.ident_cely in ftp.nlst():
-                            ftp.cwd(record.ident_cely)
-                            file_names = [f for f in ftp.nlst() if f not in (".", "..")]
-                            for filename in file_names:
-                                stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
-                                if stopped:
-                                    logger.info(
-                                        "cron.tasks.run_data_import.files.insert.stopped", extra={"job_id": job_id}
-                                    )
-                                    redis_connector.set(
-                                        f"import_data_status_message_{job_id}",
-                                        _("cron.tasks.run_data_import.stopped_by_user"),
-                                    )
-                                    break
-                                redis_connector.set(
-                                    f"import_data_status_message_{job_id}",
-                                    _("cron.tasks.run_data_import.importing_file")
-                                    + f" {filename} ({record.ident_cely})",
-                                )
-                                fedora_transaction = FedoraTransaction()
-                                conn = FedoraRepositoryConnector(record, fedora_transaction, skip_container_check=False)
-                                bio = BytesIO()
-                                ftp.retrbinary(f"RETR {filename}", bio.write)
-                                mimetype = Soubor.get_mime_types(bio)
-                                soubor_query = Soubor.objects.filter(nazev=filename, vazba=record.soubory)
-                                if soubor_query.exists():
-                                    if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
-                                        logger.info(
-                                            "cron.tasks.run_data_import.files.insert.skipped",
-                                            extra={
-                                                "imported_filename": filename,
-                                                "ident_cely": record.ident_cely,
-                                                "job_id": job_id,
-                                            },
-                                        )
-                                        import_results_files.append(
-                                            {
-                                                "ident_cely": record.ident_cely,
-                                                "file_name": filename,
-                                                "mimetype": _("cron.tasks.run_data_import.files.file_skipped"),
-                                                "size_mb": "",
-                                            }
-                                        )
-                                        redis_connector.set(
-                                            f"import_data_files_{job_id}", json.dumps(import_results_files)
-                                        )
-                                        continue
-                                    soubor = Soubor.objects.filter(nazev=filename, vazba=record.soubory).first()
-                                    rep_bin_file = conn.update_binary_file(
-                                        filename, mimetype, bio, soubor.repository_uuid
-                                    )
-                                    soubor.mimetype = mimetype
-                                    soubor.size_mb = rep_bin_file.size_mb
-                                    soubor.sha_512 = rep_bin_file.sha_512
-                                else:
-                                    if performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
-                                        logger.info(
-                                            "cron.tasks.run_data_import.files.update.skipped",
-                                            extra={
-                                                "imported_filename": filename,
-                                                "ident_cely": record.ident_cely,
-                                                "job_id": job_id,
-                                            },
-                                        )
-                                        import_results_files.append(
-                                            {
-                                                "ident_cely": record.ident_cely,
-                                                "file_name": filename,
-                                                "mimetype": _("cron.tasks.run_data_import.files.file_skipped"),
-                                                "size_mb": "",
-                                            }
-                                        )
-                                        redis_connector.set(
-                                            f"import_data_files_{job_id}", json.dumps(import_results_files)
-                                        )
-                                        continue
-                                    rep_bin_file = conn.save_binary_file(filename, mimetype, bio)
-                                    sha_512 = rep_bin_file.sha_512
-                                    soubor: Soubor = Soubor(
+                        fedora_transaction = FedoraTransaction()
+                        conn = FedoraRepositoryConnector(
+                            soubor.vazba.navazany_objekt, fedora_transaction, skip_container_check=False
+                        )
+                        bio = BytesIO()
+                        ftp.retrbinary(f"RETR {filename}", bio.write)
+                        mimetype = Soubor.get_mime_types(bio)
+                        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+                            rep_bin_file = conn.save_binary_file(filename, mimetype, bio)
+                        else:
+                            rep_bin_file = conn.update_binary_file(filename, mimetype, bio, soubor.repository_uuid)
+                        soubor.mimetype = mimetype
+                        soubor.size_mb = rep_bin_file.size_mb
+                        soubor.sha_512 = rep_bin_file.sha_512
+                        soubor.path = rep_bin_file.url_without_domain
+                        """
+                                                            soubor: Soubor = Soubor(
                                         vazba=record.soubory,
                                         nazev=filename,
                                         mimetype=mimetype,
@@ -864,40 +846,42 @@ def run_data_import(job_id, user_id):
                                         path=rep_bin_file.url_without_domain,
                                         sha_512=sha_512,
                                     )
-                                soubor.suppress_signal = True
-                                soubor.save()
-                                soubor.create_soubor_vazby()
-                                Historie(
-                                    typ_zmeny=IMPORT,
-                                    uzivatel=User.objects.get(pk=user_id),
-                                    vazba=soubor.historie,
-                                    poznamka=f"{_('cron.tasks.run_data_import.imported_file')} "
-                                    f"{ftp_settings['FILE_IMPORT_FTP_PATH']}/{record.ident_cely}/{filename}",
-                                ).save()
-                                logger.info(
-                                    "cron.tasks.run_data_import.files.insert.saved",
-                                    extra={
-                                        "imported_filename": filename,
-                                        "ident_cely": record.ident_cely,
-                                        "job_id": job_id,
-                                    },
-                                )
-                                soubor.active_transaction = fedora_transaction
-                                soubor.save()
-                                fedora_transaction.mark_transaction_as_closed()
-                                import_results_files.append(
-                                    {
-                                        "ident_cely": record.ident_cely,
-                                        "file_name": filename,
-                                        "mimetype": mimetype,
-                                        "size_mb": round(rep_bin_file.size_mb, 3),
-                                    }
-                                )
-                                redis_connector.set(f"import_data_files_{job_id}", json.dumps(import_results_files))
-                            ftp.cwd("..")
+                        """
+                        soubor.suppress_signal = True
+                        soubor.save()
+                        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+                            soubor.create_soubor_vazby()
+                        Historie(
+                            typ_zmeny=IMPORT,
+                            uzivatel=User.objects.get(pk=user_id),
+                            vazba=soubor.historie,
+                            poznamka=f"{_('cron.tasks.run_data_import.imported_file')} "
+                            f"{ftp_settings['FILE_IMPORT_FTP_PATH']}/{ident_cely}/{filename}",
+                        ).save()
+                        logger.info(
+                            "cron.tasks.run_data_import.files.insert.saved",
+                            extra={
+                                "imported_filename": filename,
+                                "ident_cely": ident_cely,
+                                "job_id": job_id,
+                            },
+                        )
+                        soubor.active_transaction = fedora_transaction
+                        soubor.save()
+                        fedora_transaction.mark_transaction_as_closed()
+                        import_results_files.append(
+                            {
+                                "ident_cely": ident_cely,
+                                "file_name": filename,
+                                "mimetype": mimetype,
+                                "size_mb": round(rep_bin_file.size_mb, 3),
+                            }
+                        )
+                        redis_connector.set(f"import_data_files_{job_id}", json.dumps(import_results_files))
+                        ftp.cwd("..")
                     redis_connector.set(f"import_data_progress_files_{job_id}", round((record_id + 1) / record_count))
         except Exception as err:
-            logger.info("cron.tasks.run_data_import.fpt_error", extra={"error": err, "job_id": job_id})
+            logger.error("cron.tasks.run_data_import.fpt_error", extra={"error": err, "job_id": job_id})
             redis_connector.set(f"import_data_stop_{job_id}", 1)
             redis_connector.set(
                 f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.cannot_connect_to_ftp")
