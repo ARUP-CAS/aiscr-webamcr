@@ -799,7 +799,7 @@ def run_data_import(job_id, user_id):
                                 {
                                     "ident_cely": ident_cely,
                                     "file_name": filename,
-                                    "mimetype": None,
+                                    "mimetype": _("cron.tasks.run_data_import.does_not_exist"),
                                     "size_mb": None,
                                 }
                             )
@@ -810,7 +810,7 @@ def run_data_import(job_id, user_id):
                                 {
                                     "ident_cely": ident_cely,
                                     "file_name": filename,
-                                    "mimetype": None,
+                                    "mimetype": _("cron.tasks.run_data_import.already_exists"),
                                     "size_mb": None,
                                 }
                             )
