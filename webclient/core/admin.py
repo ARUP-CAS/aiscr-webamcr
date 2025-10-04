@@ -1,5 +1,4 @@
 import csv
-import datetime
 import io
 import json
 import logging
@@ -17,7 +16,6 @@ from django.contrib import admin, messages
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.management import call_command
-from django.db.models import DateTimeField, ExpressionWrapper, F
 from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import redirect
@@ -52,6 +50,7 @@ from .import_data_mappers import (
 )
 from .models import OdstavkaSystemu, Permissions, PermissionsSkip
 from .setting_models import CustomAdminSettings
+from .utils import is_maintenance_in_progress
 
 logger = logging.getLogger(__name__)
 
@@ -679,21 +678,12 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 name = name.split("/")[-1]
             return name.strip().lower()
 
-        maintenance = not (
-            OdstavkaSystemu.objects.annotate(
-                datetime_odstavky=ExpressionWrapper(
-                    F("datum_odstavky") + F("cas_odstavky"), output_field=DateTimeField()
-                )
-            )
-            .filter(datetime_odstavky__lte=datetime.datetime.now(), status=True)
-            .exists()
-        )
         context = {
             "app_list": self.get_app_list(request),
-            "maintenance": maintenance,
+            "maintenance": is_maintenance_in_progress(),
             **self.each_context(request),
         }
-        if not maintenance:
+        if not is_maintenance_in_progress():
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
         if request.method == "POST" and request.user.is_superuser:
             data_file = request.FILES["data_file"]
