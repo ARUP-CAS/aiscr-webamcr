@@ -873,8 +873,8 @@ def run_data_import(job_id, user_id):
                             {
                                 "ident_cely": ident_cely,
                                 "file_name": filename,
-                                "mimetype": mimetype,
                                 "size_mb": round(rep_bin_file.size_mb, 3),
+                                "additional_info": mimetype,
                             }
                         )
                         redis_connector.set(f"import_data_files_{job_id}", json.dumps(import_results_files))
