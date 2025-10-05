@@ -1494,6 +1494,7 @@ class AdbMapper(ImportModelMapper):
 class AdbVyskovyBod(ImportModelMapper):
     fields = ("ident_cely", "geom")
     model_class = VyskovyBod
+    require_primary_key_value = True
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
