@@ -799,8 +799,8 @@ def run_data_import(job_id, user_id):
                                 {
                                     "ident_cely": ident_cely,
                                     "file_name": filename,
-                                    "mimetype": _("cron.tasks.run_data_import.does_not_exist"),
                                     "size_mb": None,
+                                    "additional_info": _("cron.tasks.run_data_import.does_not_exist"),
                                 }
                             )
                             redis_connector.set(f"import_data_files_{job_id}", json.dumps(import_results_files))
@@ -810,8 +810,8 @@ def run_data_import(job_id, user_id):
                                 {
                                     "ident_cely": ident_cely,
                                     "file_name": filename,
-                                    "mimetype": _("cron.tasks.run_data_import.already_exists"),
                                     "size_mb": None,
+                                    "additional_info": _("cron.tasks.run_data_import.already_exists"),
                                 }
                             )
                             redis_connector.set(f"import_data_files_{job_id}", json.dumps(import_results_files))

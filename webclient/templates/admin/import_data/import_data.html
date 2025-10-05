@@ -97,8 +97,8 @@
         <tr>
           <th>{% trans "core.templates.admin.import_data.files.ident_cely" %}</th>
           <th>{% trans "core.templates.admin.import_data.files.file_name" %}</th>
-          <th>{% trans "core.templates.admin.import_data.files.mimetype" %}</th>
           <th>{% trans "core.templates.admin.import_data.files.size_mb" %}</th>
+          <th>{% trans "core.templates.admin.import_data.files.additional_info" %}</th>
         </tr>
       </table>
     {% else %}
@@ -198,11 +198,11 @@
                   row.appendChild(cell_2)
 
                   const cell_3 = document.createElement("td")
-                  cell_3.innerText = data.serialized_results_files[i]["mimetype"]
+                  cell_3.innerText = data.serialized_results_files[i]["size_mb"]
                   row.appendChild(cell_3)
 
                   const cell_4 = document.createElement("td")
-                  cell_4.innerText = data.serialized_results_files[i]["size_mb"]
+                  cell_4.innerText = data.serialized_results_files[i]["additional_info"]
                   row.appendChild(cell_4)
 
                   table_files.appendChild(row)
