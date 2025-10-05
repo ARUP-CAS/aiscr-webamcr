@@ -695,7 +695,7 @@ def run_data_import(job_id, user_id):
                                 if isinstance(record, Model):
                                     record.suppress_signal = True
                                     mapper_class.create_relations(record)
-                                    mapper_class.record_postprocessing(record, performed_action)
+                                    mapper_class.record_postprocessing(record, performed_action, fedora_transaction)
                                     if hasattr(record, "historie"):
                                         record.save()
                                         Historie(
@@ -837,16 +837,6 @@ def run_data_import(job_id, user_id):
                         soubor.size_mb = rep_bin_file.size_mb
                         soubor.sha_512 = rep_bin_file.sha_512
                         soubor.path = rep_bin_file.url_without_domain
-                        """
-                                                            soubor: Soubor = Soubor(
-                                        vazba=record.soubory,
-                                        nazev=filename,
-                                        mimetype=mimetype,
-                                        size_mb=rep_bin_file.size_mb,
-                                        path=rep_bin_file.url_without_domain,
-                                        sha_512=sha_512,
-                                    )
-                        """
                         soubor.suppress_signal = True
                         soubor.save()
                         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:

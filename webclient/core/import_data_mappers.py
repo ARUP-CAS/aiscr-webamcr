@@ -7,7 +7,7 @@ from decimal import Decimal
 import pandas as pd
 from adb.models import Adb, Kladysm5, VyskovyBod
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam, ArcheologickyZaznamKatastr, ExterniOdkaz
-from core.constants import DOKUMENT_RELATION_TYPE, PIAN_POTVRZEN
+from core.constants import DOKUMENT_RELATION_TYPE
 from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
 from core.forms import ImportDataAdminForm
 from core.ident_cely import get_record_from_ident
@@ -78,7 +78,6 @@ from heslar.hesla import (
     HESLAR_VYSKOVY_BOD_TYP,
     HESLAR_ZEME,
 )
-from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR
 from heslar.models import (
     Heslar,
     HeslarDatace,
@@ -98,7 +97,7 @@ from neidentakce.models import NeidentAkce, NeidentAkceVedouci
 from notifikace_projekty.models import Pes
 from oznameni.models import Oznamovatel
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
-from pian.models import Kladyzm, Pian, get_ZM_from_point
+from pian.models import Kladyzm, Pian, vytvor_pian
 from projekt.models import Projekt, ProjektKatastr
 from uzivatel.models import Organizace, Osoba, User, UserNotificationType
 
@@ -915,7 +914,7 @@ class ImportModelMapper(ABC):
             instance.komponenty = kv
 
     @classmethod
-    def record_postprocessing(cls, record, performed_action):
+    def record_postprocessing(cls, record, performed_action, fedora_transaction):
         return record
 
 
@@ -1319,10 +1318,10 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         return mapping_dict.get(field_name, BaseImportField())
 
     @classmethod
-    def record_postprocessing(cls, record, performed_action):
+    def record_postprocessing(cls, record, performed_action, fedora_transaction):
         if isinstance(record, ArcheologickyZaznam) and performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             record.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
-        return super().record_postprocessing(record, performed_action)
+        return super().record_postprocessing(record, performed_action, fedora_transaction)
 
 
 class LokalitaMapper(MultipleClassImportModelMapper):
@@ -1442,26 +1441,11 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
         field_mapping["typ"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_DJ_TYP})
         return field_mapping
 
-    def create_records(self, performed_action) -> list:
-        records = super().create_records(performed_action)
-        dj: DokumentacniJednotka = records[0]
-        katastr = dj.archeologicky_zaznam.hlavni_katastr
-        geom_jtsk, res = transform_geom_to_sjtsk(str(katastr.hranice).split(";")[1])
-        zm10, zm50 = get_ZM_from_point(katastr.definicni_bod)
-        pian = Pian(
-            stav=PIAN_POTVRZEN,
-            zm10=zm10,
-            zm50=zm50,
-            typ=Heslar.objects.get(pk=GEOMETRY_PLOCHA),
-            presnost=Heslar.objects.get(pk=PIAN_PRESNOST_KATASTR),
-            geom=katastr.hranice,
-            geom_sjtsk=GEOSGeometry(geom_jtsk),
-            geom_system="4326",
-        )
-        dj.pian = pian
-        return [
-            pian,
-        ] + records
+    @classmethod
+    def record_postprocessing(cls, record, performed_action, fedora_transaction):
+        record: DokumentacniJednotka
+        record.pian = vytvor_pian(record.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
+        return record
 
 
 class AdbMapper(ImportModelMapper):
