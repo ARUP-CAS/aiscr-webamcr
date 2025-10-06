@@ -87,7 +87,7 @@
         </tr>
         {% for result in validation_results %}
           <tr>
-            <td>{{ forloop.counter0 }} ({{ result.0 }})</td>
+            <td>{{ forloop.counter0 }}, {% if result.0 %}{{ result.0 }}{% endif %}</td>
             <td>{{ result.1 }}</td>
             <td></td>
           </tr>

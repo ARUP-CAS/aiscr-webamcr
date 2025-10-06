@@ -730,8 +730,16 @@ class FedoraCustomAdminSite(admin.AdminSite):
                                 validation_results.append([getattr(err, "record_id", ""), err])
                                 invalid_records.append(record_id)
                             else:
+
+                                def format_primary_key(pk):
+                                    if isinstance(pk, dict):
+                                        return ", ".join([f"{k}: {v}" for k, v in pk.items()])
+                                    return str(pk)
+
                                 records.append(record)
-                                validation_results.append([primary_key, _("core.admin.import_data.record_valid")])
+                                validation_results.append(
+                                    [format_primary_key(primary_key), _("core.admin.import_data.record_valid")]
+                                )
                                 self.redis_connector.set(f"import_data_{job_id}_record_{record_id}", json.dumps(record))
                             record_id += 1
                         else:

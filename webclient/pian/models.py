@@ -298,9 +298,6 @@ def vytvor_pian(katastr, fedora_transaction):
         geom_jtsk, res = transform_geom_to_sjtsk(str(geom).split(";")[1])
         presnost = Heslar.objects.get(pk=PIAN_PRESNOST_KATASTR)
         typ = Heslar.objects.get(pk=GEOMETRY_PLOCHA)
-        pian_query = Pian.objects.filter(zm10=zm10, zm50=zm50, presnost=presnost, typ=typ, geom=geom)
-        if pian_query.exists():
-            return pian_query.first()
         pian = Pian(
             stav=PIAN_POTVRZEN,
             zm10=zm10,

@@ -18,7 +18,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.postgres.fields import DateRangeField
-from django.core.exceptions import FieldDoesNotExist
+from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
 from django.db import models
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.utils import timezone
@@ -115,14 +115,31 @@ class ImportDataIncorrectStructureError(ImportDataError):
         super().__init__(
             f'{_("core_admin.ImportDataIncorrectStructureError.message.part_1")} '
             + (
-                f'{_("core_admin.ImportDataMissingReferencedValueError.message.missing_columns")}: {", ".join(missing_columns)} '
+                f'{_("core_admin.ImportDataIncorrectStructureError.message.missing_columns")}: {", ".join(missing_columns)} '
                 if missing_columns
                 else ""
             )
             + (
-                f'{_("core_admin.ImportDataMissingReferencedValueError.message.excess_columns")}: {", ".join(excess_columns)} '
+                f'{_("core_admin.ImportDataIncorrectStructureError.message.excess_columns")}: {", ".join(excess_columns)} '
                 if excess_columns
                 else ""
+            )
+        )
+
+
+class ImportDataIncorrectStructureContentObjectError(ImportDataError):
+    """
+    Exception raised when the structure of the imported data does not match the expected structure.
+    """
+
+    def __init__(self, columns, *expected_colummns_options):
+        super().__init__(
+            f'{_("core_admin.ImportDataIncorrectStructureContentObjectError.message.part_1")} '
+            + (
+                f'{_("core_admin.ImportDataIncorrectStructureContentObjectError.message.columns")}: {", ".join(columns)} '
+            )
+            + (
+                f'{_("core_admin.ImportDataIncorrectStructureContentObjectError.message.expected_columns_options")}: {"; ".join([str(op) for op in expected_colummns_options])} '
             )
         )
 
@@ -567,7 +584,7 @@ class GenericForeignKeyImportField(LookupImportField):
         else:
             return self._value.pk
 
-    def _process_value(self, value):
+    def _process_value(self, value: str | int):
         if isinstance(value, str) and (match := re.match(r"(?:\w+-)?(\d+)", value)):
             value = int(match.group(1))
 
@@ -831,19 +848,13 @@ class ImportModelMapper(ABC):
                 )
             return self._get_filter_kwargs_primary_key()
 
-    def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
-        """
-        Checks if the file columns structure is valid as the first step. If not, the ImportDataIncorrectStructureError
-        exception is raised. Then it creates a dict with field names as keys and values are instances of
-        BaseImportField class or one of its child classes with values loaded from the import file.
-        """
-
-        mapping_dict = {}
+    def _check_column_structure(self, performed_action, include_primary_key=False):
         primary_keys = set((self.primary_key,) if isinstance(self.primary_key, str) else self.primary_key)
         mapping_column_set = set(self.value_dict.keys())
         value_dict_column_set = set(self.get_mapping(include_primary_key).keys()) | primary_keys
         missing_columns = set()
         excess_columns = set()
+
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             if mapping_column_set != value_dict_column_set:
                 excess_columns = mapping_column_set - value_dict_column_set
@@ -866,6 +877,17 @@ class ImportModelMapper(ABC):
             excess_columns = mapping_column_set - primary_keys
         if missing_columns or excess_columns:
             raise ImportDataIncorrectStructureError(missing_columns, excess_columns)
+
+    def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
+        """
+        Checks if the file columns structure is valid as the first step. If not, the ImportDataIncorrectStructureError
+        exception is raised. Then it creates a dict with field names as keys and values are instances of
+        BaseImportField class or one of its child classes with values loaded from the import file.
+        """
+
+        self._check_column_structure(performed_action, include_primary_key)
+
+        mapping_dict = {}
         for field_name, field_instance in self.get_mapping(include_primary_key).items():
             if field_name in self.value_dict:
                 field_value = self.value_dict[field_name]
@@ -1444,7 +1466,13 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
     @classmethod
     def record_postprocessing(cls, record, performed_action, fedora_transaction):
         record: DokumentacniJednotka
-        record.pian = vytvor_pian(record.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
+        try:
+            if pian := record.archeologicky_zaznam.hlavni_katastr.pian:
+                record.pian = pian
+            else:
+                record.pian = vytvor_pian(record.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
+        except ObjectDoesNotExist:
+            record.pian = vytvor_pian(record.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
         return record
 
 
@@ -1941,6 +1969,44 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         if field_name == "uzivatel":
             field_name = "user"
         return super().map_field(field_name)
+
+    def create_records(self, performed_action) -> list:
+        mapping_dict = self.map(performed_action, True)
+        mapping_dict = {self.map_column_name_to_field_name(field): value for field, value in mapping_dict.items()}
+        app_label, model = mapping_dict["content_type"].split(".")
+        primary_key_import_field: GenericForeignKeyImportField = self.get_mapping()["ruian"]
+        content_object = primary_key_import_field._process_value(
+            self.value_dict.get("ruian", self.value_dict.get("object_id"))
+        )
+        return [
+            Pes(
+                user=mapping_dict["user"],
+                content_type=ContentType.objects.get(app_label=app_label, model=model),
+                content_object=content_object,
+            )
+        ]
+
+    def _check_column_structure(self, performed_action, include_primary_key=False):
+        mapping_column_set = set(self.value_dict.keys())
+        expected_column_set_import = {"uzivatel", "ruian"}
+        expected_column_set_job = {"uzivatel", "content_type", "object_id"}
+        if mapping_column_set != expected_column_set_import and mapping_column_set != expected_column_set_job:
+            raise ImportDataIncorrectStructureContentObjectError(
+                mapping_column_set, expected_column_set_import, expected_column_set_job
+            )
+
+    def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
+        mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
+        primary_key_import_field: GenericForeignKeyImportField = self.get_mapping()["ruian"]
+        content_object = primary_key_import_field._process_value(
+            self.value_dict.get("ruian", self.value_dict.get("object_id"))
+        )
+        content_type: ContentType = ContentType.objects.get_for_model(content_object)
+        return {
+            "uzivatel": mapping_dict["uzivatel"],
+            "content_type": f"{content_type.app_label}.{content_type.model}",
+            "object_id": content_object.kod,
+        }
 
 
 class UzivatelSpolupraceMapper(ImportModelMapper):
