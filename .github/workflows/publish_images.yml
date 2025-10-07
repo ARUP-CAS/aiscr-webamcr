@@ -58,7 +58,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.tag }}
       
@@ -111,14 +111,14 @@ jobs:
             TAG_APP=${{ github.ref }}
 
       - name: Attest build - GitHub
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v3
         id: attest_github
         with:
           subject-name: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
           subject-digest: ${{ steps.push.outputs.digest }}
 
       - name: Attest build - DockerHub
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v3
         id: attest_dockerhub
         with:
           subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}

@@ -37,14 +37,14 @@ jobs:
       sha: ${{ steps.set-sha.outputs.sha }}
     steps:
       - name: Log-in as AMCR app
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v2
         id: app-token
         with:
           app-id: ${{ vars.AISCR_AMCR_ACTIONS_APP_ID }}
           private-key: ${{ secrets.AISCR_AMCR_ACTIONS_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: dev
           token: ${{ steps.app-token.outputs.token }}
@@ -55,7 +55,7 @@ jobs:
 
       - name: Set up Python
         if: ${{ inputs.pip_update }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -124,7 +124,7 @@ jobs:
       name: ${{ inputs.environment }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: dev
 
