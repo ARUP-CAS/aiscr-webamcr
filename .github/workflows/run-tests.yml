@@ -24,6 +24,7 @@ on:
         description: 'Zadej vlastní větev (pokud není použita předvolená)'
         required: false
         type: string
+  push:
 
 env:
   branch: dev
