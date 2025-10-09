@@ -90,7 +90,7 @@ jobs:
               chmod +x ${{ env.dep_script }}
               #./${{ env.dep_script }} ${{ env.server_deploy_root }} $vetv
 
-              # Spustit testy
+              echo "Spustit testy"
               chmod +x ${{ env.test_script }}
               #./${{ env.test_script }}
             AOF
