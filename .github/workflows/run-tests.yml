@@ -1,4 +1,5 @@
 name: Run tests
+
 permissions:
   contents: read
   packages: read
@@ -25,9 +26,10 @@ on:
         required: false
         type: string
 
+
 env:
-  branch: dev
-  server_deploy_root: /home/amcr/aiscr-webamcr
+  #server_deploy_root: /home/amcr/aiscr-webamcr
+  server_deploy_root: /home/havrlant/git/aiscr-webamcr
   dep_script: scripts/ci_deployment/deploy_server.sh
   test_script: scripts/start_selenium_tests.sh
 
@@ -35,16 +37,8 @@ jobs:
   deployment:
     name: Deploy to DEV Server
     runs-on: ubuntu-latest
-    #env:
-      #DEPLOYMENT_SERVER: ${{ inputs.environment == 'DEV' && secrets.DEPLOYMENT_SERVER_DEV || inputs.environment == 'TEST' && secrets.DEPLOYMENT_SERVER_TEST }}
-      #SSH_PRIVATE_KEY: ${{ inputs.environment == 'DEV' && secrets.SSH_PRIVATE_KEY_SERVER_DEV || inputs.environment == 'TEST' && secrets.SSH_PRIVATE_KEY_SERVER_TEST }}
-      #SSH_KNOWN_HOST: ${{ inputs.environment == 'DEV' && secrets.SSH_KNOWN_HOST_DEV || inputs.environment == 'TEST' && secrets.SSH_KNOWN_HOST_TEST }}
-    
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: v${{ inputs.tag }}
 
+    steps:
       - name: Install OpenVPN
         run: |
           sudo apt-get update
@@ -65,7 +59,7 @@ jobs:
         timeout-minutes: 2
         run: |
           for i in {1..10}; do
-            dig ${{ secrets.DNS_RESOLVER }} ${{ env.DEPLOYMENT_SERVER }} A +time=1 && break
+            dig ${{ secrets.DNS_RESOLVER }} ${{ secrets.DEPLOYMENT_SERVER_DEV }} A +time=1 && break
             sleep 2
           done
 
@@ -91,21 +85,24 @@ jobs:
             sudo su - root << 'AOF'
               cd ${{ env.server_deploy_root }}
               chmod +x ${{ env.dep_script }}
-              ./${{ env.dep_script }} ${{ inputs.tag }} ${{ env.server_deploy_root }} $vetv
+              ./${{ env.dep_script }} ${{ env.server_deploy_root }} $vetv
 
               # Spustit testy
               chmod +x ${{ env.test_script }}
               ./${{ env.test_script }}
             AOF
           EOF
+
       - name: Stáhnout výsledky testů ze serveru
         run: |
           scp -o StrictHostKeyChecking=no amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/results.xlsx ./results.xlsx
+
       - name: Nahrát výsledky testů jako artifact
         uses: actions/upload-artifact@v4
         with:
           name: selenium-vysledky
           path: ./results.xlsx
+
       - name: Disconnect VPN
         if: always()
         run: |
