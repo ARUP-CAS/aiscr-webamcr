@@ -70,7 +70,7 @@ jobs:
 
       - name: Stáhnout výsledky testů ze serveru
         run: |
-          eval "$(ssh-agent -s)"
+          eval $(ssh-agent -s)
           echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
