@@ -30,7 +30,7 @@ on:
 env:
   #server_deploy_root: /home/amcr/aiscr-webamcr
   server_deploy_root: /home/havrlant/git/aiscr-webamcr
-  dep_script: scripts/ci_deployment/deploy_server.sh
+  dep_script: scripts/ci_deployment/deploy_test_server.sh
   test_script: scripts/start_selenium_tests.sh
 
 jobs:
