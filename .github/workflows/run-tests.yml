@@ -66,35 +66,7 @@ jobs:
             sleep 2
           done
 
-      - name: SSH deployment a testy
-        shell: bash
-        run: |
-          vetv="${{ inputs.predvolena_vetv }}"
-          if [ "${{ inputs.pouzit_predvolenou }}" != "true" ]; then
-            vetv="${{ inputs.vlastni_vetv }}"
-          fi
-          echo "Použitá větev: $vetv"
-          eval $(ssh-agent -s)
-          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-          sleep 30          
-          ping -c 10 ${{ secrets.DEPLOYMENT_SERVER_DEV }}          
-          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
 
-          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << 'EOF'
-            sudo su - root << 'AOF'
-              cd ${{ env.server_deploy_root }}
-              chmod +x ${{ env.dep_script }}
-              #./${{ env.dep_script }} ${{ env.server_deploy_root }} $vetv
-
-              echo "Spustit testy"
-              chmod +x ${{ env.test_script }}
-              #./${{ env.test_script }}
-            AOF
-          EOF
 
       - name: Stáhnout výsledky testů ze serveru
         run: |
