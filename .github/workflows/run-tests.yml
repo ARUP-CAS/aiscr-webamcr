@@ -46,6 +46,9 @@ jobs:
 
       - name: Setup VPN config
         run: |
+          mkdir -p .github/vpn
+          curl -o .github/vpn/openvpn20_huldio_ci.ovpn \
+            https://raw.githubusercontent.com/ARUP-CAS/aiscr-webamcr/dev/.github/vpn/openvpn20_huldio_ci.ovpn
           echo "${{ secrets.VPN_CA_CRT }}" > .github/vpn/openvpn20_huldio_ci_ca.crt
           echo "${{ secrets.VPN_USER_CRT }}" > .github/vpn/openvpn20_huldio_ci_user.crt
           echo "${{ secrets.VPN_USER_KEY }}" > .github/vpn/openvpn20_huldio_ci_user.key
