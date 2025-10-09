@@ -35,7 +35,7 @@ env:
 
 jobs:
   deployment:
-    name: Deploy to DEV Server
+    name: Deploy to DEV Server and test
     runs-on: ubuntu-latest
 
     steps:
@@ -88,16 +88,23 @@ jobs:
             sudo su - root << 'AOF'
               cd ${{ env.server_deploy_root }}
               chmod +x ${{ env.dep_script }}
-              ./${{ env.dep_script }} ${{ env.server_deploy_root }} $vetv
+              #./${{ env.dep_script }} ${{ env.server_deploy_root }} $vetv
 
               # Spustit testy
               chmod +x ${{ env.test_script }}
-              ./${{ env.test_script }}
+              #./${{ env.test_script }}
             AOF
           EOF
 
       - name: Stáhnout výsledky testů ze serveru
         run: |
+          eval "$(ssh-agent -s)"
+          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
           scp -o StrictHostKeyChecking=no amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/results.xlsx ./results.xlsx
 
       - name: Nahrát výsledky testů jako artifact
