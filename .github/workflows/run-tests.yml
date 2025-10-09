@@ -26,6 +26,12 @@ on:
         required: false
         type: string
 
+      testuj_pouze_neuspesne:
+        description: 'Testuj pouze neúspěšné testy bez nového nasazení'
+        required: true
+        type: boolean
+        default: false
+
 
 env:
   #server_deploy_root: /home/amcr/aiscr-webamcr
@@ -80,11 +86,24 @@ jobs:
           chmod 700 ~/.ssh
           echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          sleep 30          
+          sleep 2          
           ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_DEV }}          
           echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
-
-
+          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << 'EOF'
+            sudo su - root << 'AOF'
+              cd ${{ env.server_deploy_root }}
+              chmod +x ${{ env.dep_script }}
+              chmod +x ${{ env.test_script }}
+              if [ "${{ inputs.testuj_pouze_neuspesne }}" != "true" ]; then
+                ./${{ env.dep_script }} ${{ env.server_deploy_root }} $vetv
+                echo "Spustit testy"              
+                ./${{ env.test_script }}
+              else
+                echo "Testuji pouze neuspesne bez noveho nasazeni"
+                ./${{ env.test_script }} -f
+              fi
+            AOF
+          EOF
 
       - name: Stáhnout výsledky testů ze serveru
         shell: bash
@@ -95,7 +114,6 @@ jobs:
           chmod 700 ~/.ssh
           echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-
           scp -o StrictHostKeyChecking=no amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/results.xlsx ./results.xlsx
 
       - name: Nahrát výsledky testů jako artifact
