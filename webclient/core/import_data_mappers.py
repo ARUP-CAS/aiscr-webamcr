@@ -18,7 +18,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.postgres.fields import DateRangeField
-from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.utils import timezone
@@ -1466,12 +1466,9 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
     @classmethod
     def record_postprocessing(cls, record, performed_action, fedora_transaction):
         record: DokumentacniJednotka
-        try:
-            if pian := record.archeologicky_zaznam.hlavni_katastr.pian:
-                record.pian = pian
-            else:
-                record.pian = vytvor_pian(record.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
-        except ObjectDoesNotExist:
+        if pian := record.archeologicky_zaznam.hlavni_katastr.pian:
+            record.pian = pian
+        else:
             record.pian = vytvor_pian(record.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
         return record
 
