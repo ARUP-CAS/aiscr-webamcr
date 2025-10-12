@@ -1583,17 +1583,17 @@ class DataImportProgress(LoginRequiredMixin, View):
         if not request.user.is_superuser:
             raise PermissionDenied
         job_id = kwargs.get("job_id")
-        redis_connector = RedisConnector().get_connection()
+        redis_connector = RedisConnector().get_connection_decode()
         try:
-            record_count = int(redis_connector.get(f"import_data_count_{job_id}").decode("utf-8"))
+            record_count = int(redis_connector.get(f"import_data_count_{job_id}"))
             import_data_progress_files = int(
-                redis_connector.get(f"import_data_progress_files_{job_id}").decode("utf-8")
+                redis_connector.get(f"import_data_progress_files_{job_id}")
             )
-            status_message = redis_connector.get(f"import_data_status_message_{job_id}").decode("utf-8")
+            status_message = redis_connector.get(f"import_data_status_message_{job_id}")
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 
-            serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}").decode("utf-8"))
-            serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}").decode("utf-8"))
+            serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}"))
+            serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}"))
 
             progress_data = math.floor((len(serialized_results) / record_count) * 100)
             progress_files = math.floor(import_data_progress_files * 100)
@@ -1613,9 +1613,10 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "serialized_results_files": serialized_results_files,
                 "status_message": status_message,
             }
-        except AttributeError:
+        except (AttributeError, TypeError):
             progress_response = {
                 "status": "unknown",
+                "status_message": _("core.views.dataImportProgress.unknown_import_status"),
             }
         return JsonResponse(progress_response)
 
@@ -1625,6 +1626,6 @@ class DataImportStop(LoginRequiredMixin, View):
         if not request.user.is_superuser:
             raise PermissionDenied
         job_id = kwargs.get("job_id")
-        redis_connector = RedisConnector().get_connection()
+        redis_connector = RedisConnector().get_connection_decode()
         redis_connector.set(f"import_data_stop_{job_id}", 1)
         return JsonResponse({"result": "ok"})

@@ -592,7 +592,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
 
 class FedoraCustomAdminSite(admin.AdminSite):
-    redis_connector = RedisConnector().get_connection()
+    redis_connector = RedisConnector().get_connection_decode()
 
     @staticmethod
     def _read_file(uploaded_file, context):

@@ -47,10 +47,10 @@
 {% block content %}
   <div id="content-main">
     {% if not request.user.is_superuser %}
-        <p>{% trans "core.templates.admin.import_data.not_superuser" %}</p>
-      {% elif not maintenance %}
-        <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
-      {% elif validation_results %}
+      <p>{% trans "core.templates.admin.import_data.not_superuser" %}</p>
+    {% elif not maintenance %}
+      <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
+    {% elif validation_results %}
       <div class="submit-row">
         <div id="progressBarBoxData" class="progressBarBox" style="margin-bottom: 1rem">
           <div id="progressBarData" class="progressBar" style="position: relative;">
@@ -129,15 +129,18 @@
   </div>
 
   <script>
-      const requestUrl = "{{ url }}";
-      const stopRequestUrl = "{{ url_stop }}";
-      let stopRequests = {% if stop_request is True %}true{% else %}false{% endif %};
-      document.getElementById("stopRequests").addEventListener("click", () => {
-          fetch(stopRequestUrl);
-          document.getElementById("stopRequests").disabled = true;
-          const progressBarBoxData = document.getElementById("progressBarBoxData");
-          progressBarBoxData.style.display = "none";
-      });
+      const requestUrl = "{{ url }}"
+      const stopRequestUrl = "{{ url_stop }}"
+      let stopRequests = {% if stop_request is True %}true{% else %}false{% endif %}
+      const stopRequestButton = document.getElementById("stopRequests")
+      if (stopRequestButton) {
+        document.getElementById("stopRequests").addEventListener("click", () => {
+            fetch(stopRequestUrl)
+            document.getElementById("stopRequests").disabled = true
+            const progressBarBoxData = document.getElementById("progressBarBoxData")
+            progressBarBoxData.style.display = "none"
+        });
+      }
 
       async function sendRequest(url) {
           try {
@@ -152,11 +155,16 @@
 
               const data = await response.json()
 
-              const progressBarData = document.getElementById("progressBarData")
-              progressBarData.style.width = data.progress_data + "%"
-
               const processCurrentStatus = document.getElementById("processCurrentStatus")
               processCurrentStatus.textContent = data.status_message
+
+              if (data.status === "unknown") {
+                  console.error("Unknown status of the import process.")
+                  return 0
+              }
+
+              const progressBarData = document.getElementById("progressBarData")
+              progressBarData.style.width = data.progress_data + "%"
 
               const progressPercentData = document.getElementById("progressPercentData")
               progressPercentData.style.left = `${document.getElementById("progressBarBoxData").offsetWidth / 2}px`
