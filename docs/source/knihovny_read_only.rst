@@ -56,7 +56,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/google/brotli
    * - Django
-     - 5.2.6
+     - 5.2.7
      - BSD License
      - https://www.djangoproject.com/
    * - Jinja2
@@ -104,11 +104,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://github.com/celery/py-amqp
    * - asgiref
-     - 3.9.2
+     - 3.10.0
      - BSD License
      - https://github.com/django/asgiref/
    * - attrs
-     - 25.3.0
+     - 25.4.0
      - UNKNOWN
      - https://www.attrs.org/en/stable/changelog.html
    * - babel
@@ -116,7 +116,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://babel.pocoo.org/
    * - beautifulsoup4
-     - 4.13.5
+     - 4.14.2
      - MIT License
      - https://www.crummy.com/software/BeautifulSoup/bs4/
    * - billiard
@@ -132,7 +132,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://docs.celeryq.dev/
    * - certifi
-     - 2025.8.3
+     - 2025.10.5
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
@@ -180,7 +180,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - UNKNOWN
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
-     - 46.0.1
+     - 46.0.2
      - UNKNOWN
      - https://github.com/pyca/cryptography
    * - defusedxml
@@ -236,7 +236,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - UNKNOWN
      - https://github.com/django-extensions/django-extensions
    * - django-filter
-     - 25.1
+     - 25.2
      - BSD License
      - https://github.com/carltongibson/django-filter/tree/main
    * - django-libsass
@@ -308,7 +308,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.19.1
+     - 3.20.0
      - The Unlicense (Unlicense)
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -324,12 +324,12 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.6.14
+     - 2.6.15
      - MIT
      - https://github.com/pre-commit/identify
    * - idna
-     - 3.10
-     - BSD License
+     - 3.11
+     - UNKNOWN
      - https://github.com/kjd/idna
    * - imagesize
      - 1.4.1
@@ -340,9 +340,9 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://inflate64.readthedocs.io/
    * - isort
-     - 6.0.1
+     - 6.1.0
      - MIT License
-     - https://github.com/PyCQA/isort/releases
+     - https://pycqa.github.io/isort/index.html
    * - kombu
      - 5.5.4
      - BSD License
@@ -388,7 +388,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/pypa/packaging
    * - pandas
-     - 2.3.2
+     - 2.3.3
      - BSD License
      - https://pandas.pydata.org
    * - pathspec
@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.14
+     - 9.0.15
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -420,7 +420,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/raimon49/pip-licenses
    * - platformdirs
-     - 4.4.0
+     - 4.5.0
      - MIT License
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -476,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - UNKNOWN
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.1.0
+     - 6.1.1
      - UNKNOWN
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -508,7 +508,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://pythonhosted.org/pytz
    * - pyzstd
-     - 0.17.0
+     - 0.18.0
      - BSD License
      - https://github.com/Rogdham/pyzstd
    * - rarfile
@@ -544,7 +544,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - CC0 1.0 Universal (CC0 1.0) Public Domain Dedication; Zero-Clause BSD (0BSD)
      - https://github.com/AA-Turner/roman-numerals/blob/master/CHANGES.rst
    * - selenium
-     - 4.35.0
+     - 4.36.0
      - Apache-2.0
      - https://www.selenium.dev
    * - setuptools
@@ -552,7 +552,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - UNKNOWN
      - https://github.com/pypa/setuptools
    * - simplejson
-     - 3.20.1
+     - 3.20.2
      - Academic Free License (AFL); MIT License
      - https://github.com/simplejson/simplejson
    * - six
@@ -620,15 +620,15 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/foutaise/texttable/
    * - tomli
-     - 2.2.1
-     - MIT License
+     - 2.3.0
+     - UNKNOWN
      - https://github.com/hukkin/tomli
    * - tornado
      - 6.5.2
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
-     - 0.30.0
+     - 0.31.0
      - UNKNOWN
      - https://github.com/python-trio/trio
    * - trio-websocket
@@ -636,7 +636,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-trio/trio-websocket
    * - typing_extensions
-     - 4.14.1
+     - 4.15.0
      - UNKNOWN
      - https://github.com/python/typing_extensions
    * - tzdata
@@ -656,7 +656,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.34.0
+     - 20.35.3
      - MIT License
      - https://github.com/pypa/virtualenv
    * - wcwidth
@@ -664,7 +664,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/jquast/wcwidth
    * - websocket-client
-     - 1.8.0
+     - 1.9.0
      - Apache Software License
      - https://github.com/websocket-client/websocket-client.git
    * - wrapt
