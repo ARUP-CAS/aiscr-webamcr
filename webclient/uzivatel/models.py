@@ -63,6 +63,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     """
 
     EMAIL_FIELD = "email"
+    IDENT_PREFIX = "U"
+    SEQUENCE_NAME = "auth_user_ident_seq"
 
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
@@ -344,6 +346,9 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
     Class pro db model organizace.
     """
 
+    IDENT_PREFIX = "HES"
+    SEQUENCE_NAME = "organizace_ident_seq"
+
     nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255, db_index=True)
     nazev_zkraceny = models.CharField(
         verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"), max_length=255, unique=True
@@ -472,6 +477,9 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
     """
     Class pro db model osoba.
     """
+
+    IDENT_PREFIX = "HES"
+    SEQUENCE_NAME = "osoba_ident_seq"
 
     jmeno = models.CharField(verbose_name=_("uzivatel.models.Osoba.jmeno"), max_length=100)
     prijmeni = models.CharField(verbose_name=_("uzivatel.models.Osoba.prijmeni"), max_length=100)

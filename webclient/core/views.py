@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import os
 import re
 import unicodedata
@@ -1575,3 +1576,56 @@ class ApplicationRestartView(LoginRequiredMixin, View):
             referer = fallback_url
         # Redirect to referer or fallback URL
         return redirect(referer)
+
+
+class DataImportProgress(LoginRequiredMixin, View):
+    def get(self, request, **kwargs):
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        job_id = kwargs.get("job_id")
+        redis_connector = RedisConnector().get_connection_decode()
+        try:
+            record_count = int(redis_connector.get(f"import_data_count_{job_id}"))
+            import_data_progress_files = int(
+                redis_connector.get(f"import_data_progress_files_{job_id}")
+            )
+            status_message = redis_connector.get(f"import_data_status_message_{job_id}")
+            stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
+
+            serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}"))
+            serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}"))
+
+            progress_data = math.floor((len(serialized_results) / record_count) * 100)
+            progress_files = math.floor(import_data_progress_files * 100)
+            if progress_data == progress_files == 100:
+                status = "finished"
+            elif stopped:
+                status = "stopped"
+            else:
+                status = "in_progress"
+            progress_response = {
+                "record_count": record_count,
+                "progress_data": progress_data,
+                "progress_files": progress_files,
+                "finished_record_count": len(serialized_results),
+                "serialized_results": serialized_results,
+                "status": status,
+                "serialized_results_files": serialized_results_files,
+                "status_message": status_message,
+            }
+        except (AttributeError, TypeError):
+            progress_response = {
+                "status": "unknown",
+                "status_message": _("core.views.dataImportProgress.unknown_import_status"),
+            }
+        return JsonResponse(progress_response)
+
+
+class DataImportStop(LoginRequiredMixin, View):
+    def get(self, request, **kwargs):
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        job_id = kwargs.get("job_id")
+        redis_connector = RedisConnector().get_connection_decode()
+        redis_connector.set(f"import_data_stop_{job_id}", 1)
+        return JsonResponse({"result": "ok"})

@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Optional
+from typing import Optional, Type
 
 from adb.models import Adb, AdbSekvence, Kladysm5, VyskovyBod
 from arch_z.models import ArcheologickyZaznam
@@ -26,6 +26,7 @@ from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba, User
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -293,7 +294,7 @@ def get_adb_ident(pian: Pian) -> str:
         raise MaximalIdentNumberError(sequence.sekvence)
 
 
-def get_temp_lokalita_ident(typ, region, lokalita):
+def get_temp_lokalita_ident(typ, region):
     """
     Metóda pro výpočet dočasného identu lokality.
 
@@ -330,32 +331,39 @@ def get_temp_ez_ident():
     return str(IDENTIFIKATOR_DOCASNY_PREFIX + "BIB-" + id_number)
 
 
+def get_next_sequence_integrity_check(object_class: Type[ModelWithMetadata] | Type[User]) -> str:
+    while True:
+        current_value = f"{object_class.IDENT_PREFIX}-{get_next_sequence(object_class.SEQUENCE_NAME):06}"
+        if not object_class.objects.filter(ident_cely=current_value).exists():
+            return current_value
+
+
 def get_heslar_ident():
     """
     Metoda pro výpočet identu hesláře.
     """
-    return f"{Heslar.ident_prefix}-{get_next_sequence('heslar_ident_cely_seq'):06}"
+    return get_next_sequence_integrity_check(Heslar)
 
 
 def get_uzivatel_ident():
     """
     Metoda pro výpočet identu uživatele.
     """
-    return f"U-{get_next_sequence('auth_user_ident_seq'):06}"
+    return get_next_sequence_integrity_check(User)
 
 
 def get_organizace_ident():
     """
     Metoda pro výpočet identu organizce.
     """
-    return f"ORG-{get_next_sequence('organizace_ident_seq'):06}"
+    return get_next_sequence_integrity_check(Organizace)
 
 
 def get_osoba_ident():
     """
     Metoda pro výpočet identu osoby.
     """
-    return f"OS-{get_next_sequence('osoba_ident_seq'):06}"
+    return get_next_sequence_integrity_check(Osoba)
 
 
 def get_record_from_ident(ident_cely):

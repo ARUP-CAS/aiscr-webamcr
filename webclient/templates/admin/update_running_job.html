@@ -114,7 +114,6 @@
             result = await sendRequest(requestUrl);
             if (result === 1) {
                 document.getElementById("stopRequests").style.display = "none";
-                document.getElementById("processFinishedParagraph").style.display = null;
             }
         } while (result > 1 && !stopRequests );        
       }

@@ -6,9 +6,11 @@ import os
 import random
 import re
 import string
+import zipfile
 
 import pandas as pd
 from bs4 import BeautifulSoup
+from cron import tasks
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth.models import Group
@@ -38,9 +40,17 @@ from .constants import (
     ROLE_NASTAVENI_ODSTAVKY,
 )
 from .exceptions import WrongCSVError, WrongSheetError
-from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
+from .forms import ImportDataAdminForm, OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
+from .import_data_mappers import (
+    ImportDataError,
+    ImportDataUnsupportedFileError,
+    ImportDataUnsupportedMultipleFilesError,
+    ImportModelMapper,
+    LookupImportField,
+)
 from .models import OdstavkaSystemu, Permissions, PermissionsSkip
 from .setting_models import CustomAdminSettings
+from .utils import is_maintenance_in_progress
 
 logger = logging.getLogger(__name__)
 
@@ -582,7 +592,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
 
 class FedoraCustomAdminSite(admin.AdminSite):
-    redis_connector = RedisConnector().get_connection()
+    redis_connector = RedisConnector().get_connection_decode()
 
     @staticmethod
     def _read_file(uploaded_file, context):
@@ -658,6 +668,104 @@ class FedoraCustomAdminSite(admin.AdminSite):
             context["form"] = UpdateMetadataFileForm()
         return TemplateResponse(request, "admin/fedora_management/update_metadata.html", context)
 
+    def import_data(self, request):
+        """
+        Creates a view for importing data from a zip file.
+        """
+
+        def normalize_file_name(name: str) -> str:
+            if "/" in name:
+                name = name.split("/")[-1]
+            return name.strip().lower()
+
+        context = {
+            "app_list": self.get_app_list(request),
+            "maintenance": is_maintenance_in_progress(),
+            **self.each_context(request),
+        }
+        if not is_maintenance_in_progress():
+            return TemplateResponse(request, "admin/import_data/import_data.html", context)
+        if request.method == "POST" and request.user.is_superuser:
+            data_file = request.FILES["data_file"]
+            form = ImportDataAdminForm(request.POST, request.FILES)
+            if form.is_valid():
+                cleaned_data = form.cleaned_data
+            else:
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            context["form"] = form
+            file_bytes = data_file.read()
+            job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
+            context["url"] = reverse("core:data-import-progress", args=[job_id])
+            context["url_stop"] = reverse("core:data-import-stop", args=[job_id])
+            validation_results = []
+            records = []
+            LookupImportField.records = records
+            record_id = 0
+            invalid_records = []
+            performed_action = cleaned_data["performed_action"]
+            with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+                file_names = [name for name in zf.namelist() if not name.startswith("__MACOSX")]
+                file_names = set(file_names)
+                allowed_file_names = set(
+                    [f"{name}.csv".lower() for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
+                )
+                normalized_imported_file_names = set([normalize_file_name(file_name) for file_name in file_names])
+                if not normalized_imported_file_names.issubset(allowed_file_names):
+                    raise ImportDataUnsupportedMultipleFilesError(normalized_imported_file_names - allowed_file_names)
+                for file_name in file_names:
+                    with zf.open(file_name) as file:
+                        sheet = pd.read_csv(file)
+                    file_name = normalize_file_name(file_name)
+                    for idx, row in sheet.iterrows():
+                        mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
+                        if mapper_class:
+                            try:
+                                mapper = mapper_class(row.to_dict())
+                                record = mapper.map(performed_action, serialize=True, include_primary_key=True)
+                                mapper.check_required_fields(performed_action)
+                                primary_key = mapper.import_validation(performed_action)
+                                LookupImportField.records += mapper.create_records(performed_action)
+                                record["__file_name"] = file_name
+                            except ImportDataError as err:
+                                validation_results.append([getattr(err, "record_id", ""), err])
+                                invalid_records.append(record_id)
+                            else:
+
+                                def format_primary_key(pk):
+                                    if isinstance(pk, dict):
+                                        return ", ".join([f"{k}: {v}" for k, v in pk.items()])
+                                    return str(pk)
+
+                                records.append(record)
+                                validation_results.append(
+                                    [format_primary_key(primary_key), _("core.admin.import_data.record_valid")]
+                                )
+                                self.redis_connector.set(f"import_data_{job_id}_record_{record_id}", json.dumps(record))
+                            record_id += 1
+                        else:
+                            raise ImportDataUnsupportedFileError(file_name)
+            records_count = record_id
+            self.redis_connector.set(f"import_data_count_{job_id}", records_count)
+            self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)
+            self.redis_connector.set(f"import_data_files_{job_id}", json.dumps([]))
+            self.redis_connector.set(f"import_data_progress_files_{job_id}", 0)
+            context["records_count"] = records_count
+            context["validation_results"] = validation_results
+            context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
+            if not invalid_records:
+                tasks.run_data_import.delay(job_id, request.user.id)
+                context["stop_request"] = False
+            else:
+                context["stop_request"] = True
+            logger.debug(
+                "core.admin.FedoraCustomAdminSite.import_data.end",
+                extra={"job_id": job_id, "records_count": records_count, "invalid_records": invalid_records},
+            )
+            return TemplateResponse(request, "admin/import_data/import_data.html", context)
+        else:
+            context["form"] = ImportDataAdminForm()
+        return TemplateResponse(request, "admin/import_data/import_data.html", context)
+
     def get_urls(
         self,
     ):
@@ -671,6 +779,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 "update-doi/",
                 self.admin_view(self.update_doi),
                 name="update_doi",
+            ),
+            path(
+                "import-data/",
+                self.admin_view(self.import_data),
+                name="import_data",
             ),
         ] + super().get_urls()
 

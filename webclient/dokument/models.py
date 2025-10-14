@@ -43,6 +43,7 @@ from heslar.hesla import (
     HESLAR_DOKUMENT_ULOZENI,
     HESLAR_DOKUMENT_ZACHOVALOST,
     HESLAR_JAZYK,
+    HESLAR_LETFOTO_TVAR,
     HESLAR_LETISTE,
     HESLAR_LICENCE,
     HESLAR_POCASI,
@@ -825,7 +826,9 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     """
 
     dokument = models.ForeignKey(Dokument, on_delete=models.CASCADE, db_column="dokument")
-    tvar = models.ForeignKey(Heslar, models.RESTRICT, db_column="tvar")
+    tvar = models.ForeignKey(
+        Heslar, models.RESTRICT, db_column="tvar", limit_choices_to={"nazev_heslare": HESLAR_LETFOTO_TVAR}
+    )
     poznamka = models.TextField(blank=True, null=True)
 
     class Meta:

@@ -1,0 +1,240 @@
+{% extends 'admin/change_list.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "admin/css/forms.css" %}">
+  <style>
+      .form-group {
+          display: flex;
+          align-items: center;
+          margin-bottom: 1rem;
+      }
+
+      .form-label {
+          width: 300px;
+          margin-right: 10px;
+      }
+      .progressBarBox {
+          width: 100%;
+          background-color: grey;
+      }
+
+      .progressBar {
+          width: 0;
+          height: 30px;
+          background-color: rgb(32, 80, 103);
+      }
+  </style>
+{% endblock %}
+
+{% block pagination %}{% endblock %}
+{% block filters %}{% endblock filters %}
+{% block object-tools %}{% endblock object-tools %}
+{% block search %}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "core.templates.admin.import_data.home_link" %}</a>
+    {% if page_name %} &rsaquo; {{ page_name }}{% endif %}
+  </div>
+{% endblock %}
+
+<h2>{% trans "core.templates.admin.import_data.heading" %}</h2>
+
+{% block content %}
+  <div id="content-main">
+    {% if not request.user.is_superuser %}
+      <p>{% trans "core.templates.admin.import_data.not_superuser" %}</p>
+    {% elif not maintenance %}
+      <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
+    {% elif validation_results %}
+      <div class="submit-row">
+        <div id="progressBarBoxData" class="progressBarBox" style="margin-bottom: 1rem">
+          <div id="progressBarData" class="progressBar" style="position: relative;">
+            <span id="progressPercentData" style="position: absolute; top: 0; transform: translateX(-50%); color: #fff; line-height: 30px; font-weight: bold;"></span>
+          </div>
+        </div>
+        <div id="progressBarBoxFiles" class="progressBarBox" style="margin-bottom: 1rem">
+          <div id="progressBarFiles" class="progressBar" style="position: relative;">
+            <span id="progressPercentFiles" style="position: absolute; top: 0; transform: translateX(-50%); color: #fff; line-height: 30px; font-weight: bold;"></span>
+          </div>
+        </div>
+        <p style="width: 100%;">
+          <b>{% trans "core.templates.admin.import_data.status" %}:</b>
+          <span id="processCurrentStatus">{% trans "core.templates.admin.import_data.starting" %}</span>
+        </p>
+        <p>
+          <input type="submit" id="stopRequests" class="default"
+                 value="{% trans "core.templates.admin.import_data.stop_request" %}">
+        </p>
+      </div>
+      <p id="processFinishedParagraph" style="display: none">
+        <strong>{% trans "core.templates.admin.import_data.finished" %}</strong>
+      </p>
+      {% if invalid_records %}
+        <p>
+          <strong>{% trans "core.templates.admin.import_data.invalid_records" %}</strong>: {{ invalid_records }}
+        </p>
+      {% endif %}
+      <table id="result_list" class="table table-bordered table-striped">
+        <tr>
+          <th>{% trans "core.templates.admin.import_data.id" %}</th>
+          <th>{% trans "core.templates.admin.validation_result" %}</th>
+          <th>{% trans "core.templates.admin.status" %}</th>
+        </tr>
+        {% for result in validation_results %}
+          <tr>
+            <td>{{ forloop.counter0 }}, {% if result.0 %}{{ result.0 }}{% endif %}</td>
+            <td>{{ result.1 }}</td>
+            <td></td>
+          </tr>
+        {% endfor %}
+      </table>
+      <table id="result_list_files" class="table table-bordered table-striped">
+        <tr>
+          <th>{% trans "core.templates.admin.import_data.files.ident_cely" %}</th>
+          <th>{% trans "core.templates.admin.import_data.files.file_name" %}</th>
+          <th>{% trans "core.templates.admin.import_data.files.size_mb" %}</th>
+          <th>{% trans "core.templates.admin.import_data.files.additional_info" %}</th>
+        </tr>
+      </table>
+    {% else %}
+      <form method="post" enctype="multipart/form-data">
+        <div>
+          <fieldset class="module aligned">
+            {{ update_metadata_file_form.non_field_errors }}
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="id_performed_action" class="form-label">
+                {{ form.performed_action.label }}
+              </label>
+              {{ form.performed_action }}
+            </div>
+            <div class="form-group">
+              <label for="id_ident_list_file" class="form-label">
+                {{ form.data_file.label }}
+              </label>
+              <input type="file" id="id_data_file" name="data_file" required accept=".zip">
+            </div>
+          </fieldset>
+          <div class="submit-row">
+            <input type="submit" value="{% trans 'Save' %}" class="default" name="_save">
+          </div>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+
+  <script>
+      const requestUrl = "{{ url }}"
+      const stopRequestUrl = "{{ url_stop }}"
+      let stopRequests = {% if stop_request is True %}true{% else %}false{% endif %}
+      const stopRequestButton = document.getElementById("stopRequests")
+      if (stopRequestButton) {
+        document.getElementById("stopRequests").addEventListener("click", () => {
+            fetch(stopRequestUrl)
+            document.getElementById("stopRequests").disabled = true
+            const progressBarBoxData = document.getElementById("progressBarBoxData")
+            progressBarBoxData.style.display = "none"
+        });
+      }
+
+      async function sendRequest(url) {
+          try {
+              if (stopRequests) {
+                  return -1
+              }
+
+              const response = await fetch(url)
+              if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`)
+              }
+
+              const data = await response.json()
+
+              const processCurrentStatus = document.getElementById("processCurrentStatus")
+              processCurrentStatus.textContent = data.status_message
+
+              if (data.status === "unknown") {
+                  console.error("Unknown status of the import process.")
+                  return 0
+              }
+
+              const progressBarData = document.getElementById("progressBarData")
+              progressBarData.style.width = data.progress_data + "%"
+
+              const progressPercentData = document.getElementById("progressPercentData")
+              progressPercentData.style.left = `${document.getElementById("progressBarBoxData").offsetWidth / 2}px`
+
+              if (data.progress_data > 0) {
+                  progressPercentData.textContent = data.progress_data + "%"
+              }
+
+              const progressBarFiles = document.getElementById("progressBarFiles");
+              progressBarFiles.style.width = data.progress_files + "%"
+
+              const progressPercentFiles = document.getElementById("progressPercentFiles")
+              progressPercentFiles.style.left = `${document.getElementById("progressBarBoxFiles").offsetWidth / 2}px`
+
+
+              if (data.progress_files > 0) {
+                  progressPercentFiles.textContent = data.progress_files + "%"
+              } else {
+                  progressPercentFiles.textContent = "{% trans 'core.templates.admin.import_data.files.not_started_yet' %}"
+              }
+
+              const table = document.getElementById("result_list");
+              for (let i = 0; i < data.finished_record_count; i++) {
+                  const row = table.rows[i + 1]
+                  row.cells[2].innerText = data.serialized_results[i]
+              }
+
+              const table_files = document.getElementById("result_list_files")
+              const start_index = table_files.rows.length - 1
+              for (let i = start_index; i < data.serialized_results_files.length; i++) {
+                  const row = document.createElement("tr")
+
+                  const cell_1 = document.createElement("td")
+                  cell_1.innerText = data.serialized_results_files[i]["ident_cely"]
+                  row.appendChild(cell_1)
+
+                  const cell_2 = document.createElement("td")
+                  cell_2.innerText = data.serialized_results_files[i]["file_name"]
+                  row.appendChild(cell_2)
+
+                  const cell_3 = document.createElement("td")
+                  cell_3.innerText = data.serialized_results_files[i]["size_mb"]
+                  row.appendChild(cell_3)
+
+                  const cell_4 = document.createElement("td")
+                  cell_4.innerText = data.serialized_results_files[i]["additional_info"]
+                  row.appendChild(cell_4)
+
+                  table_files.appendChild(row)
+              }
+
+              if (data.status === "finished" || data.status === "stopped") {
+                  document.getElementById("stopRequests").disabled = true
+                  stopRequests = true
+              }
+
+          } catch (error) {
+              console.error("Error fetching data:", error)
+              return 0
+          }
+
+      }
+
+      async function process() {
+          do {
+              await sendRequest(requestUrl);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+          } while (stopRequests === false);
+      }
+
+      process();
+  </script>
+{% endblock content %}

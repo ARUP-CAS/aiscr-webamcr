@@ -80,4 +80,14 @@ urlpatterns = [
         views.ApplicationRestartView.as_view(),
         name="application-restart",
     ),
+    path(
+        "data-import-progress/<str:job_id>",
+        views.DataImportProgress.as_view(),
+        name="data-import-progress",
+    ),
+    path(
+        "data-import-stop/<str:job_id>",
+        views.DataImportStop.as_view(),
+        name="data-import-stop",
+    ),
 ]
