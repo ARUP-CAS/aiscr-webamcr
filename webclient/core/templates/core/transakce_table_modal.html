@@ -117,7 +117,7 @@
     });
     });
     tag.on('select2:unselect', function (e) {
-        $(cd + " table tbody tr:contains('" + e.params.data.text + "')").remove();
+        $("#d"+e.params.data.id).remove();
         if ($(cl + " table tbody tr").length == 0){
             $(cl).css("display", "none");
         }
