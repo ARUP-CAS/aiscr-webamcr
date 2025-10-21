@@ -436,7 +436,7 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komponenta_ident_cely"])
         if not dj.komponenty == komponenta.komponenta_vazby:
-            logger.error("Komponenta - Dokumentacni jednotka wrong relation")
+            logger.warning("Komponenta - Dokumentacni jednotka wrong relation")
             messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
             if url_has_allowed_host_and_scheme(
                 request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS
