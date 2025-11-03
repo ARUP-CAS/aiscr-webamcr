@@ -12,6 +12,7 @@ from celery import shared_task
 from core.connectors import RedisConnector
 from core.constants import (
     IMPORT,
+    OBLAST_CECHY,
     PRISTUPNOST_MIN_RAZENI,
     PROJEKT_STAV_VYTVORENY,
     PROJEKT_STAV_ZAPSANY,
@@ -412,9 +413,16 @@ def cancel_old_projects():
             project.active_transaction = FedoraTransaction()
             project.set_zruseny(User.objects.get(pk=hesla_dynamicka.ADMIN_USER), cancelled_string, RUSENI_STARE_PROJ)
             if project.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID and project.has_oznamovatel():
-                project.create_cancel_confirmation_document(User.objects.get(pk=hesla_dynamicka.ADMIN_USER))
+                rep_bin_file = project.create_cancel_confirmation_document(User.objects.get(pk=hesla_dynamicka.ADMIN_USER))
+            else:
+                rep_bin_file = None
             project.close_active_transaction_when_finished = True
             project.save()
+            reason = _("core.cron.cancel_old_projects.reason")
+            if project.ident_cely[0] == OBLAST_CECHY:
+                Mailer.send_ep06a(project=project, reason=reason, rep_bin_file=rep_bin_file)
+            else:
+                Mailer.send_ep06b(project=project, reason=reason, rep_bin_file=rep_bin_file)
             logger.debug("core.cron.cancel_old_projects.do.project", extra={"ident_cely": project.ident_cely})
         logger.debug("core.cron.cancel_old_projects.do.end")
     except Exception as err:
