@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import socket
+import time
 import zipfile
 from typing import Optional, Union
 
@@ -464,20 +465,27 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def check_antivirus(cls, bytes_io: io.BytesIO):
         buffer_size = 4096
         if settings.CLAMD_HOST and settings.CLAMD_PORT:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((settings.CLAMD_HOST, settings.CLAMD_PORT))
-            s.send(b"zINSTREAM\0")
-            bytes_io.seek(0)
-            while True:
-                chunk = bytes_io.read(buffer_size)
-                if not chunk:
-                    break
-                s.send(len(chunk).to_bytes(4, byteorder="big") + chunk)
-            s.send(b"\0\0\0\0")
-            response = s.recv(buffer_size).decode("utf-8").rstrip("\u0000")
-            s.close()
-            logger.debug("core.models.Soubor.check_antivirus.response", extra={"response": response})
-            return response.upper() == "OK" or response.upper().endswith("OK")
+            try:
+                with socket.create_connection((settings.CLAMD_HOST, settings.CLAMD_PORT), settings.CLAMD_TIMEOUT) as s:
+                    start = time.time()
+                    # Keep the same timeout for subsequent ops
+                    s.settimeout(settings.CLAMD_TIMEOUT)
+                    s.send(b"zINSTREAM\0")
+                    bytes_io.seek(0)
+                    while True:
+                        chunk = bytes_io.read(buffer_size)
+                        if not chunk:
+                            break
+                        s.send(len(chunk).to_bytes(4, byteorder="big") + chunk)
+                    s.send(b"\0\0\0\0")
+                    response = s.recv(buffer_size).decode("utf-8").rstrip("\u0000")
+                    end = time.time()
+                    logger.debug("core.models.Soubor.check_antivirus.response", extra={"response": response,
+                                                                                       "time": (end - start)})
+                    return response.upper() == "OK" or response.upper().endswith("OK")
+            except socket.timeout:
+                logger.error("core.models.Soubor.check_antivirus.exception")
+                return False
         return None
 
     def _create_file_response(self, rep_bin_file: RepositoryBinaryFile) -> FileResponse:

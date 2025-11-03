@@ -552,6 +552,7 @@ TEST_ENV = get_secret("TEST_ENV", "True") == "True"
 
 CLAMD_HOST = None
 CLAMD_PORT = None
+CLAMD_TIMEOUT = 10
 
 DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "https://digiarchiv.aiscr.cz/id/")
 
