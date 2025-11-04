@@ -135,7 +135,7 @@
     });
     });
     tag.on('select2:unselect', function (e) {
-        $(cl + " table tbody tr:contains('" + e.params.data.text + "')").remove();
+        $("#d"+e.params.data.id).remove();
         if ("{{ id_tag }}" == "vratit-akci-form"){
             let totalFormsInput = $('input[name="form-TOTAL_FORMS"]');
             totalFormsInput.val($(cl + " table tbody tr").length);
