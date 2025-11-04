@@ -64,92 +64,73 @@ def balanced_parentheses(expression):
     return True
 
 
+def load_database_translation_strings():
+    return [
+        _("pian.posgtres.importovatPian.check.unsupportedEPSG"),
+        _("pian.posgtres.importovatPian.check.wrongGeometry"),
+        _("pian.posgtres.importovatPian.check.dimension"),
+        _("pian.posgtres.importovatPian.check.BBox"),
+        _("pian.posgtres.importovatPian.check.geometryNotSimple"),
+        _("pian.posgtres.importovatPian.check.geometryIsEmpty"),
+        _("pian.posgtres.importovatPian.check.geometryIsMultipart"),
+        _("pian.posgtres.importovatPian.check.tooFewPoints"),
+        _("pian.posgtres.importovatPian.check.segmentsTooShort"),
+    ]
+
+
 def validate_and_split_geometry(geom):
     """
     Funkce pro validaci řetězce s WKT geometrií.
     """
 
-    valid_bbox = "5, 40, 25, 60"
-    if geom.iloc[1] == "5514":
-        valid_bbox = "-905000, -1230000, -400000, -930000"
     new_rows = []
     if not isinstance(geom.iloc[2], str) or geom.iloc[2] == "":
         geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
         new_rows.append(geom)
         return new_rows
-    query = (
-        """
-      WITH bbox AS (
-    SELECT ST_MakeEnvelope("""
-        + valid_bbox
-        + """) AS geom
+    query = """
+WITH geom_to_insert AS (
+    SELECT ST_GeomFromText(%s, %s) AS geom
 ),
-geom_to_insert AS (
-    SELECT ST_GeomFromText(%s) AS geom
-),
-geometries AS (
+dumped AS (
     SELECT (ST_Dump(geom)).geom AS geom
     FROM geom_to_insert
 ),
-analyzed AS (
+validated AS (
     SELECT
         g.geom,
         ST_GeometryType(g.geom) AS geom_type,
-        ST_CoordDim(g.geom) AS coord_dim,
+        ST_AsText(g.geom) AS wkt,
         CASE
-            WHEN ST_GeometryType(g.geom) NOT IN (
-                'ST_Point', 'ST_LineString', 'ST_Polygon',
-                'ST_MultiPoint', 'ST_MultiLineString', 'ST_MultiPolygon'
-            ) THEN false
-            WHEN ST_CoordDim(g.geom) != 2 THEN false
-            WHEN NOT ST_Within(g.geom, b.geom) THEN false
-            ELSE ST_IsValid(g.geom)
-        END AS is_valid,
-        ST_IsSimple(g.geom) AS is_simple,
-        CASE
-            WHEN ST_GeometryType(g.geom) NOT IN (
-                'ST_Point', 'ST_LineString', 'ST_Polygon',
-                'ST_MultiPoint', 'ST_MultiLineString', 'ST_MultiPolygon'
-            ) THEN '"""
-        + _("pian.views.importovatPianView.check.wrongGeometry")
-        + """'
-            WHEN ST_CoordDim(g.geom) != 2 THEN '"""
-        + _("pian.views.importovatPianView.check.dimension")
-        + """'
-            WHEN NOT ST_Within(g.geom, b.geom) THEN '"""
-        + _("pian.views.importovatPianView.check.BBox")
-        + """'
-            ELSE '"""
-        + _("pian.views.importovatPianView.check.wrongGeometry")
-        + """'
-        END AS invalid_reason
-    FROM geometries g, bbox b
+            WHEN ST_NumGeometries(g.geom) > 1 THEN 'pian.posgtres.importovatPian.check.geometryIsMultipart'
+            ELSE validategeom(ST_AsText(g.geom), %s)
+        END AS validation_result
+    FROM dumped g
 ),
-ring AS (
+rings AS (
     SELECT
-        is_valid, is_simple, invalid_reason,
-        ST_AsText((ST_DumpRings(geom)).geom) AS rings,
-        geom_type
-    FROM analyzed
-    WHERE geom_type = 'ST_Polygon'
+        v.validation_result,
+        ST_AsText((ST_DumpRings(v.geom)).geom) AS ring,
+        v.geom_type
+    FROM validated v
+    WHERE v.geom_type = 'ST_Polygon'
 ),
-other AS (
+others AS (
     SELECT
-        is_valid, is_simple, invalid_reason,
-        ST_AsText(geom) AS rings,
-        geom_type
-    FROM analyzed
-    WHERE geom_type != 'ST_Polygon'
+        v.validation_result,
+        ST_AsText(v.geom) AS ring,
+        v.geom_type
+    FROM validated v
+    WHERE v.geom_type != 'ST_Polygon'
 )
-SELECT * FROM ring
+SELECT * FROM rings
 UNION ALL
-SELECT * FROM other;
-    """
-    )
+SELECT * FROM others;
+"""
     cursor = connection.cursor()
     sid = transaction.savepoint()
     try:
-        cursor.execute(query, [geom.iloc[2]])
+        cursor.execute(query, [geom.iloc[2], geom.iloc[1], geom.iloc[1]])
         transaction.savepoint_commit(sid)
     except Exception as e:
         transaction.savepoint_rollback(sid)
@@ -160,11 +141,11 @@ SELECT * FROM other;
     rows = cursor.fetchall()
     for index, row in enumerate(rows):
         new_geom = geom.copy()
-        new_geom.iloc[2] = row[3]
+        new_geom.iloc[2] = row[1]
         if len(rows) > 1:
             new_geom.iloc[0] = f"{geom.iloc[0]}_{index + 1}"
-        if row[0] is False or row[1] is False:
-            new_geom["result"] = row[2]
+        if row[0] != "valid":
+            new_geom["result"] = _(row[0])
             new_rows.append(new_geom)
             return new_rows
         new_geom["result"] = True
