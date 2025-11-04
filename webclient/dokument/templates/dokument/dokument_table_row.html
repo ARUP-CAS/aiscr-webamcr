@@ -33,4 +33,7 @@
     {% if pripojit %}
     <td><input type="checkbox" name="dokument" value="{{d.id}}"></td>
     {% endif %}
+    {% if vratit %}
+    <td>{{ form.old_stav }}{{ form.ident_cely }}{{ form.reason }}</td>
+    {% endif %}
 </tr>

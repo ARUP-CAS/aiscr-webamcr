@@ -14,6 +14,7 @@ from core.constants import (
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
     D_STAV_ARCHIVOVANY,
+    D_STAV_ODESLANY,
     ODESLANI_AZ,
     PIAN_NEPOTVRZEN,
     PIAN_POTVRZEN,
@@ -29,8 +30,8 @@ from core.constants import (
     ZMENA_AZ,
 )
 from core.coordTransform import transform_geom_to_wgs84
-from core.exceptions import MaximalEventCount
-from core.forms import CheckStavNotChangedForm, VratitForm
+from core.exceptions import MaximalEventCount, StateChangedError
+from core.forms import CheckStavNotChangedForm, VratitFormAkce, VratitFormDokument
 from core.ident_cely import get_project_event_ident, get_temp_akce_ident
 from core.message_constants import (
     MAXIMUM_AKCII_DOSAZENO,
@@ -64,7 +65,7 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction
 from django.db.models import Q, RestrictedError
-from django.forms import inlineformset_factory
+from django.forms import formset_factory, inlineformset_factory
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -845,12 +846,30 @@ def vratit(request, ident_cely):
             {"redirect": az.get_absolute_url()},
             status=403,
         )
+    DokumentFormSet = formset_factory(VratitFormDokument, extra=0)
     if request.method == "POST":
-        form = VratitForm(request.POST)
-        if form.is_valid():
+        form = VratitFormAkce(request.POST, ident=az.ident_cely)
+        formset = DokumentFormSet(request.POST)
+        if form.is_valid() and formset.is_valid():
             fedora_trasnaction = az.create_transaction(request.user)
             stav_initial = az.stav
             try:
+                for form_row in formset:
+                    dokument_iednt_cely = form_row.cleaned_data["ident_cely"]
+                    dokument = Dokument.objects.get(ident_cely=dokument_iednt_cely)
+                    dokument.active_transaction = fedora_trasnaction
+                    if dokument.stav != D_STAV_ODESLANY and dokument.stav != D_STAV_ARCHIVOVANY:
+                        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+                        raise PermissionDenied
+                    if check_stav_changed(request, dokument):
+                        raise StateChangedError
+                    if dokument.stav == D_STAV_ARCHIVOVANY:
+                        dokument.doi_hide()
+                    form_row.duvod = form_row.cleaned_data["reason"]  # type: ignore[attr-defined]
+                    form_row.dokument = dokument  # type: ignore[attr-defined]
+                    form_row.before_save_state = dokument.stav  # type: ignore[attr-defined]
+                    dokument.set_vraceny(request.user, dokument.stav - 1, form_row.duvod)
+                    dokument.save()
                 if stav_initial == AZ_STAV_ARCHIVOVANY:
                     az.igsn_lokalita_hide()
                 duvod = form.cleaned_data["reason"]
@@ -877,9 +896,12 @@ def vratit(request, ident_cely):
                 az.save()
                 if before_save_state == AZ_STAV_ODESLANY:
                     Mailer.send_ev01(zaznam=az, reason=duvod)
+                for form_row in formset:
+                    if form_row.before_save_state == D_STAV_ODESLANY:
+                        Mailer.send_ek02(document=form_row.dokument, reason=form_row.duvod)
                 fedora_trasnaction.success_message = get_message(az, "USPESNE_VRACENA")
                 return JsonResponse({"redirect": az.get_absolute_url()})
-            except (DoiWriteError, FedoraError) as err:
+            except Exception as err:
                 logger.info("arch_z.views.vratit.post_error", extra={"error": err, "ident_cely": az.ident_cely})
                 transaction.set_rollback(True)
                 fedora_trasnaction.rollback_transaction()
@@ -889,15 +911,17 @@ def vratit(request, ident_cely):
         else:
             logger.debug("arch_z.views.vratit.not_valid", extra={"error": form.errors})
     else:
-        form = VratitForm(initial={"old_stav": az.stav})
+        form = VratitFormAkce(ident=az.ident_cely, initial={"old_stav": az.stav})
+        formset = DokumentFormSet()
     context = {
         "object": az,
         "form": form,
         "title": _("arch_z.views.vratit.title.text"),
         "id_tag": "vratit-akci-form",
         "button": _("arch_z.views.vratit.submitButton.text"),
+        "formset": formset,
     }
-    return render(request, "core/transakce_modal.html", context)
+    return render(request, "core/transakce_table_modal.html", context)
 
 
 @never_cache

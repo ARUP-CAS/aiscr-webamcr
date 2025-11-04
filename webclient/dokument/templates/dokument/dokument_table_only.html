@@ -15,6 +15,9 @@
     {% if pripojit %}
     <th>{% trans "dokument.templates.dokument_table_only.pripojitDokument.label" %}</th>
     {% endif %}
+    {% if id_tag == "vratit-akci-form" %}
+    <th>{% trans "dokument.templates.dokument_table_only.vratit.label" %}*</th>
+    {% endif %}
   </tr>
   </thead>
   <tbody>

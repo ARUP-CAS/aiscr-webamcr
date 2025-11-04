@@ -39,6 +39,15 @@
       {{ text }}
     </div>
     {% endif %}
+    {% if id_tag == "vratit-akci-form" %}
+
+    <div class="app-card-dokument">
+        <div class="app-table-list-wrapper vratit-dokument-table" style="display: none;">
+        {{ formset.management_form }}
+        {%include "dokument/dokument_table_only.html"%}
+        </div>
+    </div>
+    {% endif %}
     {% if id_tag == "pripojit-dokument-form" %}
     <div class="app-card-dokument">
         <div class="app-table-list-wrapper add-dokument-table" {% if hide_table %} style="display: none;" {%endif%}>
@@ -93,6 +102,11 @@
         tag = $('#id_ez')
         cl = '.add-ez-table'
     }
+    else if ("{{ id_tag }}" == "vratit-akci-form"){
+        base_url = '{% url "dokument:get_dokument_table_row_vratit" %}'
+        tag = $('#id_dokument')
+        cl = '.vratit-dokument-table'
+    }
     else{
         base_url = '{% url "projekt:get_projekt_table_row" %}'
         tag = $('#id_projekt')
@@ -105,19 +119,27 @@
         $.ajax({
             type: "GET",
             url: base_url, 
-            data: {'id': data.id },
+            data: {'id': data.id, 'index': $(cl + " table tbody tr").length },
             success : function(data) {
                 if (cl == '.add-projekt-table' || cl == '.add-eo-table' || cl == '.add-ez-table'){
                     first_row.remove()
                 }
                 $(cl + ' table tbody').append(data);
                 $(cl).css("display", "block");
+                if ("{{ id_tag }}" == "vratit-akci-form"){
+                    let totalFormsInput = $('input[name="form-TOTAL_FORMS"]');
+                    totalFormsInput.val($(cl + " table tbody tr").length);
+                }                
                 // $('.row.replace').html(data);
              }
     });
     });
     tag.on('select2:unselect', function (e) {
-        $(cd + " table tbody tr:contains('" + e.params.data.text + "')").remove();
+        $(cl + " table tbody tr:contains('" + e.params.data.text + "')").remove();
+        if ("{{ id_tag }}" == "vratit-akci-form"){
+            let totalFormsInput = $('input[name="form-TOTAL_FORMS"]');
+            totalFormsInput.val($(cl + " table tbody tr").length);
+        }  
         if ($(cl + " table tbody tr").length == 0){
             $(cl).css("display", "none");
         }

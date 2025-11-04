@@ -1,14 +1,17 @@
 import logging
 
 from bs4 import BeautifulSoup
+from core.constants import D_STAV_ODESLANY
 from core.message_constants import TRANSLATION_FILE_TOOSMALL, TRANSLATION_FILE_WRONG_FORMAT
 from core.models import OdstavkaSystemu
+from core.widgets import AutocompleteSelect2Multiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from django import forms
 from django.conf import settings
 from django.utils import formats
 from django.utils.translation import gettext_lazy as _
+from dokument.models import Dokument
 from heslar.models import Heslar
 from polib import pofile
 
@@ -144,6 +147,36 @@ class VratitForm(forms.Form):
         super(VratitForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+
+
+class VratitFormDokument(VratitForm):
+    ident_cely = forms.CharField(required=True, widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["reason"].widget = forms.Textarea(
+            attrs={"rows": 3, "cols": 150, "required": "required", "class": "textinput form-control"}
+        )
+
+
+class VratitFormAkce(VratitForm):
+    """
+    Formulář pro vrácení záznamu Akce nebo Lokality. Obsahuje text pole pro zdůvodnění vrácení a výběr dokumentů pro vrácení.
+    """
+
+    dokument = forms.ModelMultipleChoiceField(
+        queryset=Dokument.objects.none(),
+        widget=AutocompleteSelect2Multiple,
+        label=_("core.forms.VratitFormAkce.dokument.label"),
+        help_text=_("core.forms.VratitFormAkce.dokument.tooltip"),
+        required=False,
+    )
+
+    def __init__(self, *args, ident, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["dokument"].queryset = Dokument.objects.filter(
+            stav=D_STAV_ODESLANY, casti__archeologicky_zaznam__ident_cely=ident
+        ).distinct()
 
 
 class DecimalTextWideget(forms.widgets.TextInput):
