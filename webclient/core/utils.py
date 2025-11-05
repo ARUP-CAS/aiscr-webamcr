@@ -11,6 +11,7 @@ import django
 import pytz
 from arch_z.models import ArcheologickyZaznam
 from core.constants import EPSG_WGS84, LIMIT_PRVKU_ZOBRAZENI_HEATMAP, ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
+from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
 from core.message_constants import (
     VALIDATION_EMPTY,
     VALIDATION_LINE_LENGTH,
@@ -23,7 +24,7 @@ from django.apps import apps
 from django.conf import ENVIRONMENT_VARIABLE, settings
 from django.contrib.gis.db.models.functions import AsGeoJSON, PointOnSurface
 from django.core.cache import caches
-from django.db import connection, transaction
+from django.db import connection, connections
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
@@ -127,13 +128,10 @@ SELECT * FROM rings
 UNION ALL
 SELECT * FROM others;
 """
-    cursor = connection.cursor()
-    sid = transaction.savepoint()
+    cursor = connections["urgent"].cursor()
     try:
         cursor.execute(query, [geom.iloc[2], geom.iloc[1], geom.iloc[1]])
-        transaction.savepoint_commit(sid)
     except Exception as e:
-        transaction.savepoint_rollback(sid)
         logger.debug("core.utils.file_validate_geometry.exception", extra={"error": e})
         geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
         new_rows.append(geom)
@@ -146,6 +144,23 @@ SELECT * FROM others;
             new_geom.iloc[0] = f"{geom.iloc[0]}_{index + 1}"
         if row[0] != "valid":
             new_geom["result"] = _(row[0])
+            new_rows.append(new_geom)
+            return new_rows
+        try:
+            if geom.iloc[1] == "4326":
+                geom_jtsk = transform_geom_to_sjtsk(row[1])
+                cursor.execute(query, [geom_jtsk[0], "5514", "5514"])
+            else:
+                geom_wgs = transform_geom_to_wgs84(row[1])
+                cursor.execute(query, [geom_wgs[0], "4326", "4326"])
+            row_trans = cursor.fetchone()
+            if row_trans[0] != "valid":
+                new_geom["result"] = _(row_trans[0])
+                new_rows.append(new_geom)
+                return new_rows
+        except Exception as e:
+            logger.debug("core.utils.file_validate_geometry.transformException", extra={"error": e})
+            new_geom["result"] = _("pian.views.importovatPianView.check.wrongGeometry")
             new_rows.append(new_geom)
             return new_rows
         new_geom["result"] = True

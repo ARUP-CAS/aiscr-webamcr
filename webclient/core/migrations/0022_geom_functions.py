@@ -71,8 +71,7 @@ AS $function$
 			  val_result int;
               bbox geometry;
     		  allowed_types text[] := ARRAY[
-		        'ST_Point', 'ST_LineString', 'ST_Polygon',
-		        'ST_MultiPoint', 'ST_MultiLineString', 'ST_MultiPolygon'
+		        'ST_Point', 'ST_LineString', 'ST_Polygon','ST_MultiPolygon'
 		      ];
             begin
 				-- Výběr BBOXu podle EPSG
