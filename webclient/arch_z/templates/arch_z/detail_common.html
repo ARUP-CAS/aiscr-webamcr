@@ -322,6 +322,16 @@
 
       function show_form(form_id, form_to_show_next) {
         //clearUnfinishedEditGeometry()
+          // Validate form_id and form_to_show_next to prevent XSS
+          const validPattern = /^[a-zA-Z0-9_-]+$/;
+          if (!validPattern.test(form_id)) {
+              console.error("Invalid form_id: must contain only alphanumeric characters, hyphens, and underscores");
+              return;
+          }
+          if (form_to_show_next != null && !validPattern.test(form_to_show_next)) {
+              console.error("Invalid form_to_show_next: must contain only alphanumeric characters, hyphens, and underscores");
+              return;
+          }
           let form = document.getElementById(form_id);
           if (form) {
             if (form.style.display === "none") {
