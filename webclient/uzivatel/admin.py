@@ -341,8 +341,10 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         basic_groups_ids_list = [ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]
         try:
             user_db = User.objects.get(id=obj.pk)
+            user_db_group_ids = set(user_db.groups.values_list("id", flat=True))
         except ObjectDoesNotExist:
             user_db = None
+            user_db_group_ids = set()
         user_db: Union[User, None]
         form_groups = form.cleaned_data["groups"]
         if obj.is_active:
@@ -437,7 +439,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             transaction.on_commit(
                 lambda: obj.groups.set([max_id] + list(other_groups.values_list("id", flat=True)), clear=True)
             )
-        if user_db.is_active != obj.is_active and obj.is_active:
+        if (user_db_group_ids != set(all_groups_ids) or user_db.is_active != obj.is_active) and obj.is_active:
             logger.debug("uzivatel.admin.save_model.send_activation_email", extra={"pk": obj.pk})
             Mailer.send_eu06(user=obj, groups=[main_group] + list(other_groups))
         logger.debug(
