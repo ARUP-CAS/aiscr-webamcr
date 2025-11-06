@@ -1052,6 +1052,7 @@ class DokumentCastOdpojitView(TransakceView):
     def post(self, request, *args, **kwargs):
         cast = self.get_zaznam()
         fedora_transaction = cast.create_transaction(request.user, self.success_message)
+        fedora_transaction.redirect_url = cast.get_absolute_url()
         archeologicky_zaznam = cast.archeologicky_zaznam
         cast.archeologicky_zaznam = None
         cast.projekt = None
@@ -1608,6 +1609,7 @@ def odeslat(request, ident_cely):
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ODESLAN, DOKUMENT_NELZE_ODESLAT)
+        fedora_transaction.redirect_url = get_detail_json_view(ident_cely)
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
         returned_value = Dokument.set_permanent_identificator(dokument, request, messages, fedora_transaction)
