@@ -418,7 +418,7 @@ def cancel_old_projects():
                 rep_bin_file = None
             project.close_active_transaction_when_finished = True
             project.save()
-            reason = _("core.cron.cancel_old_projects.reason")
+            reason = STARY_PROJEKT_ZRUSEN
             if project.ident_cely[0] == OBLAST_CECHY:
                 Mailer.send_ep06a(project=project, reason=reason, rep_bin_file=rep_bin_file)
             else:
