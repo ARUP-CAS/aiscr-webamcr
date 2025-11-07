@@ -106,6 +106,7 @@ def odpojit(request, dj_ident_cely):
     pian: Pian
     if request.method == "POST":
         fedora_transaction = dj.archeologicky_zaznam.create_transaction(request.user)
+        fedora_transaction.redirect_url = dj.get_absolute_url()
         fedora_transaction.main_record = dj
         dj.archeologicky_zaznam.get_absolute_url()
         dj.pian = None
