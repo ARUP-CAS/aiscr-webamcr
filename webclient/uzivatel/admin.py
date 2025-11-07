@@ -439,8 +439,8 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             transaction.on_commit(
                 lambda: obj.groups.set([max_id] + list(other_groups.values_list("id", flat=True)), clear=True)
             )
-        if user_db_group_ids != set(all_groups_ids):
-            logger.debug("send activate email or change email")
+        if (user_db_group_ids != set(all_groups_ids) or user_db.is_active != obj.is_active) and obj.is_active:
+            logger.debug("uzivatel.admin.save_model.send_activation_email", extra={"pk": obj.pk})
             Mailer.send_eu06(user=obj, groups=[main_group] + list(other_groups))
         logger.debug(
             "uzivatel.admin.save_model.manage_user_groups.highest_groups",
