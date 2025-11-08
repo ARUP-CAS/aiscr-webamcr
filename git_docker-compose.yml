@@ -179,7 +179,7 @@ services:
       - logstash_elastic_pass
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.2.0
     hostname: elasticsearch
     environment:
       - discovery.type=single-node
