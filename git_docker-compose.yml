@@ -164,7 +164,7 @@ services:
       - "--config.file=/run/secrets/prometheus_config"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.14.1
+    image: docker.elastic.co/logstash/logstash:9.2.0
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
     volumes:
