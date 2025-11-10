@@ -969,7 +969,7 @@ class Mailer:
             notification_type.cesta_sablony,
             {
                 "ident_cely": document.ident_cely,
-                "state": document.STATES[document.stav - 1][1],
+                "state": document.STATES[0][1],
                 "reason": reason,
                 "site_url": settings.SITE_URL,
             },

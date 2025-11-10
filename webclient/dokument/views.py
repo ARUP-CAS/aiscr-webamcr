@@ -2231,9 +2231,12 @@ def get_dokument_table_row_vratit(request):
     index = request.GET.get("index")
     if not dokument_id:
         return HttpResponse(status=400)
-    try:
-        dokument = Dokument.objects.get(id=dokument_id)
-    except Dokument.DoesNotExist:
+    qs = Dokument.objects.filter(id=dokument_id)
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
+    qs = perm_object.check_filter_permission(qs)
+    dokument = qs.first()
+    if dokument is None:
         raise Http404("Dokument neexistuje.")
     form = VratitFormDokument(
         initial={"old_stav": dokument.stav, "ident_cely": dokument.ident_cely}, prefix=f"form-{index}"

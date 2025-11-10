@@ -39,8 +39,7 @@
       {{ text }}
     </div>
     {% endif %}
-    {% if id_tag == "vratit-akci-form" %}
-
+    {% if id_tag == "vratit-akci-form"  and formset %}
     <div class="app-card-dokument">
         <div class="app-table-list-wrapper vratit-dokument-table" style="display: none;">
         {{ formset.management_form }}
