@@ -169,7 +169,7 @@ services:
       - "--storage.tsdb.retention.time=365d"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.14.1
+    image: docker.elastic.co/logstash/logstash:8.19.0
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
@@ -184,7 +184,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.0
     hostname: elasticsearch
     restart: always
     environment:
@@ -210,7 +210,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.14.1
+    image: docker.elastic.co/kibana/kibana:8.19.0
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200

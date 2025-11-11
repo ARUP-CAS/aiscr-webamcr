@@ -164,7 +164,7 @@ services:
       - "--config.file=/run/secrets/prometheus_config"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.14.1
+    image: docker.elastic.co/logstash/logstash:8.19.0
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
     volumes:
@@ -179,7 +179,7 @@ services:
       - logstash_elastic_pass
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.0
     hostname: elasticsearch
     environment:
       - discovery.type=single-node
@@ -205,7 +205,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.14.1
+    image: docker.elastic.co/kibana/kibana:8.19.0
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
