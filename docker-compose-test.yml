@@ -255,7 +255,7 @@ services:
       - prod-net
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
     volumes:
       - "/:/rootfs:ro"
       - "/var/run:/var/run:ro"
