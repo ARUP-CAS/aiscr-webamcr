@@ -32,7 +32,7 @@ services:
       - net.core.somaxconn=1024
 
   sidecar:
-    image: eeacms/rsync:2.4
+    image: eeacms/rsync:3.0
     environment:
       - CRON_TASK_1=*/1 * * * * rsync -a /vol/web/locale/* /backup/
     volumes:
