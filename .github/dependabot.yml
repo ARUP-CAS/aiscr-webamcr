@@ -6,6 +6,24 @@
 version: 2
 updates:
   - package-ecosystem: "pip" # See documentation for possible values
+    directory: "/webclient/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 30
+    
+  - package-ecosystem: "docker" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 30
+    
+  - package-ecosystem: "docker-compose" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 30
+
+  - package-ecosystem: "github-actions" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
