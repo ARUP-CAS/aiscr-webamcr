@@ -53,7 +53,7 @@ services:
       start_period: 30s
 
   sidecar:
-    image: eeacms/rsync:2.4
+    image: eeacms/rsync:3.0
     environment:
       - CRON_TASK_1=*/1 * * * * rsync -a /vol/web/locale/* /backup/
     volumes:
@@ -82,7 +82,7 @@ services:
       start_period: 30s
   
   redis-exporter:
-    image: oliver006/redis_exporter:v1.61.0-alpine
+    image: oliver006/redis_exporter:v1.80.0-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -143,7 +143,7 @@ services:
       - redis
 
   celery_exporter:
-    image: danihodovic/celery-exporter:0.10.8
+    image: danihodovic/celery-exporter:0.10.14
     networks:
       - prod-net
     secrets:
@@ -156,7 +156,7 @@ services:
     entrypoint: [ '/bin/sh', '-c', 'export CE_BROKER_URL="redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat /var/run/secrets/redis_host)"; python /app/cli.py' ] 
 
   grafana:
-    image: grafana/grafana-enterprise:10.2.8
+    image: grafana/grafana-enterprise:12.2.1
     restart: always
     depends_on:
       - prometheus
@@ -173,7 +173,7 @@ services:
       - prod-net
 
   prometheus:
-    image: prom/prometheus:v2.45.6
+    image: prom/prometheus:v3.7.3
     restart: always
     volumes:
       - ./prometheus:/etc/prometheus
@@ -189,7 +189,7 @@ services:
       - "--storage.tsdb.retention.time=30d"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.14.1
+    image: docker.elastic.co/logstash/logstash:8.19.0
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
@@ -232,7 +232,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.14.1
+    image: docker.elastic.co/kibana/kibana:8.19.0
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
@@ -255,7 +255,7 @@ services:
       - prod-net
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
     volumes:
       - "/:/rootfs:ro"
       - "/var/run:/var/run:ro"
@@ -271,7 +271,7 @@ services:
     restart: always
 
   postgresql_exporter:
-    image: prometheuscommunity/postgres-exporter:v0.17.1
+    image: prometheuscommunity/postgres-exporter:v0.18.1
     restart: always
     environment:
       - DATA_SOURCE_URI_FILE=/run/secrets/postgresql_exporter_uri
