@@ -35,7 +35,7 @@ class FedoraError(Exception):
         self.headers = headers
         self.fedora_transaction: FedoraTransaction = fedora_transaction
         self.ident_cely: str = fedora_transaction.main_record.ident_cely if fedora_transaction else None
-        self.redirect = self.fedora_transaction.redirect_on_error
+        self.redirect = fedora_transaction.redirect_on_error if fedora_transaction else None
         self.redirect_url = self.fedora_transaction.redirect_url if fedora_transaction else None
         super().__init__(self.message)
 
@@ -45,6 +45,10 @@ class FedoraUpdatedByAnotherTransactionError(FedoraError):
 
 
 class IdentChangeFedoraError(Exception):
+    pass
+
+
+class FedoraNoResponseError(FedoraError):
     pass
 
 
@@ -663,6 +667,8 @@ class FedoraRepositoryConnector:
             }
             return document_func, headers_func
 
+        if not result:
+            raise FedoraNoResponseError(url, "No Fedora response", None, fedora_transaction=self.transaction)
         if result.status_code == 404:
             document, headers = generate_metadata()
             headers["slug"] = "metadata"
