@@ -13,7 +13,6 @@ current_deployment_tag="test"
 deployment_root=${1}
 branch=${2}
 echo ${deployment_root}
-echo "větev"
 echo ${branch}
 
 d_stamp="$(date +%Y%m%dT%H%M%S)"
