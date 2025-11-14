@@ -7,25 +7,6 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
-      pouzit_predvolenou:
-        description: 'Použít předvolenou větev?'
-        required: true
-        type: boolean
-
-      predvolena_vetv:
-        description: 'Vyber předvolenou větev'
-        required: false
-        type: choice
-        options:
-          - main
-          - develop
-          - test
-
-      vlastni_vetv:
-        description: 'Zadej vlastní větev (pokud není použita předvolená)'
-        required: false
-        type: string
-
       testuj_pouze_neuspesne:
         description: 'Testuj pouze neúspěšné testy bez nového nasazení'
         required: true
@@ -75,10 +56,7 @@ jobs:
       - name: SSH deployment a testy
         shell: bash
         run: |
-          vetv="${{ inputs.predvolena_vetv }}"
-          if [ "${{ inputs.pouzit_predvolenou }}" != "true" ]; then
-            vetv="${{ inputs.vlastni_vetv }}"
-          fi
+          vetv="${{ github.ref_name }}"
           echo "Použitá větev: $vetv"
           eval $(ssh-agent -s)
           echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -

@@ -28,11 +28,11 @@ find "$logpath" -name "$logfile" -type f -mtime +5 -exec rm -f {} \;
 mkdir -p ${logpath}
 
 print_d1 "Update repository..."
-#git fetch origin
-#git clean -fd
-#git restore .
-#git checkout -B ${branch} origin/${branch}
-#git reset --hard origin/${branch}
+git fetch origin
+git clean -fd
+git restore .
+git checkout -B ${branch} origin/${branch}
+git reset --hard origin/${branch}
 
 
 #Prints
@@ -74,6 +74,9 @@ done
 #TBD
 
 #FINAL
+print_d1 "Cloning test database"
+docker exec -i $(docker ps -q -f name=swarm_webamcr_web) script -q -c "python3 /scripts/db/clone_test_db.py"
+
 print_d1 "PUTTING TAG ${current_deployment_tag} as LAST into ${path_last_tag}"
 echo "${current_deployment_tag}" > ${path_last_tag}
 
