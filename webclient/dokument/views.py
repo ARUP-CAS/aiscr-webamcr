@@ -1757,10 +1757,10 @@ def vratit(request, ident_cely):
                 return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
             except (DoiWriteError, FedoraError) as err:
                 logger.info("dokument.views.vratit.post_error", extra={"error": err, "ident_cely": ident_cely})
-                fedora_transaction.set_rollback(True)
                 fedora_transaction.rollback_transaction()
                 if isinstance(err, FedoraError):
                     dokument.doi_publish(False)
+                transaction.set_rollback(True)
                 return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
         else:
             logger.debug("dokument.views.vratit.not_valid", extra={"error": form.errors})
@@ -2350,20 +2350,24 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
             prefix=komponenta.ident_cely,
             readonly=not show["editovat"],
         ),
-        "form_nalezy_objekty": NalezObjektFormset(
-            old_nalez_post,
-            instance=komponenta,
-            prefix=komponenta.ident_cely + "_o",
-        )
-        if komponenta.ident_cely == komp_ident_cely
-        else NalezObjektFormset(instance=komponenta, prefix=komponenta.ident_cely + "_o"),
-        "form_nalezy_predmety": NalezPredmetFormset(
-            old_nalez_post,
-            instance=komponenta,
-            prefix=komponenta.ident_cely + "_p",
-        )
-        if komponenta.ident_cely == komp_ident_cely
-        else NalezPredmetFormset(instance=komponenta, prefix=komponenta.ident_cely + "_p"),
+        "form_nalezy_objekty": (
+            NalezObjektFormset(
+                old_nalez_post,
+                instance=komponenta,
+                prefix=komponenta.ident_cely + "_o",
+            )
+            if komponenta.ident_cely == komp_ident_cely
+            else NalezObjektFormset(instance=komponenta, prefix=komponenta.ident_cely + "_o")
+        ),
+        "form_nalezy_predmety": (
+            NalezPredmetFormset(
+                old_nalez_post,
+                instance=komponenta,
+                prefix=komponenta.ident_cely + "_p",
+            )
+            if komponenta.ident_cely == komp_ident_cely
+            else NalezPredmetFormset(instance=komponenta, prefix=komponenta.ident_cely + "_p")
+        ),
         "helper_predmet": NalezFormSetHelper(typ="predmet"),
         "helper_objekt": NalezFormSetHelper(typ="objekt"),
     }
