@@ -56,8 +56,7 @@ jobs:
       - name: SSH deployment a testy
         shell: bash
         run: |
-          vetv="${{ github.ref_name }}"
-          echo "Použitá větev: $vetv"
+          echo "Použitá větev: ${{ github.ref_name }}"
           eval $(ssh-agent -s)
           echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
           mkdir -p ~/.ssh
@@ -73,7 +72,7 @@ jobs:
               chmod +x ${{ env.dep_script }}
               chmod +x ${{ env.test_script }}
               if [ "${{ inputs.testuj_pouze_neuspesne }}" != "true" ]; then
-                ./${{ env.dep_script }} ${{ env.server_deploy_root }} $vetv
+                ./${{ env.dep_script }} ${{ env.server_deploy_root }} ${{ github.ref_name }}
                 echo "Spustit testy"              
                 ./${{ env.test_script }}
               else

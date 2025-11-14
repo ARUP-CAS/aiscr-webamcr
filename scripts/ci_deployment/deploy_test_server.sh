@@ -6,13 +6,14 @@ print_d1 () {
     echo "----------------"
 
 }
-
+print_d1 "Start script deploy_test_server.sh"
 stack_name="swarm_webamcr"
 
 current_deployment_tag="test"
 deployment_root=${1}
 branch=${2}
 echo ${deployment_root}
+echo "větev"
 echo ${branch}
 
 d_stamp="$(date +%Y%m%dT%H%M%S)"
@@ -28,6 +29,8 @@ find "$logpath" -name "$logfile" -type f -mtime +5 -exec rm -f {} \;
 mkdir -p ${logpath}
 
 print_d1 "Update repository..."
+
+
 git fetch origin
 git clean -fd
 git restore .
